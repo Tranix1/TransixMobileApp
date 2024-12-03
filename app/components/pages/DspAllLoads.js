@@ -434,11 +434,11 @@ let mapThsAll = [...getOneLoad , ...loadsList]
 
     let contactMe = ( <View style={{ paddingLeft: 30 }}>
 
-            <TouchableOpacity  onPress={()=>navigate(`/message/${item.userId}/${item.CompanyName} `)} style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#008080" , borderWidth:1 , borderColor :'#008080', justifyContent:'center', marginBottom : 5 , marginTop:6}} >
+            {auth.currentUser&&<TouchableOpacity   style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#008080" , borderWidth:1 , borderColor :'#008080', justifyContent:'center', marginBottom : 5 , marginTop:6}} >
             <Text style={{color:"#008080"}} >Message now</Text>
             <MaterialIcons name="chat" size={24} color="#008080" />
 
-          </TouchableOpacity>
+          </TouchableOpacity>}
 
             <TouchableOpacity onPress={() => Linking.openURL(`whatsapp://send?phone=${item.contact}&text=${encodeURIComponent(message)}`)} style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#25D366" , borderWidth:1 , borderColor :'#25D366', justifyContent:'center', marginBottom:6}} >
             <Text style={{color : "#25D366"}} >WhatsApp </Text> 
@@ -651,7 +651,7 @@ let mapThsAll = [...getOneLoad , ...loadsList]
         <Text style={{color:'white'}} >Bid</Text>
       </TouchableOpacity>
 
-        <TouchableOpacity  onPress={()=>navigate(`/message/${item.userId}/${item.companyName} `)} style={{ width : 90 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#6a0c0c' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
+        <TouchableOpacity   style={{ width : 90 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#6a0c0c' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
           <Text style={{color:'white'}} >Message</Text>
         </TouchableOpacity>       
         </View> : 
@@ -736,14 +736,18 @@ let mapThsAll = [...getOneLoad , ...loadsList]
     </TouchableOpacity>}
     </View>
 }
-        { loadsList.length>0? rendereIterms: <Text>Loads Loading.....</Text> }
+
+        {!dspLoadMoreBtn && loadsList.length <= 0 && location&&<Text style={{fontSize:19 ,fontWeight:'bold'}} >{location} Do Not Have Local loads </Text> }
+       {!dspLoadMoreBtn && loadsList.length <= 0  && location &&<Text style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more loads</Text>}
+
+        { dspLoadMoreBtn&&loadsList.length>0? rendereIterms: <Text>Loads Loading.....</Text> }
           {LoadMoreData && loadsList.length>0 && <Text style={{alignSelf:'center'}} >Loading More Loads....... </Text> } 
+          
          {loadsList.length>15 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> loadedData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >
         <Text style={{color :'white', fontSize :21 , textAlign :'center'}} >Load More......</Text>
       </TouchableOpacity>}
         <View style={{height : 200}} ></View>
     </ScrollView> }
-
 
        {localLoads && <View style={{alignItems : 'center' , paddingTop : 30}}>
         <TouchableOpacity  onPress={()=>specifyLocation('Zimbabwe')} style={styles.buttonStyleCounry}  >

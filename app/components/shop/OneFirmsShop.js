@@ -22,6 +22,8 @@ function OneFirmsShop({navigation , route}){
   }
   useEffect(() => {
     try {
+      if(auth.currentUser){
+
         const userId = auth.currentUser.uid;
         // const dataQuery = query(collection(db, "Shop"), where("userId" ,"==", userId) );
       let dataQuery = query(collection(db, "Shop"), where("userId" ,"==", userId), where("frontMarkert" ,"==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) );
@@ -40,6 +42,7 @@ function OneFirmsShop({navigation , route}){
         
         // Clean up function to unsubscribe from the listener when the component unmounts
         return () => unsubscribe();
+      }
     } catch (err) {
       console.error(err);
     }
@@ -220,6 +223,7 @@ const [priceRangeDsp , setPriceRangeDsp]= React.useState(false)
   const [getOneItem, setgetOneItem] = useState([]);
 
     function getOneItemF(){
+      if(auth.currentUser){
 
       const userId = auth.currentUser.uid;
         const dataQuery = query(collection(db, "Shop"), where("timeStamp", "==", itemKey) , where("userId", "==", userId) );
@@ -239,12 +243,14 @@ const [priceRangeDsp , setPriceRangeDsp]= React.useState(false)
         // Clean up function to unsubscribe from the listener when the component unmounts
         return () => unsubscribe();
 
+      }
 
     }
 
 
 
         
+  const [losdingSpec , setLoadingSpec]=React.useState(false)  
   const [dspLoadMoreBtn , setLoadMoreBtn]=React.useState(true)
   const [LoadMoreData , setLoadMoreData]=React.useState(false)
 
@@ -263,56 +269,69 @@ async function fetchData(loadOneMore) {
             if(specproduct === "vehicles" ){
 
                  if(vehicleType && vehiMake && priceRange && (buyRent===true || buyRent === false || buyRent==="R2B") ){
+                    setLoadingSpec(true)
                     dataQuery = query(collection(db, "Shop"),orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId),  where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("vehicleType", "==", vehicleType) , where("vehiMake", "==", vehiMake) , where("vehiMake", "==", vehiMake) , where("priceRange", "==", priceRange) , where("sellRent", "==", buyRent) );
                  }else if(vehicleType && vehiMake && priceRange){
 
+                    setLoadingSpec(true)
                     dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("vehicleType", "==", vehicleType) , where("vehiMake", "==", vehiMake) , where("vehiMake", "==", vehiMake) , where("priceRange", "==", priceRange) );
                  }
 
                  else if (priceRange) {
 
                 if(vehicleType ){
+                    setLoadingSpec(true)
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("priceRange", "==", priceRange) , where("vehicleType", "==", vehicleType) );
 
                 }else if( vehiMake ){
 
+                    setLoadingSpec(true)
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("priceRange", "==", priceRange) , where("vehiMake", "==", vehiMake) );
                 }else if ((buyRent === true || buyRent === false || buyRent ==="R2B" ) ){
 
+                    setLoadingSpec(true)
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("sellRent", "==", buyRent) , where("priceRange", "==", priceRange));
                 }else{
 
+                    setLoadingSpec(true)
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("priceRange", "==", priceRange) );
                 }
 
                  }else if(vehicleType){
                   if( vehiMake ){
 
+                    setLoadingSpec(true)
                     dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("vehicleType", "==", vehicleType) , where("vehiMake", "==", vehiMake) );
                   }else if ((buyRent === true || buyRent === false || buyRent==="R2B" ) ){
 
+                    setLoadingSpec(true)
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("sellRent", "==", buyRent) , where("vehicleType", "==", vehicleType));
 
                 }
                   else{
 
+                    setLoadingSpec(true)
                     dataQuery = query(collection(db, "Shop"),orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("vehicleType", "==", vehicleType)  );
                   }
                  }else if(vehiMake){
                    if ((buyRent === true || buyRent === false || buyRent==="R2B" ) ){
 
+                    setLoadingSpec(true)
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("sellRent", "==", buyRent) , where("vehiMake", "==", vehiMake));
 
                     }else {
 
+                    setLoadingSpec(true)
                       dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("vehiMake", "==", vehiMake)  );
                     }
                  }else if(buyRent === true || buyRent === false || buyRent==="R2B" ){
 
+                    setLoadingSpec(true)
                       dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy)  , where("sellRent", "==", buyRent) , );
                  }
                  else{
 
+                    setLoadingSpec(true)
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) );
                 }
             
@@ -323,21 +342,27 @@ async function fetchData(loadOneMore) {
               if(trailerType){
 
                 if(buyRent === true || buyRent === false || buyRent==="R2B" ){
+                  setLoadingSpec(true)
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellRent", "==", buyRent) , where("sellOBuy", "==", sellOBuy) , where("trailerType", "==", trailerType), where("sellRent", "==", buyRent) );
 
                 }else{
+                    setLoadingSpec(true)
                 dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("trailerType", "==", trailerType) );
                 }
 
               }else if (buyRent === true || buyRent === false || buyRent==="R2B" ) {
+                    setLoadingSpec(true)
                 dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellRent", "==", buyRent) , where("sellOBuy", "==", sellOBuy) );
             } else {
+                    setLoadingSpec(true)
                 dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) );
             }
         } else if(specproduct === "Sprovider") {
+                    setLoadingSpec(true)
             dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), );
         }else{
 
+                    setLoadingSpec(true)
             dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) );
         }
 
@@ -363,6 +388,7 @@ async function fetchData(loadOneMore) {
     setAllSoldIterms(loadOneMore ? [...allSoldIterms, ...loadedData] : loadedData);
     loadOneMore ? setLoadMoreData(false) :null
 
+                    setLoadingSpec(false)
   } catch (error) {
     console.error("Error fetching data:", error);
   }
@@ -424,6 +450,7 @@ function displayAllImages(itemId){
       })
   );
 }
+
 const spreadThis = [...getOneItem ,...allSoldIterms]
 
   const rendereIterms = spreadThis.map((item)=>{
@@ -432,7 +459,7 @@ const spreadThis = [...getOneItem ,...allSoldIterms]
           ; // Set your desired message here
     let contactMe = ( <View style={{ paddingLeft: 30 }}>
 
-          <TouchableOpacity  onPress={()=>navigate(`/message/${item.userId}/${item.CompanyName} `)} style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#008080" , borderWidth:1 , borderColor :'#008080', justifyContent:'center', marginBottom : 5 , marginTop:6}} >
+          <TouchableOpacity  style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#008080" , borderWidth:1 , borderColor :'#008080', justifyContent:'center', marginBottom : 5 , marginTop:6}} >
             <Text style={{color:"#008080"}} >Message now</Text>
             <MaterialIcons name="chat" size={24} color="#008080" />
 
@@ -745,7 +772,7 @@ const spreadThis = [...getOneItem ,...allSoldIterms]
           <Text style={{ color:'white'}} > Get In Touch Now</Text>
         </TouchableOpacity>
 
-        {auth.currentUser.uid === userId &&
+        { auth.currentUser && auth.currentUser.uid === userId &&
         <View style={{justifyContent:'space-between' , flexDirection :'row',padding:6,paddingLeft:15}} >
 
           {spinnerItem&&<Text> Deleting {item.productName} </Text>}
@@ -801,11 +828,11 @@ const spreadThis = [...getOneItem ,...allSoldIterms]
 
            {sellOBuy ==="toBuy"&& <TouchableOpacity onPress={()=>setSellOBuy("forSell")}
              style={{justifyContent:'center'}} >
-             {auth.currentUser.uid === userId ? <Text style={{color:'white',fontWeight:'bold',fontSize:19,alignSelf:'center' }} >Looking For</Text> 
+             {auth.currentUser&& auth.currentUser.uid === userId ? <Text style={{color:'white',fontWeight:'bold',fontSize:19,alignSelf:'center' }} >Looking For</Text> 
              : <Text style={sellOBuy === "forSell" ? {color:'black'} : {color:'white',fontWeight:'bold',fontSize:19,alignSelf:'center' }} >Click to BUY</Text>}
             </TouchableOpacity>}
             {sellOBuy ==="forSell"&& <TouchableOpacity onPress={()=>setSellOBuy("toBuy")} style={{justifyContent:'center'}} >
-               { auth.currentUser.uid === userId ? <Text style={{color:'white',fontWeight:'bold',fontSize:19,alignSelf:'center' }} >My Products </Text> :
+               {auth.currentUser && auth.currentUser.uid === userId ? <Text style={{color:'white',fontWeight:'bold',fontSize:19,alignSelf:'center' }} >My Products </Text> :
 
                  <Text style={sellOBuy === "toBuy" ? {color:'black'} :{color:'white',fontWeight:'bold',fontSize:19,alignSelf:'center' } } >Click to SELL</Text>}
             </TouchableOpacity>}
@@ -1200,6 +1227,7 @@ const spreadThis = [...getOneItem ,...allSoldIterms]
 
         </ScrollView> : null }
         <ScrollView>
+          {losdingSpec && <ActivityIndicator size="small" />}
         { allSoldIterms.length>0? rendereIterms: <Text> {specproduct} Loading.....</Text> }
 
         {!dspLoadMoreBtn &&allSoldIterms.length <= 0 && <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO {specproduct} In {location} Available Freely Add </Text> }

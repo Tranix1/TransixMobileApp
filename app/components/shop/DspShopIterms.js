@@ -162,7 +162,7 @@ return(
              </TouchableOpacity>
             :
             
-          <TouchableOpacity onPress={()=> navigate("/createUser/")} style={{position :'absolute',top: 440 ,right:10 ,  alignItems :"center" , justifyContent :'center', backgroundColor:'#6a0c0c' , zIndex :200 , borderRadius: 8}} >
+          <TouchableOpacity onPress={()=> navigation.navigate("createUser")} style={{position :'absolute',top: 440 ,right:10 ,  alignItems :"center" , justifyContent :'center', backgroundColor:'#6a0c0c' , zIndex :200 , borderRadius: 8}} >
             <Text  style={{color : 'white'}} > Sign  to add  </Text> 
 
           </TouchableOpacity>

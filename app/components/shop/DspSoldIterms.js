@@ -114,7 +114,7 @@ const [priceRangeDsp , setPriceRangeDsp]= React.useState(false)
     }
 
 
-
+  const [losdingSpec , setLoadingSpec]=React.useState(false)  
   const [dspLoadMoreBtn , setLoadMoreBtn]=React.useState(true)
   const [LoadMoreData , setLoadMoreData]=React.useState(false)
 async function fetchData(loadOneMore) {
@@ -131,56 +131,69 @@ async function fetchData(loadOneMore) {
             if(specproduct === "vehicles" ){
 
                  if(vehicleType && vehiMake && priceRange && (buyRent===true || buyRent === false || buyRent==="R2B") ){
+                    setLoadingSpec(true)
                     dataQuery = query(collection(db, "Shop"),orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) , where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("vehicleType", "==", vehicleType) , where("vehiMake", "==", vehiMake) , where("vehiMake", "==", vehiMake) , where("priceRange", "==", priceRange) , where("sellRent", "==", buyRent) );
                  }else if(vehicleType && vehiMake && priceRange){
 
+                    setLoadingSpec(true)
                     dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("vehicleType", "==", vehicleType) , where("vehiMake", "==", vehiMake) , where("vehiMake", "==", vehiMake) , where("priceRange", "==", priceRange) );
                  }
 
                  else if (priceRange) {
 
+                    setLoadingSpec(true)
                 if(vehicleType ){
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("priceRange", "==", priceRange) , where("vehicleType", "==", vehicleType) );
 
                 }else if( vehiMake ){
 
+                    setLoadingSpec(true)
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("priceRange", "==", priceRange) , where("vehiMake", "==", vehiMake) );
                 }else if ((buyRent === true || buyRent === false || buyRent ==="R2B" ) ){
 
+                    setLoadingSpec(true)
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("sellRent", "==", buyRent) , where("priceRange", "==", priceRange));
                 }else{
 
+                    setLoadingSpec(true)
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("priceRange", "==", priceRange) );
                 }
 
                  }else if(vehicleType){
                   if( vehiMake ){
 
+                    setLoadingSpec(true)
                     dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("vehicleType", "==", vehicleType) , where("vehiMake", "==", vehiMake) );
                   }else if ((buyRent === true || buyRent === false || buyRent==="R2B" ) ){
 
+                    setLoadingSpec(true)
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("sellRent", "==", buyRent) , where("vehicleType", "==", vehicleType));
 
                 }
                   else{
 
+                    setLoadingSpec(true)
                     dataQuery = query(collection(db, "Shop"),orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) , where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("vehicleType", "==", vehicleType)  );
                   }
                  }else if(vehiMake){
                    if ((buyRent === true || buyRent === false || buyRent==="R2B" ) ){
 
+                    setLoadingSpec(true)
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("sellRent", "==", buyRent) , where("vehiMake", "==", vehiMake));
 
                     }else {
 
+                    setLoadingSpec(true)
                       dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("vehiMake", "==", vehiMake)  );
                     }
                  }else if(buyRent === true || buyRent === false || buyRent==="R2B" ){
 
+                    setLoadingSpec(true)
                       dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy)  , where("sellRent", "==", buyRent) , );
                  }
                  else{
 
+                    setLoadingSpec(true)
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) );
                 }
             
@@ -190,22 +203,28 @@ async function fetchData(loadOneMore) {
             }else   if (specproduct === "trailers") {
               if(trailerType){
 
+                    setLoadingSpec(true)
                 if(buyRent === true || buyRent === false || buyRent==="R2B" ){
                   dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellRent", "==", buyRent) , where("sellOBuy", "==", sellOBuy) , where("trailerType", "==", trailerType), where("sellRent", "==", buyRent) );
 
                 }else{
+                    setLoadingSpec(true)
                 dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) , where("trailerType", "==", trailerType) );
                 }
 
               }else if (buyRent === true || buyRent === false || buyRent==="R2B" ) {
+                    setLoadingSpec(true)
                 dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellRent", "==", buyRent) , where("sellOBuy", "==", sellOBuy) );
             } else {
+                    setLoadingSpec(true)
                 dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) );
             }
         } else if(specproduct ==="Sprovider" ) {
+                    setLoadingSpec(true)
             dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), );
         }else{
 
+                    setLoadingSpec(true)
             dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sellOBuy", "==", sellOBuy) );
         }
 
@@ -237,6 +256,7 @@ async function fetchData(loadOneMore) {
     // Update state with the new data
     setAllSoldIterms(loadOneMore ? [...allSoldIterms, ...loadedData] : loadedData);
        loadOneMore ? setLoadMoreData(false) :null
+       setLoadingSpec(false)
 
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -296,7 +316,7 @@ function displayAllImages(itemId){
           ; // Set your desired message here
     let contactMe = ( <View style={{ paddingLeft: 30 }}>
 
-          <TouchableOpacity  onPress={()=>navigate(`/message/${item.userId}/${item.CompanyName} `)} style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#008080" , borderWidth:1 , borderColor :'#008080', justifyContent:'center', marginBottom : 5 , marginTop:6}} >
+          <TouchableOpacity  style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#008080" , borderWidth:1 , borderColor :'#008080', justifyContent:'center', marginBottom : 5 , marginTop:6}} >
             <Text style={{color:"#008080"}} >Message now</Text>
             <MaterialIcons name="chat" size={24} color="#008080" />
 
@@ -732,12 +752,13 @@ function displayAllImages(itemId){
 
   { specproduct ==="vehicles" && vehicleTypeDsp && <View style={{flexDirection:'row'}} >
     
-                  <TouchableOpacity onPress={toggleCargoTrcks} style={styles.btnIsActive  } >
+                {!heavyEquipment && <TouchableOpacity onPress={toggleCargoTrcks} style={styles.btnIsActive  } >
                     <Text style={{color:"white"}} >Cargo Trucks</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={toggleHeavyEquipment} style={styles.btnIsActive  } >
+                  </TouchableOpacity>}
+
+                  {!cargoTrcks &&<TouchableOpacity onPress={toggleHeavyEquipment} style={styles.btnIsActive  } >
                     <Text style={{color:"white"}} >heavy Equipment</Text>
-                  </TouchableOpacity>
+                  </TouchableOpacity>}
                  {cargoTrcks && <View style={{flexDirection:'row'}} >
                   <TouchableOpacity onPress={()=>addVehicleType("truckhorse")} style={styles.bynIsUnActive } >
                     <Text>truck horse</Text>
@@ -1009,9 +1030,13 @@ function displayAllImages(itemId){
 
 
         </ScrollView> : null }
+        
+          {losdingSpec && <ActivityIndicator size="small" />}
 
         {!dspLoadMoreBtn &&allSoldIterms.length <= 0 && <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO {specproduct} In {location} Available Freely Add </Text> }
-        { allSoldIterms.length>0 && dspLoadMoreBtn ? rendereIterms: <Text> {specproduct} Loading.......</Text> }
+
+       {!dspLoadMoreBtn &&allSoldIterms.length <= 0  &&<Text style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more {specproduct} </Text>}
+        { dspLoadMoreBtn &&allSoldIterms.length>0 && dspLoadMoreBtn ? rendereIterms: <Text> {specproduct} Loading.......</Text> }
           {LoadMoreData && allSoldIterms.length>0 && <Text style={{alignSelf:'center'}} >Loading More {specproduct}....... </Text> }
 
          {allSoldIterms.length>0 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> fetchData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >

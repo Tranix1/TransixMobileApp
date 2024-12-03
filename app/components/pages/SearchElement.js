@@ -69,13 +69,7 @@ function SearchIterms({navigation}){
   }, []);
 
 
-useEffect(() => {
-  loadedData();
-  if(itemKey){
-    getOneItemF()
 
-  }
-}, []);;
 
 
         const [filteredData, setFilteredData] = React.useState([]);
@@ -182,7 +176,7 @@ useEffect(() => {
              </View>
 
                 {textTyped && allTrucks.length >0  && filteredDataTrucks.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<Text style={{fontSize : 20 , }} >  No Loads Or Truck Available </Text>}
-                {textTyped && allTrucks.length >0  && filteredDataTrucks.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<Text style={{fontSize : 20 , textDecorationLine:'underline '}} > Share or recommend our app for more trucks and loads!</Text>}
+                {textTyped && allTrucks.length >0  && filteredDataTrucks.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<Text style={{fontSize : 20 ,textDecorationLine:'underline' }} > Share or recommend our app for more Trucks and Loads!</Text>}
           </View>
            )
 }

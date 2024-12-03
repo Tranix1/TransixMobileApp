@@ -1,3 +1,4 @@
+// billie illish oxean eyes lovely birds of a feathure wild flower 
 import React,{useState , useEffect,useRef} from "react";
 import { View , Text , Button , TouchableOpacity , StatusBar, BackHandler,Linking,Platform,ActivityIndicator  } from "react-native";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -13,8 +14,8 @@ import Constants from 'expo-constants';
 
 
 import  { auth , db,  } from "./components/config/fireBase"
-import { signOut} from  'firebase/auth'
-import {doc , getDoc ,query ,collection , where,onSnapshot} from "firebase/firestore"
+import { signOut,sendEmailVerification} from  'firebase/auth'
+import {doc , getDoc ,query ,collection , where,onSnapshot, loadBundle} from "firebase/firestore"
 
 import Header from "./components/Header"
 import SearchIterms from "./components/pages/SearchElement"
@@ -212,6 +213,7 @@ function HomeScreen({ navigation ,route, }) {
 
 
   const [trackLoading , setTrackLoading]=React.useState(false)
+  const [trackLoadingScnd , setTrackLoadingScnd]=React.useState(false)
 
   const [currentUser, setCurrentUser] = React.useState("");
    const [ username , setUsername] = React.useState(false);
@@ -254,6 +256,9 @@ function HomeScreen({ navigation ,route, }) {
       setUsername("")
     }
 setTrackLoading(true)
+if(trackLoading){
+setTrackLoadingScnd(true)
+}
   } catch (err) {
     console.error(err);
   }
@@ -296,8 +301,23 @@ const [isConnectedInternet, setIsConnectedInternet] = useState(true);
       console.error(err)
     }
   }
+const newCodeEmVeri = async () => {
+  try {
+    const user = auth.currentUser  ;
 
-  
+    if (user && user.email) {
+      await sendEmailVerification(user);
+      alert("New code sent");
+      setemailVerifiedN(false)
+    } else {
+      console.error("Current user or user email is null");
+    }
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
 
 
@@ -309,7 +329,7 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
 
   function checkAuth(routeToGo){
 
-    if(username !== false ){
+    if(username !== false|| trackLoadingScnd){
 
      if(!currentUser){
       navigation.navigate("createUser")
@@ -393,7 +413,46 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
         } catch (error) {
           console.error(error);
         }
-      }, [currentUser]);
+      }, [currentUser,username]);
+
+
+      const [newAppUpdate , setNewAppUpdate]=React.useState(false)
+      const [updateApp , setUpdateApp]=React.useState(false)
+      
+          React.useEffect(() => {
+        try {
+            const loadsQuery = query(collection(db, "updateEveryone"));
+            const unsubscribe = onSnapshot(loadsQuery, (querySnapshot) => {
+              querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const newAppUpdate = data.newAppUpdate ; // Assuming isVerified is a boolean field
+
+                setNewAppUpdate(newAppUpdate)
+              });
+            });
+
+            return () => unsubscribe(); // Cleanup the listener when the component unmounts
+        } catch (error) {
+          console.error(error);
+        }
+      }, [currentUser,username]);
+
+
+
+  const packageJson = require('../package.json');
+  const appVersion = packageJson.version;
+
+
+  React.useEffect(() => {
+
+if(username !== false ||trackLoadingScnd ){
+
+  if(appVersion !==  newAppUpdate){
+    setUpdateApp(true)
+  }
+}
+}, [newAppUpdate]);
+
 
   return (
     <View >  
@@ -430,6 +489,25 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
                 </TouchableOpacity>
              </View>
 
+                   {updateApp && <View style={{alignSelf:'center', backgroundColor :'white', zIndex:100, position:'absolute', top : 130 , width:300, padding:7, height:100, justifyContent:'center',alignItems :'center', borderRadius:7}} >
+              <Text>Update App</Text>
+              <Text>To latest better version</Text>
+                  <View style={{flexDirection:'row', justifyContent:"space-evenly",marginTop:7}} >
+
+               <TouchableOpacity style={{height:27 , backgroundColor:'red', width:65,borderRadius:5, alignItems:'center',margin:7}} onPress={()=>setUpdateApp(false) } >
+                <Text style={{color:'white'}}>Cancel</Text>
+               </TouchableOpacity>
+
+             
+               <TouchableOpacity onPress={()=>Linking.openURL("https://play.google.com/store/apps/details?id=com.yayapana.Transix")} style={{height:27 , backgroundColor:'green', width:65,borderRadius:5, alignItems:'center',margin:7}}>
+        
+                <Text style={{color:'white'}} >OK</Text>
+               </TouchableOpacity>
+
+              </View>
+             </View>}
+
+
              {whenemailVerifiedN && <View style={{alignSelf:'center', backgroundColor :'white', zIndex:100, position:'absolute', top : 130 , width:300, padding:7, height:150, justifyContent:'center',alignItems :'center', borderRadius:7}} >
                <Text style={{fontSize:17 , fontWeight:'600'}} >Verify Your Email</Text> 
                <Text style={{fontSize:17 , fontWeight:'600',color:'green'}} >{currentUser.email}</Text> 
@@ -438,6 +516,10 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
 
                <TouchableOpacity style={{height:27 , backgroundColor:'red', width:65,borderRadius:5, alignItems:'center',margin:7}} onPress={logout} >
                 <Text style={{color:'white'}}>Sign Out</Text>
+               </TouchableOpacity>
+
+               <TouchableOpacity onPress={newCodeEmVeri} style={{borderWidth:2 , marginLeft:6 , marginRight:5 ,width:80,height:27,alignItems:'center',marginTop:7}} >
+                <Text>new code</Text>
                </TouchableOpacity>
 
                <TouchableOpacity onPress={reloadApp} style={{height:27 , backgroundColor:'green', width:65,borderRadius:5, alignItems:'center',margin:7}}>
@@ -467,11 +549,6 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
 
 
 function App(){
-  React.useEffect(() => {
-    // Set the status bar color and style
-    StatusBar.setBackgroundColor('#6a0c0c'); // Set the background color of the status bar
-    StatusBar.setBarStyle('light-content'); // Set the style of the status bar text (light or dark)
-  }, []);
 
 
       const [isVerified, setIsVerified] = React.useState(false);
@@ -523,7 +600,7 @@ function App(){
         } catch (error) {
           console.error(error);
         }
-      }, []);
+      }, [currentUser, username]);
   
   const [expoPushToken, setExpoPushToken] = useState('');
   const [notification, setNotification] = useState(Notifications.Notification )
@@ -567,6 +644,12 @@ function App(){
     return () => unsubscribe();
   }, [currentUser]);
 
+  React.useEffect(() => {
+    // Set the status bar color and style
+    StatusBar.setBackgroundColor('#6a0c0c'); // Set the background color of the status bar
+    StatusBar.setBarStyle('light-content'); // Set the style of the status bar text (light or dark)
+  }, [currentUser ]);
+
    const [ username , setUsername] = React.useState("");
    const [ contact , setContact] = React.useState('');
    const [ spechopLoc , setShopLoc] = React.useState('');
@@ -601,20 +684,22 @@ function App(){
 }, [currentUser]);
             
 
-      const [verifyOngoing , setverifyOngoing]=React.useState(true)
+      const [verifyOngoing , setverifyOngoing]=React.useState(false)
+      const [newAppUpdate , setNewAppUpdate]=React.useState(false)
       
           React.useEffect(() => {
         try {
           if (auth.currentUser) {
-            const userId = auth.currentUser.uid;
             const loadsQuery = query(collection(db, "updateEveryone"));
 
             const unsubscribe = onSnapshot(loadsQuery, (querySnapshot) => {
               querySnapshot.forEach((doc) => {
                 const data = doc.data();
                 const isVerifyOngoing = data.verifyOngoing || false; // Assuming isVerified is a boolean field
+                const newAppUpdate = data.newAppUpdate || false; // Assuming isVerified is a boolean field
 
                 setverifyOngoing(isVerifyOngoing)
+                setNewAppUpdate(newAppUpdate)
               });
             });
 
@@ -623,9 +708,10 @@ function App(){
         } catch (error) {
           console.error(error);
         }
-      }, []);
+      }, [currentUser,username]);
             
 const Stack = createNativeStackNavigator();
+
 
     return(
       <Stack.Navigator>

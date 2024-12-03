@@ -3,7 +3,9 @@ import { collection, onSnapshot,doc,deleteDoc,query,limit,startAfter } from 'fir
 import { db , auth} from '../config/fireBase';
 import { View , Text , Image , ScrollView , TouchableOpacity , Linking} from 'react-native';
 import defaultImage from '../images/TRANSIX.jpg'
+import { Ionicons } from "@expo/vector-icons";
 
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 // import {useNavigate} from '@react-navigation/native-stack'
 import { useNavigation } from '@react-navigation/native';
@@ -12,7 +14,6 @@ function DspAllTrucks(){
 
 const navigation = useNavigation();
 
-  const trucksDB = collection(db , "Trucks")
   const [allTrucks, setAllTrucks] = useState([]);
 
      
@@ -24,7 +25,7 @@ const navigation = useNavigation();
     
     try {
       loadMore ? setLoadMoreData(true) : null;
-
+          
           const orderByF = "fromLocation";
           const pagination = loadMore && allTrucks.length > 0 ? [startAfter(allTrucks[allTrucks.length - 1][orderByF])] : [];
           let dataQuery = query(collection(db, "Trucks"), orderByF, ...pagination, limit(12) );
@@ -85,7 +86,6 @@ const navigation = useNavigation();
             const loadsDocRef = doc(db, 'Trucks', id);
             deleteDoc(loadsDocRef);
         setSpinnerItem(false);
-        console.log("Delleeeeeeeee")
     }
     }
 
@@ -93,7 +93,7 @@ const navigation = useNavigation();
        allTrucks.forEach((item) => {
         
   if (item.withDetails && !item.isVerified ) {
-  if (item.deletionTime === undefined) {
+  if (!item.deletionTime) {
     deleteItem(item.id, item.imageUrl);
   } else {
     const deletionTime = item.deletionTime;
@@ -132,22 +132,33 @@ setTimeout(() => {
     };
 
   const rendereIterms = allTrucks.map((item)=>{
+   const message =  `${item.companyName}
+        Is this truck available
+        ${item.truckType} from ${item.fromLocation} to ${item.toLocation}
+        Trailer config ${item.trailerType}
+        ${item.withDetails ? "It have detais":"It does not have details"}
 
+        From: https://transix.net`  
     let contactMe = ( <View style={{ paddingLeft: 30 }}>
 
-        {auth.currentUser &&   <TouchableOpacity  onPress={()=>navigate(`/message/${item.userId}/${item.CompanyName} `)}  >
-            <Text>Message now</Text>
+           {auth.currentUser&& <TouchableOpacity   style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#008080" , borderWidth:1 , borderColor :'#008080', justifyContent:'center', marginBottom : 5 , marginTop:6}} >
+            <Text style={{color:"#008080"}} >Message now</Text>
+            <MaterialIcons name="chat" size={24} color="#008080" />
+
           </TouchableOpacity>}
 
-          <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.contact}`)}>
-            <Text>Phone call</Text>
+            <TouchableOpacity onPress={() => Linking.openURL(`whatsapp://send?phone=${item.contact}&text=${encodeURIComponent(message)}`)} style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#25D366" , borderWidth:1 , borderColor :'#25D366', justifyContent:'center', marginBottom:6}} >
+            <Text style={{color : "#25D366"}} >WhatsApp </Text> 
+            <FontAwesome6 name="whatsapp" size={24} color="#25D366" />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => Linking.openURL(`whatsapp://send?phone=${item.contact}`)}>
-            <Text>WhatsApp</Text>
+          <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.contact}`)} style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#0074D9" , borderWidth:1 , borderColor :'#0074D9', justifyContent:'center', marginBottom:4}} >
+            <Text style={{color:'#0074D9'}} >Phone call</Text>
+                <MaterialIcons name="call" size={24} color="#0074D9" />
           </TouchableOpacity>
 
           </View>)
+
     return(
       <View  key={item.id} style={{padding :7, borderWidth : 2 , borderColor:'black', borderRadius:8 ,  shadowColor: '#6a0c0c',
         shadowOffset: { width: 1, height: 2 },
@@ -176,12 +187,12 @@ setTimeout(() => {
       </View>
 
           { item.truckType && <View style={{flexDirection :'row'}} >
-              <Text style={{width :60}} >Trailer Type</Text>
+              <Text style={{width :100}} >Trailer Type</Text>
               <Text>:  {item.truckType}</Text>
             </View>}
 
           {item.trailerType && <View style={{flexDirection :'row'}} >
-              <Text style={{width :60}} >Trailer Config</Text>
+              <Text style={{width :100}} >Trailer Config</Text>
               <Text>:  {item.trailerType}</Text>
             </View>}
 
@@ -192,11 +203,14 @@ setTimeout(() => {
         </View>}
 
         {contactDisplay[item.id] && contactMe}
-        <TouchableOpacity onPress={toggleDspMoreInfo} >
-          <Text>See more </Text>
+
+
+         <TouchableOpacity onPress={()=>toggleDspMoreInfo(item.id) } >
+          <Text style={{color :'green'}} >{  dspMoreInfo[item.id]  ?"See Less": "See More"} </Text>
         </TouchableOpacity>
-        <TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{marginTop : 7 , marginBottom :10}} >
-          <Text style={{textDecorationLine:'underline'}} > get In Touch now</Text>
+
+        <TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{  width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
+          <Text style={{color:"white"}} > Get In Touch Now</Text>
         </TouchableOpacity>
 
 
@@ -210,6 +224,7 @@ return(
          <View style={{height : 550}} >
            </View>
             {dspLoadMoreBtn &&allTrucks.length > 0 && <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO Trucks Available </Text> }
+          {LoadMoreData && allTrucks.length>0 && <Text style={{alignSelf:'center'}} >Loading More Trucks....... </Text> } 
          {allTrucks.length >=12 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> fetchData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >
         <Text style={{color :'white', fontSize :21 , textAlign :'center'}} >Load More......</Text>
       </TouchableOpacity>}

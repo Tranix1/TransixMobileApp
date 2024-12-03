@@ -60,7 +60,7 @@ const MiniLoad = () => {
 
 
 const rendereIterms = mainLoadsList.map((item)=>{
-  return( <TouchableOpacity style={{borderWidth : 2 , borderColor : "rgb(129,201,149)" , width : 260 , marginRight :16,padding:3}} onPress={()=> navigation.navigate('selectedUserLoads', {userId : item.userId , companyName : item.companyName }) } key={item.id} >
+  return( <TouchableOpacity style={{borderWidth : 2 , borderColor : "rgb(129,201,149)" , width : 260 , marginRight :16,padding:3,paddingBottom:6}} onPress={()=> navigation.navigate('selectedUserLoads', {userId : item.userId , companyNameG : item.companyName }) } key={item.id} >
 
       { item.isVerified&& <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white' , zIndex : 66}} >
          <MaterialIcons name="verified" size={26} color="green" />
@@ -86,24 +86,23 @@ const rendereIterms = mainLoadsList.map((item)=>{
         <Text>:  {item.toLocation} </Text>
       </View>
 
-      {!item.linksRate && !item.triaxleRate && <View style={{flexDirection :'row'}} >
+      {item.ratePerTonne&& <View style={{flexDirection :'row'}} >
         <Text style={{width :50,color:'green',fontWeight:'bold',fontSize:16}} >Rate</Text>
         <Text style={{color:'green',fontWeight:'bold',fontSize:16}} >:  {item.currency ? "USD" : "RAND"} {item.ratePerTonne} {item.perTonne ? "Per tonne" :null} </Text>
       </View>}
+  <View style={{flexDirection:'row'}} >
 
-        <View style={{flexDirection:'row'}} >
-       {item.linksRate&&  <View style={{flexDirection :'row'}} >
-        <Text style={{width :50,color:'green',fontWeight:'bold',fontSize:16}} >Link</Text>
-        <Text style={{color:'green',fontWeight:'bold',fontSize:16}} >: {item.currency ? "USD" : "RAND"} {item.linksRate} {item.perTonne ? "Per tonne" :null} </Text>
+        {item.links&&  <View style={{flexDirection :'row'}} >
+        <Text style={{width :50,color:'green',fontWeight:'bold',fontSize:14}} >Links</Text>
+        <Text style={{color:'green',fontWeight:'bold',fontSize:14}} >:  {item.currency ? "USD" : "RAND"} {item.links} {item.perTonne ? "Per tonne" :null} </Text>
       </View>}
 
-       {item.triaxleRate&& <View style={{flexDirection :'row'}} >
-        <Text style={{width :50,color:'green',fontWeight:'bold',fontSize:16}} >Triax</Text>
-
-        <Text style={{color:'green',fontWeight:'bold',fontSize:16}} >: {item.currency ? "USD" : "RAND"} {item.triaxleRate} {item.perTonne ? "Per tonne" :null} </Text> 
+       {item.triaxle&& <View style={{flexDirection :'row'}} >
+        <Text style={{width :50,color:'green',fontWeight:'bold',fontSize:14}} >Triaxle</Text>
+        <Text style={{color:'green',fontWeight:'bold',fontSize:14}} >:  {item.currency ? "USD" : "RAND"} {item.triaxle} {item.perTonne ? "Per tonne" :null} </Text>
       </View>}
-        </View>
 
+  </View>
     </View>
     </TouchableOpacity>
 
@@ -111,7 +110,7 @@ const rendereIterms = mainLoadsList.map((item)=>{
 })
  
   return (
-    <ScrollView style={{margin:10 , height : 140}} horizontal  showsHorizontalScrollIndicator={false}>
+    <ScrollView style={{margin:7,height:140 }} horizontal  showsHorizontalScrollIndicator={false}>
       {mainLoadsList.length > 0 ? rendereIterms   : <Text>Loading MiniLoads....</Text>}
 
     </ScrollView>

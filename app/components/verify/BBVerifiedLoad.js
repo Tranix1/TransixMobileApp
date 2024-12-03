@@ -109,7 +109,6 @@ const [bbVerifiedLoadD ,setbbVerifiedLoadD]=React.useState([])
             const loadsDocRef = doc(db, 'Trucks', id);
             deleteDoc(loadsDocRef);
         setSpinnerItem(false);
-        console.log("Delleeeeeeeee")
     }
     }
 

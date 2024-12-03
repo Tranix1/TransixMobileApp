@@ -187,9 +187,9 @@ function SearchInShop({navigation}){
 
              </View>
 
-                  {textTyped && lookingFor.length >0  && displaySearchedScnd.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<Text style={{fontSize : 20 , }} >  No Loads Or Truck Available </Text>}
-                {textTyped && lookingFor.length >0  && displaySearchedScnd.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<Text style={{fontSize : 20 , textDecorationLine:'underline '}} > Share or recommend our app for more trucks and loads!</Text>}
+                {textTyped && lookingFor.length >0  && displaySearchedScnd.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<Text style={{fontSize : 20 , textDecorationLine:'underline'}} > Share or recommend our app for more services or products!</Text>}
 
+                  {textTyped && lookingFor.length >0  && displaySearchedScnd.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<Text style={{fontSize : 20 ,textDecorationLine:'underline'  }} >You can also add what you are looking For or selling</Text>}
 
 
 
