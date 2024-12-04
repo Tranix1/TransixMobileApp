@@ -1,5 +1,5 @@
 import React,{useState,useEffect} from "react";
-import { View , Text , ScrollView , TouchableOpacity,TextInput} from "react-native";
+import { View , Text , ScrollView , TouchableOpacity,TextInput,Share} from "react-native";
 
 import { collection, onSnapshot ,doc ,where,query} from 'firebase/firestore';
 import { db } from "../config/fireBase";
@@ -146,6 +146,39 @@ function SearchInShop({navigation}){
               </TouchableOpacity>
             )
           })
+            const handleShareApp = async (companyName) => {
+              try {
+                const message = `I invite you to Transix!
+
+Transix is a tech-driven business enhancing transportation and logistics services, connecting suppliers with demand for truckloads, vehicles, trailers, spare parts etc.
+
+Contact us at +263716325160 with the message "Application" to swiftly receive the application download link.
+
+Explore website at : https://transix.net/
+
+Experience the future of transportation and logistics!  `;
+
+                const result = await Share.share({
+                  message: message,
+                });
+
+                if (result) {
+                  if (result.action === Share.sharedAction) {
+                    if (result.activityType) {
+                      // Shared with activity type of result.activityType
+                    } else {
+                      // Shared
+                    }
+                  } else if (result.action === Share.dismissedAction) {
+                    // Dismissed
+                  }
+                } else {
+                  // Handle the case where result is undefined or null
+                }
+              } catch (error) {
+                alert(error.message);
+              }
+            };
           
            return(
             <View>
@@ -187,9 +220,13 @@ function SearchInShop({navigation}){
 
              </View>
 
-                {textTyped && lookingFor.length >0  && displaySearchedScnd.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<Text style={{fontSize : 20 , textDecorationLine:'underline'}} > Share or recommend our app for more services or products!</Text>}
 
-                  {textTyped && lookingFor.length >0  && displaySearchedScnd.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<Text style={{fontSize : 20 ,textDecorationLine:'underline'  }} >You can also add what you are looking For or selling</Text>}
+                  {textTyped && lookingFor.length >0  && displaySearchedScnd.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<Text style={{fontSize : 16,marginBottom:2  }} >You can also add what you are looking For or selling</Text>}
+
+                {textTyped && lookingFor.length >0  && displaySearchedScnd.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  && <TouchableOpacity onPress={handleShareApp}>
+
+                  <Text style={{fontSize : 20 , textDecorationLine:'underline'}} > Share or recommend our app for more services or products!</Text>
+                </TouchableOpacity> }
 
 
 

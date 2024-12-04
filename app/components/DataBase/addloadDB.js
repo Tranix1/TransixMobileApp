@@ -25,7 +25,10 @@ const [error , setError]= React.useState("")
     fuelAvai :"",
     additionalInfo: "",
     links :null ,
-    triaxle :null
+    triaxle :null,
+    returnRate :null ,
+    returnLoad :"",
+    returnTerms :""
   });
 
     const [currency , setCurrency] = React.useState(true)
@@ -72,6 +75,19 @@ const [error , setError]= React.useState("")
     setfuelAvD(prev => !prev)
   }
 
+
+  const [returnLoad , setReturnLoad] = React.useState(false)
+
+  function toggleDspRetunLoad(){
+    setReturnLoad(prev => !prev)
+  }
+
+  const [roundTrip , setRoundTrip] = React.useState(false)
+
+  function toggleRundTripAlert(){
+    setRoundTrip(prev => !prev)
+  }
+
   const  handleTypedText  = (value, fieldName) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -95,7 +111,12 @@ const [error , setError]= React.useState("")
         return
       }
 
-      if(alertMsgD && !formData.alertMsg ){
+      if(returnLoad ){
+        if(!formData.returnLoad || !formData.returnRate || !formData.returnTerms){
+          alert("Whats the cargo rate and terms for return load")
+          return
+        }
+      }else  if(alertMsgD && !formData.alertMsg ){
         alert("Alert is On Write the Alert Message")
         return
       }else if(fuelAvaD && !formData.fuelAvai){
@@ -131,6 +152,7 @@ const [error , setError]= React.useState("")
         perTonne : perTonne , 
         activeLoading : activeLoading ,
         location : location ,
+        roundTrip : roundTrip ,
         ...formData 
       });
 
@@ -147,6 +169,10 @@ const [error , setError]= React.useState("")
     fuelAvai :"",
     alertMsg :""
       });
+      setAlertMsgD(false)
+      setfuelAvD(false)
+      setReturnLoad(false)
+      setRoundTrip(false)
       setSpinnerItem(false)
       setPerTonne(false)
       setActiveLoading(false)
@@ -364,6 +390,33 @@ The Future Of Transport And Logistics (Transix)
     style={inputstyles.addIterms }
   />}
 
+      {returnLoad && <View>
+
+        <TextInput 
+          value={formData.returnLoad}
+          placeholderTextColor="#6a0c0c"
+          placeholder="Return Load"
+          onChangeText={(text) => handleTypedText(text, 'returnLoad')}
+          type="text"
+          style={inputstyles.addIterms }
+        />
+        <TextInput 
+          value={formData.returnRate}
+          placeholderTextColor="#6a0c0c"
+          placeholder="Return Rate"
+          onChangeText={(text) => handleTypedText(text, 'returnRate')}
+          style={inputstyles.addIterms }
+        keyboardType="numeric"
+        />
+        <TextInput 
+          value={formData.returnTerms}
+          placeholderTextColor="#6a0c0c"
+          placeholder="Return Terms"
+          onChangeText={(text) => handleTypedText(text, 'returnTerms')}
+          type="text"
+          style={inputstyles.addIterms }
+        />
+      </View>}
 
 
   <View style={{flexDirection:'row' , justifyContent :'space-around',marginBottom:20}} > 
@@ -375,6 +428,17 @@ The Future Of Transport And Logistics (Transix)
    {<TouchableOpacity onPress={toggleFuelMsgD} style={fuelAvaD ? styles.bttonIsTrue : styles.buttonIsFalse} >
       <Text style={fuelAvaD ? {color:'white'} : null} >Fuel </Text>
     </TouchableOpacity>}
+
+
+   {<TouchableOpacity onPress={toggleDspRetunLoad} style={returnLoad ? styles.bttonIsTrue : styles.buttonIsFalse} >
+      <Text style={returnLoad ? {color:'white'} : null} >Return Load </Text>
+    </TouchableOpacity>}
+          
+
+   {<TouchableOpacity onPress={toggleRundTripAlert} style={roundTrip ? styles.bttonIsTrue : styles.buttonIsFalse} >
+      <Text style={roundTrip ? {color:'white'} : null} >Round Trip</Text>
+    </TouchableOpacity>}
+
  </View>
    </View>}
    
@@ -430,7 +494,7 @@ The Future Of Transport And Logistics (Transix)
   <TouchableOpacity  onPress={handleSubmit} style={{backgroundColor : '#6a0c0c' , width : 80 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',alignSelf:'center' }}>
     <Text style={{color : 'white'}}>submit</Text>
   </TouchableOpacity>
-  <View style={{}} ></View>
+  <View style={{height:300}} ></View>
     </ScrollView>
 </View>
   );

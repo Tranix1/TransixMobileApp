@@ -60,17 +60,32 @@ const MiniLoad = () => {
 
 
 const rendereIterms = mainLoadsList.map((item)=>{
-  return( <TouchableOpacity style={{borderWidth : 2 , borderColor : "rgb(129,201,149)" , width : 260 , marginRight :16,padding:3,paddingBottom:6}} onPress={()=> navigation.navigate('selectedUserLoads', {userId : item.userId , companyNameG : item.companyName }) } key={item.id} >
+  return( <TouchableOpacity style={{borderWidth : 2 , borderColor : "rgb(129,201,149)" , width : 280 , marginRight :16,padding:3,paddingBottom:6}} onPress={()=> navigation.navigate('selectedUserLoads', {userId : item.userId , companyNameG : item.companyName }) } key={item.id} >
 
       { item.isVerified&& <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white' , zIndex : 66}} >
          <MaterialIcons name="verified" size={26} color="green" />
       </View>}
-
        <View className='miniloadH3Div' key={item.id} style={{backgroundColor : '#228B22' ,  }} >
          <Text style={{color : 'white' , textAlign : 'center' , fontSize : 18}} > {item.companyName} </Text>
       </View  >
 
-      <View style={{padding : 8}} >
+                {<View style={{ flexDirection:'row',margin:4}} >
+
+         {item.returnLoad &&  <View style={{backgroundColor :'#6a0c0c',paddingLeft :4 , paddingRight:4 , marginLeft :7}} >
+          <Text style={{color :'white'}} >Return Load</Text>
+          </View>}
+
+         {item.roundTrip &&  <View style={{backgroundColor :'#6a0c0c',paddingLeft :4 , paddingRight:4 , marginLeft :7}} >
+          <Text style={{color :'white'}} >Round Trip</Text>
+          </View>}
+
+         {item.fuelAvai &&  <View style={{backgroundColor :'#6a0c0c',paddingLeft :4 , paddingRight:4 , marginLeft :7}} >
+          <Text style={{color :'white'}} >Fuel</Text>
+          </View>}
+
+      </View>}
+
+      <View style={{padding : 8, paddingTop:0}} >
           <View style={{flexDirection :'row',color:"#6a0c0c"}} >
         <Text style={{width :75,color:'#6a0c0c'}} >Commodity</Text>
         <Text style={{color:'#6a0c0c'}} >:  {item.typeofLoad} </Text>
@@ -110,7 +125,7 @@ const rendereIterms = mainLoadsList.map((item)=>{
 })
  
   return (
-    <ScrollView style={{margin:7,height:140 }} horizontal  showsHorizontalScrollIndicator={false}>
+    <ScrollView style={{margin:7,height:155 }} horizontal  showsHorizontalScrollIndicator={false}>
       {mainLoadsList.length > 0 ? rendereIterms   : <Text>Loading MiniLoads....</Text>}
 
     </ScrollView>

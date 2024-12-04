@@ -570,6 +570,21 @@ let mapThsAll = [...getOneLoad , ...loadsList]
               </View>}
         <Text style={{color:'#6a0c0c' , fontSize:15,textAlign :'center' ,fontSize: 21 , fontWeight:'600'}}  >{item.companyName} </Text>
 
+       {<View style={{ flexDirection:'row',margin:4}} >
+
+         {item.returnLoad &&  <View style={{backgroundColor :'#6a0c0c',paddingLeft :4 , paddingRight:4 , marginLeft :7}} >
+          <Text style={{color :'white'}} >Return Load</Text>
+          </View>}
+
+         {item.roundTrip &&  <View style={{backgroundColor :'#6a0c0c',paddingLeft :4 , paddingRight:4 , marginLeft :7}} >
+          <Text style={{color :'white'}} >Round Trip</Text>
+          </View>}
+
+         {item.fuelAvai &&  <View style={{backgroundColor :'#6a0c0c',paddingLeft :4 , paddingRight:4 , marginLeft :7}} >
+          <Text style={{color :'white'}} >Fuel</Text>
+          </View>}
+
+      </View>}
       <View style={{flexDirection :'row'}} >
         <Text style={{width :100}} >Commodity</Text>
         <Text  >:  {item.typeofLoad} </Text>
@@ -606,27 +621,47 @@ let mapThsAll = [...getOneLoad , ...loadsList]
         <Text style={{width :100}} >Payment Terms</Text>
         <Text>:  {item.paymentTerms} </Text>
       </View>
-    { dspMoreInfo[item.id] && item.fuelAvai && <View style={{flexDirection :'row' ,marginTop:5}} >
+
+        {item.activeLoading&& <Text style={{fontSize:17 , color:"#FF8C00" }} >Active Loading.... </Text> }
+     { dspMoreInfo[item.id] &&<View>
+    {  item.fuelAvai && <View style={{flexDirection :'row' ,marginTop:5}} >
         <Text style={{width:100}} >Fuel </Text>
          <Text style={{}} >:  {item.fuelAvai} </Text>
       </View>}
-      { dspMoreInfo[item.id] && item.additionalInfo && <View style={{flexDirection :'row'}} >
+      { item.additionalInfo && <View style={{flexDirection :'row'}} >
         <Text style={{width :100}} >Additional info </Text>
        {<Text>:  {item.additionalInfo} </Text>} 
       </View>}
 
 
-    { dspMoreInfo[item.id] && item.alertMsg && <View style={{flexDirection :'row',marginTop:5}} >
+    {  item.alertMsg && <View style={{flexDirection :'row',marginTop:5}} >
         <Text style={{width :100 ,backgroundColor:'rgba(220, 20, 60, 0.8)',color:'white' ,textAlign:'center',fontSize:15}} >Alert</Text>
          <Text style={{paddingRight:7 ,backgroundColor:'rgba(220, 20, 60, 0.8)',color:'white' ,fontSize:15,}} >:  {item.alertMsg} </Text>
       </View>}
 
+      {item.returnLoad && <View style={{marginTop:5}} >
+        <Text style={{alignSelf:'center',color:"rgba(220, 20, 60, 0.8)",fontSize:16 ,margin:3}} >Return Load</Text>
+          { item.returnLoad &&<View style={{flexDirection :'row'}} >
+        <Text style={{width :100}} >R Cargo</Text>
+       {<Text>:  {item.returnLoad} </Text>} 
+      </View>}
+          { item.returnRate &&<View style={{flexDirection :'row'}} >
+        <Text style={{width :100}} >R Rate</Text>
+       {<Text>:  {item.returnRate} </Text>} 
+      </View>}
+          { item.returnTerms &&<View style={{flexDirection :'row'}} >
+        <Text style={{width :100}} >R Terms</Text>
+       {<Text>:  {item.returnTerms} </Text>} 
+      </View>}
+      </View>}
+ </View>}
+
+
          {!contactDisplay[item.id] && <TouchableOpacity onPress={()=>toggleDspMoreInfo(item.id) } >
-          <Text style={{color :'green'}} >{  dspMoreInfo[item.id]  ?"See Less": "See more"} </Text>
+          <Text style={{color :'green',fontWeight:'bold',fontSize:16}} >{  dspMoreInfo[item.id]  ?"See Less": "See more"} </Text>
         </TouchableOpacity>}
         </View> }
 
-        {item.activeLoading&& <Text style={{fontSize:17 , color:"#FF8C00" }} >Active Loading.... </Text> }
 
         {contactDisplay[item.id] && contactMe}
 
@@ -691,7 +726,39 @@ let mapThsAll = [...getOneLoad , ...loadsList]
     }
   };
 
+    const handleShareApp = async (companyName) => {
+              try {
+                const message = `I invite you to Transix!
 
+Transix is a tech-driven business enhancing transportation and logistics services, connecting suppliers with demand for truckloads, vehicles, trailers, spare parts etc.
+
+Contact us at +263716325160 with the message "Application" to swiftly receive the application download link.
+
+Explore website at : https://transix.net/
+
+Experience the future of transportation and logistics!  `;
+
+                const result = await Share.share({
+                  message: message,
+                });
+
+                if (result) {
+                  if (result.action === Share.sharedAction) {
+                    if (result.activityType) {
+                      // Shared with activity type of result.activityType
+                    } else {
+                      // Shared
+                    }
+                  } else if (result.action === Share.dismissedAction) {
+                    // Dismissed
+                  }
+                } else {
+                  // Handle the case where result is undefined or null
+                }
+              } catch (error) {
+                alert(error.message);
+              }
+            };
     
 
   return(
@@ -738,7 +805,9 @@ let mapThsAll = [...getOneLoad , ...loadsList]
 }
 
         {!dspLoadMoreBtn && loadsList.length <= 0 && location&&<Text style={{fontSize:19 ,fontWeight:'bold'}} >{location} Do Not Have Local loads </Text> }
-       {!dspLoadMoreBtn && loadsList.length <= 0  && location &&<Text style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more loads</Text>}
+       {!dspLoadMoreBtn && loadsList.length <= 0  && location &&<TouchableOpacity onPress={handleShareApp} >
+         <Text style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more loads</Text>
+       </TouchableOpacity>}
 
         { dspLoadMoreBtn&&loadsList.length>0? rendereIterms: <Text>Loads Loading.....</Text> }
           {LoadMoreData && loadsList.length>0 && <Text style={{alignSelf:'center'}} >Loading More Loads....... </Text> } 

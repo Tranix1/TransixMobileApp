@@ -1,6 +1,6 @@
 import React, { useEffect, useState ,useRef} from 'react';
 import { db , auth} from '../config/fireBase';
-import { View , Text , Image , ScrollView , TouchableOpacity , Linking , StyleSheet, Alert, ActivityIndicator} from 'react-native';
+import { View , Text , Image , ScrollView , TouchableOpacity , Linking , StyleSheet, Alert, ActivityIndicator,Share} from 'react-native';
 import {onSnapshot ,  query ,collection,where ,limit,getDocs,startAfter,orderBy} from "firebase/firestore"
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -670,7 +670,39 @@ function displayAllImages(itemId){
       })
 
 
+    const handleShareApp = async (companyName) => {
+              try {
+                const message = `I invite you to Transix!
 
+Transix is a tech-driven business enhancing transportation and logistics services, connecting suppliers with demand for truckloads, vehicles, trailers, spare parts etc.
+
+Contact us at +263716325160 with the message "Application" to swiftly receive the application download link.
+
+Explore website at : https://transix.net/
+
+Experience the future of transportation and logistics!`;
+
+                const result = await Share.share({
+                  message: message,
+                });
+
+                if (result) {
+                  if (result.action === Share.sharedAction) {
+                    if (result.activityType) {
+                      // Shared with activity type of result.activityType
+                    } else {
+                      // Shared
+                    }
+                  } else if (result.action === Share.dismissedAction) {
+                    // Dismissed
+                  }
+                } else {
+                  // Handle the case where result is undefined or null
+                }
+              } catch (error) {
+                alert(error.message);
+              }
+            };
 
 
 
@@ -1035,7 +1067,10 @@ function displayAllImages(itemId){
 
         {!dspLoadMoreBtn &&allSoldIterms.length <= 0 && <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO {specproduct} In {location} Available Freely Add </Text> }
 
-       {!dspLoadMoreBtn &&allSoldIterms.length <= 0  &&<Text style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more {specproduct} </Text>}
+       {!dspLoadMoreBtn &&allSoldIterms.length <= 0  &&<TouchableOpacity onPress={handleShareApp} >
+
+         <Text style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more {specproduct} </Text>
+       </TouchableOpacity>}
         { dspLoadMoreBtn &&allSoldIterms.length>0 && dspLoadMoreBtn ? rendereIterms: <Text> {specproduct} Loading.......</Text> }
           {LoadMoreData && allSoldIterms.length>0 && <Text style={{alignSelf:'center'}} >Loading More {specproduct}....... </Text> }
 

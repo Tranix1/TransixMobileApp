@@ -1,5 +1,5 @@
 import React,{useState,useEffect} from "react";
-import { View , Text , ScrollView , TouchableOpacity,TextInput} from "react-native";
+import { View , Text , ScrollView , TouchableOpacity,TextInput,Share} from "react-native";
 
 import { collection, onSnapshot ,limit ,query} from 'firebase/firestore';
 
@@ -132,6 +132,39 @@ function SearchIterms({navigation}){
             )
           })
           
+           const handleShareApp = async (companyName) => {
+              try {
+                const message = `I invite you to Transix!
+
+Transix is a tech-driven business enhancing transportation and logistics services, connecting suppliers with demand for truckloads, vehicles, trailers, and spare parts etc.
+
+Contact us at +263716325160 with the message "Application" to swiftly receive the application download link.
+
+Explore website at : https://transix.net/
+
+Experience the future of transportation and logistics!`;
+
+                const result = await Share.share({
+                  message: message,
+                });
+
+                if (result) {
+                  if (result.action === Share.sharedAction) {
+                    if (result.activityType) {
+                      // Shared with activity type of result.activityType
+                    } else {
+                      // Shared
+                    }
+                  } else if (result.action === Share.dismissedAction) {
+                    // Dismissed
+                  }
+                } else {
+                  // Handle the case where result is undefined or null
+                }
+              } catch (error) {
+                alert(error.message);
+              }
+            };
            return(
             <View>
             <View  style={{ height : 84  ,   paddingTop:10  ,paddingTop : 15 , alignItems : 'center' , paddingTop : 10  , alignItems : 'center', justifyContent:'center',borderColor:'#6a0c0c', borderWidth:2}} >
@@ -176,7 +209,10 @@ function SearchIterms({navigation}){
              </View>
 
                 {textTyped && allTrucks.length >0  && filteredDataTrucks.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<Text style={{fontSize : 20 , }} >  No Loads Or Truck Available </Text>}
-                {textTyped && allTrucks.length >0  && filteredDataTrucks.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<Text style={{fontSize : 20 ,textDecorationLine:'underline' }} > Share or recommend our app for more Trucks and Loads!</Text>}
+                {textTyped && allTrucks.length >0  && filteredDataTrucks.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<TouchableOpacity onPress={handleShareApp} >
+                  <Text style={{fontSize : 20 ,textDecorationLine:'underline' }} > Share or recommend our app for more Trucks and Loads!</Text>
+                </TouchableOpacity>}
+
           </View>
            )
 }
