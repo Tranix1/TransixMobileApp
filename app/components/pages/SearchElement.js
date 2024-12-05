@@ -210,7 +210,7 @@ Experience the future of transportation and logistics!`;
 
                 {textTyped && allTrucks.length >0  && filteredDataTrucks.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<Text style={{fontSize : 20 , }} >  No Loads Or Truck Available </Text>}
                 {textTyped && allTrucks.length >0  && filteredDataTrucks.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  &&<TouchableOpacity onPress={handleShareApp} >
-                  <Text style={{fontSize : 20 ,textDecorationLine:'underline' }} > Share or recommend our app for more Trucks and Loads!</Text>
+                  <Text style={{fontSize : 20 ,textDecorationLine:'underline' }} > Share or recommend our app for more services and  products!</Text>
                 </TouchableOpacity>}
 
           </View>

@@ -28,8 +28,11 @@ function AddIterms({navigation,route}){
                     <Text style={{color:"#6a0c0c"}}>BulkTrailers </Text>
                 </TouchableOpacity>
 
+                <TouchableOpacity  onPress={()=> navigation.navigate('addTrucksDB', {truckType:'flatDecks',verifiedLoad:verifiedLoad , fromLocation :fromLocation , toLocation : toLocation }) }  style={styles.buttonStyle}>
+                    <Text style={{color:"#6a0c0c"}}>flatDecks </Text>
+                </TouchableOpacity>
                 <TouchableOpacity  onPress={()=> navigation.navigate( 'addTrucksDB', {truckType:'sideTippers',verifiedLoad:verifiedLoad , fromLocation :fromLocation , toLocation : toLocation }) }  style={styles.buttonStyle}>
-                    <Text style={{color:"#6a0c0c"}}>SideTipper </Text>
+                    <Text style={{color:"#6a0c0c"}}>SideTippers </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={()=> navigation.navigate('addTrucksDB', {truckType:'LowBeds',verifiedLoad:verifiedLoad , fromLocation :fromLocation , toLocation : toLocation }) }  style={styles.buttonStyle}>
@@ -37,14 +40,14 @@ function AddIterms({navigation,route}){
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={()=> navigation.navigate('addTrucksDB', {truckType:'tauntliner',verifiedLoad:verifiedLoad , fromLocation :fromLocation , toLocation : toLocation }) } style={styles.buttonStyle}>
-                    <Text style={{color:"#6a0c0c"}}> Tautliner </Text>
+                    <Text style={{color:"#6a0c0c"}}> Tautliners </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={()=> navigation.navigate('addTrucksDB', {truckType:'tanker',verifiedLoad:verifiedLoad , fromLocation :fromLocation , toLocation : toLocation }) } style={styles.buttonStyle} >
                     <Text style={{color:"#6a0c0c"}}>Tankers </Text>
                 </TouchableOpacity>
                <TouchableOpacity onPress={()=> navigation.navigate('addTrucksDB', {truckType:'Rigid',verifiedLoad:verifiedLoad , fromLocation :fromLocation , toLocation : toLocation }) }  style={styles.buttonStyle} >
-                    <Text style={{color:"#6a0c0c"}}>Rigid </Text>
+                    <Text style={{color:"#6a0c0c"}}>Rigids </Text>
                 </TouchableOpacity>
 
                <TouchableOpacity onPress={()=> navigation.navigate('addTrucksDB', {truckType:'other',verifiedLoad:verifiedLoad , fromLocation :fromLocation , toLocation : toLocation }) }  style={styles.buttonStyle} >

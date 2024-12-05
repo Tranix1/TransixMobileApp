@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db , auth} from '../config/fireBase';
-import { View , Text , Image , ScrollView , TouchableOpacity} from 'react-native';
+import { View , Text , Image , ScrollView , TouchableOpacity,Share} from 'react-native';
 import { collection, onSnapshot,doc,deleteDoc,query,limit,startAfter ,where} from 'firebase/firestore';
 
 import { Ionicons } from "@expo/vector-icons";
@@ -215,6 +215,42 @@ setTimeout(() => {
     </View>
         )
       })
+
+          const handleShareApp = async (companyName) => {
+              try {
+                const message = `I invite you to Transix!
+
+Transix is a tech-driven business enhancing transportation and logistics services, connecting suppliers with demand for truckloads, vehicles, trailers, spare parts etc.
+
+Contact us at +263716325160 with the message "Application" to swiftly receive the application download link.
+
+Explore website at : https://transix.net/
+
+Experience the future of transportation and logistics!`;
+
+                const result = await Share.share({
+                  message: message,
+                });
+
+                if (result) {
+                  if (result.action === Share.sharedAction) {
+                    if (result.activityType) {
+                      // Shared with activity type of result.activityType
+                    } else {
+                      // Shared
+                    }
+                  } else if (result.action === Share.dismissedAction) {
+                    // Dismissed
+                  }
+                } else {
+                  // Handle the case where result is undefined or null
+                }
+              } catch (error) {
+                alert(error.message);
+              }
+            };
+
+
  
 return(
   <View  >
@@ -227,13 +263,20 @@ return(
                
         <ScrollView style={{padding : 10 }}>
          {allTrucks.length > 0 ? rendereIterms   : <Text>All {truckType} Loading...</Text>}
-         <View style={{height : 550}} >
-           </View>
-            {dspLoadMoreBtn &&allTrucks.length > 0 && <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO Trucks Available </Text> }
+
+            {!dspLoadMoreBtn &&allTrucks.length <= 0 && <Text style={{fontSize:17 ,fontWeight:'bold'}} >NO {truckType} </Text> }
+            
+            {!dspLoadMoreBtn &&allTrucks.length <= 0 &&<TouchableOpacity onPress={handleShareApp} >
+
+              <Text style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more services and  products!  </Text> 
+            </TouchableOpacity>}
+            
           {LoadMoreData && allTrucks.length>0 && <Text style={{alignSelf:'center'}} >Loading More {truckType}....... </Text> } 
          {allTrucks.length >=12 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> fetchData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >
         <Text style={{color :'white', fontSize :21 , textAlign :'center'}} >Load More {truckType} ......</Text>
       </TouchableOpacity>}
+         <View style={{height : 550}} >
+           </View>
         </ScrollView>
         </View>
 )

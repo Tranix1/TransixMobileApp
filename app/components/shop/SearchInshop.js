@@ -225,7 +225,7 @@ Experience the future of transportation and logistics!  `;
 
                 {textTyped && lookingFor.length >0  && displaySearchedScnd.length <= 0 &&loadsList.length >0  && filteredData.length <= 0  && <TouchableOpacity onPress={handleShareApp}>
 
-                  <Text style={{fontSize : 20 , textDecorationLine:'underline'}} > Share or recommend our app for more services or products!</Text>
+                  <Text style={{fontSize : 20 , textDecorationLine:'underline'}} > Share or recommend our app for more services and products!</Text>
                 </TouchableOpacity> }
 
 

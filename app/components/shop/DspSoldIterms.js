@@ -1069,7 +1069,7 @@ Experience the future of transportation and logistics!`;
 
        {!dspLoadMoreBtn &&allSoldIterms.length <= 0  &&<TouchableOpacity onPress={handleShareApp} >
 
-         <Text style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more {specproduct} </Text>
+         <Text style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more services and products! </Text>
        </TouchableOpacity>}
         { dspLoadMoreBtn &&allSoldIterms.length>0 && dspLoadMoreBtn ? rendereIterms: <Text> {specproduct} Loading.......</Text> }
           {LoadMoreData && allSoldIterms.length>0 && <Text style={{alignSelf:'center'}} >Loading More {specproduct}....... </Text> }
