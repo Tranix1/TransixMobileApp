@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { db , auth} from '../config/fireBase';
 import { View , Text , Image , ScrollView , TouchableOpacity,Share} from 'react-native';
-import { collection, onSnapshot,doc,deleteDoc,query,limit,startAfter ,where} from 'firebase/firestore';
+import { collection, onSnapshot,doc,deleteDoc,query,limit,startAfter ,where,orderBy} from 'firebase/firestore';
 
 import { Ionicons } from "@expo/vector-icons";
 // import defaultImage from '../images/logo.jpg'
@@ -22,9 +22,9 @@ function DspOneTruckType ({route,navigation} ){
     try {
       loadMore ? setLoadMoreData(true) : null;
           
-          const orderByF = "fromLocation";
+          const orderByF = "fromLocation" ;
           const pagination = loadMore && allTrucks.length > 0 ? [startAfter(allTrucks[allTrucks.length - 1][orderByF])] : [];
-          let dataQuery = query(collection(db, "Trucks"), orderByF, ...pagination, limit(12) , where("truckType" ,"==",truckType) );
+          let dataQuery = query(collection(db, "Trucks"), orderBy(orderByF), ...pagination, limit(12) , where("truckType" ,"==",truckType) );
 
             
 
@@ -39,7 +39,7 @@ function DspOneTruckType ({route,navigation} ){
              if (loadedData.length === 0) {
                 setLoadMoreBtn(false);
             }
-          setAllTrucks(loadedData);
+            setAllTrucks(loadMore ? [  ...allTrucks , ...loadedData] : loadedData);
           loadMore ? setLoadMoreData(false) : null;
         });
         

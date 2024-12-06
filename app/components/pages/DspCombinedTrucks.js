@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot,doc,deleteDoc,query,limit,startAfter } from 'firebase/firestore';
+import { collection, onSnapshot,doc,deleteDoc,query,limit,startAfter,orderBy } from 'firebase/firestore';
 import { db , auth} from '../config/fireBase';
 import { View , Text , Image , ScrollView , TouchableOpacity , Linking} from 'react-native';
 import defaultImage from '../images/TRANSIX.jpg'
@@ -26,10 +26,10 @@ const navigation = useNavigation();
     try {
       loadMore ? setLoadMoreData(true) : null;
           
-          const orderByF = "fromLocation";
-          const pagination = loadMore && allTrucks.length > 0 ? [startAfter(allTrucks[allTrucks.length - 1][orderByF])] : [];
-          let dataQuery = query(collection(db, "Trucks"), orderByF, ...pagination, limit(12) );
+          const orderByF = "fromLocation" ;
+    const pagination = loadMore && allTrucks.length > 0 ? [startAfter(allTrucks[allTrucks.length - 1][orderByF])] : [];
 
+         let dataQuery = query(collection(db, "Trucks"), orderBy(orderByF), ...pagination, limit(12) );
             
 
         const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
@@ -43,7 +43,7 @@ const navigation = useNavigation();
              if (loadedData.length === 0) {
                 setLoadMoreBtn(false);
             }
-          setAllTrucks(loadedData);
+            setAllTrucks(loadMore ? [  ...allTrucks , ...loadedData] : loadedData);
           loadMore ? setLoadMoreData(false) : null;
         });
         
@@ -221,10 +221,9 @@ setTimeout(() => {
 return(
         <ScrollView style={{padding : 10 }}>
          {allTrucks.length > 0 ? rendereIterms   : <Text>All Trucks Loading...</Text>}
-         <View style={{height : 550}} >
-           </View>
-            {dspLoadMoreBtn &&allTrucks.length > 0 && <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO Trucks Available </Text> }
+            {!dspLoadMoreBtn &&allTrucks.length <= 0 && <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO Trucks Available </Text> }
           {LoadMoreData && allTrucks.length>0 && <Text style={{alignSelf:'center'}} >Loading More Trucks....... </Text> } 
+          
          {allTrucks.length >=12 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> fetchData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >
         <Text style={{color :'white', fontSize :21 , textAlign :'center'}} >Load More......</Text>
       </TouchableOpacity>}

@@ -117,6 +117,14 @@ const [priceRangeDsp , setPriceRangeDsp]= React.useState(false)
   const [losdingSpec , setLoadingSpec]=React.useState(false)  
   const [dspLoadMoreBtn , setLoadMoreBtn]=React.useState(true)
   const [LoadMoreData , setLoadMoreData]=React.useState(false)
+
+    const [refreshPage, setRefreshPage]= React.useState(false)
+      function refreshPageF(){
+
+       navigation.goBack()      
+       navigation.navigate('DspShop'  , {location:location ,specproduct: "vehicles" ,sellOBuy:"forSell" })
+      }
+
 async function fetchData(loadOneMore) {
        loadOneMore ? setLoadMoreData(true) :null
   try {
@@ -127,7 +135,7 @@ async function fetchData(loadOneMore) {
 
     
   let dataQuery;
-
+          
             if(specproduct === "vehicles" ){
 
                  if(vehicleType && vehiMake && priceRange && (buyRent===true || buyRent === false || buyRent==="R2B") ){
@@ -267,8 +275,7 @@ async function fetchData(loadOneMore) {
 
 useEffect(() => {
   fetchData();
-}, [specproduct, buyRent, sellOBuy , priceRange , vehicleType ,vehiMake ,trailerType]);;
-
+}, [specproduct, buyRent, sellOBuy , priceRange , vehicleType ,vehiMake ,trailerType,refreshPage]);;
 
     const [contactDisplay, setContactDisplay] = React.useState({ ['']: false });
     const toggleContact = (itemId) => {
@@ -1065,13 +1072,21 @@ Experience the future of transportation and logistics!`;
         
           {losdingSpec && <ActivityIndicator size="small" />}
 
-        {!dspLoadMoreBtn &&allSoldIterms.length <= 0 && <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO {specproduct} In {location} Available Freely Add </Text> }
+        {!dspLoadMoreBtn &&allSoldIterms.length <= 0 &&!vehicleType && !priceRange&& !buyRent && !vehiMake&& <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO {specproduct} In {location} Available Freely Add </Text> }
+
+            { allSoldIterms.length<=0 &&  (vehicleType || priceRange|| buyRent || vehiMake)&&<Text style={{fontSize :15}}> The specified product is not available in {location}. </Text> }
+         { allSoldIterms.length<=0 &&  (vehicleType || priceRange|| buyRent || vehiMake)&& <TouchableOpacity onPress={refreshPageF} style={{borderWidth: 2.5 , width : 150 , height : 30 , borderColor : "#6a0c0c" , alignSelf:'center', margin:4, borderRadius:8 ,  shadowColor: '#6a0c0c',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,justifyContent:'center',alignItems:'center'  }} >
+          <Text style={{ fontSize:16 , fontWeight:'600',color:'#6a0c0c'}} >Refresh</Text>
+         </TouchableOpacity>}
 
        {!dspLoadMoreBtn &&allSoldIterms.length <= 0  &&<TouchableOpacity onPress={handleShareApp} >
 
          <Text style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more services and products! </Text>
        </TouchableOpacity>}
-        { dspLoadMoreBtn &&allSoldIterms.length>0 && dspLoadMoreBtn ? rendereIterms: <Text> {specproduct} Loading.......</Text> }
+        { dspLoadMoreBtn &&allSoldIterms.length>0 && dspLoadMoreBtn && rendereIterms}
+         { dspLoadMoreBtn &&allSoldIterms.length<=0  && <Text> {specproduct} Loading.......</Text>} 
+
+
           {LoadMoreData && allSoldIterms.length>0 && <Text style={{alignSelf:'center'}} >Loading More {specproduct}....... </Text> }
 
          {allSoldIterms.length>0 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> fetchData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >

@@ -2,10 +2,15 @@ import React from "react";
 import {View , TouchableOpacity , Text , StyleSheet , ScrollView , TextInput  } from "react-native"
 import {  doc , updateDoc, onSnapshot} from "firebase/firestore"
 import {auth , db} from "../config/fireBase"
+import { signOut,sendEmailVerification} from  'firebase/auth'
+
 import DspSoldIterms from "./DspSoldIterms";
 import ShopHeader from "./ShopHeader";
 import inputstyles from "../styles/inputElement";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
+//Check if user is online or offline 
+import NetInfo from '@react-native-community/netinfo';
 
 function DspShopIterms({navigation , route}){
 
@@ -17,6 +22,7 @@ function DspShopIterms({navigation , route}){
 
   React.useEffect(() => {
     // Check if user is already signed in
+      setemailVerifiedN(false)
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
     });
@@ -68,15 +74,63 @@ function DspShopIterms({navigation , route}){
 
 
 
+const [isConnectedInternet, setIsConnectedInternet] = React.useState(true);
+
+  React.useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnectedInternet(state.isConnected);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  },[]);
+
+
+    if(!isConnectedInternet){
+
+      alert("You are offline. Please check your internet connection.")
+    }
 
 
 
+  const logout = async ()=>{
+    
+    try{
+      setemailVerifiedN(false)
+      setCurrentUser(null)
+    await signOut(auth)
 
+    }catch (err){
+      console.error(err)
+    }
+  }
+  const newCodeEmVeri = async () => {
+  try {
+    const user = auth.currentUser  ;
 
+    if (user && user.email) {
+      await sendEmailVerification(user);
+      alert("New code sent");
+      setemailVerifiedN(false)
+    } else {
+      console.error("Current user or user email is null");
+    }
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
   function checkAuth(){
     if(!currentUser){
       navigation.navigate("createUser")
-    }else if(currentUser &&!username){
+    }else if(!currentUser.emailVerified ){
+      setemailVerifiedN(true)
+      return
+    }
+    else if(currentUser &&!username){
       navigation.navigate("addPersnoalInfo")
     }else {
 
@@ -122,6 +176,27 @@ function DspShopIterms({navigation , route}){
 return(
     <View> 
         <ShopHeader  navigation ={navigation} route={route} />
+
+            {whenemailVerifiedN && <View style={{alignSelf:'center', backgroundColor :'white', zIndex:100, position:'absolute', top : 130 , width:300, padding:7, height:150, justifyContent:'center',alignItems :'center', borderRadius:7}} >
+               <Text style={{fontSize:17 , fontWeight:'600'}} >Verify Your Email</Text> 
+               <Text style={{fontSize:17 , fontWeight:'600',color:'green'}} >{currentUser.email}</Text> 
+               <Text>To Proceed........</Text>
+              <View style={{flexDirection:'row', justifyContent:"space-evenly",marginTop:7}} >
+
+               <TouchableOpacity style={{height:27 , backgroundColor:'red', width:65,borderRadius:5, alignItems:'center',margin:7}} onPress={logout} >
+                <Text style={{color:'white'}}>Sign Out</Text>
+               </TouchableOpacity>
+
+               <TouchableOpacity onPress={newCodeEmVeri} style={{borderWidth:2 , marginLeft:6 , marginRight:5 ,width:80,height:27,alignItems:'center',marginTop:7}} >
+                <Text>new code</Text>
+               </TouchableOpacity>
+
+               <TouchableOpacity onPress={reloadApp} style={{height:27 , backgroundColor:'green', width:65,borderRadius:5, alignItems:'center',margin:7}}>
+                <Text style={{color:'white'}} >Refresh</Text>
+               </TouchableOpacity>
+
+              </View>
+             </View>}
 
                {diplayEnterShopLoc && <View style={{position:'absolute' , alignSelf:'center' , backgroundColor:'white' , top : 160 ,  zIndex:500}} >
 
