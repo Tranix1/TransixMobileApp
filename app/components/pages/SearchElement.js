@@ -112,6 +112,8 @@ function SearchIterms({navigation}){
             </View>}
             <Text style={{color:'#6a0c0c' , fontSize:15,textAlign :'center' ,fontSize: 17}}>{value.CompanyName} </Text>
             <Text >from {value.fromLocation } to {value.toLocation} </Text>
+            <Text> Truck Ton : {value.truckTonnage}</Text>
+            <Text>Trailer Type : {value.truckType}</Text>
               </TouchableOpacity>
             )
           })
@@ -174,7 +176,7 @@ Experience the future of transportation and logistics!`;
                 <Ionicons name="arrow-back" size={30} color="white"style={{ marginLeft: 10 }}  />
                 </TouchableOpacity>
                 <TextInput
-                    placeholder="Search"
+                    placeholder="Search Route"
                     onChangeText={(text) => handleFilter(text)}  
                     style={{height:40, flex : 1 ,fontSize : 17 , backgroundColor: '#6a0c0c' , color:'white'}}      
                     placeholderTextColor="white"    

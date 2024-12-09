@@ -198,7 +198,7 @@ return(
               </View>
              </View>}
 
-               {diplayEnterShopLoc && <View style={{position:'absolute' , alignSelf:'center' , backgroundColor:'white' , top : 160 ,  zIndex:500}} >
+               {diplayEnterShopLoc && <View style={{position:'absolute' , alignSelf:'center' , backgroundColor:'white' , top : 160 ,  zIndex:500,padding:12}} >
 
                   <Text> Specify Adress of Shop In {location} </Text>
 

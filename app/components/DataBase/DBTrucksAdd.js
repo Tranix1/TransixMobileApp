@@ -25,7 +25,8 @@ function DBTrucksAdd( {navigation ,route} ) {
     additionalInfo :"" ,
     trailerType : '',
     trailerModel :"" ,
-
+    truckTonnage :"",
+      
     horseReg :"" ,
     trailerReg :"",
     scndTrailerReg :"",
@@ -227,6 +228,8 @@ let _downloadURL
     toLocation:  "",
     additionalInfo :"" ,
     trailerType : '',
+    truckTonnage :"",
+
 
     horseReg :"" ,
     trailerReg :"",
@@ -338,6 +341,14 @@ The Future Of Transport And Logistics (Transix)
             type="text"
           style={inputstyles.addIterms }
           />}
+            <TextInput 
+            value={formData.truckTonnage}
+            placeholderTextColor="#6a0c0c"
+            placeholder="Truck Tonnage"
+            onChangeText={(text) => handlechange(text, 'truckTonnage')}
+        keyboardType="numeric"
+          style={inputstyles.addIterms }
+          />
           <TextInput 
             value={formData.trailerType}
             placeholderTextColor="#6a0c0c"

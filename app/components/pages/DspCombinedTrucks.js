@@ -186,16 +186,20 @@ setTimeout(() => {
         <Text>:  {item.contact}</Text>
       </View>
 
+          {item.truckTonnage && <View style={{flexDirection :'row'}} >
+              <Text style={{width :100}} >Truck Ton</Text>
+              <Text>:  {item.truckTonnage}</Text>
+            </View>}
           { item.truckType && <View style={{flexDirection :'row'}} >
               <Text style={{width :100}} >Trailer Type</Text>
               <Text>:  {item.truckType}</Text>
             </View>}
 
+
           {item.trailerType && <View style={{flexDirection :'row'}} >
               <Text style={{width :100}} >Trailer Config</Text>
               <Text>:  {item.trailerType}</Text>
             </View>}
-
     { dspMoreInfo && item.additionalInfo &&  <View style={{flexDirection :'row'}} >
         <Text style={{width :100}} > Additional Info</Text>
         <Text>:  {item.additionalInfo}</Text>
