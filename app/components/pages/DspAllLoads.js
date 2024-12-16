@@ -13,9 +13,9 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 // import route from "expo-router"
 
-function DspAllLoads({username ,route, contactG  , sendPushNotification ,userIsVerified}){
+function DspAllLoads({username ,route, contactG  , sendPushNotification ,userIsVerified,blockVerifiedU ,blackLWarning }){
   
-const {userId ,  location ,itemKey, verfiedLoads,companyNameG} = route.params
+const {userId ,  location ,itemKey, verfiedLoads,companyNameG ,blockVerifiedUP  , blackLWarningP } = route.params
 
 // const navigate = useNavigate()
 
@@ -562,7 +562,7 @@ let mapThsAll = [...getOneLoad , ...loadsList]
     <View  key={item.id} style={{  marginBottom : 8,  padding :7 ,borderWidth : 2 , borderColor:'black', borderRadius:8 ,  shadowColor: '#6a0c0c',
         shadowOffset: { width: 1, height: 2 },
         shadowOpacity: 0.7,
-        shadowRadius: 5}} >
+        shadowRadius: 5,   overflow: 'hidden', }} >
 
                           
               { item.isVerified&& <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white' , zIndex : 66}} >
@@ -612,14 +612,14 @@ let mapThsAll = [...getOneLoad , ...loadsList]
 
        {   !contactDisplay[item.id] && <View>
 
-     {!item.isVerified&&  <View style={{flexDirection :'row'}} >
+     {!item.isVerified&&  !blockVerifiedU &&!blackLWarning &&  !blockVerifiedUP  && !blackLWarningP && <View style={{flexDirection :'row'}} >
         <Text style={{width :100}} >Contact</Text>
         <Text>:  {item.contact}</Text>
       </View>}
 
-      <View style={{flexDirection :'row'}} >
-        <Text style={{width :100}} >Payment Terms</Text>
-        <Text>:  {item.paymentTerms} </Text>
+      <View style={{flexDirection :'row', width:245}} >
+        <Text style={{width:100}} >Payment Terms</Text>
+        <Text  style={{textOverflow:'ellipsis' }}>: {item.paymentTerms}</Text>
       </View>
 
         {item.activeLoading&& <Text style={{fontSize:17 , color:"#FF8C00" }} >Active Loading.... </Text> }
@@ -667,12 +667,12 @@ let mapThsAll = [...getOneLoad , ...loadsList]
 
          {bidDisplay[item.id]&& bidNow}
 
-        { !item.isVerified&& !bidDisplay[item.id]&&  <TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{  width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
+        {!blockVerifiedUP  && !blackLWarningP && !blockVerifiedU &&!blackLWarning && !item.isVerified&& !bidDisplay[item.id]&&  <TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{  width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
           <Text style={{color:'white'}} > Get In Touch Now</Text>
         </TouchableOpacity>}
         
         
-       {  auth.currentUser ? !bidDisplay[item.id]&& !contactDisplay[item.id]  && <View style={{flexDirection : 'row', justifyContent : 'space-evenly' }} >  
+       {  auth.currentUser  ? !bidDisplay[item.id]&& !contactDisplay[item.id]  && !blockVerifiedUP  && !blackLWarningP &&!blockVerifiedU &&!blackLWarning &&<View style={{flexDirection : 'row', justifyContent : 'space-evenly' }} >  
       {bookingError&&<Text>{bookingError}</Text>}
           {spinnerItem === item ? (
         <ActivityIndicator size={34} />

@@ -15,7 +15,7 @@ import Constants from 'expo-constants';
 
 import  { auth , db,  } from "./components/config/fireBase"
 import { signOut,sendEmailVerification} from  'firebase/auth'
-import {doc , getDoc ,query ,collection , where,onSnapshot, loadBundle} from "firebase/firestore"
+import {doc , getDoc ,query ,collection , where,onSnapshot, loadBundle,updateDoc} from "firebase/firestore"
 
 import Header from "./components/Header"
 import SearchIterms from "./components/pages/SearchElement"
@@ -390,21 +390,102 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
   }, [dspLoads , dspTruckType]);
 
 
+
       const [userIsVerified, setIsVerified] = React.useState(false);
-      
+      const [reverifyUserV , setReverifyUser] = React.useState(false)
+
+      const [isBlackListed, setIsBlacListed] = React.useState(false);
+
+      const [blackLWarning, setIsblacklWarning] = React.useState(false);
+      const [blackLWarningDSP, setIsblacklWarningDSP] = React.useState(false);
+
+      const [blockVerifiedU , setBlockVerifiedU] = React.useState(false)
+
+       async function changeStatuses(userId,elemUpdate) {
+          const docRef = doc(db, 'userStatuses', userId);
+          try {
+              if(elemUpdate==="verifcation"){
+
+              await updateDoc(docRef, {
+                 isVerified: false, veriExpTime: 0,reverifyUser:true , reverfyTime :Date.now() + 14 * 24 * 60 * 60 * 1000   });
+              alert("Verification Expired! \nRe-verify to unlock features.")
+            }else if(elemUpdate === "blockWarn"){
+
+             await updateDoc(docRef, { isBlackListed:true , blackLWarning : false,usernameBL :username , contactBL : contact});
+             alert("You have been blocked")
+            }else if(elemUpdate === "reverfyOff"){
+
+            await updateDoc(docRef, {
+             veriExpTime: 0,reverifyUser:false , reverfyTime :0, leftVeri : true , usernameLV : username,contactLV:contact});
+         }
+
+          } catch (error) {
+              console.error('Error updating document:', error);
+         }
+      }
+        
+
    React.useEffect(() => {
         try {
 
+         
           if (auth.currentUser) {
             const userId = auth.currentUser.uid;
-            const loadsQuery = query(collection(db, "userStatuses"), where("userId", "==", userId));
+            const statusQuery = query(collection(db, "userStatuses"), where("userId", "==", userId));
 
-            const unsubscribe = onSnapshot(loadsQuery, (querySnapshot) => {
+            const unsubscribe = onSnapshot(statusQuery, (querySnapshot) => {
               querySnapshot.forEach((doc) => {
                 const data = doc.data();
                 const isVerifiedValue = data.isVerified || false; // Assuming isVerified is a boolean field
+                const reverifyUserValue = data.reverifyUser || false; // Assuming isVerified is a boolean field
+
+                const blackListedValue = data.isBlackListed || false; // Assuming isVerified is a boolean field
+                const blackLWrningValue = data.blackLWarning || false; // Assuming isVerified is a boolean field
+                const blockVerifiedUValue = data.blockVerifiedU || false; // Assuming isVerified is a boolean field
+
+                const  veriExpTime = data.veriExpTime || false; // Assuming isVerified is a boolean field
+                const  blockBlackWarn  = data.blockBlackWarn || false; // Aswsuming isVerified is a boolean field
+                const  reverfyTime  = data.reverfyTime || false; // Aswsuming isVerified is a boolean field
+
+
+              const timeRemainingVer = veriExpTime - Date.now();
+              
+              if(isVerifiedValue ){
+                if(timeRemainingVer <= 0){
+                    changeStatuses(userId,"verifcation")
+                  }else if(timeRemainingVer > 0){
+                    setIsVerified(isVerifiedValue)
+                  }
+                 
+                }
+
+                const timeRemainingReVer = reverfyTime - Date.now();
+                  if(reverifyUserValue <= 0 ){
+                    if(timeRemainingReVer){
+                      changeStatuses(userId,"reverfyOff")
+
+                    }else{
+                      setReverifyUser(true)
+                    }
+                  }
+
+              const blockBlackWarnTim = blockBlackWarn - Date.now();
+              
+                if(blackLWrningValue){
+                  if(blockBlackWarnTim <= 0 ){
+
+                    changeStatuses(userId,"blockWarn")
+                  }else if(blockBlackWarnTim >0){
+
+                    setIsblacklWarning(blackLWrningValue);
+                    setIsblacklWarningDSP(true)
+                  }
+                }
+
                 
-                setIsVerified(isVerifiedValue);
+
+                setBlockVerifiedU(blockVerifiedUValue)
+                setIsBlacListed(blackListedValue);
               });
             });
 
@@ -417,6 +498,7 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
 
 
       const [newAppUpdate , setNewAppUpdate]=React.useState(false)
+      const [newAppUpdateTU , setNewAppUpdateTU]=React.useState(false)
       const [updateApp , setUpdateApp]=React.useState(false)
       
           React.useEffect(() => {
@@ -426,8 +508,16 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
               querySnapshot.forEach((doc) => {
                 const data = doc.data();
                 const newAppUpdate = data.newAppUpdate ; // Assuming isVerified is a boolean field
+                const newAppUpdateFTime = data.newAppUpdateFTime ; // Assuming isVerified is a boolean field
+              const appUpdateFTim = newAppUpdateFTime - Date.now();
+                if(newAppUpdate  ){
+                  if(appUpdateFTim  <= 0){
+                    setNewAppUpdateTU(true)
+                  }else{
+                    setNewAppUpdate(newAppUpdate)
 
-                setNewAppUpdate(newAppUpdate)
+                  }
+                }
               });
             });
 
@@ -446,7 +536,7 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
   React.useEffect(() => {
 
 if(username !== false ||trackLoadingScnd ){
-
+  
   if(appVersion !==  newAppUpdate){
     setUpdateApp(true)
   }
@@ -455,7 +545,9 @@ if(username !== false ||trackLoadingScnd ){
 
 
   return (
-    <View >  
+    <View>
+
+    {!isBlackListed ?<View >  
         <Header navigation={navigation} checkAuth={checkAuth} smallMenu={smallMenu} />
 
              <View  style={{flexDirection:'row' , justifyContent : "space-evenly" , paddingLeft : 20 , paddingRight: 20 , height : 40 , alignItems : 'center' , backgroundColor : '#6a0c0c' , paddingTop : 10 }}>
@@ -489,20 +581,101 @@ if(username !== false ||trackLoadingScnd ){
                 </TouchableOpacity>
              </View>
 
+
+    {blackLWarningDSP && <View style={{alignSelf:'center', backgroundColor :'white', zIndex:100, position:'absolute', top : 130 , width:300, padding:7, height:150, justifyContent:'center',alignItems :'center', borderRadius:7}} >
+      <Text>Your account is currently under investigation.</Text>
+      <Text>
+        Please contact us for resolution If Not In 4days Your Account Will Be Blocked
+      </Text>
+
+      <View style={{flexDirection:'row'}} > 
+    
+       <TouchableOpacity style={{height:27 , backgroundColor:'red', width:65,borderRadius:5, alignItems:'center',margin:7}} onPress={()=>setIsblacklWarningDSP(false)} >
+                <Text style={{color:'white'}}>Cancel</Text>
+               </TouchableOpacity>
+
+              
+
+               <TouchableOpacity onPress={()=>Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`Good day \nMy Transix account is being investigated whats the issue and how can we resolve it \nMy username is ${username}`)} `)} style={{height:27 , backgroundColor:'green', width:65,borderRadius:5, alignItems:'center',margin:7}}>
+
+                <Text style={{color:'white'}} >OK</Text>
+               </TouchableOpacity>
+
+      </View>
+    </View>}
+
+
+    {blockVerifiedU && <View style={{alignSelf:'center', backgroundColor :'white', zIndex:100, position:'absolute', top : 130 , width:300, padding:7, height:150, justifyContent:'center',alignItems :'center', borderRadius:7}} >
+      <Text>Important: You are an investigated  verified user.</Text>
+      <Text> Legal action may be taken if necessary. Contact us immediately..</Text>
+
+      <Text>
+        Please contact us for resolution If Not In 4days Your Account Will Be Blocked
+      </Text>
+
+      <View style={{flexDirection:'row'}} > 
+    
+       <TouchableOpacity style={{height:27 , backgroundColor:'red', width:65,borderRadius:5, alignItems:'center',margin:7}} onPress={()=>setIsblacklWarning(false)} >
+                <Text style={{color:'white'}}>Cancel</Text>
+               </TouchableOpacity>
+       
+              
+
+               <TouchableOpacity onPress={()=>Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`Good day \n I am a  investiged Transix verified User \nMy username is ${username} \n How can we speed up the resolving process l am legit`)} `)} style={{height:27 , backgroundColor:'green', width:65,borderRadius:5, alignItems:'center',margin:7}}>
+
+                <Text style={{color:'white'}} >OK</Text>
+               </TouchableOpacity>
+
+      </View>
+    </View>}
+
+          
+              {reverifyUserV && <View style={{alignSelf:'center', backgroundColor :'white', zIndex:100, position:'absolute', top : 130 , width:300, padding:7, height:150, justifyContent:'center',alignItems :'center', borderRadius:7}} >
+      <Text>You were a trusted industry member.</Text>
+
+      <Text>
+        Renew your verification now.
+      </Text>
+
+      <View style={{flexDirection:'row'}} > 
+    
+       <TouchableOpacity style={{height:27 , backgroundColor:'red', width:65,borderRadius:5, alignItems:'center',margin:7}} onPress={()=>setReverifyUser(false)} >
+                <Text style={{color:'white'}}>Cancel</Text>
+               </TouchableOpacity>
+       
+              
+
+               <TouchableOpacity onPress={()=>Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`Good day \n I want to be reverified on Transix \nMy username is ${username} `)} `)} style={{height:27 , backgroundColor:'green', width:65,borderRadius:5, alignItems:'center',margin:7}}>
+
+                <Text style={{color:'white'}} >OK</Text>
+               </TouchableOpacity>
+
+      </View>
+    </View>}
+
+             
+
                    {updateApp && <View style={{alignSelf:'center', backgroundColor :'white', zIndex:100, position:'absolute', top : 130 , width:300, padding:7, height:100, justifyContent:'center',alignItems :'center', borderRadius:7}} >
               <Text>Update App</Text>
               <Text>To latest better version</Text>
                   <View style={{flexDirection:'row', justifyContent:"space-evenly",marginTop:7}} >
 
-               <TouchableOpacity style={{height:27 , backgroundColor:'red', width:65,borderRadius:5, alignItems:'center',margin:7}} onPress={()=>setUpdateApp(false) } >
+              {!newAppUpdateTU && <TouchableOpacity style={{height:27 , backgroundColor:'red', width:65,borderRadius:5, alignItems:'center',margin:7}} onPress={()=>setUpdateApp(false) } >
                 <Text style={{color:'white'}}>Cancel</Text>
-               </TouchableOpacity>
+               </TouchableOpacity>}
 
              
-               <TouchableOpacity onPress={()=>Linking.openURL("https://play.google.com/store/apps/details?id=com.yayapana.Transix")} style={{height:27 , backgroundColor:'green', width:65,borderRadius:5, alignItems:'center',margin:7}}>
+               {!newAppUpdateTU &&<TouchableOpacity onPress={()=>Linking.openURL("https://play.google.com/store/apps/details?id=com.yayapana.Transix")} style={{height:27 , backgroundColor:'green', width:65,borderRadius:5, alignItems:'center',margin:7}}>
         
                 <Text style={{color:'white'}} >OK</Text>
-               </TouchableOpacity>
+               </TouchableOpacity>}
+
+             
+               {newAppUpdateTU &&<TouchableOpacity onPress={()=>Linking.openURL("https://play.google.com/store/apps/details?id=com.yayapana.Transix")} style={{height:35 , backgroundColor:'green', width:120,borderRadius:5, alignItems:'center',margin:7, alignSelf:'center'}}>
+        
+                <Text style={{color:'white'}} >OK</Text>
+               </TouchableOpacity>}
+
 
               </View>
              </View>}
@@ -529,20 +702,27 @@ if(username !== false ||trackLoadingScnd ){
               </View>
              </View>}
 
-             <TouchableOpacity onPress={()=>checkAuth("selectAddIterms")  }  style={{position :'absolute',top: 440 ,right:10 , width : 80 , height : 35 , alignItems :"center" , justifyContent :"space-around", backgroundColor:'#228B22' , zIndex :200 , borderRadius: 8, flexDirection:'row'}} >
+           {!blockVerifiedU && !blackLWarning && username !== false   && <TouchableOpacity onPress={()=>checkAuth("selectAddIterms")  }  style={{position :'absolute',top: 440 ,right:10 , width : 80 , height : 35 , alignItems :"center" , justifyContent :"space-around", backgroundColor:'#228B22' , zIndex :200 , borderRadius: 8, flexDirection:'row'}} >
                 <Text style={{color : 'white',fontSize:17,fontWeight:'bold'}} >Add</Text>
                 <MaterialIcons name="add-box" size={26} color="white" />
-             </TouchableOpacity>
+             </TouchableOpacity>}
    {!dspLoads && !dspTruckType && <View  >
 
-     <MiniLoad/>
+     <MiniLoad blockVerifiedU ={blockVerifiedU} blackLWarning={blackLWarning} />
      {username === false   && <ActivityIndicator size="large" /> }
-     <DspAllTrucks/>
+     <DspAllTrucks blockVerifiedU={blockVerifiedU} blackLWarning={blackLWarning}  />
     </View>}
 
-    {dspLoads && !dspTruckType&& <DspAllLoads  username = {username } contactG={contact} route={route}  sendPushNotification={sendPushNotification} expoPushToken={expoPushToken} userIsVerified={userIsVerified} />}
+    {dspLoads && !dspTruckType&& <DspAllLoads  username = {username } contactG={contact} route={route}  sendPushNotification={sendPushNotification} expoPushToken={expoPushToken} userIsVerified={userIsVerified} blockVerifiedU ={blockVerifiedU} blackLWarning={blackLWarning}  />}
     {dspTruckType &&  <SelectOneTruckType navigation={navigation} />}
+    </View>:
+    <View>
+      <Text>You Have been blocked</Text>
     </View>
+    
+    }
+
+ </View>
   );
 }
 
@@ -551,56 +731,6 @@ if(username !== false ||trackLoadingScnd ){
 function App(){
 
 
-      const [isVerified, setIsVerified] = React.useState(false);
-      const [isBlackListed, setIsBlacListed] = React.useState(false);
-      const [blackLWarning, setIsblacklWarning] = React.useState(false);
-      const [blockVerifiedU , setBlockVerifiedU] = React.useState(false)
-
-   function userStatusF(){
-
-  if(username ){
-
-      if(isBlackListed){
-        alert("You Are Blacklisted")
-        return
-      }else if(blackLWarning){
-        alert("Your account is currently under investigation.\n Please contact us for resolution \nIf Not In 8days Your Account Will Be Blocked")
-        Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`Good day \nMy Transix account is being investigated whats the issue and how can we resolve it \nMy username is ${username}`)} `)
-      }else if(blockVerifiedU){
-        alert("Important: You are a blocked verified user.\n Legal action may be taken if necessary. \nContact us immediately.")
-       Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`Good day \n I am a blocked Transix verified User \nMy username is ${username} \n How can we speed up the resolving process l am legit`)} `)
-      }
-
-  }
-}   
-
-      React.useEffect(() => {
-        try {
-          if (auth.currentUser) {
-            const userId = auth.currentUser.uid;
-            const loadsQuery = query(collection(db, "userStatuses"), where("userId", "==", userId));
-
-            const unsubscribe = onSnapshot(loadsQuery, (querySnapshot) => {
-              querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                const isVerifiedValue = data.isVerified || false; // Assuming isVerified is a boolean field
-                const blackListedValue = data.isBlackListed || false; // Assuming isVerified is a boolean field
-                const blackLWrningValue = data.blackLWarning || false; // Assuming isVerified is a boolean field
-                const blockVerifiedUValue = data.blockVerifiedU || false; // Assuming isVerified is a boolean field
-
-                setBlockVerifiedU(blockVerifiedUValue)
-                setIsBlacListed(blackListedValue);
-                setIsblacklWarning(blackLWrningValue);
-                setIsVerified(isVerifiedValue);
-              });
-            });
-
-            return () => unsubscribe(); // Cleanup the listener when the component unmounts
-          }
-        } catch (error) {
-          console.error(error);
-        }
-      }, [currentUser, username]);
   
   const [expoPushToken, setExpoPushToken] = useState('');
   const [notification, setNotification] = useState(Notifications.Notification )
@@ -634,7 +764,6 @@ function App(){
   const [currentUser, setCurrentUser] = React.useState("");
 
   React.useEffect(() => {
-    userStatusF()
     // Check if user is already signed in
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
@@ -648,7 +777,7 @@ function App(){
     // Set the status bar color and style
     StatusBar.setBackgroundColor('#6a0c0c'); // Set the background color of the status bar
     StatusBar.setBarStyle('light-content'); // Set the style of the status bar text (light or dark)
-  }, [currentUser ]);
+  }, [currentUser , username]);
 
    const [ username , setUsername] = React.useState("");
    const [ contact , setContact] = React.useState('');
@@ -709,6 +838,100 @@ function App(){
           console.error(error);
         }
       }, [currentUser,username]);
+
+
+
+      const [isVerified, setIsVerified] = React.useState(false);
+      const [isBlackListed, setIsBlacListed] = React.useState(false);
+      const [blackLWarning, setIsblacklWarning] = React.useState(false);
+      const [blockVerifiedU , setBlockVerifiedU] = React.useState(false)
+
+
+  if(username ){
+
+      if(isBlackListed){
+        alert("You Are Blacklisted")
+        return
+      } if(blockVerifiedU){
+        alert("Important: You are a blocked verified user.\n Legal action may be taken if necessary. \nContact us immediately.")
+       Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`Good day \n I am a blocked Transix verified User \nMy username is ${username} \n How can we speed up the resolving process l am legit`)} `)
+      }
+
+  }
+
+     async function changeStatuses(userId,elemUpdate) {
+          const docRef = doc(db, 'userStatuses', userId);
+          try {
+              if(elemUpdate==="verifcation"){
+
+              await updateDoc(docRef, { isVerified: false, veriExpTime: 0 });
+              alert("Verification Expired! \nRe-verify to unlock features.")
+            }else if(elemUpdate === "blockWarn"){
+
+             await updateDoc(docRef, { isBlackListed:true , blackLWarning : false });
+             alert("You have been blocked")
+            }
+
+          } catch (error) {
+              console.error('Error updating document:', error);
+          }
+      }
+
+      React.useEffect(() => {
+        try {
+
+          if (auth.currentUser) {
+            const userId = auth.currentUser.uid;
+            const statusQuery = query(collection(db, "userStatuses"), where("userId", "==", userId));
+
+            const unsubscribe = onSnapshot(statusQuery, (querySnapshot) => {
+              querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const isVerifiedValue = data.isVerified || false; // Assuming isVerified is a boolean field
+                const blackListedValue = data.isBlackListed || false; // Assuming isVerified is a boolean field
+                const blackLWrningValue = data.blackLWarning || false; // Assuming isVerified is a boolean field
+                const blockVerifiedUValue = data.blockVerifiedU || false; // Assuming isVerified is a boolean field
+
+                const  veriExpTime = data.veriExpTime || false; // Assuming isVerified is a boolean field
+                const  blockBlackWarn  = data.blockBlackWarn || false; // Aswsuming isVerified is a boolean field
+
+              const timeRemainingVer = veriExpTime - Date.now();
+              
+              if(isVerifiedValue ){
+                if(timeRemainingVer <= 0){
+                    changeStatuses(userId,"verifcation")
+                  }else if(timeRemainingVer > 0){
+                    setIsVerified(isVerifiedValue)
+                  }
+                 
+                }
+
+              const blockBlackWarnTim = blockBlackWarn - Date.now();
+              
+                if(blackLWrningValue){
+                  if(blockBlackWarnTim <= 0 ){
+
+                    changeStatuses(userId,"blockWarn")
+                  }else if(blockBlackWarnTim >0){
+
+                    setIsblacklWarning(blackLWrningValue);
+                  }
+                }
+
+                
+
+                setBlockVerifiedU(blockVerifiedUValue)
+                setIsBlacListed(blackListedValue);
+              });
+            });
+
+            return () => unsubscribe(); // Cleanup the listener when the component unmounts
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }, [currentUser , username]);
+
             
 const Stack = createNativeStackNavigator();
 
@@ -748,18 +971,19 @@ const Stack = createNativeStackNavigator();
       <Stack.Screen name="addLoadsDB" component={AddLoadDB} initialParams={{username : username , contact : contact , expoPushToken:expoPushToken ,isVerified:isVerified ,isBlackListed : isBlackListed ,  blackLWarning : blackLWarning ,blockVerifiedU:blockVerifiedU,verifyOngoing:verifyOngoing }} options={{title: 'Add Loads',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
       <Stack.Screen name="addTrucksDB" component={DBTrucksAdd} initialParams={{username : username , contact : contact ,expoPushToken:expoPushToken ,isVerified : isVerified ,isBlackListed : isBlackListed ,  blackLWarning : blackLWarning,blockVerifiedU:blockVerifiedU ,verifyOngoing:verifyOngoing}} options={{headerShown:false}}/>
 
-      <Stack.Screen name="dspOneTrckType" component={DspOneTruckType}  options={{headerShown:false}}/>
+      <Stack.Screen name="dspOneTrckType" component={DspOneTruckType}  options={{headerShown:false}} initialParams={{blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning }}  />
 
-      <Stack.Screen name="selectedUserLoads" component={DspAllLoads}  options={{headerShown: false}}  initialParams={{username : username , contact : contact }} />
+      <Stack.Screen name="selectedUserLoads" component={DspAllLoads}  options={{headerShown: false}}  initialParams={{username : username , contact : contact ,blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning }} />
+
       <Stack.Screen name="selectedUserTrucks" component={SelectedUserTrucks}  options={{headerShown: false}}/>
 
 
       <Stack.Screen name="shopHome" component={ShopLocation} options={{title: 'Welcome To Store',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
-      <Stack.Screen name="DspShop" component={DspShopIterms} options={{headerShown:false}} initialParams={{spechopLoc:spechopLoc}} />
+      <Stack.Screen name="DspShop" component={DspShopIterms} options={{headerShown:false}} initialParams={{spechopLoc:spechopLoc ,blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning  }} />
       <Stack.Screen name="slctAddShop" component={SelectAddToShop} options={{title: 'Add To Shop',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
       <Stack.Screen name="AddToShop" component={AddToShop} options={{headerShown:false}} 
        initialParams={{username : username , contact : contact , isVerified : isVerified ,  shopLocation: spechopLoc ,deliveryR :deliveryR ,expoPushToken :expoPushToken ,isBlackListed : isBlackListed ,  blackLWarning : blackLWarning ,blockVerifiedU:blockVerifiedU ,verifyOngoing :verifyOngoing}} />
-      <Stack.Screen name="oneFirmsShop" component={OneFirmsShop} options={{headerShown: false}}/>
+      <Stack.Screen name="oneFirmsShop" component={OneFirmsShop} options={{headerShown: false}} initialParams={{blockVerifiedUP : blockVerifiedU , blackLWarningP:blackLWarning }} />
       <Stack.Screen name="searchInShop" component={SearchInshop} options={{headerShown: false}}/>
 
       <Stack.Screen name="helpHome" component={HelpHome}  options={{title: 'Help',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>

@@ -14,7 +14,7 @@ import NetInfo from '@react-native-community/netinfo';
 
 function DspShopIterms({navigation , route}){
 
-  const {location,spechopLoc} = route.params
+  const {location,spechopLoc ,blockVerifiedU ,blackLWarning } = route.params
 
   const [diplayEnterShopLoc , setEnterSHopLoc]=React.useState(false)
   
@@ -231,7 +231,7 @@ return(
         </View>
                </View>}
 
-                     {auth.currentUser ? <TouchableOpacity onPress={checkAuth}  style={{position :'absolute',top: 470 ,right:10 , width : 80 , height : 35 , alignItems :"center" , justifyContent :'space-around', backgroundColor:'#228B22' , zIndex :200 , borderRadius: 8 , flexDirection:'row'}} >
+                     {auth.currentUser ? !blockVerifiedU && !blackLWarning &&<TouchableOpacity onPress={checkAuth}  style={{position :'absolute',top: 470 ,right:10 , width : 80 , height : 35 , alignItems :"center" , justifyContent :'space-around', backgroundColor:'#228B22' , zIndex :200 , borderRadius: 8 , flexDirection:'row'}} >
                 <Text style={{color : 'white',fontWeight:'bold'}} >ADD</Text>
                 <MaterialIcons name="add-shopping-cart" size={27} color="white" />
              </TouchableOpacity>
@@ -245,7 +245,7 @@ return(
 
 
              <ScrollView style={{padding:10}}>
-                <DspSoldIterms navigation={navigation} route={route} />
+                <DspSoldIterms navigation={navigation} route={route} blockVerifiedU={blockVerifiedU}  blackLWarning={blackLWarning}  />
              </ScrollView>
 
     </View>

@@ -9,9 +9,9 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { Ionicons } from "@expo/vector-icons";
 import AntDesign from '@expo/vector-icons/AntDesign';
 
-function OneFirmsShop({navigation , route}){
+function OneFirmsShop({navigation , route,}){
 
-  const {location, specproductG ,sellOBuyG ,userId , CompanyName , itemKey} = route.params
+  const {location, specproductG ,sellOBuyG ,userId , CompanyName , itemKey,blockVerifiedU, blackLWarning } = route.params
       const [specproduct , setSpecPrduct] = React.useState(specproductG)
 
      const [fontMarkting, setFontMarketing] = useState([]);
@@ -54,13 +54,13 @@ function OneFirmsShop({navigation , route}){
         if (decision === "Accept"&& fontMarkting.length < 4  ) {
           const docRef = doc(db, 'Shop', id);
           await updateDoc(docRef, { frontMarkert : true ,  });
-          alert("You Accepted the offer");
+          alert("Added To Top Listing");
         }else if(decision === "Accept"&& fontMarkting.length >= 4  ){
           alert("You can only add 4 iterms to martFrontline")
         }else{
           const docRef = doc(db, `Shop`, id);
           await updateDoc(docRef, { frontMarkert : false ,  });
-          alert("Username denied the offer!");
+          alert("Removed From Top Listing");
         }
       trackFmarket()
       } catch (err) {
@@ -732,7 +732,7 @@ const spreadThis = [...getOneItem ,...allSoldIterms]
        {<Text style={{color:'green'}} >:  {item.currency?"USD" : "Rand" }  {item.price}</Text>} 
       </View>}
 
-      { item.contact && <View style={{flexDirection :'row'}} >
+      { !blockVerifiedU && !blackLWarning &&item.contact && <View style={{flexDirection :'row'}} >
         <Text style={{width :100}} >Contact</Text>
        {<Text  >:  {item.contact}</Text>} 
       </View>}
@@ -768,9 +768,9 @@ const spreadThis = [...getOneItem ,...allSoldIterms]
           <Text style={{color :'green'}} >{  dspMoreInfo[item.id]  ?"See Less": "See more"} </Text>
         </TouchableOpacity>}
         
-        <TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{ width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
+       {!blockVerifiedU && !blackLWarning && <TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{ width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
           <Text style={{ color:'white'}} > Get In Touch Now</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>}
 
         { auth.currentUser && auth.currentUser.uid === userId &&
         <View style={{justifyContent:'space-between' , flexDirection :'row',padding:6,paddingLeft:15}} >

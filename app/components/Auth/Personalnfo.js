@@ -43,7 +43,7 @@ const handleSubmitData = async (event) => {
 
         if (querySnapshot.empty) {
           // Username is not found, add it to the database
-          await setDoc(doc(db, 'personalData', userId), { username: usernameValue, contact: `+${countryCode}${contact}` });
+          await setDoc(doc(db, 'personalData', userId), { username: usernameValue, contact: `+${countryCode}${contact}` , email : auth.currentUser.email });
           setUsername("");
           setContact("");
            setSpinnerItem(false)

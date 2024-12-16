@@ -105,7 +105,7 @@ function SearchIterms({navigation}){
         // const searchedTruks = 
           const displaySearchedTrucks =  filteredDataTrucks.slice(0, 15).map((value , key)=>{
             return(
-              <TouchableOpacity  style={{flex : 1, marginBottom :6 , padding : 6}} key={value.id} onPress={()=> navigation.navigate('selectedUserTrucks',{userId : value.userId} ) }>
+              <TouchableOpacity  style={{flex : 1, marginBottom :6 , padding : 6}} key={value.id} onPress={()=> navigation.navigate('selectedUserTrucks',{userId : value.userId,CompanyName:value.CompanyName} ) }>
 
             {value.isVerified&& <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white' , zIndex : 66 }} >
               <MaterialIcons name="verified" size={24} color="green" />

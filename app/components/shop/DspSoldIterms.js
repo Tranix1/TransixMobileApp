@@ -7,7 +7,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 
-function DspSoldIterms({navigation , route}){
+function DspSoldIterms({navigation , route,blockVerifiedU, blackLWarning }){
 
   const {location, specproduct ,sellOBuy } = route.params
  const [allSoldIterms, setAllSoldIterms] = useState([]);
@@ -618,7 +618,7 @@ function displayAllImages(itemId){
        {<Text style={{color:'green'}} >:  {item.currency?"USD" : "Rand" }  {item.price}</Text>} 
       </View>}
 
-      { item.contact && <View style={{flexDirection :'row'}} >
+      {!blockVerifiedU && !blackLWarning && item.contact && <View style={{flexDirection :'row'}} >
         <Text style={{width :100}} >Contact</Text>
        {<Text  >:  {item.contact}</Text>} 
       </View>}
@@ -654,9 +654,9 @@ function displayAllImages(itemId){
           <Text style={{color :'green'}} >{  dspMoreInfo[item.id]  ?"See Less": "See more"} </Text>
         </TouchableOpacity>}
         
-        <TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{ width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
+       {!blockVerifiedU && !blackLWarning &&  <TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{ width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
           <Text style={{ color:'white'}} > Get In Touch Now</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>}
 
 
 

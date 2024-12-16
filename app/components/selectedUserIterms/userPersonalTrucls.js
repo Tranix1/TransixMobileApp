@@ -182,17 +182,17 @@ setTimeout(() => {
           <Text>From {item.fromLocation} To {item.toLocation} </Text>
 
           <View style={{flexDirection :'row'}} >
-              <Text style={{width :60}} >Trailer Type</Text>
+              <Text style={{width :100}} >Trailer Type</Text>
               <Text>:  {item.truckType}</Text>
             </View>
           <View style={{flexDirection :'row'}} >
-              <Text style={{width :60}} >Trailer Config</Text>
+              <Text style={{width :100}} >Trailer Config</Text>
               <Text>:  {item.trailerType}</Text>
             </View>
 
-          <TouchableOpacity onPress={togglrTruckDe} style={styles.buttonSelectStyle} >
+         {loadIsVerified && <TouchableOpacity onPress={togglrTruckDe} style={styles.buttonSelectStyle} >
             <Text style={{color:'white'}} >Truck Details </Text>
-          </TouchableOpacity>
+          </TouchableOpacity>}
           {truckDetails &&<View> 
 
           <View style={{flexDirection :'row'}} >
@@ -213,9 +213,9 @@ setTimeout(() => {
             </View>
             </View>}
 
-            <TouchableOpacity onPress={togglrDriverDe} style={styles.buttonStyle} >
+           {loadIsVerified && <TouchableOpacity onPress={togglrDriverDe} style={styles.buttonStyle} >
               <Text>Driver Details</Text>
-            </TouchableOpacity>
+            </TouchableOpacity>}
           {driverDetails &&<View>
 
 
@@ -240,9 +240,9 @@ setTimeout(() => {
       </View>
         </View>}
 
-            <TouchableOpacity onPress={togglrTruckBuzDe} style ={styles.buttonSelectStyle} >
+           {loadIsVerified && <TouchableOpacity onPress={togglrTruckBuzDe} style ={styles.buttonSelectStyle} >
               <Text style={{color:'white',fontSize :17}} >business Details</Text>
-            </TouchableOpacity>
+            </TouchableOpacity>}
            {truckBuzDe && <View>
               
      <View style={{flexDirection :'row'}} >

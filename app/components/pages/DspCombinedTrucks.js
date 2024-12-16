@@ -10,7 +10,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 // import {useNavigate} from '@react-navigation/native-stack'
 import { useNavigation } from '@react-navigation/native';
 
-function DspAllTrucks(){    
+function DspAllTrucks({blockVerifiedU ,blackLWarning} ){    
 
 const navigation = useNavigation();
 
@@ -181,10 +181,10 @@ setTimeout(() => {
 
        {!contactDisplay[item.id] && <View>
 
-     <View style={{flexDirection :'row'}} >
+     {!blockVerifiedU &&!blackLWarning &&<View style={{flexDirection :'row'}} >
         <Text style={{width :100}} >Contact</Text>
         <Text>:  {item.contact}</Text>
-      </View>
+      </View>}
 
           {item.truckTonnage && <View style={{flexDirection :'row'}} >
               <Text style={{width :100}} >Truck Ton</Text>
@@ -213,9 +213,9 @@ setTimeout(() => {
           <Text style={{color :'green'}} >{  dspMoreInfo[item.id]  ?"See Less": "See More"} </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{  width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
+       { !blockVerifiedU &&!blackLWarning &&<TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{  width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
           <Text style={{color:"white"}} > Get In Touch Now</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>}
 
 
     </View>
