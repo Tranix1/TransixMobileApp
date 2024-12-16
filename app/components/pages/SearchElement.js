@@ -105,14 +105,14 @@ function SearchIterms({navigation}){
         // const searchedTruks = 
           const displaySearchedTrucks =  filteredDataTrucks.slice(0, 15).map((value , key)=>{
             return(
-              <TouchableOpacity  style={{flex : 1, marginBottom :6 , padding : 6}} key={value.id} onPress={()=> navigation.navigate('selectedUserTrucks',{userId : value.userId,CompanyName:value.CompanyName} ) }>
+              <TouchableOpacity  style={{flex : 1, marginBottom :6 , padding : 6}} key={value.id} onPress={()=> navigation.navigate('selectedUserTrucks',{userId : value.userId,itemKey :value.timeStamp} ) }>
 
             {value.isVerified&& <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white' , zIndex : 66 }} >
               <MaterialIcons name="verified" size={24} color="green" />
             </View>}
             <Text style={{color:'#6a0c0c' , fontSize:15,textAlign :'center' ,fontSize: 17}}>{value.CompanyName} </Text>
             <Text >from {value.fromLocation } to {value.toLocation} </Text>
-            <Text> Truck Ton : {value.truckTonnage}</Text>
+            {value.truckTonnage &&<Text> Truck Ton : {value.truckTonnage}</Text>}
             <Text>Trailer Type : {value.truckType}</Text>
               </TouchableOpacity>
             )

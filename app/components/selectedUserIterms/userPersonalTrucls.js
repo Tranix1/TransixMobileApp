@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import defaultImage from '../images/TRANSIX.jpg'
+
 import { View , Text , Image , ScrollView,StyleSheet,TouchableOpacity } from 'react-native';
 import { auth ,db} from "../config/fireBase";
 
@@ -6,7 +8,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { collection,  query , where,onSnapshot ,deleteDoc,doc,limit,startAfter,orderBy } from 'firebase/firestore';
 function SelectedUserTrucks ({route,navigation} ){ 
 
-  const {userId , loadIsVerified ,CompanyName }= route.params
+  const {userId , loadIsVerified ,CompanyName,itemKey }= route.params
+
   const [allTrucks, setAllTrucks] = useState([]);
 
   const [dspLoadMoreBtn , setLoadMoreBtn]=React.useState(true)
@@ -49,9 +52,37 @@ function SelectedUserTrucks ({route,navigation} ){
     }
     }
 
+  const [getOneTruck, setgetOneTruck] = useState([]);
+
+    function getOneItemF(){
+
+      const userId = auth.currentUser.uid;
+        const dataQuery = query(collection(db, "Trucks"), where("timeStamp", "==", itemKey) , where("userId", "==", userId) );
+
+        const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
+          let loadedData = [];
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'added' || change.type === 'modified') {
+              const dataWithId = { id: change.doc.id, ...change.doc.data() };
+              loadedData.push(dataWithId);
+            }
+          });
+
+          setgetOneTruck(loadedData);
+        });
+        
+        // Clean up function to unsubscribe from the listener when the component unmounts
+        return () => unsubscribe();
+
+
+    }
+
 
     useEffect(() => {
       fetchData()
+      if(itemKey){
+          getOneItemF()
+      }
   }, []); 
   
   
@@ -152,8 +183,8 @@ setTimeout(() => {
 
 
 
-
-  const rendereIterms = allTrucks.map((item)=>{
+let mapThis = [...getOneTruck , ...allTrucks]
+  const rendereIterms = mapThis.map((item)=>{
 
     let contactMe = ( <View style={{ paddingLeft: 30 }}>
 
@@ -177,7 +208,8 @@ setTimeout(() => {
             <VerifiedIcon style={{color : 'green'}} />
       </View>}
 
-         {<Image source={{uri: item.imageUrl }} style={{ height : 250 , borderRadius: 10}} />}
+         {item.imageUrl&& <Image source={{uri: item.imageUrl }} style={{ height : 250 , borderRadius: 10}} />}
+          {!item.imageUrl && <Image source={defaultImage} style={{ height: 280, borderRadius: 10 , width : 368}} />}
           <Text>{item.CompanyName} </Text>
           <Text>From {item.fromLocation} To {item.toLocation} </Text>
 

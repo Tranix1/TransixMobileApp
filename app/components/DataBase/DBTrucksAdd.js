@@ -1,7 +1,7 @@
 import React,{useState} from "react";
 import { storage } from "../config/fireBase";
 import { getDownloadURL, ref, uploadBytes, uploadBytesResumable ,} from "firebase/storage";
-import { collection, doc, getDoc, addDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, addDoc ,serverTimestamp} from 'firebase/firestore';
 import { db, auth } from "../config/fireBase";
 import {View, TextInput , Text ,    TouchableOpacity , Button , Image , ActivityIndicator,StyleSheet, ScrollView,Linking} from "react-native"
 import inputstyles from "../styles/inputElement";
@@ -220,6 +220,7 @@ let _downloadURL
         withDetails : withDetails ,
         expoPushToken :expoPushToken , 
         deletionTime :Date.now() + 2 * 24 * 60 * 60 * 1000 ,
+        timeStamp : serverTimestamp() ,
         ...formData ,       
       });
 
