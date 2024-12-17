@@ -410,7 +410,8 @@ The Future Of Transport And Logistics (Transix)
 }
           </ScrollView>
 
-      {images.length <4 && sellOBuy!=="toBuy" &&<Text>Add 4 Images small sized images e.g screenshots for them to load fast </Text> }
+         {images.length <4 && sellOBuy!=="toBuy" && <Text>Add 4 Images </Text> }
+      {images.length <4 && sellOBuy!=="toBuy" && <Text style={{fontStyle:"italic"}} >Small sized images e.g screenshots for them to load fast </Text>}
 
      {images.length <4 && sellOBuy!=="toBuy" &&<TouchableOpacity onPress={handleFileInputChange} style={{marginBottom : 12 , marginTop :10}}>
           <Fontisto name="camera" size={30} color="#6a0c0c" />
@@ -427,7 +428,7 @@ The Future Of Transport And Logistics (Transix)
           placeholderTextColor="#6a0c0c"
           onChangeText={(text) => handlechange(text, 'mileage')}
           type="text" 
-          style={{width : 85 , borderWidth : 1 , borderColor : 'black' , marginRight:8 ,paddingLeft:15 } }
+          style={{width : 85 , borderWidth : 1 , borderColor : 'black' , marginRight:8, padding:0 ,paddingLeft:15 } }
         />
           <TextInput
           value={formData.year}
@@ -435,7 +436,7 @@ The Future Of Transport And Logistics (Transix)
           placeholderTextColor="#6a0c0c"
           onChangeText={(text) => handlechange(text, 'year')}
           type="text" 
-          style={{width : 85 , borderWidth : 1 , borderColor : 'black' , marginRight:8 , paddingLeft:15 } }
+          style={{width : 85 , borderWidth : 1 , borderColor : 'black' , marginRight:8 ,  padding:0, paddingLeft:15 } }
         />
           <TextInput
           value={formData.engine}
@@ -443,7 +444,7 @@ The Future Of Transport And Logistics (Transix)
           placeholderTextColor="#6a0c0c"
           onChangeText={(text) => handlechange(text, 'engine')}
           type="text" 
-          style={{width : 75 , borderWidth : 1 , borderColor : 'black' , marginRight:8 ,paddingLeft:15  }}
+          style={{width : 75 , borderWidth : 1 , borderColor : 'black' , marginRight:8 , padding:0,paddingLeft:15  }}
         />
           <TextInput
           value={formData.trans}
@@ -451,7 +452,7 @@ The Future Of Transport And Logistics (Transix)
           placeholderTextColor="#6a0c0c"
           onChangeText={(text) => handlechange(text, 'trans')}
           type="text" 
-          style={{width : 75 , borderWidth : 1 , borderColor : 'black' , marginRight:8 , paddingLeft:15 } }
+          style={{width : 75 , borderWidth : 1 , borderColor : 'black' , marginRight:8 , padding:0,paddingLeft:15 } }
         />
              <TextInput
           value={formData.fuel}
@@ -459,10 +460,11 @@ The Future Of Transport And Logistics (Transix)
           placeholderTextColor="#6a0c0c"
           onChangeText={(text) => handlechange(text, 'fuel')}
           type="text" 
-          style={{width : 75 , borderWidth : 1 , borderColor : 'black' , marginRight:8 ,paddingLeft:15  } }
+          style={{width : 75 , borderWidth : 1 , borderColor : 'black' , marginRight:8 ,padding:0,paddingLeft:15  } }
         />
           
         </ScrollView>}
+
 
              { specproduct !== "Sprovider" &&  <View style={{flexDirection:'row', margin :5,marginBottom :15,alignSelf:'center'}} >
               <TouchableOpacity onPress={toggleBrandNew} style={ brandNew ? { 

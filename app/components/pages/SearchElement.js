@@ -100,12 +100,9 @@ function SearchIterms({navigation}){
         };
         
 
-        // const searchedTruks = 
-
-        // const searchedTruks = 
           const displaySearchedTrucks =  filteredDataTrucks.slice(0, 15).map((value , key)=>{
             return(
-              <TouchableOpacity  style={{flex : 1, marginBottom :6 , padding : 6}} key={value.id} onPress={()=> navigation.navigate('selectedUserTrucks',{userId : value.userId,itemKey :value.timeStamp} ) }>
+              <TouchableOpacity  style={{flex : 1, marginBottom :6 , padding : 6}} key={value.id} onPress={()=> navigation.navigate('selectedUserTrucks',{userId : value.userId,itemKey :value.timeStamp ,CompanyName:value.CompanyName} ) }>
 
             {value.isVerified&& <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white' , zIndex : 66 }} >
               <MaterialIcons name="verified" size={24} color="green" />
@@ -135,6 +132,7 @@ function SearchIterms({navigation}){
           })
           
            const handleShareApp = async (companyName) => {
+
               try {
                 const message = `I invite you to Transix!
 
@@ -142,6 +140,7 @@ Transix is a tech-driven business enhancing transportation and logistics service
 
 Contact us at +263716325160 with the message "Application" to swiftly receive the application download link.
 
+Explore Application at : https://play.google.com/store/apps/details?id=com.yayapana.Transix
 Explore website at : https://transix.net/
 
 Experience the future of transportation and logistics!`;

@@ -169,9 +169,9 @@ setTimeout(() => {
           {!item.imageUrl && <Image source={defaultImage} style={{ height: 280, borderRadius: 10 , width : 368}} />}
         
       <Text style={{marginLeft : 60 , fontWeight : 'bold', fontSize : 20}} >{item.CompanyName} </Text>
-      { item.fromLocation && <View style={{flexDirection :'row'}} >
+      { item.fromLocation && <View style={{flexDirection :'row',width:245}} >
         <Text style={{width :100}} >Route</Text>
-        <Text>:  from  {item.fromLocation}  to  {item.toLocation} </Text>
+        <Text style={{textOverflow:'ellipsis' }} >:  from  {item.fromLocation}  to  {item.toLocation} </Text>
       </View>}
 
 
@@ -197,9 +197,9 @@ setTimeout(() => {
               <Text>:  {item.trailerType}</Text>
             </View>}
 
-    { dspMoreInfo && item.additionalInfo &&  <View style={{flexDirection :'row'}} >
+    { dspMoreInfo && item.additionalInfo &&  <View style={{flexDirection :'row',width:245}} >
         <Text style={{width :100}} > Additional Info</Text>
-        <Text>:  {item.additionalInfo}</Text>
+        <Text style={{textOverflow:'ellipsis' }} >:  {item.additionalInfo}</Text>
       </View>}
         </View>}
 

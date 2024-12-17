@@ -9,6 +9,7 @@ import ShopHeader from "./ShopHeader";
 import inputstyles from "../styles/inputElement";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
+import * as Updates from 'expo-updates';
 //Check if user is online or offline 
 import NetInfo from '@react-native-community/netinfo';
 
@@ -172,6 +173,11 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
         console.error(err);
       }
     };
+
+       function reloadApp(){
+
+          Updates.reloadAsync();
+          }
 
 return(
     <View> 

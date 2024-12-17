@@ -585,73 +585,73 @@ let mapThsAll = [...getOneLoad , ...loadsList]
           </View>}
 
       </View>}
-      <View style={{flexDirection :'row'}} >
+      <View style={{flexDirection :'row', width:245 }} >
         <Text style={{width :100}} >Commodity</Text>
-        <Text  >:  {item.typeofLoad} </Text>
+        <Text  style={{textOverflow:'ellipsis' }} >:  {item.typeofLoad} </Text>
       </View>
 
-      <View style={{flexDirection :'row'}} >
+      <View style={{flexDirection :'row', width:245 }} >
         <Text style={{width :100}} >Route</Text>
-        <Text>:  from  {item.fromLocation}  to  {item.toLocation} </Text>
+        <Text style={{textOverflow:'ellipsis' }} >:  from  {item.fromLocation}  to  {item.toLocation} </Text>
       </View>
 
-      {!item.links && !item.triaxle && <View style={{flexDirection :'row',}} >
+      {!item.links && !item.triaxle && <View style={{flexDirection :'row', width:245 }} >
         <Text style={{width :100,color:'green',fontWeight:'bold',fontSize:16}} >Rate</Text>
         <Text  style={{color:'green',fontWeight:'bold',fontSize:16}} >:  {item.currency ? "USD" : "RAND"} {item.ratePerTonne} {item.perTonne ? "Per tonne" :null} </Text>
       </View>}
 
-       {item.links&&  <View style={{flexDirection :'row'}} >
+       {item.links&&  <View style={{flexDirection :'row', width:245 }} >
         <Text style={{width :100,color:'green',fontWeight:'bold',fontSize:16}} >Links</Text>
         <Text style={{color:'green',fontWeight:'bold',fontSize:16}} >:  {item.currency ? "USD" : "RAND"} {item.links} {item.perTonne ? "Per tonne" :null} </Text>
       </View>}
 
-       {item.triaxle&& <View style={{flexDirection :'row'}} >
+       {item.triaxle&& <View style={{flexDirection :'row', width:245 }} >
         <Text style={{width :100,color:'green',fontWeight:'bold',fontSize:16}} >Triaxle</Text>
         <Text style={{color:'green',fontWeight:'bold',fontSize:16}} >:  {item.currency ? "USD" : "RAND"} {item.triaxle} {item.perTonne ? "Per tonne" :null} </Text>
       </View>}
 
        {   !contactDisplay[item.id] && <View>
 
-     {!item.isVerified&&  !blockVerifiedU &&!blackLWarning &&  !blockVerifiedUP  && !blackLWarningP && <View style={{flexDirection :'row'}} >
+     {!item.isVerified&&  !blockVerifiedU &&!blackLWarning &&  !blockVerifiedUP  && !blackLWarningP && <View style={{flexDirection :'row', width:245 }} >
         <Text style={{width :100}} >Contact</Text>
-        <Text>:  {item.contact}</Text>
+        <Text style={{textOverflow:'ellipsis' }} >:  {item.contact}</Text>
       </View>}
 
-      <View style={{flexDirection :'row', width:245}} >
+      <View style={{flexDirection :'row', width:245 }} >
         <Text style={{width:100}} >Payment Terms</Text>
-        <Text  style={{textOverflow:'ellipsis' }}>: {item.paymentTerms}</Text>
+        <Text  style={{textOverflow:'ellipsis' }} >: {item.paymentTerms}</Text>
       </View>
 
         {item.activeLoading&& <Text style={{fontSize:17 , color:"#FF8C00" }} >Active Loading.... </Text> }
      { dspMoreInfo[item.id] &&<View>
-    {  item.fuelAvai && <View style={{flexDirection :'row' ,marginTop:5}} >
+    {  item.fuelAvai && <View style={{flexDirection :'row' ,marginTop:5, width:245 }} >
         <Text style={{width:100}} >Fuel </Text>
-         <Text style={{}} >:  {item.fuelAvai} </Text>
+         <Text style={{textOverflow:'ellipsis' }}  >:  {item.fuelAvai} </Text>
       </View>}
-      { item.additionalInfo && <View style={{flexDirection :'row'}} >
+      { item.additionalInfo && <View style={{flexDirection :'row', width:245 }} >
         <Text style={{width :100}} >Additional info </Text>
-       {<Text>:  {item.additionalInfo} </Text>} 
+       {<Text style={{textOverflow:'ellipsis' }} >:  {item.additionalInfo} </Text>} 
       </View>}
 
 
-    {  item.alertMsg && <View style={{flexDirection :'row',marginTop:5}} >
+    {  item.alertMsg && <View style={{flexDirection :'row',marginTop:5, width:245 }} >
         <Text style={{width :100 ,backgroundColor:'rgba(220, 20, 60, 0.8)',color:'white' ,textAlign:'center',fontSize:15}} >Alert</Text>
-         <Text style={{paddingRight:7 ,backgroundColor:'rgba(220, 20, 60, 0.8)',color:'white' ,fontSize:15,}} >:  {item.alertMsg} </Text>
+         <Text style={{paddingRight:7 ,backgroundColor:'rgba(220, 20, 60, 0.8)',color:'white' ,fontSize:15,textOverflow:'ellipsis' }} >:  {item.alertMsg} </Text>
       </View>}
 
-      {item.returnLoad && <View style={{marginTop:5}} >
+      {item.returnLoad && <View style={{marginTop:5, width:245 }} >
         <Text style={{alignSelf:'center',color:"rgba(220, 20, 60, 0.8)",fontSize:16 ,margin:3}} >Return Load</Text>
           { item.returnLoad &&<View style={{flexDirection :'row'}} >
         <Text style={{width :100}} >R Cargo</Text>
-       {<Text>:  {item.returnLoad} </Text>} 
+       {<Text style={{textOverflow:'ellipsis' }} >:  {item.returnLoad} </Text>} 
       </View>}
-          { item.returnRate &&<View style={{flexDirection :'row'}} >
+          { item.returnRate &&<View style={{flexDirection :'row', width:245 }} >
         <Text style={{width :100}} >R Rate</Text>
-       {<Text>:  {item.returnRate} </Text>} 
+       {<Text style={{textOverflow:'ellipsis' }} >:  {item.returnRate} </Text>} 
       </View>}
-          { item.returnTerms &&<View style={{flexDirection :'row'}} >
+          { item.returnTerms &&<View style={{flexDirection :'row', width:245 }} >
         <Text style={{width :100}} >R Terms</Text>
-       {<Text>:  {item.returnTerms} </Text>} 
+       {<Text style={{textOverflow:'ellipsis' }} >:  {item.returnTerms} </Text>} 
       </View>}
       </View>}
  </View>}
@@ -701,7 +701,7 @@ let mapThsAll = [...getOneLoad , ...loadsList]
   
  const handleShareLink = async (companyName) => {
     try {
-      const url = `https://truckerz.net/selectedUserLoads/${userId}`; // Replace this with the URL you want to share
+      const url = `https://transix.net/selectedUserLoads/${userId}`; // Replace this with the URL you want to share
       const message = `Check out ${companyName} loads on Truckerz: ${url}`;
 
       const result = await Share.share({
@@ -734,6 +734,7 @@ Transix is a tech-driven business enhancing transportation and logistics service
 
 Contact us at +263716325160 with the message "Application" to swiftly receive the application download link.
 
+Explore Application at : https://play.google.com/store/apps/details?id=com.yayapana.Transix
 Explore website at : https://transix.net/
 
 Experience the future of transportation and logistics!  `;
@@ -809,7 +810,7 @@ Experience the future of transportation and logistics!  `;
          <Text style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more loads</Text>
        </TouchableOpacity>}
 
-        { dspLoadMoreBtn&&loadsList.length>0? rendereIterms: <Text>Loads Loading.....</Text> }
+        { dspLoadMoreBtn &&loadsList.length>0? rendereIterms: <Text>Loads Loading.....</Text> }
           {LoadMoreData && loadsList.length>0 && <Text style={{alignSelf:'center'}} >Loading More Loads....... </Text> } 
           
          {loadsList.length>15 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> loadedData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >

@@ -6,7 +6,10 @@ import { auth ,db} from "../config/fireBase";
 
 import { Ionicons } from "@expo/vector-icons";
 import { collection,  query , where,onSnapshot ,deleteDoc,doc,limit,startAfter,orderBy } from 'firebase/firestore';
-function SelectedUserTrucks ({route,navigation} ){ 
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
+function SelectedUserTrucks ({route,navigation ,blockVerifiedU  , blackLWarning } ){ 
 
   const {userId , loadIsVerified ,CompanyName,itemKey }= route.params
 
@@ -186,23 +189,37 @@ setTimeout(() => {
 let mapThis = [...getOneTruck , ...allTrucks]
   const rendereIterms = mapThis.map((item)=>{
 
+      const message =  `${item.companyName}
+        Is this truck available
+        ${item.truckType} from ${item.fromLocation} to ${item.toLocation}
+        Trailer config ${item.trailerType}
+        ${item.withDetails ? "It have detais":"It does not have details"}
+
+        From: https://transix.net`  
     let contactMe = ( <View style={{ paddingLeft: 30 }}>
 
-        {auth.currentUser &&   <TouchableOpacity  onPress={()=>navigate(`/message/${item.userId}/${item.CompanyName} `)}  >
-            <Text>Message now</Text>
+           {auth.currentUser&& <TouchableOpacity   style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#008080" , borderWidth:1 , borderColor :'#008080', justifyContent:'center', marginBottom : 5 , marginTop:6}} >
+            <Text style={{color:"#008080"}} >Message now</Text>
+            <MaterialIcons name="chat" size={24} color="#008080" />
+
           </TouchableOpacity>}
 
-          <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.contact}`)}>
-            <Text>Phone call</Text>
+            <TouchableOpacity onPress={() => Linking.openURL(`whatsapp://send?phone=${item.contact}&text=${encodeURIComponent(message)}`)} style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#25D366" , borderWidth:1 , borderColor :'#25D366', justifyContent:'center', marginBottom:6}} >
+            <Text style={{color : "#25D366"}} >WhatsApp </Text> 
+            <FontAwesome6 name="whatsapp" size={24} color="#25D366" />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => Linking.openURL(`whatsapp://send?phone=${item.contact}`)}>
-            <Text>WhatsApp</Text>
+          <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.contact}`)} style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#0074D9" , borderWidth:1 , borderColor :'#0074D9', justifyContent:'center', marginBottom:4}} >
+            <Text style={{color:'#0074D9'}} >Phone call</Text>
+                <MaterialIcons name="call" size={24} color="#0074D9" />
           </TouchableOpacity>
 
           </View>)
     return(
-         <View style={{marginBottom:18 , padding:10}} >
+         <View style={{padding :7, borderWidth : 2 , borderColor:'black', borderRadius:8 ,  shadowColor: '#6a0c0c',
+        shadowOffset: { width: 1, height: 2 },
+        shadowOpacity: 0.7,
+        shadowRadius: 5,backgroundColor:'rgba(235, 142, 81, 0.07)' , marginBottom : 15}} >
 
       { item.isVerified&& <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white' , zIndex : 66}} >
             <VerifiedIcon style={{color : 'green'}} />
@@ -210,17 +227,48 @@ let mapThis = [...getOneTruck , ...allTrucks]
 
          {item.imageUrl&& <Image source={{uri: item.imageUrl }} style={{ height : 250 , borderRadius: 10}} />}
           {!item.imageUrl && <Image source={defaultImage} style={{ height: 280, borderRadius: 10 , width : 368}} />}
-          <Text>{item.CompanyName} </Text>
-          <Text>From {item.fromLocation} To {item.toLocation} </Text>
+         
+      <Text style={{marginLeft : 60 , fontWeight : 'bold', fontSize : 20}} >{item.CompanyName} </Text>
+      { item.fromLocation && <View style={{flexDirection :'row',width:245}} >
+        <Text style={{width :100}} >Route</Text>
+        <Text style={{textOverflow:'ellipsis' }} >:  from  {item.fromLocation}  to  {item.toLocation} </Text>
+      </View>}
 
-          <View style={{flexDirection :'row'}} >
+
+       {!contactDisplay[item.id] && <View>
+
+     {!blockVerifiedU &&!blackLWarning &&<View style={{flexDirection :'row'}} >
+        <Text style={{width :100}} >Contact</Text>
+        <Text>:  {item.contact}</Text>
+      </View>}
+
+          {item.truckTonnage && <View style={{flexDirection :'row'}} >
+              <Text style={{width :100}} >Truck Ton</Text>
+              <Text>:  {item.truckTonnage}</Text>
+            </View>}
+          { item.truckType && <View style={{flexDirection :'row'}} >
               <Text style={{width :100}} >Trailer Type</Text>
               <Text>:  {item.truckType}</Text>
-            </View>
-          <View style={{flexDirection :'row'}} >
+            </View>}
+
+
+          {item.trailerType && <View style={{flexDirection :'row'}} >
               <Text style={{width :100}} >Trailer Config</Text>
               <Text>:  {item.trailerType}</Text>
-            </View>
+            </View>}
+    { dspMoreInfo && item.additionalInfo &&  <View style={{flexDirection :'row',width:245}} >
+        <Text style={{width :100}} > Additional Info</Text>
+        <Text style={{textOverflow:'ellipsis' }} >:  {item.additionalInfo}</Text>
+      </View>}
+        </View>}
+
+        {contactDisplay[item.id] && contactMe}
+
+
+         <TouchableOpacity onPress={()=>toggleDspMoreInfo(item.id) } >
+          <Text style={{color :'green'}} >{  dspMoreInfo[item.id]  ?"See Less": "See More"} </Text>
+        </TouchableOpacity>
+
 
          {loadIsVerified && <TouchableOpacity onPress={togglrTruckDe} style={styles.buttonSelectStyle} >
             <Text style={{color:'white'}} >Truck Details </Text>
@@ -290,6 +338,10 @@ let mapThis = [...getOneTruck , ...allTrucks]
         <Text>:  {item.businessLoction}</Text>
       </View>
          </View>}
+         
+{ !blockVerifiedU &&!blackLWarning &&<TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{  width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
+   <Text style={{color:"white"}} > Get In Touch Now</Text>
+ </TouchableOpacity>}
 
         </View>       )
       })

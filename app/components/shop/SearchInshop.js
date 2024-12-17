@@ -154,6 +154,7 @@ Transix is a tech-driven business enhancing transportation and logistics service
 
 Contact us at +263716325160 with the message "Application" to swiftly receive the application download link.
 
+Explore Application at : https://play.google.com/store/apps/details?id=com.yayapana.Transix
 Explore website at : https://transix.net/
 
 Experience the future of transportation and logistics!  `;

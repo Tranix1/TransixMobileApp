@@ -1,6 +1,6 @@
 import React, { useEffect, useState ,useRef} from 'react';
 import { db , auth} from '../config/fireBase';
-import { View , Text , Image , ScrollView , TouchableOpacity , Linking , StyleSheet, Alert, ActivityIndicator} from 'react-native';
+import { View , Text , Image , ScrollView , TouchableOpacity , Linking , StyleSheet, Alert, ActivityIndicator , Share} from 'react-native';
 import {onSnapshot ,  query ,collection,where ,limit,getDocs,startAfter,orderBy,doc,updateDoc , deleteDoc} from "firebase/firestore"
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -247,6 +247,12 @@ const [priceRangeDsp , setPriceRangeDsp]= React.useState(false)
 
     }
 
+        function refreshPageF(){
+
+       navigation.goBack()      
+        navigation.navigate(`oneFirmsShop` ,{ userId:userId ,sellOBuyG :sellOBuyG ,location : location , specproductG : specproductG , CompanyName : CompanyName })
+      }
+
 
 
         
@@ -381,7 +387,7 @@ async function fetchData(loadOneMore) {
 
 
     let loadedData = userItemsMap
-    if(loadedData.length === 0 ){
+    if(loadedData.length < 4 ){
       setLoadMoreBtn(false)
     }
     // Update state with the new data
@@ -717,9 +723,9 @@ const spreadThis = [...getOneItem ,...allSoldIterms]
           </ScrollView>}
 
           
-         {item.productName &&<View style={{flexDirection :'row'}} >
+         {item.productName &&<View style={{flexDirection :'row',width:245}} >
         <Text style={{width :100}} >{sellOBuy ==="forSell" ? "Product":'Looking For' }</Text>
-       {<Text>:  {item.productName} { item.sellRent === "R2B" ?"Rent To Buy": item.sellRent ? "for sell" :'for rental' } </Text>} 
+       {<Text style={{textOverflow:'ellipsis' }} >:  {item.productName} { item.sellRent === "R2B" ?"Rent To Buy": item.sellRent ? "for sell" :'for rental' } </Text>} 
       </View>}
           
          {item.swapWith &&<View style={{flexDirection :'row'}} >
@@ -755,9 +761,9 @@ const spreadThis = [...getOneItem ,...allSoldIterms]
        {<Text>:  {item.deliveryR}</Text>} 
       </View>}
 
-      {dspMoreInfo[item.id]  && item.additionalInfo  &&<View style={{flexDirection :'row'}} >
+      {dspMoreInfo[item.id]  && item.additionalInfo  &&<View style={{flexDirection :'row',width :245}} >
         <Text style={{width :100 }} >Aditional Info</Text>
-      {<Text  >:  {item.additionalInfo}</Text>} 
+      {<Text style={{textOverflow:'ellipsis' }}  >:  {item.additionalInfo}</Text>} 
       </View>}
 
         </View>}
@@ -810,7 +816,40 @@ const spreadThis = [...getOneItem ,...allSoldIterms]
 
 
 
+   const handleShareApp = async (companyName) => {
+              try {
+                const message = `I invite you to Transix!
 
+Transix is a tech-driven business enhancing transportation and logistics services, connecting suppliers with demand for truckloads, vehicles, trailers, spare parts etc.
+
+Contact us at +263716325160 with the message "Application" to swiftly receive the application download link.
+
+Explore Application at : https://play.google.com/store/apps/details?id=com.yayapana.Transix
+Explore website at : https://transix.net/
+
+Experience the future of transportation and logistics!`;
+
+                const result = await Share.share({
+                  message: message,
+                });
+
+                if (result) {
+                  if (result.action === Share.sharedAction) {
+                    if (result.activityType) {
+                      // Shared with activity type of result.activityType
+                    } else {
+                      // Shared
+                    }
+                  } else if (result.action === Share.dismissedAction) {
+                    // Dismissed
+                  }
+                } else {
+                  // Handle the case where result is undefined or null
+                }
+              } catch (error) {
+                alert(error.message);
+              }
+            };
 
 
     return(
@@ -1227,10 +1266,25 @@ const spreadThis = [...getOneItem ,...allSoldIterms]
 
         </ScrollView> : null }
         <ScrollView>
-          {losdingSpec && <ActivityIndicator size="small" />}
-        { allSoldIterms.length>0? rendereIterms: <Text> {specproduct} Loading.....</Text> }
+            {losdingSpec && <ActivityIndicator size="small" />}
 
-        {!dspLoadMoreBtn &&allSoldIterms.length <= 0 && <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO {specproduct} In {location} Available Freely Add </Text> }
+        {!dspLoadMoreBtn &&allSoldIterms.length <= 0 &&!vehicleType && !priceRange&& !buyRent && !vehiMake&& <Text style={{fontSize:19 ,fontWeight:'bold'}} >{CompanyName} does not have {specproduct} </Text> }
+
+            { allSoldIterms.length<=0 &&  (vehicleType || priceRange|| buyRent || vehiMake)&&<Text style={{fontSize :15}}> The specified product is not available in {CompanyName} Store. </Text> }
+         { allSoldIterms.length<=0 &&  (vehicleType || priceRange|| buyRent || vehiMake)&& <TouchableOpacity onPress={refreshPageF} style={{borderWidth: 2.5 , width : 150 , height : 30 , borderColor : "#6a0c0c" , alignSelf:'center', margin:4, borderRadius:8 ,  shadowColor: '#6a0c0c',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,justifyContent:'center',alignItems:'center'  }} >
+          <Text style={{ fontSize:16 , fontWeight:'600',color:'#6a0c0c'}} >Refresh</Text>
+         </TouchableOpacity>}
+
+       {!dspLoadMoreBtn &&allSoldIterms.length <= 0  &&<TouchableOpacity onPress={handleShareApp} >
+
+         <Text style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more services and products! </Text>
+       </TouchableOpacity>}
+
+        { allSoldIterms.length>0 &&  rendereIterms}
+
+         { dspLoadMoreBtn &&allSoldIterms.length<=0  && <Text> {specproduct} Loading.......</Text>} 
+
+
           {LoadMoreData && allSoldIterms.length>0 && <Text style={{alignSelf:'center'}} >Loading More {specproduct}....... </Text> }
 
          {allSoldIterms.length>0 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> fetchData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >

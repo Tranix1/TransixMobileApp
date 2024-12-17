@@ -257,7 +257,7 @@ async function fetchData(loadOneMore) {
 
           let loadedData = userItemsMap
 
-    if(loadedData.length === 0 ){
+    if(loadedData.length < 4 ){
       setLoadMoreBtn(false)
     }
 
@@ -506,7 +506,7 @@ function displayAllImages(itemId){
 
 
           thingsToBeDsp = (
-          <TouchableOpacity  key={item.id}  onPress={()=>navigation.navigate(`oneFirmsShop` ,{ userId:item.userId ,sellOBuyG :sellOBuy ,location : location , specproductG : specproduct , CompanyName : item.CompanyName })}  style={{padding :7, borderWidth : 2 , borderColor:'black', borderRadius:8 ,  shadowColor: '#6a0c0c',
+          <TouchableOpacity  key={item.id}  onPress={ ()=>navigation.navigate(`oneFirmsShop` ,{ userId:item.userId ,sellOBuyG :sellOBuy ,location : location , specproductG : specproduct , CompanyName : item.CompanyName })}  style={{padding :7, borderWidth : 2 , borderColor:'black', borderRadius:8 ,  shadowColor: '#6a0c0c',
         shadowOffset: { width: 1, height: 2 },
         shadowOpacity: 0.7,
         shadowRadius: 5,backgroundColor:'rgba(235, 142, 81, 0.07)' , marginBottom : 15}} >
@@ -603,9 +603,9 @@ function displayAllImages(itemId){
           </ScrollView>}
 
           
-         {item.productName &&<View style={{flexDirection :'row'}} >
+         {item.productName &&<View style={{flexDirection :'row',width:245}} >
         <Text style={{width :100}} >{sellOBuy ==="forSell" ? "Product":'Looking For' }</Text>
-       {<Text>:  {item.productName} { item.sellRent === "R2B" ?"Rent To Buy": item.sellRent ? "for sell" :'for rental' } </Text>} 
+       {<Text style={{textOverflow:'ellipsis' }} >:  {item.productName} { item.sellRent === "R2B" ?"Rent To Buy": item.sellRent ? "for sell" :'for rental' } </Text>} 
       </View>}
           
          {item.swapWith &&<View style={{flexDirection :'row'}} >
@@ -641,9 +641,9 @@ function displayAllImages(itemId){
        {<Text>:  {item.deliveryR}</Text>} 
       </View>}
 
-      {dspMoreInfo[item.id]  && item.additionalInfo  &&<View style={{flexDirection :'row'}} >
+      {dspMoreInfo[item.id]  && item.additionalInfo  &&<View style={{flexDirection :'row', width:245 }} >
         <Text style={{width :100 }} >Aditional Info</Text>
-      {<Text  >:  {item.additionalInfo}</Text>} 
+      {<Text  style={{textOverflow:'ellipsis' }} >:  {item.additionalInfo}</Text>} 
       </View>}
 
         </View>}
@@ -685,6 +685,7 @@ Transix is a tech-driven business enhancing transportation and logistics service
 
 Contact us at +263716325160 with the message "Application" to swiftly receive the application download link.
 
+Explore Application at : https://play.google.com/store/apps/details?id=com.yayapana.Transix
 Explore website at : https://transix.net/
 
 Experience the future of transportation and logistics!`;
@@ -1083,7 +1084,7 @@ Experience the future of transportation and logistics!`;
 
          <Text style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more services and products! </Text>
        </TouchableOpacity>}
-        { dspLoadMoreBtn &&allSoldIterms.length>0 && dspLoadMoreBtn && rendereIterms}
+        { allSoldIterms.length>0 &&  rendereIterms}
          { dspLoadMoreBtn &&allSoldIterms.length<=0  && <Text> {specproduct} Loading.......</Text>} 
 
 

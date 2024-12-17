@@ -975,7 +975,7 @@ const Stack = createNativeStackNavigator();
 
       <Stack.Screen name="selectedUserLoads" component={DspAllLoads}  options={{headerShown: false}}  initialParams={{username : username , contact : contact ,blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning }} />
 
-      <Stack.Screen name="selectedUserTrucks" component={SelectedUserTrucks}  options={{headerShown: false}}/>
+      <Stack.Screen name="selectedUserTrucks" component={SelectedUserTrucks}  options={{headerShown: false}} initialParams={{blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning }} />
 
 
       <Stack.Screen name="shopHome" component={ShopLocation} options={{title: 'Welcome To Store',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
