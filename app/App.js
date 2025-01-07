@@ -1,72 +1,174 @@
-// billie illish oxean eyes lovely birds of a feathure wild flower 
+// This is the begenning of the transix dumentation
+// Transix is a business focusiing on improving the transport and logistics industry using cutting edge technology it keeps advancing and adapting to improve how the overal services work .
+// For now there is way to connect truck and loads or freight business , and a shop yto sell products in the transort industry .
+// On the logistics side there are trucks wich are ordered using their location also one can select a truck type using its trailer and get those type of trucks only , there is also a verified fetaure for trucks were there are verified trucks  .
+// And for loads they are sorted using their time latest load on top , they are also mini loads which show few details and can direct somone to the owner of the loads 
+// On the shop side they are vheicles wich include small cars , carg vehicles , construction for now and some can be sorted undeer other option .
+// There is also  trallers , spares , service providers that can be found in the store .
+// In the shop one can also add what they are looking for and they can also specify l will explain in depth of all the features in the code  .
+
+
+
+// Lets begin
+
+// Here is the first step as we are impoting react reusable functions that l will use for diffrent purposes like storing , tracking and prioritizing. 
+// I first imported React as it is the main function and consist of all other elements in it like usestate or useeffect but firsy l call React hook.
+// I also extracted the other functions from react so l can use them without calling React first like useState only it will not reuire me to call React first it simplifies the code and makees it shorter
+// So In short am just importing React functions
 import React,{useState , useEffect,useRef} from "react";
-import { View , Text , Button , TouchableOpacity , StatusBar, BackHandler,Linking,Platform,ActivityIndicator  } from "react-native";
+
+// In my application am not using plain react am using React native for mobile app developemnt and there is need to import the elements used to display items in React native .
+// Most of the imports below are used visualization or displaying itemrs to the user end 
+// The View is like a div in web dev its the empty container used to store items in it and can take varoius shapes and elemets in it
+// The Text is just like a p tag in html it used to store text all the text is found in the p tag that is seen by the user . Text cannot run wihtout being in a Text it cause an error 
+// The touchableOpcaity is the clickable part of the application , its like a button in html 
+// StatusBar is the topMost of the device llike the part wich have time battery and l wanted to change color
+// BackHandler is used to goBack when a user press a back button on the phsyical device
+// Linking is used to open urls or links eg when you want to open whatsapp with a number we use the linking tag
+// The platform is used to check wich device we are oprating on coz react ntive is cross platform so check if its andaroid or ios 
+// ActivityIndicator is a loading item which show a circle loading 
+
+import { View , Text  , TouchableOpacity , StatusBar, BackHandler,Linking,Platform,ActivityIndicator  } from "react-native";
+
+// The stack createNativeStackNavigator is a library used for navigation or changing pages like if am on the home page and l want to go to the store its used to change them and makes it easier to go back make Headers it automate many things even a smooth transision . I called it and store in a variable called stack ich l then used throughiut the whole code to call the screeens to be navigated . 
+// Its like react router fdom for web
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+// I imported the Updates so that l can refresh the app when a user is waiting to verify their account and they verified but its not respoding so in short l wanted to restart the app
 import * as Updates from 'expo-updates';
 
 //Check if user is online or offline 
 import NetInfo from '@react-native-community/netinfo';
 
-import * as Device from 'expo-device';
+// The imports below are used for notifications to send and receive notifications
+// The isDevice check if the user is using a physical device
+import { isDevice } from 'expo-device';
+// Here we are importing all elements in the expo notification thats why there is * so we can use them
 import * as Notifications from 'expo-notifications';
+// I dont know what the constants is for need help here 
 import Constants from 'expo-constants';
+// Imports for notification end here
 
+// The imports below are from firebase so l can use firebase elements in the code
 
+// The auth is being used to check if the user is authiateted or created an account and the account is being created using firebase
+// db its for database and used to know wich data base is being reuired or being used
+// The auth and db are both connceted to my personal info as they are uniue to my credentials so that they can add to the correct imported db thats why they are imported from a local file
+// The confiig firebase file is the one that have all my configs with firebase what l imported and the keys to link them to firebase
 import  { auth , db,  } from "./components/config/fireBase"
-import { signOut,sendEmailVerification} from  'firebase/auth'
-import {doc , getDoc ,query ,collection , where,onSnapshot, loadBundle,updateDoc} from "firebase/firestore"
 
+// The firebase auth is not configured by me
+// SignOut is used to signout a user from the app not delete the accoutn
+// sendEmailVerification is used to send link so that user can verify their email that its legit 
+
+import { signOut,sendEmailVerification} from  'firebase/auth'
+
+// The below are the imports from firestore wich l used for diffrent many oprations 
+// I used firestre as my database and these are some of the functons ich l need in the App file and how they work
+import {doc  ,query ,collection , where,onSnapshot,updateDoc} from "firebase/firestore"
+
+// The header element of the app  or the top most view which have the compny Name to display small menu etc
 import Header from "./components/Header"
+
+// The Page wich display when the search icon is clicked consist of all searchng code
 import SearchIterms from "./components/pages/SearchElement"
 
+// Code for Auth and Auth
+// The page wich deal with creating and new user or logining in to an account
 import CreateUser from "./components/Auth/LogIn"
+// The Page wichconsist of signing in to an existing user
 import SignIn from "./components/Auth/SignIn"
+// The page wich allow a user to add  a username and contact information
 import PersonalAccInfo from "./components/Auth/Personalnfo"
+// Code for Auth and Auth end here
 
+// The funcytion wich display the small loads on the first page
 import MiniLoad from  "./components/pages/MiniLoads"
+
+// The function wich get all trucks and are the ones wich are below the small loads on front page
 import DspAllTrucks from  "./components/pages/DspCombinedTrucks"
+// The page wich display all loads both for one person all loads and selected country they are all here
 import DspAllLoads from  "./components/pages/DspAllLoads"
+// Function that allow you to select a truck type you want to view its fount on the header
 import SelectOneTruckType from  "./components/pages/selectOnteTruckType"
+// The page wich allow somone to view only one Truck type is were the trucks can be viewed
 import DspOneTruckType from  "./components/pages/DspOneTruckType"
 
+// THe below is code to add itemrs in logistics sector eg trucks and loads
+// When one click Add button on the fist page when they eneter the app
+
+// The first page where they select are they adding loads or trucks display 
 import AddIterms from "./components/DataBase/AddIterms"
+
+// This page display when a user select a truck type they want to add and mention they want to add a truck
 import DBTrucksAdd from "./components/DataBase/DBTrucksAdd"
+
+// If one want to add a load this page will display
 import AddLoadDB from "./components/DataBase/addloadDB";
+// THe code for adding Iterns end here
 
+
+// Here start the code that allow somone to modify the data they have added 
+
+// Allow somoene to specify what they want to edit in their personal Products just seleecting
 import SelectPersnalAcc from "./components/PersonalData/SelectPersnalAcc"
+// Give Accesss to the loads one have added and allow them to delete them  and modify them 
 import PersnalAccLoads from "./components/PersonalData/PersnalAccLoads"
+// Allow one to edit their personal information eg changing a username or contact  also were somoene can signout
 import PersnonalAccInfoEdit from "./components/PersonalData/PersnonalAccInfoEdit"
+// Give Accesss to the trucks one have added and allow them to delete them  and modify them 
 import PersonalAccTrucks from "./components/PersonalData/PersonalAccTrucks"
+// Here END the code that allow somone to modify the data they have added 
 
+// Here beigin the code that allow people to conctact one another for communication
+
+// When people have already started a chat the Page below allows them to select somoene you have already contacted but if not they will not appear 
 import SelectChat from "./components/communcication/selectChat"
+// After you select who you want to talk this is the page were the input elemets and code to send and receive the message
 import Messaging from "./components/communcication/Messaging"
+// The page below is for the main group were people can join a community similiar to a whatsapp group
 import MainGroup from "./components/communcication/MainGroup"
-import BookingsAndBiddings from "./components/communcication/DspBookingsAndBiidinga"
+//This is when somone click B&B on the small menu they will get a page when they must select they want bookings or bids thats the page were one select
 import SlctBookingAndBidding from "./components/communcication/selectBookingAndBiddding"
+// This is were the code that display all bookings and bids are shown wthere you bookked bidded or your itenrs are 
+import BookingsAndBiddings from "./components/communcication/DspBookingsAndBiidinga"
+// Code for communication end here
 
-import SelectedUserLoads from "./components/selectedUserIterms/userPersonalLoads"
-
+// This page is when you select one persns truck like after when they book your load and you click truck owned or when search a truck just ersonal trucks for one user
 import SelectedUserTrucks from "./components/selectedUserIterms/userPersonalTrucls"
-// 'rgb(129,201,149) 
-// '#6a0c0c'
-// '#6a0c0c'
 
+
+// All code for the store start here
+
+// After a user click on store they selct location this is the page where they must select the location 
 import ShopLocation from "./components/shop/shopHome"
+// The page below is like the App for the store . It the one that combine all itemrs like the shop header itemrs beign sold and put all itemrs on the same page. Thhats were you find the shop Header an other shop properties pages called in it
 import DspShopIterms from "./components/shop/DspShopIterms"
+// The page below is the one were you select what you want to add to the shop like specify want to sell or buy and also specify what you are having and directed to the page were you can add the product
 import SelectAddToShop from "./components/shop/SelectAddToShop"
+// This is the page where one add their Itenrs to the shop after they selct hat they are adding thats were the info is taken
 import AddToShop from "./components/shop/AddToShop"
-
+// When is were we get shop iterms for one person only like all the elements added by the user the selected one and you can select them in shop Home page when one click a user 
 import OneFirmsShop from "./components/shop/OneFirmsShop";
+// This is the page were you can search products in the shop and  select them its were you can search in shop
 import SearchInshop from "./components/shop/SearchInshop";
+// All code for the store endt here
 
-import HelpHome from "./components/HelpCentre/HelpHome"
-import VerifyInfo from './components/verify/verifyInfo'
-import MobileAppSD from "./components/MobileAppSD"
-import AppUpdates from "./components/pages/Updates"
 
+
+// The Page below is when you want to book a a verified load and must add the reuirements
 import BBVerifiedLoad from "./components/verify/BBVerifiedLoad"
 
+// This is the page were one can contact for help when they face issues  and can be acceseed when press help on small menu
+import HelpHome from "./components/HelpCentre/HelpHome"
+// This is the page were one can get information on how to be verified and can get verified 
+import VerifyInfo from './components/verify/verifyInfo'
+// This is were one can download or share the mobile app
+import MobileAppSD from "./components/MobileAppSD"
+// The is were one can View the updates any update abut anything way for developer to meet the user
+import AppUpdates from "./components/pages/Updates"
+
+// These are icons to be used in the App 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 
@@ -115,7 +217,7 @@ async function registerForPushNotificationsAsync() {
     });
   }
 
-  if (Device.isDevice) {
+  if (isDevice) {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
     if (existingStatus !== 'granted') {
@@ -548,7 +650,7 @@ if(username !== false ||trackLoadingScnd ){
     <View>
 
     {!isBlackListed ?<View >  
-        <Header navigation={navigation} checkAuth={checkAuth} smallMenu={smallMenu} />
+        <Header navigation={navigation} checkAuth={checkAuth} smallMenu={smallMenu} dspMenu={username !== false } />
 
              <View  style={{flexDirection:'row' , justifyContent : "space-evenly" , paddingLeft : 20 , paddingRight: 20 , height : 40 , alignItems : 'center' , backgroundColor : '#6a0c0c' , paddingTop : 10 }}>
 
@@ -708,9 +810,9 @@ if(username !== false ||trackLoadingScnd ){
              </TouchableOpacity>}
    {!dspLoads && !dspTruckType && <View  >
 
-     <MiniLoad blockVerifiedU ={blockVerifiedU} blackLWarning={blackLWarning} />
+     <MiniLoad blockVerifiedU ={blockVerifiedU} blackLWarning={blackLWarning} isConnectedInternet={isConnectedInternet} />
      {username === false   && <ActivityIndicator size="large" /> }
-     <DspAllTrucks blockVerifiedU={blockVerifiedU} blackLWarning={blackLWarning}  />
+     <DspAllTrucks blockVerifiedU={blockVerifiedU} blackLWarning={blackLWarning} isConnectedInternet={isConnectedInternet} />
     </View>}
 
     {dspLoads && !dspTruckType&& <DspAllLoads  username = {username } contactG={contact} route={route}  sendPushNotification={sendPushNotification} expoPushToken={expoPushToken} userIsVerified={userIsVerified} blockVerifiedU ={blockVerifiedU} blackLWarning={blackLWarning}  />}
@@ -956,7 +1058,7 @@ const Stack = createNativeStackNavigator();
 
       <Stack.Screen name="addPersnoalInfo" component={PersonalAccInfo} options={{title: 'Personal Information',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
 
-      <Stack.Screen name="selectPeronalAcc" component={SelectPersnalAcc} options={{title: 'Truckerz',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
+      <Stack.Screen name="selectPeronalAcc" component={SelectPersnalAcc} options={{title: 'Transix',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
       <Stack.Screen name="personalInfomation" component={PersnonalAccInfoEdit}initialParams={{username : username , contact : contact ,}} options={{headerShown:false}}/>
       <Stack.Screen name="peronalAccLoads" component={PersnalAccLoads} options={{title: 'Manage Loads',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
       <Stack.Screen name="peronalAccTrucks" component={PersonalAccTrucks} options={{title: 'Manage Trucks',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
@@ -982,7 +1084,7 @@ const Stack = createNativeStackNavigator();
       <Stack.Screen name="DspShop" component={DspShopIterms} options={{headerShown:false}} initialParams={{spechopLoc:spechopLoc ,blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning  }} />
       <Stack.Screen name="slctAddShop" component={SelectAddToShop} options={{title: 'Add To Shop',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
       <Stack.Screen name="AddToShop" component={AddToShop} options={{headerShown:false}} 
-       initialParams={{username : username , contact : contact , isVerified : isVerified ,  shopLocation: spechopLoc ,deliveryR :deliveryR ,expoPushToken :expoPushToken ,isBlackListed : isBlackListed ,  blackLWarning : blackLWarning ,blockVerifiedU:blockVerifiedU ,verifyOngoing :verifyOngoing}} />
+       initialParams={{username : username , contact : contact , isVerified : isVerified ,  shopLocation: spechopLoc ,deliveryR :deliveryR ,expoPushToken :expoPushToken ,isBlackListed : isBlackListed ,  blackLWarning : blackLWarning ,blockVerifiedU:blockVerifiedU ,verifyOngoing :verifyOngoing  }} />
       <Stack.Screen name="oneFirmsShop" component={OneFirmsShop} options={{headerShown: false}} initialParams={{blockVerifiedUP : blockVerifiedU , blackLWarningP:blackLWarning }} />
       <Stack.Screen name="searchInShop" component={SearchInshop} options={{headerShown: false}}/>
 

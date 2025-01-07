@@ -32,11 +32,14 @@ function DspShopIterms({navigation , route}){
     return () => unsubscribe();
   }, [currentUser]);
 
-   const [ username , setUsername] = React.useState("");
+   const [ username , setUsername] = React.useState();
    const [ contact , setContact] = React.useState('');
 
-       React.useEffect(() => {
-  let unsubscribe;  
+  const [trackLoading , setTrackLoading]=React.useState(false)
+  const [trackLoadingScnd , setTrackLoadingScnd]=React.useState(false)
+    
+           React.useEffect(() => {
+  let unsubscribe;
 
   try {
     if (auth.currentUser) {
@@ -49,10 +52,18 @@ function DspShopIterms({navigation , route}){
           setContact(doc.data().contact);
         }
       });
+    }else if(!auth.currentUser && trackLoading ) {
+      setUsername("")
     }
-  } catch (err) {
-    console.error(err);
-  }
+      setTrackLoading(true)
+      if(trackLoading){
+      setTrackLoadingScnd(true)
+      }
+        } catch (err) {
+          console.error(err);
+        }
+
+
 
   return () => {
     if (unsubscribe) {
@@ -60,6 +71,7 @@ function DspShopIterms({navigation , route}){
     }
   };
 }, [currentUser]);
+
 
 
 
@@ -125,6 +137,7 @@ const [isConnectedInternet, setIsConnectedInternet] = React.useState(true);
 
 const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
   function checkAuth(){
+    if(username !== false|| trackLoadingScnd){
     if(!currentUser){
       navigation.navigate("createUser")
     }else if(!currentUser.emailVerified ){
@@ -140,6 +153,7 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
    }else{
        navigation.navigate('slctAddShop', {location: location} ) 
    }
+    }
     }
   }
 
@@ -168,6 +182,8 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
           setNewShopAdress("")
           setNewDeliveryR("")
           setEnterSHopLoc(false)
+          navigation.goBack()
+          navigation.navigate('DspShop'  , {location:location ,specproduct: "vehicles" ,sellOBuy:"forSell" })
         }
       } catch (err) {
         console.error(err);
@@ -237,13 +253,13 @@ return(
         </View>
                </View>}
 
-                     {auth.currentUser ? !blockVerifiedU && !blackLWarning &&<TouchableOpacity onPress={checkAuth}  style={{position :'absolute',top: 470 ,right:10 , width : 80 , height : 35 , alignItems :"center" , justifyContent :'space-around', backgroundColor:'#228B22' , zIndex :200 , borderRadius: 8 , flexDirection:'row'}} >
+                     {auth.currentUser ? !blockVerifiedU && !blackLWarning &&username !== false&& <TouchableOpacity onPress={checkAuth}  style={{position :'absolute',top: 470 ,right:10 , width : 80 , height : 35 , alignItems :"center" , justifyContent :'space-around', backgroundColor:'#228B22' , zIndex :200 , borderRadius: 8 , flexDirection:'row'}} >
                 <Text style={{color : 'white',fontWeight:'bold'}} >ADD</Text>
                 <MaterialIcons name="add-shopping-cart" size={27} color="white" />
              </TouchableOpacity>
             :
             
-          <TouchableOpacity onPress={()=> navigation.navigate("createUser")} style={{position :'absolute',top: 440 ,right:10 ,  alignItems :"center" , justifyContent :'center', backgroundColor:'#6a0c0c' , zIndex :200 , borderRadius: 8}} >
+         username !== false && <TouchableOpacity onPress={()=> navigation.navigate("createUser")} style={{position :'absolute',top: 440 ,right:10 ,  alignItems :"center" , justifyContent :'center', backgroundColor:'#6a0c0c' , zIndex :200 , borderRadius: 8}} >
             <Text  style={{color : 'white'}} > Sign  to add  </Text> 
 
           </TouchableOpacity>

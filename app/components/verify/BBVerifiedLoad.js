@@ -104,11 +104,9 @@ const [bbVerifiedLoadD ,setbbVerifiedLoadD]=React.useState([])
         }
     } catch (error) {
         console.log('Error deleting image:', error);
-        setSpinnerItem(false);
     } finally {
             const loadsDocRef = doc(db, 'Trucks', id);
             deleteDoc(loadsDocRef);
-        setSpinnerItem(false);
     }
     }
 

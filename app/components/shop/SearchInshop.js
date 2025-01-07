@@ -101,7 +101,7 @@ function SearchInShop({navigation}){
 
         const displaySearchedScnd =  newFilterLookingFor.slice(0, 15).map((value , key)=>{
             return(
-      <TouchableOpacity  key={value.id}  onPress={()=>navigation.navigate(`oneFirmsShop` ,{ userId: value.userId ,itemKey : value.id , sellOBuyG :value.sellOBuy,location : value.location , specproductG : value.specproduct ,CompanyName : value.CompanyName,itemKey :value.timeStamp   })} style={{  marginBottom : 4,  padding :7 ,borderWidth : 3 , borderColor:'#6a0c0c', borderRadius:8 ,  }}>
+      <TouchableOpacity  key={value.id}  onPress={()=>navigation.navigate(`oneFirmsShop` ,{ userId: value.userId  , sellOBuyG :value.sellOBuy,location : value.location , specproductG : value.specproduct ,CompanyName : value.CompanyName,itemKey :value.timeStamp   })} style={{  marginBottom : 4,  padding :7 ,borderWidth : 3 , borderColor:'#6a0c0c', borderRadius:8 ,  }}>
 
             {value.isVerified&& <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white' , zIndex : 66 }} >
                   <MaterialIcons name="verified" size={24} color="green" />
@@ -126,7 +126,7 @@ function SearchInShop({navigation}){
 
         const displaySearched =  filteredData.slice(0, 15).map((value , key)=>{
             return(
-      <TouchableOpacity  key={value.id}  onPress={()=>navigation.navigate(`oneFirmsShop` ,{ userId: value.userId ,itemKey : value.id , sellOBuyG :value.sellOBuy,location : value.location , specproductG : value.specproduct ,CompanyName : value.CompanyName ,itemKey :value.timeStamp })} style={{  marginBottom : 4,  padding :7 ,borderWidth : 3 , borderColor:'#6a0c0c', borderRadius:8 ,  }}>
+      <TouchableOpacity  key={value.id}  onPress={()=>navigation.navigate(`oneFirmsShop` ,{ userId: value.userId  , sellOBuyG :value.sellOBuy,location : value.location , specproductG : value.specproduct ,CompanyName : value.CompanyName ,itemKey :value.timeStamp })} style={{  marginBottom : 4,  padding :7 ,borderWidth : 3 , borderColor:'#6a0c0c', borderRadius:8 ,  }}>
 
             {value.isVerified&& <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white' , zIndex : 66 }} >
                   <MaterialIcons name="verified" size={24} color="green" />

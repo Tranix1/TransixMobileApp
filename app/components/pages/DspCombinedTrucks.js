@@ -10,7 +10,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 // import {useNavigate} from '@react-navigation/native-stack'
 import { useNavigation } from '@react-navigation/native';
 
-function DspAllTrucks({blockVerifiedU ,blackLWarning} ){    
+function DspAllTrucks({blockVerifiedU ,blackLWarning,isConnectedInternet} ){    
 
 const navigation = useNavigation();
 
@@ -57,7 +57,7 @@ const navigation = useNavigation();
 
     useEffect(() => {
       fetchData()
-  }, []); 
+  }, [isConnectedInternet]); 
 
 
 
@@ -81,11 +81,9 @@ const navigation = useNavigation();
         }
     } catch (error) {
         console.log('Error deleting image:', error);
-        setSpinnerItem(false);
     } finally {
             const loadsDocRef = doc(db, 'Trucks', id);
             deleteDoc(loadsDocRef);
-        setSpinnerItem(false);
     }
     }
 
@@ -166,7 +164,7 @@ setTimeout(() => {
         shadowRadius: 5,backgroundColor:'rgba(235, 142, 81, 0.07)' , marginBottom : 15}}  >
 
       { item.isVerified&& <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white' , zIndex : 66}} >
-            <VerifiedIcon style={{color : 'green'}} />
+         <MaterialIcons name="verified" size={26} color="green" />
       </View>}
       
          {item.imageUrl&& <Image source={{uri: item.imageUrl }} style={{ height : 250 , borderRadius: 10}} />}
@@ -224,9 +222,12 @@ setTimeout(() => {
  
 return(
         <ScrollView style={{padding : 10 }}>
-         {allTrucks.length > 0 ? rendereIterms   : <Text>All Trucks Loading...</Text>}
-            {!dspLoadMoreBtn &&allTrucks.length <= 0 && <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO Trucks Available </Text> }
-          {LoadMoreData && allTrucks.length>0 && <Text style={{alignSelf:'center'}} >Loading More Trucks....... </Text> } 
+         {allTrucks.length > 0 ? rendereIterms   : isConnectedInternet && <Text>All Trucks Loading...</Text>}
+
+            { !isConnectedInternet  ? <Text>You are offline</Text>
+             : !dspLoadMoreBtn &&allTrucks.length <= 0 && <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO Trucks Available </Text> }
+          {LoadMoreData && allTrucks.length>0 && <Text style={{alignSelf:'center'}} >Loading More Trucks....... </Text>
+         } 
           
          {allTrucks.length >=12 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> fetchData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >
         <Text style={{color :'white', fontSize :21 , textAlign :'center'}} >Load More......</Text>

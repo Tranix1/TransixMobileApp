@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db , auth} from '../config/fireBase';
-import { View , Text , Image , ScrollView , TouchableOpacity,Share} from 'react-native';
+import { View , Text , Image , ScrollView , TouchableOpacity,Share,Linking} from 'react-native';
 import { collection, onSnapshot,doc,deleteDoc,query,limit,startAfter ,where,orderBy} from 'firebase/firestore';
 
 import { Ionicons } from "@expo/vector-icons";
@@ -77,11 +77,9 @@ function DspOneTruckType ({route,navigation} ){
         }
     } catch (error) {
         console.log('Error deleting image:', error);
-        setSpinnerItem(false);
     } finally {
             const loadsDocRef = doc(db, 'Trucks', id);
             deleteDoc(loadsDocRef);
-        setSpinnerItem(false);
     }
     }
 
@@ -162,7 +160,7 @@ setTimeout(() => {
         shadowRadius: 5,backgroundColor:'rgba(235, 142, 81, 0.07)' , marginBottom : 15}}  >
 
       { item.isVerified&& <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white' , zIndex : 66}} >
-            <VerifiedIcon style={{color : 'green'}} />
+         <MaterialIcons name="verified" size={26} color="green" />
       </View>}
       
          {item.imageUrl&& <Image source={{uri: item.imageUrl }} style={{ height : 250 , borderRadius: 10}} />}

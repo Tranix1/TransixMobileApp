@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import defaultImage from '../images/TRANSIX.jpg'
 
-import { View , Text , Image , ScrollView,StyleSheet,TouchableOpacity } from 'react-native';
+import { View , Text , Image , ScrollView,StyleSheet,TouchableOpacity,Linking, } from 'react-native';
 import { auth ,db} from "../config/fireBase";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -59,7 +59,6 @@ function SelectedUserTrucks ({route,navigation ,blockVerifiedU  , blackLWarning 
 
     function getOneItemF(){
 
-      const userId = auth.currentUser.uid;
         const dataQuery = query(collection(db, "Trucks"), where("timeStamp", "==", itemKey) , where("userId", "==", userId) );
 
         const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
@@ -149,11 +148,9 @@ function SelectedUserTrucks ({route,navigation ,blockVerifiedU  , blackLWarning 
         }
     } catch (error) {
         console.log('Error deleting image:', error);
-        setSpinnerItem(false);
     } finally {
             const loadsDocRef = doc(db, 'Trucks', id);
             deleteDoc(loadsDocRef);
-        setSpinnerItem(false);
         console.log("Delleeeeeeeee")
     }
     }
@@ -222,7 +219,7 @@ let mapThis = [...getOneTruck , ...allTrucks]
         shadowRadius: 5,backgroundColor:'rgba(235, 142, 81, 0.07)' , marginBottom : 15}} >
 
       { item.isVerified&& <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white' , zIndex : 66}} >
-            <VerifiedIcon style={{color : 'green'}} />
+         <MaterialIcons name="verified" size={26} color="green" />
       </View>}
 
          {item.imageUrl&& <Image source={{uri: item.imageUrl }} style={{ height : 250 , borderRadius: 10}} />}

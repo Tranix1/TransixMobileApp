@@ -223,9 +223,7 @@ const [priceRangeDsp , setPriceRangeDsp]= React.useState(false)
   const [getOneItem, setgetOneItem] = useState([]);
 
     function getOneItemF(){
-      if(auth.currentUser){
 
-      const userId = auth.currentUser.uid;
         const dataQuery = query(collection(db, "Shop"), where("timeStamp", "==", itemKey) , where("userId", "==", userId) );
 
         const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
@@ -243,7 +241,6 @@ const [priceRangeDsp , setPriceRangeDsp]= React.useState(false)
         // Clean up function to unsubscribe from the listener when the component unmounts
         return () => unsubscribe();
 
-      }
 
     }
 
@@ -806,7 +803,7 @@ const spreadThis = [...getOneItem ,...allSoldIterms]
 
 
     return(
-        <View> 
+        <View key={item.id} > 
           {thingsToBeDsp}
              
         </View>
@@ -1268,7 +1265,8 @@ Experience the future of transportation and logistics!`;
         <ScrollView>
             {losdingSpec && <ActivityIndicator size="small" />}
 
-        {!dspLoadMoreBtn &&allSoldIterms.length <= 0 &&!vehicleType && !priceRange&& !buyRent && !vehiMake&& <Text style={{fontSize:19 ,fontWeight:'bold'}} >{CompanyName} does not have {specproduct} </Text> }
+        {sellOBuy ==="forSell"&& !dspLoadMoreBtn &&allSoldIterms.length <= 0 &&!vehicleType && !priceRange&& !buyRent && !vehiMake&& <Text style={{fontSize:19 ,fontWeight:'bold'}} >{CompanyName} does not have {specproduct} </Text> }
+        {sellOBuy ==="toBuy"&& !dspLoadMoreBtn &&allSoldIterms.length <= 0 &&!vehicleType && !priceRange&& !buyRent && !vehiMake&& <Text style={{fontSize:19 ,fontWeight:'bold'}} >{CompanyName} is not looking for {specproduct} </Text> }
 
             { allSoldIterms.length<=0 &&  (vehicleType || priceRange|| buyRent || vehiMake)&&<Text style={{fontSize :15}}> The specified product is not available in {CompanyName} Store. </Text> }
          { allSoldIterms.length<=0 &&  (vehicleType || priceRange|| buyRent || vehiMake)&& <TouchableOpacity onPress={refreshPageF} style={{borderWidth: 2.5 , width : 150 , height : 30 , borderColor : "#6a0c0c" , alignSelf:'center', margin:4, borderRadius:8 ,  shadowColor: '#6a0c0c',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,justifyContent:'center',alignItems:'center'  }} >

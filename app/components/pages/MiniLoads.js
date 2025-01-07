@@ -8,7 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
-const MiniLoad = () => {
+const MiniLoad = ({isConnectedInternet }) => {
 
   const navigation = useNavigation();
 
@@ -126,7 +126,8 @@ const rendereIterms = mainLoadsList.map((item)=>{
  
   return (
     <ScrollView style={{margin:7,height:155 }} horizontal  showsHorizontalScrollIndicator={false}>
-      {mainLoadsList.length > 0 ? rendereIterms   : <Text>Loading MiniLoads....</Text>}
+      {!isConnectedInternet && <Text>You are offline</Text> }
+      {mainLoadsList.length > 0 ? rendereIterms   : isConnectedInternet && <Text>Loading MiniLoads....</Text>}
 
     </ScrollView>
   );

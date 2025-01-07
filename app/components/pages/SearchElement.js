@@ -118,7 +118,7 @@ function SearchIterms({navigation}){
 
         const displaySearched =   filteredData.slice(0, 15).map((value , key)=>{
             return(
-            <TouchableOpacity  style={{flex : 1, marginBottom :6 , padding : 6}} key={value.id} onPress={()=> navigation.navigate('selectedUserLoads',{userId : value.userId ,itemKey: value.timeStamp ,} ) }>
+            <TouchableOpacity  style={{flex : 1, marginBottom :6 , padding : 6}} key={value.id}  onPress={()=> navigation.navigate('selectedUserLoads', {userId : value.userId , companyNameG : value.companyName ,itemKey: value.timeStamp }) }    >
 
             {value.isVerified&& <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white' , zIndex : 66 }} >
                   <MaterialIcons name="verified" size={24} color="green" />

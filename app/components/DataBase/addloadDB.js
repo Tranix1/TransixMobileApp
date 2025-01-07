@@ -193,8 +193,10 @@ Provide:
 - Company Details (e.g., Articles of Association, tax clearance, etc.)
 - National ID or Passport must match details in company details
 
-- Verify Address using Utility Bill (electricity, water, internet, gas), Lease Agreement, Business Licence, Tax Document.
-- The document for Address must be from 3-6 months ago and also if you are the owner of the company or part of the team mentioned on docs, your private equity can be used for the address or the document address must have your company name on it.
+- Verify Address using Utility Bill (electricity, water, internet, gas),
+  Lease Agreement, Business Licence, Tax Document.
+
+- The document for Address must be from 3-6 months ago.
 
 There is a $5 monthly subscription fee, and you can choose for how long you want to be verified.
 

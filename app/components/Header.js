@@ -11,7 +11,7 @@ import { auth } from "./config/fireBase";
 import {doc , onSnapshot} from "firebase/firestore"
 import { db } from "./config/fireBase";
 
- function Header ({navigation,checkAuth,smallMenu}){
+ function Header ({navigation,checkAuth,smallMenu,dspMenu}){
   
 
 
@@ -29,9 +29,9 @@ import { db } from "./config/fireBase";
                     </TouchableOpacity>
 
                     {/* <TouchableOpacity style={{marginLeft : 6}} onPress={currentUser? toggleSmallMenu :()=> navigation.navigate('createUser')  } > */}
-                    <TouchableOpacity style={{marginLeft : 6}} onPress={checkAuth} >
+                    {dspMenu&&<TouchableOpacity style={{marginLeft : 6}} onPress={checkAuth} >
                     <Ionicons name="ellipsis-vertical" size={24} color="white" />
-                    </TouchableOpacity>
+                    </TouchableOpacity>}
                 </View>
 
              </View>

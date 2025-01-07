@@ -55,7 +55,6 @@ const navigation = useNavigation();
 
     function getOneItemF(){
 
-      const userId = auth.currentUser.uid;
         const dataQuery = query(collection(db, "Loads"), where("timeStamp", "==", itemKey) , where("userId", "==", userId) );
 
         const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
@@ -158,10 +157,7 @@ async function loadedData(loadMore) {
 
 useEffect(() => {
   loadedData();
-  if(itemKey){
     getOneItemF()
-
-  }
 }, []);;
 
 
@@ -227,8 +223,11 @@ useEffect(() => {
       }));
   }
 
+  console.log( "getOneLoa" ,getOneLoad)
 
 let mapThsAll = [...getOneLoad , ...loadsList]
+
+console.log( "maaalll", mapThsAll)
       
     const rendereIterms =  mapThsAll.map((item)=>{ 
       const handleSubmit = async (clickedItem , dbName) => {
@@ -810,7 +809,11 @@ Experience the future of transportation and logistics!  `;
          <Text style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more loads</Text>
        </TouchableOpacity>}
 
-        { dspLoadMoreBtn &&loadsList.length>0? rendereIterms: <Text>Loads Loading.....</Text> }
+       
+
+        { loadsList.length>0? rendereIterms: <Text>Loads Loading.....</Text> }
+
+
           {LoadMoreData && loadsList.length>0 && <Text style={{alignSelf:'center'}} >Loading More Loads....... </Text> } 
           
          {loadsList.length>15 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> loadedData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >

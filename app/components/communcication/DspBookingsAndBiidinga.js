@@ -1,6 +1,6 @@
 import React,{useEffect} from "react";
 import { View,TouchableOpacity , Text, StyleSheet,ScrollView,Linking } from "react-native";
-import { onSnapshot ,  query ,doc , collection,where ,updateDoc , deleteDoc ,runTransaction,orderBy,limit,getDocs} from "firebase/firestore"
+import { onSnapshot ,  query ,doc , collection,where ,updateDoc , deleteDoc ,runTransaction,orderBy,limit,getDocs,startAfter} from "firebase/firestore"
 import { auth , db } from "../config/fireBase";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -107,6 +107,7 @@ setTimeout(() => {
 async function loadedData(loadMore) {
   try{
 
+    loadMore ? setLoadMoreData(true) : null;
     const orderByF = "timestamp";
     const orderByField = orderBy(orderByF, 'desc'); // Order by timestamp in descending order
 
@@ -142,7 +143,7 @@ async function loadedData(loadMore) {
     }
 
     // Update state with the new data
-    setAllIterms(loadMore ? [...loadsList , ...loadedData] : loadedData);
+    setAllIterms(loadMore ? [...getAllIterms , ...loadedData] : loadedData);
     loadMore ? setLoadMoreData(false) : null;
 
   }catch(err){
@@ -315,7 +316,7 @@ const userId = auth.currentUser.uid;
         }else if(item.triaxleRate){
           theRateD = `Triaxle ${item.triaxleRate} ${item.perTonneB ?"per tonne":""} `
         }else if(item.linksRate){
-          theRateD = `Links ${item.linksRate} ${perTonneB ?"per tonne":""} `
+          theRateD = `Links ${item.linksRate} ${item.perTonneB ?"per tonne":""} `
         }
 
   const message =  `${item.ownerName}
