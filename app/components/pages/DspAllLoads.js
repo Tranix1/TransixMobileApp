@@ -157,7 +157,10 @@ async function loadedData(loadMore) {
 
 useEffect(() => {
   loadedData();
+  if(itemKey){
+
     getOneItemF()
+  }
 }, []);;
 
 
@@ -223,11 +226,9 @@ useEffect(() => {
       }));
   }
 
-  console.log( "getOneLoa" ,getOneLoad)
 
 let mapThsAll = [...getOneLoad , ...loadsList]
 
-console.log( "maaalll", mapThsAll)
       
     const rendereIterms =  mapThsAll.map((item)=>{ 
       const handleSubmit = async (clickedItem , dbName) => {

@@ -599,9 +599,11 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
       }, [currentUser,username]);
 
 
-      const [newAppUpdate , setNewAppUpdate]=React.useState(false)
+    const [newAppUpdate , setNewAppUpdate]=React.useState(false)
       const [newAppUpdateTU , setNewAppUpdateTU]=React.useState(false)
       const [updateApp , setUpdateApp]=React.useState(false)
+      const [downloadPlayStore , setDownloadOnPlaystore]=React.useState(false)
+      const [downloadApkLink , setDownloadApkLink]=React.useState(false)
       
           React.useEffect(() => {
         try {
@@ -610,15 +612,35 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
               querySnapshot.forEach((doc) => {
                 const data = doc.data();
                 const newAppUpdate = data.newAppUpdate ; // Assuming isVerified is a boolean field
+
                 const newAppUpdateFTime = data.newAppUpdateFTime ; // Assuming isVerified is a boolean field
-              const appUpdateFTim = newAppUpdateFTime - Date.now();
+
+                const newAppUpdateApkLink = data.newAppUpdateApkLink
+                const newAppUpdatePlystore = data.switchToPlayStoreLink
+
+                const appUpdateFTim = newAppUpdateFTime - Date.now();
                 if(newAppUpdate  ){
                   if(appUpdateFTim  <= 0){
+                    if(newAppUpdateApkLink){
+
+                      setDownloadApkLink(newAppUpdateApkLink)
+                    }else if(newAppUpdatePlystore){
+                         setDownloadOnPlaystore(newAppUpdatePlystore)
+                    }
+
                     setNewAppUpdateTU(true)
                   }else{
+                      if(newAppUpdateApkLink){
+
+                      setDownloadApkLink(newAppUpdateApkLink)
+                    }else if(newAppUpdatePlystore){
+                         setDownloadOnPlaystore(newAppUpdatePlystore)
+                    }
                     setNewAppUpdate(newAppUpdate)
 
                   }
+
+                  
                 }
               });
             });
@@ -757,8 +779,11 @@ if(username !== false ||trackLoadingScnd ){
 
              
 
-                   {updateApp && <View style={{alignSelf:'center', backgroundColor :'white', zIndex:100, position:'absolute', top : 130 , width:300, padding:7, height:100, justifyContent:'center',alignItems :'center', borderRadius:7}} >
-              <Text>Update App</Text>
+                   {updateApp && <View style={{position:'absolute', top: 10 , left :0 , right:0 , bottom : 0 , zIndex: 500 , backgroundColor:'rgba(106, 12, 12, 0.4)'}}>
+                    <View style={{alignSelf:'center', backgroundColor :'white', zIndex:100, position:'absolute', top : 130 , width:300, padding:7, height:100, justifyContent:'center',alignItems :'center', borderRadius:7}} >
+
+         {downloadApkLink ?      <Text>Update App not yet on Playstore </Text> : <Text>Update App on Playstore</Text>}
+
               <Text>To latest better version</Text>
                   <View style={{flexDirection:'row', justifyContent:"space-evenly",marginTop:7}} >
 
@@ -767,20 +792,22 @@ if(username !== false ||trackLoadingScnd ){
                </TouchableOpacity>}
 
              
-               {!newAppUpdateTU &&<TouchableOpacity onPress={()=>Linking.openURL("https://play.google.com/store/apps/details?id=com.yayapana.Transix")} style={{height:27 , backgroundColor:'green', width:65,borderRadius:5, alignItems:'center',margin:7}}>
+               {!newAppUpdateTU &&<TouchableOpacity onPress={()=>Linking.openURL(`${downloadApkLink ? downloadApkLink : downloadPlayStore }`)} style={{height:27 , backgroundColor:'green', width:65,borderRadius:5, alignItems:'center',margin:7}}>
         
                 <Text style={{color:'white'}} >OK</Text>
                </TouchableOpacity>}
 
              
-               {newAppUpdateTU &&<TouchableOpacity onPress={()=>Linking.openURL("https://play.google.com/store/apps/details?id=com.yayapana.Transix")} style={{height:35 , backgroundColor:'green', width:120,borderRadius:5, alignItems:'center',margin:7, alignSelf:'center'}}>
+               {newAppUpdateTU &&<TouchableOpacity onPress={()=>Linking.openURL(`${downloadApkLink ? downloadApkLink : downloadPlayStore }`)} style={{height:35 , backgroundColor:'green', width:120,borderRadius:5, alignItems:'center',margin:7, alignSelf:'center'}}>
         
                 <Text style={{color:'white'}} >OK</Text>
                </TouchableOpacity>}
 
 
               </View>
-             </View>}
+             </View>
+                </View>
+             }
 
 
              {whenemailVerifiedN && <View style={{alignSelf:'center', backgroundColor :'white', zIndex:100, position:'absolute', top : 130 , width:300, padding:7, height:150, justifyContent:'center',alignItems :'center', borderRadius:7}} >
@@ -916,7 +943,6 @@ function App(){
             
 
       const [verifyOngoing , setverifyOngoing]=React.useState(false)
-      const [newAppUpdate , setNewAppUpdate]=React.useState(false)
       
           React.useEffect(() => {
         try {
@@ -927,10 +953,8 @@ function App(){
               querySnapshot.forEach((doc) => {
                 const data = doc.data();
                 const isVerifyOngoing = data.verifyOngoing || false; // Assuming isVerified is a boolean field
-                const newAppUpdate = data.newAppUpdate || false; // Assuming isVerified is a boolean field
 
                 setverifyOngoing(isVerifyOngoing)
-                setNewAppUpdate(newAppUpdate)
               });
             });
 

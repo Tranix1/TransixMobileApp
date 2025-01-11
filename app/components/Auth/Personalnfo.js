@@ -22,10 +22,12 @@ const handleSubmitData = async (event) => {
     if(!countryCode){
         Alert.alert("Select country code ")
         setCountryCode(false)
+        setSpinnerItem(false)
         return
     }else if(!contact){
         Alert.alert("Enter your phone number")
         setCountryCode(false)
+        setSpinnerItem(false)
         return
     }
     

@@ -169,7 +169,7 @@ let _downloadURL
           _downloadURL = null
         }
         
-        if(!formData.fromLocation || formData.toLocation){
+        if(!formData.fromLocation || !formData.toLocation){
           alert("Add The location the truck is needing");
           return
         }
@@ -327,7 +327,6 @@ The Future Of Transport And Logistics (Transix)
         <TextInput
           placeholder="to location"
           type="text"
-          onChange={handlechange}
           name="toLocation"
           value={formData.toLocation}
           placeholderTextColor="#6a0c0c"
