@@ -58,6 +58,11 @@ return(
         <Text>Verification</Text>
         </TouchableOpacity>
 
+     <TouchableOpacity   onPress={ ()=> navigation.navigate('blackListed') }  style={styles.buttonStyle}>
+        <Text>Blacklisted</Text>
+        </TouchableOpacity>
+
+
     <TouchableOpacity   onPress={()=> navigation.navigate('mobileAppSD') }  style={styles.buttonStyle}>
         <Text>Mobile App </Text>
     </TouchableOpacity>

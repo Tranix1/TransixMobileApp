@@ -25,7 +25,7 @@ function DBTrucksAdd( {navigation ,route} ) {
     additionalInfo :"" ,
     trailerType : '',
     trailerModel :"" ,
-    truckTonnage :"",
+    truckTonnage :null,
       
     horseReg :"" ,
     trailerReg :"",
@@ -71,6 +71,11 @@ function DBTrucksAdd( {navigation ,route} ) {
 
 
   const  handlechange  = (value, fieldName) => {
+         if (fieldName === 'truckTonnage' && isNaN(value)) {
+        // Handle the case where the input is not a number for the price field
+        alert('Truck Tonnage must be a number.');
+        return;
+    }
     setFormData((prevFormData) => ({
       ...prevFormData,
       [fieldName]: value,
@@ -348,7 +353,7 @@ The Future Of Transport And Logistics (Transix)
             placeholderTextColor="#6a0c0c"
             placeholder="Truck Tonnage"
             onChangeText={(text) => handlechange(text, 'truckTonnage')}
-        keyboardType="numeric"
+            keyboardType="numeric"
           style={inputstyles.addIterms }
           />
           <TextInput 

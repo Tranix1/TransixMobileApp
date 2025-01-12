@@ -190,7 +190,10 @@ let renderElements = bbVerifiedLoadD.map((item)=>{
 
         let message  =`${itemName} ${dbName === "bookings" ? "Booked" : "Bidded"} ${theRateD} `
         let tittle = `From ${item.fromLocation} to ${item.toLocation} `
-        await sendPushNotification(expoPushToken, message , tittle,dbName );
+        if(expoPushToken){
+
+          await sendPushNotification(expoPushToken, message , tittle,dbName );
+        }
 
         alert("You Booked A Verified Load");
         navigation.goBack()

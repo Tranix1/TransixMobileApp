@@ -456,9 +456,20 @@ function displayAllImages(itemId){
 
 const spreadThis = [...getOneItem ,...allSoldIterms]
 
+
+function replaceSpacesWithPercent(url) {
+    return url.replace(/ /g, '%20');
+}
+
   const rendereIterms = spreadThis.map((item)=>{
- 
-          const message =  `${item.CompanyName} \n Is this Product still ${ item.sellOBuy === "forSell"? "available":"wanted" } ${item.productName} ${item.sellRent ? "for sell" :'for rental' } \nPrice  ${item.currency?"USD" : "Rand" }  ${item.price} \n\n from https://transix.net/OneFirmsShop/${item.userId}/${item.id}/${item.location}/${sellOBuy}`
+    
+const url = `https://www.transix.net/OneFirmsShop/${item.userId}/${item.location}/${sellOBuy}/${item.specproduct}/${item.CompanyName}/${item.productName}/${item.additionalInfo}`  ;
+
+const updatedUrl = replaceSpacesWithPercent(url);
+    
+
+      const message = specproduct !== "Sprovider" ?  `${item.CompanyName} \n Is this Product still ${ item.sellOBuy === "forSell"? "available":"wanted" } ${item.productName} ${item.sellRent ? "for sell" :'for rental' } \nPrice  ${item.currency?"USD" : "Rand" }  ${item.price} \n\n from  ${updatedUrl} ` :
+             `${item.CompanyName} \n Do you still offer  ${item.productName}  \nI am intrested \n\n from  https://www.transix.net/OneFirmsShop/${item.userId}/${item.location}/${sellOBuy}/${item.specproduct}/${item.CompanyName} `
           ; // Set your desired message here
     let contactMe = ( <View style={{ paddingLeft: 30 }}>
 

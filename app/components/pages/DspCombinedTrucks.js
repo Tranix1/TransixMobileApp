@@ -136,7 +136,7 @@ setTimeout(() => {
         Trailer config ${item.trailerType}
         ${item.withDetails ? "It have detais":"It does not have details"}
 
-        From: https://transix.net`  
+        From: https://transix.net/selectedUserTrucks/${item.userId}/${item.deletionTime}/${item.CompanyName}/whatsApp`  
     let contactMe = ( <View style={{ paddingLeft: 30 }}>
 
            {auth.currentUser&& <TouchableOpacity   style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#008080" , borderWidth:1 , borderColor :'#008080', justifyContent:'center', marginBottom : 5 , marginTop:6}} >
@@ -223,16 +223,13 @@ setTimeout(() => {
 return(
         <ScrollView style={{padding : 10 }}>
          {allTrucks.length > 0 ? rendereIterms   : isConnectedInternet && <Text>All Trucks Loading...</Text>}
-
-            { !isConnectedInternet  ? <Text>You are offline</Text>
-             : !dspLoadMoreBtn &&allTrucks.length <= 0 && <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO Trucks Available </Text> }
-          {LoadMoreData && allTrucks.length>0 && <Text style={{alignSelf:'center'}} >Loading More Trucks....... </Text>
-         } 
+ 
           
          {allTrucks.length >=12 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> fetchData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >
         <Text style={{color :'white', fontSize :21 , textAlign :'center'}} >Load More......</Text>
       </TouchableOpacity>}
-         <View style={{height : 600}} >
+         <View style={{height : 1000}} >
+
            </View>
         </ScrollView>
 )

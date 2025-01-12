@@ -192,7 +192,8 @@ let mapThis = [...getOneTruck , ...allTrucks]
         Trailer config ${item.trailerType}
         ${item.withDetails ? "It have detais":"It does not have details"}
 
-        From: https://transix.net`  
+        From:  https://transix.net/selectedUserLoads/${item.userId}/${item.companyName}/${item.deletionTime}/whatsApp `  // Set your desired message here
+  
     let contactMe = ( <View style={{ paddingLeft: 30 }}>
 
            {auth.currentUser&& <TouchableOpacity   style={{height : 30 ,  flexDirection:'row', alignItems :'center',color : "#008080" , borderWidth:1 , borderColor :'#008080', justifyContent:'center', marginBottom : 5 , marginTop:6}} >

@@ -164,6 +164,7 @@ import HelpHome from "./components/HelpCentre/HelpHome"
 // This is the page were one can get information on how to be verified and can get verified 
 import VerifyInfo from './components/verify/verifyInfo'
 // This is were one can download or share the mobile app
+import BlackList from './components/verify/Blacklist'
 import MobileAppSD from "./components/MobileAppSD"
 // The is were one can View the updates any update abut anything way for developer to meet the user
 import AppUpdates from "./components/pages/Updates"
@@ -1117,6 +1118,7 @@ const Stack = createNativeStackNavigator();
       <Stack.Screen name="updates" component={AppUpdates}  options={{title: 'Updates',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
 
 
+      <Stack.Screen name="blackListed" component={BlackList}  options={{title: ' Black List',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
       <Stack.Screen name="verifyInfo" component={VerifyInfo}  options={{title: ' Verification Info',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
       <Stack.Screen name="bbVerifiedLoad" component={BBVerifiedLoad}  options={{headerShown:false}}/>
 

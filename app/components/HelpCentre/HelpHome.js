@@ -91,7 +91,7 @@ function HelpHome(){
             <Text> We the future for transport and logistics </Text>
 
            <Image source={defaultImage} style={{ height : 97 , borderRadius : 10 , width: 160, margin :6}} />
-            <Text style={{fontStyle:'italic'}} > From 2023 - 2024 </Text>
+            <Text style={{fontStyle:'italic'}} > From 2023 - 2025 </Text>
             <Text style={{fontStyle:'italic'}} > Parent company © ARMAMENT VENTURES </Text>
         </View> }
 

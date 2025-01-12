@@ -229,6 +229,10 @@ useEffect(() => {
 
 let mapThsAll = [...getOneLoad , ...loadsList]
 
+
+function replaceSpacesWithPercent(url) {
+    return url.replace(/ /g, '%20');
+}
       
     const rendereIterms =  mapThsAll.map((item)=>{ 
       const handleSubmit = async (clickedItem , dbName) => {
@@ -270,6 +274,9 @@ let mapThsAll = [...getOneLoad , ...loadsList]
                 thelinksRate = item.links
                 thetriaxleRate= item.triaxle
               }
+              let submitexpoPushToken = item.expoPushToken ? item.expoPushToken : null
+
+
 
           if(  !existingChat ){
 
@@ -300,7 +307,7 @@ let mapThsAll = [...getOneLoad , ...loadsList]
         deletionTime :Date.now() + 4 * 24 * 60 * 60 * 1000 ,
         timestamp : serverTimestamp() ,
         dbName : dbName ,
-        expoPushToken : item.expoPushToken ,
+        expoPushToken : submitexpoPushToken,
         sendPushNotification : sendPushNotification ,
 
 
@@ -322,11 +329,13 @@ let mapThsAll = [...getOneLoad , ...loadsList]
           theRateD = `Links ${thelinksRate} ${perTonneB ?"per tonne":""} `
         }
       
-        console.log(theRateD)
 
         let message  =`${item.typeofLoad} ${dbName === "bookings" ? "Booked" : "Bidded"} Rate ${theRateD} `
         let tittle = `From ${item.fromLocation} to ${item.toLocation} `
-        await sendPushNotification(item.expoPushToken, message , tittle,dbName );
+        if(item.expoPushToken){
+
+          await sendPushNotification(item.expoPushToken, message , tittle,dbName );
+        }
 
         
         const docRef = await addDoc(bookingCollection, {
@@ -424,13 +433,14 @@ let mapThsAll = [...getOneLoad , ...loadsList]
           theRateM = `Links ${item.links} ${item.ratePerTonne ?"per tonne":""} `
         }
 
-       
+        const url = `https://transix.net/selectedUserLoads/${item.userId}/${item.companyName}/${item.deletionTime}` 
+        const updatedUrl = replaceSpacesWithPercent(url);
         const message =  `${item.companyName}
         Is this Load still available
         ${item.typeofLoad} from ${item.fromLocation} to ${item.toLocation}
         ${theRateM}
 
-        From: https://transix.net/selectedUserLoads/${item.userId}/${item.id}`  // Set your desired message here
+        From: ${updatedUrl} `  // Set your desired message here
 
     let contactMe = ( <View style={{ paddingLeft: 30 }}>
 
