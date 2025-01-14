@@ -183,6 +183,16 @@ let frontMarkert = false
     }
 
 
+   const [ sProviderDsp , setSproviderDsp] = React.useState(false)
+    function toggleSproviderDsp(){
+      setSproviderDsp(prev=>!prev)
+    }
+    const [ sProviderType , setSProviderType] = React.useState(null)
+    function addSProviderType(value){
+      setSProviderType(value)
+      setSproviderDsp(false)
+    }
+
 const [images, setImages] = useState([]);
 
 const handleFileInputChange = async () => {
@@ -214,11 +224,6 @@ const handleFileInputChange = async () => {
 
 
 
-
-
-    
- let image 
-
 const [spinnerItem, setSpinnerItem] = React.useState(false);
     
  
@@ -236,7 +241,7 @@ const handleSubmit = async () => {
         return
       }
 
-    if(sellOBuy ==="forSell" ){
+    if(sellOBuy ==="forSell" || specproduct==="Sprovider" ){
 
        if(images.length === 0){
         alert("Add at least 4 images")
@@ -328,6 +333,7 @@ const handleSubmit = async () => {
             negetiatable : negetiatable ,
             vehiMake : vehiMake,
             trailerType : trailerType ,
+            sProviderType : sProviderType ,
             expoPushToken : expoPushToken,
             timeStamp : serverTimestamp() ,
 
@@ -354,6 +360,8 @@ const handleSubmit = async () => {
       setBrandNew(false)
       setnegotiatable(false)
       setSwapA(false)
+      setSProviderType(null)
+      setTrailerType(null)
     } catch (error) {
       setSpinnerItem(false)
         console.error('Error uploading images and adding document:', error);
@@ -598,7 +606,8 @@ The Future Of Transport And Logistics (Transix)
                   </TouchableOpacity>}
 
                 </View>}
-                    {specproduct=== "trailers" && <View style={{alignSelf:'center'}} >
+
+             {specproduct=== "trailers" && <View style={{alignSelf:'center'}} >
                       <TouchableOpacity onPress={toggleTrailerTypeDsp} style={!trailerType ? styles.buttonSelectStyle : styles.buttonStyle } >
                         <Text style={!trailerType ? {color :'white'}:null } >{trailerType ? trailerType  : "Trailer Type" } </Text>
                       </TouchableOpacity>
@@ -634,6 +643,45 @@ The Future Of Transport And Logistics (Transix)
                       <TouchableOpacity onPress={()=>addTrailerType("otherTrailer")}  style={styles.buttonStyle} >
                         <Text>other</Text>
                       </TouchableOpacity>
+                        </View>}
+                    </View> }
+
+
+
+                    {specproduct=== "Sprovider" && <View style={{alignSelf:'center'}} >
+                      <TouchableOpacity onPress={toggleSproviderDsp} style={!sProviderType ? styles.buttonSelectStyle : styles.buttonStyle } >
+                        <Text style={!sProviderType ? {color :'white'}:null } >{sProviderType ? sProviderType  : "S Provider Type" } </Text>
+                      </TouchableOpacity>
+
+                     {sProviderDsp && <View style={{alignSelf:'center'}} >
+                        <TouchableOpacity onPress={()=>addSProviderType("AutoMechanic")}  style={styles.buttonStyle} >
+                        <Text>Auto Mech</Text>
+                      </TouchableOpacity>
+                        <TouchableOpacity onPress={()=>addSProviderType("HeavyDutyMechanic")}  style={styles.buttonStyle} >
+                        <Text>Heavy Equip Mech</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={()=>addSProviderType("MotoMechanic")} style={styles.buttonStyle} >
+                        <Text>Moto Mech</Text>
+                      </TouchableOpacity>
+                        <TouchableOpacity onPress={()=>addSProviderType("AutoTechnician")}  style={styles.buttonStyle} >
+                        <Text>Auto Tech</Text>
+                      </TouchableOpacity>
+                        <TouchableOpacity onPress={()=>addSProviderType("MotoTechnician")}  style={styles.buttonStyle} >
+                        <Text>Moto Tech</Text>
+                      </TouchableOpacity>
+                        <TouchableOpacity onPress={()=>addSProviderType("HeavyEquipmentTechnician")}  style={styles.buttonStyle} >
+                        <Text>Heavy Equip Tech</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={()=>addSProviderType("Towing")}  style={styles.buttonStyle} >
+                        <Text>Towing</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={()=>addSProviderType("Warehouse")}  style={styles.buttonStyle} >
+                        <Text>Warehouse</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={()=>addSProviderType("other")}  style={styles.buttonStyle} >
+                        <Text>other</Text>
+                      </TouchableOpacity>
+                     
                         </View>}
                     </View> }
 

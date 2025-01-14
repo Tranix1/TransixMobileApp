@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db , auth} from '../config/fireBase';
-import { View , Text , Image , ScrollView , TouchableOpacity,Share,Linking} from 'react-native';
+import { View , Text , Image , ScrollView , TouchableOpacity,Share,Linking,StyleSheet} from 'react-native';
 import { collection, onSnapshot,doc,deleteDoc,query,limit,startAfter ,where,orderBy} from 'firebase/firestore';
 
 import { Ionicons } from "@expo/vector-icons";
@@ -12,6 +12,7 @@ function DspOneTruckType ({route,navigation} ){
 
   const {truckType ,blockVerifiedU , blackLWarning  } = route.params
   const [allTrucks, setAllTrucks] = useState([]);
+  const [truckTonnage , setTruckTonnage]= useState("")
 
 
 
@@ -24,7 +25,15 @@ function DspOneTruckType ({route,navigation} ){
           
           const orderByF = "fromLocation" ;
           const pagination = loadMore && allTrucks.length > 0 ? [startAfter(allTrucks[allTrucks.length - 1][orderByF])] : [];
-          let dataQuery = query(collection(db, "Trucks"), orderBy(orderByF), ...pagination, limit(12) , where("truckType" ,"==",truckType) );
+
+          let dataQuery
+          if(truckTonnage){
+
+          dataQuery = query(collection(db, "Trucks"), orderBy(orderByF), ...pagination, limit(12) , where("truckType" ,"==",truckType) , where("truckTonnage" ,"==",truckTonnage));
+          }else{
+
+            dataQuery = query(collection(db, "Trucks"), orderBy(orderByF), ...pagination, limit(12) , where("truckType" ,"==",truckType) );
+          }
 
             
 
@@ -53,7 +62,7 @@ function DspOneTruckType ({route,navigation} ){
 
     useEffect(() => {
       fetchData()
-  }, []); 
+  }, [truckTonnage]); 
 
 
 
@@ -262,11 +271,36 @@ return(
         </TouchableOpacity> 
         <Text style={{fontSize: 20 , color : 'white'}} > {truckType} </Text>
        </View>
+
+       <ScrollView horizontal style={{marginRight:10}}>
+            <TouchableOpacity style={styles.bynIsUnActive}  onPress={()=>setTruckTonnage("1-3 T" ) } >
+                    <Text>1-3 T</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.bynIsUnActive}  onPress={()=> setTruckTonnage("4 - 7 T") }>
+                    <Text>4 - 7 T</Text>
+                </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.bynIsUnActive}    onPress={()=> setTruckTonnage("8 - 14 T" ) }>
+                        <Text>8 - 14 T</Text>
+                    </TouchableOpacity>
+                   
+
+                    <TouchableOpacity style={styles.bynIsUnActive}  onPress={()=> setTruckTonnage("8 - 14 T" ) } >
+                        <Text>15 - 25 T</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.bynIsUnActive}  onPress={()=> setTruckTonnage("26 T +++") }>
+                        <Text>26 T +++ </Text>
+                    </TouchableOpacity>
+                   
+       </ScrollView>
                
         <ScrollView style={{padding : 10 }}>
-         {allTrucks.length > 0 ? rendereIterms   : <Text>All {truckType} Loading...</Text>}
+         {allTrucks.length > 0 ? rendereIterms   : <Text>All {truckTonnage} {truckType} Loading...</Text>}
 
-            {!dspLoadMoreBtn &&allTrucks.length <= 0 && <Text style={{fontSize:17 ,fontWeight:'bold'}} >NO {truckType} </Text> }
+            {!dspLoadMoreBtn &&allTrucks.length <= 0 && !truckTonnage &&<Text style={{fontSize:17 ,fontWeight:'bold'}} >NO {truckType} available</Text> }
+            {!dspLoadMoreBtn &&allTrucks.length <= 0 && truckTonnage &&<Text style={{fontSize:17 ,fontWeight:'bold'}} >NO {truckTonnage} {truckType} available</Text> }
             
             {!dspLoadMoreBtn &&allTrucks.length <= 0 &&<TouchableOpacity onPress={handleShareApp} >
 
@@ -285,3 +319,28 @@ return(
 }
 export default DspOneTruckType 
 
+
+const styles = StyleSheet.create({
+  bynIsUnActive : {
+    // width : 50 ,
+    paddingLeft : 6 ,
+    paddingRight :4 ,
+    color :'white'  , 
+    borderWidth:1, 
+    alignItems :'center' ,
+    justifyContent :'center' ,
+    marginRight : 7 ,
+    borderRadius : 15
+  },
+  btnIsActive : {
+    paddingLeft : 5 ,
+    paddingRight :6 ,
+    color :'white'  , 
+    alignItems :'center' ,
+    justifyContent :'center' ,
+    marginRight : 7 ,
+    borderRadius : 15 ,
+    backgroundColor : 'rgb(129,201,149)'
+  }
+
+});

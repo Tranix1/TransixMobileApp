@@ -219,6 +219,10 @@ const [priceRangeDsp , setPriceRangeDsp]= React.useState(false)
       setTrailerType(value)
       setTrailerTypeDsp(false)
     }
+    const [ sProviderType , setSProviderType] = React.useState(null)
+    function addSProviderType(value){
+      setSProviderType(value)
+    }
 
   const [getOneItem, setgetOneItem] = useState([]);
 
@@ -362,7 +366,14 @@ async function fetchData(loadOneMore) {
             }
         } else if(specproduct === "Sprovider") {
                     setLoadingSpec(true)
-            dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId), where("specproduct", "==", specproduct), where("location", "==", location), );
+              
+                 if(sProviderType){
+                      dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId),where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), where("sProviderType", "==", sProviderType));
+
+                    }else{
+
+                      dataQuery = query(collection(db, "Shop"), orderBy(orderByField), ...pagination , limit(4) , where("userId" ,"==", userId),where("frontMarkert", "==", true) ,where("specproduct", "==", specproduct), where("location", "==", location), );
+                    }
         }else{
 
                     setLoadingSpec(true)
@@ -402,7 +413,7 @@ async function fetchData(loadOneMore) {
 
 useEffect(() => {
   fetchData();
-}, [specproduct, buyRent, sellOBuy , priceRange , vehicleType ,vehiMake ,trailerType, trackDatachange]);;
+}, [specproduct, buyRent, sellOBuy , priceRange , vehicleType ,vehiMake ,trailerType, trackDatachange , sProviderType]);;
 
 useEffect(() => {
 
@@ -753,6 +764,10 @@ const updatedUrl = replaceSpacesWithPercent(url);
 
 
        {!contactDisplay[item.id] && <View>
+          {item.sProviderType &&<View style={{flexDirection :'row'}} >
+        <Text style={{width :100}} >Service offered</Text>
+       {<Text>:  {item.sProviderType}  </Text>} 
+      </View>}
 
       {item.shopLocation &&<View style={{flexDirection :'row'}} >
         <Text style={{width :100}} >Store Loc</Text>
@@ -923,6 +938,39 @@ Experience the future of transportation and logistics!`;
 
             </TouchableOpacity>
         </View>
+
+                     {specproduct=== "Sprovider" && <ScrollView horizontal style={{marginBottom:10}} >
+                     
+                    <TouchableOpacity onPress={()=>addSProviderType("AutoMechanic")}  style={ styles.bynIsUnActive }  >
+                        <Text>Auto Mech</Text>
+                      </TouchableOpacity>
+                        <TouchableOpacity onPress={()=>addSProviderType("HeavyDutyMechanic")}  style={ styles.bynIsUnActive }  >
+                        <Text>Heavy Equip Mech</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={()=>addSProviderType("MotoMechanic")} style={ styles.bynIsUnActive } >
+                        <Text>Moto Mech</Text>
+                      </TouchableOpacity>
+                        <TouchableOpacity onPress={()=>addSProviderType("AutoTechnician")}  style={ styles.bynIsUnActive } >
+                        <Text>Auto Tech</Text>
+                      </TouchableOpacity>
+                        <TouchableOpacity onPress={()=>addSProviderType("MotoTechnician")}  style={ styles.bynIsUnActive }  >
+                        <Text>Moto Tech</Text>
+                      </TouchableOpacity>
+                        <TouchableOpacity onPress={()=>addSProviderType("HeavyEquipmentTechnician")}  style={ styles.bynIsUnActive }  >
+                        <Text>Heavy Equip Tech</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={()=>addSProviderType("Towing")}  style={ styles.bynIsUnActive }  >
+                        <Text>Towing</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={()=>addSProviderType("Warehouse")}  style={ styles.bynIsUnActive }  >
+                        <Text>Warehouse</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={()=>addSProviderType("other")}  style={ styles.bynIsUnActive }  >
+                        <Text>other</Text>
+                      </TouchableOpacity>
+                     
+
+                    </ScrollView> }
 
      { specproduct ==="vehicles" || specproduct ==="trailers" ? <ScrollView  horizontal  showsHorizontalScrollIndicator={false} style={{marginBottom:15 , marginLeft:10 , height : 27}} >
 
@@ -1276,11 +1324,11 @@ Experience the future of transportation and logistics!`;
         <ScrollView>
             {losdingSpec && <ActivityIndicator size="small" />}
 
-        {sellOBuy ==="forSell"&& !dspLoadMoreBtn &&allSoldIterms.length <= 0 &&!vehicleType && !priceRange&& !buyRent && !vehiMake&& <Text style={{fontSize:19 ,fontWeight:'bold'}} >{CompanyName} does not have {specproduct} </Text> }
-        {sellOBuy ==="toBuy"&& !dspLoadMoreBtn &&allSoldIterms.length <= 0 &&!vehicleType && !priceRange&& !buyRent && !vehiMake&& <Text style={{fontSize:19 ,fontWeight:'bold'}} >{CompanyName} is not looking for {specproduct} </Text> }
+        {sellOBuy ==="forSell"&& !dspLoadMoreBtn &&allSoldIterms.length <= 0 &&!vehicleType && !priceRange&& !buyRent && !vehiMake&& !sProviderType && !trailerType&&<Text style={{fontSize:19 ,fontWeight:'bold'}} >{CompanyName} does not have {specproduct} </Text> }
+        {sellOBuy ==="toBuy"&& !dspLoadMoreBtn &&allSoldIterms.length <= 0 &&!vehicleType && !priceRange&& !buyRent && !vehiMake&&sProviderType && trailerType&& <Text style={{fontSize:19 ,fontWeight:'bold'}} >{CompanyName} is not looking for {specproduct} </Text> }
 
-            { allSoldIterms.length<=0 &&  (vehicleType || priceRange|| buyRent || vehiMake)&&<Text style={{fontSize :15}}> The specified product is not available in {CompanyName} Store. </Text> }
-         { allSoldIterms.length<=0 &&  (vehicleType || priceRange|| buyRent || vehiMake)&& <TouchableOpacity onPress={refreshPageF} style={{borderWidth: 2.5 , width : 150 , height : 30 , borderColor : "#6a0c0c" , alignSelf:'center', margin:4, borderRadius:8 ,  shadowColor: '#6a0c0c',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,justifyContent:'center',alignItems:'center'  }} >
+            { allSoldIterms.length<=0 &&  (vehicleType || priceRange|| buyRent || vehiMake ||sProviderType || trailerType )&&<Text style={{fontSize :15}}> The specified product is not available in {CompanyName} Store. </Text> }
+         { allSoldIterms.length<=0 &&  (vehicleType || priceRange|| buyRent || vehiMake|| sProviderType || trailerType)&& <TouchableOpacity onPress={refreshPageF} style={{borderWidth: 2.5 , width : 150 , height : 30 , borderColor : "#6a0c0c" , alignSelf:'center', margin:4, borderRadius:8 ,  shadowColor: '#6a0c0c',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,justifyContent:'center',alignItems:'center'  }} >
           <Text style={{ fontSize:16 , fontWeight:'600',color:'#6a0c0c'}} >Refresh</Text>
          </TouchableOpacity>}
 
