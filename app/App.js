@@ -1083,7 +1083,7 @@ const Stack = createNativeStackNavigator();
 
       <Stack.Screen name="addPersnoalInfo" component={PersonalAccInfo} options={{title: 'Personal Information',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
 
-      <Stack.Screen name="selectPeronalAcc" component={SelectPersnalAcc} options={{title: 'Transix',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
+      <Stack.Screen name="selectPeronalAcc" component={SelectPersnalAcc} options={{title: 'Transix',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}} initialParams={{isVerified : isVerified}} />
       <Stack.Screen name="personalInfomation" component={PersnonalAccInfoEdit}initialParams={{username : username , contact : contact ,}} options={{headerShown:false}}/>
       <Stack.Screen name="peronalAccLoads" component={PersnalAccLoads} options={{title: 'Manage Loads',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
       <Stack.Screen name="peronalAccTrucks" component={PersonalAccTrucks} options={{title: 'Manage Trucks',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
@@ -1102,7 +1102,7 @@ const Stack = createNativeStackNavigator();
 
       <Stack.Screen name="selectedUserLoads" component={DspAllLoads}  options={{headerShown: false}}  initialParams={{username : username , contact : contact ,blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning }} />
 
-      <Stack.Screen name="selectedUserTrucks" component={SelectedUserTrucks}  options={{headerShown: false}} initialParams={{blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning }} />
+      <Stack.Screen name="selectedUserTrucks" component={SelectedUserTrucks}  options={{headerShown: false}} initialParams={{blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning,isVerified:isVerified }} />
 
 
       <Stack.Screen name="shopHome" component={ShopLocation} options={{title: 'Welcome To Store',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>

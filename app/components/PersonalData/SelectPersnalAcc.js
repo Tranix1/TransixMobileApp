@@ -1,7 +1,8 @@
 import React from "react";
 import { View , TouchableOpacity , Text , StyleSheet} from "react-native";
+import { auth } from "../config/fireBase";
 
-function SelectPersonalAcc({navigation}){
+function SelectPersonalAcc({navigation ,isVerified}){
     return(
         <View style={{alignItems : 'center', paddingTop : 60}} >
            <TouchableOpacity onPress={()=>navigation.navigate("personalInfomation") } style={styles.buttonPAcc}>
@@ -12,7 +13,7 @@ function SelectPersonalAcc({navigation}){
             <Text>Manage Loads </Text>
             </TouchableOpacity> 
 
-           <TouchableOpacity onPress={()=>navigation.navigate("peronalAccTrucks") } style={styles.buttonStyleIterm} >
+           <TouchableOpacity  onPress={()=>navigation.navigate('selectedUserTrucks', { userId : auth.currentUser.uid , loadIsVerified: isVerified , CompanyName : "Manage" }) } style={styles.buttonStyleIterm} >
             <Text>Manage Trucks </Text>
             </TouchableOpacity>
              

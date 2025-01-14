@@ -830,7 +830,7 @@ Experience the future of transportation and logistics!  `;
          {loadsList.length>15 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> loadedData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >
         <Text style={{color :'white', fontSize :21 , textAlign :'center'}} >Load More......</Text>
       </TouchableOpacity>}
-        <View style={{height : 200}} ></View>
+        <View style={{height : 1000}} ></View>
     </ScrollView> }
 
        {localLoads && <View style={{alignItems : 'center' , paddingTop : 30}}>

@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import defaultImage from '../images/TRANSIX.jpg'
 
-import { View , Text , Image , ScrollView,StyleSheet,TouchableOpacity,Linking, } from 'react-native';
+import { View , Text , Image , ScrollView,StyleSheet,TouchableOpacity,Linking,TextInput,ActivityIndicator } from 'react-native';
 import { auth ,db} from "../config/fireBase";
 
 import { Ionicons } from "@expo/vector-icons";
-import { collection,  query , where,onSnapshot ,deleteDoc,doc,limit,startAfter,orderBy } from 'firebase/firestore';
+import { collection,  query , where,onSnapshot ,deleteDoc,doc,limit,startAfter,orderBy,updateDoc  } from 'firebase/firestore';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import inputstyles from '../styles/inputElement';
 
-function SelectedUserTrucks ({route,navigation ,blockVerifiedU  , blackLWarning } ){ 
+function SelectedUserTrucks ({route,navigation ,blockVerifiedU  , blackLWarning,isVerified } ){ 
 
   const {userId , loadIsVerified ,CompanyName,itemKey }= route.params
 
@@ -85,7 +87,7 @@ function SelectedUserTrucks ({route,navigation ,blockVerifiedU  , blackLWarning 
       if(itemKey){
           getOneItemF()
       }
-  }, []); 
+  }, [spinnerItem]); 
   
   
   const [dspMoreInfo , setDspMoreInfo] = React.useState(false)
@@ -129,9 +131,43 @@ function SelectedUserTrucks ({route,navigation ,blockVerifiedU  , blackLWarning 
     setDriverDDsp(prev=>!prev)
   }
 
+      const [spinnerItem, setSpinnerItem] = React.useState(false);
+  const [ changeRouteDsp , setChnageRouteDsp]= React.useState(false)
+  function changeRuteDsp(){
+      setChnageRouteDsp(prev=>!prev)
+  }
+  const [newFromLocation , setNewFromLoc]= React.useState("")
+  const [newToLocation , setNewToLoc]= React.useState("")
+
+       async function handleUpdateRoutes(id){
+        setSpinnerItem(true)
+          const docRef = doc(db, 'Trucks', id);
+          await updateDoc(docRef, { fromLocation : newFromLocation ,toLocation:newToLocation  });
+          setChnageRouteDsp(false)
+        setSpinnerItem(false)
+          alert("New Route Updated")
+        }
+
+    const toggleTruckAvailability = async ( id ,decision ) => {
+      try {
+        if (decision === "avaialble") {
+          const docRef = doc(db, 'Trucks', id);
+          await updateDoc(docRef, { tAvailability : true ,  });
+          alert("Truck now looking for load");
+        }else{
+          const docRef = doc(db, `Trucks`, id);
+          await updateDoc(docRef, { tAvailability : false ,  });
+          alert("Truck No longer available");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+  }
+
 
     const deleteItem = async (id , imageUrl) => {
 
+        setSpinnerItem(true)
     try {
         const response = await fetch(imageUrl, {
             method: 'DELETE',
@@ -153,6 +189,7 @@ function SelectedUserTrucks ({route,navigation ,blockVerifiedU  , blackLWarning 
             deleteDoc(loadsDocRef);
         console.log("Delleeeeeeeee")
     }
+        setSpinnerItem(false)
     }
 
      const checkAndDeleteExpiredItems = () => {
@@ -233,12 +270,14 @@ let mapThis = [...getOneTruck , ...allTrucks]
       </View>}
 
 
+        {!changeRouteDsp&& <View>
        {!contactDisplay[item.id] && <View>
 
      {!blockVerifiedU &&!blackLWarning &&<View style={{flexDirection :'row'}} >
         <Text style={{width :100}} >Contact</Text>
         <Text>:  {item.contact}</Text>
       </View>}
+           
 
           {item.truckTonnage && <View style={{flexDirection :'row'}} >
               <Text style={{width :100}} >Truck Ton</Text>
@@ -336,24 +375,89 @@ let mapThis = [...getOneTruck , ...allTrucks]
         <Text>:  {item.businessLoction}</Text>
       </View>
          </View>}
-         
-{ !blockVerifiedU &&!blackLWarning &&<TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{  width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
+
+         </View>}
+{auth.currentUser && auth.currentUser.uid === userId &&<View>
+
+
+            {changeRouteDsp &&isVerified&& <View style={{alignSelf:'center', marginTop:7,marginBottom:7}}>
+
+                  <Text>New From Location  </Text>
+
+               <TextInput
+                     placeholder="From Location"
+                     type="text"
+                     value={newFromLocation}
+                     onChangeText={(text) => setNewFromLoc(text)}
+                     style={inputstyles.inputElem}            
+                  />
+              {spinnerItem &&<ActivityIndicator size="small" />}
+                  <Text>New To Location</Text>
+               <TextInput
+                     placeholder="To Location"
+                     type="text"
+                     value={newToLocation}
+                     onChangeText={(text) => setNewToLoc(text)}
+                     style={inputstyles.inputElem}            
+                  />
+
+        <View style={{flexDirection : 'row', paddingTop : 10 , justifyContent : 'space-evenly'}}>
+          <TouchableOpacity style={styles.cancelBtn}onPress={()=>setChnageRouteDsp (false)} >
+            <Text>cancel</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity onPress={()=> handleUpdateRoutes(item.id) } style={styles.saveBtn}>
+            <Text style={{color : 'white'}}>Save</Text>
+          </TouchableOpacity>
+            
+        </View>
+               </View>}
+
+
+
+
+ {!changeRouteDsp&&<View style={{justifyContent:'space-between' , flexDirection :'row',padding:6,paddingLeft:15}} >
+
+          {spinnerItem&&<Text> Deleting Truck  </Text>}
+          {!item.tAvailability&& isVerified&&<TouchableOpacity onPress={()=>toggleTruckAvailability(item.id , "avaialble") } style={{backgroundColor:'#3CB371', flexDirection :'row' , height : 30 , borderRadius:10, width : 155 ,justifyContent:'space-around',alignItems:'center'}}>
+            <Text style={{color:"white"}} >Truck Available</Text>
+          </TouchableOpacity>}
+         {item.tAvailability&& isVerified && <TouchableOpacity onPress={()=>toggleTruckAvailability(item.id , "nAvailable") } style={{backgroundColor:'#DC143C', flexDirection :'row' , height : 30 , borderRadius:10, width : 155 ,justifyContent:'space-around',alignItems:'center'}}>
+            <Text style={{color:'white'}} >Not Available</Text>
+          </TouchableOpacity>}
+
+        {!spinnerItem&& <TouchableOpacity onPress={()=>deleteItem(item.id , item.imageUrl)}  style={{backgroundColor:'#CE2029' , flexDirection :'row' , height : 30 , borderRadius:10, width : 86 ,justifyContent:'space-around',alignItems:'center'}} >
+            <Text style={{color:'white',fontSize:17}} >Delete</Text>
+            <AntDesign name="delete" size={24} color="white" />
+          </TouchableOpacity>}
+        </View>}
+
+</View>}
+
+
+
+  {isVerified&&<TouchableOpacity onPress={changeRuteDsp} style={{  width : 150 ,alignSelf:'center',  height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#6a0c0c' ,  borderRadius: 8, margin:5 }}>
+    <Text style={{color:'white'}} >Change truck route</Text>
+  </TouchableOpacity>}
+
+{auth.currentUser&& auth.currentUser.uid !== userId ? !blockVerifiedU &&!blackLWarning &&<TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{  width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
    <Text style={{color:"white"}} > Get In Touch Now</Text>
- </TouchableOpacity>}
+ </TouchableOpacity>:null}
 
         </View>       )
       })
       
 return(
   <View>
-          
+
+
         <View  style={{flexDirection : 'row' , height : 84  ,  paddingLeft : 6 , paddingRight: 15 , paddingTop:10 ,backgroundColor : '#6a0c0c' ,paddingTop : 15 , alignItems : 'center'}} >
         <TouchableOpacity style={{marginRight: 10}} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={28} color="white"style={{ marginLeft: 10 }}  />
-        {!dspLoadMoreBtn &&allTrucks.length <= 0 && <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO Trucks Available </Text> }
         </TouchableOpacity>
       <Text style={{fontSize: 20 , color : 'white'}} > {CompanyName} Trucks </Text>
        </View> 
+        {!dspLoadMoreBtn &&allTrucks.length <= 0 && <Text style={{fontSize:19 ,fontWeight:'bold'}} >NO Trucks Available </Text> }
         <ScrollView>
          {allTrucks.length > 0 ? rendereIterms   : <Text>Trucks Loading...</Text>}
 
@@ -362,7 +466,7 @@ return(
         <Text style={{color :'white', fontSize :21 , textAlign :'center'}} >Load More......</Text>
       </TouchableOpacity>}
 
-         <View style={{height : 550}} >
+         <View style={{height : 1000}} >
            </View>
         </ScrollView> 
         </View>
@@ -390,5 +494,22 @@ const styles = StyleSheet.create({
         marginTop: 10 ,
         borderRadius: 10
 
-    }
+    },
+   saveBtn : {
+   backgroundColor : '#6a0c0c' , 
+   width : 70 ,
+   height : 35 ,
+   borderRadius: 5 , 
+   alignItems : 'center' ,
+   justifyContent : 'center'
+  } ,
+  cancelBtn : { 
+   width : 70 ,
+   height : 35 ,
+   borderRadius: 5 , 
+   alignItems : 'center' ,
+   justifyContent : 'center',
+   borderWidth : 1 ,
+   borderColor : '#6a0c0c'
+  }
 });
