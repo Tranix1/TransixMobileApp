@@ -35,7 +35,7 @@ function AddIterms({navigation,route}){
             </TouchableOpacity>
             </View>}
 
-           { (truckTypeDsp ||verifiedLoad) &&<View>
+           { (truckTypeDsp ||verifiedLoad)&& !truckTonnageDsp&&<View>
                 <TouchableOpacity   style={styles.buttonStyle} onPress={()=>addTruckType("BulkTrailers")} >
 
                     <Text style={{color:"#6a0c0c"}}>BulkTrailers </Text>

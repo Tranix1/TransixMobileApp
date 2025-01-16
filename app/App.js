@@ -519,7 +519,7 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
             }else if(elemUpdate === "reverfyOff"){
 
             await updateDoc(docRef, {
-             veriExpTime: 0,reverifyUser:false , reverfyTime :0, leftVeri : true , usernameLV : username,contactLV:contact});
+             veriExpTime: 0,reverifyUser:false , reverfyTime :0, leftVeri : true , usernameLV : username,contactLV : contact});
          }
 
           } catch (error) {
@@ -562,9 +562,9 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
                  
                 }
 
-                const timeRemainingReVer = reverfyTime - Date.now();
-                  if(reverifyUserValue <= 0 ){
-                    if(timeRemainingReVer){
+                     const timeRemainingReVer = reverfyTime - Date.now();
+                  if(reverifyUserValue  ){
+                    if(timeRemainingReVer <= 0){
                       changeStatuses(userId,"reverfyOff")
 
                     }else{
@@ -597,7 +597,7 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
         } catch (error) {
           console.error(error);
         }
-      }, [currentUser,username]);
+      }, [currentUser]);
 
 
     const [newAppUpdate , setNewAppUpdate]=React.useState(false)

@@ -5,7 +5,7 @@ import { auth ,db} from "../config/fireBase";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Ionicons } from "@expo/vector-icons";
 
-import { collection, addDoc, query , where,onSnapshot ,deleteDoc,doc } from 'firebase/firestore';
+import { collection,  serverTimestamp ,addDoc, query , where , doc,deleteDoc , runTransaction , setDoc,onSnapshot,getDocs } from 'firebase/firestore';
 
 function BBVerifiedLoad({navigation,route}){
 const {itemName ,fromLocation ,toLocation ,
@@ -137,6 +137,19 @@ setTimeout(() => {
 }, 1000);
 
 
+// This function is checking if user has already an id in add new iterms
+// Whe we are counting how many new iterms were boked ot bidded it check wheter to create a new doc or update an exsiting one
+   const checkExistixtBBDoc = async (receriverId) => {
+    const chatsRef = collection(db, 'newIterms'); // Reference to the 'ppleInTouch' collection
+    const chatQuery = query(chatsRef, where('receriverId', '==', receriverId)); // Query for matching chat ID
+
+      const querySnapshot = await getDocs(chatQuery);  
+     // Check if any documents exist with the chat ID
+      return !querySnapshot.empty; // Returns true if a document exists, false otherwise
+    };
+// If the id already exisist it create else it update the doc
+
+
 let renderElements = bbVerifiedLoadD.map((item)=>{
 
     async function handleSubmitDetails(){
@@ -194,6 +207,45 @@ let renderElements = bbVerifiedLoadD.map((item)=>{
 
           await sendPushNotification(expoPushToken, message , tittle,dbName );
         }
+
+        // The code below is used to add 1 when a users add to tell the owner how many of his itemrs were booked and how many were bidded
+            const existingBBDoc = await checkExistixtBBDoc(bookerId);
+        // const existingChat = await checkExistingChat(addChatId);
+        let newBiddedDoc = 0
+        let newBOOKEDDoc = 0
+
+        dbName === "bookings" ? newBOOKEDDoc = 1  : newBiddedDoc = 1
+      // Chat doesn't exist, add it to 'ppleInTouch'
+      if(!existingBBDoc){
+      await setDoc( doc(db , "newIterms", bookerId), {
+        bookingdocs : newBOOKEDDoc ,
+        biddingdocs : newBiddedDoc ,
+        timestamp : serverTimestamp() ,
+        receriverId : ownerId ,
+      }); 
+    }
+    else{
+       
+       const docRef = doc(db, 'newIterms', bookerId);
+       await runTransaction(db, async (transaction) => {
+        const docSnap = await transaction.get(docRef);
+
+        if (docSnap.exists()) {
+            const currentBiddingDocs = docSnap.data().biddingdocs || 0;
+
+            const currentBookingsDocs = docSnap.data().bookingdocs || 0;
+            let updatedBiddingDocs = currentBiddingDocs
+            let updateBokingsDocs = currentBookingsDocs
+            dbName !== "bookings" ?  updatedBiddingDocs = currentBiddingDocs + 1 : updateBokingsDocs = currentBookingsDocs + 1
+
+            transaction.update(docRef, {
+                biddingdocs : updatedBiddingDocs,
+                bookingdocs :  updateBokingsDocs ,
+            });
+        }
+    });
+    }
+    // The code to add numbers for new iterms end here
 
         alert("You Booked A Verified Load");
         navigation.goBack()

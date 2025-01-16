@@ -632,6 +632,10 @@ function replaceSpacesWithPercent(url) {
         <Text  style={{textOverflow:'ellipsis' }} >: {item.paymentTerms}</Text>
       </View>
 
+        { item.requirements&&<View style={{flexDirection :'row', width:245 }} >
+        <Text style={{width:100}} >Requirements</Text>
+        <Text  style={{textOverflow:'ellipsis' }} >: { item.requirements}</Text>
+      </View>}
         {item.activeLoading&& <Text style={{fontSize:17 , color:"#FF8C00" }} >Active Loading.... </Text> }
      { dspMoreInfo[item.id] &&<View>
     {  item.fuelAvai && <View style={{flexDirection :'row' ,marginTop:5, width:245 }} >
@@ -709,32 +713,7 @@ function replaceSpacesWithPercent(url) {
 
   
   
- const handleShareLink = async (companyName) => {
-    try {
-      const url = `https://transix.net/selectedUserLoads/${userId}`; // Replace this with the URL you want to share
-      const message = `Check out ${companyName} loads on Truckerz: ${url}`;
-
-      const result = await Share.share({
-        message: message,
-      });
-
-      if (result) {
-        if (result.action === Share.sharedAction) {
-          if (result.activityType) {
-            // Shared with activity type of result.activityType
-          } else {
-            // Shared
-          }
-        } else if (result.action === Share.dismissedAction) {
-          // Dismissed
-        }
-      } else {
-        // Handle the case where result is undefined or null
-      }
-    } catch (error) {
-      alert(error.message);
-    }
-  };
+ 
 
     const handleShareApp = async (companyName) => {
               try {
@@ -783,11 +762,7 @@ Experience the future of transportation and logistics!  `;
        
                 <Text style={{fontSize: 20 , color : 'white'}} > {companyNameG } Loads </Text>
 
-                <TouchableOpacity  onPress={()=>handleShareLink(companyNameG)} style={{position :'absolute' , right:30 , backgroundColor : 'white' }} >
-                    <Text  >Share loads </Text>
-                </TouchableOpacity>
-
-       </View> }
+                       </View> }
        
 
 
