@@ -493,9 +493,12 @@ The Future Of Transport And Logistics (Transix)
 </TouchableOpacity>
 
 </View>
-  <TouchableOpacity  onPress={handleSubmit} style={{backgroundColor : '#6a0c0c' , width : 80 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',alignSelf:'center' }}>
+  {!spinnerItem ?  <TouchableOpacity  onPress={handleSubmit} style={{backgroundColor : '#6a0c0c' , width : 80 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',alignSelf:'center' }}>
     <Text style={{color : 'white'}}>submit</Text>
   </TouchableOpacity>
+: <Text style={{alignSelf:"center",fontStyle:'italic'}}>Load is being added Please wait</Text>  
+}
+ 
   <View style={{height:300}} ></View>
     </ScrollView>
 </View>

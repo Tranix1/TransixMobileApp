@@ -860,6 +860,7 @@ if(username !== false ||trackLoadingScnd ){
 
 function App(){
 
+ 
 
   
   const [expoPushToken, setExpoPushToken] = useState('');
@@ -903,11 +904,6 @@ function App(){
     return () => unsubscribe();
   }, [currentUser]);
 
-  React.useEffect(() => {
-    // Set the status bar color and style
-    StatusBar.setBackgroundColor('#6a0c0c'); // Set the background color of the status bar
-    StatusBar.setBarStyle('light-content'); // Set the style of the status bar text (light or dark)
-  }, [currentUser , username]);
 
    const [ username , setUsername] = React.useState("");
    const [ contact , setContact] = React.useState('');

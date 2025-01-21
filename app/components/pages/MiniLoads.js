@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState} from 'react';
 import { collection, limit, onSnapshot ,query } from 'firebase/firestore';
-import { View , Text , ScrollView , TouchableOpacity} from 'react-native';
+import { View , Text , ScrollView , TouchableOpacity,StatusBar} from 'react-native';
 import { db } from '../config/fireBase';
 import { useNavigation } from '@react-navigation/native';
 
@@ -71,7 +71,7 @@ const rendereIterms = mainLoadsList.map((item)=>{
 
                 {<View style={{ flexDirection:'row',margin:4}} >
 
-         {item.returnLoad &&  <View style={{backgroundColor :'#6a0c0c',paddingLeft :4 , paddingRight:4 , marginLeft :7}} >
+         {item.returnLoad && <View style={{backgroundColor :'#6a0c0c',paddingLeft :4 , paddingRight:4 , marginLeft :7}} >
           <Text style={{color :'white'}} >Return Load</Text>
           </View>}
 
@@ -101,11 +101,11 @@ const rendereIterms = mainLoadsList.map((item)=>{
         <Text>:  {item.toLocation} </Text>
       </View>
 
-      {item.ratePerTonne&& <View style={{flexDirection :'row'}} >
+      {item.ratePerTonne&& !item.links&& !item.triaxle&& <View style={{flexDirection :'row'}} >
         <Text style={{width :50,color:'green',fontWeight:'bold',fontSize:16}} >Rate</Text>
         <Text style={{color:'green',fontWeight:'bold',fontSize:16}} >:  {item.currency ? "USD" : "RAND"} {item.ratePerTonne} {item.perTonne ? "Per tonne" :null} </Text>
       </View>}
-  <View style={{flexDirection:'row'}} >
+  <View  >
 
         {item.links&&  <View style={{flexDirection :'row'}} >
         <Text style={{width :50,color:'green',fontWeight:'bold',fontSize:14}} >Links</Text>
@@ -123,9 +123,14 @@ const rendereIterms = mainLoadsList.map((item)=>{
 
   )
 })
+  React.useEffect(() => {
+    // Set the status bar color and style
+    StatusBar.setBackgroundColor('#6a0c0c'); // Set the background color of the status bar
+    StatusBar.setBarStyle('light-content'); // Set the style of the status bar text (light or dark)
+  }, [mainLoadsList]);
  
   return (
-    <ScrollView style={{margin:7,height:155 }} horizontal  showsHorizontalScrollIndicator={false}>
+    <ScrollView style={{margin:7,height:170 }} horizontal  showsHorizontalScrollIndicator={false} >
       {!isConnectedInternet && <Text>You are offline</Text> }
       {mainLoadsList.length > 0 ? rendereIterms   : isConnectedInternet && <Text>Loading MiniLoads....</Text>}
 

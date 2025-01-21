@@ -196,30 +196,38 @@ let frontMarkert = false
 const [images, setImages] = useState([]);
 
 const handleFileInputChange = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (status !== 'granted') {
-        alert('Permission to access camera roll is required!');
+if (status !== 'granted') {
+    alert('Permission to access camera roll is required!');
+    return;
+}
+
+let result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: false,
+    quality: 1,
+    allowsMultipleSelection: true,
+});
+
+if (result.assets.length + images.length > 4) {
+    setImages([]);
+    alert('You can only select up to 4 images.');
+    return; // Exit if more than 4 images
+}
+
+// Check the file size of each selected image
+for (const asset of result.assets) {
+    if (asset.fileSize > 1.5 * 1024 * 1024) { // 1.5MB in bytes
+        alert('One or more selected images exceed 1.5MB in size.\n Add screenshot or compress the image');
         return;
     }
+}
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: false,
-        quality: 1,
-        allowsMultipleSelection: true,
-    });
-
-     if (result.assets.length + images.length > 4) {
-            setImages([])
-            alert('You can only select up to 4 images.');
-            return; // Exit if more than 4 images
-        }
-
-    if (!result.cancelled) {
-        // Update the state with the selected images correctly using the functional form of setImages
-        setImages(prevImages => [...prevImages, ...result.assets ]);
-    }
+if (!result.cancelled) {
+    // Update the state with the selected images correctly using the functional form of setImages
+    setImages(prevImages => [...prevImages, ...result.assets]);
+}
 };
 
 
@@ -941,11 +949,16 @@ The Future Of Transport And Logistics (Transix)
                       <View style={{height :300}} >
                       </View>
                   </ScrollView>}
-        <TouchableOpacity onPress={handleSubmit} style={{backgroundColor : '#6a0c0c' , width : 100 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center', marginTop :6 ,alignSelf:'center'}} >
+             {!spinnerItem ?  <TouchableOpacity onPress={handleSubmit} style={{backgroundColor : '#6a0c0c' , width : 70 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center', marginTop :6,alignSelf:"center"}} >
 
         <Text style={{color:'white'}} >submit</Text>
 
         </TouchableOpacity>
+      : <View>
+        <Text style={{alignSelf:"center",fontStyle:'italic'}} >The {specproduct} is being added Please wait </Text>  
+         <Text style={{alignSelf:"center",fontStyle:'italic'}} >Add Screenshot Images so they can be added fast </Text>           
+      </View>
+      }
 <View style={{height:500}} ></View>
     </ScrollView>
       

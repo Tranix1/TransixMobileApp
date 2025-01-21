@@ -93,31 +93,37 @@ function DBTrucksAdd( {navigation ,route} ) {
 
  const [image, setImage] = useState(null);
      const selectImage = async () => {
-    let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (permissionResult.granted === false) {
-      alert('Permission to access camera roll is required!');
-      return;
-    }
+        if (permissionResult.granted === false) {
+           alert('The selected image must not be more than 1.5MB.\n Add screenshot or compress the image');
+          return;
+        }
 
-    let pickerResult = await ImagePicker.launchImageLibraryAsync();
-    
-    if (pickerResult.cancelled === true) {
-      return;
-    }
+        let pickerResult = await ImagePicker.launchImageLibraryAsync();
 
-    // Check if assets array exists and has at least one element
-    if (pickerResult.assets && pickerResult.assets.length > 0) {
-      const firstAsset = pickerResult.assets[0];
-      if (firstAsset.uri) {
-        setImage({ localUri: firstAsset.uri });
-        uploadImage(firstAsset); // Call uploadImage with the selected asset
-      } else {
-        alert('Selected image URI is undefined');
-      }
-    } else {
-      alert('No assets found in the picker result');
-    }
+        if (pickerResult.cancelled === true) {
+          return;
+        }
+
+        // Check if assets array exists and has at least one element
+        if (pickerResult.assets && pickerResult.assets.length > 0) {
+          const firstAsset = pickerResult.assets[0];
+          if (firstAsset.uri) {
+            // Check the file size before setting the image
+            if (firstAsset.fileSize > 1.5 * 1024 * 1024) { // 1.5MB in bytes
+              alert('The selected image must not be more than 1.5MB.');
+              return;
+            }
+
+            setImage({ localUri: firstAsset.uri });
+            uploadImage(firstAsset); // Call uploadImage with the selected asset
+          } else {
+            alert('Selected image URI is undefined');
+          }
+        } else {
+          alert('No assets found in the picker result');
+        }
   };
 
 const [downloadURL, setDownloadURL] = React.useState('')
@@ -574,12 +580,13 @@ The Future Of Transport And Logistics (Transix)
         }
         </TouchableOpacity>             
 
-
-        <TouchableOpacity onPress={handleSubmit} style={{alignSelf :"center", backgroundColor : '#6a0c0c' , width : 100 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',marginTop:5}} >
+    {!spinnerItem? <TouchableOpacity onPress={handleSubmit} style={{alignSelf :"center", backgroundColor : '#6a0c0c' , width : 100 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',marginTop:5}} >
 
         <Text style={{color:'white'}} >submit</Text>
 
-        </TouchableOpacity>
+        </TouchableOpacity>:
+        <Text style={{alignSelf:"center",fontStyle:'italic'}} >The truck is being added Please wait </Text>
+        }
         <View style={{height:300}} ></View>
             </ScrollView>
       </View>

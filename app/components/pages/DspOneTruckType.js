@@ -13,6 +13,11 @@ function DspOneTruckType ({route,navigation} ){
   const {truckType ,blockVerifiedU , blackLWarning  } = route.params
   const [allTrucks, setAllTrucks] = useState([]);
   const [truckTonnage , setTruckTonnage]= useState("")
+  const [location , setlocation] =   React.useState("")
+  
+   function specifyLocation(loc){
+    setlocation(loc)
+  }
 
 
 
@@ -27,14 +32,19 @@ function DspOneTruckType ({route,navigation} ){
           const pagination = loadMore && allTrucks.length > 0 ? [startAfter(allTrucks[allTrucks.length - 1][orderByF])] : [];
 
           let dataQuery
-          if(truckTonnage){
+              if(truckTonnage && location){
+
+          dataQuery = query(collection(db, "Trucks"), orderBy(orderByF), ...pagination, limit(12) , where("truckType" ,"==",truckType) , where("truckTonnage" ,"==",truckTonnage), where("location" ,"==",location) );
+                  }else if(truckTonnage){
 
           dataQuery = query(collection(db, "Trucks"), orderBy(orderByF), ...pagination, limit(12) , where("truckType" ,"==",truckType) , where("truckTonnage" ,"==",truckTonnage));
+          }else if(location){
+
+          dataQuery = query(collection(db, "Trucks"), orderBy(orderByF), ...pagination, limit(12) , where("truckType" ,"==",truckType)  , where("location" ,"==",location) );
           }else{
 
             dataQuery = query(collection(db, "Trucks"), orderBy(orderByF), ...pagination, limit(12) , where("truckType" ,"==",truckType) );
           }
-
             
 
         const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
@@ -272,29 +282,67 @@ return(
         <Text style={{fontSize: 20 , color : 'white'}} > {truckType} </Text>
        </View>
 
-       <ScrollView horizontal style={{marginRight:10}}>
-            <TouchableOpacity style={styles.bynIsUnActive}  onPress={()=>setTruckTonnage("1-3 T" ) } >
-                    <Text>1-3 T</Text>
+           <ScrollView horizontal style={{marginLeft:10}}>
+            <TouchableOpacity style={truckTonnage==="1-3 T"?styles.btnIsActive : styles.bynIsUnActive }  onPress={()=>setTruckTonnage("1-3 T" ) } >
+                    <Text style={truckTonnage==="1-3 T"?{color : 'white'}: {color : 'black'} }>1-3 T</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.bynIsUnActive}  onPress={()=> setTruckTonnage("4 - 7 T") }>
-                    <Text>4 - 7 T</Text>
+                <TouchableOpacity style={truckTonnage==="4 - 7 T"?styles.btnIsActive : styles.bynIsUnActive }  onPress={()=> setTruckTonnage("4 - 7 T") }>
+                    <Text style={truckTonnage==="4 - 7 T"?{color : 'white'}: {color : 'black'} } >4 - 7 T</Text>
                 </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.bynIsUnActive}    onPress={()=> setTruckTonnage("8 - 14 T" ) }>
-                        <Text>8 - 14 T</Text>
+                    <TouchableOpacity style={truckTonnage==="8 - 14 T"?styles.btnIsActive : styles.bynIsUnActive }    onPress={()=> setTruckTonnage("8 - 14 T" ) }>
+                        <Text  style={truckTonnage==="8 - 14 T"?{color : 'white'}: {color : 'black'} } >8 - 14 T</Text>
                     </TouchableOpacity>
                    
 
-                    <TouchableOpacity style={styles.bynIsUnActive}  onPress={()=> setTruckTonnage("8 - 14 T" ) } >
-                        <Text>15 - 25 T</Text>
+                    <TouchableOpacity style={truckTonnage==="15 - 25 T"?styles.btnIsActive : styles.bynIsUnActive }  onPress={()=> setTruckTonnage("15 - 25 T" ) } >
+                        <Text style={truckTonnage==="15 - 25 T"?{color : 'white'}: {color : 'black'} } >15 - 25 T</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.bynIsUnActive}  onPress={()=> setTruckTonnage("26 T +++") }>
-                        <Text>26 T +++ </Text>
+                    <TouchableOpacity style={truckTonnage==="26 T +++"?styles.btnIsActive : styles.bynIsUnActive }  onPress={()=> setTruckTonnage("26 T +++") }>
+                        <Text style={truckTonnage==="26 T +++"?{color : 'white'}: {color : 'black'} } >26 T +++ </Text>
                     </TouchableOpacity>
                    
        </ScrollView>
+
+              <ScrollView style={{margin:10,}} horizontal showsHorizontalScrollIndicator={false} >
+                 <TouchableOpacity onPress={()=>specifyLocation('International')} style={location==="International"?styles.btnIsActive : styles.bynIsUnActive } > 
+            <Text style={location==="International" ? {color : 'white'}: {color : 'black'} }>International</Text>
+          </TouchableOpacity>
+                <Text style={{ fontWeight:'bold'}} > local operators</Text>
+          <TouchableOpacity onPress={()=>specifyLocation('Zimbabwe')} style={location==="Zimbabwe"?styles.btnIsActive : styles.bynIsUnActive } > 
+            <Text style={location==="Zimbabwe" ? {color : 'white'}: {color : 'black'} }>Zimbabwe </Text>
+          </TouchableOpacity>
+
+            <TouchableOpacity onPress={()=> specifyLocation('SouthAfrica') } style={location==="SouthAfrica"?styles.btnIsActive : styles.bynIsUnActive } >
+                  <Text style={location==="SouthAfrica" ? {color : 'white'}: {color : 'black'} } >  South Africa</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={()=> specifyLocation('Namibia') } style={location==="Namibia"?styles.btnIsActive : styles.bynIsUnActive }>
+                  <Text style={location==="Namibia" ? {color : 'white'}: {color : 'black'} }>Namibia </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={()=> specifyLocation('Tanzania') } style={location==="Tanzania"?styles.btnIsActive : styles.bynIsUnActive }>
+                  <Text style={location==="Tanzania" ? {color : 'white'}: {color : 'black'} }> Tanzania</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={()=>specifyLocation ('Mozambique') } style={location==="Mozambique"?styles.btnIsActive : styles.bynIsUnActive }>
+                  <Text style={location==="Mozambique" ? {color : 'white'}: {color : 'black'} }>Mozambique </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={()=> specifyLocation('Zambia') } style={location==="Zambia"?styles.btnIsActive : styles.bynIsUnActive }>
+                  <Text style={location==="Zambia" ? {color : 'white'}: {color : 'black'} }> Zambia</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={()=> specifyLocation('Botswana') } style={location==="Botswana"?styles.btnIsActive : styles.bynIsUnActive } >
+                  <Text style={location==="Botswana" ? {color : 'white'}: {color : 'black'} }>Botswana </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={()=> specifyLocation('Malawi') }style={location==="Malawi"?styles.btnIsActive : styles.bynIsUnActive } >
+                  <Text style={location==="Malawi" ? {color : 'white'}: {color : 'black'} }>Malawi </Text>
+              </TouchableOpacity>
+                </ScrollView>
                
         <ScrollView style={{padding : 10 }}>
          {allTrucks.length > 0 ? rendereIterms   : <Text>All {truckTonnage} {truckType} Loading...</Text>}
