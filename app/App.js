@@ -171,6 +171,8 @@ import AppUpdates from "./components/pages/Updates"
 
 // These are icons to be used in the App 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+// Insuarance icon
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 
 Notifications.setNotificationHandler({
@@ -669,6 +671,27 @@ if(username !== false ||trackLoadingScnd ){
 }, [newAppUpdate]);
 
 
+
+
+    const [dspFrstPage , setDspFrstPage] = React.useState(true)
+    function toggleFrstPage(){
+      setDspFrstPage(false)
+    }
+    const [contrMoreInfo, setContractMoreInfo] = React.useState(false)
+    function toggleDspMoreInfo(){
+      setContractMoreInfo(prev=> !prev)
+    }
+    
+    const [contractFeature , setContactFeature]= React.useState(false)
+    function toggleContractFeature(){
+      setContactFeature(prev=> !prev)
+    }
+
+    const [contrreuirements, setcontrreuirements] = React.useState(false)
+    const [contrAdtionalI, setcontAdditonalInf] = React.useState(false)
+
+
+
   return (
     <View>
 
@@ -705,6 +728,151 @@ if(username !== false ||trackLoadingScnd ){
                  <Text style={{color:'white'}} >Shop</Text>
                 </TouchableOpacity>
              </View>
+
+
+                {/* <View style={{position:'absolute' , top : 50 , left :0 , right:0 , bottom: 0 , backgroundColor: 'rgba(34, 139, 34, 0.8)', zIndex:210}} > */}
+               {dspFrstPage && <View style={{position:'absolute' , top : 70 , left :0 , right:0 , bottom: 0 , backgroundColor: 'white', zIndex:210,padding:10,paddingTop:0}} >
+
+                <Text style={{alignSelf:'center',margin:3,fontStyle:'italic',marginBottom:10}} >The future of transport and logistics</Text>
+
+                <View style={{flexDirection:'row', justifyContent: 'space-around',marginBottom:10}} >
+
+                  <TouchableOpacity style={{height: 30 , width: 130 , borderRadius:60, backgroundColor:'#228B22',justifyContent:'center',marginTop:2 }} onPress={()=> navigation.navigate('shopHome') }>
+                  <Text style={{color:'white', textAlign:'center'}}>Go To store</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={{height: 30 , width: 130 , borderRadius:60, backgroundColor:'red',justifyContent:'center',marginTop:2 }} onPress={()=>setDspFrstPage(false)} >
+                  <Text style={{color:'white', textAlign:'center'}}>Visit App</Text>
+
+                  </TouchableOpacity>
+                </View>
+
+
+                <View style={{flexDirection:'row' ,}} >
+                  
+                
+                  <View style={{width:290,}} >
+                    <TouchableOpacity  onPress={toggleDspMoreInfo} style={{  marginBottom : 8,  padding :7 ,borderWidth : 2 , borderColor:'#6a0c0c', borderRadius:8 ,  shadowColor: '#6a0c0c',
+        shadowOffset: { width: 1, height: 2 },
+        shadowOpacity: 0.7,
+        shadowRadius: 5,   overflow: 'hidden', }}>
+                    <View > 
+                  <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:21}} >9 months Contract Available</Text>
+                  <Text>Commodiy : Tobbaco</Text>
+                  <Text>Rate : 3.50/KM for distance above 100KM</Text>
+                  <Text>Rate : 4.50/KM for distance below 100KM</Text>
+                  </View>
+
+                 {contrMoreInfo && <View onPress={toggleDspMoreInfo}  >
+                  <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:19,marginTop:8}} >Routes</Text>
+                  <Text> i) Karoi ii) Mvurwi   </Text>
+                  <Text>iii)marondera iV) Rusape</Text>
+
+                  <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:19,marginTop:8}}>Requirements</Text>
+                  <Text>Trialxes : (flatdecks or dropsides)</Text>
+                  <Text>superlinks : (flatdecks or dropsides)</Text>
+                  <Text>Rigids i.e 30MT , 34MT</Text>
+
+
+                  <View style={{marginTop:5}} >
+
+
+                  <TouchableOpacity onPress={()=>Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`Transix
+                    Is this contract still available
+                      Tobbaco from  i) Karoi ii) Mvurwi   iii)marondera iV Rusape
+                    Rate : 3.50/KM for distance above 100
+                    Rate : 4.50/KM for distance below 100KM
+
+                    From: transix.net`)} `)} style={{  width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
+
+                    <Text style={{color:'white'}}> Book now due 1 March </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={()=>Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`Good day`)} `)} style={{  width : 70 , height : 25 , alignItems :"center" , justifyContent :'center',  borderRadius: 8, alignSelf:'center', margin:5 , borderWidth:2 ,borderColor:'red'}} >
+        
+                    <Text style={{color:'red'}} >Help</Text>
+                  </TouchableOpacity>
+
+                  </View>
+
+
+                    </View>}
+ </TouchableOpacity>
+
+                  { !contrMoreInfo &&<TouchableOpacity style={{marginTop:9 , borderWidth:2 , borderColor:'green', padding:5 ,  shadowColor: 'rgba(34, 139, 34, 1)',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,   overflow: 'hidden',borderRadius:8}} onPress={() => Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`
+I aspire to become verified at the first level on Transix Now!
+To make this happen without any delays or uncertainties.
+
+Provide:
+- Company Address
+- Company Details (e.g., Articles of Association, tax clearance, etc.)
+- National ID or Passport must match details in company details
+
+- Verify Address using Utility Bill (electricity, water, internet, gas),
+  Lease Agreement, Business Licence, Tax Document.
+
+- The document for Address must be from 3-6 months ago.
+
+There is a $5 monthly subscription fee, and you can choose for how long you want to be verified.
+
+The Future Of Transport And Logistics (Transix)
+`)} `)} >
+
+                  <MaterialIcons name="verified" size={70} color="rgba(34, 139, 34, 0.2)" style={{alignSelf:'center'}} />
+
+                  <View style={{position:'absolute',alignSelf:'center',zIndex:14,}}>
+                    <Text style={{ color:'#228B22' , fontWeight:'bold',fontSize:22,marginTop:8}}>first level verification</Text>
+                    <Text style={{fontSize:17,}}>We encourage all legit business to be verified</Text>
+                    </View>
+                   </TouchableOpacity>}
+
+                  { !contrMoreInfo&&<TouchableOpacity style={{marginTop:7,borderWidth:2 , borderColor:'#0074D9',padding:5,  shadowColor: 'rgba(0, 116, 217, 0.2)',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,   overflow: 'hidden',borderRadius:8}} onPress={() => Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`
+I am determined to achieve second-level verification for my insurance GIT on Transix Now!
+To make this happen without any delays or uncertainties.
+
+- You must be Verified at First level
+
+The Future Of Transport And Logistics (Transix)
+`)} `)} >
+        <FontAwesome6 name="shield" size={70} color="rgba(0, 116, 217, 0.2)" style={{alignSelf:'center'}} />
+                      <View  style={{position:'absolute',alignSelf:'center',zIndex:14,}}>
+                    <Text style={{ color:'#0074D9' , fontWeight:'bold',fontSize:19,marginTop:8}} >GIT (Goods in transit Insuarance) </Text>
+                    <Text style={{fontSize:17}}>Click here to get GIT now</Text>
+                    </View>
+                   </TouchableOpacity>}
+
+                   </View>
+
+                 { <View style={{margin:7 , }} >
+
+                  <Text style={{color:'#1E90FF'}}>Add its</Text>
+                  <Text style={{color:'#1E90FF'}}>Free &</Text>
+                  <Text style={{color:'#1E90FF'}}>Unlimited</Text>
+
+                    {!blockVerifiedU && !blackLWarning && username !== false   && <TouchableOpacity onPress={()=>checkAuth("selectAddIterms")  }  style={{  borderWidth:1 , borderColor:'red' , zIndex :200 , borderRadius: 8,marginBottom:7,marginTop:7}} >
+                      <Text style={{color : 'red',fontSize:12,fontWeight:'bold',alignSelf:'center'}}>Logistics</Text>
+                      <View style={{flexDirection:'row',alignItems :"center" , justifyContent :"space-around", }} >
+                <Text style={{color : 'red',fontSize:12,fontWeight:'bold'}} >Add</Text>
+                <MaterialIcons name="add-box" size={18} color="red" />
+                    </View>
+             </TouchableOpacity>}
+                    {!blockVerifiedU && !blackLWarning && username !== false   && <TouchableOpacity onPress={()=>checkAuth("selectAddIterms")  }  style={{ width : 70 , height : 35 ,  zIndex :200 , borderRadius: 8, borderWidth:1 , borderColor:'green'}} >
+                      <Text style={{color : 'green',fontSize:12,fontWeight:'bold',alignSelf:'center'}}>Store</Text>
+                <View  style={{flexDirection:'row',alignItems :"center" , justifyContent :"space-around", }}>
+
+                <Text style={{color : 'green',fontSize:12,fontWeight:'bold'}} >Add</Text>
+                <MaterialIcons name="add-shopping-cart" size={18} color="green" />
+                </View>
+             </TouchableOpacity>}
+
+                  </View>}
+
+
+                </View>
+                   
+
+                </View>}
+
 
 
     {blackLWarningDSP && <View style={{alignSelf:'center', backgroundColor :'white', zIndex:100, position:'absolute', top : 130 , width:300, padding:7, height:150, justifyContent:'center',alignItems :'center', borderRadius:7}} >

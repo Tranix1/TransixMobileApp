@@ -1088,11 +1088,11 @@ Experience the future of transportation and logistics!`;
                     <TouchableOpacity  onPress={()=>addVehicleType("Bulldozer")} style={styles.bynIsUnActive } >
                       <Text>Bulldozer</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity  onPress={()=>addVehicleType("WheelLoader")}style={styles.bynIsUnActive }   >
+                    <TouchableOpacity  onPress={()=>addVehicleType("crane")}style={styles.bynIsUnActive }   >
                       <Text>Crane</Text>
                     </TouchableOpacity>
                     <TouchableOpacity  onPress={()=>addVehicleType("truckhorse")} style={styles.bynIsUnActive } >
-                      <Text>WheelLoader</Text>
+                      <Text>Yruckhorse</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity  onPress={()=>addVehicleType("Compactors")}style={styles.bynIsUnActive } >

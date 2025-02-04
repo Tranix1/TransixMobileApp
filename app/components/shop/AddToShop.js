@@ -57,7 +57,7 @@ let frontMarkert = false
     } catch (err) {
       console.error(err);
     }
-  }, []);
+  }, [username , specproduct,contact]);
 
   if(frontMarkting.length < 4 ){
     frontMarkert = true
@@ -714,11 +714,11 @@ The Future Of Transport And Logistics (Transix)
                     <TouchableOpacity  onPress={()=>addVehicleType("Bulldozer")} style={styles.buttonStyle} >
                       <Text>Bulldozer</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity  onPress={()=>addVehicleType("WheelLoader")}style={styles.buttonStyle}  >
+                    <TouchableOpacity  onPress={()=>addVehicleType("crane")}style={styles.buttonStyle}  >
                       <Text>Crane</Text>
                     </TouchableOpacity>
                     <TouchableOpacity  onPress={()=>addVehicleType("truckhorse")} style={styles.buttonStyle} >
-                      <Text>WheelLoader</Text>
+                      <Text>Truckhorse</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity  onPress={()=>addVehicleType("Compactors")}style={styles.buttonStyle}  >
