@@ -192,6 +192,8 @@ setTimeout(() => {
         <Text style={{textOverflow:'ellipsis' }} >:  from  {item.fromLocation}  to  {item.toLocation} </Text>
       </View>}
 
+         {item.imageUrl&& <Image source={{uri: item.imageUrlSc }} style={{ height : 250 , borderRadius: 10}} />}
+         {item.imageUrl&& <Image source={{uri: item.imageUrlTr }} style={{ height : 250 , borderRadius: 10}} />}
 
        {!contactDisplay[item.id] && <View>
 

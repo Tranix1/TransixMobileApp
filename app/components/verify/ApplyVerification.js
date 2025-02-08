@@ -1,11 +1,13 @@
-import React from "react"
+import React from "react";
 import {View , TouchableOpacity , Text , StyleSheet , ScrollView , TextInput,ActivityIndicator  } from "react-native"
+
 import { collection, doc, addDoc, serverTimestamp ,} from 'firebase/firestore';
 import { db, auth } from "../config/fireBase";
 
 import inputstyles from "../styles/inputElement";
-function ApplyGit({username , contact}){
-  const [formData, setFormData] = React.useState({
+
+function ApplyVerification(params) {
+   const [formData, setFormData] = React.useState({
   noOfTrucks:"",
   productsTransported :"",
   valueOProductsRange :"",
@@ -53,7 +55,7 @@ return(
             <TextInput 
           value={formData.noOfTrucks}
           placeholderTextColor="#6a0c0c"
-          placeholder="Return Load"
+          placeholder="Full name"
           onChangeText={(text) => handleTypedText(text, 'noOfTrucks')}
           type="text"
           style={inputstyles.addIterms }
@@ -61,16 +63,17 @@ return(
     <TextInput 
           value={formData.productsTransported}
           placeholderTextColor="#6a0c0c"
-          placeholder="Return Load"
+          placeholder="national id"
           onChangeText={(text) => handleTypedText(text, 'productsTransported')}
           type="text"
           style={inputstyles.addIterms }
         />
+
       { spinnerItem &&<ActivityIndicator size={36} />}
             <TextInput 
           value={formData.valueOProductsRange}
           placeholderTextColor="#6a0c0c"
-          placeholder="Return Load"
+          placeholder="company adress"
           onChangeText={(text) => handleTypedText(text, 'valueOProductsRange')}
           type="text"
           style={inputstyles.addIterms }
@@ -78,7 +81,7 @@ return(
             <TextInput 
           value={formData.tripNumRangeMonth}
           placeholderTextColor="#6a0c0c"
-          placeholder="Return Load"
+          placeholder="company details artcles or memorendum"
           onChangeText={(text) => handleTypedText(text, 'tripNumRangeMonth')}
           type="text"
           style={inputstyles.addIterms }
@@ -86,7 +89,7 @@ return(
             <TextInput 
           value={formData.localOSADC}
           placeholderTextColor="#6a0c0c"
-          placeholder="Return Load"
+          placeholder="adress verification"
           onChangeText={(text) => handleTypedText(text, 'localOSADC')}
           type="text"
           style={inputstyles.addIterms }
@@ -97,6 +100,6 @@ return(
 : <Text style={{alignSelf:"center",fontStyle:'italic'}}>Information being submited. Please wait</Text>  
 }
     </View>
-)
+)  
 }
-export default React.memo(ApplyGit)
+export default React.memo(ApplyVerification)

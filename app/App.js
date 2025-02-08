@@ -28,7 +28,7 @@ import React,{useState , useEffect,useRef} from "react";
 // The platform is used to check wich device we are oprating on coz react ntive is cross platform so check if its andaroid or ios 
 // ActivityIndicator is a loading item which show a circle loading 
 
-import { View , Text  , TouchableOpacity , StatusBar, BackHandler,Linking,Platform,ActivityIndicator  } from "react-native";
+import { View , Text  , TouchableOpacity , StatusBar, BackHandler,Linking,Platform,ActivityIndicator,StyleSheet  } from "react-native";
 
 // The stack createNativeStackNavigator is a library used for navigation or changing pages like if am on the home page and l want to go to the store its used to change them and makes it easier to go back make Headers it automate many things even a smooth transision . I called it and store in a variable called stack ich l then used throughiut the whole code to call the screeens to be navigated . 
 // Its like react router fdom for web
@@ -168,6 +168,13 @@ import BlackList from './components/verify/Blacklist'
 import MobileAppSD from "./components/MobileAppSD"
 // The is were one can View the updates any update abut anything way for developer to meet the user
 import AppUpdates from "./components/pages/Updates"
+
+// We impoerting the page were we display the page to book a GIT
+import ApplyGit from "./components/verify/ApplyGit"
+
+// When one is applying for Verfication first time
+import ApplyVerification from "./components/verify/ApplyVerification"
+
 
 // These are icons to be used in the App 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -432,6 +439,7 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
         setSmallMenu(prev => !prev)
     }
 
+    const [addStoreLoc , setStoreLoc]= React.useState(false)
   function checkAuth(routeToGo){
 
     if(username !== false|| trackLoadingScnd){
@@ -447,6 +455,8 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
       if(routeToGo ==="selectAddIterms" ){
 
         navigation.navigate('selectAddIterms',{verifiedLoad : false } ) 
+      }else if(routeToGo ==="selectAddToShop"){
+          setStoreLoc(true)
       }else{
         toggleSmallMenu()
       }
@@ -735,6 +745,45 @@ if(username !== false ||trackLoadingScnd ){
 
                 <Text style={{alignSelf:'center',margin:3,fontStyle:'italic',marginBottom:10}} >The future of transport and logistics</Text>
 
+
+                {addStoreLoc&& <View style={{position:'absolute',top:20 , left:0 , right:0 , bottom: 0,zIndex:220,backgroundColor:'white'}} >
+                   <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop', {location:"Zimbabwe" }) } style={styles.buttonStyle} >
+            <Text style={{color:'#6a0c0c'}}> Zimbabwe</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop',{ location :"SouthAfrica" }) } style={styles.buttonStyle}>
+            <Text style={{color:'#6a0c0c'}}>  South Africa</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop', {location:"Namibia" }) } style={styles.buttonStyle}>
+            <Text style={{color:'#6a0c0c'}}>Namibia </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop', { location :"Tanzania" }) } style={styles.buttonStyle}>
+            <Text style={{color:'#6a0c0c'}}> Tanzania</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop',{location: "Mozambique" }) } style={styles.buttonStyle}>
+            <Text style={{color:'#6a0c0c'}}>Mozambique </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop', {location: "Zambia" }) } style={styles.buttonStyle}>
+            <Text style={{color:'#6a0c0c'}}> Zambia</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop', {location: "Botswana" }) } style={styles.buttonStyle} >
+            <Text style={{color:'#6a0c0c'}}>Botswana </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop', {location: "Malawi" }) }style={styles.buttonStyle} >
+            <Text style={{color:'#6a0c0c'}}>Malawi </Text>
+        </TouchableOpacity>
+                </View>}
+
+
+
+
+
                 <View style={{flexDirection:'row', justifyContent: 'space-around',marginBottom:10}} >
 
                   <TouchableOpacity style={{height: 30 , width: 130 , borderRadius:60, backgroundColor:'#228B22',justifyContent:'center',marginTop:2 }} onPress={()=> navigation.navigate('shopHome') }>
@@ -799,24 +848,7 @@ if(username !== false ||trackLoadingScnd ){
                     </View>}
  </TouchableOpacity>
 
-                  { !contrMoreInfo &&<TouchableOpacity style={{marginTop:9 , borderWidth:2 , borderColor:'green', padding:5 ,  shadowColor: 'rgba(34, 139, 34, 1)',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,   overflow: 'hidden',borderRadius:8}} onPress={() => Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`
-I aspire to become verified at the first level on Transix Now!
-To make this happen without any delays or uncertainties.
-
-Provide:
-- Company Address
-- Company Details (e.g., Articles of Association, tax clearance, etc.)
-- National ID or Passport must match details in company details
-
-- Verify Address using Utility Bill (electricity, water, internet, gas),
-  Lease Agreement, Business Licence, Tax Document.
-
-- The document for Address must be from 3-6 months ago.
-
-There is a $5 monthly subscription fee, and you can choose for how long you want to be verified.
-
-The Future Of Transport And Logistics (Transix)
-`)} `)} >
+                  { !contrMoreInfo &&<TouchableOpacity style={{marginTop:9 , borderWidth:2 , borderColor:'green', padding:5 ,  shadowColor: 'rgba(34, 139, 34, 1)',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,   overflow: 'hidden',borderRadius:8}} onPress={()=> navigation.navigate('applyVerification') } >
 
                   <MaterialIcons name="verified" size={70} color="rgba(34, 139, 34, 0.2)" style={{alignSelf:'center'}} />
 
@@ -826,15 +858,8 @@ The Future Of Transport And Logistics (Transix)
                     </View>
                    </TouchableOpacity>}
 
-                  { !contrMoreInfo&&<TouchableOpacity style={{marginTop:7,borderWidth:2 , borderColor:'#0074D9',padding:5,  shadowColor: 'rgba(0, 116, 217, 0.2)',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,   overflow: 'hidden',borderRadius:8}} onPress={() => Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`
-I am determined to achieve second-level verification for my insurance GIT on Transix Now!
-To make this happen without any delays or uncertainties.
-
-- You must be Verified at First level
-
-The Future Of Transport And Logistics (Transix)
-`)} `)} >
-        <FontAwesome6 name="shield" size={70} color="rgba(0, 116, 217, 0.2)" style={{alignSelf:'center'}} />
+                  { !contrMoreInfo&&<TouchableOpacity style={{marginTop:7,borderWidth:2 , borderColor:'#0074D9',padding:5,  shadowColor: 'rgba(0, 116, 217, 0.2)',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,   overflow: 'hidden',borderRadius:8}} onPress={()=> navigation.navigate('applyGit') } >
+                      <FontAwesome6 name="shield" size={70} color="rgba(0, 116, 217, 0.2)" style={{alignSelf:'center'}} />
                       <View  style={{position:'absolute',alignSelf:'center',zIndex:14,}}>
                     <Text style={{ color:'#0074D9' , fontWeight:'bold',fontSize:19,marginTop:8}} >GIT (Goods in transit Insuarance) </Text>
                     <Text style={{fontSize:17}}>Click here to get GIT now</Text>
@@ -856,7 +881,7 @@ The Future Of Transport And Logistics (Transix)
                 <MaterialIcons name="add-box" size={18} color="red" />
                     </View>
              </TouchableOpacity>}
-                    {!blockVerifiedU && !blackLWarning && username !== false   && <TouchableOpacity onPress={()=>checkAuth("selectAddIterms")  }  style={{ width : 70 , height : 35 ,  zIndex :200 , borderRadius: 8, borderWidth:1 , borderColor:'green'}} >
+                    {!blockVerifiedU && !blackLWarning && username !== false   && <TouchableOpacity onPress={()=>checkAuth("selectAddToShop")  }  style={{ width : 70 , height : 35 ,  zIndex :200 , borderRadius: 8, borderWidth:1 , borderColor:'green'}} >
                       <Text style={{color : 'green',fontSize:12,fontWeight:'bold',alignSelf:'center'}}>Store</Text>
                 <View  style={{flexDirection:'row',alignItems :"center" , justifyContent :"space-around", }}>
 
@@ -1282,6 +1307,10 @@ const Stack = createNativeStackNavigator();
       <Stack.Screen name="updates" component={AppUpdates}  options={{title: 'Updates',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
 
 
+      <Stack.Screen name="applyGit" component={ApplyGit}  options={{title: 'Goods In Transit',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
+      <Stack.Screen name="applyVerification" component={ApplyVerification}  options={{title: 'Goods In Transit',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
+
+
       <Stack.Screen name="blackListed" component={BlackList}  options={{title: ' Black List',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
       <Stack.Screen name="verifyInfo" component={VerifyInfo}  options={{title: ' Verification Info',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
       <Stack.Screen name="bbVerifiedLoad" component={BBVerifiedLoad}  options={{headerShown:false}}/>
@@ -1292,3 +1321,19 @@ const Stack = createNativeStackNavigator();
     )
 }
 export default App
+
+
+
+const styles = StyleSheet.create({
+    buttonStyle : {
+        height : 40,
+        justifyContent : 'center' , 
+        alignItems : 'center' ,
+        width : 150 ,
+        marginBottom: 15 ,
+        borderWidth: 2 ,
+        borderColor:"#6a0c0c" ,
+        borderRadius: 3
+    } ,
+  
+});

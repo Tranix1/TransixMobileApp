@@ -92,8 +92,10 @@ function DBTrucksAdd( {navigation ,route} ) {
 
 
  const [image, setImage] = useState(null);
+const [images, setImages] = useState([]);
+  
      const selectImage = async () => {
-        let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
         if (permissionResult.granted === false) {
            alert('The selected image must not be more than 1.5MB.\n Add screenshot or compress the image');
@@ -116,49 +118,20 @@ function DBTrucksAdd( {navigation ,route} ) {
               return;
             }
 
-            setImage({ localUri: firstAsset.uri });
-            uploadImage(firstAsset); // Call uploadImage with the selected asset
+            setImages(prevImages => [...prevImages, firstAsset]);
+            // uploadImageSc(firstAsset); // Call uploadImage with the selected asset
           } else {
             alert('Selected image URI is undefined');
           }
         } else {
           alert('No assets found in the picker result');
         }
+         
   };
 
-const [downloadURL, setDownloadURL] = React.useState('')
 
-async function uploadImage(asset) {  
-const response = await fetch(asset.uri);
-const blob = await response.blob();
-const storageRef = ref(storage, `Trucks/` + new Date().getTime() );
-const path = `Stuff/${new Date().getTime()}`;
-const uploadTask = uploadBytesResumable(storageRef, blob);
 
-return new Promise((resolve, reject) => {
-  // Listen for events
-  uploadTask.on(
-    'state_changed',
-    (snapshot) => {
-      // Progress handling
-    },
-    (error) => {
-      // Error handling
-      reject(error);
-    },
-    () => {
-      getDownloadURL(uploadTask.snapshot.ref)
-        .then((downloadURL) => {
-           setDownloadURL(downloadURL)
-          resolve(downloadURL);
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    }
-    );
-});
-}
+
 
 let _downloadURL 
   
@@ -166,6 +139,28 @@ let _downloadURL
     const [spinnerItem, setSpinnerItem] = React.useState(false);
  
   const handleSubmit = async () => {
+
+      setSpinnerItem(true)
+
+    const uploadImage = async (image) => {
+    const response = await fetch(image.uri);
+    const blob = await response.blob();
+    const storageRef = ref(storage, `Shop/` + new Date().getTime());
+    
+    const snapshot = await uploadBytes(storageRef, blob);
+    const imageUrl = await getDownloadURL(storageRef);
+    
+    return imageUrl;
+}
+
+let truckImage , truckBookImage , trailerBookF , trailerBookSc, driverLicense , driverPassport;
+
+ truckImage= await uploadImage(images[0]);
+ truckBookImage= await uploadImage(images[1]);
+ trailerBookF   = await uploadImage(images[2]);
+
+
+
 
 
       if(isBlackListed ){
@@ -234,7 +229,9 @@ let _downloadURL
       const docRef = await addDoc(trucksDB, {
         CompanyName : username ,
         contact : contact ,
-        imageUrl: _downloadURL,
+        imageUrl: frstImage,
+        imageUrlSc: scndImage,
+        imageUrlTr: thrdImage,
         userId : userId ,
         truckType : truckType ,
         isVerified : isVerified ,
@@ -330,9 +327,9 @@ The Future Of Transport And Logistics (Transix)
       
 
 
-     {image && <Image source={{ uri: image.localUri }} style={{ width: 200, height: 200 }} />}
+     {images[0] &&<Image source={{ uri: images[0].uri }} style={{ width: 200, height: 200 }} />}
 
-     {!image && <TouchableOpacity onPress={selectImage} style={{marginBottom : 9}}>
+     {!image && <TouchableOpacity onPress={selectImage } style={{marginBottom : 9}}>
           <Fontisto name="camera" size={30} color="#6a0c0c" />
      </TouchableOpacity>}
 
@@ -387,36 +384,35 @@ The Future Of Transport And Logistics (Transix)
       {truckDetails && <View>
         
 
+
+     {images[1] &&<Image source={{ uri: images[1].uri }} style={{ width: 200, height: 200 }} />}
+     {<TouchableOpacity onPress={selectImage} style={{marginBottom : 9}}>
+          <Fontisto name="camera" size={30} color="#6a0c0c" />
+     </TouchableOpacity>}
           <TextInput 
             value={formData.horseReg}
             placeholderTextColor="#6a0c0c"
             placeholder="Horse Reg"
             onChangeText={(text) => handlechange(text, 'horseReg')}
-            type="text"
-          style={inputstyles.addIterms }
           />
+          
 
-
-          <TextInput 
-            value={formData.trailerReg}
-            placeholderTextColor="#6a0c0c"
-            placeholder="Trailer Reg 1"
-            onChangeText={(text) => handlechange(text, 'trailerReg')}
-            type="text"
-          style={inputstyles.addIterms }
-          />
-
+     {images[2] && <Image source={{ uri: images[2].uri }} style={{ width: 200, height: 200 }} />}
+     {<TouchableOpacity onPress={()=>selectImage("trhd") } style={{marginBottom : 9}}>
+          <Fontisto name="camera" size={30} color="#6a0c0c" />
+     </TouchableOpacity>}
+        <Text>First Trailer reg</Text>
+          
 
 
 
-          <TextInput 
-            value={formData.scndTrailerReg}
-            placeholderTextColor="#6a0c0c"
-            placeholder="Trailer Reg 2"
-            onChangeText={(text) => handlechange(text, 'scndTrailerReg')}
-            type="text"
-          style={inputstyles.addIterms }
-          />
+        <Text>Second   Trailer Reg</Text>
+     {images[3] && <Image source={{ uri: images[3].uri }} style={{ width: 200, height: 200 }} />}
+     {!image && <TouchableOpacity onPress={selectImage} style={{marginBottom : 9}}>
+          <Fontisto name="camera" size={30} color="#6a0c0c" />
+     </TouchableOpacity>}
+
+         
 
       </View>}
 
@@ -430,34 +426,23 @@ The Future Of Transport And Logistics (Transix)
 
 
 
-          <TextInput 
-            value={formData.driverName}
-            placeholderTextColor="#6a0c0c"
-            placeholder="Driver Name"
-            onChangeText={(text) => handlechange(text, 'driverName')}
-            type="text"
-          style={inputstyles.addIterms }
-          />
+       
+        <Text>driver License</Text>
+
+     {images[4] && <Image source={{ uri: images[4].uri }} style={{ width: 200, height: 200 }} />}
+     {!image && <TouchableOpacity onPress={selectImageSc} style={{marginBottom : 9}}>
+          <Fontisto name="camera" size={30} color="#6a0c0c" />
+     </TouchableOpacity>}
+         
 
 
-          <TextInput 
-            value={formData.driverLicense}
-            placeholderTextColor="#6a0c0c"
-            placeholder="Driver License"
-            onChangeText={(text) => handlechange(text, 'driverLicense')}
-            type="text"
-          style={inputstyles.addIterms }
-          />
+        <Text>driverPassport</Text>
 
-
-          <TextInput 
-            value={formData.driverPassport}
-            placeholderTextColor="#6a0c0c"
-            placeholder="Driver Passport"
-            onChangeText={(text) => handlechange(text, 'driverPassport')}
-            type="text"
-          style={inputstyles.addIterms }
-          />
+     {images[5] && <Image source={{ uri: images[5].uri }} style={{ width: 200, height: 200 }} />}
+     {!image && <TouchableOpacity onPress={selectImageTH} style={{marginBottom : 9}}>
+          <Fontisto name="camera" size={30} color="#6a0c0c" />
+     </TouchableOpacity>}
+          
 
           <TextInput 
             value={formData.driverPhone}
