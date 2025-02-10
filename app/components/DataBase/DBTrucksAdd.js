@@ -1,7 +1,7 @@
 import React,{useState} from "react";
 import { storage } from "../config/fireBase";
 import { getDownloadURL, ref, uploadBytes, uploadBytesResumable ,} from "firebase/storage";
-import { collection, doc, getDoc, addDoc ,serverTimestamp} from 'firebase/firestore';
+import { collection, doc, getDoc, addDoc ,serverTimestamp , onSnapshot , setDoc, runTransaction} from 'firebase/firestore';
 import { db, auth } from "../config/fireBase";
 import {View, TextInput , Text ,    TouchableOpacity , Button , Image , ActivityIndicator,StyleSheet, ScrollView,Linking} from "react-native"
 import inputstyles from "../styles/inputElement";
@@ -26,12 +26,7 @@ function DBTrucksAdd( {navigation ,route} ) {
     trailerType : '',
     trailerModel :"" ,
       
-    horseReg :"" ,
-    trailerReg :"",
-    scndTrailerReg :"",
     driverName :"",
-    driverLicense :"" ,
-    driverPassport :"" ,
     driverPhone :"",
 
     truckOwnerPhone :"",
@@ -40,6 +35,58 @@ function DBTrucksAdd( {navigation ,route} ) {
     maximumWheight :"" ,
 
   });
+
+
+
+   const [ ownerName , SetOwnerName] = React.useState('');
+  const [ ownerWhatsApp , setOwnerWhatsApp] = React.useState('');
+  const [ ownerCall , setOwnerCall] = React.useState('');
+
+       React.useEffect(() => {
+  let unsubscribe;
+
+  try {
+    if (auth.currentUser) {
+      const userId = auth.currentUser.uid;
+      const docRef = doc(db, 'truckOwnerDetails', userId);
+
+      unsubscribe = onSnapshot(docRef, (doc) => {
+        if (doc.exists()) {
+          SetOwnerName(doc.data().ownerName);
+          setOwnerCall(doc.data().ownerCall);
+          setOwnerWhatsApp(doc.data().ownerWhatsApp);
+        }
+      });
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  return () => {
+    if (unsubscribe) {
+      unsubscribe();
+    }
+  };
+}, [username]);
+
+  const [ ownerNameAddDb , SetOwnerNameAddDb] = React.useState('');
+  const [ ownerWhatsAppAddDb , setOwnerWhatsAppAddDb] = React.useState('');
+  const [ ownerCallAddDb , setOwnerCallAddDb] = React.useState('');
+  
+  const handleUpdateDriverDetails = async () => {
+    try {
+      if(auth.currentUser){
+        const userId = auth.currentUser.uid
+        await setDoc(doc(db, 'truckOwnerDetails', userId), { ownerName: ownerNameAddDb, ownerWhatsApp : ownerCallAddDb , ownerCall :ownerCallAddDb, username:username });
+        alert("donee")
+      }  
+  
+          } catch (err) {
+          alert("errr")
+            console.error(err);
+            }
+    };
+
 
   const [location , setlocation] =   React.useState("")
   const [localOperation , setLocalLoads]=React.useState(false)
@@ -55,24 +102,16 @@ function DBTrucksAdd( {navigation ,route} ) {
 
   function togglrTruckDe(){
     setTruckDDsp(prev=>!prev) 
-    setTruckBuzDDsp(false)
     setDriverDDsp(false)
   }
 
 
 
-  const [ truckBuzDe , setTruckBuzDDsp]=React.useState(false)
 
-  function togglrTruckBuzDe(){
-    setTruckBuzDDsp(prev=>!prev)
-    setDriverDDsp(false)
-    setTruckDDsp(false)
-  }
 
   const [driverDetails , setDriverDDsp]=React.useState(false)
 
   function togglrDriverDe(){
-     setTruckBuzDDsp(false)
     setTruckDDsp(false)
     setDriverDDsp(prev=>!prev)
   }
@@ -91,7 +130,6 @@ function DBTrucksAdd( {navigation ,route} ) {
 
 
 
- const [image, setImage] = useState(null);
 const [images, setImages] = useState([]);
   
      const selectImage = async () => {
@@ -133,60 +171,28 @@ const [images, setImages] = useState([]);
 
 
 
-let _downloadURL 
   
 
     const [spinnerItem, setSpinnerItem] = React.useState(false);
  
   const handleSubmit = async () => {
+    setDriverDDsp(false)
+    setTruckDDsp(false)
 
       setSpinnerItem(true)
 
-    const uploadImage = async (image) => {
-    const response = await fetch(image.uri);
-    const blob = await response.blob();
-    const storageRef = ref(storage, `Shop/` + new Date().getTime());
-    
-    const snapshot = await uploadBytes(storageRef, blob);
-    const imageUrl = await getDownloadURL(storageRef);
-    
-    return imageUrl;
-}
 
-let truckImage , truckBookImage , trailerBookF , trailerBookSc, driverLicense , driverPassport;
-
- truckImage= await uploadImage(images[0]);
- truckBookImage= await uploadImage(images[1]);
- trailerBookF   = await uploadImage(images[2]);
-
-
-
-
-
-      if(isBlackListed ){
-        return
-      }else if(blackLWarning ){
-        alert("Your account is currently under investigation.\n Please contact us for resolution")
-        Linking.openURL(`whatsapp://send?phone=+263716326160  &text=${encodeURIComponent(`Good day \nMy Transix account is being investigated whats the issue and how can we resolve it \nMy username is ${username} \n`)} `)
-        return
-      }else if(blockVerifiedU){
-        alert("Important: You are a blocked verified user.\n Legal action may be taken if necessary. \nContact us immediately.")
-        Linking.openURL(`whatsapp://send?phone=+263716326160  &text=${encodeURIComponent(`Good day \n I am a blocked Transix verified User \nMy username is ${username} \n How can we speed up the resolving process l am legit`)} `)
-        return
-      }
+      
       if(!location){
-        alert("Choose were the truck operate")
+        alert("Choose were the truck operate \n Click the Button below named operating location")
+        setSpinnerItem(false)
         return
       }
 
-        if(downloadURL){
-          _downloadURL = downloadURL
-        }else{
-          _downloadURL = null
-        }
-        
+               
         if(!formData.fromLocation || !formData.toLocation){
-          alert("Add The location the truck is needing");
+          alert("Add The location the truck is needing \n Like from location and to location");
+          setSpinnerItem(false)
           return
         }
         
@@ -197,6 +203,7 @@ let truckImage , truckBookImage , trailerBookF , trailerBookSc, driverLicense , 
         }else if(truckType==="other" && !formData.trailerModel  ) {
 
           alert("Enter The Trailer Type You Have");
+          setSpinnerItem(false)
           return
         }
 
@@ -215,23 +222,83 @@ let truckImage , truckBookImage , trailerBookF , trailerBookSc, driverLicense , 
 
         if (verifiedLoad && !areAllElementsTrueExceptKeys(formData, excludedKeys)) {
             alert("This truck is for verified loads.\n\nAdd all truck details except for Trailer Reg2 if not available.");
-            return;
-        } else if (verifiedLoad && !downloadURL) {
-            alert("Please add a truck image.");
+            setSpinnerItem(false)
             return;
         }
     }
+
+
+
+
+
+    const uploadImage = async (image) => {
+    const response = await fetch(image.uri);
+    const blob = await response.blob();
+    const storageRef = ref(storage, `Trucks/` + new Date().getTime() );
+    
+    const snapshot = await uploadBytes(storageRef, blob);
+    const imageUrl = await getDownloadURL(storageRef);
+    
+    return imageUrl;
+}
+
+let truckImage , truckBookImage , trailerBookF , trailerBookSc, driverLicense , driverPassport ;
+
+if(isVerified && images.length <5 && spinnerItem && truckType !== "Rigid") {
+    alert("Add All reuired images")
+    setSpinnerItem(false)
+    return
+  }else if(isVerified && images.length >6 && spinnerItem && truckType !== "Rigid"){
+    alert("You added too many images click restart addig images")
+    setSpinnerItem(false)
+    return
+  }else if(isVerified && (images.length ===5||images.length ===6 ) && spinnerItem && truckType !== "Rigid" ){
+
+  truckImage= await uploadImage(images[0]);
+  driverLicense  = await uploadImage(images[1]);
+  driverPassport = await uploadImage(images[2]);
+
+  truckBookImage = await uploadImage(images[3]);
+  trailerBookF   = await uploadImage(images[4]);
+  trailerBookSc = images.length === 4 ? await uploadImage(images[5]) : null ;
+  
+
+  }else if(isVerified && images.length ===4&& spinnerItem && truckType === "Rigid" ){
+
+  truckImage= await uploadImage(images[0]);
+  driverLicense  = await uploadImage(images[1]);
+  driverPassport = await uploadImage(images[2]);
+
+  truckBookImage = await uploadImage(images[3]);
+
+  }  else if(!isVerified && images.length === 1 ){
+
+    truckImage= await uploadImage(images[0]);
+  }else{
+    alert("Please add truck image")
+    setSpinnerItem(false)
+    return
+  }
+
+
       setSpinnerItem(true)
         let withDetails 
         verifiedLoad||isVerified ? withDetails = true : withDetails = false 
+
+
     let userId = auth.currentUser.uid
     try {
       const docRef = await addDoc(trucksDB, {
         CompanyName : username ,
         contact : contact ,
-        imageUrl: frstImage,
-        imageUrlSc: scndImage,
-        imageUrlTr: thrdImage,
+        imageUrl: truckImage,
+
+        truckBookImage :truckBookImage ,
+        trailerBookF :trailerBookF , 
+        trailerBookSc :trailerBookSc, 
+        driverLicense:driverLicense ,
+        driverPassport :driverPassport ,
+
         userId : userId ,
         truckType : truckType ,
         isVerified : isVerified ,
@@ -250,23 +317,12 @@ let truckImage , truckBookImage , trailerBookF , trailerBookSc, driverLicense , 
     additionalInfo :"" ,
     trailerType : '',
 
-
-    horseReg :"" ,
-    trailerReg :"",
-    scndTrailerReg :"",
-    driverName :"",
-    driverLicense :"" ,
-    driverPassport :"" ,
     driverPhone :"",
 
-    truckOwnerPhone :"",
-    truckOwnerWhatsApp :"",
-    businessLoction :"",
     maximumWheight :""
 
-
       });
-      setImage(null);
+      setImages([]);
       setSpinnerItem(false)
       if(verifiedLoad){
       navigation.goBack()
@@ -290,30 +346,56 @@ let truckImage , truckBookImage , trailerBookF , trailerBookSc, driverLicense , 
        </View>
 
 
-        {verifyOngoing && !isVerified&&<TouchableOpacity  onPress={() => Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`
-I aspire to become verified at the first level on Transix Now!
-To make this happen without any delays or uncertainties.
+     {isVerified && !ownerName && <View style={{position:'absolute' , alignSelf:'center' , backgroundColor:'white' , top : 100 ,  zIndex:500,padding:20}} >
 
-Provide:
-- Company Address
-- Company Details (e.g., Articles of Association, tax clearance, etc.)
-- National ID or Passport must match details in company details
 
-- Verify Address using Utility Bill (electricity, water, internet, gas),
-  Lease Agreement, Business Licence, Tax Document.
+               <TextInput
+                     placeholder="Owner Name"
+                     type="text"
+                     value={ownerNameAddDb}
+                     onChangeText={(text) => SetOwnerNameAddDb(text)}
+                     style={inputstyles.inputElem}            
+                  />
 
-- The document for Address must be from 3-6 months ago.
+               <TextInput
+                     placeholder="Owner Calls"
+                     type="text"
+                     value={ownerCallAddDb}
+                     onChangeText={(text) => setOwnerCallAddDb(text)}
+                     style={inputstyles.inputElem}            
+                  />
 
-There is a $5 monthly subscription fee, and you can choose for how long you want to be verified.
+               <TextInput
+                     placeholder="Owner WhatsApp"
+                     type="text"
+                     value={ownerWhatsAppAddDb}
+                     onChangeText={(text) => setOwnerWhatsAppAddDb(text)}
+                     style={inputstyles.inputElem}            
+                  />
+               
+        <View style={{flexDirection : 'row', paddingTop : 10 , justifyContent : 'space-evenly'}}>
+        
+          
+          <TouchableOpacity onPress={handleUpdateDriverDetails} style={{backgroundColor:'green'}}>
+            <Text style={{color : 'white'}}>Save</Text>
+          </TouchableOpacity>
+            
+        </View>
+               </View>}
 
-The Future Of Transport And Logistics (Transix)
-`)} `)}  style={{  marginBottom : 4,  padding :7 ,borderWidth : 3 , borderColor:'#6a0c0c', borderRadius:8 ,  shadowColor: '#6a0c0c',
+
+
+
+
+
+        {verifyOngoing && !isVerified&&<TouchableOpacity  onPress={() => Linking.openURL(``)}  style={{  marginBottom : 4,  padding :7 ,borderWidth : 3 , borderColor:'#6a0c0c', borderRadius:8 ,  shadowColor: '#6a0c0c',
         shadowOffset: { width: 3, height: 2 },
         shadowOpacity: 0.7,
         shadowRadius: 5, margin :10}} >
               {<View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white' , zIndex : 66}} >
                 <MaterialIcons name="verified" size={29} color="green" />
               </View>}
+
 
           <Text style={{alignSelf:'flex-start',fontSize:13 , color:'green',fontStyle:'italic'}} >Ongoing Verification</Text>
         {!verifiedLoad&&<Text style={{textAlign:'center',fontSize :17,color:"#6a0c0c",fontWeight:'500'}} > Your Business is not verified </Text>}
@@ -327,13 +409,15 @@ The Future Of Transport And Logistics (Transix)
       
 
 
-     {images[0] &&<Image source={{ uri: images[0].uri }} style={{ width: 200, height: 200 }} />}
-
-     {!image && <TouchableOpacity onPress={selectImage } style={{marginBottom : 9}}>
+     {images[0] &&!truckDetails&& !driverDetails&& <Image source={{ uri: images[0].uri }} style={{ width: 200, height: 200 }} />}
+        { !images[0]  && <Text>Truck Image</Text>}
+     {!images[0]  && <TouchableOpacity onPress={selectImage } style={{marginBottom : 9}}>
           <Fontisto name="camera" size={30} color="#6a0c0c" />
      </TouchableOpacity>}
 
       <ScrollView> 
+        {!truckDetails && !driverDetails&&<View> 
+
         <TextInput
           value={formData.fromLocation}
           placeholder="from location"
@@ -352,9 +436,12 @@ The Future Of Transport And Logistics (Transix)
           style={inputstyles.addIterms }
           onChangeText={(text) => handlechange(text, 'toLocation')}
         />
+
         
+        </View>}
       { spinnerItem &&<ActivityIndicator size={34} />}
-  { !localOperation &&   <View>
+
+  { !localOperation && !driverDetails && !truckDetails&&  <View>
          {truckType ==="other" && <TextInput 
             value={formData.trailerModel}
             placeholderTextColor="#6a0c0c"
@@ -372,77 +459,36 @@ The Future Of Transport And Logistics (Transix)
             type="text"
           style={inputstyles.addIterms }
           />
-      </View>}
 
+          <TextInput 
+            value={formData.maximumWheight}
+            placeholderTextColor="#6a0c0c"
+            placeholder="maximumWheight"
+            onChangeText={(text) => handlechange(text, 'maximumWheight')}
+            type="text"
+          style={inputstyles.addIterms }
+          />
+          <TextInput 
+            value={formData.additionalInfo}
+            placeholderTextColor="#6a0c0c"
+            placeholder="Additional Information"
+            onChangeText={(text) => handlechange(text, 'additionalInfo')}
+            type="text"
+            style={inputstyles.addIterms }
+            />
+
+
+          </View>}
 {(verifiedLoad || isVerified)&&!localOperation ? <View> 
 
 
-    <TouchableOpacity onPress={togglrTruckDe} style={styles.buttonSelectStyle} >
-      <Text style={{color:'white' }} >Truck Details</Text>
-    </TouchableOpacity>
 
-      {truckDetails && <View>
-        
-
-
-     {images[1] &&<Image source={{ uri: images[1].uri }} style={{ width: 200, height: 200 }} />}
-     {<TouchableOpacity onPress={selectImage} style={{marginBottom : 9}}>
-          <Fontisto name="camera" size={30} color="#6a0c0c" />
-     </TouchableOpacity>}
-          <TextInput 
-            value={formData.horseReg}
-            placeholderTextColor="#6a0c0c"
-            placeholder="Horse Reg"
-            onChangeText={(text) => handlechange(text, 'horseReg')}
-          />
-          
-
-     {images[2] && <Image source={{ uri: images[2].uri }} style={{ width: 200, height: 200 }} />}
-     {<TouchableOpacity onPress={()=>selectImage("trhd") } style={{marginBottom : 9}}>
-          <Fontisto name="camera" size={30} color="#6a0c0c" />
-     </TouchableOpacity>}
-        <Text>First Trailer reg</Text>
-          
-
-
-
-        <Text>Second   Trailer Reg</Text>
-     {images[3] && <Image source={{ uri: images[3].uri }} style={{ width: 200, height: 200 }} />}
-     {!image && <TouchableOpacity onPress={selectImage} style={{marginBottom : 9}}>
-          <Fontisto name="camera" size={30} color="#6a0c0c" />
-     </TouchableOpacity>}
-
-         
-
-      </View>}
-
-
-
-        <TouchableOpacity onPress={togglrDriverDe} style={styles.buttonStyle} >
+       {images[0] && images[0] && <TouchableOpacity onPress={togglrDriverDe} style={styles.buttonSelectStyle} >
           <Text>Driver Details</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>}
 
-      {driverDetails && <View>
+      {driverDetails && <View style={{justifyContent:'center'}} >
 
-
-
-       
-        <Text>driver License</Text>
-
-     {images[4] && <Image source={{ uri: images[4].uri }} style={{ width: 200, height: 200 }} />}
-     {!image && <TouchableOpacity onPress={selectImageSc} style={{marginBottom : 9}}>
-          <Fontisto name="camera" size={30} color="#6a0c0c" />
-     </TouchableOpacity>}
-         
-
-
-        <Text>driverPassport</Text>
-
-     {images[5] && <Image source={{ uri: images[5].uri }} style={{ width: 200, height: 200 }} />}
-     {!image && <TouchableOpacity onPress={selectImageTH} style={{marginBottom : 9}}>
-          <Fontisto name="camera" size={30} color="#6a0c0c" />
-     </TouchableOpacity>}
-          
 
           <TextInput 
             value={formData.driverPhone}
@@ -453,66 +499,73 @@ The Future Of Transport And Logistics (Transix)
           style={inputstyles.addIterms }
           />
 
+       
+
+      {images[1] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >DRIVER PASSPORT IMAGE</Text>}
+     {images[1] && <Image source={{ uri: images[1].uri }} style={{ width: 200, height: 200, margin:7 }} />}
+     {images[0]   && !images[1] &&<TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
+        <Text style={{backgroundColor:'white'  }} >Driver PASSPORT Image </Text>
+     </TouchableOpacity>}
+         
+
+
+      {images[2] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >DRIVER ID IMAGE</Text>}
+
+     {images[2] && <Image source={{ uri: images[2].uri }} style={{ width: 200, height: 200 , margin:7}} />}
+     {images[0] && images[1] && !images[2]   &&<TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
+        <Text style={{backgroundColor:'white'  }} >Driver Id Image </Text>
+     </TouchableOpacity>}
+          
+
+
       </View>}
 
 
-        <TouchableOpacity onPress={togglrTruckBuzDe} style={styles.buttonSelectStyle} >
-          <Text style= {{color:"white" }} >business Details</Text>
-        </TouchableOpacity>
-
-      {truckBuzDe && <View>
-
-          <TextInput 
-            value={formData.truckOwnerPhone}
-            placeholderTextColor="#6a0c0c"
-            placeholder="truckOwnerPhone"
-            onChangeText={(text) => handlechange(text, 'truckOwnerPhone')}
-            type="text"
-          style={inputstyles.addIterms }
-          />
 
 
-          <TextInput 
-            value={formData.truckOwnerWhatsApp}
-            placeholderTextColor="#6a0c0c"
-            placeholder="truck Owner WhatsApp"
-            onChangeText={(text) => handlechange(text, 'truckOwnerWhatsApp')}
-            type="text"
-          style={inputstyles.addIterms }
-          />
+    {images[2] &&<TouchableOpacity onPress={togglrTruckDe} style={styles.buttonSelectStyle} >
+      <Text  >Truck Details</Text>
+    </TouchableOpacity>}
+
+      {truckDetails && <View style={{justifyContent:'center'}} >
+        
+
+      {images[3] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >HORSE REG BOOK IMAGE</Text>}
+     {images[3] && <Image source={{ uri: images[3].uri }} style={{ width: 200, height: 200 , margin:7 }} />}
+     {images[0] && images[1] && images[2] && !images[3] && <TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
+        <Text style={{backgroundColor:'white'  }} >horse Reg Book Image </Text>
+     </TouchableOpacity>}
+          
+          
+
+      {images[4] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >HORSE REG BOOK IMAGE</Text>}
+     {images[4] && <Image source={{ uri: images[4].uri }} style={{ width: 200, height: 200, margin:7 }} />}
+     {images[0] && images[1] && images[2] && images[3] && !images[4] &&  <TouchableOpacity onPress={selectImage } style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
+        <Text>First Trailer reg</Text>
+        <Text style={{backgroundColor:'white'  }} >Trailer Reg Book Image </Text>
+     </TouchableOpacity>}
+          
 
 
-          <TextInput 
-            value={formData.businessLoction}
-            placeholderTextColor="#6a0c0c"
-            placeholder="businessLoction"
-            onChangeText={(text) => handlechange(text, 'businessLoction')}
-            type="text"
-          style={inputstyles.addIterms }
-          />
+      {images[5] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >TRAILER 2 REG BOOK IMAGE</Text>}
+     {images[5] && <Image source={{ uri: images[5].uri }} style={{ width: 200, height: 200,margin:7 }} />}
 
+      {images[0] && images[1] && images[2]&& images[3]  && images[4]&& !images[5]  && <Text style={{alignSelf:'center',fontWeight:'bold'}} >Add If available or continue to add driver details</Text>}
+     {images[0] && images[1] && images[2]&& images[3]  && images[4]&& !images[5]  &&<TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
+        <Text style={{backgroundColor:'white'  }} >Trailer 2 Reg Book Image </Text>
+     </TouchableOpacity>}
 
-          <TextInput 
-            value={formData.maximumWheight}
-            placeholderTextColor="#6a0c0c"
-            placeholder="maximumWheight"
-            onChangeText={(text) => handlechange(text, 'maximumWheight')}
-            type="text"
-          style={inputstyles.addIterms }
-          />
+         
 
       </View>}
+
+
+
+
+
 
  </View>:null}
 
-          <TextInput 
-            value={formData.additionalInfo}
-            placeholderTextColor="#6a0c0c"
-            placeholder="Additional Information"
-            onChangeText={(text) => handlechange(text, 'additionalInfo')}
-            type="text"
-            style={inputstyles.addIterms }
-            />
 
 
         {localOperation && <View style={{alignSelf:'center'}} >
@@ -558,12 +611,12 @@ The Future Of Transport And Logistics (Transix)
 
 
   
-        <TouchableOpacity onPress={toggleLocalLoads} style={{}}>
+        {!truckDetails && !driverDetails&&<TouchableOpacity onPress={toggleLocalLoads} style={{}}>
           {!location? <Text style={styles.buttonIsFalse}>Operating Location</Text>:
           <Text style={styles.buttonIsFalse}>{location}</Text>
 
         }
-        </TouchableOpacity>             
+        </TouchableOpacity>             }
 
     {!spinnerItem? <TouchableOpacity onPress={handleSubmit} style={{alignSelf :"center", backgroundColor : '#6a0c0c' , width : 100 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',marginTop:5}} >
 
@@ -596,14 +649,16 @@ const styles = StyleSheet.create({
         alignSelf:'center'
     } ,
     buttonSelectStyle :{
-      alignSelf:'center',
-        backgroundColor :"#6a0c0c",
-        height : 35,
+        height : 30,
         justifyContent : 'center' , 
         alignItems : 'center' ,
-        width : 150 ,
+        width : 200 ,
         marginTop: 10 ,
-        borderRadius: 10
+        borderWidth: 2 ,
+        borderColor:"#6a0c0c" ,
+        borderRadius: 10 ,
+        alignSelf:'center',
+        marginBottom:10
 
     },
       buttonIsFalse : {
