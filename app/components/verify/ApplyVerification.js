@@ -1,20 +1,23 @@
 import React,{useState} from "react";
 import {View , TouchableOpacity , Text , StyleSheet , ScrollView , TextInput,ActivityIndicator  } from "react-native"
 
-import { collection, doc, addDoc, serverTimestamp ,} from 'firebase/firestore';
 import { db, auth } from "../config/fireBase";
 
 import * as DocumentPicker from 'expo-document-picker';
 
 import inputstyles from "../styles/inputElement";
 
-function ApplyVerification(params) {
+import { storage } from "../config/fireBase";
+import { getDownloadURL, ref, uploadBytes, uploadBytesResumable ,} from "firebase/storage";
+import { collection, doc, getDoc, addDoc ,serverTimestamp , onSnapshot , setDoc, runTransaction} from 'firebase/firestore';
+function ApplyVerification({route}) {
+  const {username , contact} = route.params
    const [formData, setFormData] = React.useState({
-  noOfTrucks:"",
-  productsTransported :"",
-  valueOProductsRange :"",
-  tripNumRangeMonth:"",
-  localOSADC:"" ,
+    buzLoc :"",
+    phoneNumCalls :"",
+    phoneNumApp :"" ,
+    contactEmail :"",
+    addressWithProof :"" ,
 
   });
 
@@ -28,7 +31,7 @@ function ApplyVerification(params) {
     const [spinnerItem, setSpinnerItem] = React.useState(false);
 
 
- const [selectedDocument, setSelectedDocumentS] = useState(null);
+ const [selectedDocuments, setSelectedDocumentS] = useState([]);
 
   const pickDocument = async () => {
     let result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf' });
@@ -58,7 +61,7 @@ function ApplyVerification(params) {
   }
 
 
-  const gitCollection = collection(db, "gitCutsomer");
+  const gitCollection = collection(db, "verifactionDetails");
 async function handleSubmit(){
       setSpinnerItem(true)
 
@@ -66,7 +69,7 @@ async function handleSubmit(){
   const uploadImage = async (image) => {
     const response = await fetch(image.uri);
     const blob = await response.blob();
-    const storageRef = ref(storage, `Trucks/` + new Date().getTime() );
+    const storageRef = ref(storage, `verifactionDetails/` + new Date().getTime() );
     
     const snapshot = await uploadBytes(storageRef, blob);
     const imageUrl = await getDownloadURL(storageRef);
@@ -74,102 +77,123 @@ async function handleSubmit(){
     return imageUrl;
 }
 
-let certOIncop  ;
+let certOIncop , memoOAssociation , taxClearance , buzProfile , NationalId , proofORes  ;
 
 
-  certOIncop= await uploadImage(images[0]);
+  certOIncop= await uploadImage(selectedDocuments[0]);
+  memoOAssociation= await uploadImage(selectedDocuments[1]);
+  taxClearance= await uploadImage(selectedDocuments[2]);
+  buzProfile= await uploadImage(selectedDocuments[3]);
+  NationalId= await uploadImage(selectedDocuments[4]);
+  proofORes= await uploadImage(selectedDocuments[5]);
 
+  const userId = auth.currentUser.uid
   try {
       const docRef = await addDoc(gitCollection, {
         userId: userId, // Add the user ID to the document
         companyName: username,
         contact: contact,
+        certOIncop  :certOIncop ,
+        memoOAssociation :memoOAssociation ,
+        taxClearance :taxClearance ,
+        buzProfile :buzProfile,
+        NationalId :NationalId ,
+        proofORes :proofORes ,
         ...formData 
       });
 
       setFormData({
-        noOfTrucks:"",
-        productsTransported :"",
-        valueOProductsRange :"",
-        tripNumRangeMonth:"",
-        localOSADC:"" ,
+        buzLoc :"",
+        phoneNumCalls :"",
+        phoneNumApp :"" ,
+        contactEmail :"",
+        addressWithProof :"" ,
+
       });
+      setSpinnerItem(false)
+      alert("doneee")
    
     } catch (err) {
       setSpinnerItem(false)
-      setError(err.toString());
+      console.error(err.toString());
       }
 }
 
 
 return(
     <View style={{alignItems:'center'}} >
-<TouchableOpacity onPress={pickDocument}>
-  <Text>pickDocument</Text>
-</TouchableOpacity>
 
- {selectedDocument && (
-        <View>
-          <Text>Selected PDF document:</Text>
-          <Text>{selectedDocument.name}</Text>
-        </View>
-      )}
+
+
 
   <View>    
 
-
+{selectedDocuments[0] && <Text>{selectedDocuments[0].name }</Text> }
 <TouchableOpacity onPress={pickDocument}>
   <Text>Cerificate of incoperation</Text>
 </TouchableOpacity>
            
 
+{selectedDocuments[1] && <Text>{selectedDocuments[1].name }</Text> }
 <TouchableOpacity onPress={pickDocument}>
   <Text>memorendum of Association</Text>
 </TouchableOpacity>
             
- <Text>Tax clearance</Text>           
+{selectedDocuments[2] && <Text>{selectedDocuments[2].name }</Text> }
 <TouchableOpacity onPress={pickDocument}>
-  <Text>pickDocument</Text>
+ <Text>Tax clearance</Text>           
 </TouchableOpacity>
-          
- <Text>Business profile</Text> 
+
+
+{selectedDocuments[3] && <Text>{selectedDocuments[3].name }</Text> }
  <Text>Add buz profile if available</Text>      
 <TouchableOpacity onPress={pickDocument}>
   <Text>pickDocument</Text>
+ <Text>Business profile</Text> 
 </TouchableOpacity>
 
+            <TextInput 
+          value={formData.buzLoc}
+          placeholderTextColor="#6a0c0c"
+          placeholder="company adress"
+          onChangeText={(text) => handleTypedText(text, 'buzLoc')}
+          type="text"
+          style={inputstyles.addIterms }
+        />
     </View>
 
 
     <View>
 
 
+{selectedDocuments[4] && <Text>{selectedDocuments[4].name }</Text> }
     <TouchableOpacity onPress={pickDocument}>
       <Text>National Id</Text>
     </TouchableOpacity>
 
+        
         <TextInput 
-              value={formData.productsTransported}
-              placeholderTextColor="#6a0c0c"
-              placeholder="national id"
-              onChangeText={(text) => handleTypedText(text, 'productsTransported')}
-              type="text"
-              style={inputstyles.addIterms }
-            />
-        <TextInput 
-              value={formData.productsTransported}
+              value={formData.phoneNumCalls}
               placeholderTextColor="#6a0c0c"
               placeholder="phone number"
-              onChangeText={(text) => handleTypedText(text, 'productsTransported')}
+              onChangeText={(text) => handleTypedText(text, 'phoneNumCalls')}
               type="text"
               style={inputstyles.addIterms }
             />
 
          <TextInput 
-              value={formData.productsTransported}
+              value={formData.phoneNumApp}
               placeholderTextColor="#6a0c0c"
-              placeholder="phone number"
-              onChangeText={(text) => handleTypedText(text, 'productsTransported')}
+              placeholder="WhtsApp tag"
+              onChangeText={(text) => handleTypedText(text, 'phoneNumApp')}
+              type="text"
+              style={inputstyles.addIterms }
+            />
+              <TextInput 
+              value={formData.contactEmail}
+              placeholderTextColor="#6a0c0c"
+              placeholder="email"
+              onChangeText={(text) => handleTypedText(text, 'contactEmail')}
               type="text"
               style={inputstyles.addIterms }
             />
@@ -177,21 +201,12 @@ return(
 
 
 <View>
-<TouchableOpacity onPress={pickDocument}>
-  <Text>pickDocument</Text>
-</TouchableOpacity>
+
       { spinnerItem &&<ActivityIndicator size={36} />}
-            <TextInput 
-          value={formData.valueOProductsRange}
-          placeholderTextColor="#6a0c0c"
-          placeholder="company adress"
-          onChangeText={(text) => handleTypedText(text, 'valueOProductsRange')}
-          type="text"
-          style={inputstyles.addIterms }
-        />
 
 
 
+{selectedDocuments[5] && <Text>{selectedDocuments[5].name }</Text> }
 <TouchableOpacity onPress={pickDocument}>
   <Text>Proof of res of business or any of the directors</Text>
 </TouchableOpacity>
@@ -199,10 +214,10 @@ return(
 
 <Text>Proof </Text>
             <TextInput 
-          value={formData.localOSADC}
+          value={formData.addressWithProof}
           placeholderTextColor="#6a0c0c"
           placeholder="adress verification"
-          onChangeText={(text) => handleTypedText(text, 'localOSADC')}
+          onChangeText={(text) => handleTypedText(text, 'addressWithProof')}
           type="text"
           style={inputstyles.addIterms }
         />

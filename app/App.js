@@ -177,6 +177,8 @@ import ApplyGit from "./components/verify/ApplyGit"
 // When one is applying for Verfication first time
 import ApplyVerification from "./components/verify/ApplyVerification"
 
+// These are ongoing events that are for transport and logistics indurty eg burnouts or carshow
+import Events from "./components/pages/Events"
 
 // These are icons to be used in the App 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -1146,8 +1148,12 @@ const Stack = createNativeStackNavigator();
       <Stack.Screen name="updates" component={AppUpdates}  options={{title: 'Updates',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
 
 
-      <Stack.Screen name="applyGit" component={ApplyGit}  options={{title: 'Goods In Transit',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
-      <Stack.Screen name="applyVerification" component={ApplyVerification}  options={{title: 'Goods In Transit',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
+      <Stack.Screen name="applyGit" component={ApplyGit}  initialParams={{username : username , contact : contact , }}  options={{title: 'Goods In Transit',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
+      <Stack.Screen name="applyVerification" component={ApplyVerification}  initialParams={{username : username , contact : contact , }}  options={{title: 'Goods In Transit',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
+
+
+
+      <Stack.Screen name="Events" component={Events}  options={{title: 'Goods In Transit',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
 
 
       <Stack.Screen name="blackListed" component={BlackList}  options={{title: ' Black List',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>

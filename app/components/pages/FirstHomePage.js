@@ -9,9 +9,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 // Insuarance icon
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
-import QRCode from 'react-native-qrcode-svg';
 
-import zimFlag from "../images/zimFlag.png"
 
 function FirsHomePage({setDspFrstPage , checkAuth , addStoreLoc , navigation , username , blackLWarning , blockVerifiedU}){
 
@@ -139,35 +137,35 @@ return(
 
                 {addStoreLoc&& <View style={{position:'absolute',top:20 , left:0 , right:0 , bottom: 0,zIndex:220,backgroundColor:'white'}} >
                    <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop', {location:"Zimbabwe" }) } style={styles.buttonStyle} >
-            <Text style={{color:'#6a0c0c'}}> Zimbabwe</Text>
+            <Text style={{color:'#008000'}}> Zimbabwe</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop',{ location :"SouthAfrica" }) } style={styles.buttonStyle}>
-            <Text style={{color:'#6a0c0c'}}>  South Africa</Text>
+            <Text style={{color:'#F7DC6F'}}>  South Africa</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop', {location:"Namibia" }) } style={styles.buttonStyle}>
-            <Text style={{color:'#6a0c0c'}}>Namibia </Text>
+            <Text style={{color:'#032B44'}}>Namibia </Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop', { location :"Tanzania" }) } style={styles.buttonStyle}>
-            <Text style={{color:'#6a0c0c'}}> Tanzania</Text>
+            <Text style={{color:'#34C759'}}> Tanzania</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop',{location: "Mozambique" }) } style={styles.buttonStyle}>
-            <Text style={{color:'#6a0c0c'}}>Mozambique </Text>
+            <Text style={{color:'#008000'}}>Mozambique </Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop', {location: "Zambia" }) } style={styles.buttonStyle}>
-            <Text style={{color:'#6a0c0c'}}> Zambia</Text>
+            <Text style={{color:'#FFA07A'}}> Zambia</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop', {location: "Botswana" }) } style={styles.buttonStyle} >
-            <Text style={{color:'#6a0c0c'}}>Botswana </Text>
+            <Text style={{color:'#468M2B4'}}>Botswana </Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={()=> navigation.navigate('slctAddShop', {location: "Malawi" }) }style={styles.buttonStyle} >
-            <Text style={{color:'#6a0c0c'}}>Malawi </Text>
+            <Text style={{color:'#FFC080'}}>Malawi </Text>
         </TouchableOpacity>
                 </View>}
 
@@ -195,7 +193,6 @@ return(
 
 
 
-  {/* <QRCode value="Your data here" /> */}
 
 
 
@@ -210,15 +207,7 @@ return(
 </TouchableOpacity>}
 
 {selectContractCountry && !contractLoc &&<View style={{alignSelf:'center'}} > 
-            <TouchableOpacity  onPress={()=>setContraLoc('Zimbabwe')}  style={{    justifyContent : 'center' , 
-        alignItems : 'center' ,
-        height : 80 ,
-        width : 200 , 
-        // borderWidth : 1 , 
-        // borderColor : 'black',
-        padding : 5 ,
-        margin : 10,}}  >
-              <Image source={zimFlag} style={{height:'100%' ,width:'100%',resizeMode:'contain' }} />
+            <TouchableOpacity  onPress={()=>setContraLoc('Zimbabwe')}  style={{}}  >
           <Text style={{position:'absolute',alignSelf:'center',fontWeight:'bold',fontSize:16,zIndex:14,backgroundColor:'white'}}>Zimbabwe </Text>
         </TouchableOpacity>
           <TouchableOpacity onPress={()=> setContraLoc('SouthAfrica') }  >
@@ -272,6 +261,15 @@ return(
                       <View  style={{position:'absolute',alignSelf:'center',zIndex:14,}}>
                     <Text style={{ color:'#0074D9' , fontWeight:'bold',fontSize:19,marginTop:8}} >GIT (Goods in transit Insuarance) </Text>
                     <Text style={{fontSize:17}}>Click here to get GIT now</Text>
+                    </View>
+                   </TouchableOpacity>}
+
+
+             { !selectContractCountry&&<TouchableOpacity style={{marginTop:7,borderWidth:2 , borderColor:'#0074D9',padding:5,  shadowColor: 'rgba(0, 116, 217, 0.2)',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,   overflow: 'hidden',borderRadius:8}} onPress={()=> navigation.navigate('Events') } >
+                      <FontAwesome6 name="shield" size={70} color="rgba(0, 116, 217, 0.2)" style={{alignSelf:'center'}} />
+                      <View  style={{position:'absolute',alignSelf:'center',zIndex:14,}}>
+                    <Text style={{ color:'#0074D9' , fontWeight:'bold',fontSize:19,marginTop:8}} >Events </Text>
+                    <Text style={{fontSize:17}}>Events</Text>
                     </View>
                    </TouchableOpacity>}
 

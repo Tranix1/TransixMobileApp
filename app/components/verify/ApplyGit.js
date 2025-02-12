@@ -53,7 +53,7 @@ return(
             <TextInput 
           value={formData.noOfTrucks}
           placeholderTextColor="#6a0c0c"
-          placeholder="Return Load"
+          placeholder="Number of truck"
           onChangeText={(text) => handleTypedText(text, 'noOfTrucks')}
           type="text"
           style={inputstyles.addIterms }
@@ -61,7 +61,7 @@ return(
     <TextInput 
           value={formData.productsTransported}
           placeholderTextColor="#6a0c0c"
-          placeholder="Return Load"
+          placeholder="what truck transport"
           onChangeText={(text) => handleTypedText(text, 'productsTransported')}
           type="text"
           style={inputstyles.addIterms }
@@ -70,7 +70,7 @@ return(
             <TextInput 
           value={formData.valueOProductsRange}
           placeholderTextColor="#6a0c0c"
-          placeholder="Return Load"
+          placeholder="value of products"
           onChangeText={(text) => handleTypedText(text, 'valueOProductsRange')}
           type="text"
           style={inputstyles.addIterms }
@@ -78,7 +78,7 @@ return(
             <TextInput 
           value={formData.tripNumRangeMonth}
           placeholderTextColor="#6a0c0c"
-          placeholder="Return Load"
+          placeholder="completed trips per month"
           onChangeText={(text) => handleTypedText(text, 'tripNumRangeMonth')}
           type="text"
           style={inputstyles.addIterms }
@@ -86,7 +86,7 @@ return(
             <TextInput 
           value={formData.localOSADC}
           placeholderTextColor="#6a0c0c"
-          placeholder="Return Load"
+          placeholder="Do you operate in SADC"
           onChangeText={(text) => handleTypedText(text, 'localOSADC')}
           type="text"
           style={inputstyles.addIterms }
