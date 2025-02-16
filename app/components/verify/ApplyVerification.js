@@ -10,12 +10,16 @@ import inputstyles from "../styles/inputElement";
 import { storage } from "../config/fireBase";
 import { getDownloadURL, ref, uploadBytes, uploadBytesResumable ,} from "firebase/storage";
 import { collection, doc, getDoc, addDoc ,serverTimestamp , onSnapshot , setDoc, runTransaction} from 'firebase/firestore';
+
+
+import CountryPicker from 'react-native-country-picker-modal';
+
 function ApplyVerification({route}) {
   const {username , contact} = route.params
    const [formData, setFormData] = React.useState({
     buzLoc :"",
-    phoneNumCalls :"",
-    phoneNumApp :"" ,
+    phoneNumFrst :"",
+    phoneNumSc :"" ,
     contactEmail :"",
     addressWithProof :"" ,
 
@@ -59,6 +63,14 @@ function ApplyVerification({route}) {
         }
 
   }
+
+  const [countryCode , setCountryCode] = React.useState(null)
+    const [callingCode, setCallingCode] = React.useState('');
+
+    const handleCountrySelect = (country) => {
+      setCallingCode(country.cca2);
+        setCountryCode(country.callingCode);
+      };
 
 
   const gitCollection = collection(db, "verifactionDetails");
@@ -104,14 +116,13 @@ let certOIncop , memoOAssociation , taxClearance , buzProfile , NationalId , pro
 
       setFormData({
         buzLoc :"",
-        phoneNumCalls :"",
-        phoneNumApp :"" ,
+        phoneNumFrst :"",
+        phoneNumSc :"" ,
         contactEmail :"",
         addressWithProof :"" ,
 
       });
       setSpinnerItem(false)
-      alert("doneee")
    
     } catch (err) {
       setSpinnerItem(false)
@@ -120,39 +131,43 @@ let certOIncop , memoOAssociation , taxClearance , buzProfile , NationalId , pro
 }
 
 
+const [enterCompDw , setEntCompDe]= React.useState(true)
+const [directorDetails , setDirectorDet]=React.useState(false)
+const [addressWithProof , setAdressWithProof]=React.useState(false)
+
+      function goToPersnalInfoF(){
+      setEntCompDe(false)
+      setDirectorDet(true)
+      }
+
+
 return(
     <View style={{alignItems:'center'}} >
 
 
+{ enterCompDw&& <View>    
 
+{selectedDocuments[0] && <Text style={{borderWidth:1 , borderColor:"#6a0c0c", marginBottom:10,padding:5}} >{selectedDocuments[0].name }</Text> }
 
-  <View>    
-
-{selectedDocuments[0] && <Text>{selectedDocuments[0].name }</Text> }
-<TouchableOpacity onPress={pickDocument}>
-  <Text>Cerificate of incoperation</Text>
-</TouchableOpacity>
+{<TouchableOpacity onPress={pickDocument} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}} >
+  <Text style={{backgroundColor:'white'  }}>Cerificate of incoperation</Text>
+</TouchableOpacity>}
            
 
 {selectedDocuments[1] && <Text>{selectedDocuments[1].name }</Text> }
-<TouchableOpacity onPress={pickDocument}>
+<TouchableOpacity onPress={pickDocument} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}} >
   <Text>memorendum of Association</Text>
+  <Text>CR14</Text>
 </TouchableOpacity>
             
 {selectedDocuments[2] && <Text>{selectedDocuments[2].name }</Text> }
-<TouchableOpacity onPress={pickDocument}>
+<TouchableOpacity onPress={pickDocument} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}} >
  <Text>Tax clearance</Text>           
 </TouchableOpacity>
 
 
-{selectedDocuments[3] && <Text>{selectedDocuments[3].name }</Text> }
- <Text>Add buz profile if available</Text>      
-<TouchableOpacity onPress={pickDocument}>
-  <Text>pickDocument</Text>
- <Text>Business profile</Text> 
-</TouchableOpacity>
 
-            <TextInput 
+      <TextInput 
           value={formData.buzLoc}
           placeholderTextColor="#6a0c0c"
           placeholder="company adress"
@@ -160,35 +175,47 @@ return(
           type="text"
           style={inputstyles.addIterms }
         />
-    </View>
+
+  { selectedDocuments.length === 3 && formData.buzLoc&& <TouchableOpacity onPress={goToPersnalInfoF} >
+    <Text>NEXT PAGE</Text>
+  </TouchableOpacity>}
 
 
-    <View>
+    </View>}
 
 
+    {directorDetails&&<View>
+
+<Text>Prove business ownership Or represntative</Text>
+
+<Text>The id of a director or owner must match in company documents </Text>
 {selectedDocuments[4] && <Text>{selectedDocuments[4].name }</Text> }
-    <TouchableOpacity onPress={pickDocument}>
+    <TouchableOpacity onPress={pickDocument} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}} >
       <Text>National Id</Text>
     </TouchableOpacity>
 
+
+   {!countryCode&&  <CountryPicker
+        countryCode={callingCode}
+        withCountryNameButton={true}
+        withCallingCode={true}
+        withFilter={true}
+        onSelect={handleCountrySelect}
+
+      />
+        }      
+      {countryCode && <Text>{countryCode}</Text>}
         
         <TextInput 
-              value={formData.phoneNumCalls}
+              value={formData.phoneNumFrst}
               placeholderTextColor="#6a0c0c"
               placeholder="phone number"
-              onChangeText={(text) => handleTypedText(text, 'phoneNumCalls')}
+              onChangeText={(text) => handleTypedText(text, 'phoneNumFrst')}
               type="text"
               style={inputstyles.addIterms }
             />
 
-         <TextInput 
-              value={formData.phoneNumApp}
-              placeholderTextColor="#6a0c0c"
-              placeholder="WhtsApp tag"
-              onChangeText={(text) => handleTypedText(text, 'phoneNumApp')}
-              type="text"
-              style={inputstyles.addIterms }
-            />
+   
               <TextInput 
               value={formData.contactEmail}
               placeholderTextColor="#6a0c0c"
@@ -197,17 +224,18 @@ return(
               type="text"
               style={inputstyles.addIterms }
             />
-    </View>
+    </View>}
 
-
-<View>
 
       { spinnerItem &&<ActivityIndicator size={36} />}
 
+{addressWithProof&&<View>
 
+
+<Text>Address and proof for the business or director</Text>
 
 {selectedDocuments[5] && <Text>{selectedDocuments[5].name }</Text> }
-<TouchableOpacity onPress={pickDocument}>
+<TouchableOpacity onPress={pickDocument} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}} >
   <Text>Proof of res of business or any of the directors</Text>
 </TouchableOpacity>
 
@@ -222,7 +250,7 @@ return(
           style={inputstyles.addIterms }
         />
 
- </View>
+ </View>}
 
 
           {!spinnerItem ?  <TouchableOpacity  onPress={handleSubmit} style={{backgroundColor : '#6a0c0c' , width : 80 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',alignSelf:'center' }}>

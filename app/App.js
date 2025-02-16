@@ -179,6 +179,9 @@ import ApplyVerification from "./components/verify/ApplyVerification"
 
 // These are ongoing events that are for transport and logistics indurty eg burnouts or carshow
 import Events from "./components/pages/Events"
+import ViewEventsCode from "./components/pages/ViewEventCode"
+
+
 
 // These are icons to be used in the App 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -1153,7 +1156,8 @@ const Stack = createNativeStackNavigator();
 
 
 
-      <Stack.Screen name="Events" component={Events}  options={{title: 'Goods In Transit',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
+      <Stack.Screen name="Events" component={Events}  options={{headerShown:false}}  initialParams={{username : username , contact : contact , }}  />
+      <Stack.Screen name="viewEventsCode" component={ViewEventsCode}  options={{headerShown:false}}  initialParams={{username : username , contact : contact , }}  />
 
 
       <Stack.Screen name="blackListed" component={BlackList}  options={{title: ' Black List',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
@@ -1168,17 +1172,3 @@ const Stack = createNativeStackNavigator();
 export default App
 
 
-
-const styles = StyleSheet.create({
-    buttonStyle : {
-        height : 40,
-        justifyContent : 'center' , 
-        alignItems : 'center' ,
-        width : 150 ,
-        marginBottom: 15 ,
-        borderWidth: 2 ,
-        borderColor:"#6a0c0c" ,
-        borderRadius: 3
-    } ,
-  
-});

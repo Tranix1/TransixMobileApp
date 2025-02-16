@@ -81,7 +81,7 @@ const handleCountrySelect = (country) => {
         <View style={{paddingTop:60 , alignItems:'center' }} > 
 
             {errorOccur&& <Text>{errorOccur} </Text>}
-     {!countryCode&&  <CountryPicker
+  {!countryCode&&  <CountryPicker
         countryCode={callingCode}
         withCountryNameButton={true}
         withCallingCode={true}
