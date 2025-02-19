@@ -142,28 +142,30 @@ const [addressWithProof , setAdressWithProof]=React.useState(false)
 
 
 return(
-    <View style={{alignItems:'center'}} >
+    <View style={{alignItems:'center',marginTop:20}} >
 
 
 { enterCompDw&& <View>    
 
-{selectedDocuments[0] && <Text style={{borderWidth:1 , borderColor:"#6a0c0c", marginBottom:10,padding:5}} >{selectedDocuments[0].name }</Text> }
+{selectedDocuments[2] && <Text style={{color:'green',fontWeight:'bold',textAlign:"center"}} >certifacete of incoperation</Text>}
+{selectedDocuments[0] && <Text style={{borderWidth:1 , borderColor:"#6a0c0c", marginBottom:10,padding:5,textAlign:'center',marginBottom:15}} >{selectedDocuments[0].name }</Text> }
 
-{<TouchableOpacity onPress={pickDocument} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}} >
-  <Text style={{backgroundColor:'white'  }}>Cerificate of incoperation</Text>
+{!selectedDocuments[0] &&<TouchableOpacity onPress={pickDocument} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:40 , justifyContent:'center' ,alignSelf:'center', marginBottom:15,width:200}} >
+  <Text style={{backgroundColor:'white',textAlign:'center'  }}>Cerificate of incoperation</Text>
 </TouchableOpacity>}
            
-
-{selectedDocuments[1] && <Text>{selectedDocuments[1].name }</Text> }
-<TouchableOpacity onPress={pickDocument} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}} >
-  <Text>memorendum of Association</Text>
-  <Text>CR14</Text>
-</TouchableOpacity>
+{selectedDocuments[2] && <Text style={{color:'green',fontWeight:'bold',textAlign:"center"}} >Board Resolution</Text>}
+{selectedDocuments[1] && <Text style={{borderWidth:1 , borderColor:"#6a0c0c", marginBottom:10,padding:5,textAlign:'center',marginBottom:15}}>{selectedDocuments[1].name }</Text> }
+  {selectedDocuments[0] &&  !selectedDocuments[1] &&<Text  >CR14, Memorandum of Association, Register of Directors </Text>}
+{selectedDocuments[0] && !selectedDocuments[1] &&<TouchableOpacity onPress={pickDocument} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:40, justifyContent:'center' ,alignSelf:'center',marginBottom:15,width:200}} >
+<Text style={{textAlign:'center',backgroundColor:'white'}} >Board Resolution</Text>
+</TouchableOpacity>}
             
-{selectedDocuments[2] && <Text>{selectedDocuments[2].name }</Text> }
-<TouchableOpacity onPress={pickDocument} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}} >
- <Text>Tax clearance</Text>           
-</TouchableOpacity>
+            {selectedDocuments[2] && <Text>Tax clearance</Text>}
+{selectedDocuments[2] && <Text style={{borderWidth:1 , borderColor:"#6a0c0c", marginBottom:10,padding:5,textAlign:'center',marginBottom:15}}>{selectedDocuments[2].name }</Text> }
+{selectedDocuments[1] && !selectedDocuments[2] && <TouchableOpacity onPress={pickDocument} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:40 , justifyContent:'center' ,alignSelf:'center',marginBottom:15,width:200}} >
+ <Text style={{backgroundColor:'white'}} >Tax clearance</Text>           
+</TouchableOpacity>}
 
 
 

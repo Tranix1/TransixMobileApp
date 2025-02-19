@@ -6,6 +6,9 @@ import { db, auth } from "../config/fireBase";
 import { Ionicons } from "@expo/vector-icons";
 import {v4 as uuidv4} from "react-native-uuid"
 
+const { Paynow } = require("paynow");
+
+
 function Events({route,navigation}) {
 
   const {username , contact} = route.params
@@ -155,6 +158,57 @@ useEffect(() => {
   })
 
 
+function handleMakePayement() {
+  let paynow = new Paynow("20036", "e33d1e4a-26df-4c10-91ab-c29bca24c96f");
+  // Create a new payment inside the function to avoid stale data
+
+
+  let payment = paynow.createPayment("Invoice 37", "kelvinyaya8@gmail.com");
+  
+  // Passing in the name of the item and the price of the item
+  
+  paynow.resultUrl = "https://transix.net";
+  paynow.returnUrl = "https://transix.net";
+  // Add items/services
+  payment.add("Bananas", 2.5);
+  payment.add("Apples", 1.0);
+
+
+  paynow.sendMobile(payment, "0771111111", "ecocash")
+    .then(response => {
+      if (response.success) {
+        let pollUrl = response.pollUrl; // Save this URL to check the payment status
+        console.log("Payment Instructions:", response.instructions);
+
+        // Polling every 10 seconds until transaction is "paid"
+          paynow.pollTransaction(pollUrl)
+            .then(status => {
+                  console.log("🔍 Full Transaction Response:", status); // Log full response
+
+    if (status.status === "paid") {
+      console.log("✅ Payment Complete!");
+      console.log(pollUrl)
+    } else {
+      console.log("❌ Payment Not Complete. Current status:", status.status);
+
+    }
+            })
+            .catch(err => {
+              console.log("Polling Error:", err);
+              clearInterval(pollInterval); // Stop polling on error
+            });
+      } else {
+        console.log("Error:", response.error);
+      }
+    })
+    .catch(err => console.log("Error:", err));
+}
+
+
+
+
+
+
 
  return(
     <View style={{paddingTop:100}} >
@@ -167,7 +221,9 @@ useEffect(() => {
         <Text style={{fontSize: 20 , color : 'white'}} > {!selectedEvent ? "Events" : selectedEvent}  </Text>
        </View>
 
-
+  <TouchableOpacity onPress={handleMakePayement} >
+    <Text>make payment</Text>
+  </TouchableOpacity>
       {dspSelEvent && <View style={{alignSelf:'center'}}>
 
         <TouchableOpacity onPress={()=>moveToEventsPage("Burn Outs")} style={styles.sEventButtonStyle} >

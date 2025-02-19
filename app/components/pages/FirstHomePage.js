@@ -22,113 +22,7 @@ function FirsHomePage({setDspFrstPage , checkAuth , addStoreLoc , navigation , u
 
 
 
-const [contractLoc , setContraLoc]=React.useState(null)
-const [getContracts , setGetContracts]=React.useState([])
 
-  const [dspLoadMoreBtn , setLoadMoreBtn]=React.useState(true)
-  const [LoadMoreData , setLoadMoreData]=React.useState(false)
-
-async function loadedData(loadMore) {
-
-  try{
-      loadMore ? setLoadMoreData(true) : null;
-
-    const orderByF = "timeStamp";
-    const orderByField = orderBy(orderByF, 'desc'); // Order by timestamp in descending order
-
-    const pagination = loadMore && loadsList.length > 0 ? [startAfter(loadsList[loadsList.length - 1][orderByF])] : [];
-         let dataQuery =query(collection(db, "logiContracts"),  where("userId", "==", "yay") ,orderByField, ...pagination, limit(15) ,   );
-
-      
-    const docsSnapshot = await getDocs(dataQuery);
-    
-    let userItemsMap = [];
-    
-    docsSnapshot.forEach(doc => {
-        userItemsMap.push({ id: doc.id, ...doc.data() });
-    });
-
-    const verifiedUsers = userItemsMap.filter(user => user.isVerified);
-    const nonVerifiedUsers = userItemsMap.filter(user => !user.isVerified);
-    
-    userItemsMap = verifiedUsers.concat(nonVerifiedUsers);
-    let loadedData = userItemsMap;
-
-    if (loadedData.length === 0) {
-        setLoadMoreBtn(false);
-    }
-
-    // Update state with the new data
-    setGetContracts(loadMore ? [  ...getContracts , ...getContracts] : getContracts);
-
-    loadMore ? setLoadMoreData(false) : null;
-    }catch(err){
-      console.error(err)
-    }
-}
-
-
-
-
-
-const rendereIterms = getContracts.map((item)=>{ 
-return (
-      
-                    <View  style={{  marginBottom : 8,  padding :7 ,borderWidth : 2 , borderColor:'#6a0c0c', borderRadius:8 ,  shadowColor: '#6a0c0c',
-        shadowOffset: { width: 1, height: 2 },
-        shadowOpacity: 0.7,
-        shadowRadius: 5,   overflow: 'hidden', }}>
-                    <View > 
-                  <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:21}} >9 months Contract Available</Text>
-                  <Text>Commodiy : Tobbaco</Text>
-                  <Text>Rate : 3.50/KM for distance above 100KM</Text>
-                  <Text>Rate : 4.50/KM for distance below 100KM</Text>
-                  </View>
-
-                  <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:19,marginTop:8}} >Routes</Text>
-                  <Text> i) Karoi ii) Mvurwi   </Text>
-                  <Text>iii)marondera iV) Rusape</Text>
-
-                  <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:19,marginTop:8}}>Requirements</Text>
-                  <Text>Trialxes : (flatdecks or dropsides)</Text>
-                  <Text>superlinks : (flatdecks or dropsides)</Text>
-                  <Text>Rigids i.e 30MT , 34MT</Text>
-
-
-                  <View style={{marginTop:5}} >
-
-
-                  <TouchableOpacity onPress={()=>Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`Transix
-                    Is this contract still available
-                      Tobbaco from  i) Karoi ii) Mvurwi   iii)marondera iV Rusape
-                    Rate : 3.50/KM for distance above 100
-                    Rate : 4.50/KM for distance below 100KM
-
-                    From: transix.net`)} `)} style={{  width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
-
-                    <Text style={{color:'white'}}> Book now due 1 March </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity onPress={()=>Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`Good day`)} `)} style={{  width : 70 , height : 25 , alignItems :"center" , justifyContent :'center',  borderRadius: 8, alignSelf:'center', margin:5 , borderWidth:2 ,borderColor:'red'}} >
-        
-                    <Text style={{color:'red'}} >Help</Text>
-                  </TouchableOpacity>
-
-                  </View>
-
-
- </View>
-)
-})
-
-
-
-
-
-    const [selectContractCountry, setSelectContractCountry] = React.useState(false)
-    function toggleSelctCntrctCounrty(){
-      setSelectContractCountry(prev=> !prev)
-    }
 
 
 return(
@@ -136,10 +30,32 @@ return(
 
                { <View style={{}} >
                 <View style={{justifyContent:'space-between',padding:5,flexDirection:'row',alignItems:'center'}} >
-              <Text style={{fontSize : 30 , zIndex : 50,}} >Transix</Text>
-              <Entypo name="menu" size={40} color="black" />
+              <Text style={{fontSize: 35, fontWeight: "900", color: "#6a0c0c", textTransform: "uppercase",textAlign: "center",textShadowColor: "rgba(0, 0, 0, 0.3)",textShadowOffset: { width: 2, height: 3 },textShadowRadius: 4,zIndex: 50}}>
+  Transix
+</Text>
+
+              <Entypo 
+  name="menu" 
+  size={40} 
+  color="#6a0c0c" 
+  style={{textShadowColor: "rgba(0, 0, 0, 0.3)",textShadowOffset: { width: 2, height: 3 },textShadowRadius: 4}} 
+/>
+
                 </View>
-                <Text style={{alignSelf:'center',margin:3,fontStyle:'italic',marginBottom:10}} >The future of transport and logistics</Text>
+                <Text style={{
+  fontSize: 18, 
+  fontWeight: "600", 
+  color: "#555", 
+  textAlign: "center", 
+  fontStyle: "italic", 
+  textShadowColor: "rgba(0, 0, 0, 0.2)", 
+  textShadowOffset: { width: 1, height: 1 }, 
+  textShadowRadius: 2 ,
+   marginBottom:17
+}}>
+  The Future of Transport & Logistics
+</Text>
+
 
 
                 {addStoreLoc&& <View style={{position:'absolute',top:20 , left:0 , right:0 , bottom: 0,zIndex:220,backgroundColor:'white'}} >
@@ -182,32 +98,26 @@ return(
 
                 <View style={{flexDirection:'row', justifyContent: 'space-around',marginBottom:10}} >
 
-                  <TouchableOpacity style={{height: 30 , width: 130 , borderRadius:60, backgroundColor:'#228B22',justifyContent:'center',marginTop:2 }} onPress={()=> navigation.navigate('shopHome') }>
+                  <TouchableOpacity style={{height: 27 , width: 130 , borderRadius:60, backgroundColor:'#228B22',justifyContent:'center',marginTop:2 }} onPress={()=> navigation.navigate('shopHome') }>
                   <Text style={{color:'white', textAlign:'center'}}>Go To store</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity style={{height: 30 , width: 130 , borderRadius:60, backgroundColor:'red',justifyContent:'center',marginTop:2 }} onPress={()=>setDspFrstPage(false)} >
+                  <TouchableOpacity style={{height: 27 , width: 130 , borderRadius:60, backgroundColor:'red',justifyContent:'center',marginTop:2 }} onPress={()=>setDspFrstPage(false)} >
                   <Text style={{color:'white', textAlign:'center'}}>Visit App</Text>
 
                   </TouchableOpacity>
                 </View>
 
 
-                <View  >
                   
                 
-                  <View style={{width:290,}} >
+                  <View style={{flexDirection:'row'}} >
 
 
-
-
-<View style={{flexDirection:'row'}} >
-
-
-{!selectContractCountry &&!contractLoc&&<TouchableOpacity onPress={toggleSelctCntrctCounrty} style={{  marginBottom : 8,  padding :7 ,borderWidth : 2 , borderColor:'#6a0c0c', borderRadius:8 ,  shadowColor: '#6a0c0c',
+{<TouchableOpacity onPress={()=>navigation.navigate("loadsContracts")} style={{  marginBottom : 8,  padding :7 ,borderWidth : 2 , borderColor:'#6a0c0c', borderRadius:8 ,  shadowColor: '#6a0c0c',
         shadowOffset: { width: 1, height: 2 },
         shadowOpacity: 0.7,
-        shadowRadius: 5,   overflow: 'hidden', }} > 
+        shadowRadius: 5,   overflow: 'hidden',width:283 }} > 
          <Text style={{ color: "#8B0000", fontWeight: "bold", fontSize: 24, marginBottom: 12 }}>
         Long-Term Contracts
       </Text>
@@ -227,7 +137,7 @@ return(
 
 <View style={{margin:7}} >
 
-                  <Text style={{color:'#1E90FF'}}>Add its</Text>
+                  <Text style={{color:'#1E90FF',fontWeight:'bold'}}>Add Now</Text>
 
                     {!blockVerifiedU && !blackLWarning && username !== false   && <TouchableOpacity onPress={()=>checkAuth("selectAddIterms")  }  style={{  borderWidth:1 , borderColor:'red' , zIndex :200 , borderRadius: 8,marginBottom:7,marginTop:7}} >
                       <Text style={{color : 'red',fontSize:12,fontWeight:'bold',alignSelf:'center'}}>Logistics</Text>
@@ -251,48 +161,15 @@ return(
 
 
 
-{selectContractCountry && !contractLoc &&<View style={{alignSelf:'center'}} > 
-            <TouchableOpacity  onPress={()=>setContraLoc('Zimbabwe')}  style={{}}  >
-          <Text style={{}}>Zimbabwe </Text>
-        </TouchableOpacity>
-          <TouchableOpacity onPress={()=> setContraLoc('SouthAfrica') }  >
-            <Text style={{color:'#6a0c0c'}}>South Africa</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={()=> setContraLoc('Namibia') } >
-            <Text style={{color:'#6a0c0c'}}>Namibia </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={()=> setContraLoc('Tanzania') } >
-            <Text style={{color:'#6a0c0c'}}> Tanzania</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={()=>setContraLoc('Mozambique') }  >
-            <Text style={{color:'#6a0c0c'}}>Mozambique </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={()=> setContraLoc('Zambia') }  >
-            <Text style={{color:'#6a0c0c'}}> Zambia</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={()=> setContraLoc('Botswana') }  >
-            <Text style={{color:'#6a0c0c'}}>Botswana </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={()=> setContraLoc('Malawi') } >
-            <Text style={{color:'#6a0c0c'}}>Malawi </Text>
-        </TouchableOpacity>
-</View> }
 
 
 
 
-            {contractLoc && rendereIterms}
 
 
   <View style={{flexDirection:'row'}} > 
 
-            { !selectContractCountry &&<TouchableOpacity style={{  marginBottom : 8,  padding :7 ,borderWidth : 2 , borderColor:'#6a0c0c', borderRadius:8 ,  shadowColor: '#6a0c0c',
+            { <TouchableOpacity style={{  marginBottom : 8,  padding :7 ,borderWidth : 2 , borderColor:'#6a0c0c', borderRadius:8 ,  shadowColor: '#6a0c0c',
         shadowOffset: { width: 1, height: 2 },
         shadowOpacity: 0.7,
         shadowRadius: 5,   overflow: 'hidden',width:283}} onPress={()=> navigation.navigate('applyVerification') } >
@@ -311,6 +188,9 @@ return(
                    
                 <View style={{margin:7}} >
               
+                  <Text style={{color:'#1E90FF',fontWeight:'bold'}}>Search</Text>
+                  <Text style={{color:'#1E90FF',fontWeight:'bold'}}>Find Fast</Text>
+
                     <TouchableOpacity onPress={()=>checkAuth("selectAddIterms")  }  style={{  borderWidth:1 , borderColor:'red' , zIndex :200 , borderRadius: 8,marginBottom:7,marginTop:7}} >
                       <View style={{flexDirection:'row',alignItems :"center" , justifyContent :"space-around", }} >
                       <Text style={{color : 'red',fontSize:12,fontWeight:'bold'}} >Search</Text>
@@ -342,7 +222,7 @@ return(
 
                 <View style={{flexDirection:'row'}} >
 
-                  { !selectContractCountry&&<TouchableOpacity style={{marginTop:7,borderWidth:2 , borderColor:'#0074D9',padding:5,  shadowColor: 'rgba(0, 116, 217, 0.2)',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,   overflow: 'hidden',borderRadius:8,width:283}} onPress={()=> navigation.navigate('applyGit') } >
+                  { <TouchableOpacity style={{marginTop:7,borderWidth:2 , borderColor:'#0074D9',padding:5,  shadowColor: 'rgba(0, 116, 217, 0.2)',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,   overflow: 'hidden',borderRadius:8,width:283}} onPress={()=> navigation.navigate('applyGit') } >
                       <FontAwesome6 name="shield" size={120} color="rgba(0, 116, 217, 0.1)" style={{alignSelf:'center'}} />
                       <View  style={{position:'absolute',alignSelf:'center',zIndex:14,}}>
                     <Text style={{ color:'#00509E' , fontWeight: "bold", fontSize: 24, marginBottom: 8 }} >GIT (Goods in transit Insuarance) </Text>
@@ -355,15 +235,18 @@ return(
 
                   <View style={{margin:7}} >
                     <Text>Logistics </Text>
+              <TouchableOpacity onPress={()=>checkAuth("selectAddIterms")  }  style={{  borderWidth:1 , borderColor:'red' , zIndex :200 , borderRadius: 8,marginBottom:7,marginTop:7,flexDirection:'row',alignItems:'center'}} >
+                      <Text style={{color : 'red',fontSize:17,fontWeight:'bold'  , }} >Loads</Text>
+                          <MaterialIcons name="forklift" size={26} color="red" style={{alignSelf:'center'}} />
 
-                  <TouchableOpacity>
-                  <MaterialIcons name="forklift" size={24} color="black" />
-                  <Text>Loads</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity>
-                    <FontAwesome5 name="truck" size={24} color="black" />
-                    <Text>Trucks</Text>
-                  </TouchableOpacity>
+                    </TouchableOpacity>
+
+  <TouchableOpacity onPress={()=>checkAuth("selectAddIterms")  }  style={{  borderWidth:1 , borderColor:'red' , zIndex :200 , borderRadius: 8,marginBottom:7,marginTop:7,flexDirection:'row'}} >
+                      <Text style={{color : 'red',fontSize:17,fontWeight:'bold'  , }} >Trucks</Text>
+
+                    <FontAwesome5 name="truck" size={20} color="red" />
+                    </TouchableOpacity>
+                  
                   </View>
                </View>
 
@@ -372,8 +255,8 @@ return(
 
 
 
-
-             { !selectContractCountry&&<TouchableOpacity style={{marginTop:7,borderWidth:2 , borderColor:'rgba(220, 20, 60)',padding:5,  shadowColor: 'rgba(0, 116, 217, 0.2)',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,   overflow: 'hidden',borderRadius:8}} onPress={()=> navigation.navigate('Events') } >
+        <View style={{flexDirection:'row'}} >
+             { <TouchableOpacity style={{marginTop:7,borderWidth:2 , borderColor:'rgba(220, 20, 60)',padding:5,  shadowColor: 'rgba(0, 116, 217, 0.2)',shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,   overflow: 'hidden',borderRadius:8 ,width:283}} onPress={()=> navigation.navigate('Events') } >
               <MaterialIcons name="event" size={129} color="rgba(220, 20, 60, 0.1)" style={{alignSelf:'center'}} />
                       <View  style={{position:'absolute',zIndex:14,paddingLeft:5}}>
                     <Text style={{ color:'#B22222' , fontWeight: "bold", fontSize: 24, marginBottom: 8 }} >T & L Events </Text>
@@ -382,26 +265,25 @@ return(
                     </View>
                    </TouchableOpacity>}
 
-                   </View>
+<View  style={{margin:7}} >
 
-                 { <View style={{margin:7 , }} >
+                    <Text>Transport </Text>
+  <TouchableOpacity onPress={()=>checkAuth("selectAddToShop")  }  style={{ width : 70 , height : 35 ,  zIndex :200 , borderRadius: 8, borderWidth:1 , borderColor:'green', marginBottom:10}} >
+
+                      <Text style={{color : 'green',fontSize:13,fontWeight:'bold'}}>click to sell</Text>
+                      <MaterialIcons name="sell" size={18} color="green" style={{alignSelf:'center'}} />
+             </TouchableOpacity>
+
+               <TouchableOpacity onPress={()=>checkAuth("selectAddToShop")  }  style={{ width : 70 , height : 35 ,  zIndex :200 , borderRadius: 8, borderWidth:1 , borderColor:'green'}} >
+
+                      <Text  style={{color : 'green',fontSize:13,fontWeight:'bold'}} >click to buy</Text>
+                      <FontAwesome name="dollar" size={18} color="green" style={{alignSelf:'center'}} />
+             </TouchableOpacity>
+</View>
 
 
-                  <View>
-                    <TouchableOpacity>
-                      <Text>click to sell</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity>
-                      <Text>click to buy</Text>
-                    </TouchableOpacity>
                   </View>
 
-                  </View>}
-
-
-                </View>
-                   
 
                 </View>}
 </View>
