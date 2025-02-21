@@ -124,7 +124,7 @@ return(
 
       {/* Clickable Text for Long-term Contracts */}
         <Text style={{ color: "#C62828", fontWeight: "600", fontSize: 16, textDecorationLine: "underline", marginBottom: 10 }}>
-          Click Here for Long-Term Contracts
+          Click Here for Logistics Contracts
         </Text>
 
       {/* Additional Information */}
@@ -188,7 +188,6 @@ return(
                    
                 <View style={{margin:7}} >
               
-                  <Text style={{color:'#1E90FF',fontWeight:'bold'}}>Search</Text>
                   <Text style={{color:'#1E90FF',fontWeight:'bold'}}>Find Fast</Text>
 
                     <TouchableOpacity onPress={()=>checkAuth("selectAddIterms")  }  style={{  borderWidth:1 , borderColor:'red' , zIndex :200 , borderRadius: 8,marginBottom:7,marginTop:7}} >
@@ -234,7 +233,7 @@ return(
 
 
                   <View style={{margin:7}} >
-                    <Text>Logistics </Text>
+                    <Text  style={{color:'#1E90FF',fontWeight:'bold'}}>Logistics </Text>
               <TouchableOpacity onPress={()=>checkAuth("selectAddIterms")  }  style={{  borderWidth:1 , borderColor:'red' , zIndex :200 , borderRadius: 8,marginBottom:7,marginTop:7,flexDirection:'row',alignItems:'center'}} >
                       <Text style={{color : 'red',fontSize:17,fontWeight:'bold'  , }} >Loads</Text>
                           <MaterialIcons name="forklift" size={26} color="red" style={{alignSelf:'center'}} />
@@ -267,7 +266,7 @@ return(
 
 <View  style={{margin:7}} >
 
-                    <Text>Transport </Text>
+                    <Text style={{color:'#1E90FF',fontWeight:'bold'}}>Transport </Text>
   <TouchableOpacity onPress={()=>checkAuth("selectAddToShop")  }  style={{ width : 70 , height : 35 ,  zIndex :200 , borderRadius: 8, borderWidth:1 , borderColor:'green', marginBottom:10}} >
 
                       <Text style={{color : 'green',fontSize:13,fontWeight:'bold'}}>click to sell</Text>
