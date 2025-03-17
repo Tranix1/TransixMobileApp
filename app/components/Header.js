@@ -3,7 +3,7 @@ import React from "react";
 //Check if user is online or offline 
 import NetInfo from '@react-native-community/netinfo';
 
-import { View , Text , TouchableOpacity } from "react-native";
+import { View , Text , TouchableOpacity , } from "react-native";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Ionicons } from '@expo/vector-icons';
 import SmallMenu from "./SmallMenu";

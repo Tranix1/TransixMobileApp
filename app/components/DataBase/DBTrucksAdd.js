@@ -26,21 +26,32 @@ function DBTrucksAdd( {navigation ,route} ) {
     trailerType : '',
     trailerModel :"" ,
       
-    driverName :"",
     driverPhone :"",
 
-    truckOwnerPhone :"",
-    truckOwnerWhatsApp :"",
-    businessLoction :"",
-    maximumWheight :"" ,
-
   });
+
+  const [countryCodeDriver , setCountryCodeDriver] = React.useState(null)
+    const [callingCodeDriver, setCallingCodeDriver] = React.useState('');
+
+    const handleCountrySelectDriver = (country) => {
+      setCallingCodeDriver(country.cca2);
+        setCountryCodeDriver(country.callingCode);
+      };
+
+        const [countryCodeTrOwner , setCountryCodeTrOwner] = React.useState(null)
+    const [callingCodeTrOwner, setCallingCodeTrOwne] = React.useState('');
+
+    const handleCountrySelectTrOwner = (country) => {
+      setCallingCodeTrOwne(country.cca2);
+        setCountryCodeTrOwner(country.callingCode);
+      };
+
 
 
 
    const [ ownerName , SetOwnerName] = React.useState('');
-  const [ ownerWhatsApp , setOwnerWhatsApp] = React.useState('');
-  const [ ownerCall , setOwnerCall] = React.useState('');
+  const [ onwerEmail , setOwnerEmail] = React.useState('');
+  const [ ownerPhoneNum , setOwnerCall] = React.useState('');
 
        React.useEffect(() => {
   let unsubscribe;
@@ -53,8 +64,8 @@ function DBTrucksAdd( {navigation ,route} ) {
       unsubscribe = onSnapshot(docRef, (doc) => {
         if (doc.exists()) {
           SetOwnerName(doc.data().ownerName);
-          setOwnerCall(doc.data().ownerCall);
-          setOwnerWhatsApp(doc.data().ownerWhatsApp);
+          setOwnerCall(doc.data().ownerPhoneNum);
+          setOwnerEmail(doc.data().ownerEmail);
         }
       });
     }
@@ -70,15 +81,16 @@ function DBTrucksAdd( {navigation ,route} ) {
 }, [username]);
 
   const [ ownerNameAddDb , SetOwnerNameAddDb] = React.useState('');
-  const [ ownerWhatsAppAddDb , setOwnerWhatsAppAddDb] = React.useState('');
-  const [ ownerCallAddDb , setOwnerCallAddDb] = React.useState('');
+  const [ ownerEmailAddDb , setOwnerEmailAddDb] = React.useState('');
+  const [ ownerPhonNumAddDb , setOwnerPhoneNum] = React.useState('');
   
   const handleUpdateDriverDetails = async () => {
     try {
       if(auth.currentUser){
         const userId = auth.currentUser.uid
-        await setDoc(doc(db, 'truckOwnerDetails', userId), { ownerName: ownerNameAddDb, ownerWhatsApp : ownerCallAddDb , ownerCall :ownerCallAddDb, username:username });
-        alert("donee")
+        await setDoc(doc(db, 'truckOwnerDetails', userId), { ownerName: ownerNameAddDb, ownerPhoneNum : ownerPhonNumAddDb , ownerEmail :ownerEmailAddDb, username:username });
+        alert("Submitted Truck owner details");
+
       }  
   
           } catch (err) {
@@ -88,15 +100,18 @@ function DBTrucksAdd( {navigation ,route} ) {
     };
 
 
+
+
+
   const [location , setlocation] =   React.useState("")
   const [localOperation , setLocalLoads]=React.useState(false)
 
-  function toggleLocalLoads(){
+  function chooseOpLoc(){
     setLocalLoads(prevState => !prevState)
   }
     function specifyLocation(loc){
     setlocation(loc)
-    setLocalLoads(prev => false)
+    setLocalLoads(false)
   }
   const [ truckDetails , setTruckDDsp]=React.useState(false)
 
@@ -117,6 +132,14 @@ function DBTrucksAdd( {navigation ,route} ) {
   }
 
 
+       React.useEffect(() => {
+ 
+if(images.length >= 5 && images){
+
+    setTruckDDsp(false)
+    setDriverDDsp(false)
+}
+}, [images]);
 
   const  handlechange  = (value, fieldName) => {
          
@@ -218,7 +241,7 @@ const [images, setImages] = useState([]);
             return true;
         };
 
-        const excludedKeys = ["scndTrailerReg", "trailerModel"];
+        const excludedKeys = ["scndTrailerReg", "trailerModel","additionalInfo"];
 
         if (verifiedLoad && !areAllElementsTrueExceptKeys(formData, excludedKeys)) {
             alert("This truck is for verified loads.\n\nAdd all truck details except for Trailer Reg2 if not available.");
@@ -230,7 +253,8 @@ const [images, setImages] = useState([]);
 
 
 
-
+    let truckImage , truckBookImage , trailerBookF , trailerBookSc, driverLicense , driverPassport ;
+    
     const uploadImage = async (image) => {
     const response = await fetch(image.uri);
     const blob = await response.blob();
@@ -242,7 +266,6 @@ const [images, setImages] = useState([]);
     return imageUrl;
 }
 
-let truckImage , truckBookImage , trailerBookF , trailerBookSc, driverLicense , driverPassport ;
 
 if(isVerified && images.length <5 && spinnerItem && truckType !== "Rigid") {
     alert("Add All reuired images")
@@ -252,7 +275,7 @@ if(isVerified && images.length <5 && spinnerItem && truckType !== "Rigid") {
     alert("You added too many images click restart addig images")
     setSpinnerItem(false)
     return
-  }else if(isVerified && (images.length ===5||images.length ===6 ) && spinnerItem && truckType !== "Rigid" ){
+  }else if(isVerified && (images.length ===5||images.length ===6 ) &&  truckType !== "Rigid" ){
 
   truckImage= await uploadImage(images[0]);
   driverLicense  = await uploadImage(images[1]);
@@ -298,6 +321,10 @@ if(isVerified && images.length <5 && spinnerItem && truckType !== "Rigid") {
         trailerBookSc :trailerBookSc, 
         driverLicense:driverLicense ,
         driverPassport :driverPassport ,
+
+        ownerName :ownerName ,
+        onwerEmail: onwerEmail , 
+        ownerPhoneNum :ownerPhoneNum ,
 
         userId : userId ,
         truckType : truckType ,
@@ -357,26 +384,38 @@ if(isVerified && images.length <5 && spinnerItem && truckType !== "Rigid") {
                      style={inputstyles.inputElem}            
                   />
 
+                       {!countryCodeTrOwner&&  <CountryPicker
+        countryCode={callingCodeTrOwner}
+        withCountryNameButton={true}
+        withCallingCode={true}
+        withFilter={true}
+        onSelect={handleCountrySelectTrOwner}
+        style={{alignSelf:'centre',marginBottom:8}}
+      />
+        }      
+      {countryCodeTrOwner && <Text style={{textAlign:'center',color:'green',fontWeight:'bold',textAlign:"center",}} >Country Code : {countryCodeTrOwner}</Text>}
+        { !countryCodeTrOwner && <Text>Click select country to choose country code</Text> }
+
                <TextInput
-                     placeholder="Owner Calls"
+                     placeholder="Owner Phon num"
                      type="text"
-                     value={ownerCallAddDb}
-                     onChangeText={(text) => setOwnerCallAddDb(text)}
+                     value={ownerPhonNumAddDb}
+                     onChangeText={(text) => setOwnerPhoneNum(text)}
                      style={inputstyles.inputElem}            
                   />
 
                <TextInput
-                     placeholder="Owner WhatsApp"
+                     placeholder="Owner Email"
                      type="text"
-                     value={ownerWhatsAppAddDb}
-                     onChangeText={(text) => setOwnerWhatsAppAddDb(text)}
+                     value={ownerEmailAddDb}
+                     onChangeText={(text) => setOwnerEmailAddDb(text)}
                      style={inputstyles.inputElem}            
                   />
                
         <View style={{flexDirection : 'row', paddingTop : 10 , justifyContent : 'space-evenly'}}>
         
           
-          <TouchableOpacity onPress={handleUpdateDriverDetails} style={{backgroundColor:'green'}}>
+          <TouchableOpacity onPress={handleUpdateDriverDetails} style={{backgroundColor:'green',width:100 , height:35 , borderRadius:5}}>
             <Text style={{color : 'white'}}>Save</Text>
           </TouchableOpacity>
             
@@ -479,17 +518,52 @@ if(isVerified && images.length <5 && spinnerItem && truckType !== "Rigid") {
 
 
           </View>}
+
+        {!truckDetails && !driverDetails&&<TouchableOpacity onPress={chooseOpLoc} style={{}}>
+          {!location? <Text style={styles.buttonIsFalse}>Operating Location</Text>:
+          <Text style={styles.buttonIsFalse}>{location}</Text>
+
+        }
+        </TouchableOpacity>             }
+
+
+
+
+
+
+
+
 {(verifiedLoad || isVerified)&&!localOperation ? <View> 
 
+{!location && formData.fromLocation&&formData.toLocation&&formData.trailerType&&formData.maximumWheight&&<Text>Click Operating location and choose were truck operate</Text>}
 
-
-       {images[0] && images[0] && <TouchableOpacity onPress={togglrDriverDe} style={styles.buttonSelectStyle} >
+       {images[0] &&  !driverDetails&&!truckDetails&&location && formData.fromLocation&&formData.toLocation&&formData.trailerType&&formData.maximumWheight&&<TouchableOpacity onPress={togglrDriverDe} style={styles.buttonSelectStyle} >
           <Text>Driver Details</Text>
-        </TouchableOpacity>}
+        </TouchableOpacity>
+        }
+
+        <View style={{alignSelf:'center'}}>
+
+{(!images[0] && !formData.fromLocation||!formData.toLocation||!formData.trailerType||!formData.maximumWheight)&&<Text>Fill in all the Information </Text>}
+{(!images[0] && !formData.fromLocation||!formData.toLocation||!formData.trailerType||!formData.maximumWheight)&&<Text>To add truck and driver details </Text>}
+        </View>
+
 
       {driverDetails && <View style={{justifyContent:'center'}} >
 
+          <Text>Driver Details</Text>
 
+           {!countryCodeDriver&&  <CountryPicker
+        countryCode={callingCodeDriver}
+        withCountryNameButton={true}
+        withCallingCode={true}
+        withFilter={true}
+        onSelect={handleCountrySelectDriver}
+        style={{alignSelf:'centre',marginBottom:8}}
+      />
+        }      
+      {countryCodeDriver && <Text style={{textAlign:'center',color:'green',fontWeight:'bold',textAlign:"center",}} >Country Code : {countryCodeDriver}</Text>}
+        {formData.phoneNumFrst && !countryCodeDriver && <Text>Click select country to choose country code</Text> }
           <TextInput 
             value={formData.driverPhone}
             placeholderTextColor="#6a0c0c"
@@ -500,11 +574,12 @@ if(isVerified && images.length <5 && spinnerItem && truckType !== "Rigid") {
           />
 
        
+    {images[1]&&!formData.driverPhone&&<Text>Dont forget to Enter driver Phone number</Text> }
 
       {images[1] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >DRIVER PASSPORT IMAGE</Text>}
      {images[1] && <Image source={{ uri: images[1].uri }} style={{ width: 200, height: 200, margin:7 }} />}
      {images[0]   && !images[1] &&<TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
-        <Text style={{backgroundColor:'white'  }} >Driver PASSPORT Image </Text>
+        <Text style={{backgroundColor:'white',textAlign:'center'  }} >Driver PASSPORT</Text>
      </TouchableOpacity>}
          
 
@@ -513,23 +588,40 @@ if(isVerified && images.length <5 && spinnerItem && truckType !== "Rigid") {
 
      {images[2] && <Image source={{ uri: images[2].uri }} style={{ width: 200, height: 200 , margin:7}} />}
      {images[0] && images[1] && !images[2]   &&<TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
-        <Text style={{backgroundColor:'white'  }} >Driver Id Image </Text>
+        <Text style={{backgroundColor:'white',textAlign:'center'  }} >Driver Id Image </Text>
      </TouchableOpacity>}
           
-
+{images[2]&&!formData.driverPhone&&<Text>Enter the driver Phone number to continue</Text> }
+      {images[2]&&formData.driverPhone&& <TouchableOpacity onPress={togglrTruckDe} style={{      height: 35, 
+      width: 120, 
+      backgroundColor: '#1E90FF', 
+      borderRadius: 8, 
+      alignSelf: 'flex-end', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      shadowColor: '#000', 
+      shadowOffset: { width: 0, height: 2 }, 
+      shadowOpacity: 0.2, 
+      shadowRadius: 4, 
+      elevation: 3,
+      alignSelf:'flex-end'}} >
+    <Text style={{ fontWeight: "bold", color: 'white', fontSize: 16 }}>Done NEXT PAGE</Text>
+      </TouchableOpacity>}
 
       </View>}
 
 
 
 
-    {images[2] &&<TouchableOpacity onPress={togglrTruckDe} style={styles.buttonSelectStyle} >
+    {images[3] && !truckDetails &&!driverDetails&&<TouchableOpacity onPress={togglrTruckDe} style={styles.buttonSelectStyle} >
       <Text  >Truck Details</Text>
     </TouchableOpacity>}
 
-      {truckDetails && <View style={{justifyContent:'center'}} >
-        
+      {truckDetails && <View >
+        <Text>Truck Details</Text>
 
+
+  <View style={{justifyContent:'center'}} > 
       {images[3] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >HORSE REG BOOK IMAGE</Text>}
      {images[3] && <Image source={{ uri: images[3].uri }} style={{ width: 200, height: 200 , margin:7 }} />}
      {images[0] && images[1] && images[2] && !images[3] && <TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
@@ -538,23 +630,25 @@ if(isVerified && images.length <5 && spinnerItem && truckType !== "Rigid") {
           
           
 
-      {images[4] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >HORSE REG BOOK IMAGE</Text>}
+      {images[4] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >Trailer Book Image</Text>}
      {images[4] && <Image source={{ uri: images[4].uri }} style={{ width: 200, height: 200, margin:7 }} />}
+        {images[0] && images[1] && images[2] && images[3] && !images[4] &&  <Text>First Trailer reg</Text>}
      {images[0] && images[1] && images[2] && images[3] && !images[4] &&  <TouchableOpacity onPress={selectImage } style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
-        <Text>First Trailer reg</Text>
-        <Text style={{backgroundColor:'white'  }} >Trailer Reg Book Image </Text>
+        <Text style={{backgroundColor:'white'  }} >Trailer Reg Book</Text>
      </TouchableOpacity>}
-          
+       </View>   
 
+<View>
 
       {images[5] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >TRAILER 2 REG BOOK IMAGE</Text>}
      {images[5] && <Image source={{ uri: images[5].uri }} style={{ width: 200, height: 200,margin:7 }} />}
 
       {images[0] && images[1] && images[2]&& images[3]  && images[4]&& !images[5]  && <Text style={{alignSelf:'center',fontWeight:'bold'}} >Add If available or continue to add driver details</Text>}
+      {images[4]&& !images[5]  &&<Text>Trailer 2 Reg </Text>}
      {images[0] && images[1] && images[2]&& images[3]  && images[4]&& !images[5]  &&<TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
-        <Text style={{backgroundColor:'white'  }} >Trailer 2 Reg Book Image </Text>
+        <Text style={{backgroundColor:'white'  }} >Book Image </Text>
      </TouchableOpacity>}
-
+</View>
          
 
       </View>}
@@ -611,20 +705,25 @@ if(isVerified && images.length <5 && spinnerItem && truckType !== "Rigid") {
 
 
   
-        {!truckDetails && !driverDetails&&<TouchableOpacity onPress={toggleLocalLoads} style={{}}>
-          {!location? <Text style={styles.buttonIsFalse}>Operating Location</Text>:
-          <Text style={styles.buttonIsFalse}>{location}</Text>
+{/* 
+    {!spinnerItem&&!verifiedLoad &&!isVerified?  <TouchableOpacity onPress={handleSubmit} style={{alignSelf :"center", backgroundColor : '#6a0c0c' , width : 100 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',marginTop:5}} >
 
-        }
-        </TouchableOpacity>             }
+        <Text style={{color:'white'}} >submit</Text>
 
-    {!spinnerItem? <TouchableOpacity onPress={handleSubmit} style={{alignSelf :"center", backgroundColor : '#6a0c0c' , width : 100 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',marginTop:5}} >
+        </TouchableOpacity>:
+        <Text style={{alignSelf:"center",fontStyle:'italic'}} >The truck is being added Please wait </Text>
+        } */}
+
+
+    {!spinnerItem? images.length>=5&& <TouchableOpacity onPress={handleSubmit} style={{alignSelf :"center", backgroundColor : '#6a0c0c' , width : 100 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',marginTop:5}} >
 
         <Text style={{color:'white'}} >submit</Text>
 
         </TouchableOpacity>:
         <Text style={{alignSelf:"center",fontStyle:'italic'}} >The truck is being added Please wait </Text>
         }
+
+
         <View style={{height:300}} ></View>
             </ScrollView>
       </View>

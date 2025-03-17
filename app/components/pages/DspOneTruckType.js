@@ -195,7 +195,6 @@ setTimeout(() => {
          {item.imageUrl&& <Image source={{uri: item.truckBookImage }} style={{ height : 250 , borderRadius: 10}} />}
          {item.imageUrl&& <Image source={{uri: item.trailerBookF }} style={{ height : 250 , borderRadius: 10}} />}
          {item.imageUrl&& <Image source={{uri: item.trailerBookSc }} style={{ height : 250 , borderRadius: 10}} />}
-         {item.imageUrl&& <Image source={{uri: item.driverLicense }} style={{ height : 250 , borderRadius: 10}} />}
          {item.imageUrl&& <Image source={{uri: item.driverPassport}} style={{ height : 250 , borderRadius: 10}} />}
 
        {!contactDisplay[item.id] && <View>

@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
-    "@react-native-async-storage/async-storage": "^1.24.0",
+    "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-community/netinfo": "^11.4.1",
     "@react-navigation/bottom-tabs": "^7.0.0",
     "@react-navigation/native": "^7.0.0",
@@ -51,7 +51,8 @@
     "react-native-screens": "~4.1.0",
     "react-native-uuid": "^2.0.3",
     "react-native-web": "~0.19.13",
-    "react-native-webview": "13.12.2"
+    "react-native-webview": "13.12.2",
+    "undefined": "\\"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

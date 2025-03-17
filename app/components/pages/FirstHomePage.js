@@ -34,12 +34,15 @@ return(
   Transix
 </Text>
 
+<TouchableOpacity onPress={checkAuth}>
+
               <Entypo 
   name="menu" 
   size={40} 
   color="#6a0c0c" 
   style={{textShadowColor: "rgba(0, 0, 0, 0.3)",textShadowOffset: { width: 2, height: 3 },textShadowRadius: 4}} 
 />
+</TouchableOpacity>
 
                 </View>
                 <Text style={{
@@ -269,7 +272,7 @@ return(
                     <Text style={{color:'#1E90FF',fontWeight:'bold'}}>Transport </Text>
   <TouchableOpacity onPress={()=>checkAuth("selectAddToShop")  }  style={{ width : 70 , height : 35 ,  zIndex :200 , borderRadius: 8, borderWidth:1 , borderColor:'green', marginBottom:10}} >
 
-                      <Text style={{color : 'green',fontSize:13,fontWeight:'bold'}}>click to sell</Text>
+                      <Text style={{color : 'green',fontSize:13,fontWeight:'bold'}}>clickto sell</Text>
                       <MaterialIcons name="sell" size={18} color="green" style={{alignSelf:'center'}} />
              </TouchableOpacity>
 

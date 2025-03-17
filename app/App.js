@@ -93,6 +93,7 @@ import DspAllTrucks from  "./components/pages/DspCombinedTrucks"
 import DspAllLoads from  "./components/pages/DspAllLoads"
 // These are contracts for loads long term like when tthere is a 7 onths contract avaialvbel 
 import LoadsContracts from "./components/pages/LoadsContracts"
+import BookLContract from "./components/pages/BookContract"
 // Function that allow you to select a truck type you want to view its fount on the header
 import SelectOneTruckType from  "./components/pages/selectOnteTruckType"
 // The page wich allow somone to view only one Truck type is were the trucks can be viewed
@@ -109,6 +110,10 @@ import DBTrucksAdd from "./components/DataBase/DBTrucksAdd"
 
 // If one want to add a load this page will display
 import AddLoadDB from "./components/DataBase/addloadDB";
+
+// When they have privelleg to add contracts this is the page to add contracts
+import AddLoadContractDB from "./components/DataBase/AddLoadsContracts"
+
 // THe code for adding Iterns end here
 
 
@@ -181,7 +186,7 @@ import ApplyVerification from "./components/verify/ApplyVerification"
 
 // These are ongoing events that are for transport and logistics indurty eg burnouts or carshow
 import Events from "./components/pages/Events"
-import ViewEventsCode from "./components/pages/ViewEventCode"
+import ViewEvent from "./components/pages/ViewEvent"
 
 
 
@@ -447,6 +452,7 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
     }
 
     const [addStoreLoc , setStoreLoc]= React.useState(false)
+    
   function checkAuth(routeToGo){
 
     if(username !== false|| trackLoadingScnd){
@@ -738,10 +744,12 @@ if(username !== false ||trackLoadingScnd ){
                 </TouchableOpacity>
 
                 <TouchableOpacity   onPress={()=> navigation.navigate('shopHome') }  >
-                 <Text style={{color:'white'}} >Shop</Text>
+                 <Text style={{color:'white'}} >Store</Text>
                 </TouchableOpacity>
              </View>
                 
+{/* This is the first home that display when the u ser visit the app */}
+
             {dspFrstPage && <FirstHomePage setDspFrstPage={setDspFrstPage} checkAuth={checkAuth} addStoreLoc={addStoreLoc} navigation={navigation} blockVerifiedU={blockVerifiedU} blackLWarning={blackLWarning} username = {username} />  }    
 
 
@@ -1130,6 +1138,8 @@ const Stack = createNativeStackNavigator();
       <Stack.Screen name="DspBookingsAndBiddings" component={BookingsAndBiddings} options={{headerShown : false}}/>
 
       <Stack.Screen name="selectAddIterms" component={AddIterms} options={{title: 'Add Iterms',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
+
+      <Stack.Screen name="addContractsDb" component={AddLoadContractDB} initialParams={{username : username , contact : contact , expoPushToken:expoPushToken ,isVerified:isVerified ,isBlackListed : isBlackListed ,  blackLWarning : blackLWarning ,blockVerifiedU:blockVerifiedU,verifyOngoing:verifyOngoing }} options={{title: 'Add contracts',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
       <Stack.Screen name="addLoadsDB" component={AddLoadDB} initialParams={{username : username , contact : contact , expoPushToken:expoPushToken ,isVerified:isVerified ,isBlackListed : isBlackListed ,  blackLWarning : blackLWarning ,blockVerifiedU:blockVerifiedU,verifyOngoing:verifyOngoing }} options={{title: 'Add Loads',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
       <Stack.Screen name="addTrucksDB" component={DBTrucksAdd} initialParams={{username : username , contact : contact ,expoPushToken:expoPushToken ,isVerified : isVerified ,isBlackListed : isBlackListed ,  blackLWarning : blackLWarning,blockVerifiedU:blockVerifiedU ,verifyOngoing:verifyOngoing}} options={{headerShown:false}}/>
 
@@ -1137,6 +1147,7 @@ const Stack = createNativeStackNavigator();
 
       <Stack.Screen name="selectedUserLoads" component={DspAllLoads}  options={{headerShown: false}}  initialParams={{username : username , contact : contact ,blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning }} />
       <Stack.Screen name="loadsContracts" component={LoadsContracts}  options={{headerShown:false}}  initialParams={{username : username , contact : contact ,blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning }} />
+      <Stack.Screen name="BookLContract" component={BookLContract}  options={{headerShown:false}}  initialParams={{username : username , contact : contact ,blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning }} />
 
         
 
@@ -1162,7 +1173,7 @@ const Stack = createNativeStackNavigator();
 
 
       <Stack.Screen name="Events" component={Events}  options={{headerShown:false}}  initialParams={{username : username , contact : contact , }}  />
-      <Stack.Screen name="viewEventsCode" component={ViewEventsCode}  options={{headerShown:false}}  initialParams={{username : username , contact : contact , }}  />
+      <Stack.Screen name="viewEvent" component={ViewEvent}  options={{headerShown:false}}  initialParams={{username : username , contact : contact , }}  />
 
 
       <Stack.Screen name="blackListed" component={BlackList}  options={{title: ' Black List',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
