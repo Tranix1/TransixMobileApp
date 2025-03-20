@@ -354,7 +354,7 @@ async function handleSubmission() {
     <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333', textAlign: 'center' }}>Sponsorship / Partnership</Text>
     
     <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 5 }}>
-      <TouchableOpacity style={{ borderWidth:1 , borderColor:'black', width:30 , height:20 , justifyContent:'center',alignItems:'center' }}>
+      <TouchableOpacity style={{ borderWidth:1 , borderColor:'black', width:60 , height:30 , justifyContent:'center',alignItems:'center',marginRight:9 }}>
         <Text style={{ }}>Call</Text>
       </TouchableOpacity>
       

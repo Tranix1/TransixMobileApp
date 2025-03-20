@@ -70,55 +70,7 @@ return (
         shadowOpacity: 0.7,
         shadowRadius: 5,   overflow: 'hidden',   }}  key={item.id} >
                     <View > 
-                  <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:21}} >9 months Contract Available</Text>
-                  <Text>Commodiy : {item.commodity.frst} </Text>
-                  <Text>Commodiy : {item.commodity.scnd} </Text>
-                  <Text>Commodiy : {item.commodity.third} </Text>
-                  <Text>Commodiy : {item.commodity.forth} </Text>
-                  <Text>Rate : {item.rate.solidFrst}</Text>
-                  <Text>Rate : {item.rate.solidScnd}</Text>
-                  <Text>Rate : {item.rate.triaxleFrst}</Text>
-                  <Text>Rate : {item.rate.triaxlesScnd}</Text>
-                  <Text>Rate : {item.rate.linksFrst}</Text>
-                  <Text>Rate : {item.rate.linksScnd}</Text>
-                  </View>
-
-                  <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:19,marginTop:8}} >Routes</Text>
-                  <Text> i {item.location.frst} ii {item.location.scnd}   </Text>
-                  <Text> iii {item.location.thrd} iv {item.location.forth}   </Text>
-                  <Text> v {item.location.fifth} vi {item.location.sixth}   </Text>
-
-              <View>
-
-                  <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:19,marginTop:8}}>Requirements</Text>
-                  <Text> {item.trckRequired.frst} </Text>
-                  <Text> {item.trckRequired.scnd} </Text>
-                  <Text> {item.trckRequired.third} </Text>
-                  <Text> {item.trckRequired.forth} </Text>
-                  <Text> {item.trckRequired.fifth} </Text>
-
-              </View>
-
-              <View>
-                  <Text> {item.otherRequirements.frst} </Text>
-                  <Text> {item.otherRequirements.scnd} </Text>
-                  <Text> {item.otherRequirements.third} </Text>
-                  <Text> {item.otherRequirements.forth} </Text>
-
-              </View>
-
-                  <View style={{marginTop:5}} >
-                    <Text>{item.bookingClosingD}</Text>
-
-                  <TouchableOpacity onPress={()=>navigation.navigate("BookLContract")} style={{  width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
-
-                    <Text style={{color:'white'}}> {item.startingDate} </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity onPress={()=>Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`Good day`)} `)} style={{  width : 70 , height : 25 , alignItems :"center" , justifyContent :'center',  borderRadius: 8, alignSelf:'center', margin:5 , borderWidth:2 ,borderColor:'red'}} >
-        
-                    <Text style={{color:'red'}} >Help</Text>
-                  </TouchableOpacity>
+                 <Text>Hiiiiii</Text>
 
                   </View>
 

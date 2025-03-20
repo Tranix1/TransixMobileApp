@@ -131,13 +131,7 @@ import PersonalAccTrucks from "./components/PersonalData/PersonalAccTrucks"
 
 // Here beigin the code that allow people to conctact one another for communication
 
-// When people have already started a chat the Page below allows them to select somoene you have already contacted but if not they will not appear 
-import SelectChat from "./components/communcication/selectChat"
-// After you select who you want to talk this is the page were the input elemets and code to send and receive the message
-import Messaging from "./components/communcication/Messaging"
 // The page below is for the main group were people can join a community similiar to a whatsapp group
-import MainGroup from "./components/communcication/MainGroup"
-//This is when somone click B&B on the small menu they will get a page when they must select they want bookings or bids thats the page were one select
 import SlctBookingAndBidding from "./components/communcication/selectBookingAndBiddding"
 // This is were the code that display all bookings and bids are shown wthere you bookked bidded or your itenrs are 
 import BookingsAndBiddings from "./components/communcication/DspBookingsAndBiidinga"
@@ -1122,7 +1116,7 @@ const Stack = createNativeStackNavigator();
       <Stack.Screen name="searchElement" component={SearchIterms} options={{headerShown: false}}/>
 
       <Stack.Screen name="createUser" component={CreateUser} options={{title: 'create Account',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
-      <Stack.Screen name="signInexistAcc" component={SignIn} options={{title: 'create Account',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
+      <Stack.Screen name="signInexistAcc" component={SignIn} options={{title: 'create Account',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}} />
 
       <Stack.Screen name="addPersnoalInfo" component={PersonalAccInfo} options={{title: 'Personal Information',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
 
@@ -1131,9 +1125,6 @@ const Stack = createNativeStackNavigator();
       <Stack.Screen name="peronalAccLoads" component={PersnalAccLoads} options={{title: 'Manage Loads',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
       <Stack.Screen name="peronalAccTrucks" component={PersonalAccTrucks} options={{title: 'Manage Trucks',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
 
-      <Stack.Screen name="selectChat" component={SelectChat} options={{title: 'Chats',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
-      <Stack.Screen name="mainGroup" component={MainGroup} initialParams={{username : username }} options={{title: 'Main Group',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
-      <Stack.Screen name="message" component={Messaging}  initialParams={{username : username}} options={{headerShown: false}}/>
       <Stack.Screen name="SlctBookingsAndBiddings" component={SlctBookingAndBidding} options={{title: 'Bookings And Biddings',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
       <Stack.Screen name="DspBookingsAndBiddings" component={BookingsAndBiddings} options={{headerShown : false}}/>
 

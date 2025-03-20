@@ -1,4 +1,4 @@
-import React from "react";
+import React , {useState} from "react";
 import { db, auth } from "../config/fireBase";
 import { collection, doc, addDoc, serverTimestamp ,} from 'firebase/firestore';
 
@@ -248,25 +248,25 @@ const [error , setError]= React.useState("")
 const [dspCommodity, setDspCommodity] = React.useState(false);
 
 function toggleDspCommodity(params) {
-  setDspCommodity(true);
+  setDspCommodity(prev=> !prev);
 }
 
 const [dspLocation, setDspLocation] = React.useState(false);
 
 function toggleDspLocation(params) {
-  setDspLocation(true);
+  setDspLocation(prev=> !prev);
 }
 
 const [dspTruckRequired, setDspTruckRequired] = React.useState(false);
 
 function toggleDspTruckRequired(params) {
-  setDspTruckRequired(true);
+  setDspTruckRequired(prev=> !prev);
 }
 
 const [dspRate, setDspRate] = React.useState(false);
 
 function toggleDspRate(params) {
-  setDspRate(true);
+  setDspRate(prev=> !prev);
 }
 
 
@@ -276,37 +276,32 @@ function toggleDspRate(params) {
 const [dspOtherRequirements, setDspOtherRequirements] = React.useState(false);
 
 function toggleDspOtherRequirements(params) {
-  setDspOtherRequirements(true);
+  setDspOtherRequirements(prev=> !prev);
 }
 
 const [dspReturnRate, setDspReturnRate] = React.useState(false);
 
 function toggleDspReturnRate(params) {
-  setDspReturnRate(true);
+  setDspReturnRate(prev=> !prev);
 }
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   return (
-    <View   style={{alignItems :'center', }}>
-        {verifyOngoing && !isVerified&&<TouchableOpacity  onPress={() => Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`
-I aspire to become verified at the first level on Transix Now!
-To make this happen without any delays or uncertainties.
-
-Provide:
-- Company Address
-- Company Details (e.g., Articles of Association, tax clearance, etc.)
-- National ID or Passport must match details in company details
-
-- Verify Address using Utility Bill (electricity, water, internet, gas),
-  Lease Agreement, Business Licence, Tax Document.
-
-- The document for Address must be from 3-6 months ago.
-
-There is a $5 monthly subscription fee, and you can choose for how long you want to be verified.
-
-The Future Of Transport And Logistics (Transix)
-`)} `)} style={{  marginBottom : 4,  padding :7 ,borderWidth : 3 , borderColor:'#6a0c0c', borderRadius:8 ,  shadowColor: '#6a0c0c',
+    <View   style={{alignItems :'center', paddingTop:55}}>
+        {verifyOngoing && !isVerified&&<TouchableOpacity  style={{  marginBottom : 4,  padding :7 ,borderWidth : 3 , borderColor:'#6a0c0c', borderRadius:8 ,  shadowColor: '#6a0c0c',
         shadowOffset: { width: 3, height: 2 },
         shadowOpacity: 0.7,
         shadowRadius: 5, margin :10}} >
@@ -320,9 +315,30 @@ The Future Of Transport And Logistics (Transix)
             </Text>
           <Text>Click Here to Verify Your Business and Loads</Text>
         </TouchableOpacity>}
-    <ScrollView showsVerticalScrollIndicator={false} >
 
-       { !localLoads &&   <View>
+<View style={{height:40 , position:'absolute' , top: 0  , left : 0 , right:0 , flexDirection:'row'}}>
+  <TouchableOpacity style={styles.buttonIsFalse} >
+    <Text>Load Details</Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity style={styles.buttonIsFalse} >
+    <Text>Fuel</Text>
+  </TouchableOpacity>
+  <TouchableOpacity style={styles.buttonIsFalse} >
+    <Text>Return Load</Text>
+  </TouchableOpacity>
+  <TouchableOpacity style={styles.buttonIsFalse}>
+    <Text>Loads/week</Text>
+  </TouchableOpacity>
+  <TouchableOpacity style={styles.buttonIsFalse}>
+    <Text>NB Msg</Text>
+  </TouchableOpacity>
+
+</View>
+
+    <ScrollView >
+
+       {   <View>
 
 
 
@@ -332,9 +348,19 @@ The Future Of Transport And Logistics (Transix)
 
 
 
-{<View style={dspCommodity ?{position:'absolute', top :0 , bottom:0 , left:0 , right : 0 , backgroundColor:'white'}:null } >
-        {dspCommodity && <Text>Add all the commodities to be transpoted</Text>}
-
+{ !dspReturnRate && !dspOtherRequirements && !dspRate && !dspTruckRequired && !dspLocation && <View style={{      marginBottom: 15,
+      padding: 10,
+      borderWidth: 2,
+      borderColor: "#6a0c0c",
+      borderRadius: 8,
+      shadowColor: "#6a0c0c",
+      shadowOffset: { width: 1, height: 2 },
+      shadowOpacity: 0.7,
+      shadowRadius: 5,
+      overflow: "hidden",
+      width: 320}} >
+        {dspCommodity && <Text style={{color:'#1E90FF' , fontWeight:'bold' , fontSize:15, alignSelf:'center'}} >Add all the commodities to be transpoted</Text>}
+          {!dspCommodity &&<Text style={{color:'#1E90FF' , fontWeight:'bold' , fontSize:15, alignSelf:'center'}} >Add 3 Commodity</Text>}
         <TextInput
           value={formData.commodity.frst}
           placeholder="First Commodity"
@@ -348,8 +374,8 @@ The Future Of Transport And Logistics (Transix)
           style={inputstyles.addIterms }
           />
 
-          {!dspCommodity&&<TouchableOpacity onPress={toggleDspCommodity} >
-          <Text>If u have more than 2 commoditys</Text>
+          {!dspCommodity&&<TouchableOpacity onPress={toggleDspCommodity} style={{padding:6 , borderWidth:1 , borderColor:'black',justifyContent:'center',alignItems:'center',borderRadius:5,marginTop:6}} >
+          <Text style={{fontStyle:'italic'}} >If u have more than 2 commoditys</Text>
 
           </TouchableOpacity>}
      { dspCommodity &&  <View>
@@ -365,11 +391,11 @@ The Future Of Transport And Logistics (Transix)
           onChangeText={(text) => handleTypedText(text, 'commodity.forth')}
           style={inputstyles.addIterms }
         />
+ <TouchableOpacity onPress={toggleDspCommodity} style={{padding:6 , borderWidth:1 , borderColor:'black',justifyContent:'center',alignItems:'center',borderRadius:5}} >
+  <Text style={{fontStyle:'italic'}}>Done Adding commodities</Text>
+ </TouchableOpacity>
  </View>}
 
- <TouchableOpacity onPress={toggleDspCommodity}>
-  <Text>Done Adding commodities</Text>
- </TouchableOpacity>
 
 
       </View>}
@@ -385,7 +411,20 @@ The Future Of Transport And Logistics (Transix)
 
      
       
-      {dspLocation && <View>
+      { !dspReturnRate && !dspOtherRequirements && !dspRate && !dspTruckRequired &&  !dspCommodity &&  <View style={{      marginBottom: 15,
+      padding: 10,
+      borderWidth: 2,
+      borderColor: "#6a0c0c",
+      borderRadius: 8,
+      shadowColor: "#6a0c0c",
+      shadowOffset: { width: 1, height: 2 },
+      shadowOpacity: 0.7,
+      shadowRadius: 5,
+      overflow: "hidden",
+      width: 320}} >
+        
+        {dspLocation && <Text style={{color:'#1E90FF' , fontWeight:'bold' , fontSize:15, alignSelf:'center'}} >Add all the commodities to be transpoted</Text>}
+          {!dspLocation &&<Text style={{color:'#1E90FF' , fontWeight:'bold' , fontSize:15, alignSelf:'center'}} >Add 3 Commodity</Text>}
         <TextInput
           value={formData.location.frst}
           placeholder="First Location"
@@ -398,7 +437,15 @@ The Future Of Transport And Logistics (Transix)
           onChangeText={(text) => handleTypedText(text, 'location.scnd')}
           style={inputstyles.addIterms }
         />
+
+          {!dspLocation&&<TouchableOpacity onPress={toggleDspLocation} style={{padding:6 , borderWidth:1 , borderColor:'black',justifyContent:'center',alignItems:'center',borderRadius:5}}>
+          <Text style={{fontStyle:'italic'}}>If u have more than 2 commoditys</Text>
+
+          </TouchableOpacity>}
+
+     {dspLocation && <View>
       
+
         <TextInput
           value={formData.location.thrd}
           placeholder="Third Location"
@@ -423,6 +470,11 @@ The Future Of Transport And Logistics (Transix)
           onChangeText={(text) => handleTypedText(text, 'location.sixth')}
           style={inputstyles.addIterms }
         />
+  {dspLocation&&<TouchableOpacity onPress={toggleDspLocation} style={{padding:6 , borderWidth:1 , borderColor:'black',justifyContent:'center',alignItems:'center',borderRadius:5}}>
+          <Text style={{fontStyle:'italic'}}>Done Adiing Location</Text>
+
+          </TouchableOpacity>}
+      </View>}
       </View>}
 
 
@@ -433,7 +485,20 @@ The Future Of Transport And Logistics (Transix)
 
 
 
-     {dspTruckRequired && <View>
+     {  !dspReturnRate && !dspOtherRequirements && !dspRate &&  !dspLocation && !dspCommodity && <View style={{      marginBottom: 15,
+      padding: 10,
+      borderWidth: 2,
+      borderColor: "#6a0c0c",
+      borderRadius: 8,
+      shadowColor: "#6a0c0c",
+      shadowOffset: { width: 1, height: 2 },
+      shadowOpacity: 0.7,
+      shadowRadius: 5,
+      overflow: "hidden",
+      width: 320}}>
+
+        {dspTruckRequired && <Text style={{color:'#1E90FF' , fontWeight:'bold' , fontSize:15, alignSelf:'center'}} >Add all the commodities to be transpoted</Text>}
+          {!dspTruckRequired &&<Text style={{color:'#1E90FF' , fontWeight:'bold' , fontSize:15, alignSelf:'center'}} >Add 3 Commodity</Text>}
       <TextInput
         value={formData.trckRequired.frst}
         placeholder="First Truck Requirement"
@@ -446,6 +511,12 @@ The Future Of Transport And Logistics (Transix)
         onChangeText={(text) => handleTypedText(text, 'trckRequired.scnd')}
         style={inputstyles.addIterms }
       />
+  {!dspTruckRequired&&<TouchableOpacity onPress={toggleDspTruckRequired} style={{padding:6 , borderWidth:1 , borderColor:'black',justifyContent:'center',alignItems:'center',borderRadius:5}}>
+          <Text style={{fontStyle:'italic'}}>If more than 2 truck types required</Text>
+
+          </TouchableOpacity>}
+
+      {dspTruckRequired &&<View> 
       <TextInput
         value={formData.trckRequired.third}
         placeholder="Third Truck Requirement"
@@ -464,6 +535,11 @@ The Future Of Transport And Logistics (Transix)
         onChangeText={(text) => handleTypedText(text, 'trckRequired.fifth')}
         style={inputstyles.addIterms }
       />
+        {dspTruckRequired&&<TouchableOpacity onPress={toggleDspTruckRequired} style={{padding:6 , borderWidth:1 , borderColor:'black',justifyContent:'center',alignItems:'center',borderRadius:5}}>
+          <Text style={{fontStyle:'italic'}}>Done Adiing Required Trucks</Text>
+
+          </TouchableOpacity>}
+      </View>}
     </View>}
     
 
@@ -475,7 +551,20 @@ The Future Of Transport And Logistics (Transix)
 
 
 
-    {dspOtherRequirements&&<View>
+    { !dspReturnRate &&  !dspRate && !dspTruckRequired && !dspLocation && !dspCommodity && <View style={{      marginBottom: 15,
+      padding: 10,
+      borderWidth: 2,
+      borderColor: "#6a0c0c",
+      borderRadius: 8,
+      shadowColor: "#6a0c0c",
+      shadowOffset: { width: 1, height: 2 },
+      shadowOpacity: 0.7,
+      shadowRadius: 5,
+      overflow: "hidden",
+      width: 320}}>
+
+        {dspOtherRequirements&& <Text style={{color:'#1E90FF' , fontWeight:'bold' , fontSize:15, alignSelf:'center'}} >Add all the commodities to be transpoted</Text>}
+          {!dspOtherRequirements &&<Text style={{color:'#1E90FF' , fontWeight:'bold' , fontSize:15, alignSelf:'center'}} >Add 3 Commodity</Text>}
       <TextInput
         value={formData.otherRequirements.frst}
         placeholder="First Other Requirement"
@@ -488,6 +577,14 @@ The Future Of Transport And Logistics (Transix)
         onChangeText={(text) => handleTypedText(text, 'otherRequirements.scnd')}
         style={inputstyles.addIterms }
       />
+  {!dspOtherRequirements&&<TouchableOpacity onPress={toggleDspOtherRequirements} style={{padding:6 , borderWidth:1 , borderColor:'black',justifyContent:'center',alignItems:'center',borderRadius:5}}>
+
+          <Text style={{fontStyle:'italic'}}>Geral Requirements </Text>
+
+          </TouchableOpacity>}
+      {dspOtherRequirements&&<View>
+
+
       <TextInput
         value={formData.otherRequirements.third}
         placeholder="Third Other Requirement"
@@ -500,6 +597,11 @@ The Future Of Transport And Logistics (Transix)
         onChangeText={(text) => handleTypedText(text, 'otherRequirements.forth')}
         style={inputstyles.addIterms }
       />
+        {dspOtherRequirements&&<TouchableOpacity onPress={toggleDspOtherRequirements} style={{padding:6 , borderWidth:1 , borderColor:'black',justifyContent:'center',alignItems:'center',borderRadius:5}}>
+          <Text style={{fontStyle:'italic'}}>Done General Requirements</Text>
+
+          </TouchableOpacity>}
+      </View>}
     </View>}
 
 
@@ -510,43 +612,69 @@ The Future Of Transport And Logistics (Transix)
 
 
 
-  {dspRate && <View>
+  {  !dspReturnRate && !dspOtherRequirements &&  !dspTruckRequired && !dspLocation && !dspCommodity && <View style={{      marginBottom: 15,
+      padding: 10,
+      borderWidth: 2,
+      borderColor: "#6a0c0c",
+      borderRadius: 8,
+      shadowColor: "#6a0c0c",
+      shadowOffset: { width: 1, height: 2 },
+      shadowOpacity: 0.7,
+      shadowRadius: 5,
+      overflow: "hidden",
+      width: 320}}>
+        {dspRate&& <Text style={{color:'#1E90FF' , fontWeight:'bold' , fontSize:15, alignSelf:'center'}} >Add all the commodities to be transpoted</Text>}
+          {!dspRate &&<Text style={{color:'#1E90FF' , fontWeight:'bold' , fontSize:15, alignSelf:'center'}} >Add 3 Commodity</Text>}
   <TextInput
     value={formData.rate.solidFrst}
     placeholder="Solid First Rate"
     onChangeText={(text) => handleTypedText(text, 'rate.solidFrst')}
     style={inputstyles.addIterms }
   />
-  <TextInput
+ {dspRate &&  <TextInput
     value={formData.rate.solidScnd}
     placeholder="Solid Second Rate"
     onChangeText={(text) => handleTypedText(text, 'rate.solidScnd')}
     style={inputstyles.addIterms }
-  />
+  />}
+
   <TextInput
     value={formData.rate.triaxleFrst}
     placeholder="Triaxle First Rate"
     onChangeText={(text) => handleTypedText(text, 'rate.triaxleFrst')}
     style={inputstyles.addIterms }
   />
-  <TextInput
+ {dspRate &&  <TextInput
     value={formData.rate.triaxlesScnd}
     placeholder="Triaxle Second Rate"
     onChangeText={(text) => handleTypedText(text, 'rate.triaxlesScnd')}
     style={inputstyles.addIterms }
-  />
+  />}
   <TextInput
     value={formData.rate.linksFrst}
     placeholder="Links First Rate"
     onChangeText={(text) => handleTypedText(text, 'rate.linksFrst')}
     style={inputstyles.addIterms }
   />
-  <TextInput
+ {dspRate &&  <TextInput
     value={formData.rate.linksScnd}
     placeholder="Links Second Rate"
     onChangeText={(text) => handleTypedText(text, 'rate.linksScnd')}
     style={inputstyles.addIterms }
-  />
+  />}
+
+
+    {!dspRate&&<TouchableOpacity onPress={toggleDspRate} style={{padding:6 , borderWidth:1 , borderColor:'black',justifyContent:'center',alignItems:'center',borderRadius:5}}>
+          <Text style={{fontStyle:'italic'}}>More than 2 rates </Text>
+
+          </TouchableOpacity>}
+
+    {dspRate&&<TouchableOpacity onPress={toggleDspRate} style={{padding:6 , borderWidth:1 , borderColor:'black',justifyContent:'center',alignItems:'center',borderRadius:5}}>
+          <Text style={{fontStyle:'italic'}}>Done Adding Rates</Text>
+
+          </TouchableOpacity>}
+
+
 </View>}
 
 
@@ -557,7 +685,19 @@ The Future Of Transport And Logistics (Transix)
 
 
 
-   {dspReturnRate&&<View>
+   { !dspOtherRequirements && !dspRate && !dspTruckRequired && !dspLocation && !dspCommodity && <View style={{      marginBottom: 15,
+      padding: 10,
+      borderWidth: 2,
+      borderColor: "#6a0c0c",
+      borderRadius: 8,
+      shadowColor: "#6a0c0c",
+      shadowOffset: { width: 1, height: 2 },
+      shadowOpacity: 0.7,
+      shadowRadius: 5,
+      overflow: "hidden",
+      width: 320}}>
+        {dspReturnRate&& <Text style={{color:'#1E90FF' , fontWeight:'bold' , fontSize:15, alignSelf:'center'}} >Add all the commodities to be transpoted</Text>}
+          {!dspReturnRate &&<Text style={{color:'#1E90FF' , fontWeight:'bold' , fontSize:15, alignSelf:'center'}} >Add 3 Commodity</Text>}
   <TextInput
     value={formData.returnRate.solidFrst}
     placeholder="Return Solid First Rate"
@@ -570,6 +710,13 @@ The Future Of Transport And Logistics (Transix)
     onChangeText={(text) => handleTypedText(text, 'returnRate.solidScnd')}
     style={inputstyles.addIterms }
   />
+   {!dspReturnRate&&<TouchableOpacity onPress={toggleDspReturnRate} style={{padding:6 , borderWidth:1 , borderColor:'black',justifyContent:'center',alignItems:'center',borderRadius:5}}>
+          <Text style={{fontStyle:'italic'}}>More than 2 rates </Text>
+
+          </TouchableOpacity>}
+ { dspReturnRate&&<View>
+
+
   <TextInput
     value={formData.returnRate.triaxleFrst}
     placeholder="Return Triaxle First Rate"
@@ -594,107 +741,11 @@ The Future Of Transport And Logistics (Transix)
     onChangeText={(text) => handleTypedText(text, 'returnRate.linkScnd')}
     style={inputstyles.addIterms }
   />
-</View>}
+  {dspOtherRequirements&&<TouchableOpacity onPress={toggleDspReturnRate} style={{padding:6 , borderWidth:1 , borderColor:'black',justifyContent:'center',alignItems:'center',borderRadius:5}}>
+          <Text style={{fontStyle:'italic'}}>Done Adding Return Rate</Text>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-  {!trailerConfig && <View style={{flexDirection:'row', alignItems : 'center'}}>
-
-    <View>   
-     <TouchableOpacity onPress={toggleCurrency}>
-        {currency ? <Text style={styles.buttonIsFalse} >USD</Text> :
-         <Text style={styles.bttonIsTrue}>Rand </Text>}
-      </TouchableOpacity>
-    </View>
-
-    <TextInput
-        onChangeText={(text) => handleTypedText(text, 'ratePerTonne')}
-        name="ratePerTonne"
-        value={formData.ratePerTonne}
-        keyboardType="numeric"
-        placeholderTextColor="#6a0c0c"
-        style={ {   height : 40 , borderBottomWidth: 2 , borderBottomColor : "#6a0c0c" ,marginBottom : 10 , paddingLeft : 20 ,width : 180}}
-        placeholder="Enter rate here"
-      />
-      <TouchableOpacity onPress={togglePerTonne} >
-         {perTonne ? <Text style={styles.bttonIsTrue} >Per tonne</Text> : 
-          <Text style={styles.buttonIsFalse}>Per tonne</Text>}
-      </TouchableOpacity>
-   </View>}
-
-
-<TouchableOpacity onPress={toggleTrailerConfig} style={ trailerConfig ? styles.bttonIsTrue : styles.buttonIsFalse} >
-  <Text style={ trailerConfig ? {color:'white'} :null }  >Trailer config</Text>
-</TouchableOpacity>
-
-
-
-
-{trailerConfig && <View>
-
-  <View >
-    <Text style={{fontSize:19 ,}} >Links </Text>
-        <View style={{flexDirection:'row', alignItems : 'center'}} >
-    <View>   
-     <TouchableOpacity onPress={toggleCurrency}>
-        {currency ? <Text style={styles.buttonIsFalse} >USD</Text> :
-         <Text style={styles.bttonIsTrue}>Rand </Text>}
-      </TouchableOpacity>
-    </View>
-
-    <TextInput
-        onChangeText={(text) => handleTypedText(text, 'links')}
-        name="links"
-        value={formData.links}
-        keyboardType="numeric"
-        placeholderTextColor="#6a0c0c"
-        style={ {   height : 40 , borderBottomWidth: 2 , borderBottomColor : "#6a0c0c" ,marginBottom : 10 , paddingLeft : 20 ,width : 180}}
-        placeholder="Enter Links rate"
-      />
-      <TouchableOpacity onPress={togglePerTonne} >
-         {perTonne ? <Text style={styles.bttonIsTrue} >Per tonne</Text> : 
-          <Text style={styles.buttonIsFalse}>Per tonne</Text>}
-      </TouchableOpacity>
-   </View>
- </View>
-
-
-  <View >
-    <Text style={{fontSize:19 , }}>Triaxle</Text>
-        <View style={{flexDirection:'row', alignItems : 'center'}} > 
-    <View>   
-     <TouchableOpacity onPress={toggleCurrency}>
-        {currency ? <Text style={styles.buttonIsFalse} >USD</Text> :
-         <Text style={styles.bttonIsTrue}>Rand </Text>}
-      </TouchableOpacity>
-    </View>
-
-    <TextInput
-        onChangeText={(text) => handleTypedText(text, 'triaxle')}
-        name="triaxle"
-        value={formData.triaxle}
-        keyboardType="numeric"
-        placeholderTextColor="#6a0c0c"
-        style={ {   height : 40 , borderBottomWidth: 2 , borderBottomColor : "#6a0c0c" ,marginBottom : 10 , paddingLeft : 20 ,width : 180}}
-        placeholder="Enter triaxle rate"
-      />
-      <TouchableOpacity onPress={togglePerTonne} >
-         {perTonne ? <Text style={styles.bttonIsTrue} >Per tonne</Text> : 
-          <Text style={styles.buttonIsFalse}>Per tonne</Text>}
-      </TouchableOpacity>
-   </View>
-   </View>
+          </TouchableOpacity>}
+  </View>}
 
 </View>}
 
@@ -704,159 +755,15 @@ The Future Of Transport And Logistics (Transix)
 
 
 
-      { spinnerItem &&<ActivityIndicator size={36} />}
-        {error &&<Text>{error} retry </Text>}
-
-  <TextInput
-    value={formDataScnd.paymentTerms}
-    placeholderTextColor="#6a0c0c"
-    placeholder="Payment Terms"
-    onChangeText={(text) => handleTypedTextScnd(text, 'paymentTerms')}
-    type="text"
-    style={inputstyles.addIterms }
-  />
-  <TextInput
-     value={formDataScnd.requirements}
-    placeholderTextColor="#6a0c0c"
-    placeholder="Requirements"
-    onChangeText={(text) => handleTypedTextScnd(text, 'requirements')}
-    type="text"
-    style={inputstyles.addIterms }
-  />
-
-  <TextInput 
-    value={formDataScnd.additionalInfo}
-    placeholderTextColor="#6a0c0c"
-    placeholder="Additional Information"
-    onChangeText={(text) => handleTypedTextScnd(text, 'additionalInfo')}
-    type="text"
-    style={inputstyles.addIterms }
-  />
-    {alertMsgD && <TextInput
-     value={formDataScnd.alertMsg}
-    placeholderTextColor="#6a0c0c"
-    placeholder="Alert Message"
-    onChangeText={(text) => handleTypedTextScnd(text, 'alertMsg')}
-    type="text"
-    style={inputstyles.addIterms }
-  />}
-   {fuelAvaD && <TextInput
-     value={formDataScnd.fuelAvai}
-    placeholderTextColor="#6a0c0c"
-    placeholder="Fuel Availability"
-    onChangeText={(text) => handleTypedTextScnd(text, 'fuelAvai')}
-    type="text"
-    style={inputstyles.addIterms }
-  />}
-
-      {returnLoad && <View>
-
-        <TextInput 
-          value={formData.returnLoad}
-          placeholderTextColor="#6a0c0c"
-          placeholder="Return Load"
-          onChangeText={(text) => handleTypedText(text, 'returnLoad')}
-          type="text"
-          style={inputstyles.addIterms }
-        />
-        <TextInput 
-          value={formData.returnRate}
-          placeholderTextColor="#6a0c0c"
-          placeholder="Return Rate"
-          onChangeText={(text) => handleTypedText(text, 'returnRate')}
-          style={inputstyles.addIterms }
-        keyboardType="numeric"
-        />
-        <TextInput 
-          value={formData.returnTerms}
-          placeholderTextColor="#6a0c0c"
-          placeholder="Return Terms"
-          onChangeText={(text) => handleTypedText(text, 'returnTerms')}
-          type="text"
-          style={inputstyles.addIterms }
-        />
-      </View>}
 
 
-  <View style={{flexDirection:'row' , justifyContent :'space-around',marginBottom:20}} > 
-    {<TouchableOpacity onPress={toggleAlertMsgD} style={alertMsgD ? styles.bttonIsTrue : styles.buttonIsFalse} >
-
-      <Text style={alertMsgD ? {color:'white'} : null} >Alert </Text>
-    </TouchableOpacity>}
-
-   {<TouchableOpacity onPress={toggleFuelMsgD} style={fuelAvaD ? styles.bttonIsTrue : styles.buttonIsFalse} >
-      <Text style={fuelAvaD ? {color:'white'} : null} >Fuel </Text>
-    </TouchableOpacity>}
 
 
-   {<TouchableOpacity onPress={toggleDspRetunLoad} style={returnLoad ? styles.bttonIsTrue : styles.buttonIsFalse} >
-      <Text style={returnLoad ? {color:'white'} : null} >Return Load </Text>
-    </TouchableOpacity>}
-          
-
-   {<TouchableOpacity onPress={toggleRundTripAlert} style={roundTrip ? styles.bttonIsTrue : styles.buttonIsFalse} >
-      <Text style={roundTrip ? {color:'white'} : null} >Round Trip</Text>
-    </TouchableOpacity>}
-
- </View>
-   </View>}
-   
-  {localLoads && <View style={{alignSelf:'center'}} >
-    <TouchableOpacity onPress={()=>specifyLocation('Zimbabwe')} style={styles.buttonStyle} > 
-      <Text style={{color:'#6a0c0c'}}>Zimbabwe </Text>
-    </TouchableOpacity>
-
-      <TouchableOpacity onPress={()=> specifyLocation('SouthAfrica') } style={styles.buttonStyle} >
-            <Text style={{color:'#6a0c0c'}} >  South Africa</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={()=> specifyLocation('Namibia') } style={styles.buttonStyle}>
-            <Text style={{color:'#6a0c0c'}}>Namibia </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={()=> specifyLocation('Tanzania') } style={styles.buttonStyle}>
-            <Text style={{color:'#6a0c0c'}}> Tanzania</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={()=>specifyLocation ('Mozambique') } style={styles.buttonStyle}>
-            <Text style={{color:'#6a0c0c'}}>Mozambique </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={()=> specifyLocation('Zambia') } style={styles.buttonStyle}>
-            <Text style={{color:'#6a0c0c'}}> Zambia</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={()=> specifyLocation('Botswana') } style={styles.buttonStyle} >
-            <Text style={{color:'#6a0c0c'}}>Botswana </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={()=> specifyLocation('Malawi') }style={styles.buttonStyle} >
-            <Text style={{color:'#6a0c0c'}}>Malawi </Text>
-        </TouchableOpacity>
 
   </View>
   }
 
-{location !== "International"&& <Text>local load for {location} </Text>}
-<View style={{flexDirection : 'row' , marginBottom: 6   , justifyContent:'space-between' , width : 200,alignSelf:'center'}}> 
 
-  <TouchableOpacity onPress={toggleActiveLoading}>
-    {!activeLoading ? <Text style={styles.buttonIsFalse}>Active Loading</Text>:
-     <Text style={styles.bttonIsTrue}>Active Loading </Text> }
-  </TouchableOpacity>
-
-<TouchableOpacity onPress={toggleLocalLoads} style={{}}>
-  <Text style={styles.buttonIsFalse}>Local loads </Text>
-</TouchableOpacity>
-
-</View>
-  {!spinnerItem ?  <TouchableOpacity  onPress={handleSubmit} style={{backgroundColor : '#6a0c0c' , width : 80 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',alignSelf:'center' }}>
-    <Text style={{color : 'white'}}>submit</Text>
-  </TouchableOpacity>
-: <Text style={{alignSelf:"center",fontStyle:'italic'}}>Load is being added Please wait</Text>  
-}
- 
-  <View style={{height:300}} ></View>
     </ScrollView>
 </View>
   );
@@ -865,33 +772,15 @@ The Future Of Transport And Logistics (Transix)
 export default React.memo(AddLoadContract);
 
 const styles = StyleSheet.create({
-    buttonStyle : {
-        height : 40,
-        justifyContent : 'center' , 
-        alignItems : 'center' ,
-        width : 150 ,
-        marginBottom: 15 ,
-        borderWidth: 2 ,
-        borderColor:"#6a0c0c" ,
-        borderRadius: 10
-    } ,
-    buttonSelectStyle :{
-        backgroundColor :"#6a0c0c",
-        height : 40,
-        justifyContent : 'center' , 
-        alignItems : 'center' ,
-        width : 150 ,
-        marginBottom: 15 ,
-        borderRadius: 10
-    }  ,
+
   buttonIsFalse : {
      borderWidth : 1 ,
      borderColor : '#6a0c0c' ,
-     paddingLeft :4 , 
-     paddingRight:4 ,
-     alignSelf:'center'
+     paddingLeft :6 , 
+     paddingRight:6 ,
+     alignSelf:'center' ,
 
-    //  marginLeft : 6
+     marginLeft : 6
    } , 
     bttonIsTrue:{
     backgroundColor : '#6a0c0c' ,

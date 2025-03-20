@@ -35,7 +35,6 @@ import { db } from "./config/fireBase";
                 </View>
 
              </View>
-             <View></View>
 
         </View>
     )
