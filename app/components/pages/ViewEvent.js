@@ -354,12 +354,12 @@ async function handleSubmission() {
     <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333', textAlign: 'center' }}>Sponsorship / Partnership</Text>
     
     <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 5 }}>
-      <TouchableOpacity style={{ borderWidth:1 , borderColor:'black', width:60 , height:30 , justifyContent:'center',alignItems:'center',marginRight:9 }}>
-        <Text style={{ }}>Call</Text>
+      <TouchableOpacity style={{}}>
+        <Text style={{ }}>263787884434</Text>
       </TouchableOpacity>
       
       <TouchableOpacity style={{ }}>
-        <Text style={{ }}>Email</Text>
+        <Text style={{ }}>kelvinyaya8@gmail.com</Text>
       </TouchableOpacity>
     </View>
   </View>
