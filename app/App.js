@@ -85,7 +85,6 @@ import PersonalAccInfo from "./components/Auth/Personalnfo"
 import FirstHomePage from "./components/pages/FirstHomePage"
 
 // The funcytion wich display the small loads on the first page
-import MiniLoad from  "./components/pages/MiniLoads"
 
 // The function wich get all trucks and are the ones wich are below the small loads on front page
 import DspAllTrucks from  "./components/pages/DspCombinedTrucks"
@@ -474,16 +473,24 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
 
   const [dspLoads , setDspLoads] =React.useState(false)
   function toggleDspLoads(){
-    setDspLoads(prev => !prev)
-    setDspTrckType(prev => false)
+    setDspLoads(true)
+    setDspTrckType(false)
+    setDspFrstPage(false)
+
   }
 
 
   const [dspTruckType , setDspTrckType] =React.useState(false)
   function toggleDspTrckType(){
-    setDspTrckType(prev => !prev)
-    setDspLoads(prev => false)
+    setDspTrckType(true)
+    setDspLoads(false)
   }
+
+    const [dspFrstPage , setDspFrstPage] = React.useState(true)
+    function toggleFrstPage(){
+      setDspFrstPage(false)
+    }
+
   function toggleGoHome(){
     setDspTrckType(prev => false)
     setDspLoads(prev => false)
@@ -690,10 +697,6 @@ if(username !== false ||trackLoadingScnd ){
 
 
 
-    const [dspFrstPage , setDspFrstPage] = React.useState(true)
-    function toggleFrstPage(){
-      setDspFrstPage(false)
-    }
     
     const [contractFeature , setContactFeature]= React.useState(false)
     function toggleContractFeature(){
@@ -713,7 +716,7 @@ if(username !== false ||trackLoadingScnd ){
 
              <View  style={{flexDirection:'row' , justifyContent : "space-evenly" , paddingLeft : 20 , paddingRight: 20 , height : 40 , alignItems : 'center' , backgroundColor : '#6a0c0c' , paddingTop : 10 }}>
 
-               <TouchableOpacity onPress={toggleGoHome}
+               <TouchableOpacity onPress={()=>setDspFrstPage(true) }
                > 
                    {  !dspTruckType&& !dspLoads?
                  <Text style={{color:'white' , textDecorationLine:'underline' , fontWeight:'600' , fontSize : 18  }} > Home</Text> :
@@ -744,9 +747,8 @@ if(username !== false ||trackLoadingScnd ){
                 
 {/* This is the first home that display when the u ser visit the app */}
 
-            {dspFrstPage && <FirstHomePage setDspFrstPage={setDspFrstPage} checkAuth={checkAuth} addStoreLoc={addStoreLoc} navigation={navigation} blockVerifiedU={blockVerifiedU} blackLWarning={blackLWarning} username = {username} />  }    
-
-
+            {dspFrstPage && <FirstHomePage setDspFrstPage={setDspFrstPage} checkAuth={checkAuth} addStoreLoc={addStoreLoc} navigation={navigation} blockVerifiedU={blockVerifiedU} blackLWarning={blackLWarning} username = {username} toggleDspLoads={toggleDspLoads} />  }    
+            
 
     {blackLWarningDSP && <View style={{alignSelf:'center', backgroundColor :'white', zIndex:100, position:'absolute', top : 130 , width:300, padding:7, height:150, justifyContent:'center',alignItems :'center', borderRadius:7}} >
       <Text>Your account is currently under investigation.</Text>
@@ -796,7 +798,7 @@ if(username !== false ||trackLoadingScnd ){
     </View>}
 
           
-              {reverifyUserV && <View style={{alignSelf:'center', backgroundColor :'white', zIndex:100, position:'absolute', top : 130 , width:300, padding:7, height:150, justifyContent:'center',alignItems :'center', borderRadius:7}} >
+              {/* {reverifyUserV && <View style={{alignSelf:'center', backgroundColor :'white', zIndex:100, position:'absolute', top : 130 , width:300, padding:7, height:150, justifyContent:'center',alignItems :'center', borderRadius:7}} >
       <Text>You were a trusted industry member.</Text>
 
       <Text>
@@ -817,7 +819,7 @@ if(username !== false ||trackLoadingScnd ){
                </TouchableOpacity>
 
       </View>
-    </View>}
+    </View>} */}
 
              
 
@@ -873,16 +875,11 @@ if(username !== false ||trackLoadingScnd ){
               </View>
              </View>}
 
-           {!blockVerifiedU && !blackLWarning && username !== false   && <TouchableOpacity onPress={()=>checkAuth("selectAddIterms")  }  style={{position :'absolute',top: 440 ,right:10 , width : 80 , height : 35 , alignItems :"center" , justifyContent :"space-around", backgroundColor:'#228B22' , zIndex :200 , borderRadius: 8, flexDirection:'row'}} >
+           {!blockVerifiedU && !blackLWarning && username !== false   && !dspFrstPage&&<TouchableOpacity onPress={()=>checkAuth("selectAddIterms")  }  style={{position :'absolute',top: 440 ,right:10 , width : 80 , height : 35 , alignItems :"center" , justifyContent :"space-around", backgroundColor:'#228B22' , zIndex :200 , borderRadius: 8, flexDirection:'row'}} >
                 <Text style={{color : 'white',fontSize:17,fontWeight:'bold'}} >Add</Text>
                 <MaterialIcons name="add-box" size={26} color="white" />
              </TouchableOpacity>}
-   {!dspLoads && !dspTruckType && <View  >
-
-     <MiniLoad blockVerifiedU ={blockVerifiedU} blackLWarning={blackLWarning} isConnectedInternet={isConnectedInternet} />
-     {username === false   && <ActivityIndicator size="large" /> }
-     <DspAllTrucks blockVerifiedU={blockVerifiedU} blackLWarning={blackLWarning} isConnectedInternet={isConnectedInternet} />
-    </View>}
+  
 
     {dspLoads && !dspTruckType&& <DspAllLoads  username = {username } contactG={contact} route={route}  sendPushNotification={sendPushNotification} expoPushToken={expoPushToken} userIsVerified={userIsVerified} blockVerifiedU ={blockVerifiedU} blackLWarning={blackLWarning}  />}
     {dspTruckType &&  <SelectOneTruckType navigation={navigation} />}

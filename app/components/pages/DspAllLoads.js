@@ -235,6 +235,11 @@ function replaceSpacesWithPercent(url) {
 }
       
     const rendereIterms =  mapThsAll.map((item)=>{ 
+
+
+
+
+      
       const handleSubmit = async (clickedItem , dbName) => {
 
         setSpinnerItem(clickedItem);
@@ -564,7 +569,11 @@ function replaceSpacesWithPercent(url) {
 
 
 
+const getFirstLetter = (str) => str?.charAt(0) || '';
 
+// Example usage
+const myString = item.companyName;
+const firstLetter = getFirstLetter(myString);
 
 
 
@@ -681,11 +690,19 @@ function replaceSpacesWithPercent(url) {
 
          {bidDisplay[item.id]&& bidNow}
 
-        {!blockVerifiedUP  && !blackLWarningP && !blockVerifiedU &&!blackLWarning && !item.isVerified&& !bidDisplay[item.id]&&  <TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{  width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
+<View style={{flexDirection:'row' , justifyContent:'space-around'}}>
+
+        {!blockVerifiedUP  && !blackLWarningP && !blockVerifiedU &&!blackLWarning && !item.isVerified&& !bidDisplay[item.id]&&  <TouchableOpacity  onPress={()=>toggleContact(item.id) } style={{  width : 120 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, margin:5 }} >
           <Text style={{color:'white'}} > Get In Touch Now</Text>
         </TouchableOpacity>}
+        <TouchableOpacity onPress={()=> navigation.navigate('selectedUserLoads', {userId : item.userId , companyNameG : item.companyName }) }   style={{  width : 120 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8,  margin:5 }} >
+          <Text style={{color:'white'}}>All {firstLetter}  Loads </Text>
+        </TouchableOpacity>
         
-        
+</View>
+
+
+
        {  auth.currentUser  ? !bidDisplay[item.id]&& !contactDisplay[item.id]  && !blockVerifiedUP  && !blackLWarningP &&!blockVerifiedU &&!blackLWarning &&<View style={{flexDirection : 'row', justifyContent : 'space-evenly' }} >  
       {bookingError&&<Text>{bookingError}</Text>}
           {spinnerItem === item ? (

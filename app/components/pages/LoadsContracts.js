@@ -60,22 +60,152 @@ useEffect(() => {
   
 }, []);
 
+
+const [contrMoreInfo, setContractMoreInfo] = React.useState(false)
+     function toggleDspMoreInfo(){
+       setContractMoreInfo(prev=> !prev)
+     }
+
+  const [dspRturnnLoads, setDspReturnLoads] = React.useState(false);
+
+  function toggleDspReturnLoads(params) {
+    setDspReturnLoads(true);
+    setDspContractD(false);
+    setDspLoadDe(false)
+  }
+
+  const [dspContractD, setDspContractD] = React.useState(false);
+
+  function toggleDspContractD(params) {
+    setDspContractD(true);
+    setDspReturnLoads(false);
+    setDspLoadDe(false)
+  }
+
+  // const [dspCommodity, setDspCommodity] = React.useState(false);
+
+  // function toggleDspCommodity(params) {
+  //   setDspCommodity(prev=> !prev);
+  // }
+
+  const [dsoLoadDe, setDspLoadDe] = React.useState(true)
+  function dspLoadDet() {
+    setDspLoadDe(true)
+    setDspContractD(false);
+    setDspReturnLoads(false);
+
+  }
+
 // commodity  , contract Id , Contract Duration , Contract Rate ,  contract Route r R  outes ,  , Reuirements , Due Date , owner number , owner Id
 
 const rendereIterms = getContracts.map((item)=>{ 
 return (
-      
-                    <View  style={{  marginBottom : 8,  padding :7 ,borderWidth : 2 , borderColor:'#6a0c0c', borderRadius:8 ,  shadowColor: '#6a0c0c',
-        shadowOffset: { width: 1, height: 2 },
-        shadowOpacity: 0.7,
-        shadowRadius: 5,   overflow: 'hidden',   }}  key={item.id} >
-                    <View > 
-                 <Text>Hiiiiii</Text>
+                      <View  style={{  marginBottom : 8,  padding :7 ,borderWidth : 2 , borderColor:'#6a0c0c', borderRadius:8 ,  shadowColor: '#6a0c0c',
+         shadowOffset: { width: 1, height: 2 },
+         shadowOpacity: 0.7,
+         shadowRadius: 5,   overflow: 'hidden', paddingTop:45  }}  key={item.id} >
 
+            <View style={{ height: 40, position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', borderBottomWidth: 2, borderBottomColor: "#6a0c0c", paddingBottom: 7, justifyContent: 'space-evenly' }} >
+        <TouchableOpacity style={dsoLoadDe ? styles.bttonIsTrue : styles.buttonIsFalse} onPress={dspLoadDet} >
+          <Text style={dsoLoadDe ? { color: 'white' } : null} >Load Details</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={dspRturnnLoads ? styles.bttonIsTrue : styles.buttonIsFalse} onPress={toggleDspReturnLoads}>
+          <Text style={dspRturnnLoads ? { color: 'white' } : null}>Return Load</Text>
+        </TouchableOpacity>
+
+
+        <TouchableOpacity onPress={toggleDspContractD} style={dspContractD ? styles.bttonIsTrue : styles.buttonIsFalse}>
+          <Text style={dspContractD ? { color: 'white' } : null}>Contract Details</Text>
+        </TouchableOpacity>
+
+      </View>
+                     
+                   <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:21}} >9 months Contract Available</Text>
+             { dsoLoadDe && <View>
+
+                    <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:19,marginTop:8}}> Commodiy </Text>
+                    <View style={styles.textRow} >
+                   <Text>i) {item.formData.commodity.frst} </Text>
+                   <Text>ii) {item.formData.commodity.scnd} </Text>
+                   <Text>iii) {item.formData.commodity.third} </Text>
+                   <Text>iV) {item.formData.commodity.forth} </Text>
                   </View>
 
 
- </View>
+                  <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:19,marginTop:8}}>Rate</Text>
+                    <View >
+                      <View> 
+                  <Text>Solid Rate</Text>
+                  <Text>i)  {item.formData.rate.solidFrst} </Text>
+                  <Text>ii) {item.formData.rate.solidScnd} </Text>
+                      </View>
+
+                      <View> 
+                  <Text>Triaxle</Text>
+                  <Text>1)  {item.formData.rate.triaxleFrst} </Text>
+                  <Text>ii){item.formData.rate.triaxlesScnd} </Text>
+                      </View>
+
+                      <View>
+                    <Text>Link Rate</Text>
+                  <Text>i)  {item.formData.rate.linksFrst} </Text>
+                  <Text>ii)  {item.formData.rate.linksScnd} </Text>
+                      </View>
+                </View>
+
+
+
+                <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:19,marginTop:8}}>Routes</Text>
+                <View style={styles.textRow}>
+                <Text> i) {item.formData.location.frst} </Text>
+                <Text>ii) {item.formData.location.scnd} </Text>
+                <Text>iii) {item.formData.location.thrd} </Text>
+                <Text>iv) {item.formData.location.forth} </Text>
+                <Text>v) {item.formData.location.fifth} </Text>
+                <Text>vi) {item.formData.location.sixth} </Text>
+                </View>
+
+
+              <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:19,marginTop:8}}> Trucks Required </Text>
+            <View style={styles.textRow}>
+              <Text>i) {item.formData.trckRequired.frst}</Text>
+              <Text>ii) {item.formData.trckRequired.scnd}</Text>
+              <Text>iii) {item.formData.trckRequired.third}</Text>
+              <Text>iv) {item.formData.trckRequired.forth}</Text>
+              <Text>v) {item.formData.trckRequired.fifth}</Text>
+            </View>
+                   
+                   
+            <Text style={{ color:'#9c2828' , fontWeight:'bold',fontSize:19,marginTop:8}} >Other Requirements </Text>
+          <View style={styles.textRow}>
+            <Text>i) {item.formData.otherRequirements.frst} </Text>
+            <Text>ii) {item.formData.otherRequirements.scnd} </Text>
+            <Text>iii) {item.formData.otherRequirements.third} </Text>
+            <Text>iv) {item.formData.otherRequirements.forth} </Text>
+          </View>
+                
+ 
+              </View>}
+ 
+ 
+                   <View style={{marginTop:5}} >
+ 
+ 
+                   <TouchableOpacity  style={{  width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
+ 
+                     <Text style={{color:'white'}}> Book now due 1 March </Text>
+                   </TouchableOpacity>
+ 
+                   <TouchableOpacity onPress={()=>Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`Good day`)} `)} style={{  width : 70 , height : 25 , alignItems :"center" , justifyContent :'center',  borderRadius: 8, alignSelf:'center', margin:5 , borderWidth:2 ,borderColor:'red'}} >
+         
+                     <Text style={{color:'red'}} >Help</Text>
+                   </TouchableOpacity>
+ 
+                   </View>
+ 
+ 
+  </View>
 )
 })
 
@@ -154,5 +284,27 @@ const styles = StyleSheet.create({
         borderColor:"#6a0c0c" ,
         borderRadius: 3
     } ,
-  
+  buttonIsFalse: {
+    borderWidth: 1,
+    borderColor: '#6a0c0c',
+    paddingLeft: 6,
+    paddingRight: 6,
+    alignSelf: 'center',
+
+    marginLeft: 6
+  },
+  bttonIsTrue: {
+    backgroundColor: '#6a0c0c',
+    paddingLeft: 4,
+    paddingRight: 4,
+    color: 'white',
+    alignSelf: 'center'
+
+  }, 
+    textRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 5,
+    flexWrap: 'wrap',
+  },
 });

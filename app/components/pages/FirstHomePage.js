@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet , StatusBar } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
@@ -14,7 +14,16 @@ function FirsHomePage({
   username,
   blackLWarning,
   blockVerifiedU,
+  toggleDspLoads
 }) {
+
+
+   React.useEffect(() => {
+    // Set the status bar color and style
+    StatusBar.setBackgroundColor('#6a0c0c'); // Set the background color of the status bar
+    StatusBar.setBarStyle('light-content'); // Set the style of the status bar text (light or dark)
+  }, [username]);
+
   return (
     <View
       style={{
@@ -67,7 +76,8 @@ function FirsHomePage({
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.redButton}
-            onPress={() => setDspFrstPage(false)}
+            onPress={toggleDspLoads}
+
           >
             <Text style={styles.buttonText}>Visit App</Text>
           </TouchableOpacity>
@@ -313,6 +323,7 @@ function FirsHomePage({
       shadowRadius: 5,
       overflow: "hidden",
       width: 283,
+      height:138
     }}
     onPress={() => navigation.navigate("applyVerification")}
   >
@@ -448,6 +459,7 @@ function FirsHomePage({
       overflow: "hidden",
       borderRadius: 8,
       width: 283,
+      height:140
     }}
     onPress={() => navigation.navigate("applyGit")}
   >
@@ -558,6 +570,7 @@ function FirsHomePage({
       overflow: "hidden",
       borderRadius: 8,
       width: 283,
+      height:138
     }}
     onPress={() => navigation.navigate("Events")}
   >

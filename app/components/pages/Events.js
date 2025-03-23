@@ -56,9 +56,9 @@ function Events({ route, navigation }) {
       <View key={item.id} style={{ flexDirection: "row", marginHorizontal: 10 }}>
         <Image
           source={{
-            uri: "https://firebasestorage.googleapis.com/v0/b/truckers-cace6.appspot.com/o/Trucks%2F1741522836736?alt=media&token=5ed6d0b6-0c85-4264-8237-d91fb385633f",
+            uri: "https://i.ytimg.com/vi/bBf1Gs6EpBk/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLD-EfeycyQtz2eQP8pjYxmkO9985Q",
           }}
-          style={{ height: 125, width: 120, borderRadius: 10, alignSelf: "center" }}
+          style={{ height: 122, width: 120, borderRadius: 10, alignSelf: "center" ,marginTop:4}}
         />
         <View style={{ marginLeft: 10 }}>
           <Text style={{ fontWeight: "bold", fontSize: 25 }}>Selecka Base</Text>

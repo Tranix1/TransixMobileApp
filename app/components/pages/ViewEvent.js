@@ -1,6 +1,6 @@
 import React from "react";
 
-import { View , Text  , TouchableOpacity , StatusBar, BackHandler,Linking,Platform,ActivityIndicator,StyleSheet ,Image,TextInput } from "react-native";
+import { View , Text  , TouchableOpacity , ScrollView,StyleSheet ,Image,TextInput } from "react-native";
 import { collection, startAfter , serverTimestamp ,addDoc, query , where , getDocs ,doc,deleteDoc , updateDoc, runTransaction , setDoc,orderBy,limit,onSnapshot } from 'firebase/firestore';
 import QRCode from 'react-native-qrcode-svg';
 import { Ionicons } from "@expo/vector-icons";
@@ -140,11 +140,15 @@ async function handleSubmission() {
   }
 }
 
-
+function toggleDspDescrip(){
+      setDspActivities(false)
+    setEntertainer(false)
+    setDspParticipant(false)
+}
 
   const [dspActivities , setDspActivities]=React.useState(false)
   function toggleActivities(){
-    setDspActivities(prev=>!prev)
+    setDspActivities(true)
     setEntertainer(false)
     setDspParticipant(false)
   }
@@ -159,7 +163,7 @@ async function handleSubmission() {
 
   const [entertainers , setEntertainer]=React.useState(false)
   function toggleEnter(){
-    setEntertainer(prev=>!prev)
+    setEntertainer(true)
     setDspActivities(false)
     setDspParticipant(false)
   }
@@ -190,11 +194,18 @@ async function handleSubmission() {
         <Text style={{fontSize: 20 , color : 'white'}} > SELECKTA BURNOUT  </Text>
        </View>
 
-<View style={{width:270 , alignSelf:'center'}} >
+<View style={{width:330 , alignSelf:'center'}} >
 
+<ScrollView horizontal  style={{borderRadius:10}}>
 
-       { <Image source={{uri: "https://firebasestorage.googleapis.com/v0/b/truckers-cace6.appspot.com/o/Trucks%2F1741522836736?alt=media&token=5ed6d0b6-0c85-4264-8237-d91fb385633f"
-}} style={{ height : 220 , borderRadius: 10, width:345, alignSelf:'center'}} />}
+       { <Image source={{uri: "https://i.ytimg.com/vi/bBf1Gs6EpBk/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLD-EfeycyQtz2eQP8pjYxmkO9985Q"
+}} style={{ height : 220 , borderRadius: 10, width:345, alignSelf:'center',marginRight:9,borderRadius:9}} />}
+       { <Image source={{uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRDH5jFb7P3CPPeC4Kzk3mUVlQ6k93noJP_XA&s"
+}} style={{ height : 220 , borderRadius: 10, width:400, alignSelf:'center',borderRadius:9}} />}
+</ScrollView>
+
+       {/* { <Image source={{uri: "https://i.ytimg.com/vi/bBf1Gs6EpBk/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLD-EfeycyQtz2eQP8pjYxmkO9985Q"
+}} style={{ height : 220 , borderRadius: 10, width:345, alignSelf:'center'}} />} */}
 
 
 
@@ -250,20 +261,21 @@ async function handleSubmission() {
 
 
 
-{dspDescription&&<View>
+{dspDescription&&<ScrollView showsVerticalScrollIndicator={false}>
 
 
 
 <View>
-  <Text style={{fontWeight:'bold', fontSize:20}} >Piano Cuzzle</Text>
+  <Text style={{fontWeight:'bold', fontSize:20,marginBottom:5}} >50TH Geration</Text>
+
   <View style={{flexDirection:'row', justifyContent:'space-between'}} >
-    <Text style={{}}>My stiue garderns</Text>
-    <Text style={{color:'red'}}>$5</Text>
+    <Text style={{}}>Borrowdale </Text>
+    <Text style={{color:'red',fontSize:16 , fontWeight:'bold'}}>$5</Text>
   </View>
 </View>
 
-<View>
-  <Text>March 30 2025</Text>
+<View  style={{borderWidth:1 , borderColor:'black', borderRadius:18, height:35,marginTop:10,flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingLeft:13 , paddingRight:13}} >
+  <Text style={{borderRightWidth:1 , borderRightColor:'black',width:150}} >March 30 2025</Text>
   <Text>2 Pm</Text>
 </View>
 
@@ -274,33 +286,47 @@ async function handleSubmission() {
 
 
   {/* Buttons */}
-  <View style={{ alignSelf: 'center', flexDirection: 'row', justifyContent: 'space-evenly', marginVertical: 10 }}>
-    <TouchableOpacity>
-      <Text>Description</Text>
+  <View style={{marginTop:12,marginBottom:10}}> 
+
+  <View style={{ flexDirection:'row',justifyContent:"space-evenly"}}>
+    <TouchableOpacity onPress={toggleDspDescrip} >
+      <Text style={  (!dspActivities && !dspParticipants && !entertainers) ? { color: "#C71F37",textDecorationLine: "underline",textDecorationColor: "#6a0c0c",} :{fontSize: 16,
+    fontWeight: "500",color: "#333",} } >Description</Text>
     </TouchableOpacity>
-    <TouchableOpacity  onPress={toggleEnter}>
-      <Text >Entertainers</Text>
+    <TouchableOpacity  onPress={toggleEnter} >
+      <Text style={ entertainers? { color: "#C71F37",textDecorationLine: "underline",textDecorationColor: "#6a0c0c",} :{fontSize: 16,
+    fontWeight: "500",color: "#333",} }>Entertainers</Text>
     </TouchableOpacity>
 
+  </View>
+  
+  <View style={{flexDirection:'row',justifyContent:'space-around'}} >
+
     <TouchableOpacity  onPress={toggleDspPartic}>
-      <Text >Participants</Text>
+      <Text style={ dspParticipants ?{ color: "#C71F37",textDecorationLine: "underline",textDecorationColor: "#6a0c0c",} :{fontSize: 16,
+    fontWeight: "500",color: "#333",}}>Participants</Text>
     </TouchableOpacity>
 
     <TouchableOpacity  onPress={toggleActivities}>
-      <Text >Activities</Text>
+      <Text style={ dspActivities? { color: "#C71F37",textDecorationLine: "underline",textDecorationColor: "#6a0c0c",} :{fontSize: 16,
+    fontWeight: "500",color: "#333",} }>Activities</Text>
     </TouchableOpacity>
   </View>
 
+  </View>
 
  
-<View>
-  <Text>Event descrip</Text>
-  <Text>kjasdh asjhd asdjha sdh asdhweu asdha sdhj lahsdahsdl dfss sdf sdf sdf sdf sdf sd sdfsdf sdfsdf asjdh</Text>
-</View>
+{!dspActivities && !dspParticipants && !entertainers && <View style={styles.section}>
+  <Text style={styles.sectionTitle} >Event descrip</Text>
+  <Text style={{ padding: 10, lineHeight: 22, textAlign: "justify" }}>
+  kjasdh asjhd asdjha sdh asdhweu asdha sdhj lahsdahsdl dfss sdf sdf sdf sdf sdf sd sdfsdf sdfsdf asjdh
+</Text>
+
+</View>}
 
 
   
-<View style={styles.container}>
+{(dspActivities || dspParticipants || entertainers) && <View style={styles.container}>
   {/* 🎤 Entertainers Section */}
   {entertainers && (
     <View style={styles.section}>
@@ -335,55 +361,57 @@ async function handleSubmission() {
     </View>
   )}
 
+
   {/* 🎆 Activities Section */}
   {dspActivities && (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Activities</Text>
-      <Text style={styles.detailText}>🔥 Burnouts</Text>
-      <Text style={styles.detailText}>🚗 Exhibitions</Text>
-      <Text style={styles.detailText}>🏁 Static Car Displays</Text>
-      <Text style={styles.detailText}>🏍️ Bikers</Text>
-      <Text style={styles.detailText}>🎶 Live Music, DJ Concession, Food & Drinks, Fireworks</Text>
+      <Text style={styles.detailText}>Burnouts</Text>
+      <Text style={styles.detailText}>Exhibitions</Text>
+      <Text style={styles.detailText}>Static Car Displays</Text>
+      <Text style={styles.detailText}>Bikers</Text>
+      <Text style={styles.detailText}>Live Music, DJ Concession, Food & Drinks, Fireworks</Text>
     </View>
   )}
-</View>
+</View>}
 
+
+
+ {/* Sponsors */}
+  <View style={{ marginTop:10 }}>
+    <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333', textAlign: 'center' }}>Sponsors</Text>
+    
+    <View style={styles.textRow} >
+      <Text  style >SOLATEX</Text>
+      <Text style={{fontStyle:'italic'}} >AUTO UIP</Text>
+      <Text style={{fontStyle:'italic'}} >TRANSIX</Text>
+      <Text style={{fontStyle:'italic'}} >PROTON</Text>
+      <Text style={{fontStyle:'italic'}} >Schweppes</Text>
+      <Text style={{fontStyle:'italic'}} >AHOGANT</Text>
+      <Text style={{fontStyle:'italic'}} >BAVARIAN</Text>
+    </View>
+
+  </View>
 
    {/* Sponsorship Section */}
   <View style={{ alignSelf: "center", marginTop: 10 }}>
     <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333', textAlign: 'center' }}>Sponsorship / Partnership</Text>
     
     <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 5 }}>
-      <TouchableOpacity style={{}}>
-        <Text style={{ }}>263787884434</Text>
+      <TouchableOpacity style={{marginLeft:3}}>
+        <Text style={{fontStyle:'italic'}} >263787884434</Text>
       </TouchableOpacity>
-      
-      <TouchableOpacity style={{ }}>
-        <Text style={{ }}>kelvinyaya8@gmail.com</Text>
+      <Text>/</Text>
+      <TouchableOpacity style={{ marginRight:3}}>
+        <Text style={{fontStyle:'italic'}} >kelvinyaya8@gmail.com</Text>
       </TouchableOpacity>
     </View>
   </View>
+  <View style={{height:600}}>
 
- {/* Sponsors */}
-  <View style={{ marginTop: 15 }}>
-    <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333', textAlign: 'center' }}>Sponsors</Text>
-    
-    <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 5 }}>
-      <Text >SOLATEX</Text>
-      <Text >AUTO UIP</Text>
-      <Text >TRANSIX</Text>
-      <Text >PROTON</Text>
-      <Text >KHARL</Text>
-    </View>
-
-    <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 5 }}>
-      <Text >Schweppes</Text>
-      <Text >AHOGANT</Text>
-      <Text >BAVARIAN</Text>
-    </View>
   </View>
+</ScrollView>}
 
-</View>}
 
 </View>
 
