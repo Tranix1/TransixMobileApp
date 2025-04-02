@@ -63,6 +63,7 @@ function AddLoadContract({ route }) {
       frst: "",
       scnd: "",
       third: "",
+      forth :''
     },
   });
 

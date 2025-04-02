@@ -92,6 +92,9 @@ import DspAllTrucks from  "./components/pages/DspCombinedTrucks"
 import DspAllLoads from  "./components/pages/DspAllLoads"
 // These are contracts for loads long term like when tthere is a 7 onths contract avaialvbel 
 import LoadsContracts from "./components/pages/LoadsContracts"
+// Dsp More Info of the Contract like more details
+import ViewContractMoreInfo from "./components/pages//MoreContractInfo"
+
 import BookLContract from "./components/pages/BookContract"
 // Function that allow you to select a truck type you want to view its fount on the header
 import SelectOneTruckType from  "./components/pages/selectOnteTruckType"
@@ -1134,7 +1137,11 @@ const Stack = createNativeStackNavigator();
       <Stack.Screen name="dspOneTrckType" component={DspOneTruckType}  options={{headerShown:false}} initialParams={{blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning }}  />
 
       <Stack.Screen name="selectedUserLoads" component={DspAllLoads}  options={{headerShown: false}}  initialParams={{username : username , contact : contact ,blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning }} />
+
       <Stack.Screen name="loadsContracts" component={LoadsContracts}  options={{headerShown:false}}  initialParams={{username : username , contact : contact ,blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning }} />
+      <Stack.Screen name="ViewContractMoreInfo" component={ViewContractMoreInfo}  options={{headerShown:false}}  />
+
+      
       <Stack.Screen name="BookLContract" component={BookLContract}  options={{headerShown:false}}  initialParams={{username : username , contact : contact ,blockVerifiedU : blockVerifiedU , blackLWarning:blackLWarning }} />
 
         
