@@ -1,5 +1,5 @@
 import React,{useState} from "react";
-import {View , TouchableOpacity , Text , StyleSheet , ScrollView , TextInput,ActivityIndicator  } from "react-native"
+import {View , TouchableOpacity , Text , StyleSheet , ScrollView , TextInput,ActivityIndicator,Animated  } from "react-native"
 
 import { db, auth } from "../config/fireBase";
 
@@ -38,32 +38,31 @@ function ApplyVerification({route}) {
 
  const [selectedDocuments, setSelectedDocumentS] = useState([]);
 
-  const pickDocument = async () => {
-    let result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf' });
+ const pickDocument = async () => {
+  let result = await DocumentPicker.getDocumentAsync();
 
-    if (result.cancelled) {
-      return
-    }
+  if (result.cancelled) {
+    return;
+  }
 
   if (result.assets && result.assets.length > 0) {
-          const firstAsset = result.assets[0];
-          if (firstAsset.uri) {
-            // Check the file size before setting the image
-            if (firstAsset.fileSize > 1.5 * 1024 * 1024) { // 1.5MB in bytes
-              alert('The selected Document must not be more than 1.5MB.');
-              return;
-            }
+    const firstAsset = result.assets[result.assets.length - 1]; // Access the last element of the assets array
+    if (firstAsset.uri) {
+      // Check the file size before setting the document
+      if (firstAsset.fileSize > 0.5 * 1024 * 1024) { // 0.5MB in bytes
+        alert('The selected document must not be more than 0.5MB.');
+        return;
+      }
 
-            setSelectedDocumentS(prevDocs => [...prevDocs, firstAsset]);
-            // uploadImageSc(firstAsset); // Call uploadImage with the selected asset
-          } else {
-            alert('Selected image URI is undefined');
-          }
-        } else {
-          alert('No assets found in the picker result');
-        }
-
+      setSelectedDocumentS(prevDocs => [...prevDocs, firstAsset]);
+      // uploadImageSc(firstAsset); // Call uploadImage with the selected asset
+    } else {
+      alert('Selected document URI is undefined');
+    }
+  } else {
+    alert('No assets found in the picker result');
   }
+}
 
   const [countryCode , setCountryCode] = React.useState(null)
     const [callingCode, setCallingCode] = React.useState('');
@@ -154,7 +153,36 @@ const [paymentPage , setPaymentPage]=React.useState(false)
 
 
       
-const [ecocashPhoneNum , setEcocashPhneNum]=React.useState(null)
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const handleSelect = (item) => {
+    setSelectedItem(item);
+  };
+
+  const getItemStyle = (item) => {
+    if (selectedItem === item) {
+      return [styles.item, styles.selected];
+    }
+    return styles.item;
+  };
+
+  const getSelectedStyle = (item) => {
+    if (selectedItem === item) {
+      return styles.selectedItem;
+    }
+    return null;
+  };
+  const [ecocashPhoneNum, setEcocashPhneNum] = useState('');
+  const animatedValue = new Animated.Value(100);
+
+  const startAnimation = () => {
+    Animated.timing(animatedValue, {
+      toValue: 0,
+      duration: 500,
+      useNativeDriver: false,
+    }).start();
+  };
+
 function handleMakePayement() {
   let paynow = new Paynow("20036", "e33d1e4a-26df-4c10-91ab-c29bca24c96f");
   // Create a new payment inside the function to avoid stale data
@@ -192,11 +220,14 @@ function handleMakePayement() {
 
 
 return(
-    <View style={{alignItems:'center',marginTop:20}} >
+    <View style={{alignItems:'center',}} >
 
-  <Text style={{position:"absolute", top :3 , left :5, color :'green'}} >PAGE 4/4</Text>
+  {enterCompDw &&<Text style={{position:"absolute", top :0 , left :5, color :'green',marginTop:8}} >PAGE 1/4</Text>}
+  {directorDetails &&<Text style={{position:"absolute", top :3 , left :5, color :'green'}} >PAGE 2/4</Text>}
+  {addressWithProof &&<Text style={{position:"absolute", top :3 , left :5, color :'green'}} >PAGE 3/4</Text>}
+  {paymentPage &&<Text style={{position:"absolute", top :3 , left :5, color :'green'}} >PAGE 4/4</Text>}
 
-{ enterCompDw&& <View>    
+{ enterCompDw&& <View style={{marginTop:20}}>    
 
 {selectedDocuments[0] && <Text style={{color:'green',fontWeight:'bold',textAlign:"center",fontSize:12}} >certifacete of incoperation</Text>}
 {selectedDocuments[0] && <Text style={{borderWidth:1 , borderColor:"#6a0c0c", marginBottom:10,padding:5,textAlign:'center',marginBottom:15}} >{selectedDocuments[0].name }</Text> }
@@ -257,7 +288,7 @@ return(
     </View>}
 
 
-    {directorDetails&&<View>
+    {directorDetails&&<View style={{marginTop:20}}>
 
 
       <View style={{ padding: 10 ,alignSelf:'center' }}>
@@ -275,6 +306,8 @@ return(
     </TouchableOpacity>}
 
 {selectedDocuments[3] &&<View style={{alignSelf:'center'}} >
+
+
    {!countryCode&&  <CountryPicker
         countryCode={callingCode}
         withCountryNameButton={true}
@@ -283,7 +316,8 @@ return(
         onSelect={handleCountrySelect}
         style={{alignSelf:'centre',marginBottom:8}}
       />
-        }      
+        }    
+
       {countryCode && <Text style={{textAlign:'center',color:'green',fontWeight:'bold',textAlign:"center",}} >Country Code : {countryCode}</Text>}
         {formData.phoneNumFrst && !countryCode && <Text>Click select country to choose country code</Text> }
         <TextInput 
@@ -333,7 +367,7 @@ return(
 
       { spinnerItem &&<ActivityIndicator size={36} />}
 
-{addressWithProof&&<View>
+{addressWithProof&&<View style={{marginTop:20}}>
 
 
 <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 5 }} >Address and proof for the business or director</Text>
@@ -379,56 +413,67 @@ return(
 
  </View>}
 
- {paymentPage && <View>
+ {paymentPage && <View style={{marginTop:20}}>
 
-    <Text>Make Payment</Text>
-    <Text style={{marginBottom:10}} >Method ecocash</Text>
+    <Text style={styles.makePayment}>Make Payment</Text>
+      <Text style={styles.methodText}>Method ecocash</Text>
+      <Text>
+        Eco <Text style={styles.blueText}>Cash</Text>
+      </Text>
+      <TouchableOpacity onPress={startAnimation}>
+        <Animated.View style={{ transform: [{ translateY: animatedValue }] }}>
+          <TextInput
+            placeholderTextColor="#6a0c0c"
+            placeholder="phone number"
+            onChangeText={(text) => setEcocashPhneNum(text)}
+            keyboardType="numeric"
+            style={styles.input}
+          />
+        </Animated.View>
+      </TouchableOpacity>
 
-    <TextInput 
-              value={ecocashPhoneNum}
-              placeholderTextColor="#6a0c0c"
-              placeholder="phone number"
-              onChangeText={(text) => setEcocashPhneNum(text)}
-              type="text"
-              style={inputstyles.addIterms }
-              keyboardType="numeric"               
-            />
-
-              <TouchableOpacity style={{marginTop:10}}>
-                <Text>Verification period</Text>
-              </TouchableOpacity>
-          <View  style={{flexDirection:'row'}} >
-
-            <View>
-            <Text>Months</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            </View>
-
-            <View>
-            <Text>Years</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            <Text>1 mon</Text>
-            </View>
-          </View>
+              
+         <View style={styles.container}>
+      <Text style={styles.heading}>Verification Period</Text>
+      <View style={styles.row}>
+        <View style={styles.column}>
+          <Text style={styles.subHeading}>Months</Text>
+          <TouchableOpacity onPress={() => handleSelect('1 month')}>
+            <Text style={getItemStyle('1 month')}>1 mon</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleSelect('2 months')}>
+            <Text style={getItemStyle('2 months')}>2 mon</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleSelect('3 months')}>
+            <Text style={getItemStyle('3 months')}>3 mon</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleSelect('6 months')}>
+            <Text style={getItemStyle('6 months')}>6 mon</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleSelect('9 months')}>
+            <Text style={getItemStyle('9 months')}>9 mon</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleSelect('12 months')}>
+            <Text style={getItemStyle('12 months')}>12 mon</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.column}>
+          <Text style={styles.subHeading}>Years</Text>
+          <TouchableOpacity onPress={() => handleSelect('2 years')}>
+            <Text style={[getItemStyle('2 years'), getSelectedStyle('2 years')]}>2 years</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleSelect('3 years')}>
+            <Text style={[getItemStyle('3 years'), getSelectedStyle('3 years')]}>3 years</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleSelect('4 years')}>
+            <Text style={[getItemStyle('4 years'), getSelectedStyle('4 years')]}>4 years</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleSelect('5 years')}>
+            <Text style={[getItemStyle('5 years'), getSelectedStyle('5 years')]}>5 years</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
 
             
   </View>}
@@ -441,3 +486,69 @@ return(
 )  
 }
 export default React.memo(ApplyVerification)
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#f4f4f4',
+  },
+  heading: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginVertical: 20,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 20,
+  },
+  column: {
+    marginHorizontal: 10,
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  subHeading: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  item: {
+    fontSize: 16,
+    marginVertical: 5,
+    color: '#666',
+    textAlign: 'center',
+  },
+  selected: {
+    backgroundColor: '#007bff',
+    color: '#fff',
+  },
+  selectedItem: {
+    backgroundColor: '#28a745',
+  }, makePayment: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  methodText: {
+    marginBottom: 10,
+  },
+  blueText: {
+    color: 'blue',
+  },
+  input: {
+    height: 40,
+    width: 200,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginTop: 10,
+    paddingHorizontal: 10,
+  },
+});

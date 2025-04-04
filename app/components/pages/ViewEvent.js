@@ -13,6 +13,10 @@ import inputstyles from "../styles/inputElement";
 
 import {v4 as uuidv4} from "react-native-uuid"
 
+
+import Feather from '@expo/vector-icons/Feather';
+import EvilIcons from '@expo/vector-icons/EvilIcons';
+
 function ViewEventsCode({navigation,route}) {
 
 const {username ,contact , } = route.params
@@ -183,12 +187,38 @@ function toggleDspDescrip(){
     setDspTickets(false)
   }
 
+
+
+
+  const TicketComponent = ({ title, price }) => {
+  return (
+    <View style={styles.ticketContainer}>
+      <View style={styles.ticketRow}>
+        <Text style={styles.ticketText}>{title}</Text>
+        <Text style={styles.ticketText}>${price}</Text>
+        <TouchableOpacity style={styles.buyButton}>
+          <Text style={{color:'green'}} >Buy</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+const CheckoutButton = ({ totalPrice }) => {
+  return (
+    <TouchableOpacity style={styles.checkoutButton} onPress={handleSubmission} >
+      <Text style={styles.checkoutButtonText}>Check out ${totalPrice}</Text>
+    </TouchableOpacity>
+  );
+};
+
+
     return(
              
   <View style={{paddingTop:100}} >
              <View  style={{position:'absolute' , top : 0 , left: 0 , right : 0 , flexDirection : 'row' , height : 74  ,  paddingLeft : 6 , paddingRight: 15 , paddingTop:10 ,backgroundColor : '#6a0c0c' ,paddingTop : 15 , alignItems : 'center' , }} >
          <TouchableOpacity style={{marginRight: 10}} >
-            {/* <Ionicons name="arrow-back" size={28} color="white"style={{ marginLeft: 10 }}  /> */}
+            <Ionicons name="arrow-back" size={28} color="white"style={{ marginLeft: 10 }}  />
         </TouchableOpacity> 
         
         <Text style={{fontSize: 20 , color : 'white'}} > SELECKTA BURNOUT  </Text>
@@ -213,52 +243,39 @@ function toggleDspDescrip(){
 
 
 
-
-
-
-
-
-<View style={{flexDirection:'row' , height: 40 , alignItems:'center' , justifyContent:'space-around'}} >
-  <TouchableOpacity   onPress={toggleDspDescription} >
-    <Text style={dspDescription ?{color:'red' }:null} >Description</Text>
+<View style={{
+  flexDirection: 'row',
+  height: 40,
+  alignItems: 'center',
+  justifyContent: 'space-around',
+  padding: 10,
+}}>
+  <TouchableOpacity onPress={toggleDspDescription}>
+    <Text style={[{ fontSize: 16, fontWeight: 'bold', color: dspDescription ? 'red' : 'black' }]}>Description</Text>
   </TouchableOpacity>
 
-  <TouchableOpacity onPress={toggleDspSellT} >
-    <Text style={dspTickets ?{color:'red' }:null} >Tickets</Text>
+  <TouchableOpacity onPress={toggleDspSellT}>
+    <Text style={[{ fontSize: 16, fontWeight: 'bold', color: dspTickets ? 'red' : 'black' }]}>Tickets</Text>
   </TouchableOpacity>
 </View>
 
 
 
-{dspTickets&&<View>
+
+
+
+      {dspTickets && (
+        <View>
+          <TicketComponent title="General" price="2" />
+          <TicketComponent title="VIP Access" price="20" />
+          <CheckoutButton totalPrice="20" />
+        </View>
+      )}
+
+
+
+
  
-  <View style={{flexDirection:'row',justifyContent:'space-between', backgroundColor:'grey', height:35, borderRadius:6,alignItems:'center', paddingLeft:8 , paddingRight:8,marginBottom:12}} >
-    <Text style={{fontWeight:"bold"}} >General</Text>
-    <Text style={{fontWeight:"bold"}}>$2 </Text>
-    <TouchableOpacity style={{backgroundColor:'red', height:25 , width:40 , borderRadius:5 , justifyContent:'center',alignItems:'center' }} >
-      <Text>Buy</Text>
-    </TouchableOpacity>
-  </View>
-
-  <View style={{flexDirection:'row',justifyContent:'space-between', backgroundColor:'grey', height:35, borderRadius:6,alignItems:'center', paddingLeft:8 , paddingRight:8,marginBottom:12}} >
-    <Text style={{fontWeight:"bold"}} >VIP Access</Text>
-    <Text style={{fontWeight:"bold"}} >$20 </Text>
-    <TouchableOpacity style={{backgroundColor:'red', height:25 , width:40 , borderRadius:5 , justifyContent:'center',alignItems:'center' }}>
-      <Text>Buy</Text>
-    </TouchableOpacity>
-  </View>
-
-<TouchableOpacity style={{backgroundColor:'red', marginTop:15 ,height:30,borderRadius:6, justifyContent:'center',alignItems:'center' }}>
-  <Text>Check out $20</Text>
-</TouchableOpacity>
-
-
-</View>}
-
-
-
-
-
 
 
 {dspDescription&&<ScrollView showsVerticalScrollIndicator={false}>
@@ -269,14 +286,37 @@ function toggleDspDescrip(){
   <Text style={{fontWeight:'bold', fontSize:20,marginBottom:5}} >50TH Geration</Text>
 
   <View style={{flexDirection:'row', justifyContent:'space-between'}} >
-    <Text style={{}}>Borrowdale </Text>
+
+    <View  style={{flexDirection:'row',alignItems:'center'}}>
+
+      <EvilIcons name="location" size={25} color="black" style={{marginRight:10}} />
+      <Text>Borrowdale</Text>
+    </View>
+
     <Text style={{color:'red',fontSize:16 , fontWeight:'bold'}}>$5</Text>
   </View>
 </View>
 
-<View  style={{borderWidth:1 , borderColor:'black', borderRadius:18, height:35,marginTop:10,flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingLeft:13 , paddingRight:13}} >
-  <Text style={{borderRightWidth:1 , borderRightColor:'black',width:150}} >March 30 2025</Text>
-  <Text>2 Pm</Text>
+<View  style={{borderWidth:1 , borderColor:'black', borderRadius:18, height:35,marginTop:10,flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingLeft:15 , paddingRight:15}} >
+
+
+<View style={{flexDirection:'row',alignItems:'center'}}>
+
+<Feather name="calendar" size={15} color="black" style={{marginRight:10}} />
+
+  <Text style={{borderRightWidth:1 , borderRightColor:'black',width:150 , fontSize:16,fontWeight:'bold'}} >
+    March 30 2025
+    </Text>
+</View>
+
+<View style={{flexDirection:'row',alignItems:'center'}}>
+
+<Feather name="clock" size={15} color="black" style={{marginRight:10}} />
+  <Text style={{fontSize:15,fontWeight:'bold'}}>
+    2 Pm
+    </Text>
+</View>
+
 </View>
 
 
@@ -388,25 +428,26 @@ function toggleDspDescrip(){
       <Text style={{fontStyle:'italic'}} >PROTON</Text>
       <Text style={{fontStyle:'italic'}} >Schweppes</Text>
       <Text style={{fontStyle:'italic'}} >AHOGANT</Text>
+      <Text style={{fontStyle:'italic'}} >AHOGANT</Text>
+      <Text style={{fontStyle:'italic'}} >AHOGANT</Text>
       <Text style={{fontStyle:'italic'}} >BAVARIAN</Text>
     </View>
 
   </View>
 
-   {/* Sponsorship Section */}
-  <View style={{ alignSelf: "center", marginTop: 10 }}>
-    <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333', textAlign: 'center' }}>Sponsorship / Partnership</Text>
-    
-    <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 5 }}>
-      <TouchableOpacity style={{marginLeft:3}}>
-        <Text style={{fontStyle:'italic'}} >263787884434</Text>
-      </TouchableOpacity>
-      <Text>/</Text>
-      <TouchableOpacity style={{ marginRight:3}}>
-        <Text style={{fontStyle:'italic'}} >kelvinyaya8@gmail.com</Text>
-      </TouchableOpacity>
-    </View>
+ <View style={styles.sponsorshipSection}>
+  <Text style={styles.sectionTitle}>Sponsorship / Partnership</Text>
+
+  <View style={styles.contactInfo}>
+    <TouchableOpacity style={styles.contactItem}>
+      <Text style={styles.contactText}>263787884434</Text>
+    </TouchableOpacity>
+    <Text style={styles.separator}>/</Text>
+    <TouchableOpacity style={styles.contactItem}>
+      <Text style={styles.contactText}>kelvinyaya8@gmail.com</Text>
+    </TouchableOpacity>
   </View>
+</View>
   <View style={{height:600}}>
 
   </View>
@@ -518,7 +559,84 @@ sEventButtonText: {
   boldText: {
     fontWeight: 'bold',
     color: '#2c3e50',
-  }
+  },
 
+   ticketContainer: {
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    backgroundColor: '#f9f9f9',
+    padding: 10,
+  },
+  ticketRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  ticketText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#333',
+  },
+  buyButton: {
+    borderRadius: 20,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buyButtonText: {
+    fontWeight: 'bold',
+  },
+  buyButtonRed: {
+    backgroundColor: '#ff5c5c',
+  },
+  buyButtonBlue: {
+    backgroundColor: '#5c8cff',
+  },
+  checkoutButton: {
+    backgroundColor: '#ff5c5c',
+    marginTop: 15,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkoutButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  checkoutButtonBlue: {
+    backgroundColor: '#5c8cff',
+  },
+  sponsorshipSection: {
+    alignSelf: 'center',
+    marginTop: 10,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 5,
+  },
+  contactInfo: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  contactItem: {
+    marginHorizontal: 3,
+  },
+  contactText: {
+    fontStyle: 'italic',
+    color: '#555',
+  },
+  separator: {
+    marginHorizontal: 5,
+    color: '#555',
+  },
   
 });

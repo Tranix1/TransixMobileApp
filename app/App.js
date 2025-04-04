@@ -1163,7 +1163,7 @@ const Stack = createNativeStackNavigator();
 
 
       <Stack.Screen name="applyGit" component={ApplyGit}  initialParams={{username : username , contact : contact , }}  options={{title: 'Goods In Transit',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
-      <Stack.Screen name="applyVerification" component={ApplyVerification}  initialParams={{username : username , contact : contact , }}  options={{title: 'Goods In Transit',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
+      <Stack.Screen name="applyVerification" component={ApplyVerification}  initialParams={{username : username , contact : contact , }}  options={{title: 'Apply Verification',headerStyle: {backgroundColor: '#6a0c0c', },headerTintColor: 'white',}}/>
 
 
 

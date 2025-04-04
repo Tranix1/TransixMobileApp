@@ -7,6 +7,7 @@ import {View, TextInput , Text ,    TouchableOpacity , Image , ActivityIndicator
 import inputstyles from "../styles/inputElement";
 
 import * as ImagePicker from 'expo-image-picker';
+import CountryPicker from 'react-native-country-picker-modal';
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Ionicons } from "@expo/vector-icons";

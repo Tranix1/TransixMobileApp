@@ -168,7 +168,16 @@ const {item } = route.params
             <Text>iv) {item.formData.otherRequirements.forth} </Text>
           </View>
 
-          <View style={{height:200}}>
+
+
+          <TouchableOpacity style={{ width: 300, height: 30, alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', borderRadius: 8, alignSelf: 'center', margin: 5 , marginTop: 14 }} onPress={()=> navigation.navigate('BookLContract')} >
+
+            <Text style={{ color: 'white' }}> Book now due {item.formDataScnd.bookingClosingD} </Text>
+          </TouchableOpacity>
+
+
+
+          <View style={{height:150}}>
             
           </View>
         </ScrollView>}
