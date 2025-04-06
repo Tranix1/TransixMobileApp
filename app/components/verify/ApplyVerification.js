@@ -1,5 +1,5 @@
 import React,{useState} from "react";
-import {View , TouchableOpacity , Text , StyleSheet , ScrollView , TextInput,ActivityIndicator,Animated  } from "react-native"
+import {View , TouchableOpacity , Text , StyleSheet , ScrollView , TextInput,ActivityIndicator,Animated,Image  } from "react-native"
 
 import { db, auth } from "../config/fireBase";
 
@@ -15,6 +15,8 @@ import { collection, doc, getDoc, addDoc ,serverTimestamp , onSnapshot , setDoc,
 import CountryPicker from 'react-native-country-picker-modal';
 
 const { Paynow } = require("paynow");
+
+import ecocashLogo from "../../../assets/images/ECOCASH-logo(1).jpg"
 
 function ApplyVerification({route}) {
   const {username , contact} = route.params
@@ -73,69 +75,12 @@ function ApplyVerification({route}) {
       };
 
 
-  const gitCollection = collection(db, "verifactionDetails");
-async function handleSubmit(){
-      setSpinnerItem(true)
 
-
-  const uploadImage = async (image) => {
-    const response = await fetch(image.uri);
-    const blob = await response.blob();
-    const storageRef = ref(storage, `verifactionDetails/` + new Date().getTime() );
-    
-    const snapshot = await uploadBytes(storageRef, blob);
-    const imageUrl = await getDownloadURL(storageRef);
-    
-    return imageUrl;
-}
-
-let certOIncop , memoOAssociation , taxClearance  , NationalId , proofORes  ;
-
-
-  certOIncop= await uploadImage(selectedDocuments[0]);
-  memoOAssociation= await uploadImage(selectedDocuments[1]);
-  taxClearance= await uploadImage(selectedDocuments[2]);
-  NationalId= await uploadImage(selectedDocuments[3]);
-  proofORes= await uploadImage(selectedDocuments[4]);
-
-  const userId = auth.currentUser.uid
-  try {
-      const docRef = await addDoc(gitCollection, {
-        userId: userId, // Add the user ID to the document
-        companyName: username,
-        contact: contact,
-        certOIncop  :certOIncop ,
-        memoOAssociation :memoOAssociation ,
-        taxClearance :taxClearance ,
-        NationalId :NationalId ,
-        proofORes :proofORes ,
-        buzLoc : formData.buzLoc ,
-        phoneNumFrst : `${callingCode}${formData.phoneNumFrst}` ,
-        contactEmail : formData.contactEmail ,
-        addressWithProof : formData.addressWithProof
-      });
-
-      setFormData({
-        buzLoc :"",
-        phoneNumFrst :"",
-        contactEmail :"",
-        addressWithProof :"" ,
-
-      });
-      setSpinnerItem(false)
-   
-    } catch (err) {
-      setSpinnerItem(false)
-      console.error(err.toString());
-      }
-}
-
-
-const [enterCompDw , setEntCompDe]= React.useState(true)
+const [enterCompDw , setEntCompDe]= React.useState(false)
 const [directorDetails , setDirectorDet]=React.useState(false)
 const [addressWithProof , setAdressWithProof]=React.useState(false)
 
-const [paymentPage , setPaymentPage]=React.useState(false)
+const [paymentPage , setPaymentPage]=React.useState(true)
 
       function goToPersnalInfoF(){
       setEntCompDe(false)
@@ -155,8 +100,33 @@ const [paymentPage , setPaymentPage]=React.useState(false)
       
   const [selectedItem, setSelectedItem] = useState(null);
 
+  const [totalPrice , setTotalPrice] =React.useState(null)
+
   const handleSelect = (item) => {
     setSelectedItem(item);
+
+    if(item==="1 month"){
+      setTotalPrice(5)
+    }else if(item==="2 months"){
+      setTotalPrice(10)
+    }else if(item==="3 months"){
+      setTotalPrice(14)
+    }else if(item==="6 months"){
+      setTotalPrice(27)
+    }else if(item==="9 months"){
+      setTotalPrice(40)
+    }else if(item==="12 months"){
+      setTotalPrice(50)
+    }else if(item==="2 years"){
+      setTotalPrice(90)
+    }else if(item==="3 years"){
+      setTotalPrice(125)
+    }else if(item==="4 years"){
+      setTotalPrice(160)
+    }else if(item==="5 years"){
+      setTotalPrice(200)
+    }
+
   };
 
   const getItemStyle = (item) => {
@@ -172,6 +142,17 @@ const [paymentPage , setPaymentPage]=React.useState(false)
     }
     return null;
   };
+
+const DiscountView = ({ogPrice ,  discPrice,remvedPerc})=>(
+<View style={{ padding: 5 }}>
+  <Text style={{ fontSize: 12, fontStyle: 'italic', color: '#333' }}>{ogPrice}</Text>
+  <Text style={{ fontSize: 12, fontStyle: 'italic', color: '#333' }}>{discPrice}</Text>
+  <Text style={{ fontSize: 12, fontStyle: 'italic', color: '#333' }}>{remvedPerc}</Text>
+</View>
+)
+
+
+
   const [ecocashPhoneNum, setEcocashPhneNum] = useState('');
   const animatedValue = new Animated.Value(100);
 
@@ -183,39 +164,123 @@ const [paymentPage , setPaymentPage]=React.useState(false)
     }).start();
   };
 
-function handleMakePayement() {
-  let paynow = new Paynow("20036", "e33d1e4a-26df-4c10-91ab-c29bca24c96f");
-  // Create a new payment inside the function to avoid stale data
 
-  let payment = paynow.createPayment("Invoice 37", "kelvinyaya8@gmail.com");
+
+
+
+
+  const gitCollection = collection(db, "verificationDetails");
+async function handleSubmit(pollUrl){
+      setSpinnerItem(true)
+
+
+//   const uploadImage = async (image) => {
+//     const response = await fetch(image.uri);
+//     const blob = await response.blob();
+//     const storageRef = ref(storage, `verifactionDetails/` + new Date().getTime() );
+    
+//     const snapshot = await uploadBytes(storageRef, blob);
+//     const imageUrl = await getDownloadURL(storageRef);
+    
+//     return imageUrl;
+// }
+
+let certOIncop , memoOAssociation , taxClearance  , NationalId , proofORes  ;
+
+
+  // certOIncop= await uploadImage(selectedDocuments[0]);
+  // memoOAssociation= await uploadImage(selectedDocuments[1]);
+  // taxClearance= await uploadImage(selectedDocuments[2]);
+  // NationalId= await uploadImage(selectedDocuments[3]);
+  // proofORes= await uploadImage(selectedDocuments[4]);
+
+  const userId = auth.currentUser.uid
+  try {
+      const docRef = await addDoc(gitCollection, {
+        userId: userId, // Add the user ID to the document
+        companyName: username,
+        contact: contact,
+        // certOIncop  :certOIncop ,
+        // memoOAssociation :memoOAssociation ,
+        // taxClearance :taxClearance ,
+        // NationalId :NationalId ,
+        // proofORes :proofORes ,
+        // buzLoc : formData.buzLoc ,
+        // phoneNumFrst : `${callingCode}${formData.phoneNumFrst}` ,
+        // contactEmail : formData.contactEmail ,
+        // addressWithProof : formData.addressWithProof ,
+
+
+        pollUrl : pollUrl ,
+      });
+
+      setFormData({
+        buzLoc :"",
+        phoneNumFrst :"",
+        contactEmail :"",
+        addressWithProof :"" ,
+
+      });
+      setSpinnerItem(false)
+   
+    } catch (err) {
+      setSpinnerItem(false)
+      console.error(err.toString());
+      }
+}
+
+
+
+
   
+      let uniqueRecepipt = Math.floor(100000000000 + Math.random() * 900000000000).toString() 
+async function handleSubmission() {
+  let paynow = new Paynow("20036", "e33d1e4a-26df-4c10-91ab-c29bca24c96f");
+
+  let payment = paynow.createPayment( `${uniqueRecepipt}r`, "kelvinyaya8@gmail.com");
+
   paynow.resultUrl = "https://transix.net";
   paynow.returnUrl = "https://transix.net";
+
   // Add items/services
-  payment.add("Bananas", 2.5);
+  payment.add(`verification:${selectedItem}`, totalPrice);
 
+  try {
+    let response = await paynow.sendMobile(payment, "0771111111", "ecocash");
 
-  paynow.sendMobile(payment, "0771111111", "ecocash")
-    .then(response => {
-      if (response.success) {
-        let pollUrl = response.pollUrl; // Save this URL to check the payment status
-          paynow.pollTransaction(pollUrl)
-            .then(status => {
+    if (response.success) {
+      let pollUrl = response.pollUrl; // Save this URL to check the payment status
+      console.log("✅ Payment initiated! Polling for status...");
 
-                  if (status.status === "paid") {
-                    console.log("✅ Payment Complete!");
-                    console.log(pollUrl)
-                  } else {
-                    console.log("❌ Payment Not Complete. Current status:", status.status);
+      // Poll every 10 seconds until payment is complete
+      let pollInterval = setInterval(async () => {
+        try {
+          let status = await paynow.pollTransaction(pollUrl);
+          console.log("🔄 Checking payment status:", status.status);
 
-                  }
-            })
-      } else {
-        console.log("Error:", response.error);
-      }
-    })
-    .catch(err => console.log("Error:", err));
+          if (status.status === "paid") {
+            console.log("✅ Payment Complete!");
+              handleSubmit(pollUrl)
+            clearInterval(pollInterval); // Stop polling
+          } else if (status.status === "cancelled" || status.status === "failed") {
+            console.log("❌ Payment Failed or Cancelled.");
+            clearInterval(pollInterval);
+          }
+        } catch (pollError) {
+          console.log("⚠️ Polling Error:", pollError);
+          clearInterval(pollInterval);
+        }
+      }, 10000); // Poll every 10 seconds
+    } else {
+      console.log("❌ Error:", response.error);
+    }
+  } catch (error) {
+    console.log("⚠️ Payment Error:", error);
+  }
 }
+
+
+
 
 
 
@@ -415,26 +480,51 @@ return(
 
  {paymentPage && <View style={{marginTop:20}}>
 
-    <Text style={styles.makePayment}>Make Payment</Text>
-      <Text style={styles.methodText}>Method ecocash</Text>
-      <Text>
-        Eco <Text style={styles.blueText}>Cash</Text>
+    
+    
+  <View style={{ padding: 15 }}>
+      <Text style={{ fontSize: 20, fontWeight: '600', marginBottom: 10 }}>
+        Proceed to Payment
       </Text>
-      <TouchableOpacity onPress={startAnimation}>
-        <Animated.View style={{ transform: [{ translateY: animatedValue }] }}>
+      <Text style={{ fontSize: 16, color: '#555' }}>
+        Select Payment Method
+      </Text>
+    </View>
+
+<Text style={{fontSize:21 , fontWeight:'bold' ,alignSelf:'center'}}><Text style={{color:'#2457A0'}}>Eco</Text><Text style={{color:'#E22428'}}>Cash</Text> </Text>
+                {/* <Image source={ecocashLogo} style={{width:170,height:25 , alignSelf:'center',marginBottom:8}} /> */}
+
+
+      {/* <TouchableOpacity onPress={startAnimation}> */}
+        {/* <Animated.View style={{ transform: [{ translateY: animatedValue }] }}> */}
           <TextInput
             placeholderTextColor="#6a0c0c"
             placeholder="phone number"
             onChangeText={(text) => setEcocashPhneNum(text)}
             keyboardType="numeric"
             style={styles.input}
-          />
-        </Animated.View>
-      </TouchableOpacity>
+            />
+        {/* </Animated.View> */}
+            {/* </TouchableOpacity> */}
 
               
          <View style={styles.container}>
       <Text style={styles.heading}>Verification Period</Text>
+
+          {selectedItem ==="1 month"&& <DiscountView ogPrice="• Base price: $5.00"  discPrice="No discount since it’s the minimum bundle" remvedPerc=""  />}
+          {selectedItem ==="2 months"&& <DiscountView ogPrice="• Base price: $10.00"  discPrice="No discount since it’s the minimum bundle" remvedPerc="" />}
+          {selectedItem ==="3 months"&& <DiscountView ogPrice="• Regular cost: $15.00"  discPrice="With a small discount, charge $14.00"  remvedPerc="(~6.7% off)" />}
+          {selectedItem ==="6 months"&& <DiscountView ogPrice="• Regular cost: $30.00"  discPrice="• With discount, charge $27.00"  remvedPerc="(~10% off)" />}
+          {selectedItem ==="9 months"&& <DiscountView ogPrice="• Regular cost: $45.00"  discPrice="• With discount, charge $40.00"  remvedPerc="(~11% off)" />}
+          {selectedItem ==="12 months"&& <DiscountView ogPrice="• Regular cost: $60.00"  discPrice="• With discount, charge $50.00"  remvedPerc="(~17% off)"/>}
+          {selectedItem ==="2 years"&& <DiscountView ogPrice="• Regular cost: $5 × 24 = $120.00"  discPrice="• With discount, charge $90.00"  remvedPerc="(~25% off)"/>}
+          {selectedItem ==="3 years"&& <DiscountView ogPrice="• Regular cost: $5 × 36 = $180.00"  discPrice="• With discount, charge $125.00 (roughly)"  remvedPerc="~30% off"/>}
+          {selectedItem ==="4 years"&& <DiscountView ogPrice="• Regular cost: $5 × 48 = $240.00"  discPrice="• With discount, charge $160.00"  remvedPerc="(~33% off)"/>}
+          {selectedItem ==="5 years"&& <DiscountView ogPrice="• Regular cost: $5 × 60 = $300.00"  discPrice="• With discount, charge $200.00"  remvedPerc="(~33% off)"/>}
+          
+
+
+
       <View style={styles.row}>
         <View style={styles.column}>
           <Text style={styles.subHeading}>Months</Text>
@@ -473,9 +563,14 @@ return(
           </TouchableOpacity>
         </View>
       </View>
+
+
+    <TouchableOpacity style={styles.checkoutButton}  onPress={handleSubmission} >
+      <Text style={styles.checkoutButtonText}>Check out {totalPrice} </Text>
+    </TouchableOpacity>
     </View>
 
-            
+        
   </View>}
           {/* {!spinnerItem ? <TouchableOpacity  onPress={handleSubmit} style={{backgroundColor : '#6a0c0c' , width : 80 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',alignSelf:'center' }}>
     <Text style={{color : 'white'}}>submit</Text>
@@ -494,14 +589,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#f4f4f4',
   },
   heading: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginVertical: 20,
+    marginTop: 35,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginVertical: 20,
+    marginTop: 8,
   },
   column: {
     marginHorizontal: 10,
@@ -550,5 +645,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginTop: 10,
     paddingHorizontal: 10,
+    borderTopWidth:0 ,
+    alignSelf:'center'
+  },
+   checkoutButton: {
+    borderWidth:2 ,
+    borderColor:'#ff5c5c', 
+    marginTop: 15,
+    height: 40,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width:220
+  },
+  checkoutButtonText: {
+    color: '#ff5c5c',
+    fontWeight: 'bold',
+    fontSize: 18,
   },
 });

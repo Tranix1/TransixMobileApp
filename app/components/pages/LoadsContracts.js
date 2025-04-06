@@ -211,6 +211,16 @@ function LoadsContracts({ navigation }) {
 
           <Text style={{ color: 'white' }}> Add Contract </Text>
         </TouchableOpacity>
+
+
+          <TouchableOpacity>
+            <Text>Do you offer contreacts and want to markert them here for $10</Text>
+            <Text>Click here and email us now</Text>
+            <Text>We also give access to already added trucks that are readily Available</Text>
+          </TouchableOpacity>
+
+
+
         <TouchableOpacity onPress={() => setContraLoc('Zimbabwe')} style={styles.buttonStyle}   >
           <Text style={{ color: '#6a0c0c' }}>Zimbabwe </Text>
         </TouchableOpacity>

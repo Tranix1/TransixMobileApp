@@ -495,8 +495,9 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
     }
 
   function toggleGoHome(){
-    setDspTrckType(prev => false)
-    setDspLoads(prev => false)
+      setDspFrstPage(true)
+    setDspTrckType( false)
+    setDspLoads( false)
   }
 
 
@@ -504,8 +505,9 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
  
   useEffect(() => {
     const backAction = () => {
-      if (dspLoads) {
-       toggleDspLoads()
+      
+       if (dspLoads) {
+       toggleGoHome()
         return true; // Prevent default back button action
       } else if(dspTruckType) {
         setDspTrckType(false)
@@ -519,7 +521,7 @@ const [whenemailVerifiedN , setemailVerifiedN] = React.useState(false)
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
 
     return () => backHandler.remove();
-  }, [dspLoads , dspTruckType]);
+  }, [dspLoads , dspTruckType ,dspFrstPage]);
 
 
 

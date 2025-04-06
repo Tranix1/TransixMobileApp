@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useState} from "react";
 
 import { View , Text  , TouchableOpacity , ScrollView,StyleSheet ,Image,TextInput } from "react-native";
 import { collection, startAfter , serverTimestamp ,addDoc, query , where , getDocs ,doc,deleteDoc , updateDoc, runTransaction , setDoc,orderBy,limit,onSnapshot } from 'firebase/firestore';
@@ -13,11 +13,49 @@ import inputstyles from "../styles/inputElement";
 
 import {v4 as uuidv4} from "react-native-uuid"
 
-
+import * as DocumentPicker from 'expo-document-picker';
 import Feather from '@expo/vector-icons/Feather';
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 
+import Entypo from '@expo/vector-icons/Entypo';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
 function ViewEventsCode({navigation,route}) {
+
+
+ const pickDocument = async () => {
+ try {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: 'application/pdf',
+      copyToCacheDirectory: true,
+    });
+
+    console.log('Picker result:', result);
+
+    if (result.canceled) {
+      alert('Document picking was cancelled.');
+      return;
+    }
+
+    const file = result.assets?.[0];
+    if (!file) {
+      alert('No document was selected.');
+      return;
+    }
+
+    if (file.size && file.size > 0.5 * 1024 * 1024) {
+      alert('The selected PDF must not be more than 0.5MB.');
+      return;
+    }
+
+    console.log('Picked file:', file);
+    // setSelectedDocumentS(prev => [...prev, file]);
+  } catch (error) {
+    console.error('Document Picker Error:', error);
+    alert('An error occurred while picking the document.');
+  }
+};
+
 
 const {username ,contact , } = route.params
 
@@ -60,12 +98,13 @@ const {username ,contact , } = route.params
 
   const ticketsCollection = collection(db, "boughtTickets");
 
-    async function handleSubDB({pollUrl}){
+    async function handleSubDB(pollUrl){
         try{
 
 
       const userId = auth.currentUser.uid
-      const orderId = `${eventLocation}${userId}${eventType}${eventDate}`
+      // const orderId = `${eventLocation}${userId}${eventType}${eventDate}`
+      const orderId = `asdhsajdh ashdjashd`
       const docRef = await addDoc(ticketsCollection, {
         userId: userId, // Add the user ID to the document
         username : username ,
@@ -77,18 +116,18 @@ const {username ,contact , } = route.params
 
         ticketPrice :ticketPrice ,
 
-        orderDate : orderDate ,
+        orderDate : '6 jam sosd' ,
         orderId : orderId ,
-        paymentMethod :paymentMethod,
+        paymentMethod :"ecocash" ,
         
         pollUrl : pollUrl ,
 
-        dsplayedId : dsplayedId
+        dsplayedId : 'sadasjdaskj'
         
 
 
       });
-
+alert('doneeeee')
 
         }catch(e){
             console.error(e)
@@ -176,6 +215,12 @@ function toggleDspDescrip(){
 
   const [dspTickets , setDspTickets] = React.useState(false)
 
+  const [addOnDsp , setAddOnDsp]=React.useState(false)
+
+  function toggleAddOnDsp(){
+    setAddOnDsp(prev =>!prev)
+  }
+
   function toggleDspSellT(){
     setDspTickets(true)
     setDspDescripton(false)
@@ -189,20 +234,101 @@ function toggleDspDescrip(){
 
 
 
+  const [dspAddBtnTckt , setDspAddBtnTckt] = React.useState({ ['']: false })
+  function toggleDspAddBtnTckt(itemId){
+          setDspAddBtnTckt((prevState) => ({
+        ...prevState,
+        [itemId]: !prevState[itemId],
+      }));
+  }
 
-  const TicketComponent = ({ title, price }) => {
+const [counts, setCounts] = useState({ ['']: 1 });
+
+const handleAdd = (title) => {
+  setCounts((prev) => {
+    const current = prev[title] ?? 1; // Use 1 as default if undefined
+    if (current < 5) {
+      return { ...prev, [title]: current + 1 };
+    }
+    return prev;
+  });
+};
+
+const handleRemove = (title) => {
+  setCounts((prev) => {
+    const current = prev[title] ?? 1;
+    if (current === 1) {
+      toggleDspAddBtnTckt(title);
+      return { ...prev, [title]: 1 }; // optional: you can remove it from state too
+    }
+    return { ...prev, [title]: current - 1 };
+  });
+};
+
+
+  const TicketComponent = ({ title, nowPrice,gatePrice }) => {
   return (
     <View style={styles.ticketContainer}>
       <View style={styles.ticketRow}>
         <Text style={styles.ticketText}>{title}</Text>
-        <Text style={styles.ticketText}>${price}</Text>
-        <TouchableOpacity style={styles.buyButton}>
-          <Text style={{color:'green'}} >Buy</Text>
-        </TouchableOpacity>
+        <Text style={{ fontSize: 12, fontWeight: '600' }}>
+        <Text style={{ fontWeight: '700' }}>now ${nowPrice} </Text>
+        <Text style={{  fontWeight: '600' }}>on-site ${gatePrice}</Text>
+      </Text>
+       { !dspAddBtnTckt[title] && <TouchableOpacity style={styles.buyButton} onPress={()=>toggleDspAddBtnTckt(title) } >
+          <Text style={[styles.ticketText, { color: 'green' }]}>Buy</Text>
+        </TouchableOpacity>}
+
+  { dspAddBtnTckt[title] &&  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <TouchableOpacity onPress={ ()=>handleRemove(title) }>
+        <Ionicons name="remove" size={20} color={counts[title]  === 1 ? 'gray' : 'green'} />
+      </TouchableOpacity>
+
+      <Text style={{ marginHorizontal: 10, fontSize: 16, fontWeight: 'bold' }}>
+        {counts[title] || 1}
+      </Text>
+
+      <TouchableOpacity onPress={()=> handleAdd(title) }>
+        <MaterialIcons name="add" size={20} color={counts[title]  === 5 ? 'gray' : 'green'} />
+      </TouchableOpacity>
+    </View>}
+
       </View>
     </View>
   );
 };
+
+
+
+
+  const [checkAddOnBtn , setCheckAddOnBtn] = React.useState({ ['']: false })
+  function toggleCheckAddOnBtn(itemId){
+         setCheckAddOnBtn((prevState) => ({
+        ...prevState,
+        [itemId]: !prevState[itemId],
+      }));
+  }
+
+
+const AddOnComponent = ({title , nowPrice,gatePrice  })=>(
+  <View>
+    <View style={[styles.ticketRow,{borderBottomWidth:1 , borderBottomColor:'black'}]} >
+
+        <Text style={{fontSize:16 ,}}>{title}</Text>
+          <Text style={{ fontSize: 12, fontWeight: '600' }}>
+        <Text style={{ fontWeight: '700' }}>now ${nowPrice} </Text>
+        <Text style={{  fontWeight: '600' }}>on-site ${gatePrice}</Text>
+      </Text> 
+
+       <TouchableOpacity style={styles.buyButton} onPress={()=>toggleCheckAddOnBtn(title) } >
+
+      {checkAddOnBtn[title]&& <Entypo name="check" size={24} color="green" /> }
+      {!checkAddOnBtn[title]&&  <MaterialIcons name="add" size={24} color="red" />}
+        </TouchableOpacity>
+
+    </View>
+  </View>
+)
 
 const CheckoutButton = ({ totalPrice }) => {
   return (
@@ -215,7 +341,7 @@ const CheckoutButton = ({ totalPrice }) => {
 
     return(
              
-  <View style={{paddingTop:100}} >
+  <View style={{paddingTop:90}} >
              <View  style={{position:'absolute' , top : 0 , left: 0 , right : 0 , flexDirection : 'row' , height : 74  ,  paddingLeft : 6 , paddingRight: 15 , paddingTop:10 ,backgroundColor : '#6a0c0c' ,paddingTop : 15 , alignItems : 'center' , }} >
          <TouchableOpacity style={{marginRight: 10}} >
             <Ionicons name="arrow-back" size={28} color="white"style={{ marginLeft: 10 }}  />
@@ -265,10 +391,29 @@ const CheckoutButton = ({ totalPrice }) => {
 
 
       {dspTickets && (
-        <View>
-          <TicketComponent title="General" price="2" />
-          <TicketComponent title="VIP Access" price="20" />
+        <View >
+         {!addOnDsp && <View>
+
+          <TicketComponent title="General" nowPrice="3" gatePrice="7" />
+          <TicketComponent title="early bird" nowPrice="3" gatePrice="7" />
+          <TicketComponent title="VIP Access" nowPrice="14" gatePrice="26"  />
+          <TicketComponent title="VVIP Access" nowPrice="14" gatePrice="26"  />
+          
+          </View>}
+
+            {addOnDsp&& <View>
+          <AddOnComponent title="Cooler Box" nowPrice="3" gatePrice="7" />
+          <AddOnComponent title="Parking" nowPrice="3" gatePrice="7" />
+            </View>}
+
+     
+           <TouchableOpacity onPress={toggleAddOnDsp}>
+            <Text style={{fontWeight:'bold',fontSize:20,alignSelf:'flex-end',margin:5,marginBottom:0}}>{addOnDsp ? "TICKETS" : "ADD ONS"}</Text>
+            </TouchableOpacity>     
+
           <CheckoutButton totalPrice="20" />
+
+         
         </View>
       )}
 
@@ -562,12 +707,12 @@ sEventButtonText: {
   },
 
    ticketContainer: {
-    marginBottom: 12,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 10,
     backgroundColor: '#f9f9f9',
-    padding: 10,
+    padding: 7,
   },
   ticketRow: {
     flexDirection: 'row',
