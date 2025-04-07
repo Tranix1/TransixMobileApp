@@ -20,6 +20,7 @@ import EvilIcons from '@expo/vector-icons/EvilIcons';
 import Entypo from '@expo/vector-icons/Entypo';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
+
 function ViewEventsCode({navigation,route}) {
 
 
@@ -185,18 +186,17 @@ alert('doneeeee')
 
 
 
+const [selectedTickets, setSelectedTickets] = useState([]);
+const [selectedAddOns, setSelectedAddOns] = useState([]);
 
-const handleSubmission = () => {
-  console.log("Tickets:", selectedTickets);
-  console.log("Add-ons:", selectedAddOns);
+  const grandTotal = React.useMemo(() => {
+  const safeTickets = selectedTickets ?? [];
+  const safeAddOns = selectedAddOns ?? [];
 
-  // Calculate total price (optional)
-  const ticketTotal = selectedTickets.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const addOnTotal = selectedAddOns.reduce((sum, item) => sum + item.price, 0);
-  const grandTotal = ticketTotal + addOnTotal;
-
-  console.log("Total: $" + grandTotal);
-};
+  const ticketTotal = safeTickets.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const addOnTotal = safeAddOns.reduce((sum, item) => sum + item.price, 0);
+  return ticketTotal + addOnTotal;
+}, [selectedTickets, selectedAddOns]);
 
 
 function toggleDspDescrip(){
@@ -250,8 +250,6 @@ function toggleDspDescrip(){
 
 
 
-const [selectedTickets, setSelectedTickets] = useState([]);
-const [selectedAddOns, setSelectedAddOns] = useState([]);
 
   const [dspAddBtnTckt , setDspAddBtnTckt] = React.useState({ ['']: false })
 
@@ -326,7 +324,7 @@ const handleRemove = (title) => {
 
   { dspAddBtnTckt[title] &&  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       <TouchableOpacity onPress={ ()=>handleRemove(title) }>
-        <Ionicons name="remove" size={20} color={counts[title]  === 1 ? 'gray' : 'green'} />
+        <Ionicons name="remove" size={20} color={counts[title]  === 1 ? 'gray' : 'red'} />
       </TouchableOpacity>
 
       <Text style={{ marginHorizontal: 10, fontSize: 16, fontWeight: 'bold' }}>
@@ -383,16 +381,100 @@ const AddOnComponent = ({title , nowPrice,gatePrice  })=>(
   </View>
 )
 
-const CheckoutButton = ({ totalPrice }) => {
+const CheckoutButton = ({  }) => {
   return (
-    <TouchableOpacity style={styles.checkoutButton} onPress={handleSubmission} >
-      <Text style={styles.checkoutButtonText}>Check out ${totalPrice}</Text>
+    <TouchableOpacity style={styles.checkoutButton} onPress={()=>setDspCheckoutPage(true) } >
+      <Text style={styles.checkoutButtonText}>Check out $ {grandTotal}</Text>
     </TouchableOpacity>
   );
 };
 
 
+// const [selectedTickets, setSelectedTickets] = useState([]);
+// const [selectedAddOns, setSelectedAddOns] = useState([]);
 
+const [dspCheckouPage , setDspCheckoutPage]=React.useState(false)
+
+const rndrSlcktedTckts =  selectedTickets.map((item)=>(
+  <View style={[styles.ticketRow,{backgroundColor:"#f9f9f9"}]} >
+    <View style={{flexDirection:"row"}} >
+    <Entypo name="pin" size={12} color="crimson" style={{marginLeft:4}} />
+    <Text style={{fontWeight:"BOLD"}}>{item.title} </Text>
+    </View>
+    <Text>{item.quantity} </Text>
+    <Text>$ {item.price} </Text>
+  </View>
+))
+
+const rndrSelectedAdOns =  selectedAddOns.map((item)=>(
+  <View style={[styles.ticketRow,{backgroundColor:"#f9f9f9"}]} >
+    <View style={{flexDirection:"row"}} >
+    <Entypo name="pin" size={12} color="crimson" style={{marginLeft:4}} />
+    <Text style={{fontWeight:"BOLD"}}>{item.title} </Text>
+    </View>
+    <Text>{item.quantity} </Text>
+    <Text>$ {item.price} </Text>
+  </View>
+))
+
+const CheckOutPage = ()=>(
+  <View style={{position:'absolute',top:0 , left: 0,right :0 ,height:455, backgroundColor:'white',zIndex:100,borderWidth:1 , borderRadius:10,padding:8}} >
+    <TouchableOpacity>
+    <Text style={{ fontSize: 16, color: '#555' }} >Payment method</Text>
+
+    </TouchableOpacity>
+    <Text style={{fontSize:20 , fontWeight:'bold' ,alignSelf:'center'}}><Text style={{color:'#2457A0'}}>Eco</Text><Text style={{color:'#E22428'}}>Cash</Text> </Text>
+    
+    <Text style={{fontWeight: '600', fontSize: 18,margin:5}} >Tickets </Text>
+      {rndrSlcktedTckts}
+
+      <Text style={{fontWeight: '600', fontSize: 18,margin:5,marginTop:7}} >Add Ons</Text>
+
+      {rndrSelectedAdOns}
+
+  <View style={[styles.ticketRow,{backgroundColor:"#f9f9f9",margin:5,marginTop:10}]} >
+
+  <Text style={{fontWeight: '600', fontSize: 16}} >Total</Text>    
+  <Text style={{borderTopWidth:1 , borderBottomWidth:1}} >$ {grandTotal} </Text>
+  </View>
+
+    <View style={{ flexDirection: "row", justifyContent:"space-evenly" , gap: 10 ,marginTop:10}}>
+  <TouchableOpacity style={{
+    // flex: 1,
+    height: 40,
+    backgroundColor: 'black',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width:110
+  }} onPress={()=>setDspCheckoutPage(false) } >
+    <Text style={{ color: 'white', fontWeight: '600' }}>Cancel</Text>
+  </TouchableOpacity>
+
+<TouchableOpacity style={{
+  height: 40,
+  backgroundColor: 'white',
+  borderRadius: 12,
+  justifyContent: 'center',
+  alignItems: 'center',
+  borderWidth: 1,
+  borderColor: '#D3D3D3',
+  width: 110,
+
+  // 💡 Shadow for iOS
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 6,
+
+  // 💡 Elevation for Android
+  elevation: 3,
+}}>
+  <Text style={{ color: 'black', fontWeight: '600' }}>Confirm</Text>
+</TouchableOpacity>
+</View>
+  </View>
+)
 
 
 
@@ -471,8 +553,10 @@ const CheckoutButton = ({ totalPrice }) => {
             <Text style={{fontWeight:'bold',fontSize:20,alignSelf:'flex-end',margin:5,marginBottom:0}}>{addOnDsp ? "TICKETS" : "ADD ONS"}</Text>
             </TouchableOpacity>     
 
-          <CheckoutButton totalPrice="20" />
+          <CheckoutButton  />
 
+
+          {dspCheckouPage && <CheckOutPage/>}
          
         </View>
       )}
@@ -626,17 +710,17 @@ const CheckoutButton = ({ totalPrice }) => {
   <View style={{ marginTop:10 }}>
     <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333', textAlign: 'center' }}>Sponsors</Text>
     
-    <View style={styles.textRow} >
-      <Text  style >SOLATEX</Text>
-      <Text style={{fontStyle:'italic'}} >AUTO UIP</Text>
-      <Text style={{fontStyle:'italic'}} >TRANSIX</Text>
-      <Text style={{fontStyle:'italic'}} >PROTON</Text>
-      <Text style={{fontStyle:'italic'}} >Schweppes</Text>
-      <Text style={{fontStyle:'italic'}} >AHOGANT</Text>
-      <Text style={{fontStyle:'italic'}} >AHOGANT</Text>
-      <Text style={{fontStyle:'italic'}} >AHOGANT</Text>
-      <Text style={{fontStyle:'italic'}} >BAVARIAN</Text>
-    </View>
+  <View style={[styles.textRow, { flexWrap: 'wrap', justifyContent: 'center' }]}>
+  <Text style={{ color: '#8E8E93', margin: 4 }}>SOLATEX</Text>
+  <Text style={{ fontStyle: 'italic', color: '#8E8E93', margin: 4 }}>AUTO UIP</Text>
+  <Text style={{ fontStyle: 'italic', color: '#8E8E93', margin: 4 }}>TRANSIX</Text>
+  <Text style={{ fontStyle: 'italic', color: '#8E8E93', margin: 4 }}>PROTON</Text>
+  <Text style={{ fontStyle: 'italic', color: '#8E8E93', margin: 4 }}>Schweppes</Text>
+  <Text style={{ fontStyle: 'italic', color: '#8E8E93', margin: 4 }}>AHOGANT</Text>
+  <Text style={{ fontStyle: 'italic', color: '#8E8E93', margin: 4 }}>AHOGANT</Text>
+  <Text style={{ fontStyle: 'italic', color: '#8E8E93', margin: 4 }}>AHOGANT</Text>
+  <Text style={{ fontStyle: 'italic', color: '#8E8E93', margin: 4 }}>BAVARIAN</Text>
+</View>
 
   </View>
 
