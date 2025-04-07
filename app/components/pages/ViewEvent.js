@@ -138,50 +138,66 @@ alert('doneeeee')
 
       let uniqueRecepipt = Math.floor(100000000000 + Math.random() * 900000000000).toString() 
 
-async function handleSubmission() {
-  let paynow = new Paynow("20036", "e33d1e4a-26df-4c10-91ab-c29bca24c96f");
+// async function handleSubmission() {
+//   let paynow = new Paynow("20036", "e33d1e4a-26df-4c10-91ab-c29bca24c96f");
 
-  let payment = paynow.createPayment( `${uniqueRecepipt}r`, "kelvinyaya8@gmail.com");
+//   let payment = paynow.createPayment( `${uniqueRecepipt}r`, "kelvinyaya8@gmail.com");
 
-  paynow.resultUrl = "https://transix.net";
-  paynow.returnUrl = "https://transix.net";
+//   paynow.resultUrl = "https://transix.net";
+//   paynow.returnUrl = "https://transix.net";
 
-  // Add items/services
-  payment.add("Bananas", 3.5);
+//   // Add items/services
+//   payment.add("Bananas", 3.5);
 
-  try {
-    let response = await paynow.sendMobile(payment, "0771111111", "ecocash");
+//   try {
+//     let response = await paynow.sendMobile(payment, "0771111111", "ecocash");
 
-    if (response.success) {
-      let pollUrl = response.pollUrl; // Save this URL to check the payment status
-      console.log("✅ Payment initiated! Polling for status...");
+//     if (response.success) {
+//       let pollUrl = response.pollUrl; // Save this URL to check the payment status
+//       console.log("✅ Payment initiated! Polling for status...");
 
-      // Poll every 10 seconds until payment is complete
-      let pollInterval = setInterval(async () => {
-        try {
-          let status = await paynow.pollTransaction(pollUrl);
-          console.log("🔄 Checking payment status:", status.status);
+//       // Poll every 10 seconds until payment is complete
+//       let pollInterval = setInterval(async () => {
+//         try {
+//           let status = await paynow.pollTransaction(pollUrl);
+//           console.log("🔄 Checking payment status:", status.status);
 
-          if (status.status === "paid") {
-            console.log("✅ Payment Complete!");
-              handleSubDB(pollUrl)
-            clearInterval(pollInterval); // Stop polling
-          } else if (status.status === "cancelled" || status.status === "failed") {
-            console.log("❌ Payment Failed or Cancelled.");
-            clearInterval(pollInterval);
-          }
-        } catch (pollError) {
-          console.log("⚠️ Polling Error:", pollError);
-          clearInterval(pollInterval);
-        }
-      }, 10000); // Poll every 10 seconds
-    } else {
-      console.log("❌ Error:", response.error);
-    }
-  } catch (error) {
-    console.log("⚠️ Payment Error:", error);
-  }
-}
+//           if (status.status === "paid") {
+//             console.log("✅ Payment Complete!");
+//               handleSubDB(pollUrl)
+//             clearInterval(pollInterval); // Stop polling
+//           } else if (status.status === "cancelled" || status.status === "failed") {
+//             console.log("❌ Payment Failed or Cancelled.");
+//             clearInterval(pollInterval);
+//           }
+//         } catch (pollError) {
+//           console.log("⚠️ Polling Error:", pollError);
+//           clearInterval(pollInterval);
+//         }
+//       }, 10000); // Poll every 10 seconds
+//     } else {
+//       console.log("❌ Error:", response.error);
+//     }
+//   } catch (error) {
+//     console.log("⚠️ Payment Error:", error);
+//   }
+// }
+
+
+
+
+const handleSubmission = () => {
+  console.log("Tickets:", selectedTickets);
+  console.log("Add-ons:", selectedAddOns);
+
+  // Calculate total price (optional)
+  const ticketTotal = selectedTickets.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const addOnTotal = selectedAddOns.reduce((sum, item) => sum + item.price, 0);
+  const grandTotal = ticketTotal + addOnTotal;
+
+  console.log("Total: $" + grandTotal);
+};
+
 
 function toggleDspDescrip(){
       setDspActivities(false)
@@ -234,21 +250,43 @@ function toggleDspDescrip(){
 
 
 
-  const [dspAddBtnTckt , setDspAddBtnTckt] = React.useState({ ['']: false })
-  function toggleDspAddBtnTckt(itemId){
-          setDspAddBtnTckt((prevState) => ({
-        ...prevState,
-        [itemId]: !prevState[itemId],
-      }));
-  }
+const [selectedTickets, setSelectedTickets] = useState([]);
+const [selectedAddOns, setSelectedAddOns] = useState([]);
 
+  const [dspAddBtnTckt , setDspAddBtnTckt] = React.useState({ ['']: false })
+
+ function toggleDspAddBtnTckt(itemId, price) {
+  setDspAddBtnTckt((prevState) => ({
+    ...prevState,
+    [itemId]: !prevState[itemId],
+  }));
+
+  setSelectedTickets((prev) => {
+    const exists = prev.find(item => item.title === itemId);
+    if (exists) {
+      return prev.filter(item => item.title !== itemId);
+    } else {
+      return [...prev, { title: itemId, price: Number(price), quantity: 1 }];
+    }
+  });
+}
+
+
+
+  
 const [counts, setCounts] = useState({ ['']: 1 });
 
 const handleAdd = (title) => {
   setCounts((prev) => {
-    const current = prev[title] ?? 1; // Use 1 as default if undefined
+    const current = prev[title] ?? 1;
     if (current < 5) {
-      return { ...prev, [title]: current + 1 };
+      const updatedCount = current + 1;
+      setSelectedTickets((prevTickets) =>
+        prevTickets.map(item =>
+          item.title === title ? { ...item, quantity: updatedCount } : item
+        )
+      );
+      return { ...prev, [title]: updatedCount };
     }
     return prev;
   });
@@ -258,10 +296,17 @@ const handleRemove = (title) => {
   setCounts((prev) => {
     const current = prev[title] ?? 1;
     if (current === 1) {
-      toggleDspAddBtnTckt(title);
-      return { ...prev, [title]: 1 }; // optional: you can remove it from state too
+      toggleDspAddBtnTckt(title); // will remove from selectedTickets
+      return { ...prev, [title]: 1 };
+    } else {
+      const updatedCount = current - 1;
+      setSelectedTickets((prevTickets) =>
+        prevTickets.map(item =>
+          item.title === title ? { ...item, quantity: updatedCount } : item
+        )
+      );
+      return { ...prev, [title]: updatedCount };
     }
-    return { ...prev, [title]: current - 1 };
   });
 };
 
@@ -275,7 +320,7 @@ const handleRemove = (title) => {
         <Text style={{ fontWeight: '700' }}>now ${nowPrice} </Text>
         <Text style={{  fontWeight: '600' }}>on-site ${gatePrice}</Text>
       </Text>
-       { !dspAddBtnTckt[title] && <TouchableOpacity style={styles.buyButton} onPress={()=>toggleDspAddBtnTckt(title) } >
+       { !dspAddBtnTckt[title] && <TouchableOpacity style={styles.buyButton} onPress={() => toggleDspAddBtnTckt(title, nowPrice)} >
           <Text style={[styles.ticketText, { color: 'green' }]}>Buy</Text>
         </TouchableOpacity>}
 
@@ -288,7 +333,7 @@ const handleRemove = (title) => {
         {counts[title] || 1}
       </Text>
 
-      <TouchableOpacity onPress={()=> handleAdd(title) }>
+      <TouchableOpacity onPress={()=> handleAdd(title ) }>
         <MaterialIcons name="add" size={20} color={counts[title]  === 5 ? 'gray' : 'green'} />
       </TouchableOpacity>
     </View>}
@@ -302,13 +347,21 @@ const handleRemove = (title) => {
 
 
   const [checkAddOnBtn , setCheckAddOnBtn] = React.useState({ ['']: false })
-  function toggleCheckAddOnBtn(itemId){
-         setCheckAddOnBtn((prevState) => ({
-        ...prevState,
-        [itemId]: !prevState[itemId],
-      }));
-  }
+  function toggleCheckAddOnBtn(itemId, price) {
+  setCheckAddOnBtn((prevState) => ({
+    ...prevState,
+    [itemId]: !prevState[itemId],
+  }));
 
+  setSelectedAddOns((prev) => {
+    const exists = prev.find(item => item.title === itemId);
+    if (exists) {
+      return prev.filter(item => item.title !== itemId);
+    } else {
+      return [...prev, { title: itemId, price: Number(price) }];
+    }
+  });
+}
 
 const AddOnComponent = ({title , nowPrice,gatePrice  })=>(
   <View>
@@ -320,7 +373,7 @@ const AddOnComponent = ({title , nowPrice,gatePrice  })=>(
         <Text style={{  fontWeight: '600' }}>on-site ${gatePrice}</Text>
       </Text> 
 
-       <TouchableOpacity style={styles.buyButton} onPress={()=>toggleCheckAddOnBtn(title) } >
+      <TouchableOpacity style={styles.buyButton} onPress={() => toggleCheckAddOnBtn(title, nowPrice)}>
 
       {checkAddOnBtn[title]&& <Entypo name="check" size={24} color="green" /> }
       {!checkAddOnBtn[title]&&  <MaterialIcons name="add" size={24} color="red" />}
@@ -337,6 +390,13 @@ const CheckoutButton = ({ totalPrice }) => {
     </TouchableOpacity>
   );
 };
+
+
+
+
+
+
+
 
 
     return(
