@@ -207,50 +207,48 @@ function LoadsContracts({ navigation }) {
       </View>
 
       {!contractLoc && <View style={{ alignSelf: 'center' }} >
-        <TouchableOpacity onPress={() => navigation.navigate("addContractsDb")} style={{ width: 150, height: 30, alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', borderRadius: 8, alignSelf: 'center', margin: 5 }} >
+        {/* <TouchableOpacity onPress={() => navigation.navigate("addContractsDb")} style={{ width: 150, height: 30, alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', borderRadius: 8, alignSelf: 'center', margin: 5 }} >
 
           <Text style={{ color: 'white' }}> Add Contract </Text>
+        </TouchableOpacity> */}
+
+
+        <TouchableOpacity style={styles.infoBox} onPress={() => Linking.openURL('mailto:youremail@example.com')}>
+          <Text style={styles.headingText}>Have Contracts to Offer?</Text>
+          <Text style={styles.bodyText}>
+            Promote your contracts here for just <Text style={styles.priceText}>$10</Text>.
+          </Text>
+          <Text style={styles.bodyText}>
+            Tap here to email us now and get started.
+          </Text>
+          <Text style={styles.highlightText}>
+            Bonus: Get access to a fleet of trucks already available!
+          </Text>
         </TouchableOpacity>
 
-
-          <TouchableOpacity>
-            <Text>Do you offer contreacts and want to markert them here for $10</Text>
-            <Text>Click here and email us now</Text>
-            <Text>We also give access to already added trucks that are readily Available</Text>
-          </TouchableOpacity>
-
-
-
-        <TouchableOpacity onPress={() => setContraLoc('Zimbabwe')} style={styles.buttonStyle}   >
-          <Text style={{ color: '#6a0c0c' }}>Zimbabwe </Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setContraLoc('SouthAfrica')} style={styles.buttonStyle} >
-          <Text style={{ color: '#6a0c0c' }}>South Africa</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => setContraLoc('Namibia')} style={styles.buttonStyle} >
-          <Text style={{ color: '#6a0c0c' }}>Namibia </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => setContraLoc('Tanzania')} style={styles.buttonStyle} >
-          <Text style={{ color: '#6a0c0c' }}> Tanzania</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => setContraLoc('Mozambique')} style={styles.buttonStyle} >
-          <Text style={{ color: '#6a0c0c' }}>Mozambique </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => setContraLoc('Zambia')} style={styles.buttonStyle}  >
-          <Text style={{ color: '#6a0c0c' }}> Zambia</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => setContraLoc('Botswana')} style={styles.buttonStyle} >
-          <Text style={{ color: '#6a0c0c' }}>Botswana </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => setContraLoc('Malawi')} style={styles.buttonStyle} >
-          <Text style={{ color: '#6a0c0c' }}>Malawi </Text>
-        </TouchableOpacity>
+    <Text style={styles.sectionTitle}>
+  Looking for contracts? Choose Location
+</Text>
+   <View style={styles.countryGrid}>
+  {[
+    'Zimbabwe',
+    'South Africa',
+    'Namibia',
+    'Tanzania',
+    'Mozambique',
+    'Zambia',
+    'Botswana',
+    'Malawi'
+  ].map((country) => (
+    <TouchableOpacity
+      key={country}
+      onPress={() => setContraLoc(country)}
+      style={styles.buttonStyle}
+    >
+      <Text style={styles.buttonText}>{country}</Text>
+    </TouchableOpacity>
+  ))}
+</View>
       </View>}
 
       {contractLoc && rendereIterms}
@@ -262,14 +260,92 @@ export default React.memo(LoadsContracts)
 
 
 const styles = StyleSheet.create({
+  infoBox: {
+    padding: 16,
+    backgroundColor: '#fff8f5',
+    borderWidth: 2,
+    borderColor: '#6a0c0c',
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  headingText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#6a0c0c',
+    marginBottom: 8,
+  },
+  bodyText: {
+    fontSize: 15,
+    color: '#333',
+    marginBottom: 6,
+  },
+  priceText: {
+    fontWeight: 'bold',
+    color: '#6a0c0c',
+  },
+  highlightText: {
+    fontSize: 14,
+    color: '#1a7300',
+    marginTop: 10,
+    fontWeight: '600',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 10,
+  },
   buttonStyle: {
-    height: 40,
+    height: 45,
     justifyContent: 'center',
     alignItems: 'center',
-    width: 150,
-    marginBottom: 15,
+    paddingHorizontal: 20,
     borderWidth: 2,
-    borderColor: "#6a0c0c",
-    borderRadius: 3
+    borderColor: '#6a0c0c',
+    borderRadius: 6,
+    backgroundColor: '#fff4f0',
   },
+  buttonText: {
+    color: '#6a0c0c',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+     sectionTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+    marginTop: 20,
+    paddingHorizontal: 10,
+  },
+  countryGridContainer: {
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#6a0c0c',
+    borderRadius: 10,
+    padding: 12,
+    marginHorizontal: 10,
+    marginBottom: 20,
+  },
+  countryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  buttonStyle: {
+    height: 45,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    margin: 6,
+    borderWidth: 2,
+    borderColor: '#6a0c0c',
+    borderRadius: 6,
+    backgroundColor: '#fff4f0',
+  },
+  buttonText: {
+    color: '#6a0c0c',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+
 });

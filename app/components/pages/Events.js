@@ -91,9 +91,16 @@ function Events({ route, navigation }) {
       </View>
     );
   });
+  const eventList = [
+    "Drag Races", "Burnouts", "Drift Competitions", "Stunt Pulls", "Racing Tournaments",
+    "Car Shows", "Monster Truck Shows", "Demolition Derbies", "Truck Pulls",
+    "Rally Cross Events", "Transport Expos", "Logistics Conferences", "Fleet Seminars"
+  ];
+
 
   return (
-    <View style={{ paddingTop: 80 }}>
+     <View style={{ flex: 1 }}>
+      {/* Header */}
       <View
         style={{
           position: "absolute",
@@ -107,6 +114,7 @@ function Events({ route, navigation }) {
           paddingTop: 15,
           backgroundColor: "#6a0c0c",
           alignItems: "center",
+          zIndex: 10,
         }}
       >
         <TouchableOpacity style={{ marginRight: 10 }} onPress={() => navigation.goBack()}>
@@ -116,77 +124,118 @@ function Events({ route, navigation }) {
           {!selectedEvent ? "Events" : `${selectedEvent}`}
         </Text>
       </View>
-      {dspSelEvent && (
-        <ScrollView style={{ alignSelf: "center", marginBottom: 120 }} showsVerticalScrollIndicator={false}>
-          <TouchableOpacity style={styles.sEventButtonStyle}>
-            <Text style={styles.sEventButtonText}>Drag Races</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sEventButtonStyle} onPress={() => moveToEventsPage("Burnouts")}>
-            <Text style={styles.sEventButtonText}>Burnouts</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sEventButtonStyle}>
-            <Text style={styles.sEventButtonText}>Drift Competitions</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sEventButtonStyle}>
-            <Text style={styles.sEventButtonText}>Stunt Pulls</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sEventButtonStyle}>
-            <Text style={styles.sEventButtonText}>Racing Tournaments</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sEventButtonStyle}>
-            <Text style={styles.sEventButtonText}>Car Shows</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sEventButtonStyle}>
-            <Text style={styles.sEventButtonText}>Monster Truck Shows</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sEventButtonStyle}>
-            <Text style={styles.sEventButtonText}>Demolition Derbies</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sEventButtonStyle}>
-            <Text style={styles.sEventButtonText}>Truck Pulls</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sEventButtonStyle}>
-            <Text style={styles.sEventButtonText}>Rally Cross Events</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sEventButtonStyle}>
-            <Text style={styles.sEventButtonText}>Transport Expos</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sEventButtonStyle}>
-            <Text style={styles.sEventButtonText}>Logistics Conferences</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sEventButtonStyle}>
-            <Text style={styles.sEventButtonText}>Fleet Seminars</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      )}
-      {selectedEvent && rendereIterms}
+
+      {/* Scrollable Content */}
+        <View style={{ paddingTop: 90 }}>
+          {dspSelEvent && (
+            <>
+              <View style={styles.promoBox}>
+                <Text style={styles.sectionTitle}>Hosting an event?</Text>
+                <Text style={styles.subText}>
+                  List your event and unlock our digital ticketing system for just{" "}
+                  <Text style={styles.highlight}>$10</Text>.
+                </Text>
+                <Text style={styles.subText}>
+                  Your event must be transport & logistics related, or match one of the types below to sell tickets.
+                </Text>
+              </View>
+
+
+        <Text style={styles.sectionTitle}> Pick an event & get your ticket! </Text>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+                {eventList.map((event, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.sEventButtonStyle}
+                    onPress={() => moveToEventsPage(event)}
+                  >
+                    <Text style={styles.sEventButtonText}>{event}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </>
+          )}
+
+          {selectedEvent && rendereIterms}
+        </View>
     </View>
-  );
+    );
 }
 
 export default React.memo(Events);
 
+
+
 const styles = StyleSheet.create({
-  sEventButtonStyle: {
-    height: 45,
-    justifyContent: "center",
-    alignItems: "center",
-    width: 220,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: "#6a0c0c",
-    borderRadius: 8,
-    backgroundColor: "#fff",
+  container: {
+    flex: 1,
+    backgroundColor: "#f2f2f2",
+    padding: 16,
+  },
+  promoBox: {
+    backgroundColor: "#fff0f0",
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  sEventButtonText: {
-    fontSize: 16,
+  sectionTitle: {
+    fontSize: 20,
     fontWeight: "bold",
     color: "#6a0c0c",
+    marginBottom: 10,
+  },
+  subText: {
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 6,
+  },
+  highlight: {
+    fontWeight: "bold",
+    color: "#d42222",
+  },
+  gridContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  sEventButtonStyle: {
+    marginVertical: 6,
+    paddingVertical: 12,
+    borderWidth: 2,
+    borderColor: "#6a0c0c",
+    borderRadius: 10,
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  sEventButtonText: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#6a0c0c",
+    textAlign: "center",
     textTransform: "uppercase",
   },
+  scrollContainer: {
+  paddingBottom: 30,
+  paddingHorizontal: 16,
+  backgroundColor: "#f2f2f2",
+  alignSelf:'center'
+},  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+    marginTop: 8,
+    paddingHorizontal: 10,
+  },
+
 });
