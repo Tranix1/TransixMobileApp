@@ -1,4 +1,4 @@
-import React, { useState,FC } from "react";
+import React, { useState, FC } from "react";
 import { collection, doc, addDoc, serverTimestamp, } from 'firebase/firestore';
 
 import { View, TextInput, Text, TouchableOpacity, ActivityIndicator, StyleSheet, ScrollView } from "react-native";
@@ -13,123 +13,123 @@ import { handleMakePayment } from "@/payments/operations";
 function AddLoadContract() {
 
 
-//   const { username, contact, isVerified, isBlackListed, blackLWarning, blockVerifiedU, expoPushToken, verifyOngoing } = route.params
+  //   const { username, contact, isVerified, isBlackListed, blackLWarning, blockVerifiedU, expoPushToken, verifyOngoing } = route.params
   const [error, setError] = React.useState("")
 
-//   const loadsContract = collection(db, "");
-type FormDataType = {
-  commodity: {
-    frst: string;
-    scnd: string;
-    third: string;
-    forth: string;
+  //   const loadsContract = collection(db, "");
+  type FormDataType = {
+    commodity: {
+      frst: string;
+      scnd: string;
+      third: string;
+      forth: string;
+    };
+    location: {
+      frst: string;
+      scnd: string;
+      thrd: string;
+      forth: string;
+      fifth: string;
+      sixth: string;
+      seventh: string;
+    };
+    trckRequired: {
+      frst: string;
+      scnd: string;
+      third: string;
+      forth: string;
+      fifth: string;
+    };
+    otherRequirements: {
+      frst: string;
+      scnd: string;
+      third: string;
+      forth: string;
+    };
+    rate: {
+      solidFrst: string;
+      solidScnd: string;
+      triaxleFrst: string;
+      triaxlesScnd: string;
+      linksFrst: string;
+      linksScnd: string;
+    };
+    returnRate: {
+      solidFrst: string;
+      solidScnd: string;
+      triaxleFrst: string;
+      triaxlesScnd: string;
+      linksFrst: string;
+      linksScnd: string;
+    };
+    returnCommodity: { frst: string; scnd: string; third: string; forth: string; };
   };
-  location: {
-    frst: string;
-    scnd: string;
-    thrd: string;
-    forth: string;
-    fifth: string;
-    sixth: string;
-    seventh: string;
+  ;
+
+  const [formData, setFormData] = useState<FormDataType>({
+    commodity: { frst: "", scnd: "", third: "", forth: "" },
+    location: { frst: "", scnd: "", thrd: "", forth: "", fifth: "", sixth: "", seventh: "" },
+    trckRequired: { frst: "", scnd: "", third: "", forth: "", fifth: "" },
+    otherRequirements: { frst: "", scnd: "", third: "", forth: "" },
+    rate: { solidFrst: "", solidScnd: "", triaxleFrst: "", triaxlesScnd: "", linksFrst: "", linksScnd: "" },
+    returnRate: { solidFrst: "", solidScnd: "", triaxleFrst: "", triaxlesScnd: "", linksFrst: "", linksScnd: "" },
+    returnCommodity: { frst: "", scnd: "", third: "", forth: "" }
+  });
+
+  const handleTypedText = (
+    text: string,
+    field: `${keyof FormDataType}.${string}`
+  ) => {
+    const [section, subField] = field.split('.') as [keyof FormDataType, string];
+
+    setFormData(prevFormData => ({
+      ...prevFormData,
+      [section]: {
+        ...prevFormData[section],
+        [subField]: text,
+      }
+    }));
   };
-  trckRequired: {
-    frst: string;
-    scnd: string;
-    third: string;
-    forth: string;
-    fifth: string;
+
+
+  type FormDataScndType = {
+    paymentTerms: string;
+    returnPaymentTerms: string;
+    contractDuration: string;
+    startingDate: string;
+    bookingClosingD: string;
+    contractRenewal: string;
+    manyRoutesOperation: string;
+    loadsPerWeek: string;
+    alertMsg: string;
+    fuelAvai: string;
+    additionalInfo: string;
   };
-  otherRequirements: {
-    frst: string;
-    scnd: string;
-    third: string;
-    forth: string;
+
+
+  const [formDataScnd, setFormDataScnd] = React.useState<FormDataScndType>({
+    paymentTerms: "",
+    returnPaymentTerms: "",
+    contractDuration: "",
+    startingDate: "",
+    bookingClosingD: "",
+    contractRenewal: "",
+    manyRoutesOperation: "",
+    loadsPerWeek: "",
+    alertMsg: "",
+    fuelAvai: "",
+    additionalInfo: "",
+  });
+
+  const handleTypedTextScnd = (
+    value: string,
+    fieldName: keyof FormDataScndType
+  ) => {
+    setFormDataScnd((prevFormData) => ({
+      ...prevFormData,
+      [fieldName]: value,
+    }));
   };
-  rate: {
-    solidFrst: string;
-    solidScnd: string;
-    triaxleFrst: string;
-    triaxlesScnd: string;
-    linksFrst: string;
-    linksScnd: string;
-  };
-  returnRate: {
-    solidFrst: string;
-    solidScnd: string;
-    triaxleFrst: string;
-    triaxlesScnd: string;
-    linksFrst: string;
-    linksScnd: string;
-  };
-  returnCommodity: {frst: string;scnd: string;third: string;forth: string;};
-};
-;
-
- const [formData, setFormData] = useState<FormDataType>({
-  commodity: { frst: "", scnd: "", third: "", forth: "" },
-  location: { frst: "", scnd: "", thrd: "", forth: "", fifth: "", sixth: "", seventh: "" },
-  trckRequired: { frst: "", scnd: "", third: "", forth: "", fifth: "" },
-  otherRequirements: { frst: "", scnd: "", third: "", forth: "" },
-  rate: { solidFrst: "", solidScnd: "", triaxleFrst: "", triaxlesScnd: "", linksFrst: "", linksScnd: "" },
-  returnRate: { solidFrst: "", solidScnd: "", triaxleFrst: "", triaxlesScnd: "", linksFrst: "", linksScnd: "" },
-  returnCommodity: { frst: "", scnd: "", third: "", forth: "" }
-});
-
-const handleTypedText = (
-  text: string,
-  field: `${keyof FormDataType}.${string}`
-) => {
-  const [section, subField] = field.split('.') as [keyof FormDataType, string];
-
-  setFormData(prevFormData => ({
-    ...prevFormData,
-    [section]: {
-      ...prevFormData[section],
-      [subField]: text,
-    }
-  }));
-};
-
-
-type FormDataScndType = {
-  paymentTerms: string;
-  returnPaymentTerms: string;
-  contractDuration: string;
-  startingDate: string;
-  bookingClosingD: string;
-  contractRenewal: string;
-  manyRoutesOperation: string;
-  loadsPerWeek: string;
-  alertMsg: string;
-  fuelAvai: string;
-  additionalInfo: string;
-};
-
-
-const [formDataScnd, setFormDataScnd] = React.useState<FormDataScndType>({
-  paymentTerms: "",
-  returnPaymentTerms: "",
-  contractDuration: "",
-  startingDate: "",
-  bookingClosingD: "",
-  contractRenewal: "",
-  manyRoutesOperation: "",
-  loadsPerWeek: "",
-  alertMsg: "",
-  fuelAvai: "",
-  additionalInfo: "",
-});
-
-const handleTypedTextScnd = (
-  value: string,
-  fieldName: keyof FormDataScndType
-) => {
-  setFormDataScnd((prevFormData) => ({
-    ...prevFormData,
-    [fieldName]: value,
-  }));
-};
 
 
 
@@ -140,10 +140,10 @@ const handleTypedTextScnd = (
   const [dspAddLocation, setDspAddLocation] = React.useState<boolean>(false)
 
 
-function specifyLocation(loc: string): void {
-  setlocation(loc);
-  setDspAddLocation(false);
-}
+  function specifyLocation(loc: string): void {
+    setlocation(loc);
+    setDspAddLocation(false);
+  }
 
 
 
@@ -154,34 +154,34 @@ function specifyLocation(loc: string): void {
   const [spinnerItem, setSpinnerItem] = React.useState(false);
 
   const handleSubmit = async () => {
-    
-         type FormData = { [key: string]: any }; // Or define specific fields if needed
 
-            const areAllElementsTrueExceptKeys = (obj: FormData, excludedKeys: string[]): boolean => {
-                for (const key in obj) {
-                    if (!excludedKeys.includes(key) && !obj[key]) {
-                        return false;
-                    }
-                }
-                return true;
-            };
+    type FormData = { [key: string]: any }; // Or define specific fields if needed
 
-      const excludedKeys = ["scndTrailerReg", "trailerModel","additionalInfo"];
-
-        if (!areAllElementsTrueExceptKeys(formData, excludedKeys)) {
-            alert("This truck is for verified loads.\n\nAdd all truck details except for Trailer Reg2 if not available.");
-            setSpinnerItem(false)
-            return;
+    const areAllElementsTrueExceptKeys = (obj: FormData, excludedKeys: string[]): boolean => {
+      for (const key in obj) {
+        if (!excludedKeys.includes(key) && !obj[key]) {
+          return false;
         }
+      }
+      return true;
+    };
+
+    const excludedKeys = ["scndTrailerReg", "trailerModel", "additionalInfo"];
+
+    if (!areAllElementsTrueExceptKeys(formData, excludedKeys)) {
+      alert("This truck is for verified loads.\n\nAdd all truck details except for Trailer Reg2 if not available.");
+      setSpinnerItem(false)
+      return;
+    }
 
 
-        const [paymenPageDsp , setPaymentPageDsp]=React.useState<boolean>(false)
-        
-
-        
+    const [paymenPageDsp, setPaymentPageDsp] = React.useState<boolean>(false)
 
 
-              
+
+
+
+
     // try {
     //   const docRef = await addDoc("loadsContracts", {
     //     // userId: userId, // Add the user ID to the document
@@ -208,16 +208,16 @@ function specifyLocation(loc: string): void {
   };
 
 
- const [paymentUpdate, setPaymentUpdate] = React.useState<string>("");
+  const [paymentUpdate, setPaymentUpdate] = React.useState<string>("");
 
-    const justConsole = () => {
-      console.log("pananaanana");
-      handleMakePayment(3, "yaya", setPaymentUpdate);
-    };
+  const justConsole = () => {
+    console.log("pananaanana");
+    handleMakePayment(3, "yaya", setPaymentUpdate);
+  };
 
 
 
-console.log("nowww " , paymentUpdate)
+  console.log("nowww ", paymentUpdate)
 
 
 
@@ -328,41 +328,41 @@ console.log("nowww " , paymentUpdate)
 
 
   // The button used to  dispaly ore or less info 
-type ToggleMLBtnProps = {
-  whatTToggle: (...args: any[]) => void;
-  theTittle: string;
-};
+  type ToggleMLBtnProps = {
+    whatTToggle: (...args: any[]) => void;
+    theTittle: string;
+  };
 
-const ToggleMLBtn = ({ whatTToggle, theTittle }: ToggleMLBtnProps) => (
-  <TouchableOpacity onPress={whatTToggle} style={styles.moreLessIterms}>
-    <Text style={{ fontStyle: 'italic' }}>{theTittle}</Text>
-  </TouchableOpacity>
-);
+  const ToggleMLBtn = ({ whatTToggle, theTittle }: ToggleMLBtnProps) => (
+    <TouchableOpacity onPress={whatTToggle} style={styles.moreLessIterms}>
+      <Text style={{ fontStyle: 'italic' }}>{theTittle}</Text>
+    </TouchableOpacity>
+  );
 
   // This is the button to choose a country 
- type SlctCountryBtnProps = {
-  selectedLoc: string;
-};
+  type SlctCountryBtnProps = {
+    selectedLoc: string;
+  };
 
-const SlctCountryBtn = ({ selectedLoc }: SlctCountryBtnProps) => (
-  <TouchableOpacity onPress={() => specifyLocation(selectedLoc)} style={styles.buttonStyle}>
-    <Text style={{ color: '#6a0c0c' }}>{selectedLoc}</Text>
-  </TouchableOpacity>
-);
+  const SlctCountryBtn = ({ selectedLoc }: SlctCountryBtnProps) => (
+    <TouchableOpacity onPress={() => specifyLocation(selectedLoc)} style={styles.buttonStyle}>
+      <Text style={{ color: '#6a0c0c' }}>{selectedLoc}</Text>
+    </TouchableOpacity>
+  );
 
 
 
   return (
     <View style={{ alignItems: 'center', paddingTop: 100 }}>
-    
 
 
 
-        <CheckOutMakePayments jsxProp={<View>
-          <Text> its $10 to add contract </Text>
-        </View> } anyProp="yaya"  confirmButon={justConsole}  />
 
-      <View style={{ height: 40, position: 'absolute', top:50, left: 0, right: 0, flexDirection: 'row', borderBottomWidth: 2, borderBottomColor: "#6a0c0c", paddingBottom: 7, justifyContent: 'space-evenly' }} >
+      <CheckOutMakePayments jsxProp={<View>
+        <Text> its $10 to add contract </Text>
+      </View>} anyProp="yaya" confirmButon={justConsole} />
+
+      <View style={{ height: 40, position: 'absolute', top: 50, left: 0, right: 0, flexDirection: 'row', borderBottomWidth: 2, borderBottomColor: "#6a0c0c", paddingBottom: 7, justifyContent: 'space-evenly' }} >
         <TouchableOpacity style={dsoLoadDe ? styles.bttonIsTrue : styles.buttonIsFalse} onPress={dspLoadDet} >
           <Text style={dsoLoadDe ? { color: 'white' } : null} >Load Details</Text>
         </TouchableOpacity>
@@ -402,8 +402,8 @@ const SlctCountryBtn = ({ selectedLoc }: SlctCountryBtnProps) => (
 
             {dspCommodity && <ToggleMLBtn whatTToggle={toggleDspCommodity} theTittle="Done Adding" />}
             {dspCommodity && (
-  <ToggleMLBtn whatTToggle={toggleDspCommodity} theTittle="Done Adding" />
-)}
+              <ToggleMLBtn whatTToggle={toggleDspCommodity} theTittle="Done Adding" />
+            )}
 
           </View>}
 
@@ -647,16 +647,16 @@ const SlctCountryBtn = ({ selectedLoc }: SlctCountryBtnProps) => (
           {dspReturnCommodity && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the commodities to be transpoted</Text>}
           {!dspReturnCommodity && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Commodity</Text>}
           <TextInput
-            value={formData.returnCommodity.frst}placeholder="First Commodity"onChangeText={(text) => handleTypedText(text, 'returnCommodity.frst')}style={inputstyles.addIterms}/>
+            value={formData.returnCommodity.frst} placeholder="First Commodity" onChangeText={(text) => handleTypedText(text, 'returnCommodity.frst')} style={inputstyles.addIterms} />
           <TextInput
-            value={formData.returnCommodity.scnd}placeholder="Second Commodity"onChangeText={(text) => handleTypedText(text, 'returnCommodity.scnd')}style={inputstyles.addIterms}/>
+            value={formData.returnCommodity.scnd} placeholder="Second Commodity" onChangeText={(text) => handleTypedText(text, 'returnCommodity.scnd')} style={inputstyles.addIterms} />
           {!dspReturnCommodity && <ToggleMLBtn whatTToggle={toggleDspReturnCommodity} theTittle=" Return Commo" />}
 
           {dspReturnCommodity && <View>
             <TextInput
-              value={formData.returnCommodity.third} placeholder="Third Commodity"onChangeText={(text) => handleTypedText(text, 'returnCommodity.third')}style={inputstyles.addIterms}/>
+              value={formData.returnCommodity.third} placeholder="Third Commodity" onChangeText={(text) => handleTypedText(text, 'returnCommodity.third')} style={inputstyles.addIterms} />
             <TextInput
-              value={formData.returnCommodity.forth}placeholder="Fourth Commodity"onChangeText={(text) => handleTypedText(text, 'returnCommodity.forth')}style={inputstyles.addIterms}/>
+              value={formData.returnCommodity.forth} placeholder="Fourth Commodity" onChangeText={(text) => handleTypedText(text, 'returnCommodity.forth')} style={inputstyles.addIterms} />
 
 
             {dspReturnCommodity && <ToggleMLBtn whatTToggle={toggleDspReturnCommodity} theTittle="Done Return Commo" />}
@@ -666,28 +666,28 @@ const SlctCountryBtn = ({ selectedLoc }: SlctCountryBtnProps) => (
 
         <View style={styles.viewMainDsp} >
           <TextInput
-            value={formDataScnd.returnPaymentTerms} placeholder="Return Payment Terms"onChangeText={(text) => handleTypedTextScnd(text, 'returnPaymentTerms')}style={inputstyles.addIterms}/>
+            value={formDataScnd.returnPaymentTerms} placeholder="Return Payment Terms" onChangeText={(text) => handleTypedTextScnd(text, 'returnPaymentTerms')} style={inputstyles.addIterms} />
         </View>
 
         {<View style={styles.viewMainDsp}>
           {dspReturnRate && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the commodities to be transpoted</Text>}
           {!dspReturnRate && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Commodity</Text>}
           <TextInput
-            value={formData.returnRate.solidFrst}placeholder="Return Solid First Rate"onChangeText={(text) => handleTypedText(text, 'returnRate.solidFrst')}
+            value={formData.returnRate.solidFrst} placeholder="Return Solid First Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.solidFrst')}
             style={inputstyles.addIterms}
           />
           {dspReturnRate && <TextInput
-            value={formData.returnRate.solidScnd}placeholder="Return Solid Second Rate"onChangeText={(text) => handleTypedText(text, 'returnRate.solidScnd')}style={inputstyles.addIterms}/>}
+            value={formData.returnRate.solidScnd} placeholder="Return Solid Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.solidScnd')} style={inputstyles.addIterms} />}
 
 
           <TextInput
-            value={formData.returnRate.triaxleFrst}placeholder="Return Triaxle First Rate"onChangeText={(text) => handleTypedText(text, 'returnRate.triaxleFrst')}style={inputstyles.addIterms}/>
+            value={formData.returnRate.triaxleFrst} placeholder="Return Triaxle First Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.triaxleFrst')} style={inputstyles.addIterms} />
           {dspReturnRate && <TextInput
-            value={formData.returnRate.triaxlesScnd}placeholder="Return Triaxle Second Rate"onChangeText={(text) => handleTypedText(text, 'returnRate.triaxlesScnd')}style={inputstyles.addIterms}/>}
+            value={formData.returnRate.triaxlesScnd} placeholder="Return Triaxle Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.triaxlesScnd')} style={inputstyles.addIterms} />}
           <TextInput
-            value={formData.returnRate.linksFrst}placeholder="Return Links First Rate"onChangeText={(text) => handleTypedText(text, 'returnRate.linksFrst')}style={inputstyles.addIterms}/>
+            value={formData.returnRate.linksFrst} placeholder="Return Links First Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.linksFrst')} style={inputstyles.addIterms} />
           {dspReturnRate && <TextInput
-            value={formData.returnRate.linksScnd}placeholder="Return Links Second Rate"onChangeText={(text) => handleTypedText(text, 'returnRate.linkScnd')}style={inputstyles.addIterms}/>}
+            value={formData.returnRate.linksScnd} placeholder="Return Links Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.linkScnd')} style={inputstyles.addIterms} />}
 
           {!dspReturnRate && <ToggleMLBtn whatTToggle={toggleDspReturnRate} theTittle="Done Return Rate" />}
           {dspReturnRate && <ToggleMLBtn whatTToggle={toggleDspReturnRate} theTittle="Done Return Rate" />}
@@ -699,28 +699,28 @@ const SlctCountryBtn = ({ selectedLoc }: SlctCountryBtnProps) => (
         {!dspAddLocation && <View>
 
           <TextInput
-            value={formDataScnd.fuelAvai}placeholder="Fuel"onChangeText={(text) => handleTypedTextScnd(text, 'fuelAvai')}style={inputstyles.addIterms}/>
+            value={formDataScnd.fuelAvai} placeholder="Fuel" onChangeText={(text) => handleTypedTextScnd(text, 'fuelAvai')} style={inputstyles.addIterms} />
 
           <TextInput
-            value={formDataScnd.loadsPerWeek}placeholder="Loads Per Week"onChangeText={(text) => handleTypedTextScnd(text, 'loadsPerWeek')}style={inputstyles.addIterms}/>
-
-
-          <TextInput
-            value={formDataScnd.contractDuration}placeholder="Contract Duration"onChangeText={(text) => handleTypedTextScnd(text, 'contractDuration')}style={inputstyles.addIterms}/>
-          <TextInput
-            value={formDataScnd.startingDate}placeholder="Starting Date"onChangeText={(text) => handleTypedTextScnd(text, 'startingDate')}style={inputstyles.addIterms}/>
-
-          <TextInput
-            value={formDataScnd.bookingClosingD}placeholder="Starting Date"onChangeText={(text) => handleTypedTextScnd(text, 'bookingClosingD')}style={inputstyles.addIterms}/>
-
-          <TextInput
-            value={formDataScnd.contractRenewal}placeholder="Can You Renew Contract for how long"onChangeText={(text) => handleTypedTextScnd(text, 'contractRenewal')}style={inputstyles.addIterms}/>
+            value={formDataScnd.loadsPerWeek} placeholder="Loads Per Week" onChangeText={(text) => handleTypedTextScnd(text, 'loadsPerWeek')} style={inputstyles.addIterms} />
 
 
           <TextInput
-            value={formDataScnd.alertMsg}placeholder="alertMsg"onChangeText={(text) => handleTypedTextScnd(text, 'alertMsg')}style={inputstyles.addIterms}/>
+            value={formDataScnd.contractDuration} placeholder="Contract Duration" onChangeText={(text) => handleTypedTextScnd(text, 'contractDuration')} style={inputstyles.addIterms} />
           <TextInput
-            value={formDataScnd.additionalInfo}placeholder="Additional Info"onChangeText={(text) => handleTypedTextScnd(text, 'additionalInfo')}style={inputstyles.addIterms}/>
+            value={formDataScnd.startingDate} placeholder="Starting Date" onChangeText={(text) => handleTypedTextScnd(text, 'startingDate')} style={inputstyles.addIterms} />
+
+          <TextInput
+            value={formDataScnd.bookingClosingD} placeholder="Starting Date" onChangeText={(text) => handleTypedTextScnd(text, 'bookingClosingD')} style={inputstyles.addIterms} />
+
+          <TextInput
+            value={formDataScnd.contractRenewal} placeholder="Can You Renew Contract for how long" onChangeText={(text) => handleTypedTextScnd(text, 'contractRenewal')} style={inputstyles.addIterms} />
+
+
+          <TextInput
+            value={formDataScnd.alertMsg} placeholder="alertMsg" onChangeText={(text) => handleTypedTextScnd(text, 'alertMsg')} style={inputstyles.addIterms} />
+          <TextInput
+            value={formDataScnd.additionalInfo} placeholder="Additional Info" onChangeText={(text) => handleTypedTextScnd(text, 'additionalInfo')} style={inputstyles.addIterms} />
 
         </View>}
 
@@ -735,7 +735,7 @@ const SlctCountryBtn = ({ selectedLoc }: SlctCountryBtnProps) => (
           <SlctCountryBtn selectedLoc="Botswana" />
           <SlctCountryBtn selectedLoc="Malawi" />
 
-        </View>   }
+        </View>}
 
         <Text>Is the contract International or Local for one country</Text>
         {!dspAddLocation && <TouchableOpacity onPress={() => setDspAddLocation(true)} style={styles.buttonIsFalse}  >
