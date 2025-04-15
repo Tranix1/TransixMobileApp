@@ -53,25 +53,26 @@ const Index = () => {
 
                 <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
-                        <View style={{ backgroundColor: '#395a4f', borderRadius: wp(2), padding: wp(1.5) }}>
-                            <Ionicons name='reader-outline' color={'#fff'} size={wp(4)} />
+                        <View style={{ backgroundColor: '#6bacbf', borderRadius: wp(2), padding: wp(1.5) }}>
+                            <Octicons name='verified' color={'#fff'} size={wp(4)} />
                         </View>
-                        <ThemedText type='subtitle' color={'#395a4f'} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
-                            Long-Term Contracts
+                        <ThemedText type='subtitle' color={'#6bacbf'} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
+                            First Level Verification
                         </ThemedText>
                     </View>
                     <ThemedText color={icon} type='default' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}>
-                        Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
+                        We encourage all legit business to be verified{'\n'}
+                        Increase business trust and credibility by verifying your company.
                     </ThemedText>
                     <Button
-                        colors={{ text: '#395a4f', bg: '#395a4f24' }}
-                        title='Learn More'
-                        Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"#395a4f"} />}
+                        colors={{ text: '#6bacbf', bg: '#6bacbf24' }}
+                        title='Get Verified'
+                        Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"#6bacbf"} />}
                     />
                 </View>
 
 
-                <View style={{ flexDirection: 'row', gap: wp(2), marginBottom: wp(5), paddingHorizontal: wp(2) }}>
+                {/* <View style={{ flexDirection: 'row', gap: wp(2), marginBottom: wp(5), paddingHorizontal: wp(2) }}>
                     <View style={{ borderWidth: .5, borderColor: accent, padding: wp(3), borderRadius: wp(6), flex: 1, alignItems: 'center' }}>
                         <ThemedText color={accent}>
                             Add Logistics
@@ -84,61 +85,53 @@ const Index = () => {
                             Add To Store
                         </ThemedText>
                     </View>
-                </View>
-                <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
-                    <View style={[{ flexDirection: 'row', gap: wp(2) }]}>
-                        <Octicons name='verified' color={accent} size={wp(5)} />
-                        <ThemedText type='subtitle' color={accent}>
-                            First Level Verification
-                        </ThemedText>
-                    </View>
-                    <ThemedText color={icon} type='default' numberOfLines={0} >
-                        We encourage all legit business to be verified{'\n'}
-                        Increase business trust and credibility by verifying your company.
-                    </ThemedText>
+                </View> */}
 
-                    <Button title='Get Verified' />
-                    {/* <View style={{ borderWidth: .5, borderColor: accent, padding: wp(2), borderRadius: wp(2) }}>
 
-                        </View> */}
-                </View>
+
+
 
                 <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
-                    <View style={[{ flexDirection: 'row', gap: wp(2) }]}>
-                        <Ionicons name='shield-checkmark-outline' color={accent} size={wp(5)} />
-                        <ThemedText type='subtitle' color={accent}>
+                    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
+                        <View style={{ backgroundColor: '#fb9274', borderRadius: wp(2), padding: wp(1.5) }}>
+                            <Octicons name='verified' color={'#fff'} size={wp(4)} />
+                        </View>
+                        <ThemedText type='subtitle' color={'#fb9274'} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
                             GIT (Goods in transit Insuarance)
                         </ThemedText>
                     </View>
-                    <ThemedText color={icon} type='default' numberOfLines={0} >
+                    <ThemedText color={icon} type='default' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}>
                         Ensures financial protection for trucks and cargo, keeping your
                         business secure.
                     </ThemedText>
-
-                    <Button title='Get Git Now' />
-                    {/* <View style={{ borderWidth: .5, borderColor: accent, padding: wp(2), borderRadius: wp(2) }}>
-
-                        </View> */}
+                    <Button
+                        colors={{ text: '#fb9274', bg: '#fb927424' }}
+                        title='Get Verified'
+                        Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"#fb9274"} />}
+                    />
                 </View>
 
-
                 <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
-                    <View style={[{ flexDirection: 'row', gap: wp(2) }]}>
-                        <Ionicons name='calendar-outline' color={'#FF5733'} size={wp(5)} />
-                        <ThemedText type='subtitle' color={'#FF5733'}>
+                    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
+                        <View style={{ backgroundColor: '#bada5f', borderRadius: wp(2), padding: wp(1.5) }}>
+                            <Octicons name='verified' color={'#fff'} size={wp(4)} />
+                        </View>
+                        <ThemedText type='subtitle' color={'#bada5f'} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
                             T & L Events
                         </ThemedText>
                     </View>
-                    <ThemedText color={icon} type='default' numberOfLines={0} >
+                    <ThemedText color={icon} type='default' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}>
                         Get your tickets now for upcoming transport & logistics events!{'\n'}
                         Featuring : burnouts, car shows, expos, conferences, racing and tournaments!
                     </ThemedText>
-
-                    <Button title='Get Git Now' />
-                    {/* <View style={{ borderWidth: .5, borderColor: accent, padding: wp(2), borderRadius: wp(2) }}>
-
-                        </View> */}
+                    <Button
+                        colors={{ text: '#bada5f', bg: '#bada5f24' }}
+                        title='Get Verified'
+                        Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"##bada5f"} />}
+                    />
                 </View>
+
+
             </ScrollView>
 
         </View>
