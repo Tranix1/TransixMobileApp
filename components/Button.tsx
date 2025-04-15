@@ -14,8 +14,15 @@ export type buttonProps = TouchableNativeFeedbackProps & {
     loading?: boolean,
 }
 
-const Button = ({ title = 'Button', type = 'white', shadow = false, loading = false, style, ...rest }: buttonProps) => {
-
+const Button = ({
+    title = 'Button',
+    type = 'white',
+    shadow = false,
+    loading = false,
+    style,
+    onPress,
+    ...rest
+}: buttonProps & { onPress?: () => void }) => {
 
     const backgroundColor = useThemeColor('backgroundLight');
     const background = useThemeColor('background');
@@ -25,10 +32,8 @@ const Button = ({ title = 'Button', type = 'white', shadow = false, loading = fa
     const colorscheme = useColorScheme();
 
     return (
-        <View style={[{ overflow: 'hidden', borderRadius: wp(3), }, shadow ? styles.shadow : undefined,]}>
-
-            <TouchableNativeFeedback {...rest} disabled={loading}>
-
+        <View style={[{ overflow: 'hidden', borderRadius: wp(3) }, shadow ? styles.shadow : undefined]}>
+            <TouchableNativeFeedback onPress={onPress} {...rest} disabled={loading}>
                 <View
                     style={[
                         styles.overall,
@@ -40,24 +45,29 @@ const Button = ({ title = 'Button', type = 'white', shadow = false, loading = fa
                     {...rest}
                 >
                     <View style={{ flexDirection: 'row', gap: wp(4), justifyContent: 'center' }}>
-
-                        <ThemedText type='defaultSemiBold'
-                            style={[{ verticalAlign: 'middle', flex: 1, textAlign: 'center' },
-                            type === 'white' ? { color: accent } : undefined,
-                            type === 'red' ? { color: 'white' } : undefined,
-                            ]}>
+                        <ThemedText
+                            type='defaultSemiBold'
+                            style={[
+                                { verticalAlign: 'middle', flex: 1, textAlign: 'center' },
+                                type === 'white' ? { color: accent } : undefined,
+                                type === 'red' ? { color: 'white' } : undefined,
+                            ]}
+                        >
                             {title}
                         </ThemedText>
-                        {loading &&
-                            <ActivityIndicator style={{ position: 'absolute', right: 0 }} color={type === 'white' ? accent : 'white'} />
-                        }
+                        {loading && (
+                            <ActivityIndicator
+                                style={{ position: 'absolute', right: 0 }}
+                                color={type === 'white' ? accent : 'white'}
+                            />
+                        )}
                     </View>
                 </View>
-
             </TouchableNativeFeedback>
         </View>
-    )
-}
+    );
+};
+
 
 export default Button
 

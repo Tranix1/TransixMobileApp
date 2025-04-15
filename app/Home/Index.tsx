@@ -7,13 +7,14 @@ import { Ionicons, Octicons } from '@expo/vector-icons'
 import { useColorScheme } from '@/hooks/useColorScheme.web'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import Button from '@/components/Button'
+import { router } from "expo-router";
 
 const Index = () => {
 
     const accent = useThemeColor('accent')
     const icon = useThemeColor('icon')
     const backgroundColor = useThemeColor('backgroundLight')
-
+   
     return (
 
         <View style={{ flex: 1 }}>
@@ -35,7 +36,8 @@ const Index = () => {
                         Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit distinctio odit amet iusto cupiditate ea porro, culpa hic laborum neque! Consequuntur rem corporis esse!
                     </ThemedText>
 
-                    <Button title='Open' />
+                            <Button title='Open' onPress={() => router.push('/Logistics/Contracts/Index')} loading={false} />
+
 
                 </View>
                 <View style={{ flexDirection: 'row', gap: wp(2), marginBottom: wp(5), paddingHorizontal: wp(2) }}>

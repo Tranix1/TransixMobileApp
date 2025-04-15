@@ -18,6 +18,7 @@ const Index = () => {
 
 
     const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
+    
     const [trucks, setTrucks] = useState<Truck[] | null>(null)
 
     useEffect(() => {
