@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import React from 'react'
 import { Truck } from '@/types/types'
 import { wp } from '@/constants/common'
@@ -6,6 +6,7 @@ import { useThemeColor } from '@/hooks/useThemeColor'
 import { ThemedText } from './ThemedText'
 import { Image } from 'expo-image'
 import { FontAwesome5, FontAwesome6, Fontisto, Ionicons, Octicons } from '@expo/vector-icons'
+import { router } from 'expo-router'
 
 const TruckItemComponent = ({ truck = {} as Truck }) => {
     const backgroundLight = useThemeColor('backgroundLight')
@@ -18,7 +19,7 @@ const TruckItemComponent = ({ truck = {} as Truck }) => {
     const placeholder = require('@/assets/images/failedimage.jpg')
 
     return (
-        <View style={[styles.container, { backgroundColor: background, borderColor: coolGray }]}>
+        <TouchableOpacity onPress={() => router.push({ pathname: "/Trucks/TruckDetails", params: { product: JSON.stringify(truck) } })} style={[styles.container, { backgroundColor: background, borderColor: coolGray }]}>
             <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truck.imageUrl }} style={styles.image} />
             <View style={styles.detailsContainer}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -69,7 +70,7 @@ const TruckItemComponent = ({ truck = {} as Truck }) => {
                 </View>
 
             </View>
-        </View>
+        </TouchableOpacity>
     )
 }
 

@@ -1,3 +1,5 @@
+import { UserInfo, UserMetadata } from "firebase/auth";
+
 export type Truck = {
 
     CompanyName: string,
@@ -17,3 +19,11 @@ export type Truck = {
 export const Countries = [
     'Zimbabwe', 'South Africa', 'zambia'
 ]
+export type User = {
+    uid: string,
+    displayName?: string,
+    photoURL?: string,
+    phoneNumber?: string,
+    email?: string,
+    [key: string]: any; // To allow additional properties
+}

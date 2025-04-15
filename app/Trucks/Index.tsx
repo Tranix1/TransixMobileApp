@@ -167,6 +167,7 @@ const Index = () => {
             <View style={[styles.container, { backgroundColor: bg }]}>
 
                 <FlatList
+                    keyExtractor={(item) => item.id.toString()}
                     ListHeaderComponent={() => <>
                         <View style={{ marginHorizontal: wp(4), marginBottom: wp(5), }}>
                             <View style={{ marginLeft: wp(3), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
