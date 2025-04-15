@@ -31,10 +31,8 @@ const Button = ({ title = 'Button', type = 'white', shadow = false, loading = fa
     const colorscheme = useColorScheme();
 
     return (
-        <View style={[{ overflow: 'hidden', borderRadius: wp(3), }, shadow ? styles.shadow : undefined,]}>
-
-            <TouchableNativeFeedback {...rest} disabled={loading}>
-
+        <View style={[{ overflow: 'hidden', borderRadius: wp(3) }, shadow ? styles.shadow : undefined]}>
+            <TouchableNativeFeedback  {...rest} disabled={loading}>
                 <View
                     style={[
                         styles.overall,
@@ -66,11 +64,11 @@ const Button = ({ title = 'Button', type = 'white', shadow = false, loading = fa
                         }
                     </View>
                 </View>
-
             </TouchableNativeFeedback>
         </View>
-    )
-}
+    );
+};
+
 
 export default Button
 
