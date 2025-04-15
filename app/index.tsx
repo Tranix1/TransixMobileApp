@@ -104,6 +104,8 @@ export default function Index() {
             tabBarStyle: {
               backgroundColor: useThemeColor("background"),
               borderTopWidth: 0,
+              height: hp(8),
+              justifyContent: 'center'
             },
             sceneStyle: {
               backgroundColor: useThemeColor("background"),
@@ -112,6 +114,7 @@ export default function Index() {
             }, tabBarItemStyle: {
               flex: 1,
               borderTopWidth: 0,
+              padding: wp(2)
             }
           })}
         >

@@ -13,3 +13,7 @@ export type Truck = {
     userId: string,
 
 }
+
+export const Countries = [
+    'Zimbabwe', 'South Africa', 'zambia'
+]
