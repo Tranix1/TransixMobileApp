@@ -3,7 +3,6 @@ import { collection, doc, addDoc, serverTimestamp, } from 'firebase/firestore';
 
 import { View, TextInput, Text, TouchableOpacity, ActivityIndicator, StyleSheet, ScrollView } from "react-native";
 
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import inputstyles from "../../../components/styles/inputElement";
 
 function AddLoadContract() {
