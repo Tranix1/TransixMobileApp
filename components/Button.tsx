@@ -20,8 +20,17 @@ export type buttonProps = TouchableNativeFeedbackProps & {
     }
 }
 
-const Button = ({ title = 'Button', type = 'white', shadow = false, loading = false, Icon, colors, style, ...rest }: buttonProps) => {
-
+const Button = ({
+    title = 'Button',
+    type = 'white',
+    shadow = false,
+    loading = false,
+    style,
+    Icon,
+    colors,
+    onPress,
+    ...rest
+}: buttonProps & { onPress?: () => void }) => {
 
     const backgroundColor = useThemeColor('backgroundLight');
     const background = useThemeColor('background');
