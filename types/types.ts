@@ -23,7 +23,6 @@ export type Truck = {
         nanoseconds: number;
         seconds: number;
     };
-    toLocation: string;
     trailerBookF: string;
     trailerBookSc: string | null;
     trailerModel: string;

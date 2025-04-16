@@ -176,8 +176,8 @@ const Index = () => {
                     keyExtractor={(item) => item.id.toString()}
                     ListHeaderComponent={() => <>
                         <View style={{ marginHorizontal: wp(4), marginBottom: wp(5), }}>
-                            <View style={{ marginLeft: wp(3), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <ThemedText type='subtitle'>Filter</ThemedText>
+                            <View style={{ marginLeft: wp(0), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <ThemedText type='subtitle'></ThemedText>
                                 <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                                     <TouchableNativeFeedback onPress={() => setShowfilter(true)}>
                                         <View style={{ padding: wp(2) }}>
@@ -214,7 +214,7 @@ const Index = () => {
                                     </View>
                                 </View>
                             }
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: wp(2), gap: wp(3) }}>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: wp(0), gap: wp(3), borderRadius: wp(4) }}>
                                 <TouchableOpacity key={'all'} onPress={() => setSelectedCountry('All')} style={[styles.countryButton, { backgroundColor: background }, selectedCountry === 'All' && styles.countryButtonSelected]} >
                                     <ThemedText style={{ color: selectedCountry === 'All' ? 'white' : coolGray }}>All </ThemedText>
                                 </TouchableOpacity>

@@ -6,9 +6,10 @@ import Home from "./Home/Index";
 import Loads from "./Logistics/Loads/Index";
 import Store from "./Transport/Store/Index";
 import Trucks from "./Logistics/Trucks/Index";
+import Account from "./Account/Index";
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { FontAwesome6, Fontisto, Octicons, Entypo, EvilIcons, Ionicons } from "@expo/vector-icons";
+import { FontAwesome6, Fontisto, Octicons, Entypo, EvilIcons, Ionicons, FontAwesome } from "@expo/vector-icons";
 import { hp, wp } from "@/constants/common";
 import { router } from "expo-router";
 import ScreenWrapper from "@/components/ScreenWrapper";
@@ -164,6 +165,7 @@ export default function Index() {
                   return <Fontisto name="truck" size={size} color={color} />;
                 case "Store":
                   return <Entypo name="shop" size={size} color={color} />;
+
                 default:
                   return null;
               }

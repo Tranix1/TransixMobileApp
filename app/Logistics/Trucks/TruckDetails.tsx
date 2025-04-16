@@ -18,7 +18,7 @@ import FormatedText from "@/components/FormatedText";
 import Divider from "@/components/Divider";
 import { Truck, User } from "@/types/types";
 import { readById } from "@/db/operations";
-import { Image } from "expo-image";
+import { Image } from 'expo-image'
 
 const TruckDetails = () => {
 
@@ -28,9 +28,9 @@ const TruckDetails = () => {
     const background = useThemeColor("background");
     const coolGray = useThemeColor("coolGray");
     const backgroundLight = useThemeColor("backgroundLight");
-    const { truck } = useLocalSearchParams();
+    const { truckid } = useLocalSearchParams();
 
-    const truckData = JSON.parse(truck as string) as Truck; // Convert string back to object
+    const [truckData, setTruckData] = useState<Truck>({} as Truck)
     const [items, setItems] = useState<Truck[] | []>([]);
     const [selectedImage, setSelectedImage] = useState("");
     const [modalVisible, setModalVisible] = useState(false);
@@ -44,6 +44,14 @@ const TruckDetails = () => {
     const getData = async () => {
         try {
             setRefreshing(true)
+            if (!truckid) return;
+            const truck = await readById('Trucks', truckid as string)
+            if (truck) {
+                setTruckData(truck as Truck)
+                if (truckData) {
+                    getowenerdata();
+                }
+            }
 
         } catch (error) {
 
@@ -67,15 +75,24 @@ const TruckDetails = () => {
     const [postOwner, setPostUser] = useState<User>();
 
     useEffect(() => {
-        getowenerdata();
-        console.log(truckData);
-
-    }, [truckData])
+        getData();
+        const checkSavedProducts = async () => {
+            try {
+                const savedProducts = await AsyncStorage.getItem('savedProducts');
+                const savedProductsArray = savedProducts ? JSON.parse(savedProducts) : [];
+                const isProductSaved = savedProductsArray.some((item: Truck) => item.id === truckData.id);
+                setIsSaved(isProductSaved);
+            } catch (error) {
+                console.error('Error checking saved products:', error);
+            }
+        };
+        checkSavedProducts();
+    }, [])
 
     const getowenerdata = async () => {
         if (truckData.userId) {
 
-            const owner = await readById('users', truckData.userId)
+            const owner = await readById('personalData', truckData.userId)
             if (owner) {
                 const user: User = {
                     ...owner,
@@ -138,7 +155,16 @@ const TruckDetails = () => {
                             </TouchableNativeFeedback>
                         </View>
                     </View>} />
-            <ScrollView contentContainerStyle={{ paddingBottom: hp(6), marginHorizontal: wp(2) }}>
+            <ScrollView
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={getData}
+                        colors={[accent]}
+                        tintColor={accent}
+                    />
+                }
+                contentContainerStyle={{ paddingBottom: hp(6), marginHorizontal: wp(2) }}>
                 <View style={{ marginHorizontal: wp(2) }}>
                     <View style={{ alignItems: 'center', borderRadius: 2, flex: 1, marginBottom: wp(2) }}>
                         {/* <Image source={{ uri: truckData.images[0] }} /> */}
@@ -244,7 +270,7 @@ const TruckDetails = () => {
                     </View>
                 </View>
 
-                <View style={{ gap: wp(2), marginBottom: wp(2), paddingVertical: wp(5), backgroundColor: background, borderRadius: wp(4), paddingBottom: wp(4) }}>
+                <View style={{ gap: wp(4), paddingHorizontal: wp(2), marginBottom: wp(2), paddingVertical: wp(5), backgroundColor: background, borderRadius: wp(4), paddingBottom: wp(4) }}>
                     <View style={{}}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                             <ThemedText type="title" style={{ maxWidth: wp(80) }}>
@@ -263,14 +289,14 @@ const TruckDetails = () => {
 
 
                     </View>
-                    <Divider />
+                    {/* <Divider /> */}
                     <View style={{}}>
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1 }}>
                                 <ThemedText type="tiny" style={{}}>
                                     Truck Type
                                 </ThemedText>
-                                <ThemedText type="defaultSemiBold" style={{}}>
+                                <ThemedText type="subtitle" style={{}}>
                                     {truckData.truckType || '--'}
                                 </ThemedText>
                             </View>
@@ -279,14 +305,14 @@ const TruckDetails = () => {
 
 
                     </View>
-                    <Divider />
+                    {/* <Divider /> */}
                     <View style={{}}>
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1 }}>
                                 <ThemedText type="tiny" style={{}}>
                                     Trailer Type
                                 </ThemedText>
-                                <ThemedText type="defaultSemiBold" style={{}}>
+                                <ThemedText type="subtitle" style={{}}>
                                     {truckData.trailerType || '--'}
                                 </ThemedText>
                             </View>
@@ -295,26 +321,61 @@ const TruckDetails = () => {
 
 
                     </View>
-                    <Divider />
+                    <View style={{}}>
+                        <View style={{ flexDirection: 'row' }}>
+                            <View style={{ flex: 1 }}>
+                                <ThemedText type="tiny" style={{}}>
+                                    Trailer Model
+                                </ThemedText>
+                                <ThemedText type="subtitle" style={{}}>
+                                    {truckData.trailerModel || '--'}
+                                </ThemedText>
+                            </View>
+
+                        </View>
+
+
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
+                        <View style={{ flex: 1 }}>
+                            <ThemedText type="tiny" style={{}}>
+                                Maximum Weight:
+                            </ThemedText>
+                            <ThemedText type="subtitle" style={{}}>
+                                {truckData.maximumWheight || '--'}
+                            </ThemedText>
+                        </View>
+                        <ThemedText>|</ThemedText>
+                        <View style={{ flex: 1 }}>
+                            <ThemedText type="tiny" style={{}}>
+                                Tonnage:
+                            </ThemedText>
+                            <ThemedText type="subtitle" style={{}}>
+                                {truckData.truckTonnage || '--'}
+                            </ThemedText>
+                        </View>
+
+                    </View>
+                    {/* <Divider /> */}
                     <View style={{}}>
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1 }}>
                                 <ThemedText type="tiny" style={{}}>
                                     Location
                                 </ThemedText>
-                                <ThemedText type="defaultSemiBold" style={{ marginBottom: wp(4) }}>
+                                <ThemedText type="subtitle" style={{ marginBottom: wp(4) }}>
                                     {truckData.fromLocation || '--'}
                                 </ThemedText>
                             </View>
-                            {truckData.toLocation &&
+                            {truckData.location &&
                                 <MaterialCommunityIcons name="google-maps" size={wp(6)} color={icon} />
                             }
                         </View>
-                        {truckData.toLocation &&
+                        {truckData.location &&
 
                             <Button
                                 onPress={() => {
-                                    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(truckData.toLocation)}`;
+                                    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(truckData.location)}`;
                                     Linking.openURL(url);
                                 }}
                                 colors={{ text: '#00c16c', bg: '#00c16c24' }}
@@ -326,9 +387,7 @@ const TruckDetails = () => {
 
                     </View>
 
-                    {truckData.additionalInfo &&
-                        <Divider />
-                    }
+
                     {truckData.additionalInfo &&
                         <View style={{}}>
                             <ThemedText type="tiny" style={{}}>
@@ -346,6 +405,23 @@ const TruckDetails = () => {
                             )}
                         </View>
                     }
+                    <View style={{}}>
+                        <ThemedText type="tiny" style={{ marginBottom: wp(2) }}>
+                            Driver Info
+                        </ThemedText>
+                        <View style={{ backgroundColor: backgroundLight, gap: wp(2), padding: wp(2), borderRadius: wp(4) }}>
+                            <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truckData.driverLicense }} style={{ height: hp(10), width: hp(10) }} />
+
+
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), padding: wp(2), }}>
+                                <Ionicons name="call-outline" />
+                                <FormatedText numberOfLines={3} style={{ paddingTop: 0, }}>
+                                    {truckData.driverPhone || 'no number'}
+                                </FormatedText>
+                            </View>
+                        </View>
+
+                    </View>
 
 
 

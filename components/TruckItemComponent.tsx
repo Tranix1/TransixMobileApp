@@ -19,7 +19,7 @@ const TruckItemComponent = ({ truck = {} as Truck }) => {
     const placeholder = require('@/assets/images/failedimage.jpg')
 
     return (
-        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truck: JSON.stringify(truck) } })} style={[styles.container, { backgroundColor: background, borderColor: coolGray }]}>
+        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id } })} style={[styles.container, { backgroundColor: background, borderColor: coolGray }]}>
             <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truck.imageUrl }} style={styles.image} />
             <View style={styles.detailsContainer}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
