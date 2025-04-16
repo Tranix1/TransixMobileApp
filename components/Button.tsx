@@ -5,6 +5,7 @@ import { green } from 'react-native-reanimated/lib/typescript/Colors'
 import { wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { TouchableNativeFeedbackProps } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 
 export type buttonProps = TouchableNativeFeedbackProps & {
     title: string,
@@ -12,6 +13,11 @@ export type buttonProps = TouchableNativeFeedbackProps & {
     containerStyles?: {},
     shadow?: boolean,
     loading?: boolean,
+    Icon?: React.ReactElement,
+    colors?: {
+        bg?: string,
+        text?: string
+    }
 }
 
 const Button = ({
@@ -20,6 +26,8 @@ const Button = ({
     shadow = false,
     loading = false,
     style,
+    Icon,
+     colors,
     onPress,
     ...rest
 }: buttonProps & { onPress?: () => void }) => {
@@ -40,27 +48,29 @@ const Button = ({
                         type === 'white' ? (colorscheme === 'light' ? styles.white : styles.black) : undefined,
                         type === 'red' ? [styles.green, { backgroundColor: accent }] : undefined,
                         shadow ? styles.shadow : undefined,
+                        colors?.bg ? { backgroundColor: colors.bg } : undefined,
+
                         style,
                     ]}
                     {...rest}
                 >
-                    <View style={{ flexDirection: 'row', gap: wp(4), justifyContent: 'center' }}>
-                        <ThemedText
-                            type='defaultSemiBold'
-                            style={[
-                                { verticalAlign: 'middle', flex: 1, textAlign: 'center' },
-                                type === 'white' ? { color: accent } : undefined,
-                                type === 'red' ? { color: 'white' } : undefined,
-                            ]}
-                        >
+                    <View style={{ flexDirection: 'row', gap: wp(1), justifyContent: 'center' }}>
+
+                        <ThemedText type='defaultSemiBold'
+                            style={[{ verticalAlign: 'middle', textAlign: 'center' },
+                            type === 'white' ? { color: accent } : undefined,
+                            type === 'red' ? { color: 'white' } : undefined,
+                            colors?.text ? { color: colors.text } : undefined,
+                            ]}>
                             {title}
                         </ThemedText>
-                        {loading && (
-                            <ActivityIndicator
-                                style={{ position: 'absolute', right: 0 }}
-                                color={type === 'white' ? accent : 'white'}
-                            />
-                        )}
+                        {Icon &&
+                            Icon
+                        }
+
+                        {loading &&
+                            <ActivityIndicator style={{ position: 'absolute', right: 0 }} color={type === 'white' ? accent : 'white'} />
+                        }
                     </View>
                 </View>
             </TouchableNativeFeedback>

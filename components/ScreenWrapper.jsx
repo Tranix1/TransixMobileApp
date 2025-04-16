@@ -7,6 +7,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { hp, wp } from '@/constants/common';
 import { ThemedText } from './ThemedText';
 import { Ionicons } from '@expo/vector-icons';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const ScreenWrapper = ({ children, fh = true, ishome = false, showError = () => { } }) => {
     const { top } = useSafeAreaInsets();
@@ -82,7 +83,10 @@ const ScreenWrapper = ({ children, fh = true, ishome = false, showError = () => 
                 </View>
             )}
             <StatusBar backgroundColor={showStatus && (isConnected ? '#81C784' : coolGray)} />
-            {children}
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                {children}
+            </GestureHandlerRootView>
+
             {showerror &&
                 <View style={{
                     position: 'absolute', borderRadius: wp(4), padding: wp(3),

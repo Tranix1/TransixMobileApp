@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, where, onSnapshot, runTransaction, serverTimestamp, startAfter, limit, orderBy, DocumentData, Query } from "firebase/firestore";
+import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, where, onSnapshot, runTransaction, serverTimestamp, startAfter, limit, orderBy, DocumentData, Query, setDoc, getDoc } from "firebase/firestore";
 import { db, auth } from "../app/components/config/fireBase";
 
 /**
@@ -149,7 +149,39 @@ export const checkDocumentExists = async (collectionName: string, filters: Array
     }
 };
 
+export const AddUser = async (userId: string, userData: object) => {
+    try {
+        const userRef = doc(db, "users", userId); // Custom ID
+        await setDoc(userRef, userData, { merge: true });
 
+        console.log("User added successfully with ID:", userId);
+        return true;
+    } catch (error) {
+        console.error("Error adding user:", error);
+        return false;
+    }
+};
+
+
+export const readById = async (collectionName: string = 'laods', id: string) => {
+    try {
+        // Reference to the document by ID
+        const postRef = doc(db, collectionName, id);
+        // Fetch the document
+        const docSnap = await getDoc(postRef);
+
+        if (docSnap.exists()) {
+            // Return the document data with its ID
+            return { id: docSnap.id, ...docSnap.data() };
+        } else {
+            console.log("No document found with the given ID.");
+            return null;
+        }
+    } catch (error) {
+        console.error("Error fetching document:", error);
+        return null;
+    }
+};
 
 
 
