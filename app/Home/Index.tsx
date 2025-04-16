@@ -8,6 +8,7 @@ import { useColorScheme } from '@/hooks/useColorScheme.web'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
+import { router } from "expo-router";
 
 const Index = () => {
 
@@ -47,6 +48,7 @@ const Index = () => {
                         colors={{ text: '#395a4f', bg: '#395a4f24' }}
                         title='Learn More'
                         Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"#395a4f"} />}
+                        onPress={() => router.push('/Logistics/Contracts/Index')}
                     />
                 </View>
 
