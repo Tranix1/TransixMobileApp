@@ -13,7 +13,12 @@ import { FontAwesome6, Fontisto, Octicons, Entypo, EvilIcons, Ionicons, FontAwes
 import { hp, wp } from "@/constants/common";
 import { router } from "expo-router";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {
+  BottomSheetModal,
+  BottomSheetView,
+  BottomSheetModalProvider,
+} from '@gorhom/bottom-sheet';
 
 const Tab = createBottomTabNavigator();
 
@@ -27,16 +32,15 @@ export default function Index() {
   const backgroundColor = useThemeColor("background");
 
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   // callbacks
+  const handlePresentModalPress = useCallback(() => {
+    bottomSheetModalRef.current?.expand();
+  }, []);
   const handleSheetChanges = useCallback((index: number) => {
     console.log('handleSheetChanges', index);
   }, []);
-  const renderBackdrop = useCallback(
-    (props: any) => <BottomSheetBackdrop {...props} opacity={0.2} appearsOnIndex={0} disappearsOnIndex={-1} />,
-    []
-  );
 
   function CustomHeader() {
     const background = useThemeColor("background");
@@ -72,7 +76,7 @@ export default function Index() {
             </TouchableNativeFeedback>
           </View>
           <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-            <TouchableNativeFeedback onPress={() => bottomSheetRef.current?.expand()}>
+            <TouchableNativeFeedback onPress={handlePresentModalPress}>
               <View style={{ padding: wp(2) }}>
                 <Ionicons name='reorder-three' size={wp(6)} />
               </View>
@@ -88,67 +92,9 @@ export default function Index() {
     <ScreenWrapper>
 
       <View style={{ flex: 1, backgroundColor: background }}>
-        <CustomHeader />
 
-        <BottomSheet
-          handleIndicatorStyle={{ backgroundColor: icon }}
-          index={-1}
-          ref={bottomSheetRef}
-          onChange={handleSheetChanges}
-          enablePanDownToClose
-          backgroundStyle={{ backgroundColor: background }}
-          backdropComponent={renderBackdrop}
+        {/* <CustomHeader /> */}
 
-          style={{ elevation: wp(10) }}
-          handleStyle={{ borderColor: background, borderBottomWidth: 0, borderWidth: 1, borderTopEndRadius: wp(4), borderTopStartRadius: wp(4) }}
-
-        >
-          <BottomSheetView style={styles.contentContainer}>
-
-            <View >
-
-              <View style={[styles.settingsCont, { backgroundColor }]}>
-                <TouchableNativeFeedback onPress={() => { }} >
-                  <View style={[styles.settingsItem, { borderBottomWidth: 0 }]}>
-                    <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
-                      <Ionicons name="settings-outline" size={wp(6)} style={{ width: wp(8), textAlign: 'center' }} color={icon} />
-                      <View style={{}}>
-                        <ThemedText type='defaultSemiBold'>
-                          Profile
-                        </ThemedText>
-                        <ThemedText type='tiny'>
-
-                        </ThemedText>
-                      </View>
-                    </View>
-                    <Ionicons name='chevron-forward' color={icon} size={wp(4)} />
-                  </View>
-
-                </TouchableNativeFeedback>
-              </View>
-
-              <View style={[styles.settingsCont, { backgroundColor }]}>
-                <TouchableNativeFeedback onPress={() => { }}>
-                  <View style={[styles.settingsItem, { borderBottomWidth: 0 }]}>
-                    <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
-                      <Ionicons name="heart" size={wp(6)} style={{ width: wp(8), textAlign: 'center' }} color={icon} />
-                      <View style={{}}>
-                        <ThemedText type='defaultSemiBold'>
-                          Saved Items
-                        </ThemedText>
-
-                      </View>
-                    </View>
-                    <Ionicons name='chevron-forward' color={icon} size={wp(4)} />
-                  </View>
-
-                </TouchableNativeFeedback>
-              </View>
-            </View>
-
-
-          </BottomSheetView>
-        </BottomSheet>
 
         <Tab.Navigator
           screenOptions={({ route }) => ({

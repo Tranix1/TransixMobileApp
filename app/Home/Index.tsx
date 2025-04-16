@@ -3,7 +3,7 @@ import React from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import { ThemedText } from '@/components/ThemedText'
 import { wp } from '@/constants/common'
-import { EvilIcons, Ionicons, Octicons } from '@expo/vector-icons'
+import { Entypo, EvilIcons, Ionicons, Octicons } from '@expo/vector-icons'
 import { useColorScheme } from '@/hooks/useColorScheme.web'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import Button from '@/components/Button'
@@ -11,7 +11,51 @@ import Input from '@/components/Input'
 import { router } from "expo-router";
 
 const Index = () => {
+    function CustomHeader() {
+        const background = useThemeColor("background");
+        return (
+            <View
+                style={{
+                    backgroundColor: background,
+                    paddingHorizontal: wp(2),
+                    paddingVertical: wp(1),
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: wp(1),
+                }}
+            >
+                <View>
+                    <ThemedText type="title">Transix</ThemedText>
+                    <ThemedText type="tiny">The future of Transport & Logistics</ThemedText>
+                </View>
+                <View style={{ flexDirection: 'row', gap: wp(2) }}>
+                    <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
+                        <TouchableNativeFeedback onPress={() => router.push('/App')}>
+                            <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
+                                <Entypo name='archive' size={wp(6)} />
+                            </View>
+                        </TouchableNativeFeedback>
+                    </View>
+                    <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
+                        <TouchableNativeFeedback>
+                            <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
+                                <EvilIcons name='search' size={wp(6)} />
+                            </View>
+                        </TouchableNativeFeedback>
+                    </View>
+                    <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
+                        <TouchableNativeFeedback onPress={() => { }}>
+                            <View style={{ padding: wp(2) }}>
+                                <Ionicons name='reorder-three' size={wp(6)} />
+                            </View>
+                        </TouchableNativeFeedback>
+                    </View>
+                </View>
+            </View>
 
+        );
+    }
     const accent = useThemeColor('accent')
     const icon = useThemeColor('icon')
     const backgroundColor = useThemeColor('backgroundLight')
@@ -21,7 +65,7 @@ const Index = () => {
     return (
 
         <View style={{ flex: 1 }}>
-
+            <CustomHeader />
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ marginVertical: wp(4), marginHorizontal: wp(2) }}>
 

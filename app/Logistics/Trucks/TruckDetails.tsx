@@ -410,14 +410,16 @@ const TruckDetails = () => {
                             Driver Info
                         </ThemedText>
                         <View style={{ backgroundColor: backgroundLight, gap: wp(2), padding: wp(2), borderRadius: wp(4) }}>
-                            <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truckData.driverLicense }} style={{ height: hp(10), width: hp(10) }} />
+                            <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truckData.driverLicense }} style={{ height: hp(20), flex: 1, borderRadius: wp(2) }} />
 
+                            <View style={{ flexDirection: 'row' }}>
 
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), padding: wp(2), }}>
-                                <Ionicons name="call-outline" />
-                                <FormatedText numberOfLines={3} style={{ paddingTop: 0, }}>
-                                    {truckData.driverPhone || 'no number'}
-                                </FormatedText>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), padding: wp(2), backgroundColor: background, borderRadius: wp(4) }}>
+                                    <Ionicons name="call-outline" />
+                                    <FormatedText numberOfLines={3} style={{ paddingTop: 0, }}>
+                                        {truckData.driverPhone || 'no number'}
+                                    </FormatedText>
+                                </View>
                             </View>
                         </View>
 
