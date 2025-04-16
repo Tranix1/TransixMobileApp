@@ -9,7 +9,6 @@ import CheckOutMakePayments from "@/components/CheckOutPayment";
 import { handleMakePayment } from "@/payments/operations";
 
 
-
 function AddLoadContract() {
 
 
@@ -147,97 +146,6 @@ function specifyLocation(loc: string): void {
 
 
 
-
-
-
-
-  const [spinnerItem, setSpinnerItem] = React.useState(false);
-
-  const handleSubmit = async () => {
-    
-         type FormData = { [key: string]: any }; // Or define specific fields if needed
-
-            const areAllElementsTrueExceptKeys = (obj: FormData, excludedKeys: string[]): boolean => {
-                for (const key in obj) {
-                    if (!excludedKeys.includes(key) && !obj[key]) {
-                        return false;
-                    }
-                }
-                return true;
-            };
-
-      const excludedKeys = ["scndTrailerReg", "trailerModel","additionalInfo"];
-
-        if (!areAllElementsTrueExceptKeys(formData, excludedKeys)) {
-            alert("This truck is for verified loads.\n\nAdd all truck details except for Trailer Reg2 if not available.");
-            setSpinnerItem(false)
-            return;
-        }
-
-
-        const [paymenPageDsp , setPaymentPageDsp]=React.useState<boolean>(false)
-        
-
-        
-
-
-              
-    // try {
-    //   const docRef = await addDoc("loadsContracts", {
-    //     // userId: userId, // Add the user ID to the document
-    //     // companyName: username,
-    //     // contact: contact,
-    //     // expoPushToken: expoPushToken,
-    //     timeStamp: serverTimestamp(),
-    //     currency: currency,
-    //     contractLocation: location,
-    //     manyRoutesAllocaton: manyRoutesAllocaton,
-    //     manyRoutesAssign: manyRoutesAssign,
-    //     formData: formData,
-    //     formDataScnd: formDataScnd,
-    //     contractId: `co${Math.floor(100000000000 + Math.random() * 900000000000).toString()}ct`,
-
-    //   });
-
-    //   console.log('ayayyayayayayarr')
-
-    // } catch (err) {
-    //   setSpinnerItem(false)
-    //   setError(err.toString());
-    // }
-  };
-
-
- const [paymentUpdate, setPaymentUpdate] = React.useState<string>("");
-
-    const justConsole = () => {
-      console.log("pananaanana");
-      handleMakePayment(3, "yaya", setPaymentUpdate);
-    };
-
-
-
-console.log("nowww " , paymentUpdate)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const [dspCommodity, setDspCommodity] = React.useState(false);
 
   function toggleDspCommodity() {
@@ -352,15 +260,52 @@ const SlctCountryBtn = ({ selectedLoc }: SlctCountryBtnProps) => (
 
 
 
+
+
+  const [dspCheckOutP, setDspCheckout]= React.useState<boolean>(false)
+
+  function toggleDspCheckout (){
+    // if(formData.commodity.frst )
+      setDspCheckout(true)
+  }
+
+  const contractData={
+       // userId: userId, // Add the user ID to the document
+        // companyName: username,
+        // contact: contact,
+        // expoPushToken: expoPushToken,
+        // currency: currency,
+        contractLocation: location,
+        manyRoutesAllocaton: manyRoutesAllocaton,
+        manyRoutesAssign: manyRoutesAssign,
+        formData: formData,
+        formDataScnd: formDataScnd,
+        contractId: `co${Math.floor(100000000000 + Math.random() * 900000000000).toString()}ct`,
+  }
+
+ const [paymentUpdate, setPaymentUpdate] = React.useState<string>("");
+
+    const justConsole = () => {
+      console.log("pananaanana");
+      handleMakePayment(3, "yaya", setPaymentUpdate , "loadsContracts" , contractData );
+    };
+
+
+
+console.log("payment status" , paymentUpdate)
+
+
   return (
     <View style={{ alignItems: 'center', paddingTop: 100 }}>
     
 
 
 
-        <CheckOutMakePayments jsxProp={<View>
+       { dspCheckOutP && <CheckOutMakePayments jsxProp={<View>
           <Text> its $10 to add contract </Text>
-        </View> } anyProp="yaya"  confirmButon={justConsole}  />
+        </View> }  confirmButon={justConsole} cancelBTN={()=>setDspCheckout(false)} />}
+
+
 
       <View style={{ height: 40, position: 'absolute', top:50, left: 0, right: 0, flexDirection: 'row', borderBottomWidth: 2, borderBottomColor: "#6a0c0c", paddingBottom: 7, justifyContent: 'space-evenly' }} >
         <TouchableOpacity style={dsoLoadDe ? styles.bttonIsTrue : styles.buttonIsFalse} onPress={dspLoadDet} >
@@ -742,7 +687,7 @@ const SlctCountryBtn = ({ selectedLoc }: SlctCountryBtnProps) => (
           <Text> {location ? location : "Choose operating Location"} </Text>
         </TouchableOpacity>}
 
-        <TouchableOpacity onPress={handleSubmit} style={{ flex: 1, backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignItems: 'center', margin: 10, borderRadius: 8 }} >
+        <TouchableOpacity onPress={toggleDspCheckout} style={{ flex: 1, backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignItems: 'center', margin: 10, borderRadius: 8 }} >
           <Text style={{ color: 'white', fontWeight: 'bold' }}>Done Submit</Text>
         </TouchableOpacity>
 

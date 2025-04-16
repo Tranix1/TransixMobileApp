@@ -1,12 +1,14 @@
       
 const { Paynow } = require("paynow");
-      
+ import { addDocument } from "@/db/operations";     
 
 
     export async function handleMakePayment(
   ammount: number,
   paymentPurpose: string,
-  onStatusUpdate: (status: string) => void
+  onStatusUpdate: (status: string) => void ,
+  dbName:string ,
+  dbData : object
 ) {
 
     let uniqueRecepipt = Math.floor(100000000000 + Math.random() * 900000000000).toString() 
@@ -33,10 +35,12 @@ const { Paynow } = require("paynow");
       let pollInterval = setInterval(async () => {
         try {
           let status = await paynow.pollTransaction(pollUrl);
-          onStatusUpdate(`🔄 Status: ${status.status}`);
+          console.log(`🔄 Status: ${status.status}`);
 
           if (status.status === "paid") {
-            onStatusUpdate("✅ Payment Complete!");
+            console.log("✅ Payment Complete!");
+            addDocument(dbName , {...dbData , pollUrl:pollUrl },onStatusUpdate )
+
             clearInterval(pollInterval);
           } else if (status.status === "cancelled" || status.status === "failed") {
             onStatusUpdate("❌ Payment Failed or Cancelled.");

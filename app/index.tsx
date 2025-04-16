@@ -1,6 +1,5 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { NavigationContainer } from "@react-navigation/native";
 import { TouchableNativeFeedback, View } from "react-native";
 import Home from "./Home/Index";
 import Loads from "./Logistics/Loads/Index";

@@ -3,12 +3,12 @@ import { View,TouchableOpacity , Text,GestureResponderEvent  } from 'react-nativ
 
 interface CheckOutMakePaymentsProps {
   jsxProp: JSX.Element;
-  anyProp: any;
  confirmButon: (event: GestureResponderEvent) => void;
+ cancelBTN: (event: GestureResponderEvent) => void;
 
 }
 
-    const CheckOutMakePayments: React.FC<CheckOutMakePaymentsProps> = ({ jsxProp, anyProp, confirmButon }) => {
+    const CheckOutMakePayments: React.FC<CheckOutMakePaymentsProps> = ({ jsxProp, confirmButon,cancelBTN }) => {
   return (
     
               <View style={{position:'absolute',left:50 , right:50 ,height:500,top:100 , backgroundColor:"white",zIndex:300}} >
@@ -33,7 +33,7 @@ interface CheckOutMakePaymentsProps {
     justifyContent: 'center',
     alignItems: 'center',
     width:110
-  }}  >
+  }} onPress={cancelBTN} >
     <Text style={{ color: 'white', fontWeight: '600' }}>Cancel</Text>
   </TouchableOpacity>
 

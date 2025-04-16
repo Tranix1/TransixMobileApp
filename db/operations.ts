@@ -6,12 +6,19 @@ import { db, auth } from "../app/components/config/fireBase";
  * @param collectionName - The name of the Firestore collection.
  * @param data - The data to add to the collection.
  */
-export const addDocument = async (collectionName: string, data: object) => {
+export const addDocument = async (
+    collectionName: string,
+     data: object,
+     onStatusUpdate: (status: string) => void ,
+     ) => {
     try {
+
+            onStatusUpdate("now submitting to db");
         const docRef = await addDoc(collection(db, collectionName), {
             ...data,
             timeStamp: serverTimestamp(),
         });
+            onStatusUpdate("Doneee submitting to db");
         return docRef.id;
     } catch (error) {
         console.error("Error adding document:", error);
