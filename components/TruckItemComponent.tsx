@@ -19,7 +19,7 @@ const TruckItemComponent = ({ truck = {} as Truck }) => {
     const placeholder = require('@/assets/images/failedimage.jpg')
 
     return (
-        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { product: JSON.stringify(truck) } })} style={[styles.container, { backgroundColor: background, borderColor: coolGray }]}>
+        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truck: JSON.stringify(truck) } })} style={[styles.container, { backgroundColor: background, borderColor: coolGray }]}>
             <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truck.imageUrl }} style={styles.image} />
             <View style={styles.detailsContainer}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -34,7 +34,7 @@ const TruckItemComponent = ({ truck = {} as Truck }) => {
                         {truck.truckType || 'N/A'}
                     </ThemedText>
                 </View>
-                <View style={{ gap: wp(2) }}>
+                <View style={{ gap: wp(3), paddingHorizontal: wp(2), marginTop: wp(1) }}>
 
 
                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
@@ -50,12 +50,12 @@ const TruckItemComponent = ({ truck = {} as Truck }) => {
                             {truck.fromLocation || 'N/A'}
                         </ThemedText>
                     </View>
-                    <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
+                    {/* <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
                         <FontAwesome6 name="road" size={wp(4)} style={{ width: wp(6) }} color={icon} />
                         <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
                             {truck.toLocation || 'N/A'}
                         </ThemedText>
-                    </View>
+                    </View> */}
 
 
 

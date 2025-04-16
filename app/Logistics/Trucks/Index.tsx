@@ -117,13 +117,16 @@ const Index = () => {
                                     }
                                 </ScrollView>
                             </View>
-                            <ScrollView style={{ maxHeight: hp(60) }}>
+                            <ThemedText>
+                                Truck Types
+                            </ThemedText>
+                            <ScrollView horizontal contentContainerStyle={{ gap: wp(2) }} style={{}}>
                                 {truckTypes.map((item) => (
                                     <TouchableOpacity
                                         key={item.id}
                                         onPress={() => {
                                             setSelectedTruckType(item);
-                                            setShowfilter(false);
+                                            // setShowfilter(false);
                                         }}
                                         style={{
                                             flexDirection: 'row',
@@ -135,10 +138,13 @@ const Index = () => {
                                         }}
                                     >
                                         <Image
-                                            style={{ width: wp(15), height: wp(15), borderRadius: wp(2), marginRight: wp(4) }}
+                                            style={{ width: wp(25), height: wp(15), borderRadius: wp(2), marginRight: wp(2) }}
                                             source={item.image}
                                         />
-                                        <ThemedText type="subtitle">{item.name}</ThemedText>
+                                        <View>
+                                            <ThemedText type="subtitle">{item.name}</ThemedText>
+                                            <Ionicons name={selectedTruckType?.id === item.id ? "checkmark-circle" : 'ellipse-outline'} size={wp(4)} color={accent} />
+                                        </View>
                                     </TouchableOpacity>
                                 ))}
                             </ScrollView>
@@ -223,42 +229,7 @@ const Index = () => {
                         </View>
                         {showfilter ?
                             <>
-                                {truckTypes.map((item, key) =>
-                                    <View key={item.id} style={{ padding: wp(2), flexDirection: 'row', backgroundColor: background, borderRadius: wp(6), marginBottom: wp(2) }}>
-                                        <View style={{ width: wp(40), }}>
-                                            <Image style={{ width: wp(40), height: wp(20), borderRadius: wp(4) }} source={item.image} />
-                                        </View>
-                                        <View style={{ paddingLeft: wp(4), paddingTop: wp(2), flex: 1, justifyContent: 'space-between' }}>
-                                            <ThemedText type='subtitle'>
-                                                {item.name}
-                                            </ThemedText>
 
-                                            <View style={{ backgroundColor: accent + '1a', borderRadius: wp(4), overflow: 'hidden' }}>
-                                                <TouchableNativeFeedback onPress={() => { setSelectedTruckType(item); setShowfilter(false) }}>
-                                                    <View style={{ padding: wp(3), alignItems: 'center' }}>
-                                                        <ThemedText color={accent} type='defaultSemiBold'>
-                                                            Select
-                                                            {/* <Ionicons name='arrow-forward' size={wp(5)} /> */}
-                                                        </ThemedText>
-                                                    </View>
-                                                </TouchableNativeFeedback>
-                                            </View>
-                                        </View>
-                                    </View>
-                                )}
-                                <View key={'all'} style={{ padding: wp(2), flexDirection: 'row', backgroundColor: background, borderRadius: wp(6), marginBottom: wp(2) }}>
-
-                                    <View style={{ backgroundColor: accent + '1a', borderRadius: wp(4), overflow: 'hidden', flex: 1 }}>
-                                        <TouchableNativeFeedback>
-                                            <View style={{ padding: wp(3), alignItems: 'center' }}>
-                                                <ThemedText color={accent} type='defaultSemiBold'>
-                                                    View All Truck Types
-
-                                                </ThemedText>
-                                            </View>
-                                        </TouchableNativeFeedback>
-                                    </View>
-                                </View>
                             </>
                             :
                             <View style={{}}>

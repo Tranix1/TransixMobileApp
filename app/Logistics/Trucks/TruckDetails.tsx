@@ -28,9 +28,9 @@ const TruckDetails = () => {
     const background = useThemeColor("background");
     const coolGray = useThemeColor("coolGray");
     const backgroundLight = useThemeColor("backgroundLight");
-    const { product } = useLocalSearchParams();
+    const { truck } = useLocalSearchParams();
 
-    const truckData = JSON.parse(product as string) as Truck; // Convert string back to object
+    const truckData = JSON.parse(truck as string) as Truck; // Convert string back to object
     const [items, setItems] = useState<Truck[] | []>([]);
     const [selectedImage, setSelectedImage] = useState("");
     const [modalVisible, setModalVisible] = useState(false);
@@ -68,7 +68,7 @@ const TruckDetails = () => {
 
     useEffect(() => {
         getowenerdata();
-        // console.log(truckData.imageUrl);
+        console.log(truckData);
 
     }, [truckData])
 
