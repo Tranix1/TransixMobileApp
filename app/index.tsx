@@ -3,9 +3,9 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { TouchableNativeFeedback, View } from "react-native";
 import Home from "./Home/Index";
-import Loads from "./Loads/Index";
-import Store from "./Store/Index";
-import Trucks from "./Trucks/Index";
+import Loads from "./Logistics/Loads/Index";
+import Store from "./Transport/Store/Index";
+import Trucks from "./Logistics/Trucks/Index";
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { FontAwesome6, Fontisto, Octicons, Entypo, EvilIcons, Ionicons } from "@expo/vector-icons";
@@ -71,6 +71,7 @@ export default function Index() {
 
       <View style={{ flex: 1, backgroundColor: background }}>
         <CustomHeader />
+        
         <Tab.Navigator
           screenOptions={({ route }) => ({
             tabBarIcon: ({ focused }) => {

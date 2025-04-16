@@ -8,6 +8,7 @@ import { useColorScheme } from '@/hooks/useColorScheme.web'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
+import { router } from "expo-router";
 
 const Index = () => {
 
@@ -43,10 +44,14 @@ const Index = () => {
                     <ThemedText color={icon} type='default' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}>
                         Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
                     </ThemedText>
+
+
+
                     <Button
                         colors={{ text: '#395a4f', bg: '#395a4f24' }}
                         title='Learn More'
                         Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"#395a4f"} />}
+                        onPress={() => router.push('/Logistics/Contracts/Index')} 
                     />
                 </View>
 
