@@ -1,9 +1,14 @@
-import React, { useState } from "react";
+import React, { useState,FC } from "react";
 import { collection, doc, addDoc, serverTimestamp, } from 'firebase/firestore';
 
 import { View, TextInput, Text, TouchableOpacity, ActivityIndicator, StyleSheet, ScrollView } from "react-native";
 
 import inputstyles from "../../../components/styles/inputElement";
+
+import CheckOutMakePayments from "@/components/CheckOutPayment";
+import { handleMakePayment } from "@/payments/operations";
+
+
 
 function AddLoadContract() {
 
@@ -170,7 +175,13 @@ function specifyLocation(loc: string): void {
         }
 
 
-    
+        const [paymenPageDsp , setPaymentPageDsp]=React.useState<boolean>(false)
+        
+
+        
+
+
+              
     // try {
     //   const docRef = await addDoc("loadsContracts", {
     //     // userId: userId, // Add the user ID to the document
@@ -195,6 +206,33 @@ function specifyLocation(loc: string): void {
     //   setError(err.toString());
     // }
   };
+
+
+ const [paymentUpdate, setPaymentUpdate] = React.useState<string>("");
+
+    const justConsole = () => {
+      console.log("pananaanana");
+      handleMakePayment(3, "yaya", setPaymentUpdate);
+    };
+
+
+
+console.log("nowww " , paymentUpdate)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -317,6 +355,12 @@ const SlctCountryBtn = ({ selectedLoc }: SlctCountryBtnProps) => (
   return (
     <View style={{ alignItems: 'center', paddingTop: 100 }}>
     
+
+
+
+        <CheckOutMakePayments jsxProp={<View>
+          <Text> its $10 to add contract </Text>
+        </View> } anyProp="yaya"  confirmButon={justConsole}  />
 
       <View style={{ height: 40, position: 'absolute', top:50, left: 0, right: 0, flexDirection: 'row', borderBottomWidth: 2, borderBottomColor: "#6a0c0c", paddingBottom: 7, justifyContent: 'space-evenly' }} >
         <TouchableOpacity style={dsoLoadDe ? styles.bttonIsTrue : styles.buttonIsFalse} onPress={dspLoadDet} >
