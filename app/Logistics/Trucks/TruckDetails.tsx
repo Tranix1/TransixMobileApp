@@ -1,10 +1,10 @@
-import { View, Text, Image, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Modal, TouchableNativeFeedback, SafeAreaView, Switch, Linking, Pressable } from "react-native";
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Modal, TouchableNativeFeedback, SafeAreaView, Switch, Linking, Pressable } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { ThemedText } from "@/components/ThemedText";
 import Heading from "@/components/Heading";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { AntDesign, FontAwesome6, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { AntDesign, FontAwesome6, Ionicons, MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
 import { hp, wp } from "@/constants/common";
 import { ReactElement, useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, GestureHandlerRootView } from "react-native-gesture-handler";
@@ -18,6 +18,7 @@ import FormatedText from "@/components/FormatedText";
 import Divider from "@/components/Divider";
 import { Truck, User } from "@/types/types";
 import { readById } from "@/db/operations";
+import { Image } from "expo-image";
 
 const TruckDetails = () => {
 
@@ -67,6 +68,8 @@ const TruckDetails = () => {
 
     useEffect(() => {
         getowenerdata();
+        // console.log(truckData.imageUrl);
+
     }, [truckData])
 
     const getowenerdata = async () => {
@@ -119,7 +122,7 @@ const TruckDetails = () => {
         )
 
     }
-
+    const placeholder = require('@/assets/images/failedimage.jpg')
     return (
         <ScreenWrapper>
             {showAlert}
@@ -142,15 +145,15 @@ const TruckDetails = () => {
 
 
                         <Image
-                            source={{ uri: truckData.imageUrl }}
+                            source={truckData.imageUrl}
                             style={{
-
                                 width: wp(96),
                                 height: wp(95),
                                 borderRadius: wp(4),
                                 marginVertical: wp(2),
                                 //opacity: index === currentIndex ? 1 : 0.5
                             }}
+                            placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder}
                         />
 
 
@@ -158,13 +161,13 @@ const TruckDetails = () => {
                     </View>
                 </View>
 
-                <View style={{ padding: wp(4), borderRadius: wp(4) }}>
+                <View style={{ padding: wp(4), borderRadius: wp(4), backgroundColor: backgroundLight }}>
                     <View style={{ flexDirection: 'row', gap: wp(6), justifyContent: 'center' }}>
-                        {postOwner?.phoneNumber &&
+                        {(postOwner?.phoneNumber || truckData.contact) &&
                             <View style={{ alignItems: 'center', gap: wp(1) }}>
                                 <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-                                    <TouchableNativeFeedback onPress={() => postOwner?.phoneNumber && Linking.openURL(`tel:${postOwner.phoneNumber}`)}>
-                                        <View style={{ width: wp(10), height: wp(10), backgroundColor: backgroundLight, justifyContent: 'center', alignItems: 'center', borderRadius: wp(10) }}>
+                                    <TouchableNativeFeedback onPress={() => (postOwner?.phoneNumber || truckData.contact) && Linking.openURL(`tel:${(postOwner?.phoneNumber || truckData.contact)}`)}>
+                                        <View style={{ width: wp(10), height: wp(10), backgroundColor: background, justifyContent: 'center', alignItems: 'center', borderRadius: wp(10) }}>
                                             <Ionicons name='call-outline' size={wp(5)} color={icon} />
                                         </View>
                                     </TouchableNativeFeedback>
@@ -174,16 +177,16 @@ const TruckDetails = () => {
                                 </ThemedText>
                             </View>
                         }
-                        {postOwner?.phoneNumber &&
+                        {(postOwner?.phoneNumber || truckData.contact) &&
                             <View style={{ alignItems: 'center', gap: wp(1) }}>
                                 <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                                     <TouchableNativeFeedback
                                         onPress={() => {
                                             const message = `Hello ${postOwner?.displayName},\n\nI am interested in your product "${truckData.CompanyName}".\n`;
-                                            postOwner?.phoneNumber && Linking.openURL(`sms:${postOwner?.phoneNumber}?body=${encodeURIComponent(message)}`);
+                                            (postOwner?.phoneNumber || truckData.contact) && Linking.openURL(`sms:${(postOwner?.phoneNumber || truckData.contact)}?body=${encodeURIComponent(message)}`);
                                         }}
                                     >
-                                        <View style={{ width: wp(10), height: wp(10), backgroundColor: backgroundLight, justifyContent: 'center', alignItems: 'center', borderRadius: wp(10) }}>
+                                        <View style={{ width: wp(10), height: wp(10), backgroundColor: background, justifyContent: 'center', alignItems: 'center', borderRadius: wp(10) }}>
                                             <Ionicons name='chatbox-outline' size={wp(5)} color={icon} />
                                         </View>
                                     </TouchableNativeFeedback>
@@ -193,16 +196,16 @@ const TruckDetails = () => {
                                 </ThemedText>
                             </View>
                         }
-                        {postOwner?.phoneNumber &&
+                        {(postOwner?.phoneNumber || truckData.contact) &&
                             <View style={{ alignItems: 'center', gap: wp(1) }}>
                                 <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                                     <TouchableNativeFeedback
                                         onPress={() => {
                                             const message = `Hello ${postOwner?.displayName},\n\nI am interested in your product "${truckData.CompanyName}".\n`;
-                                            postOwner?.phoneNumber && Linking.openURL(`https://wa.me/${postOwner?.phoneNumber}?text=${encodeURIComponent(message)}`);
+                                            (postOwner?.phoneNumber || truckData.contact) && Linking.openURL(`https://wa.me/${(postOwner?.phoneNumber || truckData.contact)}?text=${encodeURIComponent(message)}`);
                                         }}
                                     >
-                                        <View style={{ width: wp(10), height: wp(10), backgroundColor: backgroundLight, justifyContent: 'center', alignItems: 'center', borderRadius: wp(10) }}>
+                                        <View style={{ width: wp(10), height: wp(10), backgroundColor: background, justifyContent: 'center', alignItems: 'center', borderRadius: wp(10) }}>
                                             <Ionicons name='logo-whatsapp' size={wp(5)} color={icon} />
                                         </View>
                                     </TouchableNativeFeedback>
@@ -220,7 +223,7 @@ const TruckDetails = () => {
                                         style={{
                                             width: wp(10),
                                             height: wp(10),
-                                            backgroundColor: backgroundLight,
+                                            backgroundColor: background,
                                             justifyContent: 'center',
                                             alignItems: 'center',
                                             borderRadius: wp(10),
@@ -241,14 +244,54 @@ const TruckDetails = () => {
                     </View>
                 </View>
 
-                <View style={{ gap: wp(2), marginBottom: wp(2), padding: wp(2), backgroundColor: backgroundLight, borderRadius: wp(4), paddingBottom: wp(4) }}>
+                <View style={{ gap: wp(2), marginBottom: wp(2), paddingVertical: wp(5), backgroundColor: background, borderRadius: wp(4), paddingBottom: wp(4) }}>
                     <View style={{}}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', }}>
-                            <ThemedText type="title" style={{ fontSize: 25, maxWidth: wp(80) }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <ThemedText type="title" style={{ maxWidth: wp(80) }}>
                                 {truckData.CompanyName}
                             </ThemedText>
+                            {truckData.isVerified &&
+                                <View style={{ flexDirection: 'row', alignSelf: 'center', borderRadius: wp(4), alignItems: 'center', gap: wp(2), borderWidth: .4, padding: wp(1), borderColor: coolGray }}>
+                                    <Octicons name='verified' size={wp(3)} color={'#4eb3de'} />
+                                    <ThemedText numberOfLines={1} type='tiny' style={[{ color: '#4eb3de', fontSize: 13 }]}>
+                                        Verified
+                                    </ThemedText>
+                                </View>
+                            }
                         </View>
-                        <ThemedText type="tiny" style={{ color: icon }}>{truckData.fromLocation}</ThemedText>
+                        {/* <ThemedText type="tiny" style={{ color: icon }}>{truckData.fromLocation}</ThemedText> */}
+
+
+                    </View>
+                    <Divider />
+                    <View style={{}}>
+                        <View style={{ flexDirection: 'row' }}>
+                            <View style={{ flex: 1 }}>
+                                <ThemedText type="tiny" style={{}}>
+                                    Truck Type
+                                </ThemedText>
+                                <ThemedText type="defaultSemiBold" style={{}}>
+                                    {truckData.truckType || '--'}
+                                </ThemedText>
+                            </View>
+
+                        </View>
+
+
+                    </View>
+                    <Divider />
+                    <View style={{}}>
+                        <View style={{ flexDirection: 'row' }}>
+                            <View style={{ flex: 1 }}>
+                                <ThemedText type="tiny" style={{}}>
+                                    Trailer Type
+                                </ThemedText>
+                                <ThemedText type="defaultSemiBold" style={{}}>
+                                    {truckData.trailerType || '--'}
+                                </ThemedText>
+                            </View>
+
+                        </View>
 
 
                     </View>
@@ -259,8 +302,8 @@ const TruckDetails = () => {
                                 <ThemedText type="tiny" style={{}}>
                                     Location
                                 </ThemedText>
-                                <ThemedText style={{ marginBottom: wp(4) }}>
-                                    {truckData.toLocation || '--'}
+                                <ThemedText type="defaultSemiBold" style={{ marginBottom: wp(4) }}>
+                                    {truckData.fromLocation || '--'}
                                 </ThemedText>
                             </View>
                             {truckData.toLocation &&
@@ -268,19 +311,20 @@ const TruckDetails = () => {
                             }
                         </View>
                         {truckData.toLocation &&
+
                             <Button
                                 onPress={() => {
                                     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(truckData.toLocation)}`;
                                     Linking.openURL(url);
                                 }}
-
+                                colors={{ text: '#00c16c', bg: '#00c16c24' }}
                                 title="Open in Google Maps"
+                                Icon={<Ionicons name='map-outline' size={wp(4)} color={"#00c16c"} />}
                             />
 
                         }
 
                     </View>
-                    <Divider />
 
                     {truckData.additionalInfo &&
                         <Divider />
@@ -288,7 +332,7 @@ const TruckDetails = () => {
                     {truckData.additionalInfo &&
                         <View style={{}}>
                             <ThemedText type="tiny" style={{}}>
-                                Description:
+                                Additional Infomation:
                             </ThemedText>
                             <FormatedText numberOfLines={3} style={{ paddingTop: 0, }}>
                                 {truckData.additionalInfo}
@@ -323,4 +367,11 @@ const TruckDetails = () => {
 
 export default TruckDetails
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+    image: {
+        flex: 1,
+        width: wp(60),
+        height: wp(40),
+        borderRadius: wp(4),
+    },
+})

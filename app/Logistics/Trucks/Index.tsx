@@ -28,7 +28,7 @@ const Index = () => {
 
 
     const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
-    
+
     const [trucks, setTrucks] = useState<Truck[] | null>(null)
 
     const [selectedCountry, setSelectedCountry] = useState('All')
@@ -42,7 +42,6 @@ const Index = () => {
 
         const maTrucks = await fetchDocuments("Trucks");
         if (maTrucks) {
-            console.log('trucks', maTrucks);
 
             setTrucks(maTrucks as Truck[])
         }
