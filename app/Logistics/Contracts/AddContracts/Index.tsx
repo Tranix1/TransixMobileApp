@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import React, { useState, FC } from "react";
+=======
+import React, { useState,FC } from "react";
+>>>>>>> db28b4b (working functionality on make payment)
 import { collection, doc, addDoc, serverTimestamp, } from 'firebase/firestore';
 
 import { View, TextInput, Text, TouchableOpacity, ActivityIndicator, StyleSheet, ScrollView } from "react-native";
@@ -182,6 +186,16 @@ function AddLoadContract() {
 
 
 
+<<<<<<< HEAD
+=======
+        const [paymenPageDsp , setPaymentPageDsp]=React.useState<boolean>(false)
+        
+
+        
+
+
+              
+>>>>>>> db28b4b (working functionality on make payment)
     // try {
     //   const docRef = await addDoc("loadsContracts", {
     //     // userId: userId, // Add the user ID to the document
@@ -208,6 +222,7 @@ function AddLoadContract() {
   };
 
 
+<<<<<<< HEAD
   const [paymentUpdate, setPaymentUpdate] = React.useState<string>("");
 
   const justConsole = () => {
@@ -218,6 +233,18 @@ function AddLoadContract() {
 
 
   console.log("nowww ", paymentUpdate)
+=======
+ const [paymentUpdate, setPaymentUpdate] = React.useState<string>("");
+
+    const justConsole = () => {
+      console.log("pananaanana");
+      handleMakePayment(3, "yaya", setPaymentUpdate);
+    };
+
+
+
+console.log("nowww " , paymentUpdate)
+>>>>>>> db28b4b (working functionality on make payment)
 
 
 
@@ -357,12 +384,20 @@ function AddLoadContract() {
 
 
 
+<<<<<<< HEAD
 
       <CheckOutMakePayments jsxProp={<View>
         <Text> its $10 to add contract </Text>
       </View>} anyProp="yaya" confirmButon={justConsole} />
 
       <View style={{ height: 40, position: 'absolute', top: 50, left: 0, right: 0, flexDirection: 'row', borderBottomWidth: 2, borderBottomColor: "#6a0c0c", paddingBottom: 7, justifyContent: 'space-evenly' }} >
+=======
+        <CheckOutMakePayments jsxProp={<View>
+          <Text> its $10 to add contract </Text>
+        </View> } anyProp="yaya"  confirmButon={justConsole}  />
+
+      <View style={{ height: 40, position: 'absolute', top:50, left: 0, right: 0, flexDirection: 'row', borderBottomWidth: 2, borderBottomColor: "#6a0c0c", paddingBottom: 7, justifyContent: 'space-evenly' }} >
+>>>>>>> db28b4b (working functionality on make payment)
         <TouchableOpacity style={dsoLoadDe ? styles.bttonIsTrue : styles.buttonIsFalse} onPress={dspLoadDet} >
           <Text style={dsoLoadDe ? { color: 'white' } : null} >Load Details</Text>
         </TouchableOpacity>
