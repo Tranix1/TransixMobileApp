@@ -1,76 +1,105 @@
-import React from "react";
+import React, { useCallback, useRef } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+<<<<<<< HEAD
 import { TouchableNativeFeedback, View } from "react-native";
+=======
+import { NavigationContainer } from "@react-navigation/native";
+import { StyleSheet, TouchableNativeFeedback, View } from "react-native";
+>>>>>>> 98fadcbc85fc46ab91d13f53e3b87765fb4f4282
 import Home from "./Home/Index";
 import Loads from "./Logistics/Loads/Index";
 import Store from "./Transport/Store/Index";
 import Trucks from "./Logistics/Trucks/Index";
+import Account from "./Account/Index";
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { FontAwesome6, Fontisto, Octicons, Entypo, EvilIcons, Ionicons } from "@expo/vector-icons";
+import { FontAwesome6, Fontisto, Octicons, Entypo, EvilIcons, Ionicons, FontAwesome } from "@expo/vector-icons";
 import { hp, wp } from "@/constants/common";
 import { router } from "expo-router";
 import ScreenWrapper from "@/components/ScreenWrapper";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {
+  BottomSheetModal,
+  BottomSheetView,
+  BottomSheetModalProvider,
+} from '@gorhom/bottom-sheet';
 
 const Tab = createBottomTabNavigator();
 
-function CustomHeader() {
-  const background = useThemeColor("background");
-  return (
-    <View
-      style={{
-        backgroundColor: background,
-        paddingHorizontal: wp(2),
-        paddingVertical: wp(1),
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: wp(1),
-      }}
-    >
-      <View>
-        <ThemedText type="title">Transix</ThemedText>
-        <ThemedText type="tiny">The future of Transport & Logistics</ThemedText>
-      </View>
-      <View style={{ flexDirection: 'row', gap: wp(2) }}>
-        <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-          <TouchableNativeFeedback onPress={() => router.push('/App')}>
-            <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
-              <Entypo name='archive' size={wp(6)} />
-            </View>
-          </TouchableNativeFeedback>
-        </View>
-        <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-          <TouchableNativeFeedback>
-            <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
-              <EvilIcons name='search' size={wp(6)} />
-            </View>
-          </TouchableNativeFeedback>
-        </View>
-        <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-          <TouchableNativeFeedback>
-            <View style={{ padding: wp(2) }}>
-              <Ionicons name='reorder-three' size={wp(6)} />
-            </View>
-          </TouchableNativeFeedback>
-        </View>
-      </View>
-    </View>
 
-  );
-}
+
 
 export default function Index() {
   const accent = useThemeColor("accent");
   const icon = useThemeColor("icon");
   const background = useThemeColor("background");
+  const backgroundColor = useThemeColor("background");
+
+
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+
+  // callbacks
+  const handlePresentModalPress = useCallback(() => {
+    bottomSheetModalRef.current?.expand();
+  }, []);
+  const handleSheetChanges = useCallback((index: number) => {
+    console.log('handleSheetChanges', index);
+  }, []);
+
+  function CustomHeader() {
+    const background = useThemeColor("background");
+    return (
+      <View
+        style={{
+          backgroundColor: background,
+          paddingHorizontal: wp(2),
+          paddingVertical: wp(1),
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: wp(1),
+        }}
+      >
+        <View>
+          <ThemedText type="title">Transix</ThemedText>
+          <ThemedText type="tiny">The future of Transport & Logistics</ThemedText>
+        </View>
+        <View style={{ flexDirection: 'row', gap: wp(2) }}>
+          <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
+            <TouchableNativeFeedback onPress={() => router.push('/App')}>
+              <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
+                <Entypo name='archive' size={wp(6)} />
+              </View>
+            </TouchableNativeFeedback>
+          </View>
+          <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
+            <TouchableNativeFeedback>
+              <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
+                <EvilIcons name='search' size={wp(6)} />
+              </View>
+            </TouchableNativeFeedback>
+          </View>
+          <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
+            <TouchableNativeFeedback onPress={handlePresentModalPress}>
+              <View style={{ padding: wp(2) }}>
+                <Ionicons name='reorder-three' size={wp(6)} />
+              </View>
+            </TouchableNativeFeedback>
+          </View>
+        </View>
+      </View>
+
+    );
+  }
 
   return (
     <ScreenWrapper>
 
       <View style={{ flex: 1, backgroundColor: background }}>
-        <CustomHeader />
-        
+
+        {/* <CustomHeader /> */}
+
+
         <Tab.Navigator
           screenOptions={({ route }) => ({
             tabBarIcon: ({ focused }) => {
@@ -86,6 +115,7 @@ export default function Index() {
                   return <Fontisto name="truck" size={size} color={color} />;
                 case "Store":
                   return <Entypo name="shop" size={size} color={color} />;
+
                 default:
                   return null;
               }
@@ -128,3 +158,36 @@ export default function Index() {
 
   );
 }
+
+
+const styles = StyleSheet.create({
+  optionsContainerStyle: {
+    borderRadius: wp(3)
+  }, MenuOption: {
+    borderRadius: wp(2),
+    padding: wp(1.3),
+    flexDirection: 'row',
+    gap: wp(1),
+    alignItems: 'center',
+    marginVertical: wp(1),
+    marginHorizontal: wp(2)
+  }, contentContainer: {
+    paddingHorizontal: wp(4),
+    paddingBottom: wp(5)
+  }, settingsCont: {
+    borderWidth: wp(.2),
+    // padding: wp(2),
+    overflow: 'hidden',
+    marginTop: wp(1.5),
+    marginBottom: wp(1),
+    borderRadius: wp(4),
+    borderColor: '#6565651c',
+    gap: wp(2)
+  }, settingsItem: {
+    flexDirection: 'row',
+    padding: wp(3),
+    paddingVertical: wp(4.5),
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  }
+})

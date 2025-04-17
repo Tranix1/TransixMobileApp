@@ -27,7 +27,7 @@ const Button = ({
     loading = false,
     style,
     Icon,
-     colors,
+    colors,
     onPress,
     ...rest
 }: buttonProps & { onPress?: () => void }) => {
@@ -41,7 +41,7 @@ const Button = ({
 
     return (
         <View style={[{ overflow: 'hidden', borderRadius: wp(3) }, shadow ? styles.shadow : undefined]}>
-            <TouchableNativeFeedback onPress={onPress} {...rest} disabled={loading}>
+            <TouchableNativeFeedback  {...rest} disabled={loading}>
                 <View
                     style={[
                         styles.overall,
