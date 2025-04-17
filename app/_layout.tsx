@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import * as SplashScreen from 'expo-splash-screen';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Linking } from "react-native";
+import { AuthProvider } from "@/context/AuthContext";
 
 
 export default function RootLayout() {
@@ -49,7 +50,9 @@ export default function RootLayout() {
 
 
     return (
-        <MainLayout />
+        <AuthProvider>
+            <MainLayout />
+        </AuthProvider>
     )
 }
 

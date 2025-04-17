@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     }
     , shadow: {
         elevation: 12,
-        // shadowColor: '#4747475e'
         shadowColor: '#0c0c0c69'
+        // shadowColor: '#4747475e'
     }
 })

@@ -6,7 +6,7 @@ import Home from "./Home/Index";
 import Loads from "./Logistics/Loads/Index";
 import Store from "./Transport/Store/Index";
 import Trucks from "./Logistics/Trucks/Index";
-import Account from "./Account/Index";
+import Account from "./Account/SignUp";
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { FontAwesome6, Fontisto, Octicons, Entypo, EvilIcons, Ionicons, FontAwesome } from "@expo/vector-icons";

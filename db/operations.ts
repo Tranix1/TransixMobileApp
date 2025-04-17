@@ -8,17 +8,17 @@ import { db, auth } from "../app/components/config/fireBase";
  */
 export const addDocument = async (
     collectionName: string,
-     data: object,
-     onStatusUpdate: (status: string) => void ,
-     ) => {
+    data: object,
+    onStatusUpdate: (status: string) => void,
+) => {
     try {
 
-            onStatusUpdate("now submitting to db");
+        onStatusUpdate("now submitting to db");
         const docRef = await addDoc(collection(db, collectionName), {
             ...data,
             timeStamp: serverTimestamp(),
         });
-            onStatusUpdate("Doneee submitting to db");
+        onStatusUpdate("Doneee submitting to db");
         return docRef.id;
     } catch (error) {
         console.error("Error adding document:", error);
@@ -158,7 +158,7 @@ export const checkDocumentExists = async (collectionName: string, filters: Array
 
 export const AddUser = async (userId: string, userData: object) => {
     try {
-        const userRef = doc(db, "users", userId); // Custom ID
+        const userRef = doc(db, "personalData", userId); // Custom ID
         await setDoc(userRef, userData, { merge: true });
 
         console.log("User added successfully with ID:", userId);

@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setIsSignedIN(true);
             await AsyncStorage.setItem("user", JSON.stringify({ ...user }));
 
-            router.back();
+            router.dismissAll();
             return { success: true };
 
         } catch (error: any) {

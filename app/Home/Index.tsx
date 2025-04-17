@@ -1,14 +1,16 @@
-import { ScrollView, StyleSheet, Text, TouchableNativeFeedback, View } from 'react-native'
-import React from 'react'
+import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableNativeFeedback, View } from 'react-native'
+import React, { useState } from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import { ThemedText } from '@/components/ThemedText'
-import { wp } from '@/constants/common'
-import { Entypo, EvilIcons, Ionicons, Octicons } from '@expo/vector-icons'
+import { hp, wp } from '@/constants/common'
+import { AntDesign, Entypo, EvilIcons, FontAwesome, FontAwesome6, Ionicons, MaterialIcons, Octicons } from '@expo/vector-icons'
 import { useColorScheme } from '@/hooks/useColorScheme.web'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import { BlurView } from 'expo-blur'
+import { useAuth } from '@/context/AuthContext'
 
 const Index = () => {
     function CustomHeader() {
@@ -33,21 +35,21 @@ const Index = () => {
                     <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                         <TouchableNativeFeedback onPress={() => router.push('/App')}>
                             <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
-                                <Entypo name='archive' size={wp(6)} />
+                                <Entypo name='archive' size={wp(6)} color={icon} />
                             </View>
                         </TouchableNativeFeedback>
                     </View>
                     <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                         <TouchableNativeFeedback>
                             <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
-                                <EvilIcons name='search' size={wp(6)} />
+                                <EvilIcons name='search' size={wp(6)} color={icon} />
                             </View>
                         </TouchableNativeFeedback>
                     </View>
                     <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-                        <TouchableNativeFeedback onPress={() => { }}>
+                        <TouchableNativeFeedback onPress={() => { setIsVisible(true) }}>
                             <View style={{ padding: wp(2) }}>
-                                <Ionicons name='reorder-three' size={wp(6)} />
+                                <Ionicons name='reorder-three' size={wp(6)} color={icon} />
                             </View>
                         </TouchableNativeFeedback>
                     </View>
@@ -62,10 +64,165 @@ const Index = () => {
     const background = useThemeColor('background')
     const coolGray = useThemeColor('coolGray')
 
+    const [isVisible, setIsVisible] = useState(true)
+
+    const { user } = useAuth()
+    console.log(user);
+
+
+
+    useFocusEffect(
+        React.useCallback(() => {
+            setIsVisible(false);
+        }, [])
+    );
+
+
     return (
 
         <View style={{ flex: 1 }}>
             <CustomHeader />
+            <SafeAreaView>
+                <Modal onRequestClose={() => setIsVisible(false)} statusBarTranslucent visible={isVisible} transparent animationType='fade'>
+                    <Pressable onPressIn={() => { }} style={{ flex: 1, }}>
+                        <BlurView intensity={10} tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-start', flex: 1, padding: wp(4), }}>
+                            <View style={{
+                                backgroundColor: backgroundColor, padding: wp(4), elevation: 12,
+                                shadowColor: '#0c0c0c69', borderRadius: wp(6), marginTop: hp(15)
+                            }}>
+
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
+                                        <TouchableNativeFeedback onPress={() => setIsVisible(false)}>
+                                            <View style={{ padding: wp(2), justifyContent: 'center' }}>
+                                                <Ionicons name='close' color={icon} size={wp(4)} />
+                                            </View>
+                                        </TouchableNativeFeedback>
+                                    </View>
+                                    <ThemedText type='subtitle' color={accent} style={{ flex: 1, textAlign: 'center' }}>
+                                        Transix
+                                    </ThemedText>
+                                    <View style={{ overflow: 'hidden', borderRadius: wp(10), width: wp(8) }}>
+                                        {/* <TouchableNativeFeedback>
+                                            <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
+                                                <Ionicons name='close' color={icon} size={wp(6)} />
+                                            </View>
+                                        </TouchableNativeFeedback> */}
+                                    </View>
+                                </View>
+                                <View style={{ marginVertical: wp(4), gap: 4 }}>
+                                    <View style={{ borderTopRightRadius: wp(5), borderTopLeftRadius: wp(5), backgroundColor: background, padding: wp(4) }}>
+                                        {user ?
+
+                                            <View style={{ gap: wp(4), }}>
+                                                <View style={{ flexDirection: 'row', padding: wp(2), gap: wp(2), alignItems: 'center' }}>
+                                                    <FontAwesome name='user-circle' color={coolGray} size={wp(10)} />
+                                                    <View>
+                                                        <ThemedText>
+                                                            {user?.displayName}
+                                                        </ThemedText>
+                                                        <ThemedText type='tiny' color={coolGray}>
+                                                            {user?.email}
+                                                        </ThemedText>
+
+                                                    </View>
+                                                </View>
+
+                                                <Button title='Manage Account' onPress={() => router.push('/Account/Login')}
+                                                    Icon={<AntDesign name='arrowright111111111111111111' size={wp(4)} color={accent} style={{ marginLeft: wp(1) }} />} />
+                                            </View>
+                                            :
+                                            <View style={{ gap: wp(4), }}>
+                                                <View style={{ flexDirection: 'row', padding: wp(2), gap: wp(2), alignItems: 'center' }}>
+                                                    <FontAwesome name='user-circle' color={coolGray} size={wp(10)} />
+                                                    <View>
+                                                        <ThemedText>
+                                                            You are not Logged In
+                                                        </ThemedText>
+                                                        <ThemedText type='tiny' color={coolGray}>
+                                                            Click button below to Login or Create New Account
+                                                        </ThemedText>
+
+                                                    </View>
+                                                </View>
+
+                                                <Button title='Login Now' onPress={() => router.push('/Account/Login')}
+                                                    Icon={<AntDesign name='login' size={wp(4)} color={accent} style={{ marginLeft: wp(1) }} />} />
+                                            </View>
+                                        }
+                                    </View>
+                                    <TouchableNativeFeedback>
+                                        <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name="reader" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View>
+                                                <ThemedText type='default'>
+                                                    My Contracts
+                                                </ThemedText>
+                                            </View>
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                    <TouchableNativeFeedback>
+                                        <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View>
+                                                <ThemedText type='default'>
+                                                    Manage My Trucks
+                                                </ThemedText>
+                                            </View>
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                    <TouchableNativeFeedback>
+                                        <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <FontAwesome6 name="boxes-stacked" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View>
+                                                <ThemedText type='default'>
+                                                    Manage My Loads
+                                                </ThemedText>
+                                            </View>
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                    <TouchableNativeFeedback>
+                                        <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <MaterialIcons name="work-history" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+
+                                            <View>
+                                                <ThemedText type='default'>
+                                                    My Payments History
+                                                </ThemedText>
+                                            </View>
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                    <View style={{ borderBottomRightRadius: wp(5), borderBottomLeftRadius: wp(5), overflow: 'hidden' }}>
+
+                                        <TouchableNativeFeedback>
+                                            <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                                <FontAwesome6 name="shop" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                                <View>
+                                                    <ThemedText type='default'>
+                                                        Manage My Shop
+                                                    </ThemedText>
+                                                </View>
+                                            </View>
+                                        </TouchableNativeFeedback>
+                                    </View>
+                                </View>
+                                <TouchableNativeFeedback>
+                                    <View style={{ paddingHorizontal: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                        <Ionicons name="settings-outline" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+
+                                        <View>
+                                            <ThemedText type='default'>
+                                                Settings
+                                            </ThemedText>
+                                        </View>
+                                    </View>
+                                </TouchableNativeFeedback>
+                                <View style={{ marginBottom: wp(2) }} />
+                            </View>
+                        </BlurView>
+                    </Pressable>
+                </Modal>
+            </SafeAreaView>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ marginVertical: wp(4), marginHorizontal: wp(2) }}>
 
