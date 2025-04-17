@@ -1,19 +1,15 @@
 import React, { useState, FC } from "react";
-import { collection, doc, addDoc, serverTimestamp, } from 'firebase/firestore';
 
-import { View, TextInput, Text, TouchableOpacity, ActivityIndicator, StyleSheet, ScrollView } from "react-native";
+import { View, TextInput, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 
 import inputstyles from "../../../components/styles/inputElement";
 
 import CheckOutMakePayments from "@/components/CheckOutPayment";
+import { ErrorOverlay } from "@/components/ErrorOverLay";
 import { handleMakePayment } from "@/payments/operations";
 
 
 function AddLoadContract() {
-
-
-  //   const { username, contact, isVerified, isBlackListed, blackLWarning, blockVerifiedU, expoPushToken, verifyOngoing } = route.params
-  const [error, setError] = React.useState("")
 
   //   const loadsContract = collection(db, "");
   type FormDataType = {
@@ -52,6 +48,8 @@ function AddLoadContract() {
       triaxlesScnd: string;
       linksFrst: string;
       linksScnd: string;
+      superLinkFrst: string;
+      superLinkScnd: string;
     };
     returnRate: {
       solidFrst: string;
@@ -60,6 +58,8 @@ function AddLoadContract() {
       triaxlesScnd: string;
       linksFrst: string;
       linksScnd: string;
+      superLinkFrst: string;
+      superLinkScnd: string;
     };
     returnCommodity: { frst: string; scnd: string; third: string; forth: string; };
   };
@@ -70,8 +70,8 @@ function AddLoadContract() {
     location: { frst: "", scnd: "", thrd: "", forth: "", fifth: "", sixth: "", seventh: "" },
     trckRequired: { frst: "", scnd: "", third: "", forth: "", fifth: "" },
     otherRequirements: { frst: "", scnd: "", third: "", forth: "" },
-    rate: { solidFrst: "", solidScnd: "", triaxleFrst: "", triaxlesScnd: "", linksFrst: "", linksScnd: "" },
-    returnRate: { solidFrst: "", solidScnd: "", triaxleFrst: "", triaxlesScnd: "", linksFrst: "", linksScnd: "" },
+    rate: { solidFrst: "", solidScnd: "", triaxleFrst: "", triaxlesScnd: "", linksFrst: "", linksScnd: "", superLinkFrst: "", superLinkScnd: "" },
+    returnRate: { solidFrst: "", solidScnd: "", triaxleFrst: "", triaxlesScnd: "", linksFrst: "", linksScnd: "", superLinkFrst: "", superLinkScnd: "" },
     returnCommodity: { frst: "", scnd: "", third: "", forth: "" }
   });
 
@@ -134,135 +134,7 @@ function AddLoadContract() {
 
 
 
-  const [location, setlocation] = React.useState<string>("")
 
-  const [dspAddLocation, setDspAddLocation] = React.useState<boolean>(false)
-
-
-  function specifyLocation(loc: string): void {
-    setlocation(loc);
-    setDspAddLocation(false);
-  }
-
-
-
-<<<<<<< HEAD
-=======
-
-
-
-
-  const [spinnerItem, setSpinnerItem] = React.useState(false);
-
-  const handleSubmit = async () => {
-
-    type FormData = { [key: string]: any }; // Or define specific fields if needed
-
-    const areAllElementsTrueExceptKeys = (obj: FormData, excludedKeys: string[]): boolean => {
-      for (const key in obj) {
-        if (!excludedKeys.includes(key) && !obj[key]) {
-          return false;
-        }
-      }
-      return true;
-    };
-
-    const excludedKeys = ["scndTrailerReg", "trailerModel", "additionalInfo"];
-
-    if (!areAllElementsTrueExceptKeys(formData, excludedKeys)) {
-      alert("This truck is for verified loads.\n\nAdd all truck details except for Trailer Reg2 if not available.");
-      setSpinnerItem(false)
-      return;
-    }
-
-
-    const [paymenPageDsp, setPaymentPageDsp] = React.useState<boolean>(false)
-
-
-
-
-
-
-<<<<<<< HEAD
-=======
-        const [paymenPageDsp , setPaymentPageDsp]=React.useState<boolean>(false)
-        
-
-        
-
-
-              
->>>>>>> db28b4b (working functionality on make payment)
-    // try {
-    //   const docRef = await addDoc("loadsContracts", {
-    //     // userId: userId, // Add the user ID to the document
-    //     // companyName: username,
-    //     // contact: contact,
-    //     // expoPushToken: expoPushToken,
-    //     timeStamp: serverTimestamp(),
-    //     currency: currency,
-    //     contractLocation: location,
-    //     manyRoutesAllocaton: manyRoutesAllocaton,
-    //     manyRoutesAssign: manyRoutesAssign,
-    //     formData: formData,
-    //     formDataScnd: formDataScnd,
-    //     contractId: `co${Math.floor(100000000000 + Math.random() * 900000000000).toString()}ct`,
-
-    //   });
-
-    //   console.log('ayayyayayayayarr')
-
-    // } catch (err) {
-    //   setSpinnerItem(false)
-    //   setError(err.toString());
-    // }
-  };
-
-
-<<<<<<< HEAD
-  const [paymentUpdate, setPaymentUpdate] = React.useState<string>("");
-
-  const justConsole = () => {
-    console.log("pananaanana");
-    handleMakePayment(3, "yaya", setPaymentUpdate);
-  };
-
-
-
-  console.log("nowww ", paymentUpdate)
-=======
- const [paymentUpdate, setPaymentUpdate] = React.useState<string>("");
-
-    const justConsole = () => {
-      console.log("pananaanana");
-      handleMakePayment(3, "yaya", setPaymentUpdate);
-    };
-
-
-
-console.log("nowww " , paymentUpdate)
->>>>>>> db28b4b (working functionality on make payment)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
->>>>>>> 98fadcbc85fc46ab91d13f53e3b87765fb4f4282
   const [dspCommodity, setDspCommodity] = React.useState(false);
 
   function toggleDspCommodity() {
@@ -364,52 +236,115 @@ console.log("nowww " , paymentUpdate)
     </TouchableOpacity>
   );
 
+
+
+  const [location, setlocation] = React.useState<string>("")
+
+  const [dspAddLocation, setDspAddLocation] = React.useState<boolean>(false)
+
+  // const [interOpCount , setIntOpLoc]=React.useState<object>({})
+
+  function specifyLocation(loc: string): void {
+    setlocation(loc);
+  }
+
+
+  const [interOpCount, setIntOpLoc] = React.useState<string[]>([]);
+
+  const [locaOpCount, setLocaOpLoc] = React.useState<string>("");
+
+  console.log(interOpCount)
+  console.log(locaOpCount)
+
+
+  function toggleLocalCountry(count: string): void {
+    setIntOpLoc([])
+    setLocaOpLoc(count)
+    setDspAddLocation(false)
+    setlocation("")
+  }
+
+  function toggleInternationalCountry(country: string): void {
+    setLocaOpLoc("")
+    setIntOpLoc(prev => {
+      if (prev.includes(country)) {
+        return prev.filter(item => item !== country); // remove if already selected
+      } else {
+        return [...prev, country]; // add if not selected
+      }
+    });
+  }
+
+
+
   // This is the button to choose a country 
   type SlctCountryBtnProps = {
     selectedLoc: string;
+    onPress: () => void;
+    isSelected?: boolean;
   };
 
-  const SlctCountryBtn = ({ selectedLoc }: SlctCountryBtnProps) => (
-    <TouchableOpacity onPress={() => specifyLocation(selectedLoc)} style={styles.buttonStyle}>
-      <Text style={{ color: '#6a0c0c' }}>{selectedLoc}</Text>
+  const SlctCountryBtn = ({ selectedLoc, onPress, isSelected }: SlctCountryBtnProps) => (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        styles.buttonStyle,
+        { backgroundColor: isSelected ? '#6a0c0c' : '#eee' },
+      ]}
+    >
+      <Text style={{ color: isSelected ? 'white' : '#6a0c0c' }}>{selectedLoc}</Text>
     </TouchableOpacity>
   );
 
 
 
 
+  const [dspCheckOutP, setDspCheckout] = React.useState<boolean>(false)
 
-  const [dspCheckOutP, setDspCheckout]= React.useState<boolean>(false)
+  const [dspLoadDErr, setLoadDspError] = React.useState<boolean>(false)
+  const [dspContrDErro, setContractDErr] = React.useState<boolean>(false)
 
-  function toggleDspCheckout (){
+  function toggleDspCheckout() {
     // if(formData.commodity.frst )
-      setDspCheckout(true)
+    if (!formData.commodity.frst || !formDataScnd.paymentTerms || !formData.location.frst || !formData.location.scnd || !formData.trckRequired || !formData.otherRequirements.frst || !formData.rate.solidFrst) {
+      setLoadDspError(true)
+      return
+    } else if (!formDataScnd.loadsPerWeek || !formDataScnd.contractDuration || !formDataScnd.startingDate || !formDataScnd.fuelAvai || !formDataScnd.bookingClosingD || (!locaOpCount && interOpCount.length === 0)) {
+      setContractDErr(true)
+      return
+
+    }
+
+    setDspCheckout(true)
   }
 
-  const contractData={
-       // userId: userId, // Add the user ID to the document
-        // companyName: username,
-        // contact: contact,
-        // expoPushToken: expoPushToken,
-        // currency: currency,
-        contractLocation: location,
-        manyRoutesAllocaton: manyRoutesAllocaton,
-        manyRoutesAssign: manyRoutesAssign,
-        formData: formData,
-        formDataScnd: formDataScnd,
-        contractId: `co${Math.floor(100000000000 + Math.random() * 900000000000).toString()}ct`,
+  const contractData = {
+    // userId: userId, // Add the user ID to the document
+    // companyName: username,
+    // contact: contact,
+    // expoPushToken: expoPushToken,
+    // currency: currency, 
+    contractLocation: location,
+    interCountries: interOpCount,
+    localCountr: locaOpCount,
+    manyRoutesAllocaton: manyRoutesAllocaton,
+    manyRoutesAssign: manyRoutesAssign,
+    formData: formData,
+    formDataScnd: formDataScnd,
+    contractId: `co${Math.floor(100000000000 + Math.random() * 900000000000).toString()}ct`,
   }
 
- const [paymentUpdate, setPaymentUpdate] = React.useState<string>("");
+  const [paymentUpdate, setPaymentUpdate] = React.useState<string>("");
 
-    const justConsole = () => {
-      console.log("pananaanana");
-      handleMakePayment(3, "yaya", setPaymentUpdate , "loadsContracts" , contractData );
-    };
+  const justConsole = () => {
+
+    handleMakePayment(3, "yaya", setPaymentUpdate, "loadsContracts", contractData);
+  };
 
 
 
-console.log("payment status" , paymentUpdate)
+  console.log("payment status", paymentUpdate)
+
 
 
   return (
@@ -417,26 +352,47 @@ console.log("payment status" , paymentUpdate)
 
 
 
-<<<<<<< HEAD
-       { dspCheckOutP && <CheckOutMakePayments jsxProp={<View>
-=======
-<<<<<<< HEAD
+      <ErrorOverlay
+        visible={dspLoadDErr}
+        title="Missing important details on load"
+        errors={[
+          !formData.commodity.frst && "Enter at least one commodity",
+          !formDataScnd.paymentTerms && "Enter the payment terms",
+          !formData.location.frst && "Enter from location or first location",
+          !formData.location.scnd && "Enter destination location",
+          !formData.trckRequired && "Enter at least one type of truck required",
+          !formData.otherRequirements.frst && "Enter at least one requirement",
+          !formData.rate.solidFrst && "Enter the solid rate",
+        ].filter(Boolean) as string[]}
+        onClose={() => setLoadDspError(false)}
+      />
 
-      <CheckOutMakePayments jsxProp={<View>
+      <ErrorOverlay
+        visible={dspContrDErro}
+        title="Missing important details on contracts"
+        errors={[
+          !formDataScnd.loadsPerWeek && "Enter loads per week",
+          !formDataScnd.contractDuration && "Enter contract duration",
+          !formDataScnd.startingDate && "Enter when the contract is starting",
+          !formDataScnd.fuelAvai && "Enter if fuel is available and how it's distributed",
+          !formDataScnd.bookingClosingD && "Enter booking closing date",
+          !locaOpCount && interOpCount.length === 0 && "Select country the loads will operate",
+        ].filter(Boolean) as string[]}
+        onClose={() => setContractDErr(false)}
+      />
+
+
+
+
+
+
+      {dspCheckOutP && <CheckOutMakePayments jsxProp={<View>
         <Text> its $10 to add contract </Text>
-      </View>} anyProp="yaya" confirmButon={justConsole} />
+      </View>} confirmButon={justConsole} cancelBTN={() => setDspCheckout(false)} />}
+
+
 
       <View style={{ height: 40, position: 'absolute', top: 50, left: 0, right: 0, flexDirection: 'row', borderBottomWidth: 2, borderBottomColor: "#6a0c0c", paddingBottom: 7, justifyContent: 'space-evenly' }} >
-=======
-        <CheckOutMakePayments jsxProp={<View>
->>>>>>> 98fadcbc85fc46ab91d13f53e3b87765fb4f4282
-          <Text> its $10 to add contract </Text>
-        </View> }  confirmButon={justConsole} cancelBTN={()=>setDspCheckout(false)} />}
-
-
-
-      <View style={{ height: 40, position: 'absolute', top:50, left: 0, right: 0, flexDirection: 'row', borderBottomWidth: 2, borderBottomColor: "#6a0c0c", paddingBottom: 7, justifyContent: 'space-evenly' }} >
->>>>>>> db28b4b (working functionality on make payment)
         <TouchableOpacity style={dsoLoadDe ? styles.bttonIsTrue : styles.buttonIsFalse} onPress={dspLoadDet} >
           <Text style={dsoLoadDe ? { color: 'white' } : null} >Load Details</Text>
         </TouchableOpacity>
@@ -474,7 +430,7 @@ console.log("payment status" , paymentUpdate)
             <TextInput
               value={formData.commodity.forth} placeholder="Fourth Commodity" onChangeText={(text) => handleTypedText(text, 'commodity.forth')} style={inputstyles.addIterms} />
 
-            {dspCommodity && <ToggleMLBtn whatTToggle={toggleDspCommodity} theTittle="Done Adding" />}
+
             {dspCommodity && (
               <ToggleMLBtn whatTToggle={toggleDspCommodity} theTittle="Done Adding" />
             )}
@@ -690,8 +646,8 @@ console.log("payment status" , paymentUpdate)
         </View>}
 
         {!dspReturnRate && !dspOtherRequirements && !dspTruckRequired && !dspLocation && !dspCommodity && <View style={styles.viewMainDsp}>
-          {dspRate && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the commodities to be transpoted</Text>}
-          {!dspRate && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Commodity</Text>}
+          {dspRate && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the Rates dor Contract</Text>}
+          {!dspRate && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Rates</Text>}
           <TextInput
             value={formData.rate.solidFrst} placeholder="Solid First Rate" onChangeText={(text) => handleTypedText(text, 'rate.solidFrst')} style={inputstyles.addIterms} />
           {dspRate && <TextInput
@@ -705,6 +661,11 @@ console.log("payment status" , paymentUpdate)
             value={formData.rate.linksFrst} placeholder="Links First Rate" onChangeText={(text) => handleTypedText(text, 'rate.linksFrst')} style={inputstyles.addIterms} />
           {dspRate && <TextInput
             value={formData.rate.linksScnd} placeholder="Links Second Rate" onChangeText={(text) => handleTypedText(text, 'rate.linksScnd')} style={inputstyles.addIterms} />}
+
+          {<TextInput
+            value={formData.rate.superLinkFrst} placeholder="Super Link Second Rate" onChangeText={(text) => handleTypedText(text, 'rate.superLinkFrst')} style={inputstyles.addIterms} />}
+          {dspRate && <TextInput
+            value={formData.rate.superLinkScnd} placeholder="Super Links Rate" onChangeText={(text) => handleTypedText(text, 'rate.superLinkScnd')} style={inputstyles.addIterms} />}
 
 
           {!dspRate && <ToggleMLBtn whatTToggle={toggleDspRate} theTittle="More than 2 rates" />}
@@ -744,8 +705,8 @@ console.log("payment status" , paymentUpdate)
         </View>
 
         {<View style={styles.viewMainDsp}>
-          {dspReturnRate && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the commodities to be transpoted</Text>}
-          {!dspReturnRate && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Commodity</Text>}
+          {dspReturnRate && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the rates for return loads</Text>}
+          {!dspReturnRate && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add rates for return loads</Text>}
           <TextInput
             value={formData.returnRate.solidFrst} placeholder="Return Solid First Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.solidFrst')}
             style={inputstyles.addIterms}
@@ -762,6 +723,11 @@ console.log("payment status" , paymentUpdate)
             value={formData.returnRate.linksFrst} placeholder="Return Links First Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.linksFrst')} style={inputstyles.addIterms} />
           {dspReturnRate && <TextInput
             value={formData.returnRate.linksScnd} placeholder="Return Links Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.linkScnd')} style={inputstyles.addIterms} />}
+          {<TextInput
+            value={formData.returnRate.superLinkFrst} placeholder="Links Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.superLinkFrst')} style={inputstyles.addIterms} />}
+
+          {dspReturnRate && <TextInput
+            value={formData.returnRate.superLinkScnd} placeholder="Links Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.superLinkScnd')} style={inputstyles.addIterms} />}
 
           {!dspReturnRate && <ToggleMLBtn whatTToggle={toggleDspReturnRate} theTittle="Done Return Rate" />}
           {dspReturnRate && <ToggleMLBtn whatTToggle={toggleDspReturnRate} theTittle="Done Return Rate" />}
@@ -770,7 +736,7 @@ console.log("payment status" , paymentUpdate)
       </ScrollView>}
 
       {!dspRturnnLoads && dspContractD && !dsoLoadDe && <ScrollView>
-        {!dspAddLocation && <View>
+        {!dspAddLocation && <View style={{ alignItems: 'center' }} >
 
           <TextInput
             value={formDataScnd.fuelAvai} placeholder="Fuel" onChangeText={(text) => handleTypedTextScnd(text, 'fuelAvai')} style={inputstyles.addIterms} />
@@ -798,22 +764,69 @@ console.log("payment status" , paymentUpdate)
 
         </View>}
 
-        {dspAddLocation && <View style={{ alignSelf: 'center' }} >
-          <SlctCountryBtn selectedLoc="International" />
-          <SlctCountryBtn selectedLoc="Zimbabwe" />
-          <SlctCountryBtn selectedLoc="SouthAfrica" />
-          <SlctCountryBtn selectedLoc="Namibia" />
-          <SlctCountryBtn selectedLoc="Tanzania" />
-          <SlctCountryBtn selectedLoc="Mozambique" />
-          <SlctCountryBtn selectedLoc="Zambia" />
-          <SlctCountryBtn selectedLoc="Botswana" />
-          <SlctCountryBtn selectedLoc="Malawi" />
+        {dspAddLocation && (
+          <View style={{ alignSelf: 'center' }}>
+            {!location && <View>
 
-        </View>}
+              {/* Local Selector */}
+              <SlctCountryBtn selectedLoc="Local" onPress={() => specifyLocation("Local")} />
+
+              {/* International Selector */}
+              <SlctCountryBtn selectedLoc="International" onPress={() => specifyLocation("International")} />
+
+            </View>}
+
+            {/* Only show countries if International is selected */}
+            {location === "Local" && (
+              <>
+                <Text>Select The Local Country the contract wull be in</Text>
+                {["Zimbabwe", "SouthAfrica", "Namibia", "Tanzania", "Mozambique", "Zambia", "Botswana", "Malawi"].map((country) => (
+                  <SlctCountryBtn
+                    key={country}
+                    selectedLoc={country}
+                    onPress={() => toggleLocalCountry(country)}
+                  />
+                ))}
+              </>
+            )}
+
+
+            {location === "International" && (
+              <>
+                <Text>Select The International countries the contract will be in</Text>
+
+
+                {location === "International" && interOpCount.length > 0 && (
+                  <Text>Selected: {interOpCount.join(", ")}</Text>
+                )}
+                {["Zimbabwe", "SouthAfrica", "Namibia", "Tanzania", "Mozambique", "Zambia", "Botswana", "Malawi"].map((country) => (
+                  <SlctCountryBtn
+                    key={country}
+                    selectedLoc={country}
+                    isSelected={interOpCount.includes(country)}
+                    onPress={() => toggleInternationalCountry(country)}
+                  />
+                ))}
+
+                <TouchableOpacity onPress={() => {
+                  setDspAddLocation(false);
+                  setlocation("");
+                }} >
+                  <Text>Donee</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        )}
+
+        {location === "International" && interOpCount.length > 0 && (
+          <Text>Selected International : {interOpCount.join(", ")}</Text>
+        )}
+        {location === "Local" && locaOpCount && <Text>Local : {locaOpCount} </Text>}
 
         <Text>Is the contract International or Local for one country</Text>
         {!dspAddLocation && <TouchableOpacity onPress={() => setDspAddLocation(true)} style={styles.buttonIsFalse}  >
-          <Text> {location ? location : "Choose operating Location"} </Text>
+          <Text> {location ? "Chnage Opearing location" : "Choose operating Location"} </Text>
         </TouchableOpacity>}
 
         <TouchableOpacity onPress={toggleDspCheckout} style={{ flex: 1, backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignItems: 'center', margin: 10, borderRadius: 8 }} >
@@ -886,4 +899,3 @@ const styles = StyleSheet.create({
     borderRadius: 10
   },
 });
-

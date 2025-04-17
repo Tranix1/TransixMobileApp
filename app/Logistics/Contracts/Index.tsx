@@ -13,11 +13,11 @@ const Index = () => {
             <Heading page='Contracts' />
 
             <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/AddContracts/Index')} >
-                <Text>Add Contract</Text>
+                <Text style={{color:'red'}} >Add Contract</Text>
             </TouchableOpacity>
 
             <TouchableOpacity>
-                <Text> View </Text>
+                <Text style={{color:'white'}} > View </Text>
             </TouchableOpacity>
 
             <TouchableOpacity>

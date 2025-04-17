@@ -1,11 +1,7 @@
 import React, { useCallback, useRef } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-<<<<<<< HEAD
-import { TouchableNativeFeedback, View } from "react-native";
-=======
 import { NavigationContainer } from "@react-navigation/native";
 import { StyleSheet, TouchableNativeFeedback, View } from "react-native";
->>>>>>> 98fadcbc85fc46ab91d13f53e3b87765fb4f4282
 import Home from "./Home/Index";
 import Loads from "./Logistics/Loads/Index";
 import Store from "./Transport/Store/Index";

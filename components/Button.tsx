@@ -41,7 +41,7 @@ const Button = ({
 
     return (
         <View style={[{ overflow: 'hidden', borderRadius: wp(3) }, shadow ? styles.shadow : undefined]}>
-            <TouchableNativeFeedback  {...rest} disabled={loading}>
+            <TouchableNativeFeedback  {...rest} disabled={loading} onPress={onPress} >
                 <View
                     style={[
                         styles.overall,

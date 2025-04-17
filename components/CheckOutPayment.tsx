@@ -61,14 +61,6 @@ onPress={confirmButon}
   <Text style={{ color: 'black', fontWeight: '600' }}>Confirm</Text>
 </TouchableOpacity>
 </View>    
-
-
-
-
-
-          
-
-
               </View>
 
   );
