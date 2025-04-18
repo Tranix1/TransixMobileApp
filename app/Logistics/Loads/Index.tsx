@@ -3,7 +3,7 @@ import React from 'react'
 
 const Index = () => {
     return (
-        <View>
+        <View style={{paddingTop:100}} >
             <Text>Index</Text>
         </View>
     )

@@ -63,7 +63,7 @@ const Index = () => {
         // { id: 7, name: 'All', image: '' },
     ]
 
-    const [filterVerified, setFilterVerified] = useState(true)
+    const [filterVerified, setFilterVerified] = useState(false)
 
     const tonneSizes = [
         '1-3 T',

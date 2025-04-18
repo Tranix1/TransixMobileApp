@@ -129,7 +129,7 @@ const Index = () => {
                                                 </View>
 
                                                 <Button title='Manage Account' onPress={() => router.push('/Account/Login')}
-                                                    Icon={<AntDesign name='arrowright111111111111111111' size={wp(4)} color={accent} style={{ marginLeft: wp(1) }} />} />
+                                                    Icon={<AntDesign name='arrowright' size={wp(4)} color={accent} style={{ marginLeft: wp(1) }} />} />
                                             </View>
                                             :
                                             <View style={{ gap: wp(4), }}>
