@@ -1,6 +1,6 @@
 import React, { useState, FC } from "react";
 
-import { View, TextInput, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { View,  TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 
 import inputstyles from "../../../components/styles/inputElement";
 
@@ -8,64 +8,21 @@ import CheckOutMakePayments from "@/components/CheckOutPayment";
 import { ErrorOverlay } from "@/components/ErrorOverLay";
 import { handleMakePayment } from "@/payments/operations";
 
+import { ContractsFormDataScndType } from "@/types/types";
+import { ContractsFormDataType } from "@/types/types";
+
+import { ThemedText } from "@/components/ThemedText";
+import Input from "@/components/Input";
+
+import { useThemeColor } from '@/hooks/useThemeColor';
+import Heading from '@/components/Heading';
+import ScreenWrapper from '@/components/ScreenWrapper';
+
 
 function AddLoadContract() {
+const backgroundLight = useThemeColor('backgroundLight')
 
-  //   const loadsContract = collection(db, "");
-  type FormDataType = {
-    commodity: {
-      frst: string;
-      scnd: string;
-      third: string;
-      forth: string;
-    };
-    location: {
-      frst: string;
-      scnd: string;
-      thrd: string;
-      forth: string;
-      fifth: string;
-      sixth: string;
-      seventh: string;
-    };
-    trckRequired: {
-      frst: string;
-      scnd: string;
-      third: string;
-      forth: string;
-      fifth: string;
-    };
-    otherRequirements: {
-      frst: string;
-      scnd: string;
-      third: string;
-      forth: string;
-    };
-    rate: {
-      solidFrst: string;
-      solidScnd: string;
-      triaxleFrst: string;
-      triaxlesScnd: string;
-      linksFrst: string;
-      linksScnd: string;
-      superLinkFrst: string;
-      superLinkScnd: string;
-    };
-    returnRate: {
-      solidFrst: string;
-      solidScnd: string;
-      triaxleFrst: string;
-      triaxlesScnd: string;
-      linksFrst: string;
-      linksScnd: string;
-      superLinkFrst: string;
-      superLinkScnd: string;
-    };
-    returnCommodity: { frst: string; scnd: string; third: string; forth: string; };
-  };
-  ;
-
-  const [formData, setFormData] = useState<FormDataType>({
+  const [formData, setFormData] = useState<ContractsFormDataType>({
     commodity: { frst: "", scnd: "", third: "", forth: "" },
     location: { frst: "", scnd: "", thrd: "", forth: "", fifth: "", sixth: "", seventh: "" },
     trckRequired: { frst: "", scnd: "", third: "", forth: "", fifth: "" },
@@ -77,9 +34,9 @@ function AddLoadContract() {
 
   const handleTypedText = (
     text: string,
-    field: `${keyof FormDataType}.${string}`
+    field: `${keyof ContractsFormDataType}.${string}`
   ) => {
-    const [section, subField] = field.split('.') as [keyof FormDataType, string];
+    const [section, subField] = field.split('.') as [keyof ContractsFormDataType, string];
 
     setFormData(prevFormData => ({
       ...prevFormData,
@@ -91,22 +48,9 @@ function AddLoadContract() {
   };
 
 
-  type FormDataScndType = {
-    paymentTerms: string;
-    returnPaymentTerms: string;
-    contractDuration: string;
-    startingDate: string;
-    bookingClosingD: string;
-    contractRenewal: string;
-    manyRoutesOperation: string;
-    loadsPerWeek: string;
-    alertMsg: string;
-    fuelAvai: string;
-    additionalInfo: string;
-  };
 
 
-  const [formDataScnd, setFormDataScnd] = React.useState<FormDataScndType>({
+  const [formDataScnd, setFormDataScnd] = React.useState<ContractsFormDataScndType>({
     paymentTerms: "",
     returnPaymentTerms: "",
     contractDuration: "",
@@ -122,7 +66,7 @@ function AddLoadContract() {
 
   const handleTypedTextScnd = (
     value: string,
-    fieldName: keyof FormDataScndType
+    fieldName: keyof ContractsFormDataScndType
   ) => {
     setFormDataScnd((prevFormData) => ({
       ...prevFormData,
@@ -231,8 +175,8 @@ function AddLoadContract() {
   };
 
   const ToggleMLBtn = ({ whatTToggle, theTittle }: ToggleMLBtnProps) => (
-    <TouchableOpacity onPress={whatTToggle} style={styles.moreLessIterms}>
-      <Text style={{ fontStyle: 'italic' }}>{theTittle}</Text>
+    <TouchableOpacity onPress={whatTToggle} style={[styles.moreLessIterms,{ backgroundColor: backgroundLight } ]}>
+      <ThemedText style={{ fontStyle: 'italic' }}>{theTittle}</ThemedText>
     </TouchableOpacity>
   );
 
@@ -292,7 +236,7 @@ function AddLoadContract() {
         { backgroundColor: isSelected ? '#6a0c0c' : '#eee' },
       ]}
     >
-      <Text style={{ color: isSelected ? 'white' : '#6a0c0c' }}>{selectedLoc}</Text>
+      <ThemedText style={{ color: isSelected ? 'white' : '#6a0c0c' }}>{selectedLoc}</ThemedText>
     </TouchableOpacity>
   );
 
@@ -348,7 +292,12 @@ function AddLoadContract() {
 
 
   return (
-    <View style={{ alignItems: 'center', paddingTop: 100 }}>
+        <ScreenWrapper>
+
+            <Heading page='Add Contracts' />
+    <View style={{ alignItems: 'center', paddingTop: 60 }}>
+      
+
 
 
 
@@ -387,23 +336,23 @@ function AddLoadContract() {
 
 
       {dspCheckOutP && <CheckOutMakePayments jsxProp={<View>
-        <Text> its $10 to add contract </Text>
+        <ThemedText> its $10 to add contract </ThemedText>
       </View>} confirmButon={justConsole} cancelBTN={() => setDspCheckout(false)} />}
 
 
 
-      <View style={{ height: 40, position: 'absolute', top: 50, left: 0, right: 0, flexDirection: 'row', borderBottomWidth: 2, borderBottomColor: "#6a0c0c", paddingBottom: 7, justifyContent: 'space-evenly' }} >
+      <View style={{ height: 40, position: 'absolute', top: 5, left: 0, right: 0, flexDirection: 'row', borderBottomWidth: 2, borderBottomColor: "#6a0c0c", justifyContent: 'space-evenly', }} >
         <TouchableOpacity style={dsoLoadDe ? styles.bttonIsTrue : styles.buttonIsFalse} onPress={dspLoadDet} >
-          <Text style={dsoLoadDe ? { color: 'white' } : null} >Load Details</Text>
+          <ThemedText style={dsoLoadDe ? { color: 'white' } : null} >Load Details</ThemedText>
         </TouchableOpacity>
 
         <TouchableOpacity style={dspRturnnLoads ? styles.bttonIsTrue : styles.buttonIsFalse} onPress={toggleDspReturnLoads}>
-          <Text style={dspRturnnLoads ? { color: 'white' } : null}>Return Load</Text>
+          <ThemedText style={dspRturnnLoads ? { color: 'white' } : null}>Return Load</ThemedText>
         </TouchableOpacity>
 
 
         <TouchableOpacity onPress={toggleDspContractD} style={dspContractD ? styles.bttonIsTrue : styles.buttonIsFalse}>
-          <Text style={dspContractD ? { color: 'white' } : null}>Contract Details</Text>
+          <ThemedText style={dspContractD ? { color: 'white' } : null}>Contract Details</ThemedText>
         </TouchableOpacity>
 
       </View>
@@ -412,22 +361,22 @@ function AddLoadContract() {
 
 
         {!dspReturnRate && !dspOtherRequirements && !dspRate && !dspTruckRequired && !dspLocation && <View style={styles.viewMainDsp} >
-          {dspCommodity && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the commodities to be transpoted</Text>}
-          {!dspCommodity && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Commodity</Text>}
+          {dspCommodity && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the commodities to be transpoted</ThemedText>}
+          {!dspCommodity && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Commodity</ThemedText>}
 
 
-          <TextInput
+          <Input
             value={formData.commodity.frst} placeholder="First Commodity" onChangeText={(text) => handleTypedText(text, 'commodity.frst')} style={inputstyles.addIterms} />
 
-          <TextInput
+          <Input
             value={formData.commodity.scnd} placeholder="Second Commodity" onChangeText={(text) => handleTypedText(text, 'commodity.scnd')} style={inputstyles.addIterms} />
 
           {!dspCommodity && <ToggleMLBtn whatTToggle={toggleDspCommodity} theTittle="More Than 2 commo" />}
 
           {dspCommodity && <View>
-            <TextInput
+            <Input
               value={formData.commodity.third} placeholder="Third Commodity" onChangeText={(text) => handleTypedText(text, 'commodity.third')} style={inputstyles.addIterms} />
-            <TextInput
+            <Input
               value={formData.commodity.forth} placeholder="Fourth Commodity" onChangeText={(text) => handleTypedText(text, 'commodity.forth')} style={inputstyles.addIterms} />
 
 
@@ -442,8 +391,8 @@ function AddLoadContract() {
         {!dspReturnRate && !dspOtherRequirements && !dspRate && !dspTruckRequired && !dspCommodity && !dspLocation && <View style={styles.viewMainDsp} >
 
 
-          <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }}>Payment Terms</Text>
-          <TextInput
+          <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }}>Payment Terms</ThemedText>
+          <Input
             value={formDataScnd.paymentTerms} placeholder="Payment Terms" onChangeText={(text) => handleTypedTextScnd(text, 'paymentTerms')} style={inputstyles.addIterms} />
 
 
@@ -451,17 +400,17 @@ function AddLoadContract() {
 
         {!dspReturnRate && !dspOtherRequirements && !dspRate && !dspTruckRequired && !dspCommodity && <View style={styles.viewMainDsp} >
 
-          {dspLocation && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the commodities to be transpoted</Text>}
-          {!dspLocation && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Commodity</Text>}
+          {dspLocation && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the commodities to be transpoted</ThemedText>}
+          {!dspLocation && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Commodity</ThemedText>}
 
           {dspLocation && !nowEnterLoca && (
             <View style={{ padding: 20 }}>
-              <Text style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', marginBottom: 15 }}>
+              <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', marginBottom: 15 }}>
                 There is more than two location
-              </Text>
+              </ThemedText>
 
               <View style={styles.viewSubMainDsp}>
-                <Text style={{ marginBottom: 10 }}>How will they operate from routes to:</Text>
+                <ThemedText style={{ marginBottom: 10 }}>How will they operate from routes to:</ThemedText>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
                   <TouchableOpacity
@@ -474,7 +423,7 @@ function AddLoadContract() {
                       justifyContent: 'center', padding: 3,
                     }}
                   >
-                    <Text>All Routes One Stop</Text>
+                    <ThemedText>All Routes One Stop</ThemedText>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -487,12 +436,12 @@ function AddLoadContract() {
                       justifyContent: 'center', padding: 3, marginLeft: 6
                     }}
                   >
-                    <Text>Route to Route</Text>
+                    <ThemedText>Route to Route</ThemedText>
                   </TouchableOpacity>
                 </View>
 
                 {manyRoutesAssign === 'All Routes One Stop' && (
-                  <TextInput
+                  <Input
                     value={formData.location.seventh}
                     placeholder="Sixth Location"
                     onChangeText={(text) => handleTypedText(text, 'location.seventh')}
@@ -502,7 +451,7 @@ function AddLoadContract() {
               </View>
 
               <View style={styles.viewSubMainDsp}>
-                <Text style={{ marginBottom: 10 }}>Will the tranporter choose where to go or it will be random?</Text>
+                <ThemedText style={{ marginBottom: 10 }}>Will the tranporter choose where to go or it will be random?</ThemedText>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
                   <TouchableOpacity
@@ -515,7 +464,7 @@ function AddLoadContract() {
                       justifyContent: 'center', padding: 3,
                     }}
                   >
-                    <Text style={{ fontSize: 13 }}>Tranporter Choose</Text>
+                    <ThemedText style={{ fontSize: 13 }}>Tranporter Choose</ThemedText>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -528,13 +477,13 @@ function AddLoadContract() {
                       justifyContent: 'center', padding: 3, marginLeft: 6,
                     }}
                   >
-                    <Text style={{ fontSize: 13 }}>Random Allocation</Text>
+                    <ThemedText style={{ fontSize: 13 }}>Random Allocation</ThemedText>
                   </TouchableOpacity>
                 </View>
               </View>
 
-              <Text style={{ marginBottom: 10 }}>How will the routes work?</Text>
-              <TextInput
+              <ThemedText style={{ marginBottom: 10 }}>How will the routes work?</ThemedText>
+              <Input
                 value={formDataScnd.manyRoutesOperation}
                 placeholder="Routes Operate"
                 onChangeText={(text) => handleTypedTextScnd(text, 'manyRoutesOperation')}
@@ -543,7 +492,7 @@ function AddLoadContract() {
 
               {manyRoutesAllocaton && manyRoutesAssign && (
                 <TouchableOpacity onPress={doneEnterThLocs} style={{ marginTop: 20 }}>
-                  <Text style={{ color: 'blue', fontSize: 16 }}>Done</Text>
+                  <ThemedText style={{ color: 'blue', fontSize: 16 }}>Done</ThemedText>
                 </TouchableOpacity>
               )}
             </View>
@@ -552,9 +501,9 @@ function AddLoadContract() {
 
           {!dspLocation && <View>
 
-            <TextInput
+            <Input
               value={formData.location.frst} placeholder={dspLocation ? "First Location" : "From Location"} onChangeText={(text) => handleTypedText(text, 'location.frst')} style={inputstyles.addIterms} />
-            <TextInput
+            <Input
               value={formData.location.scnd} placeholder={dspLocation ? "Second Location" : "To Location"} onChangeText={(text) => handleTypedText(text, 'location.scnd')} style={inputstyles.addIterms} />
 
           </View>}
@@ -565,17 +514,17 @@ function AddLoadContract() {
 
           {dspLocation && nowEnterLoca && <View>
 
-            <TextInput
+            <Input
               value={formData.location.frst} placeholder={dspLocation ? "First Location" : "From Location"} onChangeText={(text) => handleTypedText(text, 'location.frst')} style={inputstyles.addIterms} />
-            <TextInput
+            <Input
               value={formData.location.scnd} placeholder={dspLocation ? "Second Location" : "To Location"} onChangeText={(text) => handleTypedText(text, 'location.scnd')} style={inputstyles.addIterms} />
-            <TextInput
+            <Input
               value={formData.location.thrd} placeholder="Third Location" onChangeText={(text) => handleTypedText(text, 'location.thrd')} style={inputstyles.addIterms} />
-            <TextInput
+            <Input
               value={formData.location.forth} placeholder="Fourth Location" onChangeText={(text) => handleTypedText(text, 'location.forth')} style={inputstyles.addIterms} />
-            <TextInput
+            <Input
               value={formData.location.fifth} placeholder="Fifth Location" onChangeText={(text) => handleTypedText(text, 'location.fifth')} style={inputstyles.addIterms} />
-            <TextInput
+            <Input
               value={formData.location.sixth} placeholder="Sixth Location" onChangeText={(text) => handleTypedText(text, 'location.sixth')} style={inputstyles.addIterms} />
 
             {dspLocation && <ToggleMLBtn whatTToggle={toggleDspLocation} theTittle="Done Adding Location" />}
@@ -586,11 +535,11 @@ function AddLoadContract() {
 
         {!dspReturnRate && !dspOtherRequirements && !dspRate && !dspLocation && !dspCommodity && <View style={styles.viewMainDsp}>
 
-          {dspTruckRequired && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the commodities to be transpoted</Text>}
-          {!dspTruckRequired && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Commodity</Text>}
-          <TextInput
+          {dspTruckRequired && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the commodities to be transpoted</ThemedText>}
+          {!dspTruckRequired && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Commodity</ThemedText>}
+          <Input
             value={formData.trckRequired.frst} placeholder="First Truck Requirement" onChangeText={(text) => handleTypedText(text, 'trckRequired.frst')} style={inputstyles.addIterms} />
-          <TextInput
+          <Input
             value={formData.trckRequired.scnd} placeholder="Second Truck Requirement" onChangeText={(text) => handleTypedText(text, 'trckRequired.scnd')} style={inputstyles.addIterms} />
 
 
@@ -599,12 +548,12 @@ function AddLoadContract() {
 
 
           {dspTruckRequired && <View>
-            <TextInput
+            <Input
               value={formData.trckRequired.third} placeholder="Third Truck Requirement" onChangeText={(text) => handleTypedText(text, 'trckRequired.third')} style={inputstyles.addIterms} />
-            <TextInput
+            <Input
               value={formData.trckRequired.forth} placeholder="Fourth Truck Requirement" onChangeText={(text) => handleTypedText(text, 'trckRequired.forth')} style={inputstyles.addIterms} />
 
-            <TextInput
+            <Input
               value={formData.trckRequired.fifth} placeholder="Fifth Truck Requirement" onChangeText={(text) => handleTypedText(text, 'trckRequired.fifth')} style={inputstyles.addIterms} />
 
             {dspTruckRequired && <ToggleMLBtn whatTToggle={toggleDspTruckRequired} theTittle="Done Adding Reuired trucks" />}
@@ -615,15 +564,15 @@ function AddLoadContract() {
 
         {!dspReturnRate && !dspRate && !dspTruckRequired && !dspLocation && !dspCommodity && <View style={styles.viewMainDsp}>
 
-          {dspOtherRequirements && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the commodities to be transpoted</Text>}
-          {!dspOtherRequirements && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Commodity</Text>}
-          <TextInput
+          {dspOtherRequirements && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the commodities to be transpoted</ThemedText>}
+          {!dspOtherRequirements && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Commodity</ThemedText>}
+          <Input
             value={formData.otherRequirements.frst}
             placeholder="First Other Requirement"
             onChangeText={(text) => handleTypedText(text, 'otherRequirements.frst')}
             style={inputstyles.addIterms}
           />
-          <TextInput
+          <Input
             value={formData.otherRequirements.scnd}
             placeholder="Second Other Requirement"
             onChangeText={(text) => handleTypedText(text, 'otherRequirements.scnd')}
@@ -635,9 +584,9 @@ function AddLoadContract() {
           {dspOtherRequirements && <View>
 
 
-            <TextInput
+            <Input
               value={formData.otherRequirements.third} placeholder="Third Other Requirement" onChangeText={(text) => handleTypedText(text, 'otherRequirements.third')} style={inputstyles.addIterms} />
-            <TextInput
+            <Input
               value={formData.otherRequirements.forth} placeholder="Fourth Other Requirement" onChangeText={(text) => handleTypedText(text, 'otherRequirements.forth')} style={inputstyles.addIterms} />
 
             {dspOtherRequirements && <ToggleMLBtn whatTToggle={toggleDspOtherRequirements} theTittle="Done Adding Other Rei" />}
@@ -646,26 +595,26 @@ function AddLoadContract() {
         </View>}
 
         {!dspReturnRate && !dspOtherRequirements && !dspTruckRequired && !dspLocation && !dspCommodity && <View style={styles.viewMainDsp}>
-          {dspRate && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the Rates dor Contract</Text>}
-          {!dspRate && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Rates</Text>}
-          <TextInput
+          {dspRate && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the Rates dor Contract</ThemedText>}
+          {!dspRate && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Rates</ThemedText>}
+          <Input
             value={formData.rate.solidFrst} placeholder="Solid First Rate" onChangeText={(text) => handleTypedText(text, 'rate.solidFrst')} style={inputstyles.addIterms} />
-          {dspRate && <TextInput
+          {dspRate && <Input
             value={formData.rate.solidScnd} placeholder="Solid Second Rate" onChangeText={(text) => handleTypedText(text, 'rate.solidScnd')} style={inputstyles.addIterms} />}
 
-          <TextInput
+          <Input
             value={formData.rate.triaxleFrst} placeholder="Triaxle First Rate" onChangeText={(text) => handleTypedText(text, 'rate.triaxleFrst')} style={inputstyles.addIterms} />
-          {dspRate && <TextInput
+          {dspRate && <Input
             value={formData.rate.triaxlesScnd} placeholder="Triaxle Second Rate" onChangeText={(text) => handleTypedText(text, 'rate.triaxlesScnd')} style={inputstyles.addIterms} />}
-          <TextInput
+          <Input
             value={formData.rate.linksFrst} placeholder="Links First Rate" onChangeText={(text) => handleTypedText(text, 'rate.linksFrst')} style={inputstyles.addIterms} />
-          {dspRate && <TextInput
+          {dspRate && <Input
             value={formData.rate.linksScnd} placeholder="Links Second Rate" onChangeText={(text) => handleTypedText(text, 'rate.linksScnd')} style={inputstyles.addIterms} />}
 
-          {<TextInput
-            value={formData.rate.superLinkFrst} placeholder="Super Link Second Rate" onChangeText={(text) => handleTypedText(text, 'rate.superLinkFrst')} style={inputstyles.addIterms} />}
-          {dspRate && <TextInput
-            value={formData.rate.superLinkScnd} placeholder="Super Links Rate" onChangeText={(text) => handleTypedText(text, 'rate.superLinkScnd')} style={inputstyles.addIterms} />}
+          {<Input
+            value={formData.rate.superLinkFrst} placeholder="Super Link Rate" onChangeText={(text) => handleTypedText(text, 'rate.superLinkFrst')} style={inputstyles.addIterms} />}
+          {dspRate && <Input
+            value={formData.rate.superLinkScnd} placeholder="Super Link Second Rate" onChangeText={(text) => handleTypedText(text, 'rate.superLinkScnd')} style={inputstyles.addIterms} />}
 
 
           {!dspRate && <ToggleMLBtn whatTToggle={toggleDspRate} theTittle="More than 2 rates" />}
@@ -679,18 +628,18 @@ function AddLoadContract() {
       {dspRturnnLoads && !dspContractD && !dsoLoadDe && <ScrollView>
 
         {<View style={styles.viewMainDsp} >
-          {dspReturnCommodity && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the commodities to be transpoted</Text>}
-          {!dspReturnCommodity && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Commodity</Text>}
-          <TextInput
+          {dspReturnCommodity && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the commodities to be transpoted</ThemedText>}
+          {!dspReturnCommodity && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add 3 Commodity</ThemedText>}
+          <Input
             value={formData.returnCommodity.frst} placeholder="First Commodity" onChangeText={(text) => handleTypedText(text, 'returnCommodity.frst')} style={inputstyles.addIterms} />
-          <TextInput
+          <Input
             value={formData.returnCommodity.scnd} placeholder="Second Commodity" onChangeText={(text) => handleTypedText(text, 'returnCommodity.scnd')} style={inputstyles.addIterms} />
           {!dspReturnCommodity && <ToggleMLBtn whatTToggle={toggleDspReturnCommodity} theTittle=" Return Commo" />}
 
           {dspReturnCommodity && <View>
-            <TextInput
+            <Input
               value={formData.returnCommodity.third} placeholder="Third Commodity" onChangeText={(text) => handleTypedText(text, 'returnCommodity.third')} style={inputstyles.addIterms} />
-            <TextInput
+            <Input
               value={formData.returnCommodity.forth} placeholder="Fourth Commodity" onChangeText={(text) => handleTypedText(text, 'returnCommodity.forth')} style={inputstyles.addIterms} />
 
 
@@ -700,33 +649,33 @@ function AddLoadContract() {
         </View>}
 
         <View style={styles.viewMainDsp} >
-          <TextInput
+          <Input
             value={formDataScnd.returnPaymentTerms} placeholder="Return Payment Terms" onChangeText={(text) => handleTypedTextScnd(text, 'returnPaymentTerms')} style={inputstyles.addIterms} />
         </View>
 
         {<View style={styles.viewMainDsp}>
-          {dspReturnRate && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the rates for return loads</Text>}
-          {!dspReturnRate && <Text style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add rates for return loads</Text>}
-          <TextInput
+          {dspReturnRate && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add all the rates for return loads</ThemedText>}
+          {!dspReturnRate && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, alignSelf: 'center' }} >Add rates for return loads</ThemedText>}
+          <Input
             value={formData.returnRate.solidFrst} placeholder="Return Solid First Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.solidFrst')}
             style={inputstyles.addIterms}
           />
-          {dspReturnRate && <TextInput
+          {dspReturnRate && <Input
             value={formData.returnRate.solidScnd} placeholder="Return Solid Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.solidScnd')} style={inputstyles.addIterms} />}
 
 
-          <TextInput
+          <Input
             value={formData.returnRate.triaxleFrst} placeholder="Return Triaxle First Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.triaxleFrst')} style={inputstyles.addIterms} />
-          {dspReturnRate && <TextInput
+          {dspReturnRate && <Input
             value={formData.returnRate.triaxlesScnd} placeholder="Return Triaxle Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.triaxlesScnd')} style={inputstyles.addIterms} />}
-          <TextInput
+          <Input
             value={formData.returnRate.linksFrst} placeholder="Return Links First Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.linksFrst')} style={inputstyles.addIterms} />
-          {dspReturnRate && <TextInput
+          {dspReturnRate && <Input
             value={formData.returnRate.linksScnd} placeholder="Return Links Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.linkScnd')} style={inputstyles.addIterms} />}
-          {<TextInput
+          {<Input
             value={formData.returnRate.superLinkFrst} placeholder="Links Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.superLinkFrst')} style={inputstyles.addIterms} />}
 
-          {dspReturnRate && <TextInput
+          {dspReturnRate && <Input
             value={formData.returnRate.superLinkScnd} placeholder="Links Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.superLinkScnd')} style={inputstyles.addIterms} />}
 
           {!dspReturnRate && <ToggleMLBtn whatTToggle={toggleDspReturnRate} theTittle="Done Return Rate" />}
@@ -738,28 +687,28 @@ function AddLoadContract() {
       {!dspRturnnLoads && dspContractD && !dsoLoadDe && <ScrollView>
         {!dspAddLocation && <View style={{ alignItems: 'center' }} >
 
-          <TextInput
+          <Input
             value={formDataScnd.fuelAvai} placeholder="Fuel" onChangeText={(text) => handleTypedTextScnd(text, 'fuelAvai')} style={inputstyles.addIterms} />
 
-          <TextInput
+          <Input
             value={formDataScnd.loadsPerWeek} placeholder="Loads Per Week" onChangeText={(text) => handleTypedTextScnd(text, 'loadsPerWeek')} style={inputstyles.addIterms} />
 
 
-          <TextInput
+          <Input
             value={formDataScnd.contractDuration} placeholder="Contract Duration" onChangeText={(text) => handleTypedTextScnd(text, 'contractDuration')} style={inputstyles.addIterms} />
-          <TextInput
+          <Input
             value={formDataScnd.startingDate} placeholder="Starting Date" onChangeText={(text) => handleTypedTextScnd(text, 'startingDate')} style={inputstyles.addIterms} />
 
-          <TextInput
+          <Input
             value={formDataScnd.bookingClosingD} placeholder="Starting Date" onChangeText={(text) => handleTypedTextScnd(text, 'bookingClosingD')} style={inputstyles.addIterms} />
 
-          <TextInput
+          <Input
             value={formDataScnd.contractRenewal} placeholder="Can You Renew Contract for how long" onChangeText={(text) => handleTypedTextScnd(text, 'contractRenewal')} style={inputstyles.addIterms} />
 
 
-          <TextInput
+          <Input
             value={formDataScnd.alertMsg} placeholder="alertMsg" onChangeText={(text) => handleTypedTextScnd(text, 'alertMsg')} style={inputstyles.addIterms} />
-          <TextInput
+          <Input
             value={formDataScnd.additionalInfo} placeholder="Additional Info" onChangeText={(text) => handleTypedTextScnd(text, 'additionalInfo')} style={inputstyles.addIterms} />
 
         </View>}
@@ -779,7 +728,7 @@ function AddLoadContract() {
             {/* Only show countries if International is selected */}
             {location === "Local" && (
               <>
-                <Text>Select The Local Country the contract wull be in</Text>
+                <ThemedText>Select The Local Country the contract wull be in</ThemedText>
                 {["Zimbabwe", "SouthAfrica", "Namibia", "Tanzania", "Mozambique", "Zambia", "Botswana", "Malawi"].map((country) => (
                   <SlctCountryBtn
                     key={country}
@@ -793,11 +742,11 @@ function AddLoadContract() {
 
             {location === "International" && (
               <>
-                <Text>Select The International countries the contract will be in</Text>
+                <ThemedText>Select The International countries the contract will be in</ThemedText>
 
 
                 {location === "International" && interOpCount.length > 0 && (
-                  <Text>Selected: {interOpCount.join(", ")}</Text>
+                  <ThemedText>Selected: {interOpCount.join(", ")}</ThemedText>
                 )}
                 {["Zimbabwe", "SouthAfrica", "Namibia", "Tanzania", "Mozambique", "Zambia", "Botswana", "Malawi"].map((country) => (
                   <SlctCountryBtn
@@ -812,7 +761,7 @@ function AddLoadContract() {
                   setDspAddLocation(false);
                   setlocation("");
                 }} >
-                  <Text>Donee</Text>
+                  <ThemedText>Donee</ThemedText>
                 </TouchableOpacity>
               </>
             )}
@@ -820,22 +769,23 @@ function AddLoadContract() {
         )}
 
         {location === "International" && interOpCount.length > 0 && (
-          <Text>Selected International : {interOpCount.join(", ")}</Text>
+          <ThemedText>Selected International : {interOpCount.join(", ")}</ThemedText>
         )}
-        {location === "Local" && locaOpCount && <Text>Local : {locaOpCount} </Text>}
+        {location === "Local" && locaOpCount && <ThemedText>Local : {locaOpCount} </ThemedText>}
 
-        <Text>Is the contract International or Local for one country</Text>
+        <ThemedText>Is the contract International or Local for one country</ThemedText>
         {!dspAddLocation && <TouchableOpacity onPress={() => setDspAddLocation(true)} style={styles.buttonIsFalse}  >
-          <Text> {location ? "Chnage Opearing location" : "Choose operating Location"} </Text>
+          <ThemedText> {location ? "Chnage Opearing location" : "Choose operating Location"} </ThemedText>
         </TouchableOpacity>}
 
         <TouchableOpacity onPress={toggleDspCheckout} style={{ flex: 1, backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignItems: 'center', margin: 10, borderRadius: 8 }} >
-          <Text style={{ color: 'white', fontWeight: 'bold' }}>Done Submit</Text>
+          <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>Done Submit</ThemedText>
         </TouchableOpacity>
 
       </ScrollView>}
 
     </View>
+        </ScreenWrapper>
   );
 }
 

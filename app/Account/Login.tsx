@@ -38,13 +38,9 @@ const Login = () => {
         const res = await Login({ email, password })
         if (res.success) {
 
-        } else {
-            if (res?.messsage)
-                alert(res.message);
-
         }
-
-    }
+        
+          }
 
 
     return (
@@ -88,7 +84,7 @@ const Login = () => {
                             Facebook
                         </ThemedText>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.socialButton, { backgroundColor: backgroundLight }]}><MaterialCommunityIcons name="google" size={24} color="#DB4437" />
+                    <TouchableOpacity style={[styles.socialButton, { backgroundColor: backgroundLight } ]}><MaterialCommunityIcons name="google" size={24} color="#DB4437" />
                         <ThemedText>
                             Google
                         </ThemedText>

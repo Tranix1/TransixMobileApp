@@ -126,7 +126,7 @@ export const runFirestoreTransaction = async (docPath: string, transactionCallba
  * @param lastVisible - The last visible document from the previous query.
  * @param limitCount - The number of documents to fetch.
  */
-export const paginateDocuments = async (collectionName: string, orderByField: string, lastVisible: any = null, limitCount: number = 10) => {
+export const paginateDocuments = async (collectionName: string, orderByField: string, lastVisible: any = null, limitCount: number = 1) => {
     try {
         let dataQuery = query(collection(db, collectionName), orderBy(orderByField, "desc"), limit(limitCount));
         if (lastVisible) {

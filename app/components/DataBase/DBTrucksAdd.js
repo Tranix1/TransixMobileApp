@@ -298,12 +298,7 @@ if(isVerified && images.length <5 && spinnerItem && truckType !== "Rigid") {
   }  else if(!isVerified && images.length === 1 ){
 
     truckImage= await uploadImage(images[0]);
-  }else{
-    alert("Please add truck image")
-    setSpinnerItem(false)
-    return
   }
-
 
       setSpinnerItem(true)
         let withDetails 
