@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import * as SplashScreen from 'expo-splash-screen';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Linking } from "react-native";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { auth } from "./components/config/fireBase";
 
 
 export default function RootLayout() {
@@ -58,20 +59,20 @@ export default function RootLayout() {
 
 
 const MainLayout = () => {
-    // const { isSignedIn, setupUser } = useAuth();
+    const { isSignedIn, setupUser } = useAuth();
     const router = useRouter();
 
 
     useEffect(() => {
-        // onAuthStateChanged(auth, (user) => {
-        //     if (user) {
-        //         console.log('User Found >', user.email);
-        //         setupUser(user);
-        //     } else {
-        //         console.log('Currently no user');
-        //         setupUser(null);
-        //     }
-        // });
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log('User Found >', user.email);
+                setupUser(user);
+            } else {
+                console.log('Currently no user');
+                setupUser(null);
+            }
+        });
     }, []);
 
     return (

@@ -115,10 +115,10 @@ const Index = () => {
                                         {user ?
 
                                             <View style={{ gap: wp(4), }}>
-                                                <View style={{ flexDirection: 'row', padding: wp(2), gap: wp(2), alignItems: 'center' }}>
+                                                <View style={{ flexDirection: 'row', padding: wp(2), gap: wp(2), alignItems: 'center', }}>
                                                     <FontAwesome name='user-circle' color={coolGray} size={wp(10)} />
-                                                    <View>
-                                                        <ThemedText>
+                                                    <View style={{ flex: 1 }}>
+                                                        <ThemedText type='subtitle'>
                                                             {user?.displayName}
                                                         </ThemedText>
                                                         <ThemedText type='tiny' color={coolGray}>
@@ -126,10 +126,17 @@ const Index = () => {
                                                         </ThemedText>
 
                                                     </View>
+                                                    <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
+                                                        <TouchableNativeFeedback>
+                                                            <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
+                                                                <Ionicons name='alert-circle-outline' color={icon} size={wp(6)} />
+                                                            </View>
+                                                        </TouchableNativeFeedback>
+                                                    </View>
                                                 </View>
 
-                                                <Button title='Manage Account' onPress={() => router.push('/Account/Login')}
-                                                    Icon={<AntDesign name='arrowright111111111111111111' size={wp(4)} color={accent} style={{ marginLeft: wp(1) }} />} />
+                                                <Button title='Manage Account' onPress={() => router.push('/Account/Index')}
+                                                    Icon={<AntDesign name='arrowright' size={wp(4)} color={accent} style={{ marginLeft: wp(1) }} />} />
                                             </View>
                                             :
                                             <View style={{ gap: wp(4), }}>
