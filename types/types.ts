@@ -50,7 +50,8 @@ export const Countries = ['Zimbabwe',
 ]
 export type User = {
     uid: string,
-    createdAt: number | string;
+   createdAt: number | string; // required
+
     displayName?: string,
     photoURL?: string,
     phoneNumber?: string,

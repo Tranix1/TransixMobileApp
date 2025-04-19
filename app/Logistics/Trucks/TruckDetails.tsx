@@ -89,19 +89,20 @@ const TruckDetails = () => {
         checkSavedProducts();
     }, [])
 
-    const getowenerdata = async () => {
-        if (truckData.userId) {
+  const getowenerdata = async () => {
+    if (truckData.userId) {
+        const owner = await readById('personalData', truckData.userId);
 
-            const owner = await readById('personalData', truckData.userId)
-            if (owner) {
-                const user: User = {
-                    ...owner,
-                    uid: owner.id, // Map `id` to `uid` or adjust as needed
-                };
-                setPostUser(user);
-            }
+        if (owner) {
+            const user: User = {
+                ...owner,
+                uid: String(owner.id),
+                createdAt: (owner as any).createdAt ?? Date.now(), // fallback if missing
+            };
+            setPostUser(user);
         }
     }
+};
 
     // Function to toggle save state
     const toggleSaveProduct = async () => {
@@ -405,25 +406,7 @@ const TruckDetails = () => {
                             )}
                         </View>
                     }
-                    <View style={{}}>
-                        <ThemedText type="tiny" style={{ marginBottom: wp(2) }}>
-                            Driver Info
-                        </ThemedText>
-                        <View style={{ backgroundColor: backgroundLight, gap: wp(2), padding: wp(2), borderRadius: wp(4) }}>
-                            <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truckData.driverLicense }} style={{ height: hp(20), flex: 1, borderRadius: wp(2) }} />
-
-                            <View style={{ flexDirection: 'row' }}>
-
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), padding: wp(2), backgroundColor: background, borderRadius: wp(4) }}>
-                                    <Ionicons name="call-outline" />
-                                    <FormatedText numberOfLines={3} style={{ paddingTop: 0, }}>
-                                        {truckData.driverPhone || 'no number'}
-                                    </FormatedText>
-                                </View>
-                            </View>
-                        </View>
-
-                    </View>
+                  
 
 
 
