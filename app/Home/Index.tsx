@@ -67,7 +67,6 @@ const Index = () => {
     const [isVisible, setIsVisible] = useState(true)
 
     const { user } = useAuth()
-    console.log(user);
 
 
 
@@ -85,7 +84,7 @@ const Index = () => {
             <SafeAreaView>
                 <Modal onRequestClose={() => setIsVisible(false)} statusBarTranslucent visible={isVisible} transparent animationType='fade'>
                     <Pressable onPressIn={() => { }} style={{ flex: 1, }}>
-                        <BlurView intensity={10} tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-start', flex: 1, padding: wp(4), }}>
+                        <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-start', flex: 1, padding: wp(4), }}>
                             <View style={{
                                 backgroundColor: backgroundColor, padding: wp(4), elevation: 12,
                                 shadowColor: '#0c0c0c69', borderRadius: wp(6), marginTop: hp(15)
@@ -110,7 +109,7 @@ const Index = () => {
                                         </TouchableNativeFeedback> */}
                                     </View>
                                 </View>
-                                <View style={{ marginVertical: wp(4), gap: 4 }}>
+                                <View style={{ marginVertical: wp(4), gap: 4, marginBottom: wp(2) }}>
                                     <View style={{ borderTopRightRadius: wp(5), borderTopLeftRadius: wp(5), backgroundColor: background, padding: wp(4) }}>
                                         {user ?
 
@@ -119,20 +118,23 @@ const Index = () => {
                                                     <FontAwesome name='user-circle' color={coolGray} size={wp(10)} />
                                                     <View style={{ flex: 1 }}>
                                                         <ThemedText type='subtitle'>
-                                                            {user?.displayName}
+                                                            {user?.organisation || user?.displayName || 'No name'}
                                                         </ThemedText>
                                                         <ThemedText type='tiny' color={coolGray}>
                                                             {user?.email}
                                                         </ThemedText>
 
                                                     </View>
-                                                    <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
-                                                        <TouchableNativeFeedback>
-                                                            <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
-                                                                <Ionicons name='alert-circle-outline' color={icon} size={wp(6)} />
-                                                            </View>
-                                                        </TouchableNativeFeedback>
-                                                    </View>
+                                                    {
+                                                        !user?.organisation &&
+                                                        <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
+                                                            <TouchableNativeFeedback onPress={() => router.push('/Account/Edit')}>
+                                                                <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
+                                                                    <Ionicons name='alert-circle-outline' color={icon} size={wp(6)} />
+                                                                </View>
+                                                            </TouchableNativeFeedback>
+                                                        </View>
+                                                    }
                                                 </View>
 
                                                 <Button title='Manage Account' onPress={() => router.push('/Account/Index')}
@@ -213,8 +215,8 @@ const Index = () => {
                                         </TouchableNativeFeedback>
                                     </View>
                                 </View>
-                                <TouchableNativeFeedback>
-                                    <View style={{ paddingHorizontal: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                <TouchableNativeFeedback onPress={() => router.push('/Account/Settings')}>
+                                    <View style={{ paddingHorizontal: wp(4), flexDirection: 'row', gap: wp(3), paddingVertical: wp(4) }}>
                                         <Ionicons name="settings-outline" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
 
                                         <View>
@@ -224,7 +226,7 @@ const Index = () => {
                                         </View>
                                     </View>
                                 </TouchableNativeFeedback>
-                                <View style={{ marginBottom: wp(2) }} />
+                                <View style={{ marginBottom: wp(0) }} />
                             </View>
                         </BlurView>
                     </Pressable>

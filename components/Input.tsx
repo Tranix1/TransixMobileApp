@@ -88,19 +88,20 @@ export default Input
 const styles = StyleSheet.create({
     input: {
         flex: 1,
-        fontFamily: 'Regular',
+
         minHeight: hp(5)
     },
     container: {
-        borderColor: '#7f7f7f1c',
-        borderWidth: wp(.2),
-        borderRadius: wp(5),
         paddingVertical: wp(0),
-        paddingHorizontal: wp(2),
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: wp(1)
+        gap: wp(1),
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        marginBottom: 16,
 
     }, sendBTN: {
         padding: wp(1),

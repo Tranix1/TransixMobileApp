@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const setupUser = async (userData: any) => {
         if (userData) {
-            const aditional = await readById('users', userData.uid)
+            const aditional = await readById('personalData', userData.uid)
             setUser({ ...userData, ...aditional })
             setIsSignedIN(true);
             await AsyncStorage.setItem('user', JSON.stringify({
@@ -171,7 +171,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
     interface UpdateAccountCredentials {
-        displayName: string;
+        organization: string;
         photoURL: string | null;
     }
 
@@ -180,7 +180,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         error?: string;
     }
 
-    const updateAccount = async (credentials: UpdateAccountCredentials): Promise<UpdateAccountResponse> => {
+    const updateAccount = async (credentials: User): Promise<UpdateAccountResponse> => {
         try {
             if (!isSignedIn) {
                 // router.push('/user/login')
@@ -189,7 +189,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             if (auth.currentUser) {
                 await updateProfile(auth.currentUser, {
-                    displayName: credentials.displayName,
+                    displayName: credentials.organization,
                     photoURL: credentials.photoURL,
                 }).then(() => {
                     console.log('Updated User >> ', credentials);
@@ -205,8 +205,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     ...credentials,
                 });
             }
-
-            router.back();
+            setupUser({ ...auth, ...credentials });
             return { success: true };
         } catch (error) {
             console.log("Update Error > ", error);

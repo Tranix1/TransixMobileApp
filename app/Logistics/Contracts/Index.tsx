@@ -1,4 +1,4 @@
-import { StyleSheet, View, TouchableOpacity } from 'react-native'
+import { StyleSheet, View, TouchableOpacity, TouchableNativeFeedback } from 'react-native'
 import React from 'react'
 
 import { router } from "expo-router";
@@ -7,53 +7,69 @@ import { ThemedText } from '@/components/ThemedText';
 import Heading from '@/components/Heading';
 
 import { Countries } from '@/types/types';
+import { wp } from '@/constants/common';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
+import { useThemeColor } from '@/hooks/useThemeColor';
 const Index = () => {
 
   const [contractLoc, setContraLoc] = React.useState<string>("")
-    return (
-        //Use screenwrapper and Heading every time you create a new page!!!!!!!!!!!!!
-        <ScreenWrapper>
 
-            <Heading page='Contracts' />
+  const icon = useThemeColor('icon')
+  return (
+    //Use screenwrapper and Heading every time you create a new page!!!!!!!!!!!!!
+    <ScreenWrapper>
 
-            <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/AddContracts/Index')} >
-                <ThemedText style={{color:'red'}} >Add Contract</ThemedText>
-            </TouchableOpacity>
+      <Heading page='Contracts' rightComponent={
 
-            <TouchableOpacity onPress={()=>router.push("/Logistics/Contracts/ViewContracts/Index") } >
-                <ThemedText  > View </ThemedText>
-            </TouchableOpacity>
+        <View style={{ flexDirection: 'row', marginRight: wp(4) }}>
+          <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
+            <TouchableNativeFeedback onPress={() => router.push('/Logistics/Contracts/AddContracts')}>
+              <View style={{ padding: wp(2), justifyContent: 'center' }}>
+                <AntDesign name="addfile" color={icon} size={wp(5)} />
+              </View>
+            </TouchableNativeFeedback>
+          </View>
 
+        </View>
 
-             {Countries.map((country) => (
-                <TouchableOpacity
-                key={country}
-                onPress={() => setContraLoc(country)}
-                style={styles.buttonStyle}
-                >
-                <ThemedText style={styles.buttonText}>{country}</ThemedText>
-                </TouchableOpacity>
-            ))}
-
-            <TouchableOpacity>
-                <ThemedText>Controctor</ThemedText>
-            </TouchableOpacity>
+      } />
 
 
+      {/* 
+      <TouchableOpacity onPress={() => router.push("/Logistics/Contracts/ViewContracts")} >
+        <ThemedText  > View </ThemedText>
+      </TouchableOpacity> */}
+
+
+      {/* {Countries.map((country) => (
+        <TouchableOpacity
+          key={country}
+          onPress={() => setContraLoc(country)}
+          style={styles.buttonStyle}
+        >
+          <ThemedText style={styles.buttonText}>{country}</ThemedText>
+        </TouchableOpacity>
+      ))} */}
+
+      {/* <TouchableOpacity>
+        <ThemedText>Controctor</ThemedText>
+      </TouchableOpacity> */}
 
 
 
 
 
-        </ScreenWrapper>
 
-    )
+
+    </ScreenWrapper>
+
+  )
 }
 
 export default Index
 
 const styles = StyleSheet.create({
-      buttonStyle: {
+  buttonStyle: {
     height: 45,
     justifyContent: 'center',
     alignItems: 'center',
@@ -63,7 +79,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: '#fff4f0',
   },
-    buttonText: {
+  buttonText: {
     color: '#6a0c0c',
     fontSize: 15,
     fontWeight: '600',

@@ -161,7 +161,6 @@ export const AddUser = async (userId: string, userData: object) => {
         const userRef = doc(db, "personalData", userId); // Custom ID
         await setDoc(userRef, userData, { merge: true });
 
-        console.log("User added successfully with ID:", userId);
         return true;
     } catch (error) {
         console.error("Error adding user:", error);
