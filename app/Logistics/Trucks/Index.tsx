@@ -135,36 +135,6 @@ const Index = () => {
                                 <ThemedText style={{ marginBottom: wp(2) }}>
                                     Truck Types
                                 </ThemedText>
-                                <ScrollView horizontal contentContainerStyle={{ gap: wp(2) }} style={{}}>
-                                    {truckTypes.map((item) => (
-                                        <TouchableOpacity
-                                            key={item.id}
-                                            onPress={() => {
-                                                setSelectedTruckType(item);
-                                                console.log('set ,', item);
-
-                                            }}
-                                            style={{
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                padding: wp(2),
-                                                paddingRight: wp(4),
-                                                marginBottom: wp(2),
-                                                backgroundColor: selectedTruckType?.id === item.id ? accent + '14' : background,
-                                                borderRadius: wp(4),
-                                            }}
-                                        >
-                                            <Image
-                                                style={{ width: wp(25), height: wp(15), borderRadius: wp(2), marginRight: wp(2) }}
-                                                source={item.image}
-                                            />
-                                            <View>
-                                                <ThemedText type="subtitle">{item.name}</ThemedText>
-                                                <Ionicons style={{ alignSelf: 'flex-end' }} name={selectedTruckType?.id === item.id ? "checkmark-circle" : 'ellipse-outline'} size={wp(6)} color={accent} />
-                                            </View>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
 
                                 <Button
                                     onPress={() => {
@@ -204,6 +174,54 @@ const Index = () => {
                         </View>
                     </View>
                 </View>
+
+
+
+
+
+
+                                {selectedTruckType?.name&&  <ThemedText>Truck type</ThemedText>}
+                                {!selectedTruckType?.name&& <ScrollView horizontal contentContainerStyle={{ gap: wp(2) }} style={{marginBottom:10 , marginLeft:5 , marginTop:7}}>
+                                    {truckTypes.map((item) => (
+                                        <TouchableOpacity
+                                            key={item.id}
+                                            onPress={() => {
+                                                setSelectedTruckType(item);
+                                                console.log('set ,', item);
+
+                                            }}
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                padding: wp(2),
+                                                paddingRight: wp(4),
+                                                marginBottom: wp(2),
+                                                backgroundColor: selectedTruckType?.id === item.id ? accent + '14' : background,
+                                                borderRadius: wp(4),
+                                                height:57 ,
+                                            }}
+                                        >
+                                            <Image
+                                                style={{ width: wp(19), height: wp(8), borderRadius: wp(2), marginRight: wp(2) }}
+                                                source={item.image}
+                                            />
+                                            <View>
+                                                <ThemedText type="subtitle">{item.name}</ThemedText>
+                                                <Ionicons style={{ alignSelf: 'flex-end' }} name={selectedTruckType?.id === item.id ? "checkmark-circle" : 'ellipse-outline'} size={wp(4)} color={accent} />
+                                            </View>
+                                        </TouchableOpacity>
+                                    ))}
+                                </ScrollView>}
+
+
+
+
+
+
+
+
+
+
                 <FlatList
                     keyExtractor={(item) => item.id.toString()}
                     ListHeaderComponent={() => <>
@@ -251,18 +269,16 @@ const Index = () => {
                                 </TouchableOpacity>
                             }
 
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: wp(0), gap: wp(3), borderRadius: wp(4) }}>
-                                <TouchableOpacity key={'all'} onPress={() => setSelectedCountry('All')} style={[styles.countryButton, { backgroundColor: background }, selectedCountry === 'All' && styles.countryButtonSelected]} >
-                                    <ThemedText style={{ color: selectedCountry === 'All' ? 'white' : coolGray }}>All </ThemedText>
-                                </TouchableOpacity>
-                                {
-                                    Countries.map((item, index) =>
-                                        <TouchableOpacity key={index} onPress={() => setSelectedCountry(item)} style={[styles.countryButton, { backgroundColor: background }, selectedCountry === item && styles.countryButtonSelected]} >
-                                            <ThemedText style={{ color: selectedCountry === item ? 'white' : coolGray }}>{item} </ThemedText>
-                                        </TouchableOpacity>
-                                    )
-                                }
-                            </ScrollView>
+
+                            
+
+
+
+
+
+
+
+                            
                         </View>
                         {showfilter ?
                             <>
