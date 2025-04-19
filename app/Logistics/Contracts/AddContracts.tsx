@@ -19,10 +19,13 @@ import Heading from '@/components/Heading';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { wp } from "@/constants/common";
 import Divider from "@/components/Divider";
+import { EvilIcons, Ionicons } from "@expo/vector-icons";
 
 
 function AddLoadContract() {
   const backgroundLight = useThemeColor('backgroundLight')
+  const background = useThemeColor('background')
+  const iconcolor = useThemeColor('icon')
 
   const [formData, setFormData] = useState<ContractsFormDataType>({
     commodity: { frst: "", scnd: "", third: "", forth: "" },
@@ -174,12 +177,13 @@ function AddLoadContract() {
   type ToggleMLBtnProps = {
     whatTToggle: (...args: any[]) => void;
     theTittle: string;
+    icon: boolean
   };
 
-  const ToggleMLBtn = ({ whatTToggle, theTittle }: ToggleMLBtnProps) => (
-    <TouchableOpacity onPress={whatTToggle} style={[styles.moreLessIterms, { backgroundColor: backgroundLight }]}>
-      <ThemedText type="tiny" style={{ fontStyle: 'italic' }}>{theTittle}</ThemedText>
-
+  const ToggleMLBtn = ({ whatTToggle, theTittle, icon }: ToggleMLBtnProps) => (
+    <TouchableOpacity onPress={whatTToggle} style={[styles.moreLessIterms, { backgroundColor: backgroundLight, flexDirection: 'row', gap: wp(2) }]}>
+      <ThemedText type="tiny" style={{}}>{theTittle}</ThemedText>
+      <Ionicons name={!icon ? 'chevron-down' : 'chevron-up'} size={wp(4)} color={iconcolor} />
     </TouchableOpacity>
   );
 
@@ -295,7 +299,7 @@ function AddLoadContract() {
 
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper fh={false}>
 
       <Heading page='Add Contracts' />
       <View style={{ flex: 1 }}>
@@ -390,13 +394,10 @@ function AddLoadContract() {
 
 
 
-              {
-                !dspCommodity ?
-                  <ToggleMLBtn whatTToggle={toggleDspCommodity} theTittle="add more" />
 
-                  :
-                  <ToggleMLBtn whatTToggle={toggleDspCommodity} theTittle="Done Adding" />
-              }
+              <ToggleMLBtn whatTToggle={toggleDspCommodity} theTittle={dspCommodity ? "Hide" : "Show More"} icon={dspCommodity} />
+
+
 
 
             </View>
@@ -410,7 +411,7 @@ function AddLoadContract() {
             </View>
 
             <Divider />
-            {!dspReturnRate && !dspOtherRequirements && !dspRate && !dspTruckRequired && !dspCommodity && <View style={styles.viewMainDsp} >
+            <View style={styles.viewMainDsp} >
 
               {dspLocation &&
                 <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }}>
@@ -423,135 +424,164 @@ function AddLoadContract() {
                 </ThemedText>
               }
 
+              <View>
+                <Input
+                  value={formData.location.frst} placeholder={dspLocation ? "First Location" : "From Location"} onChangeText={(text) => handleTypedText(text, 'location.frst')} style={{}} />
+                <Input
+                  value={formData.location.scnd} placeholder={dspLocation ? "Second Location" : "To Location"} onChangeText={(text) => handleTypedText(text, 'location.scnd')} style={{}} />
+              </View>
+
               {dspLocation && !nowEnterLoca && (
-                <View style={{ padding: 20 }}>
-                  <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', marginBottom: 15 }}>
+                <View style={{ padding: 4, gap: wp(5) }}>
+                  <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold' }}>
                     There is more than two location
                   </ThemedText>
+                  <View style={[styles.viewSubMainDsp, { backgroundColor: background }]}>
+                    <ThemedText style={{ textAlign: 'center' }}>How will they operate from routes?:</ThemedText>
 
-                  <View style={styles.viewSubMainDsp}>
-                    <ThemedText style={{ marginBottom: 10 }}>How will they operate from routes to:</ThemedText>
-
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
+                    <Divider />
+                    <View style={{ gap: wp(3), padding: wp(3) }}>
                       <TouchableOpacity
                         onPress={() => setManyRoutesAssign('All Routes One Stop')}
                         style={{
-                          borderColor: 'black',
-                          borderWidth: 2,
-                          borderRadius: 7,
-                          alignItems: 'center',
-                          justifyContent: 'center', padding: 3,
+                          justifyContent: 'space-between', padding: 3, alignContent: 'center', flexDirection: 'row'
                         }}
                       >
-                        <ThemedText>All Routes One Stop</ThemedText>
+                        <ThemedText>
+                          All Routes One Stop
+                        </ThemedText>
+                        {manyRoutesAssign === 'All Routes One Stop' ?
+                          <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color="black" />
+                          :
+                          <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color="black" />
+                        }
                       </TouchableOpacity>
+
+                      {manyRoutesAssign === 'All Routes One Stop' && (
+                        <Input
+                          value={formData.location.seventh}
+                          placeholder="Sixth Location"
+                          onChangeText={(text) => handleTypedText(text, 'location.seventh')}
+                          style={[{}]}
+                        />
+                      )}
+
 
                       <TouchableOpacity
                         onPress={() => setManyRoutesAssign('One Route to another')}
                         style={{
-                          borderColor: 'black',
-                          borderWidth: 2,
-                          borderRadius: 7,
-                          alignItems: 'center',
-                          justifyContent: 'center', padding: 3, marginLeft: 6
+                          justifyContent: 'space-between', padding: 3, alignContent: 'center', flexDirection: 'row'
                         }}
                       >
-                        <ThemedText>Route to Route</ThemedText>
+                        <ThemedText>
+                          Route to Route
+                        </ThemedText>
+                        {manyRoutesAssign === 'One Route to another' ?
+                          <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color="black" />
+                          :
+                          <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color="black" />
+                        }
                       </TouchableOpacity>
+
+
                     </View>
 
-                    {manyRoutesAssign === 'All Routes One Stop' && (
-                      <Input
-                        value={formData.location.seventh}
-                        placeholder="Sixth Location"
-                        onChangeText={(text) => handleTypedText(text, 'location.seventh')}
-                        style={[inputstyles.addIterms, { marginBottom: 20 }]}
-                      />
-                    )}
+
                   </View>
 
-                  <View style={styles.viewSubMainDsp}>
-                    <ThemedText style={{ marginBottom: 10 }}>Will the tranporter choose where to go or it will be random?</ThemedText>
+                  <View style={[styles.viewSubMainDsp, { backgroundColor: background }]}>
+                    <ThemedText style={{ textAlign: 'center' }}>Will the tranporter choose where to go or it will be random?</ThemedText>
 
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
+
+                    <Divider />
+                    <View style={{ gap: wp(3), padding: wp(3) }}>
+
                       <TouchableOpacity
                         onPress={() => setManyRoutesAllocation('Tranporter Choose')}
                         style={{
-                          borderColor: 'black',
-                          borderWidth: 2,
-                          borderRadius: 7,
-                          alignItems: 'center',
-                          justifyContent: 'center', padding: 3,
+                          justifyContent: 'space-between', padding: 3, alignContent: 'center', flexDirection: 'row'
                         }}
                       >
-                        <ThemedText style={{ fontSize: 13 }}>Tranporter Choose</ThemedText>
+                        <ThemedText>
+                          Tranporter Choose
+                        </ThemedText>
+                        {manyRoutesAllocaton === 'Tranporter Choose' ?
+                          <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color="black" />
+                          :
+                          <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color="black" />
+                        }
                       </TouchableOpacity>
-
                       <TouchableOpacity
                         onPress={() => setManyRoutesAllocation('Random Allocation')}
                         style={{
-                          borderColor: 'black',
-                          borderWidth: 2,
-                          borderRadius: 7,
-                          alignItems: 'center',
-                          justifyContent: 'center', padding: 3, marginLeft: 6,
+                          justifyContent: 'space-between', padding: 3, alignContent: 'center', flexDirection: 'row'
                         }}
                       >
-                        <ThemedText style={{ fontSize: 13 }}>Random Allocation</ThemedText>
+                        <ThemedText>
+                          Random Allocation
+                        </ThemedText>
+                        {manyRoutesAllocaton === 'Random Allocation' ?
+                          <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color="black" />
+                          :
+                          <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color="black" />
+                        }
                       </TouchableOpacity>
+
+
                     </View>
                   </View>
 
-                  <ThemedText style={{ marginBottom: 10 }}>How will the routes work?</ThemedText>
+                  <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold' }}>
+                    How will the routes work?
+                  </ThemedText>
                   <Input
                     value={formDataScnd.manyRoutesOperation}
                     placeholder="Routes Operate"
                     onChangeText={(text) => handleTypedTextScnd(text, 'manyRoutesOperation')}
-                    style={[inputstyles.addIterms, { marginBottom: 20 }]}
                   />
 
-                  {manyRoutesAllocaton && manyRoutesAssign && (
-                    <TouchableOpacity onPress={doneEnterThLocs} style={{ marginTop: 20 }}>
-                      <ThemedText style={{ color: 'blue', fontSize: 16 }}>Done</ThemedText>
-                    </TouchableOpacity>
-                  )}
+
                 </View>
               )}
 
+              {
+                !(dspLocation && nowEnterLoca) &&
+                <>
+                  <TouchableOpacity onPress={doneEnterThLocs} style={[styles.moreLessIterms, { backgroundColor: backgroundLight, flexDirection: 'row', gap: wp(2) }]}>
+                    <ThemedText type="tiny" >Next</ThemedText>
+                    {/* <Ionicons name={(manyRoutesAllocaton && manyRoutesAssign) ? 'che6vron-down' : 'chevron-up'} size={wp(4)} color={iconcolor} /> */}
+                  </TouchableOpacity>
 
-              {!dspLocation && <View>
-
-                <Input
-                  value={formData.location.frst} placeholder={dspLocation ? "First Location" : "From Location"} onChangeText={(text) => handleTypedText(text, 'location.frst')} style={{}} />
-                <Input
-                  value={formData.location.scnd} placeholder={dspLocation ? "Second Location" : "To Location"} onChangeText={(text) => handleTypedText(text, 'location.scnd')} style={{}} />
-
-              </View>}
-
-              {!dspLocation && <ToggleMLBtn whatTToggle={toggleDspLocation} theTittle="If You Have more that 2 locations" />}
-
-
-
-              {dspLocation && nowEnterLoca && <View>
-
-                <Input
-                  value={formData.location.frst} placeholder={dspLocation ? "First Location" : "From Location"} onChangeText={(text) => handleTypedText(text, 'location.frst')} style={{}} />
-                <Input
-                  value={formData.location.scnd} placeholder={dspLocation ? "Second Location" : "To Location"} onChangeText={(text) => handleTypedText(text, 'location.scnd')} style={{}} />
-                <Input
-                  value={formData.location.thrd} placeholder="Third Location" onChangeText={(text) => handleTypedText(text, 'location.thrd')} style={{}} />
-                <Input
-                  value={formData.location.forth} placeholder="Fourth Location" onChangeText={(text) => handleTypedText(text, 'location.forth')} style={{}} />
-                <Input
-                  value={formData.location.fifth} placeholder="Fifth Location" onChangeText={(text) => handleTypedText(text, 'location.fifth')} style={{}} />
-                <Input
-                  value={formData.location.sixth} placeholder="Sixth Location" onChangeText={(text) => handleTypedText(text, 'location.sixth')} style={{}} />
-
-                {dspLocation && <ToggleMLBtn whatTToggle={toggleDspLocation} theTittle="Done Adding Location" />}
+                </>
+              }
+              <ToggleMLBtn whatTToggle={toggleDspLocation} theTittle={dspLocation ? 'Collpase' : " If You Have more that 2 locations"} icon={dspLocation} />
+              <Divider />
 
 
-              </View>}
-            </View>}
+
+
+              {dspLocation && nowEnterLoca &&
+                <View>
+
+                  <Input
+                    value={formData.location.frst} placeholder={dspLocation ? "First Location" : "From Location"} onChangeText={(text) => handleTypedText(text, 'location.frst')} style={{}} />
+                  <Input
+                    value={formData.location.scnd} placeholder={dspLocation ? "Second Location" : "To Location"} onChangeText={(text) => handleTypedText(text, 'location.scnd')} style={{}} />
+                  <Input
+                    value={formData.location.thrd} placeholder="Third Location" onChangeText={(text) => handleTypedText(text, 'location.thrd')} style={{}} />
+                  <Input
+                    value={formData.location.forth} placeholder="Fourth Location" onChangeText={(text) => handleTypedText(text, 'location.forth')} style={{}} />
+                  <Input
+                    value={formData.location.fifth} placeholder="Fifth Location" onChangeText={(text) => handleTypedText(text, 'location.fifth')} style={{}} />
+                  <Input
+                    value={formData.location.sixth} placeholder="Sixth Location" onChangeText={(text) => handleTypedText(text, 'location.sixth')} style={{}} />
+
+                  {dspLocation &&
+                    <ToggleMLBtn whatTToggle={toggleDspLocation} icon={dspLocation} theTittle="Done Adding Location" />}
+
+
+                </View>}
+            </View>
 
             <Divider />
             {!dspReturnRate && !dspOtherRequirements && !dspRate && !dspLocation && !dspCommodity && <View style={styles.viewMainDsp}>
@@ -827,17 +857,15 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   viewSubMainDsp: {
-    marginBottom: 7,
     padding: 10,
-    borderWidth: 2,
-    borderColor: "green",
-    borderRadius: 8,
-    shadowColor: "#6a0c0c",
-    shadowOffset: { width: 1, height: 2 },
+    borderWidth: 1,
+    borderColor: "ccc",
+    borderRadius: wp(4),
+    shadowColor: '#2f2f2f69',
     shadowOpacity: 0.7,
     shadowRadius: 5,
-    overflow: "hidden",
-    width: 270
+    elevation: 10,
+    gap: wp(2)
   },
   moreLessIterms: {
     padding: wp(2), justifyContent: 'center', alignItems: 'center', borderRadius: 5
