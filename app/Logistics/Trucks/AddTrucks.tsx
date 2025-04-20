@@ -3,7 +3,7 @@ import { storage } from "@/db/fireBaseConfig";
 import { getDownloadURL, ref, uploadBytes, uploadBytesResumable ,} from "firebase/storage";
 import { collection, doc, getDoc, addDoc ,serverTimestamp , onSnapshot , setDoc} from 'firebase/firestore';
 import { db,} from "@/db/fireBaseConfig";
-import {View,  Text ,TouchableOpacity , Image , ActivityIndicator,StyleSheet, ScrollView,Linking} from "react-native"
+import {View,TouchableOpacity , Image , ActivityIndicator,StyleSheet, ScrollView,Linking} from "react-native"
 import inputstyles from "../../components/styles/inputElement";
 
 import * as ImagePicker from 'expo-image-picker';
@@ -15,12 +15,8 @@ import { CountryCode } from 'react-native-country-picker-modal';
 import { Country } from 'react-native-country-picker-modal';
 
 
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Ionicons } from "@expo/vector-icons";
 import Fontisto from '@expo/vector-icons/Fontisto';
-
-import { toggleLocalCountry,toggleInternationalCountry } from "@/Utilities/utils";
-
+import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
 import CountrySelector from "@/components/CountrySelector";
 import ScreenWrapper from "@/components/ScreenWrapper";
@@ -129,11 +125,7 @@ const handleCountrySelectTrOwner = (country: Country): void => {
 
 
 
-  const [localOperation , setLocalLoads]=React.useState(false)
-
-  function chooseOpLoc(){
-    setLocalLoads(prevState => !prevState)
-  }
+  
    const [location, setLocation] = useState<string>(""); // Track local or international selection
   const [interOpCount, setIntOpCount] = useState<string[]>([]); // Track selected international countries
   const [locaOpLoc, setLocaOpLoc] = useState<string>(""); // Track selected local country
@@ -406,8 +398,9 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
 
   
   return (
-      
-      <View style={{alignItems :'center', paddingTop : 100 , }} >
+      <ScreenWrapper>
+
+      <View style={{alignItems :'center', paddingTop : 100  }} >
 
   
 
@@ -462,7 +455,7 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
    
 
      {images[0] &&!truckDetails&& !driverDetails&& <Image source={{ uri: images[0].uri }} style={{ width: 200, height: 200 }} />}
-        { !images[0]  && <Text>Truck Image</Text>}
+        { !images[0]  && <ThemedText>Truck Image</ThemedText>}
      {!images[0]  && <TouchableOpacity onPress={selectImage } style={{marginBottom : 9}}>
           <Fontisto name="camera" size={30} color="#6a0c0c" />
      </TouchableOpacity>}
@@ -471,7 +464,7 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
        
       { spinnerItem &&<ActivityIndicator size={34} />}
 
-  { !localOperation && !driverDetails && !truckDetails&&  <View>
+  { !location && !driverDetails && !truckDetails&&  <View>
          {truckType ==="other" && <Input 
             value={formData.trailerModel}
             placeholderTextColor="#6a0c0c"
@@ -522,25 +515,25 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
 
 
 
-{!localOperation ? <View> 
+{  <View> 
 
-{!location && formData.trailerType&&formData.maxloadCapacity&&<Text>Click Operating location and choose were truck operate</Text>}
+{/* {!location && formData.trailerType&&formData.maxloadCapacity&&<ThemedText>Click Operating location and choose were truck operate</ThemedText>} */}
 
-       {images[0] &&  !driverDetails&&!truckDetails&&location && formData.trailerType&&formData.maxloadCapacity&&<TouchableOpacity onPress={togglrDriverDe} style={styles.buttonSelectStyle} >
-          <Text>Driver Details</Text>
+       {images[0] &&  !driverDetails&&!truckDetails && formData.trailerType&&formData.maxloadCapacity&&<TouchableOpacity onPress={togglrDriverDe} style={styles.buttonSelectStyle} >
+          <ThemedText  >Driver Details</ThemedText>
         </TouchableOpacity>
         }
 
         <View style={{alignSelf:'center'}}>
 
-{(!images[0] && !formData.trailerType||!formData.maxloadCapacity)&&<Text>Fill in all the Information </Text>}
-{(!images[0] &&   !formData.trailerType||!formData.maxloadCapacity)&&<Text>To add truck and driver details </Text>}
+{(!images[0] && !formData.trailerType||!formData.maxloadCapacity)&&<ThemedText>Fill in all the Information </ThemedText>}
+{(!images[0] &&   !formData.trailerType||!formData.maxloadCapacity)&&<ThemedText>To add truck and driver details </ThemedText>}
         </View>
 
 
       {driverDetails && <View style={{justifyContent:'center'}} >
 
-          <Text>Driver Details</Text>
+          <ThemedText>Driver Details</ThemedText>
 
            {!countryCodeDriver&&  <CountryPicker
         countryCode={callingCodeDriver as CountryCode}
@@ -550,8 +543,8 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
         onSelect={handleCountrySelectDriver}
       />
         }      
-      {countryCodeDriver && <Text style={{textAlign:'center',color:'green',fontWeight:'bold',}} >Country Code : {countryCodeDriver}</Text>}
-        {!countryCodeDriver && <Text>Click select country to choose country code</Text> }
+      {countryCodeDriver && <ThemedText style={{textAlign:'center',color:'green',fontWeight:'bold',}} >Country Code : {countryCodeDriver}</ThemedText>}
+        {!countryCodeDriver && <ThemedText>Click select country to choose country code</ThemedText> }
           <Input 
             value={formData.driverPhone}
             placeholderTextColor="#6a0c0c"
@@ -561,26 +554,27 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
           />
 
        
-    {images[1]&&!formData.driverPhone&&<Text>Dont forget to Enter driver Phone number</Text> }
+    {images[1]&&!formData.driverPhone&&<ThemedText>Dont forget to Enter driver Phone number</ThemedText> }
 
-      {images[1] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >DRIVER PASSPORT IMAGE</Text>}
+      {images[1] &&<ThemedText style={{alignSelf:'center',fontWeight:'bold'}} >DRIVER PASSPORT IMAGE</ThemedText>}
      {images[1] && <Image source={{ uri: images[1].uri }} style={{ width: 200, height: 200, margin:7 }} />}
      {images[0]   && !images[1] &&<TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
-        <Text style={{backgroundColor:'white',textAlign:'center'  }} >Driver PASSPORT</Text>
+        <ThemedText style={{backgroundColor:'white',textAlign:'center',color:'black'  }} >Driver PASSPORT</ThemedText>
+
      </TouchableOpacity>}
          
 
 
-      {images[2] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >DRIVER ID IMAGE</Text>}
+      {images[2] &&<ThemedText style={{alignSelf:'center',fontWeight:'bold'}} >DRIVER ID IMAGE</ThemedText>}
 
      {images[2] && <Image source={{ uri: images[2].uri }} style={{ width: 200, height: 200 , margin:7}} />}
      {images[0] && images[1] && !images[2]   &&<TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
-        <Text style={{backgroundColor:'white',textAlign:'center'  }} >Driver Id Image </Text>
+        <ThemedText style={{backgroundColor:'white',textAlign:'center',color:'black'   }} >Driver Id Image </ThemedText>
      </TouchableOpacity>}
           
-{images[2]&&!formData.driverPhone&&<Text>Enter the driver Phone number to continue</Text> }
+{images[2]&&!formData.driverPhone&&<ThemedText>Enter the driver Phone number to continue</ThemedText> }
       {images[2]&&formData.driverPhone&& <TouchableOpacity onPress={togglrTruckDe} style={{      height: 35, 
-      width: 120, 
+      width: 170, 
       backgroundColor: '#1E90FF', 
       borderRadius: 8, 
       alignSelf: 'flex-end', 
@@ -592,7 +586,7 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
       shadowRadius: 4, 
       elevation: 3,
       }} >
-    <Text style={{ fontWeight: "bold", color: 'white', fontSize: 16 }}>Done NEXT PAGE</Text>
+    <ThemedText style={{ fontWeight: "bold", color: 'white', fontSize: 16 }}>Done NEXT PAGE</ThemedText>
       </TouchableOpacity>}
 
       </View>}
@@ -601,39 +595,39 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
 
 
     {images[3] && !truckDetails &&!driverDetails&&<TouchableOpacity onPress={togglrTruckDe} style={styles.buttonSelectStyle} >
-      <Text  >Truck Details</Text>
+      <ThemedText  >Truck Details</ThemedText>
     </TouchableOpacity>}
 
       {truckDetails && <View >
-        <Text>Truck Details</Text>
+        <ThemedText>Truck Details</ThemedText>
 
 
   <View style={{justifyContent:'center'}} > 
-      {images[3] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >HORSE REG BOOK IMAGE</Text>}
+      {images[3] &&<ThemedText style={{alignSelf:'center',fontWeight:'bold'}} >HORSE REG BOOK IMAGE</ThemedText>}
      {images[3] && <Image source={{ uri: images[3].uri }} style={{ width: 200, height: 200 , margin:7 }} />}
      {images[0] && images[1] && images[2] && !images[3] && <TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
-        <Text style={{backgroundColor:'white'  }} >horse Reg Book Image </Text>
+        <ThemedText style={{backgroundColor:'white',color:'black'   }} >horse Reg Book Image </ThemedText>
      </TouchableOpacity>}
           
           
 
-      {images[4] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >Trailer Book Image</Text>}
+      {images[4] &&<ThemedText style={{alignSelf:'center',fontWeight:'bold'}} >Trailer Book Image</ThemedText>}
      {images[4] && <Image source={{ uri: images[4].uri }} style={{ width: 200, height: 200, margin:7 }} />}
-        {images[0] && images[1] && images[2] && images[3] && !images[4] &&  <Text>First Trailer reg</Text>}
+        {images[0] && images[1] && images[2] && images[3] && !images[4] &&  <ThemedText>First Trailer reg</ThemedText>}
      {images[0] && images[1] && images[2] && images[3] && !images[4] &&  <TouchableOpacity onPress={selectImage } style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
-        <Text style={{backgroundColor:'white'  }} >Trailer Reg Book</Text>
+        <ThemedText style={{backgroundColor:'white',color:'black'   }} >Trailer Reg Book</ThemedText>
      </TouchableOpacity>}
        </View>   
 
 <View>
 
-      {images[5] &&<Text style={{alignSelf:'center',fontWeight:'bold'}} >TRAILER 2 REG BOOK IMAGE</Text>}
+      {images[5] &&<ThemedText style={{alignSelf:'center',fontWeight:'bold'}} >TRAILER 2 REG BOOK IMAGE</ThemedText>}
      {images[5] && <Image source={{ uri: images[5].uri }} style={{ width: 200, height: 200,margin:7 }} />}
 
-      {images[0] && images[1] && images[2]&& images[3]  && images[4]&& !images[5]  && <Text style={{alignSelf:'center',fontWeight:'bold'}} >Add If available or continue to add driver details</Text>}
-      {images[4]&& !images[5]  &&<Text>Trailer 2 Reg </Text>}
+      {images[0] && images[1] && images[2]&& images[3]  && images[4]&& !images[5]  && <ThemedText style={{alignSelf:'center',fontWeight:'bold'}} >Add If available or continue to add driver details</ThemedText>}
+      {images[4]&& !images[5]  &&<ThemedText>Trailer 2 Reg </ThemedText>}
      {images[0] && images[1] && images[2]&& images[3]  && images[4]&& !images[5]  &&<TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
-        <Text style={{backgroundColor:'white'  }} >Book Image </Text>
+        <ThemedText style={{backgroundColor:'white' ,color:'black'  }} >Book Image </ThemedText>
      </TouchableOpacity>}
 </View>
          
@@ -645,7 +639,7 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
 
 
 
- </View>:null}
+ </View>}
 
 
 
@@ -665,10 +659,10 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
 
     {!spinnerItem? images.length>=5&& <TouchableOpacity onPress={handleSubmit} style={{alignSelf :"center", backgroundColor : '#6a0c0c' , width : 100 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',marginTop:5}} >
 
-        <Text style={{color:'white'}} >submit</Text>
+        <ThemedText style={{color:'white'}} >submit</ThemedText>
 
         </TouchableOpacity>:
-        <Text style={{alignSelf:"center",fontStyle:'italic'}} >The truck is being added Please wait </Text>
+        <ThemedText style={{alignSelf:"center",fontStyle:'italic'}} >The truck is being added Please wait </ThemedText>
         }
 
 
@@ -676,6 +670,7 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
             </ScrollView>
       </View>
 
+      </ScreenWrapper>
   );
 
 

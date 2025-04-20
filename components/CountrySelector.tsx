@@ -5,6 +5,8 @@ import { ThemedText } from './ThemedText';  // Assuming you have this component
 import { SlctCountryBtn } from './SlctCountryBtn';  // Assuming this button is present
 import { toggleLocalCountry, toggleInternationalCountry } from '../Utilities/utils';
 
+import Button from './Button';
+
 interface CountrySelectorProps {
   location: string;
   setLocation: React.Dispatch<React.SetStateAction<string>>;
@@ -24,14 +26,22 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
 }) => {
   return (
     <View>
-             {!location && <View>
-
-                {/* Local Selector */}
-                <SlctCountryBtn selectedLoc="Local" onPress={() => setLocation("Local")} />
-
+             {!location && <View >
+                <ThemedText>Select How the truck operate</ThemedText>
+                <View  style={{flexDirection:'row'}}>    
+                {/* Local Selector */}                
+                   <Button
+                        colors={{ text: '#395a4f', bg: '#395a4f24' }}
+                        title='Local'
+                        onPress={() => setLocation("Local")}
+                    />   
                 {/* International Selector */}
-                <SlctCountryBtn selectedLoc="International" onPress={() => setLocation("International")} />
-
+                   <Button
+                        colors={{ text: '#395a4f', bg: '#395a4f24' }}
+                        title='International'
+                        onPress={() => setLocation("International")}
+                    />   
+                    </View>
               </View>}
 
       {location === "Local" && (

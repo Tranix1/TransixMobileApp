@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
-import { StyleSheet, TouchableNativeFeedback, View } from "react-native";
+import { StyleSheet, TouchableNativeFeedback, View,LogBox } from "react-native";
 import Home from "./Home/Index";
 import Loads from "./Logistics/Loads/Index";
 import Store from "./Transport/Store/Index";
@@ -31,7 +31,10 @@ export default function Index() {
   const background = useThemeColor("background");
   const backgroundColor = useThemeColor("background");
 
-
+LogBox.ignoreLogs([
+  'Warning: CountryModal: Support for defaultProps will be removed',
+]);
+  
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   // callbacks
