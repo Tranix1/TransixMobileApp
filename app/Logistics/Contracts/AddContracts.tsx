@@ -584,10 +584,9 @@ function AddLoadContract() {
             </View>
 
             <Divider />
-            {!dspReturnRate && !dspOtherRequirements && !dspRate && !dspLocation && !dspCommodity && <View style={styles.viewMainDsp}>
+            <View style={styles.viewMainDsp}>
 
-              {dspTruckRequired && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }} >Add all the commodities to be transpoted</ThemedText>}
-              {!dspTruckRequired && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }} >Add 3 Commodity</ThemedText>}
+              <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }} >Add Commodities</ThemedText>
               <Input
                 value={formData.trckRequired.frst} placeholder="First Truck Requirement" onChangeText={(text) => handleTypedText(text, 'trckRequired.frst')} style={{}} />
               <Input
@@ -595,7 +594,6 @@ function AddLoadContract() {
 
 
 
-              {!dspTruckRequired && <ToggleMLBtn whatTToggle={toggleDspTruckRequired} theTittle="More than 2 type of trucks reuired" />}
 
 
               {dspTruckRequired && <View>
@@ -607,17 +605,16 @@ function AddLoadContract() {
                 <Input
                   value={formData.trckRequired.fifth} placeholder="Fifth Truck Requirement" onChangeText={(text) => handleTypedText(text, 'trckRequired.fifth')} style={{}} />
 
-                {dspTruckRequired && <ToggleMLBtn whatTToggle={toggleDspTruckRequired} theTittle="Done Adding Reuired trucks" />}
 
 
               </View>}
-            </View>}
+              <ToggleMLBtn icon={dspTruckRequired} whatTToggle={toggleDspTruckRequired} theTittle={dspTruckRequired ? 'Collpase' : "Add more"} />
+            </View>
 
             <Divider />
-            {!dspReturnRate && !dspRate && !dspTruckRequired && !dspLocation && !dspCommodity && <View style={styles.viewMainDsp}>
+            <View style={styles.viewMainDsp}>
 
-              {dspOtherRequirements && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }} >Add all the commodities to be transpoted</ThemedText>}
-              {!dspOtherRequirements && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }} >Add 3 Commodity</ThemedText>}
+              <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }} >Commodities to be transpoted</ThemedText>
               <Input
                 value={formData.otherRequirements.frst}
                 placeholder="First Other Requirement"
@@ -631,25 +628,22 @@ function AddLoadContract() {
                 style={{}}
               />
 
-              {!dspOtherRequirements && <ToggleMLBtn whatTToggle={toggleDspOtherRequirements} theTittle="Done Adding Other Reuirems" />}
 
               {dspOtherRequirements && <View>
-
-
                 <Input
                   value={formData.otherRequirements.third} placeholder="Third Other Requirement" onChangeText={(text) => handleTypedText(text, 'otherRequirements.third')} style={{}} />
                 <Input
                   value={formData.otherRequirements.forth} placeholder="Fourth Other Requirement" onChangeText={(text) => handleTypedText(text, 'otherRequirements.forth')} style={{}} />
 
-                {dspOtherRequirements && <ToggleMLBtn whatTToggle={toggleDspOtherRequirements} theTittle="Done Adding Other Rei" />}
 
-              </View>}
-            </View>}
+              </View>
+              }
+              <ToggleMLBtn icon={dspOtherRequirements} whatTToggle={toggleDspOtherRequirements} theTittle={dspOtherRequirements ? 'Collpase' : "Add More"} />
+            </View>
 
             <Divider />
-            {!dspReturnRate && !dspOtherRequirements && !dspTruckRequired && !dspLocation && !dspCommodity && <View style={styles.viewMainDsp}>
-              {dspRate && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }} >Add all the Rates dor Contract</ThemedText>}
-              {!dspRate && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }} >Add 3 Rates</ThemedText>}
+            <View style={styles.viewMainDsp}>
+              <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }} >Rates</ThemedText>
               <Input
                 value={formData.rate.solidFrst} placeholder="Solid First Rate" onChangeText={(text) => handleTypedText(text, 'rate.solidFrst')} style={{}} />
               {dspRate && <Input
@@ -670,11 +664,10 @@ function AddLoadContract() {
                 value={formData.rate.superLinkScnd} placeholder="Super Link Second Rate" onChangeText={(text) => handleTypedText(text, 'rate.superLinkScnd')} style={{}} />}
 
 
-              {!dspRate && <ToggleMLBtn whatTToggle={toggleDspRate} theTittle="More than 2 rates" />}
-              {dspRate && <ToggleMLBtn whatTToggle={toggleDspRate} theTittle="Done Rates" />}
+              <ToggleMLBtn icon={dspRate} whatTToggle={toggleDspRate} theTittle={dspRate ? 'Collpase' : "Add More"} />
 
 
-            </View>}
+            </View>
 
           </ScrollView>}
 
