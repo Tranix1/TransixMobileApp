@@ -46,10 +46,28 @@ const TruckItemComponent = ({ truck = {} as Truck }) => {
                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
 
                         <Ionicons name="location-outline" size={wp(4)} style={{ width: wp(6) }} color={icon} />
+                        {/* To show if its local on international truck */}
                         <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
-                            {truck.fromLocation || 'N/A'}
+                            Local/International
                         </ThemedText>
                     </View>
+
+                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
+
+                        <Ionicons name="location-outline" size={wp(4)} style={{ width: wp(6) }} color={icon} />
+                        {/* If local truck dispaly the county */}
+                        <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
+                            loc zim
+                        </ThemedText>
+                    </View>
+                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
+                        {/* Else if international trucks diasplay were permits are availeble */}
+                        <Ionicons name="location-outline" size={wp(4)} style={{ width: wp(6) }} color={icon} />
+                        <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
+                          Malawi , Zambia , Moaza
+                        </ThemedText>
+                    </View>
+
                     {/* <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
                         <FontAwesome6 name="road" size={wp(4)} style={{ width: wp(6) }} color={icon} />
                         <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>

@@ -21,8 +21,6 @@ function DBTrucksAdd( {navigation ,route} ) {
   const trucksDB = collection(db, "Trucks");
 
   const [formData, setFormData] = React.useState({
-    fromLocation: verifiedLoad ? fromLocation : "",
-    toLocation: verifiedLoad ? toLocation : "",
     additionalInfo :"" ,
     trailerType : '',
     trailerModel :"" ,
@@ -335,8 +333,6 @@ if(isVerified && images.length <5 && spinnerItem && truckType !== "Rigid") {
       });
 
        setFormData({
-    fromLocation:"",
-    toLocation:  "",
     additionalInfo :"" ,
     trailerType : '',
 

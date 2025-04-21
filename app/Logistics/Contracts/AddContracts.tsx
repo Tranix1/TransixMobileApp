@@ -555,7 +555,7 @@ function AddLoadContract() {
                 </>
               }
               <ToggleMLBtn whatTToggle={toggleDspLocation} theTittle={dspLocation ? 'Collpase' : " If You Have more that 2 locations"} icon={dspLocation} />
-              <Divider />
+              {/* <Divider /> */}
 
 
 
@@ -680,7 +680,7 @@ function AddLoadContract() {
               value={formData.returnCommodity.frst} placeholder="First Commodity" onChangeText={(text) => handleTypedText(text, 'returnCommodity.frst')} style={{}} />
             <Input
               value={formData.returnCommodity.scnd} placeholder="Second Commodity" onChangeText={(text) => handleTypedText(text, 'returnCommodity.scnd')} style={{}} />
-            {!dspReturnCommodity && <ToggleMLBtn whatTToggle={toggleDspReturnCommodity} theTittle=" Return Commo" />}
+            {!dspReturnCommodity && <ToggleMLBtn whatTToggle={toggleDspReturnCommodity} theTittle=" Return Commo" icon={dspReturnCommodity} />}
 
             {dspReturnCommodity && <View>
               <Input
@@ -689,7 +689,7 @@ function AddLoadContract() {
                 value={formData.returnCommodity.forth} placeholder="Fourth Commodity" onChangeText={(text) => handleTypedText(text, 'returnCommodity.forth')} style={{}} />
 
 
-              {dspReturnCommodity && <ToggleMLBtn whatTToggle={toggleDspReturnCommodity} theTittle="Done Return Commo" />}
+              {dspReturnCommodity && <ToggleMLBtn whatTToggle={toggleDspReturnCommodity} theTittle="Done Return Commo" icon={dspReturnCommodity} />}
             </View>}
 
           </View>}
@@ -724,8 +724,8 @@ function AddLoadContract() {
             {dspReturnRate && <Input
               value={formData.returnRate.superLinkScnd} placeholder="Links Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.superLinkScnd')} style={{}} />}
 
-            {!dspReturnRate && <ToggleMLBtn whatTToggle={toggleDspReturnRate} theTittle="Done Return Rate" />}
-            {dspReturnRate && <ToggleMLBtn whatTToggle={toggleDspReturnRate} theTittle="Done Return Rate" />}
+            {!dspReturnRate && <ToggleMLBtn whatTToggle={toggleDspReturnRate} theTittle="Done Return Rate" icon={dspReturnRate} />}
+            {dspReturnRate && <ToggleMLBtn whatTToggle={toggleDspReturnRate} theTittle="Done Return Rate" icon={dspReturnRate} />}
           </View>}
 
         </ScrollView>}

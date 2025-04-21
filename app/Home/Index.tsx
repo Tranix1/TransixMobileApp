@@ -1,4 +1,4 @@
-import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableNativeFeedback, View } from 'react-native'
+import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableNativeFeedback, View,TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import { ThemedText } from '@/components/ThemedText'
@@ -242,6 +242,12 @@ const Index = () => {
                 <View style={{ margin: wp(4), marginTop: 0 }}>
                     <Input placeholder='Search...' Icon={<EvilIcons name='search' size={wp(6)} />} containerStyles={{ backgroundColor: backgroundColor }} />
                 </View>
+
+                <TouchableOpacity onPress={() => router.push("/Logistics/AddHome")} >
+                    <ThemedText>Add Logistics</ThemedText>
+                    </TouchableOpacity>    
+
+                
                 <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
                         <View style={{ backgroundColor: '#395a4f', borderRadius: wp(2), padding: wp(1.5) }}>
@@ -256,12 +262,12 @@ const Index = () => {
                     </ThemedText>
                     <Button
                         colors={{ text: '#395a4f', bg: '#395a4f24' }}
-                        title='Learn More'
+                        title='Open'
                         Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"#395a4f"} />}
                         onPress={() => router.push('/Logistics/Contracts/Index')}
                     />
                 </View>
-
+                    
 
                 <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>

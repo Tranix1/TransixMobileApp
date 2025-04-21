@@ -35,6 +35,8 @@ const Index = () => {
     const [trucks, setTrucks] = useState<Truck[] | null>(null)
 
     const [selectedCountry, setSelectedCountry] = useState('All')
+    const [dspFilterLocal , setDspFilterLocal]= useState (false)
+
     const [truckTonnage, setTruckTonnage] = useState("All")
 
     useEffect(() => {
@@ -100,12 +102,30 @@ const Index = () => {
                             <View style={{ width: '95%', backgroundColor: bg, borderRadius: wp(4), padding: wp(4) }}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: wp(4) }}>
                                     <ThemedText type="default">Filter Trucks</ThemedText>
+                                    
                                     <TouchableOpacity onPress={() => setShowfilter(false)}>
                                         <Ionicons name="close" size={wp(5)} color={icon} />
                                     </TouchableOpacity>
                                 </View>
                                 <View style={{ marginBottom: wp(4), gap: wp(4) }}>
-                                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: wp(2), gap: wp(3) }}>
+
+
+
+                                    <View style={{flexDirection:'row'}}>
+                                        
+                            <TouchableOpacity  onPress={() => {
+                                setSelectedCountry('International'); 
+                                 setDspFilterLocal(false); } } style={[styles.countryButton, { backgroundColor: background,marginRight:6 }, selectedCountry === 'International' && styles.countryButtonSelected]} >
+                            <ThemedText style={{ color: selectedCountry === 'International' ? 'white' : coolGray }}>International</ThemedText>
+                        </TouchableOpacity>
+                                <TouchableOpacity onPress={() => {
+                                    setDspFilterLocal(true); setSelectedCountry('All')  } } style={[styles.countryButton, { backgroundColor: background }, dspFilterLocal && styles.countryButtonSelected]} >
+                            <ThemedText style={{ color: dspFilterLocal ? 'white' : coolGray }}>Local </ThemedText>
+                        </TouchableOpacity>
+                            </View>
+
+
+                                  {dspFilterLocal &&  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: wp(2), gap: wp(3) }}>
                                         <TouchableOpacity key={'all'} onPress={() => setSelectedCountry('All')} style={[styles.countryButton, { backgroundColor: background }, selectedCountry === 'All' && styles.countryButtonSelected]} >
                                             <ThemedText style={{ color: selectedCountry === 'All' ? 'white' : coolGray }}>All </ThemedText>
                                         </TouchableOpacity>
@@ -116,13 +136,30 @@ const Index = () => {
                                                 </TouchableOpacity>
                                             )
                                         }
-                                    </ScrollView>
+                                    </ScrollView>}
+
+
+
+                                     <View style={{flexDirection:'row'}}>
+                                        
+                            <TouchableOpacity  onPress={() => {
+                                setSelectedCountry('International'); 
+                                 setDspFilterLocal(false); } } style={[styles.countryButton, { backgroundColor: background,marginRight:6 }, selectedCountry === 'International' && styles.countryButtonSelected]} >
+                            <ThemedText style={{ color: selectedCountry === 'International' ? 'white' : coolGray }}>Cargo Trucks</ThemedText>
+                        </TouchableOpacity>
+                                <TouchableOpacity onPress={() => {
+                                    setDspFilterLocal(true); setSelectedCountry('All')  } } style={[styles.countryButton, { backgroundColor: background }, dspFilterLocal && styles.countryButtonSelected]} >
+                            <ThemedText style={{ color: dspFilterLocal ? 'white' : coolGray }}>Tankers </ThemedText>
+                        </TouchableOpacity>
+                            </View>              
+
+
                                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: wp(2), gap: wp(3) }}>
                                         <TouchableOpacity key={'all'} onPress={() => setTruckTonnage('All')} style={[styles.countryButton, { backgroundColor: background }, truckTonnage === 'All' && styles.countryButtonSelected]} >
                                             <ThemedText style={{ color: truckTonnage === 'All' ? 'white' : coolGray }}>All </ThemedText>
                                         </TouchableOpacity>
                                         {
-                                            tonneSizes.map((item, index) =>
+                                            tonneSizes.slice().reverse().map((item, index) =>
                                                 <TouchableOpacity key={index} onPress={() => setTruckTonnage(item)} style={[styles.countryButton, { backgroundColor: background }, truckTonnage === item && styles.countryButtonSelected]} >
                                                     <ThemedText style={{ color: truckTonnage === item ? 'white' : coolGray }}>{item} </ThemedText>
                                                 </TouchableOpacity>
@@ -132,22 +169,23 @@ const Index = () => {
 
                                     <SwithComponent value={filterVerified} handlePress={() => { setFilterVerified(!filterVerified); }} title='Show Verified' />
                                 </View>
-                                <ThemedText style={{ marginBottom: wp(2) }}>
-                                    Truck Types
-                                </ThemedText>
+                              
 
                                 <Button
                                     onPress={() => {
-                                        clearFilter();
+                                        // clearFilter();
                                         setShowfilter(false);
                                     }}
-                                    title='Clear Filters'
+                                    title='Done Filter'
                                     colors={{ bg: accent + '1c', text: accent }}
                                 />
                             </View>
                         </View>
                     </BlurView>
+                    
                 </Modal>
+
+                
             </SafeAreaView>
             <View style={[styles.container, { backgroundColor: bg }]}>
                 <View style={{
@@ -160,7 +198,17 @@ const Index = () => {
                     marginBottom: wp(1),
                 }} >
                     <View>
-                        <ThemedText type="title">Trucks</ThemedText>
+    <View style={{ marginLeft: 5, marginBottom: -5 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+    <ThemedText type="title">
+        Trucks 
+    </ThemedText>
+        <Text style={{ fontSize: 13, marginLeft: 5 }}>
+            {selectedCountry !== "All" && selectedCountry !== "International" ? `Local ${selectedCountry}` : selectedCountry === "International" ? selectedCountry : null}
+        </Text>
+</View>
+
+</View>
                         <ThemedText type="tiny">Find a Truck for your Load Today</ThemedText>
                     </View>
                     <View style={{ flexDirection: 'row', gap: wp(2) }}>
@@ -180,7 +228,25 @@ const Index = () => {
 
 
 
-                                {selectedTruckType?.name&&  <ThemedText>Truck type</ThemedText>}
+
+
+
+
+
+
+
+
+
+                <FlatList
+                    keyExtractor={(item) => item.id.toString()}
+                    ListHeaderComponent={() => <>
+                        <View style={{ marginHorizontal: wp(1), marginBottom: wp(1), }}>
+
+                            <TouchableOpacity onPress={()=>setSelectedTruckType(null)}>
+
+                                {selectedTruckType?.name&&  <ThemedText style={{alignSelf:'flex-end'}}>Truck type</ThemedText>}
+                            </TouchableOpacity>
+
                                 {!selectedTruckType?.name&& <ScrollView horizontal contentContainerStyle={{ gap: wp(2) }} style={{marginBottom:10 , marginLeft:5 , marginTop:7}}>
                                     {truckTypes.map((item) => (
                                         <TouchableOpacity
@@ -218,14 +284,6 @@ const Index = () => {
 
 
 
-
-
-
-
-                <FlatList
-                    keyExtractor={(item) => item.id.toString()}
-                    ListHeaderComponent={() => <>
-                        <View style={{ marginHorizontal: wp(1), marginBottom: wp(1), }}>
                             {(selectedTruckType || filterVerified || truckTonnage !== 'All') &&
                                 <TouchableOpacity onPress={() => setShowfilter(true)} style={{ padding: wp(2), flexDirection: 'row', backgroundColor: background, borderRadius: wp(6), marginBottom: wp(2), position: 'relative' }}>
                                     {selectedTruckType &&
@@ -268,15 +326,6 @@ const Index = () => {
                                     </View>
                                 </TouchableOpacity>
                             }
-
-
-                            
-
-
-
-
-
-
 
                             
                         </View>
