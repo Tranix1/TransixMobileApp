@@ -22,6 +22,8 @@ import Divider from "@/components/Divider";
 import { EvilIcons, Ionicons } from "@expo/vector-icons";
 
 
+import CountrySelector from "@/components/CountrySelector";
+
 function AddLoadContract() {
   const backgroundLight = useThemeColor('backgroundLight')
   const background = useThemeColor('background')
@@ -189,63 +191,21 @@ function AddLoadContract() {
 
 
 
-  const [location, setlocation] = React.useState<string>("")
+  
+   const [location, setLocation] = useState<string>(""); // Track local or international selection
+  const [locaOpLoc, setLocaOpLoc] = useState<string>(""); // Track selected local country
+  const [intOpLoc, setIntOpLoc] = useState<string[]>([]); // Track international countries
+  const [dspAddLocation, setDspAddLocation] = useState<boolean>(false); // Control visibility of add location
 
-  const [dspAddLocation, setDspAddLocation] = React.useState<boolean>(false)
-
-  // const [interOpCount , setIntOpLoc]=React.useState<object>({})
-
-  function specifyLocation(loc: string): void {
-    setlocation(loc);
-  }
+  
 
 
-  const [interOpCount, setIntOpLoc] = React.useState<string[]>([]);
-
-  const [locaOpCount, setLocaOpLoc] = React.useState<string>("");
-
-  console.log(interOpCount)
-  console.log(locaOpCount)
-
-
-  function toggleLocalCountry(count: string): void {
-    setIntOpLoc([])
-    setLocaOpLoc(count)
-    setDspAddLocation(false)
-    setlocation("")
-  }
-
-  function toggleInternationalCountry(country: string): void {
-    setLocaOpLoc("")
-    setIntOpLoc(prev => {
-      if (prev.includes(country)) {
-        return prev.filter(item => item !== country); // remove if already selected
-      } else {
-        return [...prev, country]; // add if not selected
-      }
-    });
-  }
+console.log(locaOpLoc)
+console.log(intOpLoc)
+console.log(location)
 
 
 
-  // This is the button to choose a country 
-  type SlctCountryBtnProps = {
-    selectedLoc: string;
-    onPress: () => void;
-    isSelected?: boolean;
-  };
-
-  const SlctCountryBtn = ({ selectedLoc, onPress, isSelected }: SlctCountryBtnProps) => (
-    <TouchableOpacity
-      onPress={onPress}
-      style={[
-        styles.buttonStyle,
-        { backgroundColor: isSelected ? '#6a0c0c' : '#eee' },
-      ]}
-    >
-      <ThemedText style={{ color: isSelected ? 'white' : '#6a0c0c' }}>{selectedLoc}</ThemedText>
-    </TouchableOpacity>
-  );
 
 
 
@@ -260,7 +220,7 @@ function AddLoadContract() {
     if (!formData.commodity.frst || !formDataScnd.paymentTerms || !formData.location.frst || !formData.location.scnd || !formData.trckRequired || !formData.otherRequirements.frst || !formData.rate.solidFrst) {
       setLoadDspError(true)
       return
-    } else if (!formDataScnd.loadsPerWeek || !formDataScnd.contractDuration || !formDataScnd.startingDate || !formDataScnd.fuelAvai || !formDataScnd.bookingClosingD || (!locaOpCount && interOpCount.length === 0)) {
+    } else if (!formDataScnd.loadsPerWeek || !formDataScnd.contractDuration || !formDataScnd.startingDate || !formDataScnd.fuelAvai || !formDataScnd.bookingClosingD || (!locaOpLoc && intOpLoc.length === 0)) {
       setContractDErr(true)
       return
 
@@ -276,8 +236,8 @@ function AddLoadContract() {
     // expoPushToken: expoPushToken,
     // currency: currency, 
     contractLocation: location,
-    interCountries: interOpCount,
-    localCountr: locaOpCount,
+    interCountries: intOpLoc,
+    localCountr: locaOpLoc,
     manyRoutesAllocaton: manyRoutesAllocaton,
     manyRoutesAssign: manyRoutesAssign,
     formData: formData,
@@ -332,7 +292,7 @@ function AddLoadContract() {
             !formDataScnd.startingDate && "Enter when the contract is starting",
             !formDataScnd.fuelAvai && "Enter if fuel is available and how it's distributed",
             !formDataScnd.bookingClosingD && "Enter booking closing date",
-            !locaOpCount && interOpCount.length === 0 && "Select country the loads will operate",
+            !locaOpLoc && intOpLoc.length === 0 && "Select country the loads will operate",
           ].filter(Boolean) as string[]}
           onClose={() => setContractDErr(false)}
         />
@@ -765,71 +725,20 @@ function AddLoadContract() {
               value={formDataScnd.additionalInfo} placeholder="Additional Info" onChangeText={(text) => handleTypedTextScnd(text, 'additionalInfo')} style={{}} />
 
           </View>}
+              <ThemedText>Choose Operating Locaton</ThemedText>
+              <ThemedText>Is the contract Local or international</ThemedText>
+            <CountrySelector
+            location={location}
+            setLocation={setLocation}
+            intOpLoc={intOpLoc}
+            setIntOpLoc={setIntOpLoc}
+            setLocaOpLoc={setLocaOpLoc}
+            setDspAddLocation={setDspAddLocation}
+            dspAddLocation={dspAddLocation}
+          />
 
-          {dspAddLocation && (
-            <View style={{ alignSelf: 'center' }}>
-              {!location && <View>
-
-                {/* Local Selector */}
-                <SlctCountryBtn selectedLoc="Local" onPress={() => specifyLocation("Local")} />
-
-                {/* International Selector */}
-                <SlctCountryBtn selectedLoc="International" onPress={() => specifyLocation("International")} />
-
-              </View>}
-
-              {/* Only show countries if International is selected */}
-              {location === "Local" && (
-                <>
-                  <ThemedText>Select The Local Country the contract wull be in</ThemedText>
-                  {["Zimbabwe", "SouthAfrica", "Namibia", "Tanzania", "Mozambique", "Zambia", "Botswana", "Malawi"].map((country) => (
-                    <SlctCountryBtn
-                      key={country}
-                      selectedLoc={country}
-                      onPress={() => toggleLocalCountry(country)}
-                    />
-                  ))}
-                </>
-              )}
-
-
-              {location === "International" && (
-                <>
-                  <ThemedText>Select The International countries the contract will be in</ThemedText>
-
-
-                  {location === "International" && interOpCount.length > 0 && (
-                    <ThemedText>Selected: {interOpCount.join(", ")}</ThemedText>
-                  )}
-                  {["Zimbabwe", "SouthAfrica", "Namibia", "Tanzania", "Mozambique", "Zambia", "Botswana", "Malawi"].map((country) => (
-                    <SlctCountryBtn
-                      key={country}
-                      selectedLoc={country}
-                      isSelected={interOpCount.includes(country)}
-                      onPress={() => toggleInternationalCountry(country)}
-                    />
-                  ))}
-
-                  <TouchableOpacity onPress={() => {
-                    setDspAddLocation(false);
-                    setlocation("");
-                  }} >
-                    <ThemedText>Donee</ThemedText>
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
-          )}
-
-          {location === "International" && interOpCount.length > 0 && (
-            <ThemedText>Selected International : {interOpCount.join(", ")}</ThemedText>
-          )}
-          {location === "Local" && locaOpCount && <ThemedText>Local : {locaOpCount} </ThemedText>}
-
-          <ThemedText>Is the contract International or Local for one country</ThemedText>
-          {!dspAddLocation && <TouchableOpacity onPress={() => setDspAddLocation(true)} style={styles.buttonIsFalse}  >
-            <ThemedText> {location ? "Chnage Opearing location" : "Choose operating Location"} </ThemedText>
-          </TouchableOpacity>}
+       
+         
 
           <TouchableOpacity onPress={toggleDspCheckout} style={{ flex: 1, backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignItems: 'center', margin: 10, borderRadius: 8 }} >
             <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>Done Submit</ThemedText>

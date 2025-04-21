@@ -14,6 +14,7 @@ interface CountrySelectorProps {
   setIntOpLoc: React.Dispatch<React.SetStateAction<string[]>>;
   setLocaOpLoc: React.Dispatch<React.SetStateAction<string>>;
   setDspAddLocation: React.Dispatch<React.SetStateAction<boolean>>;
+  dspAddLocation : boolean ;
 }
 
 const CountrySelector: React.FC<CountrySelectorProps> = ({
@@ -23,41 +24,44 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
   setIntOpLoc,
   setLocaOpLoc,
   setDspAddLocation,
+  dspAddLocation ,
+
 }) => {
+  console.log("dspAddLox", dspAddLocation)
   return (
     <View>
-             {!location && <View >
-                <ThemedText>Select How the truck operate</ThemedText>
+             {!dspAddLocation &&<View >
+                {/* <ThemedText>Select How the truck operate</ThemedText> */}
                 <View  style={{flexDirection:'row'}}>    
                 {/* Local Selector */}                
                    <Button
                         colors={{ text: '#395a4f', bg: '#395a4f24' }}
                         title='Local'
-                        onPress={() => setLocation("Local")}
+                        onPress={() => {setLocation("Local"); setDspAddLocation(true) } }
                     />   
                 {/* International Selector */}
                    <Button
                         colors={{ text: '#395a4f', bg: '#395a4f24' }}
                         title='International'
-                        onPress={() => setLocation("International")}
+                        onPress={() => {setLocation("International"); setDspAddLocation(true)} }
                     />   
                     </View>
               </View>}
 
-      {location === "Local" && (
+      {location === "Local" &&dspAddLocation&& (
         <>
           <ThemedText>Select The Local Country the contract will be in</ThemedText>
           {["Zimbabwe", "SouthAfrica", "Namibia", "Tanzania", "Mozambique", "Zambia", "Botswana", "Malawi"].map((country) => (
             <SlctCountryBtn
               key={country}
               selectedLoc={country}
-              onPress={() => toggleLocalCountry(country, setLocaOpLoc, setIntOpLoc, setDspAddLocation, setLocation)}
+              onPress={() => toggleLocalCountry(country, setLocaOpLoc, setIntOpLoc, setDspAddLocation, )}
             />
           ))}
         </>
       )}
 
-      {location === "International" && (
+      {location === "International" && dspAddLocation&&(
         <>
           <ThemedText>Select The International countries the contract will be in</ThemedText>
           {intOpLoc.length > 0 && (

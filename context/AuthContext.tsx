@@ -18,7 +18,7 @@ const AuthContext = createContext({
 });
 
 import { ReactNode } from "react";
-import { addDocument, AddUser, readById } from "@/db/operations";
+import { addDocument, setDocuments, readById } from "@/db/operations";
 import { User } from "@/types/types";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -133,7 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             // Update the user's profile with the display name
             await updateProfile(user, { displayName: credentials.displayName });
-            const newUser = await AddUser(user.uid, {
+            const newUser = await setDocuments(user.uid, {
                 phoneNumber: null,
                 photoURL: null,
                 displayName: credentials.displayName,
@@ -201,7 +201,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
 
             if (user) {
-                await AddUser(user.uid, {
+                await setDocuments(user.uid, {
                     ...credentials,
                 });
             }
