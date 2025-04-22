@@ -1,19 +1,17 @@
 import React,{useState} from "react";
-import { storage } from "@/db/fireBaseConfig";
-import { getDownloadURL, ref, uploadBytes, uploadBytesResumable ,} from "firebase/storage";
-import { collection, doc, getDoc, addDoc ,serverTimestamp , onSnapshot , setDoc} from 'firebase/firestore';
-import { db,} from "@/db/fireBaseConfig";
 import {View,TouchableOpacity , Image , ActivityIndicator,StyleSheet, ScrollView,Linking} from "react-native"
 import inputstyles from "../../components/styles/inputElement";
 
-import * as ImagePicker from 'expo-image-picker';
 import type { ImagePickerAsset } from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
 
 import CountryPicker from 'react-native-country-picker-modal';
 import { CountryCode } from 'react-native-country-picker-modal';
 import { Country } from 'react-native-country-picker-modal';
 
+import { addDocument, getDocById } from "@/db/operations";
+import { uploadImage } from "@/db/operations";
+
+import { selectManyImages } from "@/Utilities/utils";
 
 import Fontisto from '@expo/vector-icons/Fontisto';
 import { ThemedText } from "@/components/ThemedText";
@@ -21,12 +19,12 @@ import Input from "@/components/Input";
 import CountrySelector from "@/components/CountrySelector";
 import ScreenWrapper from "@/components/ScreenWrapper";
 
+
 function AddTrucks(  ) {
 
   // const {truckType ,username ,contact , isVerified,isBlackListed ,blackLWarning,blockVerifiedU , verifiedLoad , fromLocation  , toLocation ,expoPushToken ,verifyOngoing ,truckTonnageG} = route.params
 
 
-  const trucksDB = collection(db, "Trucks");
 
  interface FormData {
   additionalInfo: string;
@@ -73,32 +71,13 @@ const handleCountrySelectTrOwner = (country: Country): void => {
   const [ onwerEmail , setOwnerEmail] = React.useState('');
   const [ ownerPhoneNum , setOwnerCall] = React.useState('');
 
-// React.useEffect(() => {
-//   let unsubscribe: (() => void) | null = null;
+  const [getOwnerDetails, setOwnerDetails] = React.useState<any>({}); // Better to define an interface/type
 
-//   try {
-//     if (auth.currentUser) {
-//       const userId = auth.currentUser.uid;
-//       const docRef = doc(db, 'truckOwnerDetails', userId);
+React.useEffect(() => {
+  getDocById('truckOwnerDetails' , setOwnerDetails);
+}, []);
 
-//       unsubscribe = onSnapshot(docRef, (doc) => {
-//         if (doc.exists()) {
-//           SetOwnerName(doc.data().ownerName);
-//           setOwnerCall(doc.data().ownerPhoneNum);
-//           setOwnerEmail(doc.data().ownerEmail);
-//         }
-//       });
-//     }
-//   } catch (err) {
-//     console.error(err);
-//   }
-
-//   return () => {
-//     if (unsubscribe) {
-//       unsubscribe();
-//     }
-//   };
-// }, []);
+console.log(getOwnerDetails?.ownerName, "owner");
 
 
   const [ ownerNameAddDb , SetOwnerNameAddDb] = React.useState('');
@@ -127,7 +106,6 @@ const handleCountrySelectTrOwner = (country: Country): void => {
 
   
    const [location, setLocation] = useState<string>(""); // Track local or international selection
-  const [interOpCount, setIntOpCount] = useState<string[]>([]); // Track selected international countries
   const [locaOpLoc, setLocaOpLoc] = useState<string>(""); // Track selected local country
   const [intOpLoc, setIntOpLoc] = useState<string[]>([]); // Track international countries
   const [dspAddLocation, setDspAddLocation] = useState<boolean>(false); // Control visibility of add location
@@ -137,6 +115,7 @@ const handleCountrySelectTrOwner = (country: Country): void => {
 
 console.log(locaOpLoc)
 console.log(intOpLoc)
+console.log(location)
 
 
 
@@ -179,51 +158,6 @@ const handlechange= (value: string | number | boolean, fieldName: string): void 
 // const [images, setImages] = useState([]);
 const [images, setImages] = useState<ImagePickerAsset[]>([]);
 
-    const selectImage = async () => {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (!permissionResult.granted) {
-        alert('Permission is required to select an image.');
-        return;
-      }
-
-      const pickerResult = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: false,
-      });
-
-      if (pickerResult.canceled) {
-        return;
-      }
-
-      const asset = pickerResult.assets?.[0];
-      if (!asset || !asset.uri) {
-        alert('No image selected or image URI not found.');
-        return;
-      }
-
-      let fileSize = asset.fileSize;
-
-      // Fallback to FileSystem if fileSize is undefined
-      if (fileSize === undefined) {
-      const fileInfo = await FileSystem.getInfoAsync(asset.uri);
-        if (fileInfo.exists && fileInfo.size) {
-          fileSize = fileInfo.size;
-        } else {
-          alert('Could not determine file size. Please try a different image.');
-          return;
-        }
-      }
-
-      if (fileSize && fileSize > 1.5 * 1024 * 1024) {
-        alert('The selected image must not be more than 1.5MB.\nAdd a screenshot or compress the image.');
-        return;
-      }
-
-      setImages(prevImages => [...prevImages, asset]);
-      // uploadImageSc(asset); // Optional: Upload logic
-    };
-
 
 let [truckType , setTrcuckType]=React.useState("")
 let [truckTonnageG , setTruckTonnageG]=React.useState("")
@@ -233,6 +167,8 @@ let [truckTonnageG , setTruckTonnageG]=React.useState("")
   
 
     const [spinnerItem, setSpinnerItem] = React.useState(false);
+    const [addingDocUpdate , setAddingDocUpdate]=React.useState("")
+    const [uploadingImageUpdate , setUploadImageUpdate]=React.useState("")
  
   const handleSubmit = async () => {
     setDriverDDsp(false)
@@ -286,24 +222,7 @@ if (!areAllElementsTrueExceptKeys(formData, excludedKeys)) {
 
 
     let truckImage , truckBookImage , trailerBookF , trailerBookSc, driverLicense , driverPassport ;
-    
-    const uploadImage = async (image: { uri: string }) => {
-  try {
-    const response = await fetch(image.uri);
-    const blob = await response.blob();
-
-    const fileName = `Trucks/${Date.now()}`;
-    const storageRef = ref(storage, fileName);
-
-    await uploadBytes(storageRef, blob);
-    const imageUrl = await getDownloadURL(storageRef);
-
-    return imageUrl;
-  } catch (error) {
-    console.error('Image upload failed:', error);
-    return null;
-  }
-};
+   
 
 if( images.length <5 && spinnerItem && truckType !== "Rigid") {
     alert("Add All reuired images")
@@ -315,23 +234,22 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
     return
   }else if((images.length ===5||images.length ===6 ) &&  truckType !== "Rigid" ){
 
-  truckImage= await uploadImage(images[0]);
-  driverLicense  = await uploadImage(images[1]);
-  driverPassport = await uploadImage(images[2]);
+  truckImage= await uploadImage(images[0],"Trucks",setUploadImageUpdate," truck Image");
+  driverLicense  = await uploadImage(images[1],"Trucks",setUploadImageUpdate,"Driver License" ) ;
+  driverPassport = await uploadImage(images[2],"Trucks",setUploadImageUpdate , "driver passport");
 
-  truckBookImage = await uploadImage(images[3]);
-  trailerBookF   = await uploadImage(images[4]);
-  trailerBookSc = images.length === 5 ? await uploadImage(images[5]) : null ;
+  truckBookImage = await uploadImage(images[3],"Trucks",setUploadImageUpdate,"truck Book");
+  trailerBookF   = await uploadImage(images[4],"Trucks",setUploadImageUpdate,"trailer Book");
+  trailerBookSc = images.length === 5 ? await uploadImage(images[5],"Trucks",setUploadImageUpdate,"trailer Book sec") : null ;
 
 
   }else if(images.length ===4&& spinnerItem && truckType === "Rigid" ){
 
-  truckImage= await uploadImage(images[0]);
-  driverLicense  = await uploadImage(images[1]);
-  driverPassport = await uploadImage(images[2]);
+   truckImage= await uploadImage(images[0],"Trucks",setUploadImageUpdate,"truck Image");
+  driverLicense  = await uploadImage(images[1],"Trucks",setUploadImageUpdate,"Driver License" ) ;
+  driverPassport = await uploadImage(images[2],"Trucks",setUploadImageUpdate , "driver passport");
 
-  truckBookImage = await uploadImage(images[3]);
-
+  truckBookImage = await uploadImage(images[3],"Trucks",setUploadImageUpdate,"truck Book");
   } 
   //  else if(images.length === 1 ){
 
@@ -345,7 +263,13 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
 
     // let userId = auth.currentUser.uid
     try {
-      const docRef = await addDoc(trucksDB, {
+     
+    // let userId = auth.currentUser.uid
+
+
+
+
+     const submitData = {
         // CompanyName : username ,
         // contact : contact ,
         imageUrl: truckImage,
@@ -360,27 +284,33 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
         onwerEmail: onwerEmail , 
         ownerPhoneNum :ownerPhoneNum ,
 
+        location :location ,
+        intOpLoc:intOpLoc ,
+        locaOpLoc : locaOpLoc ,
+
         // userId : userId ,
         truckType : truckType ,
         // isVerified : isVerified ,
         withDetails : withDetails ,
         // expoPushToken :expoPushToken , 
         deletionTime :Date.now() + 2 * 24 * 60 * 60 * 1000 ,
-        timeStamp : serverTimestamp() ,
-        // location : location ,
         truckTonnage : truckTonnageG ,
         ...formData ,       
+      }
+
+
+
+            addDocument("Trucks" , submitData , setAddingDocUpdate )
+
+
+        setFormData({
+        additionalInfo: "",
+        trailerType: "",
+        trailerModel: "", 
+        driverPhone: "",
+        maxloadCapacity: ""
       });
 
-    //    setFormData({
-    // additionalInfo :"" ,
-    // trailerType : '',
-
-    // driverPhone :"",
-
-    // maxloadCapacity :""
-
-    //   });
 
       setImages([]);
       setSpinnerItem(false)
@@ -405,7 +335,7 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
   
 
 
-     {/* { !ownerName && <View style={{position:'absolute' , alignSelf:'center' , backgroundColor:'white' , top : 100 ,  zIndex:500,padding:20}} >
+     {!ownerName && <View style={{position:'absolute' , alignSelf:'center' , backgroundColor:"red" , top : 100 ,  zIndex:500,padding:20}} >
 
 
                <Input
@@ -415,16 +345,9 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
                      style={inputstyles.inputElem}            
                   />
 
-                       {!countryCodeTrOwner&&  <CountryPicker
-        countryCode={callingCodeTrOwner as CountryCode}
-        withCountryNameButton={true}
-        withCallingCode={true}
-        withFilter={true}
-        onSelect={handleCountrySelectTrOwner}
-      />
-        }      
-      {countryCodeTrOwner && <Text style={{textAlign:'center',color:'green',fontWeight:'bold',}} >Country Code : {countryCodeTrOwner}</Text>}
-        { !countryCodeTrOwner && <Text>Click select country to choose country code</Text> }
+                
+      {countryCodeTrOwner && <ThemedText style={{textAlign:'center',color:'green',fontWeight:'bold',}} >Country Code : {countryCodeTrOwner}</ThemedText>}
+        { !countryCodeTrOwner && <ThemedText>Click select country to choose country code</ThemedText> }
 
                <Input
                      placeholder="Owner Phon num"
@@ -444,19 +367,23 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
         
           
           <TouchableOpacity onPress={handleUpdateDriverDetails} style={{backgroundColor:'green',width:100 , height:35 , borderRadius:5}}>
-            <Text style={{color : 'white'}}>Save</Text>
+            <ThemedText style={{color : 'white'}}>Save</ThemedText>
           </TouchableOpacity>
             
         </View>
-               </View>} */}
+
+        
+               </View>}
 
 
 
    
 
-     {images[0] &&!truckDetails&& !driverDetails&& <Image source={{ uri: images[0].uri }} style={{ width: 200, height: 200 }} />}
+   
+
+     {images[0] &&!truckDetails&& !driverDetails&& <Image source={{ uri: images[0].uri }} style={{ width: 200, height: 200, }} />}
         { !images[0]  && <ThemedText>Truck Image</ThemedText>}
-     {!images[0]  && <TouchableOpacity onPress={selectImage } style={{marginBottom : 9}}>
+     {!images[0]  && <TouchableOpacity  onPress={() => selectManyImages(setImages) }  style={{marginBottom : 9}}>
           <Fontisto name="camera" size={30} color="#6a0c0c" />
      </TouchableOpacity>}
 
@@ -464,7 +391,7 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
        
       { spinnerItem &&<ActivityIndicator size={34} />}
 
-  { !location && !driverDetails && !truckDetails&&  <View>
+  { !dspAddLocation && !driverDetails && !truckDetails&&  <View  style={{width:350,backgroundColor:'red',overflow:'hidden'}}>
          {truckType ==="other" && <Input 
             value={formData.trailerModel}
             placeholderTextColor="#6a0c0c"
@@ -497,9 +424,12 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
             />
 
 
+        {intOpLoc.length > 0 &&  (
+            <ThemedText style={{ flexWrap: 'wrap',}}>Selected: {intOpLoc.join(", ")}</ThemedText>
+          )}
+          {locaOpLoc&&<ThemedText style={{ flexWrap: 'wrap',}} >selected {locaOpLoc} </ThemedText> }
           </View>}
 
-      
 
         <CountrySelector
         location={location}
@@ -508,16 +438,13 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
         setIntOpLoc={setIntOpLoc}
         setLocaOpLoc={setLocaOpLoc}
         setDspAddLocation={setDspAddLocation}
+        dspAddLocation={dspAddLocation}
       />
-
-
-
-
-
+          
 
 {  <View> 
 
-{/* {!location && formData.trailerType&&formData.maxloadCapacity&&<ThemedText>Click Operating location and choose were truck operate</ThemedText>} */}
+
 
        {images[0] &&  !driverDetails&&!truckDetails && formData.trailerType&&formData.maxloadCapacity&&<TouchableOpacity onPress={togglrDriverDe} style={styles.buttonSelectStyle} >
           <ThemedText  >Driver Details</ThemedText>
@@ -558,7 +485,7 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
 
       {images[1] &&<ThemedText style={{alignSelf:'center',fontWeight:'bold'}} >DRIVER PASSPORT IMAGE</ThemedText>}
      {images[1] && <Image source={{ uri: images[1].uri }} style={{ width: 200, height: 200, margin:7 }} />}
-     {images[0]   && !images[1] &&<TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
+     {images[0]   && !images[1] &&<TouchableOpacity onPress={() => selectManyImages(setImages) } style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
         <ThemedText style={{backgroundColor:'white',textAlign:'center',color:'black'  }} >Driver PASSPORT</ThemedText>
 
      </TouchableOpacity>}
@@ -568,7 +495,7 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
       {images[2] &&<ThemedText style={{alignSelf:'center',fontWeight:'bold'}} >DRIVER ID IMAGE</ThemedText>}
 
      {images[2] && <Image source={{ uri: images[2].uri }} style={{ width: 200, height: 200 , margin:7}} />}
-     {images[0] && images[1] && !images[2]   &&<TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
+     {images[0] && images[1] && !images[2]   &&<TouchableOpacity onPress={() => selectManyImages(setImages) } style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
         <ThemedText style={{backgroundColor:'white',textAlign:'center',color:'black'   }} >Driver Id Image </ThemedText>
      </TouchableOpacity>}
           
@@ -605,7 +532,7 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
   <View style={{justifyContent:'center'}} > 
       {images[3] &&<ThemedText style={{alignSelf:'center',fontWeight:'bold'}} >HORSE REG BOOK IMAGE</ThemedText>}
      {images[3] && <Image source={{ uri: images[3].uri }} style={{ width: 200, height: 200 , margin:7 }} />}
-     {images[0] && images[1] && images[2] && !images[3] && <TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
+     {images[0] && images[1] && images[2] && !images[3] && <TouchableOpacity onPress={() => selectManyImages(setImages) } style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
         <ThemedText style={{backgroundColor:'white',color:'black'   }} >horse Reg Book Image </ThemedText>
      </TouchableOpacity>}
           
@@ -614,7 +541,7 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
       {images[4] &&<ThemedText style={{alignSelf:'center',fontWeight:'bold'}} >Trailer Book Image</ThemedText>}
      {images[4] && <Image source={{ uri: images[4].uri }} style={{ width: 200, height: 200, margin:7 }} />}
         {images[0] && images[1] && images[2] && images[3] && !images[4] &&  <ThemedText>First Trailer reg</ThemedText>}
-     {images[0] && images[1] && images[2] && images[3] && !images[4] &&  <TouchableOpacity onPress={selectImage } style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
+     {images[0] && images[1] && images[2] && images[3] && !images[4] &&  <TouchableOpacity onPress={() => selectManyImages(setImages)  } style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
         <ThemedText style={{backgroundColor:'white',color:'black'   }} >Trailer Reg Book</ThemedText>
      </TouchableOpacity>}
        </View>   
@@ -626,7 +553,7 @@ if( images.length <5 && spinnerItem && truckType !== "Rigid") {
 
       {images[0] && images[1] && images[2]&& images[3]  && images[4]&& !images[5]  && <ThemedText style={{alignSelf:'center',fontWeight:'bold'}} >Add If available or continue to add driver details</ThemedText>}
       {images[4]&& !images[5]  &&<ThemedText>Trailer 2 Reg </ThemedText>}
-     {images[0] && images[1] && images[2]&& images[3]  && images[4]&& !images[5]  &&<TouchableOpacity onPress={selectImage} style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
+     {images[0] && images[1] && images[2]&& images[3]  && images[4]&& !images[5]  &&<TouchableOpacity onPress={() => selectManyImages(setImages) } style={{marginBottom : 9 , backgroundColor:'#6a0c0c',height:30,width:150 , justifyContent:'center' ,alignSelf:'center'}}>
         <ThemedText style={{backgroundColor:'white' ,color:'black'  }} >Book Image </ThemedText>
      </TouchableOpacity>}
 </View>

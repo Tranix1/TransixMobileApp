@@ -1,5 +1,7 @@
 import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, where, onSnapshot, runTransaction, serverTimestamp, startAfter, limit, orderBy, DocumentData, Query, setDoc, getDoc } from "firebase/firestore";
 import { db, auth } from "../app/components/config/fireBase";
+import { getDownloadURL, ref, uploadBytes, } from "firebase/storage";
+import { storage } from "./fireBaseConfig";
 
 /**
  * Add a document to a Firestore collection.
@@ -156,17 +158,55 @@ export const checkDocumentExists = async (collectionName: string, filters: Array
     }
 };
 
-export const AddUser = async (userId: string, userData: object) => {
+// export const AddUser = async (userId: string, userData: object) => {
+//     try {
+//         const userRef = doc(db, "personalData", userId); // Custom ID
+//         await setDoc(userRef, userData, { merge: true });
+
+//         return true;
+//     } catch (error) {
+//         console.error("Error adding user:", error);
+//         return false;
+//     }
+// };
+
+export const setDocuments = async (dbName:string , userData: object) => {
     try {
-        const userRef = doc(db, "personalData", userId); // Custom ID
+        if(auth.currentUser){
+
+        const userRef = doc(db,dbName , auth.currentUser?.uid); // Custom ID
         await setDoc(userRef, userData, { merge: true });
 
         return true;
+        }
     } catch (error) {
         console.error("Error adding user:", error);
         return false;
     }
 };
+
+export const getDocById = async (
+   dbName : string , 
+  setDocDetails: React.Dispatch<React.SetStateAction<any>> // use a better type if possible
+) => {
+  try {
+    if (auth.currentUser) {
+      const docRef = doc(db,dbName , auth.currentUser.uid);
+
+      onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setDocDetails(docSnap.data()); // ✅ get the actual data
+        } else {
+          console.log('No such document!');
+        }
+      });
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+
 
 
 export const readById = async (collectionName: string = 'laods', id: string) => {
@@ -189,6 +229,34 @@ export const readById = async (collectionName: string = 'laods', id: string) => 
     }
 };
 
+
+
+
+    
+  export  const uploadImage = async (
+    image: { uri: string } ,
+     collectionName:string ,
+      setUploadImageUpdate: (status: string) => void,
+      messageUpdate:string 
+      ) => {
+          try {
+      setUploadImageUpdate(`${messageUpdate}`) 
+    const response = await fetch(image.uri);
+    const blob = await response.blob();
+
+    const fileName = `${collectionName}/${Date.now()}`;
+    const storageRef = ref(storage, fileName);
+
+    await uploadBytes(storageRef, blob);
+    const imageUrl = await getDownloadURL(storageRef);
+
+    return imageUrl;
+      setUploadImageUpdate(`${messageUpdate}`) 
+  } catch (error) {
+    console.error('Image upload failed:', error);
+    return null;
+  }
+};
 
 
 // Example usage of the
