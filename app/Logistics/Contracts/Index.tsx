@@ -23,7 +23,7 @@ const Index = () => {
 
         <View style={{ flexDirection: 'row', marginRight: wp(4) }}>
           <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
-            <TouchableNativeFeedback onPress={() => router.push('/Logistics/Contracts/AddContracts')}>
+            <TouchableNativeFeedback onPress={() => router.push('/Logistics/Contracts/NewContract')}>
               <View style={{ padding: wp(2), justifyContent: 'center' }}>
                 <AntDesign name="addfile" color={icon} size={wp(5)} />
               </View>

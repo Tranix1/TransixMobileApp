@@ -22,7 +22,7 @@ export type Alertbutton = {
     title: string,
     onPress: ((value?: string) => void);
 }
-const AlertComponent = ({ title, message, buttons, type, visible, onBackPress = () => { } }: alertProps) => {
+const AlertComponent = ({ title, message, buttons, type = 'default', visible, onBackPress = () => { } }: alertProps) => {
 
     const [isVisible, setIsVisible] = useState(visible);
 
@@ -54,10 +54,22 @@ const AlertComponent = ({ title, message, buttons, type, visible, onBackPress = 
                     <BlurView intensity={10} tint='systemMaterialDark' experimentalBlurMethod='dimezisBlurView' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', flex: 1, padding: wp(6), }}>
 
                         <View style={{ backgroundColor: background, padding: wp(3), borderRadius: wp(4), gap: wp(2), }}>
-                            <ThemedText type='subtitle' style={{ textAlign: 'center', color: type === 'destructive' ? '#ee1133' : iconog }}>
+                            <ThemedText type='subtitle' style={[
+                                {
+                                    textAlign: 'center',
+                                },
+                                type === 'default' && { color: iconog },
+                                type === 'error' && { color: '#e50914' },
+                                type === 'destructive' && { color: '#ee1133' },
+                                type === 'laoding' && { color: '#F48024' },
+                                type === 'success' && { color: '#1db954' },
+                            ]
+                            }>
                                 {title}
                             </ThemedText>
-                            <ThemedText style={{ textAlign: 'center' }} type='default'>
+                            <ThemedText style={[{ textAlign: 'center' },
+                            type === 'error' && { lineHeight: hp(3.5), textAlign: 'left' },
+                            ]} type='default'>
                                 {message}
                             </ThemedText>
 
@@ -71,7 +83,7 @@ const AlertComponent = ({ title, message, buttons, type, visible, onBackPress = 
                                             <View style={[{ alignItems: 'center', padding: wp(3), borderRadius: wp(2), }]}>
                                                 <ThemedText type='defaultSemiBold'>
                                                     {!buttons ?
-                                                        'OK' : 'Cancel'
+                                                        'OK' : buttons?.length > 0 ? 'Cancel' : 'OK'
                                                     }
                                                 </ThemedText>
                                             </View>

@@ -2,7 +2,7 @@ import { auth } from "@/app/components/config/fireBase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, UserInfo, UserMetadata } from "firebase/auth";
-import { createContext, useContext, useState } from "react";
+import { createContext, ReactElement, useContext, useState } from "react";
 import { ToastAndroid } from "react-native";
 
 
@@ -14,12 +14,14 @@ const AuthContext = createContext({
     user: null as User | null,
     setupUser: async (userData: any) => { },
     Logout: async () => false,
+    alertBox: (title: string, message: string, buttons?: Alertbutton[], type?: "default" | "error" | "success" | "laoding" | "destructive" | undefined) => { },
     updateAccount: async (credentials: any) => ({ success: false }),
 });
 
 import { ReactNode } from "react";
 import { addDocument, AddUser, readById } from "@/db/operations";
 import { User } from "@/types/types";
+import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
@@ -213,11 +215,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const [showAlert, setshowAlert] = useState<ReactElement | null>(null);
+    function alertBox(title: string, message: string, buttons?: Alertbutton[], type?: "default" | "error" | "success" | "laoding" | "destructive" | undefined) {
+        setshowAlert(
+            <AlertComponent
+                visible
+                title={title}
+                message={message}
+                buttons={buttons}
+                type={type}
+                onBackPress={() => setshowAlert(null)}
+            />
+        )
 
+    }
 
     return (
-        <AuthContext.Provider value={{ signUp, Login, isSignedIn, user, setupUser, Logout, updateAccount }}>
+        <AuthContext.Provider value={{ signUp, Login, isSignedIn, user, setupUser, Logout, updateAccount, alertBox }}>
             {children}
+            {showAlert}
         </AuthContext.Provider>
     );
 };

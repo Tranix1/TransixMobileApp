@@ -42,7 +42,7 @@ const Input = ({
         <View style={[isDynamicwidth ? { flex: 1, flexDirection: 'row', } : styles.outter, { alignItems: rest.multiline ? 'flex-end' : 'center', }]}>
             <View style={[styles.container, sending ? { width: '86%' } : { flex: 1 }, containerStyles && containerStyles]}>
                 {Icon}
-                <TextInput ref={refcomp} cursorColor={accent} secureTextEntry={showPassword && isPassword} passwordRules={'minlength: 6;'} editable={!loading} placeholderTextColor={'#7f7f7f70'} {...rest} style={[styles.input, { color }, rest.style && rest.style]} />
+                <TextInput ref={refcomp} cursorColor={accent} secureTextEntry={showPassword && isPassword} passwordRules={'minlength: 6;'} editable={!loading} placeholderTextColor={icon + 'a1'} {...rest} style={[styles.input, { color }, rest.style && rest.style]} />
                 {
                     isPassword &&
                     <TouchableHighlight onPress={() => setShowPassword(!showPassword)}

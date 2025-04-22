@@ -1,9 +1,9 @@
-import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableNativeFeedback, View,TouchableOpacity } from 'react-native'
+import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableNativeFeedback, View, TouchableOpacity, TouchableHighlight } from 'react-native'
 import React, { useState } from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import { ThemedText } from '@/components/ThemedText'
 import { hp, wp } from '@/constants/common'
-import { AntDesign, Entypo, EvilIcons, FontAwesome, FontAwesome6, Ionicons, MaterialIcons, Octicons } from '@expo/vector-icons'
+import { AntDesign, Entypo, EvilIcons, FontAwesome, FontAwesome6, Fontisto, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons'
 import { useColorScheme } from '@/hooks/useColorScheme.web'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import Button from '@/components/Button'
@@ -243,17 +243,64 @@ const Index = () => {
                     <Input placeholder='Search...' Icon={<EvilIcons name='search' size={wp(6)} />} containerStyles={{ backgroundColor: backgroundColor }} />
                 </View>
 
-                <TouchableOpacity onPress={() => router.push("/Logistics/AddHome")} >
+                {/* <TouchableOpacity onPress={() => router.push("/Logistics/AddHome")} >
                     <ThemedText>Add Logistics</ThemedText>
-                    </TouchableOpacity>    
+                </TouchableOpacity> */}
 
-                
+
+                <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
+                    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
+                        <View style={{}}>
+                            <MaterialCommunityIcons name="lightning-bolt-circle" size={wp(4)} color={icon} />
+                        </View>
+                        <ThemedText type='subtitle' style={{ fontWeight: 'bold', fontSize: wp(3.5) }}>
+                            Quick Links
+                        </ThemedText>
+                    </View>
+                    <View style={[{ flexDirection: 'row', gap: wp(2), justifyContent: 'space-between' }]}>
+                        <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
+                            <TouchableHighlight onPress={() => router.push('/Logistics/Contracts/NewContract')} underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
+                                <Ionicons name="reader" size={wp(5)} color="#e50914" />
+                            </TouchableHighlight>
+                            <ThemedText type='tiny' style={{ textAlign: 'center' }}>
+                                Create Contract
+                            </ThemedText>
+                        </View>
+                        <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
+                            <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')} underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
+                                <Fontisto name="truck" size={wp(5)} color="#F48024" />
+                            </TouchableHighlight>
+                            <ThemedText type='tiny' style={{ textAlign: 'center' }}>
+                                Add Truck
+                            </ThemedText>
+                        </View>
+                        <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
+                            <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')} underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
+                                <Fontisto name="truck" size={wp(5)} color="#F48024" />
+                            </TouchableHighlight>
+                            <ThemedText type='tiny' style={{ textAlign: 'center' }}>
+                                Add Truck
+                            </ThemedText>
+                        </View>
+                        <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
+                            <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')} underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
+                                <Fontisto name="truck" size={wp(5)} color="#F48024" />
+                            </TouchableHighlight>
+                            <ThemedText type='tiny' style={{ textAlign: 'center' }}>
+                                Add Truck
+                            </ThemedText>
+                        </View>
+
+                    </View>
+
+                </View>
+
                 <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
                         <View style={{ backgroundColor: '#395a4f', borderRadius: wp(2), padding: wp(1.5) }}>
                             <Ionicons name='reader-outline' color={'#fff'} size={wp(4)} />
                         </View>
-                        <ThemedText type='subtitle' color={'#395a4f'} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
+                        <ThemedText type='subtitle' color={'#395a4f'} style={{ fontWeight: 'bold', fontSize: wp(4) }}>
                             Long-Term Contracts
                         </ThemedText>
                     </View>
@@ -267,7 +314,7 @@ const Index = () => {
                         onPress={() => router.push('/Logistics/Contracts/Index')}
                     />
                 </View>
-                    
+
 
                 <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
