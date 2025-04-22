@@ -1,21 +1,15 @@
 // components/CountrySelector.tsx
 import React from 'react';
-import { TouchableOpacity,View } from 'react-native';
+import { TouchableOpacity,View,ScrollView,StyleSheet } from 'react-native';
 import { ThemedText } from './ThemedText';  // Assuming you have this component
 import { SlctCountryBtn } from './SlctCountryBtn';  // Assuming this button is present
 import { toggleLocalCountry, toggleInternationalCountry } from '../Utilities/utils';
 
 import Button from './Button';
+import { CountrySelectorProps } from '@/types/types';
 
-interface CountrySelectorProps {
-  location: string;
-  setLocation: React.Dispatch<React.SetStateAction<string>>;
-  intOpLoc: string[];
-  setIntOpLoc: React.Dispatch<React.SetStateAction<string[]>>;
-  setLocaOpLoc: React.Dispatch<React.SetStateAction<string>>;
-  setDspAddLocation: React.Dispatch<React.SetStateAction<boolean>>;
-  dspAddLocation : boolean ;
-}
+import { hp, wp } from '@/constants/common'
+import { useThemeColor } from '@/hooks/useThemeColor'
 
 const CountrySelector: React.FC<CountrySelectorProps> = ({
   location,
@@ -23,50 +17,56 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
   intOpLoc,
   setIntOpLoc,
   setLocaOpLoc,
-  setDspAddLocation,
-  dspAddLocation ,
+  locaOpLoc ,
 
 }) => {
-  console.log("dspAddLox", dspAddLocation)
+      const background = useThemeColor('backgroundLight');
+    const coolGray = useThemeColor('coolGray');
+
   return (
     <View>
-             {!dspAddLocation &&<View >
-                {/* <ThemedText>Select How the truck operate</ThemedText> */}
-                <View  style={{flexDirection:'row'}}>    
-                {/* Local Selector */}                
-                   <Button
-                        colors={{ text: '#395a4f', bg: '#395a4f24' }}
-                        title='Local'
-                        onPress={() => {setLocation("Local"); setDspAddLocation(true) } }
-                    />   
-                {/* International Selector */}
-                   <Button
-                        colors={{ text: '#395a4f', bg: '#395a4f24' }}
-                        title='International'
-                        onPress={() => {setLocation("International"); setDspAddLocation(true)} }
-                    />   
-                    </View>
-              </View>}
+          
 
-      {location === "Local" &&dspAddLocation&& (
+
+   <View style={{flexDirection:'row',marginBottom:9}}>
+                                        
+                            <TouchableOpacity  onPress={() => {setLocation("Local")} } style={[styles.countryButton, { backgroundColor: background,marginRight:6 }, location === "Local" && styles.countryButtonSelected]} >
+                            <ThemedText style={{ color: location === "Local" ? 'white' : coolGray }}>Local</ThemedText>
+                        </TouchableOpacity>
+
+                                <TouchableOpacity  onPress={() => setLocation("International") } style={[styles.countryButton, { backgroundColor: background }, location === "International" && styles.countryButtonSelected]} >
+                            <ThemedText style={{ color: location === "International"? 'white' : coolGray }}>International </ThemedText>
+                        </TouchableOpacity>
+                            </View>
+
+
+          {intOpLoc.length > 0 && (
+            <ThemedText>Selected: {intOpLoc.join(", ")}</ThemedText>
+          )}
+          {location === "Local" && <ThemedText>Selected {locaOpLoc} </ThemedText>}
+
+    <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                    paddingHorizontal: wp(2),
+                    gap: wp(3),
+                }}
+            >
+      {location === "Local" &&(
         <>
-          <ThemedText>Select The Local Country the contract will be in</ThemedText>
           {["Zimbabwe", "SouthAfrica", "Namibia", "Tanzania", "Mozambique", "Zambia", "Botswana", "Malawi"].map((country) => (
             <SlctCountryBtn
               key={country}
+              isSelected={locaOpLoc.includes(country)}
               selectedLoc={country}
-              onPress={() => toggleLocalCountry(country, setLocaOpLoc, setIntOpLoc, setDspAddLocation, )}
+              onPress={() => toggleLocalCountry(country, setLocaOpLoc, setIntOpLoc,  )}
             />
           ))}
         </>
       )}
-
-      {location === "International" && dspAddLocation&&(
+      {location === "International" && (
         <>
-          <ThemedText>Select The International countries the contract will be in</ThemedText>
-          {intOpLoc.length > 0 && (
-            <ThemedText>Selected: {intOpLoc.join(", ")}</ThemedText>
-          )}
           {["Zimbabwe", "SouthAfrica", "Namibia", "Tanzania", "Mozambique", "Zambia", "Botswana", "Malawi"].map((country) => (
             <SlctCountryBtn
               key={country}
@@ -75,17 +75,26 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
               onPress={() => toggleInternationalCountry(country, setLocaOpLoc, setIntOpLoc)}
             />
           ))}
-
-          <TouchableOpacity onPress={() => {
-            setDspAddLocation(false);
-            setLocation("");
-          }}>
-            <ThemedText>Done</ThemedText>
-          </TouchableOpacity>
+         
         </>
       )}
+
+ </ScrollView>
     </View>
   );
 };
 
 export default CountrySelector;
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        margin: wp(2)
+    }, countryButton: {
+        padding: wp(2),
+        paddingHorizontal: wp(4),
+        borderRadius: wp(4)
+
+    }, countryButtonSelected: {
+        backgroundColor: '#73c8a9'
+    }
+})

@@ -11,7 +11,7 @@
 
    export   const SlctCountryBtn = ({ selectedLoc, onPress, isSelected }: SlctCountryBtnProps) => (
     <TouchableOpacity
-      onPress={onPress}
+    onPress={onPress}
       style={[
         styles.buttonStyle,
         { backgroundColor: isSelected ? '#6a0c0c' : '#eee' },

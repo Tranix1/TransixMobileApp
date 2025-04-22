@@ -726,8 +726,7 @@ console.log(location)
             intOpLoc={intOpLoc}
             setIntOpLoc={setIntOpLoc}
             setLocaOpLoc={setLocaOpLoc}
-            setDspAddLocation={setDspAddLocation}
-            dspAddLocation={dspAddLocation}
+            locaOpLoc={locaOpLoc}
           />
 
        

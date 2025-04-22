@@ -9,11 +9,9 @@ export function toggleLocalCountry(
   count: string, 
   setLocaOpLoc: React.Dispatch<React.SetStateAction<string>>, 
   setIntOpLoc: React.Dispatch<React.SetStateAction<string[]>>, 
-  setDspAddLocation: React.Dispatch<React.SetStateAction<boolean>>, 
 ): void {
   setIntOpLoc([]); // Clear international country selections
   setLocaOpLoc(count); // Set local country
-  setDspAddLocation(false); // Hide location addition
 }
 
 // Reusable function to toggle international country
@@ -35,6 +33,7 @@ export function toggleInternationalCountry(
  
 
 // Reusable Way to select many images and put them in an array
+// But it will select one by one not many at once 
 type ImageAsset = {
   uri: string;
   fileSize?: number;
@@ -92,3 +91,17 @@ export const selectManyImages = async (
 
   }
 };
+
+// Handle Data change in a form in an nput element and set it to the corresponding variable
+  // utils/handleChange.ts
+export function handleChange<T>(
+  value: string | number | boolean,
+  fieldName: keyof T,
+  setFormData: React.Dispatch<React.SetStateAction<T>>
+): void {
+  setFormData((prevFormData) => ({
+    ...prevFormData,
+    [fieldName]: value,
+  }));
+}
+

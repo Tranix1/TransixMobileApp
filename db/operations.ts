@@ -240,7 +240,7 @@ export const readById = async (collectionName: string = 'laods', id: string) => 
       messageUpdate:string 
       ) => {
           try {
-      setUploadImageUpdate(`${messageUpdate}`) 
+      setUploadImageUpdate(`Adding Image ${messageUpdate}`) 
     const response = await fetch(image.uri);
     const blob = await response.blob();
 

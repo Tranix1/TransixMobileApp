@@ -1,5 +1,18 @@
 import { UserInfo, UserMetadata } from "firebase/auth";
+import { ImageSourcePropType } from "react-native";
 
+export type TruckTypeProps={
+ id: number, name: string, image: ImageSourcePropType | undefined 
+}
+
+export type CountrySelectorProps = {
+  location: string;
+  setLocation: React.Dispatch<React.SetStateAction<string>>;
+  intOpLoc: string[];
+  setIntOpLoc: React.Dispatch<React.SetStateAction<string[]>>;
+  setLocaOpLoc: React.Dispatch<React.SetStateAction<string>>;
+   locaOpLoc : string
+}
 export type Truck = {
 
     CompanyName: string;
@@ -33,6 +46,7 @@ export type Truck = {
     userId: string;
     withDetails: boolean;
 };
+
 
 // export const Countries = [
 //     'Zimbabwe', 'South Africa', 'Zambia'
