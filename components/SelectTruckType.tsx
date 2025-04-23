@@ -1,11 +1,12 @@
 import React,{useState} from "react";
-import { View,TouchableOpacity,ScrollView,Image,ImageSourcePropType } from "react-native";
+import { View,TouchableOpacity,ScrollView,Image,} from "react-native";
 import {  wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
 
 import {  Ionicons } from '@expo/vector-icons'
 import { ThemedText } from "./ThemedText";
 import { TruckTypeProps } from "@/types/types";
+import Input from "./Input";
 
 interface SpecifyTruckTypeProps {
 
@@ -24,13 +25,13 @@ export const SpecifyTruckType:React.FC<SpecifyTruckTypeProps> =({selectedTruckTy
         { id: 3, name: 'Side Tipper', image: require('@/assets/images/Trucks/images (5).jpeg') },
         { id: 4, name: 'Tautliner', image: require('@/assets/images/Trucks/download (3).jpeg') },
         { id: 5, name: 'Tanker', image: require('@/assets/images/Trucks/images (7).jpeg') },
-        { id: 6, name: 'Rigid', image: require('@/assets/images/Trucks/download (4).jpeg') },
+        { id: 6, name: 'Other', image: require('@/assets/images/Trucks/download (4).jpeg') },
         // { id: 7, name: 'All', image: '' },
     ]
 
     return(
         <View>
-
+                <ThemedText>Load Carrying area</ThemedText>
  
                              <ScrollView horizontal contentContainerStyle={{ gap: wp(2) }} style={{}}>
                                {truckTypes.map((item) => (
@@ -64,6 +65,22 @@ export const SpecifyTruckType:React.FC<SpecifyTruckTypeProps> =({selectedTruckTy
                                  ))}
                              </ScrollView>
 
+          {selectedTruckType?.id === 6 &&<View> 
+            <ThemedText>Name of Your Load carrying area</ThemedText>
+           <Input
+            value={selectedTruckType?.name || ''}
+            placeholder="Other Cargo Body"
+            onChangeText={(text) => {
+                if (selectedTruckType) {
+                // Update only the name of the currently selected truck type
+                setSelectedTruckType({ ...selectedTruckType, name: text });
+                } else {
+                // If nothing is selected yet, create a new one with name only
+                setSelectedTruckType({ id: 0, name: text, image: undefined });
+                }
+            }}
+            />
+          </View>}
 
 
 

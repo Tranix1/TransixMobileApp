@@ -45,7 +45,7 @@ export const SlctTruckCapacity: FC<SlctTruckCapacityProps> = ({
 
     return (
         <View>
-  
+  <ThemedText>Truck Capacity</ThemedText>
    <View style={{flexDirection:'row',marginBottom:8}}>
                                         
                             <TouchableOpacity  onPress={() => setDspTruckCapacity("Tonnage")} style={[styles.countryButton, { backgroundColor: background,marginRight:6 }, dspTruckCpacity === "Tonnage" && styles.countryButtonSelected]} >

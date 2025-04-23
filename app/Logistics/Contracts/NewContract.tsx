@@ -22,6 +22,8 @@ import Button from "@/components/Button";
 import { useAuth } from "@/context/AuthContext";
 
 
+import { SpecifyTruckDetails } from "@/components/SpecifyTruckDetails";
+import { TruckTypeProps } from "@/types/types";
 
 const NewContract = () => {
     const backgroundLight = useThemeColor('backgroundLight');
@@ -329,10 +331,77 @@ const NewContract = () => {
     const { alertBox } = useAuth();
 
 
+  const [locationTruckS, setLocationTruckS] = useState<string>(""); // Track local or international selection
+  const [locaOpLocTruckS, setLocaOpLocTruckS] = useState<string>(""); // Track selected local country
+  const [intOpLocTruckS, setIntOpLocTruckS] = useState<string[]>([]); // Track international countries
+
+
+
+  const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
+
+  const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
+  let [truckCapacity, setTruckCapacity] = React.useState("")
+
+  const [dspSpecTruckDet, setDspSpecTruckDet] = React.useState<boolean>(false)
+
+console.log(selectedTruckType)
+
+  const clearFilter = () => {
+    setSelectedTruckType(null)
+    setTruckCapacity('')
+    setLocation("")
+    setLocaOpLoc("")
+    setIntOpLoc([])
+  }
+
+
+
+
+
+
+
     return (
         <ScreenWrapper fh={false}>
 
             <Heading page='Add Contracts' />
+
+
+
+
+    <TouchableOpacity onPress={() => setDspSpecTruckDet(true)} style={{ backgroundColor: "green" }} >
+        <ThemedText> Click here Select Truck Details </ThemedText>
+      </TouchableOpacity>
+  <SpecifyTruckDetails
+        dspSpecTruckDet={dspSpecTruckDet}
+        setDspSpecTruckDet={setDspSpecTruckDet}
+        // Truck Tonnage
+        dspTruckCpacity={dspTruckCpacity}
+        setDspTruckCapacity={setDspTruckCapacity}
+        truckCapacity={truckCapacity}
+        setTruckCapacity={setTruckCapacity}
+        // Selecting Truck Type
+        selectedTruckType={selectedTruckType}
+        setSelectedTruckType={setSelectedTruckType}
+
+        // Selecting A country and location
+        location={locationTruckS}
+        setLocation={setLocationTruckS}
+        intOpLoc={intOpLocTruckS}
+        setIntOpLoc={setIntOpLocTruckS}
+        setLocaOpLoc={setLocaOpLocTruckS}
+        locaOpLoc={locaOpLocTruckS}
+      />
+
+
+
+
+
+
+
+
+
+
+
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: wp(6), alignItems: 'center' }}>
                 {['Step 1', 'Step 2', 'Step 3'].map((stepLabel, index) => (
@@ -913,6 +982,9 @@ const NewContract = () => {
 
                         <View style={{ padding: wp(4) }}>
                             <View style={[styles.viewSubMainDsp, { backgroundColor: background }]}>
+
+
+                                
                                 <ThemedText type="defaultSemiBold" style={{ textAlign: 'center' }}>
                                     Is the contract International or Local for one country</ThemedText>
 
