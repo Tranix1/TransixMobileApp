@@ -19,6 +19,7 @@ export const addDocument = async (
         const docRef = await addDoc(collection(db, collectionName), {
             ...data,
             timeStamp: serverTimestamp(),
+            userId:auth.currentUser?.uid 
         });
         onStatusUpdate("Doneee submitting to db");
         return docRef.id;

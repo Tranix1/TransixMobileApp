@@ -12,8 +12,10 @@ interface SpecifyTruckTypeProps {
 
     selectedTruckType: TruckTypeProps | null;
     setSelectedTruckType: React.Dispatch<React.SetStateAction<TruckTypeProps| null>>;
+    otherTruckType : string
+    setOtherTruckType:React.Dispatch<React.SetStateAction<string>>
 }
-export const SpecifyTruckType:React.FC<SpecifyTruckTypeProps> =({selectedTruckType ,setSelectedTruckType})=>{
+export const SpecifyTruckType:React.FC<SpecifyTruckTypeProps> =({selectedTruckType ,setSelectedTruckType,otherTruckType ,setOtherTruckType, })=>{
 
     const background = useThemeColor('backgroundLight')
     const accent = useThemeColor('accent')
@@ -68,17 +70,9 @@ export const SpecifyTruckType:React.FC<SpecifyTruckTypeProps> =({selectedTruckTy
           {selectedTruckType?.id === 6 &&<View> 
             <ThemedText>Name of Your Load carrying area</ThemedText>
            <Input
-            value={selectedTruckType?.name || ''}
-            placeholder="Other Cargo Body"
-            onChangeText={(text) => {
-                if (selectedTruckType) {
-                // Update only the name of the currently selected truck type
-                setSelectedTruckType({ ...selectedTruckType, name: text });
-                } else {
-                // If nothing is selected yet, create a new one with name only
-                setSelectedTruckType({ id: 0, name: text, image: undefined });
-                }
-            }}
+            value={otherTruckType}
+            placeholder="Enter Other Cargo Body"
+            onChangeText={setOtherTruckType}
             />
           </View>}
 

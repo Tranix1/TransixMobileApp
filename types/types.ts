@@ -37,7 +37,7 @@ export type Truck = {
         seconds: number;
     };
     trailerBookF: string;
-    trailerBookSc: string | null;
+    trailerBookSc: string;
     trailerModel: string;
     trailerType: string;
     truckBookImage: string;

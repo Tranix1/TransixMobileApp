@@ -26,7 +26,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
   return (
     <View>
           
-    <ThemedText>Were can the truck Operate</ThemedText>
+    <ThemedText>Were can the truck Operat e</ThemedText>
 
    <View style={{flexDirection:'row',marginBottom:9}}>
                                         

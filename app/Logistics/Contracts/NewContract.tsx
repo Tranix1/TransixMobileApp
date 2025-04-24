@@ -338,6 +338,7 @@ const NewContract = () => {
 
 
   const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
+  const [otherTruckType , setOtherTruckType]= React.useState<string>("")
 
   const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
   let [truckCapacity, setTruckCapacity] = React.useState("")
@@ -371,6 +372,7 @@ console.log(selectedTruckType)
     <TouchableOpacity onPress={() => setDspSpecTruckDet(true)} style={{ backgroundColor: "green" }} >
         <ThemedText> Click here Select Truck Details </ThemedText>
       </TouchableOpacity>
+      
   <SpecifyTruckDetails
         dspSpecTruckDet={dspSpecTruckDet}
         setDspSpecTruckDet={setDspSpecTruckDet}
@@ -382,7 +384,8 @@ console.log(selectedTruckType)
         // Selecting Truck Type
         selectedTruckType={selectedTruckType}
         setSelectedTruckType={setSelectedTruckType}
-
+        otherTruckType ={otherTruckType}
+        setOtherTruckType={setOtherTruckType}
         // Selecting A country and location
         location={locationTruckS}
         setLocation={setLocationTruckS}

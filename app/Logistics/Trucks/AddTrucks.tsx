@@ -38,7 +38,6 @@ function AddTrucks() {
   interface FormData {
     additionalInfo: string;
     trailerType: string;
-    trailerModel: string;
     driverPhone: string;
     maxloadCapacity: string;
   }
@@ -46,7 +45,6 @@ function AddTrucks() {
   const [formData, setFormData] = React.useState<FormData>({
     additionalInfo: "",
     trailerType: "",
-    trailerModel: "",
     driverPhone: "",
     maxloadCapacity: "",
   });
@@ -121,6 +119,7 @@ function AddTrucks() {
 
 
   const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
+  const [otherTruckType , setOtherTruckType]= React.useState<string>("")
 
   const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
   let [truckCapacity, setTruckCapacity] = React.useState("")
@@ -148,10 +147,7 @@ function AddTrucks() {
     setDriverDDsp(false)
     setTruckDDsp(false)
 
-    if (selectedTruckType?.name === "other" && formData.trailerModel) {
-
-      // selectedTruckType?.name = formData.trailerModel
-    }
+ 
 
     let truckImage, truckBookImage, trailerBookF, trailerBookSc, driverLicense, driverPassport;
 
@@ -222,7 +218,6 @@ function AddTrucks() {
       setFormData({
         additionalInfo: "",
         trailerType: "",
-        trailerModel: "",
         driverPhone: "",
         maxloadCapacity: ""
       });
@@ -258,7 +253,8 @@ function AddTrucks() {
         // Selecting Truck Type
         selectedTruckType={selectedTruckType}
         setSelectedTruckType={setSelectedTruckType}
-
+        otherTruckType ={otherTruckType}
+        setOtherTruckType={setOtherTruckType}
         // Selecting A country and location
         location={location}
         setLocation={setLocation}
@@ -352,7 +348,6 @@ function AddTrucks() {
           errors={[
             !formData.trailerType && "Enter Trailer Type",
             !formData.maxloadCapacity && "Enter Maximum Load Capacity",
-            selectedTruckType?.name === "other" && !formData.trailerModel && "Enter Trailer Model",
             !location && "Select were the truck can operate",
             !selectedTruckType?.name &&"Select TrucK Type" ,
             !truckCapacity && "select trcuk capacity" ,
@@ -428,12 +423,7 @@ function AddTrucks() {
           {spinnerItem && <ActivityIndicator size={34} />}
 
           {!driverDetails && !truckDetails && <View style={{ width: 350, backgroundColor: background, overflow: 'hidden' }}>
-            {selectedTruckType?.name === "other" && <Input
-              value={formData.trailerModel}
-              placeholderTextColor="#6a0c0c"
-              placeholder="Trailer Model"
-              onChangeText={(text) => handleChange<FormData>(text, 'trailerModel', setFormData)}
-            />}
+          
 
             <Input
               value={formData.trailerType}

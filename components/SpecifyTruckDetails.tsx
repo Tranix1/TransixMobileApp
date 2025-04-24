@@ -29,11 +29,12 @@ type SpecifyTruckDetailsProps  = {
     // Select Truck Details 
     selectedTruckType: TruckTypeProps | null;
     setSelectedTruckType: React.Dispatch<React.SetStateAction<TruckTypeProps| null>>;
-
+    otherTruckType : string
+    setOtherTruckType:React.Dispatch<React.SetStateAction<string>>
 
 }& CountrySelectorProps;
 export const SpecifyTruckDetails: React.FC<SpecifyTruckDetailsProps> = ({
-    dspSpecTruckDet, setDspSpecTruckDet, dspTruckCpacity, setDspTruckCapacity, truckCapacity, setTruckCapacity, selectedTruckType, setSelectedTruckType ,  location,
+    dspSpecTruckDet, setDspSpecTruckDet, dspTruckCpacity, setDspTruckCapacity,  otherTruckType ,setOtherTruckType,  truckCapacity, setTruckCapacity, selectedTruckType, setSelectedTruckType ,  location,
   setLocation,
   intOpLoc,
   setIntOpLoc,
@@ -104,6 +105,8 @@ export const SpecifyTruckDetails: React.FC<SpecifyTruckDetailsProps> = ({
             <SpecifyTruckType
               selectedTruckType={selectedTruckType}
               setSelectedTruckType={setSelectedTruckType}
+              otherTruckType={otherTruckType}
+              setOtherTruckType={setOtherTruckType}
             />
 
             {/* You can add more components here, like filters, toggles, etc. */}
