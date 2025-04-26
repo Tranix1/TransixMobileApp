@@ -18,7 +18,7 @@ export function ThemedText({
   return (
     <Text
       style={[
-        { color: color ? color : defaultColor },
+        { color: color ? color : defaultColor, fontFamily: 'sfregular' },
         type === 'tiny' ? styles.tiny : undefined,
         type === 'default' ? styles.default : undefined,
         type === 'title' ? styles.title : undefined,
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
   default: {
     fontSize: 16,
     lineHeight: 22,
-    // fontFamily: 'Regular',
+    fontFamily: 'sfregular',
   },
   italic: {
     fontSize: 16,
@@ -49,18 +49,15 @@ const styles = StyleSheet.create({
   defaultSemiBold: {
     fontSize: 16,
     lineHeight: 22,
-    fontWeight: 500,
-    // fontFamily: 'Medium',
+    fontFamily: 'sfbold',
   },
   title: {
     fontSize: 32,
-    fontWeight: 700,
-    // fontFamily: 'Bold',
+    fontFamily: 'sfbold',
   },
   subtitle: {
     fontSize: 20,
-    fontWeight: 600,
-    // fontFamily: 'SemiBold',
+    fontFamily: 'sfregular',
   },
   link: {
     lineHeight: 30,
@@ -71,6 +68,6 @@ const styles = StyleSheet.create({
   tiny: {
     fontSize: 12,
     lineHeight: 16,
-    // fontFamily: 'Regular',
+    fontFamily: 'sfregular',
   },
 });

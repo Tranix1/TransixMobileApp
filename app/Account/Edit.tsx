@@ -127,7 +127,18 @@ const Edit = () => {
 
                         renderLeftIcon={() => <></>}
                         renderRightIcon={() => <Entypo name="chevron-thin-down" size={wp(4)} color={icon} />}
-                        renderItem={renderItem}
+                        renderItem={((item) =>
+                            <View style={[styles.item, item.value === selectedValue.value && {}]}>
+                                <ThemedText style={[{ textAlign: 'left', flex: 1 }, item.value === selectedValue.value && { color: accent }]}>{item.value}</ThemedText>
+                                {item.value === selectedValue.value && (
+                                    <Ionicons
+                                        color={icon}
+                                        name='checkmark-outline'
+                                        size={wp(5)}
+                                    />
+                                )}
+                            </View>
+                        )}
 
                     />
 

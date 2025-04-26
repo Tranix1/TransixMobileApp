@@ -10,18 +10,19 @@ interface SlctTruckCapacityProps {
     truckTonnage: string;
     setTruckTonnage: React.Dispatch<React.SetStateAction<string>>;
     dspTruckCpacity: string;
-   setDspTruckCapacity : React.Dispatch<React.SetStateAction<string>>;
+    setDspTruckCapacity: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export const SlctTruckCapacity: FC<SlctTruckCapacityProps> = ({
     truckTonnage,
     setTruckTonnage,
     dspTruckCpacity,
-    setDspTruckCapacity ,
-    
+    setDspTruckCapacity,
+
 }) => {
     const background = useThemeColor('backgroundLight');
     const coolGray = useThemeColor('coolGray');
+    const [dspTruckTonnage, setDspTrucTonage] = React.useState<boolean>(false)
 
     const litresCapacity = [
         '300L',
@@ -31,7 +32,6 @@ export const SlctTruckCapacity: FC<SlctTruckCapacityProps> = ({
         '800L',
         '900L',
     ]
-    const [dspTruckTonnage, setDspTrucTonage] = React.useState<boolean>(false)
 
     const tonneSizes = [
         '1-3 T',
@@ -45,17 +45,17 @@ export const SlctTruckCapacity: FC<SlctTruckCapacityProps> = ({
 
     return (
         <View>
-  <ThemedText>Truck Capacity</ThemedText>
-   <View style={{flexDirection:'row',marginBottom:8}}>
-                                        
-                            <TouchableOpacity  onPress={() => setDspTruckCapacity("Tonnage")} style={[styles.countryButton, { backgroundColor: background,marginRight:6 }, dspTruckCpacity === "Tonnage" && styles.countryButtonSelected]} >
-                            <ThemedText style={{ color: dspTruckCpacity === "Tonnage" ? 'white' : coolGray }}>Tonnage</ThemedText>
-                        </TouchableOpacity>
+            <ThemedText>Truck Capacity</ThemedText>
+            <View style={{ flexDirection: 'row', marginBottom: 8 }}>
 
-                                <TouchableOpacity  onPress={()=> setDspTruckCapacity("Litres")} style={[styles.countryButton, { backgroundColor: background }, dspTruckCpacity === "Litres" && styles.countryButtonSelected]} >
-                            <ThemedText style={{ color: dspTruckCpacity === "Litres" ? 'white' : coolGray }}>Litres </ThemedText>
-                        </TouchableOpacity>
-                            </View>
+                <TouchableOpacity onPress={() => setDspTruckCapacity("Tonnage")} style={[styles.countryButton, { backgroundColor: background, marginRight: 6 }, dspTruckCpacity === "Tonnage" && styles.countryButtonSelected]} >
+                    <ThemedText style={{ color: dspTruckCpacity === "Tonnage" ? 'white' : coolGray }}>Tonnage</ThemedText>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => setDspTruckCapacity("Litres")} style={[styles.countryButton, { backgroundColor: background }, dspTruckCpacity === "Litres" && styles.countryButtonSelected]} >
+                    <ThemedText style={{ color: dspTruckCpacity === "Litres" ? 'white' : coolGray }}>Litres </ThemedText>
+                </TouchableOpacity>
+            </View>
 
             <ScrollView
                 horizontal
@@ -65,10 +65,10 @@ export const SlctTruckCapacity: FC<SlctTruckCapacityProps> = ({
                     gap: wp(3),
                 }}
             >
-               
 
 
-                {dspTruckCpacity==="Tonnage" && tonneSizes.map((item, index) => (
+
+                {dspTruckCpacity === "Tonnage" && tonneSizes.map((item, index) => (
                     <TouchableOpacity
                         key={index}
                         onPress={() => setTruckTonnage(item)}
@@ -84,7 +84,7 @@ export const SlctTruckCapacity: FC<SlctTruckCapacityProps> = ({
                     </TouchableOpacity>
                 ))}
 
-                {dspTruckCpacity==="Litres" && litresCapacity.map((item, index) => (
+                {dspTruckCpacity === "Litres" && litresCapacity.map((item, index) => (
                     <TouchableOpacity
                         key={index}
                         onPress={() => setTruckTonnage(item)}

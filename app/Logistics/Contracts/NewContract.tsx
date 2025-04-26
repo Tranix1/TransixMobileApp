@@ -1,6 +1,6 @@
 import React, { useState, FC, useEffect } from "react";
 
-import { View, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { View, TouchableOpacity, StyleSheet, ScrollView, TouchableNativeFeedback } from "react-native";
 
 import CheckOutMakePayments from "@/components/CheckOutPayment";
 import { ErrorOverlay } from "@/components/ErrorOverLay";
@@ -20,10 +20,15 @@ import Divider from "@/components/Divider";
 import { EvilIcons, Ionicons } from "@expo/vector-icons";
 import Button from "@/components/Button";
 import { useAuth } from "@/context/AuthContext";
+import { CheckBox } from 'react-native-elements';
 
 
 import { SpecifyTruckDetails } from "@/components/SpecifyTruckDetails";
 import { TruckTypeProps } from "@/types/types";
+import CountrySelector from "@/components/CountrySelector";
+import { SlctTruckCapacity } from "@/components/SelectTruckCapacity";
+import { SpecifyTruckType } from "@/components/SelectTruckType";
+import { Image } from "expo-image";
 
 const NewContract = () => {
     const backgroundLight = useThemeColor('backgroundLight');
@@ -106,7 +111,58 @@ const NewContract = () => {
     const [dspReturnCommodity, setDspReturnCommodity] = useState(false);
     const [dspReturnRate, setDspReturnRate] = useState(false);
 
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState(0);
+
+    const litresCapacity = [
+        '300L',
+        '400L',
+        '500L',
+        '700L',
+        '800L',
+        '900L',
+    ]
+
+    const tonneSizes = [
+        '1-3 T',
+        '3-6 T',
+        '7-10 T',
+        '11-13 T',
+        '12-15 T',
+        '16-20 T',
+        '20+ T',
+    ];
+    const truckTypes = [
+        { id: 0, name: 'Flat deck', description: 'Ideal for transporting oversized or heavy loads.', image: require('@/assets/images/Trucks/images (2).jpeg') },
+        { id: 1, name: 'Bulk Trailer', description: 'Used for carrying bulk materials like grains or minerals.', image: require('@/assets/images/Trucks/download (1).jpeg') },
+        { id: 2, name: 'Low Bed', description: 'Designed for transporting heavy machinery and equipment.', image: require('@/assets/images/Trucks/H805f1f51529345648d1da9e5fcd6807e2.jpg') },
+        { id: 3, name: 'Side Tipper', description: 'Suitable for unloading materials like sand or gravel.', image: require('@/assets/images/Trucks/images (5).jpeg') },
+        { id: 4, name: 'Tautliner', description: 'Versatile truck with curtains for easy loading and unloading.', image: require('@/assets/images/Trucks/download (3).jpeg') },
+        { id: 5, name: 'Tanker', description: 'Used for transporting liquids like fuel or chemicals.', image: require('@/assets/images/Trucks/images (7).jpeg') },
+        { id: 6, name: 'Other', description: 'Custom or specialized truck types for unique needs.', image: require('@/assets/images/Trucks/download (4).jpeg') },
+        // { id: 7, name: 'All', image: '' },
+    ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     function toggleDspCommodity() {
         setDspCommodity(prev => !prev);
@@ -331,29 +387,29 @@ const NewContract = () => {
     const { alertBox } = useAuth();
 
 
-  const [locationTruckS, setLocationTruckS] = useState<string>(""); // Track local or international selection
-  const [locaOpLocTruckS, setLocaOpLocTruckS] = useState<string>(""); // Track selected local country
-  const [intOpLocTruckS, setIntOpLocTruckS] = useState<string[]>([]); // Track international countries
+    const [locationTruckS, setLocationTruckS] = useState<string>(""); // Track local or international selection
+    const [locaOpLocTruckS, setLocaOpLocTruckS] = useState<string>(""); // Track selected local country
+    const [intOpLocTruckS, setIntOpLocTruckS] = useState<string[]>([]); // Track international countries
 
 
 
-  const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
-  const [otherTruckType , setOtherTruckType]= React.useState<string>("")
+    const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
+    const [otherTruckType, setOtherTruckType] = React.useState<string>("")
 
-  const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
-  let [truckCapacity, setTruckCapacity] = React.useState("")
+    const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
+    const [truckCapacity, setTruckCapacity] = useState("")
 
-  const [dspSpecTruckDet, setDspSpecTruckDet] = React.useState<boolean>(false)
+    const [dspSpecTruckDet, setDspSpecTruckDet] = React.useState<boolean>(false)
 
-console.log(selectedTruckType)
+    console.log(selectedTruckType)
 
-  const clearFilter = () => {
-    setSelectedTruckType(null)
-    setTruckCapacity('')
-    setLocation("")
-    setLocaOpLoc("")
-    setIntOpLoc([])
-  }
+    const clearFilter = () => {
+        setSelectedTruckType(null)
+        setTruckCapacity('')
+        setLocation("")
+        setLocaOpLoc("")
+        setIntOpLoc([])
+    }
 
 
 
@@ -364,36 +420,45 @@ console.log(selectedTruckType)
     return (
         <ScreenWrapper fh={false}>
 
-            <Heading page='Add Contracts' />
+            <Heading page='Add Contracts' rightComponent={
+                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: wp(3) }}>
+                    <View>
+                        <TouchableNativeFeedback onPress={() => console.log('add to draft')}>
+                            <ThemedText style={{ alignSelf: 'flex-start' }}>Add Draft</ThemedText>
+                        </TouchableNativeFeedback>
+                    </View>
+                </View>
+            }
+            />
 
 
 
 
-    <TouchableOpacity onPress={() => setDspSpecTruckDet(true)} style={{ backgroundColor: "green" }} >
-        <ThemedText> Click here Select Truck Details </ThemedText>
-      </TouchableOpacity>
-      
-  <SpecifyTruckDetails
-        dspSpecTruckDet={dspSpecTruckDet}
-        setDspSpecTruckDet={setDspSpecTruckDet}
-        // Truck Tonnage
-        dspTruckCpacity={dspTruckCpacity}
-        setDspTruckCapacity={setDspTruckCapacity}
-        truckCapacity={truckCapacity}
-        setTruckCapacity={setTruckCapacity}
-        // Selecting Truck Type
-        selectedTruckType={selectedTruckType}
-        setSelectedTruckType={setSelectedTruckType}
-        otherTruckType ={otherTruckType}
-        setOtherTruckType={setOtherTruckType}
-        // Selecting A country and location
-        location={locationTruckS}
-        setLocation={setLocationTruckS}
-        intOpLoc={intOpLocTruckS}
-        setIntOpLoc={setIntOpLocTruckS}
-        setLocaOpLoc={setLocaOpLocTruckS}
-        locaOpLoc={locaOpLocTruckS}
-      />
+            {/* <TouchableOpacity onPress={() => setDspSpecTruckDet(true)} style={{ backgroundColor: "green" }} >
+                <ThemedText> Click here Select Truck Details </ThemedText>
+            </TouchableOpacity> */}
+
+            {/* <SpecifyTruckDetails
+                dspSpecTruckDet={dspSpecTruckDet}
+                setDspSpecTruckDet={setDspSpecTruckDet}
+                // Truck Tonnage
+                dspTruckCpacity={dspTruckCpacity}
+                setDspTruckCapacity={setDspTruckCapacity}
+                truckCapacity={truckCapacity}
+                setTruckCapacity={setTruckCapacity}
+                // Selecting Truck Type
+                selectedTruckType={selectedTruckType}
+                setSelectedTruckType={setSelectedTruckType}
+                otherTruckType={otherTruckType}
+                setOtherTruckType={setOtherTruckType}
+                // Selecting A country and location
+                location={locationTruckS}
+                setLocation={setLocationTruckS}
+                intOpLoc={intOpLocTruckS}
+                setIntOpLoc={setIntOpLocTruckS}
+                setLocaOpLoc={setLocaOpLocTruckS}
+                locaOpLoc={locaOpLocTruckS}
+            /> */}
 
 
 
@@ -407,43 +472,44 @@ console.log(selectedTruckType)
 
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: wp(6), alignItems: 'center' }}>
-                {['Step 1', 'Step 2', 'Step 3'].map((stepLabel, index) => (
+                {['Truck Details', 'Load Details', 'Return Load', 'Contract Details'].map((stepLabel, index) => (
                     <View key={index} style={{ alignItems: 'center', flexDirection: 'row', flex: index > 0 ? 1 : 0, }}>
                         {index > 0 && (
                             <View
                                 style={{
                                     borderWidth: 1,
                                     borderRadius: wp(40),
-                                    borderColor: step > index ? accent : '#ccc',
+                                    borderColor: step >= index ? '#0f9d58' : '#ccc',
                                     marginHorizontal: wp(2),
                                     flex: 1,
                                     marginBottom: wp(5)
                                 }}
                             />
                         )}
-                        <TouchableOpacity onPress={() => setStep(index + 1)} style={{ alignItems: 'center', }}>
+                        <TouchableOpacity onPress={() => setStep(index)} style={{ alignItems: 'center', }}>
                             <View
                                 style={{
                                     width: wp(8),
                                     height: wp(8),
                                     borderRadius: wp(4),
-                                    backgroundColor: step > index ? '#e5091443' : '#ccc',
+                                    backgroundColor: step >= index ? '#0f9d5843' : '#ccc',
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                     marginBottom: wp(1),
                                 }}
                             >
-                                {step > index + 1 ?
+                                {step > index ?
                                     <Ionicons name="checkmark" size={wp(4)} color={'white'} />
                                     :
-                                    <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>{index + 1}</ThemedText>
+                                    <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>{index}</ThemedText>
                                 }
                             </View>
                             <ThemedText
                                 type="tiny"
                                 style={{
-                                    color: step > index ? '#e50914' : '#ccc',
-                                    fontWeight: step > index ? 'bold' : 'normal',
+                                    maxWidth: wp(12), textAlign: 'center',
+                                    color: step >= index ? '#0f9d58' : '#ccc',
+                                    fontWeight: step >= index ? 'bold' : 'normal',
                                 }}
                             >
                                 {stepLabel}
@@ -455,32 +521,208 @@ console.log(selectedTruckType)
             </View>
 
             <View style={{ flex: 1 }}>
-                {step === 1 &&
-                    <ScrollView contentContainerStyle={{ marginBottom: wp(4) }}>
-                        <View style={{ backgroundColor: backgroundLight, padding: wp(2), marginTop: wp(4), justifyContent: 'space-between', flexDirection: 'row' }}>
-                            <ThemedText style={{ fontSize: wp(4), fontWeight: 700 }}>
-                                Load Details
+                {step === 0 &&
+                    <ScrollView>
+
+                        <View></View>
+
+                        <View style={{ padding: 4, gap: wp(5), marginTop: wp(4) }}>
+                            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold' }}>
+                                Truck Details
                             </ThemedText>
 
-                            <View style={{ marginRight: wp(3), backgroundColor: background, borderRadius: wp(20), width: wp(4), height: wp(4), justifyContent: 'center', alignItems: 'center' }}>
-                                <ThemedText color={accent} style={{ fontSize: wp(3), fontWeight: 700, textAlign: 'center' }}>
-                                    1
+                            <Divider />
+
+                            <View style={styles.viewMainDsp}>
+                                <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }}>
+                                    Where Truck Operates
                                 </ThemedText>
+                                <View style={{ gap: wp(3), padding: wp(3) }}>
+                                    <TouchableNativeFeedback onPress={() => setLocation('international')}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
+                                                International
+                                            </ThemedText>
+                                            <CheckBox
+                                                checked={location === 'international'}
+                                                onPress={() => setLocation('international')}
+                                                uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
+                                                checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
+                                                containerStyle={{ padding: 0 }}
+                                            />
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                    <TouchableNativeFeedback onPress={() => setLocation('local')}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
+                                                Local
+                                            </ThemedText>
+                                            <CheckBox
+                                                checked={location === 'local'}
+                                                onPress={() => setLocation('local')}
+                                                uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
+                                                checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
+
+                                                containerStyle={{ padding: 0 }}
+                                            />
+                                        </View>
+                                    </TouchableNativeFeedback>
+
+                                </View>
+                                <Divider />
+                                <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, marginBottom: wp(3) }}>
+                                    Truck Capacity
+                                </ThemedText>
+
+                                <ThemedText type="defaultSemiBold" style={{ textAlign: 'center', marginVertical: wp(4) }}>
+                                    Select Tonnage
+                                </ThemedText>
+                                <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
+                                    {tonneSizes.map((tonnesize, index) =>
+                                        <>
+                                            <TouchableNativeFeedback key={index} onPress={() => setTruckCapacity(tonnesize)}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                    <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
+                                                        {tonnesize}
+                                                    </ThemedText>
+                                                    <CheckBox
+                                                        containerStyle={{ padding: wp(1) }}
+                                                        checked={truckCapacity === tonnesize}
+                                                        onPress={() => setTruckCapacity(tonnesize)}
+                                                        uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
+                                                        checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
+                                                    />
+                                                </View>
+                                            </TouchableNativeFeedback>
+                                            {tonneSizes.length > index + 1 &&
+                                                <Divider style={{ marginVertical: wp(0) }} />
+                                            }
+                                        </>
+                                    )}
+
+
+                                </View>
+                                <ThemedText type="defaultSemiBold" style={{ textAlign: 'center', marginVertical: wp(4) }}>
+                                    Select Litres
+                                </ThemedText>
+                                <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
+                                    {litresCapacity.map((litres, index) =>
+                                        <>
+                                            <TouchableNativeFeedback key={index} onPress={() => setDspTruckCapacity(litres)}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                    <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
+                                                        {litres}
+                                                    </ThemedText>
+                                                    <CheckBox
+                                                        containerStyle={{ padding: wp(1) }}
+                                                        checked={dspTruckCpacity === litres}
+                                                        onPress={() => setDspTruckCapacity(litres)}
+                                                        uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
+                                                        checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
+                                                    />
+                                                </View>
+                                            </TouchableNativeFeedback>
+                                            {litresCapacity.length > index + 1 &&
+                                                <Divider style={{ marginVertical: wp(0) }} />
+                                            }
+                                        </>
+                                    )}
+
+
+                                </View>
+                                <ThemedText type="defaultSemiBold" style={{ textAlign: 'center', marginVertical: wp(4) }}>
+                                    Select Litres
+                                </ThemedText>
+                                <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
+                                    {truckTypes.map((truck, index) =>
+                                        <>
+                                            <TouchableNativeFeedback key={index} onPress={() => setSelectedTruckType(truck)}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(3) }}>
+                                                    <Image source={truck.image} style={{ height: wp(25), width: wp(35), borderRadius: wp(2) }} />
+                                                    <View style={{ flex: 1 }}>
+                                                        <ThemedText type="subtitle" style={{ flex: 1, textDecorationLine: 'underline' }}>
+                                                            {truck.name}
+                                                        </ThemedText>
+                                                        <ThemedText type="default" style={{ flex: 1 }}>
+                                                            {truck.description}
+                                                        </ThemedText>
+                                                    </View>
+                                                    <CheckBox
+                                                        containerStyle={{ padding: wp(0), marginHorizontal: 0 }}
+                                                        checked={selectedTruckType?.id === truck.id}
+                                                        onPress={() => setSelectedTruckType(truck)}
+                                                        uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
+                                                        checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
+                                                    />
+                                                </View>
+                                            </TouchableNativeFeedback>
+                                            {truckTypes.length > index + 1 &&
+                                                <Divider style={{ marginVertical: wp(0) }} />
+                                            }
+                                        </>
+                                    )}
+
+
+                                </View>
+
                             </View>
+
+                            {/* <View style={styles.viewMainDsp}> */}
+                            {/* <CountrySelector
+                                location={location}
+                                setLocation={setLocation}
+                                intOpLoc={interOpCount}
+                                setIntOpLoc={setIntOpLoc}
+                                setLocaOpLoc={setLocaOpLoc}
+                                locaOpLoc={locaOpCount}
+                            /> */}
+
+                            {/* <SlctTruckCapacity
+                                dspTruckCpacity={dspTruckCpacity}
+                                setDspTruckCapacity={setDspTruckCapacity}
+                                truckTonnage={truckCapacity}
+                                setTruckTonnage={setTruckCapacity}
+                            /> */}
+                            {/* <SpecifyTruckType
+                                selectedTruckType={selectedTruckType}
+                                setSelectedTruckType={setSelectedTruckType}
+                                otherTruckType={otherTruckType}
+                                setOtherTruckType={setOtherTruckType}
+                            /> */}
                         </View>
+                        <Divider />
+
+                        <View style={styles.viewMainDsp}>
+                            <Button onPress={() => setStep(step + 1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
+                        </View>
+                    </ScrollView>
+                }
+                {step === 1 &&
+                    <ScrollView contentContainerStyle={{ marginBottom: wp(4) }}>
+                        <View style={{ padding: 4, gap: wp(5), marginVertical: wp(4) }}>
+                            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold' }}>
+                                Load Details
+                            </ThemedText>
+                        </View>
+
+                        <Divider />
 
                         <View style={styles.viewMainDsp}>
                             <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }}>
                                 Add Commodities
                             </ThemedText>
-
+                            <ThemedText type="defaultSemiBold">
+                                First Commodity
+                            </ThemedText>
                             <Input
                                 value={commodityFirst}
                                 placeholder="First Commodity"
                                 onChangeText={setCommodityFirst}
                                 style={{}}
                             />
-
+                            <ThemedText type="defaultSemiBold">
+                                Second Commodity
+                            </ThemedText>
                             <Input
                                 value={commoditySecond}
                                 placeholder="Second Commodity"
@@ -490,12 +732,18 @@ console.log(selectedTruckType)
 
                             {dspCommodity && (
                                 <View>
+                                    <ThemedText type="defaultSemiBold">
+                                        Third Commodity
+                                    </ThemedText>
                                     <Input
                                         value={commodityThird}
                                         placeholder="Third Commodity"
                                         onChangeText={setCommodityThird}
                                         style={{}}
                                     />
+                                    <ThemedText type="defaultSemiBold">
+                                        Fourth Commodity
+                                    </ThemedText>
                                     <Input
                                         value={commodityFourth}
                                         placeholder="Fourth Commodity"
@@ -516,6 +764,9 @@ console.log(selectedTruckType)
 
                         <View style={styles.viewMainDsp}>
                             <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }}>
+                                Payment
+                            </ThemedText>
+                            <ThemedText type="defaultSemiBold">
                                 Payment Terms
                             </ThemedText>
                             <Input
@@ -529,24 +780,23 @@ console.log(selectedTruckType)
                         <Divider />
 
                         <View style={styles.viewMainDsp}>
-                            {dspLocation && (
-                                <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }}>
-                                    Add all the locations to be transported
-                                </ThemedText>
-                            )}
-                            {!dspLocation && (
-                                <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }}>
-                                    Add 2 Locations
-                                </ThemedText>
-                            )}
+                            <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }}>
+                                Add locations to be transported
+                            </ThemedText>
 
                             <View>
+                                <ThemedText type="defaultSemiBold">
+                                    First Location
+                                </ThemedText>
                                 <Input
                                     value={locationFirst}
                                     placeholder={"First Location"}
                                     onChangeText={setLocationFirst}
                                     style={{}}
                                 />
+                                <ThemedText type="defaultSemiBold">
+                                    Second Location
+                                </ThemedText>
                                 <Input
                                     value={locationSecond}
                                     placeholder={"Second Location"}
@@ -556,30 +806,45 @@ console.log(selectedTruckType)
                             </View>
                             {nowEnterLoca &&
                                 <View>
+                                    <ThemedText type="defaultSemiBold">
+                                        Third Location
+                                    </ThemedText>
                                     <Input
                                         value={locationThird}
                                         placeholder={"Third Location"}
                                         onChangeText={setLocationThird}
                                         style={{}}
                                     />
+                                    <ThemedText type="defaultSemiBold">
+                                        Fourth Location
+                                    </ThemedText>
                                     <Input
                                         value={locationFourth}
                                         placeholder={"Fourth Location"}
                                         onChangeText={setLocationFourth}
                                         style={{}}
                                     />
+                                    <ThemedText type="defaultSemiBold">
+                                        Fifth Location
+                                    </ThemedText>
                                     <Input
                                         value={locationFifth}
                                         placeholder={"Fifth Location"}
                                         onChangeText={setLocationFifth}
                                         style={{}}
                                     />
+                                    <ThemedText type="defaultSemiBold">
+                                        FifSixthth Location
+                                    </ThemedText>
                                     <Input
                                         value={locationSixth}
                                         placeholder={"Sixth Location"}
                                         onChangeText={setLocationSixth}
                                         style={{}}
                                     />
+                                    <ThemedText type="defaultSemiBold">
+                                        Seventh Location
+                                    </ThemedText>
                                     <Input
                                         value={locationSeventh}
                                         placeholder={"Seventh Location"}
@@ -615,14 +880,14 @@ console.log(selectedTruckType)
                                                         name="check"
                                                         size={30}
                                                         style={{ textAlign: 'center', width: wp(6) }}
-                                                        color="black"
+                                                        color={iconcolor}
                                                     />
                                                 ) : (
                                                     <Ionicons
                                                         name="ellipse-outline"
                                                         style={{ textAlign: 'center', width: wp(6) }}
                                                         size={24}
-                                                        color="black"
+                                                        color={iconcolor}
                                                     />
                                                 )}
                                             </TouchableOpacity>
@@ -651,14 +916,14 @@ console.log(selectedTruckType)
                                                         name="check"
                                                         size={30}
                                                         style={{ textAlign: 'center', width: wp(6) }}
-                                                        color="black"
+                                                        color={iconcolor}
                                                     />
                                                 ) : (
                                                     <Ionicons
                                                         name="ellipse-outline"
                                                         style={{ textAlign: 'center', width: wp(6) }}
                                                         size={24}
-                                                        color="black"
+                                                        color={iconcolor}
                                                     />
                                                 )}
                                             </TouchableOpacity>
@@ -687,14 +952,14 @@ console.log(selectedTruckType)
                                                         name="check"
                                                         size={30}
                                                         style={{ textAlign: 'center', width: wp(6) }}
-                                                        color="black"
+                                                        color={iconcolor}
                                                     />
                                                 ) : (
                                                     <Ionicons
                                                         name="ellipse-outline"
                                                         style={{ textAlign: 'center', width: wp(6) }}
                                                         size={24}
-                                                        color="black"
+                                                        color={iconcolor}
                                                     />
                                                 )}
                                             </TouchableOpacity>
@@ -713,14 +978,14 @@ console.log(selectedTruckType)
                                                         name="check"
                                                         size={30}
                                                         style={{ textAlign: 'center', width: wp(6) }}
-                                                        color="black"
+                                                        color={iconcolor}
                                                     />
                                                 ) : (
                                                     <Ionicons
                                                         name="ellipse-outline"
                                                         style={{ textAlign: 'center', width: wp(6) }}
                                                         size={24}
-                                                        color="black"
+                                                        color={iconcolor}
                                                     />
                                                 )}
                                             </TouchableOpacity>
@@ -761,32 +1026,36 @@ console.log(selectedTruckType)
                         <Divider />
 
                         <View style={styles.viewMainDsp}>
-                            <Button onPress={() => setStep(2)} title="Next" colors={{ text: '#e50914', bg: '#e5091424' }} />
+                            <Button onPress={() => setStep(0)} title="Back" />
+                            <Button onPress={() => setStep(2)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
                         </View>
                     </ScrollView>
                 }
                 {step === 2 &&
                     <ScrollView>
-                        <View style={{ backgroundColor: backgroundLight, padding: wp(2), marginTop: wp(4), justifyContent: 'space-between', flexDirection: 'row' }}>
-                            <ThemedText style={{ fontSize: wp(4), fontWeight: 700 }}>
+
+                        <View style={{ padding: 4, gap: wp(5), marginVertical: wp(4) }}>
+                            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold' }}>
                                 Return Load
                             </ThemedText>
-
-                            <View style={{ marginRight: wp(3), backgroundColor: background, borderRadius: wp(20), width: wp(4), height: wp(4), justifyContent: 'center' }}>
-                                <ThemedText color={accent} style={{ fontSize: wp(3), fontWeight: 700, textAlign: 'center' }}>
-                                    2
-                                </ThemedText>
-                            </View>
                         </View>
+
+                        <Divider />
 
                         <View style={styles.viewMainDsp}>
                             <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }}>Commodities to be transported</ThemedText>
+                            <ThemedText type="defaultSemiBold">
+                                First Commodity
+                            </ThemedText>
                             <Input
                                 value={returnCommodityFirst}
                                 placeholder="First Commodity"
                                 onChangeText={setReturnCommodityFirst}
                                 style={{}}
                             />
+                            <ThemedText type="defaultSemiBold">
+                                Second Commodity
+                            </ThemedText>
                             <Input
                                 value={returnCommoditySecond}
                                 placeholder="Second Commodity"
@@ -796,12 +1065,18 @@ console.log(selectedTruckType)
 
                             {dspReturnCommodity && (
                                 <View>
+                                    <ThemedText type="defaultSemiBold">
+                                        Third Commodity
+                                    </ThemedText>
                                     <Input
                                         value={returnCommodityThird}
                                         placeholder="Third Commodity"
                                         onChangeText={setReturnCommodityThird}
                                         style={{}}
                                     />
+                                    <ThemedText type="defaultSemiBold">
+                                        Fourth Commodity
+                                    </ThemedText>
                                     <Input
                                         value={returnCommodityFourth}
                                         placeholder="Fourth Commodity"
@@ -820,6 +1095,9 @@ console.log(selectedTruckType)
 
                         <View style={styles.viewMainDsp}>
                             <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }}>Payment Terms</ThemedText>
+                            <ThemedText type="defaultSemiBold">
+                                Return Payment Terms
+                            </ThemedText>
                             <Input
                                 value={returnPaymentTerms}
                                 placeholder="Return Payment Terms"
@@ -840,6 +1118,9 @@ console.log(selectedTruckType)
                                     Add rates for return loads
                                 </ThemedText>
                             )}
+                            <ThemedText type="defaultSemiBold">
+                                Return Solid First Rate
+                            </ThemedText>
                             <Input
                                 value={returnRateSolidFirst}
                                 placeholder="Return Solid First Rate"
@@ -847,14 +1128,21 @@ console.log(selectedTruckType)
                                 style={{}}
                             />
                             {dspReturnRate && (
-                                <Input
-                                    value={returnRateSolidSecond}
-                                    placeholder="Return Solid Second Rate"
-                                    onChangeText={setReturnRateSolidSecond}
-                                    style={{}}
-                                />
+                                <>
+                                    <ThemedText type="defaultSemiBold">
+                                        Return Solid Second Rate
+                                    </ThemedText>
+                                    <Input
+                                        value={returnRateSolidSecond}
+                                        placeholder="Return Solid Second Rate"
+                                        onChangeText={setReturnRateSolidSecond}
+                                        style={{}}
+                                    />
+                                </>
                             )}
-
+                            <ThemedText type="defaultSemiBold">
+                                Return Triaxle First Rate
+                            </ThemedText>
                             <Input
                                 value={returnRateTriaxleFirst}
                                 placeholder="Return Triaxle First Rate"
@@ -862,13 +1150,21 @@ console.log(selectedTruckType)
                                 style={{}}
                             />
                             {dspReturnRate && (
-                                <Input
-                                    value={returnRateTriaxleSecond}
-                                    placeholder="Return Triaxle Second Rate"
-                                    onChangeText={setReturnRateTriaxleSecond}
-                                    style={{}}
-                                />
+                                <>
+                                    <ThemedText type="defaultSemiBold">
+                                        Return Triaxle Second Rate
+                                    </ThemedText>
+                                    <Input
+                                        value={returnRateTriaxleSecond}
+                                        placeholder="Return Triaxle Second Rate"
+                                        onChangeText={setReturnRateTriaxleSecond}
+                                        style={{}}
+                                    />
+                                </>
                             )}
+                            <ThemedText type="defaultSemiBold">
+                                Return Links First Rate
+                            </ThemedText>
                             <Input
                                 value={returnRateLinksFirst}
                                 placeholder="Return Links First Rate"
@@ -876,13 +1172,22 @@ console.log(selectedTruckType)
                                 style={{}}
                             />
                             {dspReturnRate && (
-                                <Input
-                                    value={returnRateLinksSecond}
-                                    placeholder="Return Links Second Rate"
-                                    onChangeText={setReturnRateLinksSecond}
-                                    style={{}}
-                                />
+                                <>
+                                    <ThemedText type="defaultSemiBold">
+                                        Return Links Second Rate
+                                    </ThemedText>
+                                    <Input
+                                        value={returnRateLinksSecond}
+                                        placeholder="Return Links Second Rate"
+                                        onChangeText={setReturnRateLinksSecond}
+                                        style={{}}
+                                    />
+                                </>
+
                             )}
+                            <ThemedText type="defaultSemiBold">
+                                Return Super Link First Rate
+                            </ThemedText>
                             <Input
                                 value={returnRateSuperLinkFirst}
                                 placeholder="Return Super Link First Rate"
@@ -890,12 +1195,17 @@ console.log(selectedTruckType)
                                 style={{}}
                             />
                             {dspReturnRate && (
-                                <Input
-                                    value={returnRateSuperLinkSecond}
-                                    placeholder="Return Super Link Second Rate"
-                                    onChangeText={setReturnRateSuperLinkSecond}
-                                    style={{}}
-                                />
+                                <>
+                                    <ThemedText type="defaultSemiBold">
+                                        Return Super Link Second Rate
+                                    </ThemedText>
+                                    <Input
+                                        value={returnRateSuperLinkSecond}
+                                        placeholder="Return Super Link Second Rate"
+                                        onChangeText={setReturnRateSuperLinkSecond}
+                                        style={{}}
+                                    />
+                                </>
                             )}
                             <ToggleMLBtn
                                 whatTToggle={toggleDspReturnRate}
@@ -907,39 +1217,42 @@ console.log(selectedTruckType)
 
                         <View style={styles.viewMainDsp}>
                             <Button onPress={() => setStep(1)} title="Back" />
-                            <Button onPress={() => setStep(3)} title="Next" colors={{ text: '#e50914', bg: '#e5091424' }} />
+                            <Button onPress={() => setStep(3)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
                         </View>
                     </ScrollView>
                 }
                 {step === 3 &&
                     <ScrollView>
-                        <View style={{ backgroundColor: backgroundLight, padding: wp(2), marginTop: wp(4), justifyContent: 'space-between', flexDirection: 'row' }}>
-                            <ThemedText style={{ fontSize: wp(4), fontWeight: 700 }}>
+
+                        <View style={{ padding: 4, gap: wp(5), marginVertical: wp(4) }}>
+                            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold' }}>
                                 Contract Details
                             </ThemedText>
-
-                            <View style={{ marginRight: wp(3), backgroundColor: background, borderRadius: wp(20), width: wp(4), height: wp(4), justifyContent: 'center' }}>
-                                <ThemedText color={accent} style={{ fontSize: wp(3), fontWeight: 700, textAlign: 'center' }}>
-                                    3
-                                </ThemedText>
-                            </View>
                         </View>
 
+                        <Divider />
                         <View style={styles.viewMainDsp}>
+                            <ThemedText type="defaultSemiBold">
+                                Fuel
+                            </ThemedText>
                             <Input
                                 value={fuelAvailability}
                                 placeholder="Fuel"
                                 onChangeText={setFuelAvailability}
                                 style={{}}
                             />
-
+                            <ThemedText type="defaultSemiBold">
+                                Loads Per Week
+                            </ThemedText>
                             <Input
                                 value={loadsPerWeek}
                                 placeholder="Loads Per Week"
                                 onChangeText={setLoadsPerWeek}
                                 style={{}}
                             />
-
+                            <ThemedText type="defaultSemiBold">
+                                Contract Duration
+                            </ThemedText>
                             <Input
                                 value={contractDuration}
                                 placeholder="Contract Duration"
@@ -947,6 +1260,10 @@ console.log(selectedTruckType)
                                 style={{}}
                             />
 
+
+                            <ThemedText type="defaultSemiBold">
+                                Starting Date
+                            </ThemedText>
                             <Input
                                 value={startingDate}
                                 placeholder="Starting Date"
@@ -954,6 +1271,9 @@ console.log(selectedTruckType)
                                 style={{}}
                             />
 
+                            <ThemedText type="defaultSemiBold">
+                                Booking Closing Date
+                            </ThemedText>
                             <Input
                                 value={bookingClosingDate}
                                 placeholder="Booking Closing Date"
@@ -961,6 +1281,9 @@ console.log(selectedTruckType)
                                 style={{}}
                             />
 
+                            <ThemedText type="defaultSemiBold">
+                                Can You Renew Contract for how long
+                            </ThemedText>
                             <Input
                                 value={contractRenewal}
                                 placeholder="Can You Renew Contract for how long"
@@ -968,6 +1291,9 @@ console.log(selectedTruckType)
                                 style={{}}
                             />
 
+                            <ThemedText type="defaultSemiBold">
+                                Alert Message
+                            </ThemedText>
                             <Input
                                 value={alertMessage}
                                 placeholder="Alert Message"
@@ -975,19 +1301,23 @@ console.log(selectedTruckType)
                                 style={{}}
                             />
 
+                            <ThemedText type="defaultSemiBold">
+                                Additional Info
+                            </ThemedText>
                             <Input
                                 value={additionalInfo}
                                 placeholder="Additional Info"
                                 onChangeText={setAdditionalInfo}
                                 style={{}}
                             />
+
                         </View>
 
                         <View style={{ padding: wp(4) }}>
                             <View style={[styles.viewSubMainDsp, { backgroundColor: background }]}>
 
 
-                                
+
                                 <ThemedText type="defaultSemiBold" style={{ textAlign: 'center' }}>
                                     Is the contract International or Local for one country</ThemedText>
 
@@ -1003,9 +1333,9 @@ console.log(selectedTruckType)
                                             Local
                                         </ThemedText>
                                         {location === "Local" ?
-                                            <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color="black" />
+                                            <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />
                                             :
-                                            <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color="black" />
+                                            <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />
                                         }
                                     </TouchableOpacity>
                                     <TouchableOpacity
@@ -1018,9 +1348,9 @@ console.log(selectedTruckType)
                                             International
                                         </ThemedText>
                                         {location === "International" ?
-                                            <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color="black" />
+                                            <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />
                                             :
-                                            <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color="black" />
+                                            <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />
                                         }
                                     </TouchableOpacity>
                                 </View>
@@ -1044,9 +1374,9 @@ console.log(selectedTruckType)
                                                             {country}
                                                         </ThemedText>
                                                         {locaOpCount === country ?
-                                                            <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color="black" />
+                                                            <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />
                                                             :
-                                                            <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color="black" />
+                                                            <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />
                                                         }
                                                     </TouchableOpacity>
                                                 ))}
@@ -1074,9 +1404,9 @@ console.log(selectedTruckType)
                                                             {country}
                                                         </ThemedText>
                                                         {interOpCount.includes(country) ?
-                                                            <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color="black" />
+                                                            <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />
                                                             :
-                                                            <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color="black" />
+                                                            <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />
                                                         }
                                                     </TouchableOpacity>
                                                 ))}
@@ -1126,7 +1456,7 @@ console.log(selectedTruckType)
                 onClose={() => setContractDErr(false)}
             />
 
-        </ScreenWrapper>
+        </ScreenWrapper >
 
     )
 }

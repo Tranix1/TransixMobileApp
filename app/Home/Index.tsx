@@ -1,4 +1,4 @@
-import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableNativeFeedback, View, TouchableOpacity, TouchableHighlight } from 'react-native'
+import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableNativeFeedback, View, TouchableOpacity, TouchableHighlight, FlatList } from 'react-native'
 import React, { useState } from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import { ThemedText } from '@/components/ThemedText'
@@ -98,8 +98,8 @@ const Index = () => {
                                             </View>
                                         </TouchableNativeFeedback>
                                     </View>
-                                    <ThemedText type='subtitle' color={accent} style={{ flex: 1, textAlign: 'center' }}>
-                                        Transix
+                                    <ThemedText type='title' color={accent} style={{ flex: 1, textAlign: 'center' }}>
+                                        TRANSIX
                                     </ThemedText>
                                     <View style={{ overflow: 'hidden', borderRadius: wp(10), width: wp(8) }}>
                                         {/* <TouchableNativeFeedback>
@@ -267,19 +267,19 @@ const Index = () => {
                             </ThemedText>
                         </View>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')} underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
-                                <Fontisto name="truck" size={wp(5)} color="#F48024" />
+                            <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')} underlayColor={'#0f9d585a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#0f9d5824' }}>
+                                <Fontisto name="truck" size={wp(5)} color="#0f9d58" />
                             </TouchableHighlight>
                             <ThemedText type='tiny' style={{ textAlign: 'center' }}>
                                 Add Truck
                             </ThemedText>
                         </View>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')} underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
-                                <Fontisto name="truck" size={wp(5)} color="#F48024" />
+                            <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')} underlayColor={'#4285f45a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#4285f424' }}>
+                                <FontAwesome6 name="box" size={wp(5)} color="#4285f4" />
                             </TouchableHighlight>
                             <ThemedText type='tiny' style={{ textAlign: 'center' }}>
-                                Add Truck
+                                Add Load
                             </ThemedText>
                         </View>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
@@ -296,23 +296,46 @@ const Index = () => {
                 </View>
 
                 <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
+
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
-                        <View style={{ backgroundColor: '#395a4f', borderRadius: wp(2), padding: wp(1.5) }}>
-                            <Ionicons name='reader-outline' color={'#fff'} size={wp(4)} />
+                        <View style={{}}>
+                            <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} />
                         </View>
-                        <ThemedText type='subtitle' color={'#395a4f'} style={{ fontWeight: 'bold', fontSize: wp(4) }}>
+                        <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
                             Long-Term Contracts
                         </ThemedText>
+                        <TouchableOpacity>
+                            <ThemedText>
+                                Open Contracts
+                            </ThemedText>
+                        </TouchableOpacity>
                     </View>
-                    <ThemedText color={icon} type='default' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}>
+                    <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>
                         Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
                     </ThemedText>
-                    <Button
-                        colors={{ text: '#395a4f', bg: '#395a4f24' }}
-                        title='Open'
-                        Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"#395a4f"} />}
-                        onPress={() => router.push('/Logistics/Contracts/Index')}
+
+                    <FlatList data={[]}
+                        renderItem={(item) => (<></>)}
+                        ListEmptyComponent={<>
+                            <View style={{ marginVertical: wp(15), alignItems: 'center', gap: wp(4) }}>
+
+                                <ThemedText>
+                                    Create contract and start transporting loads today!
+                                </ThemedText>
+
+                                <TouchableOpacity style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
+                                    <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
+                                    <ThemedText color='#fff'>
+                                        Sign Contract
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            </View>
+                        </>}
                     />
+
+
+
+
                 </View>
 
 

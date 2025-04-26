@@ -1,17 +1,17 @@
 import { UserInfo, UserMetadata } from "firebase/auth";
 import { ImageSourcePropType } from "react-native";
 
-export type TruckTypeProps={
- id: number, name: string, image: ImageSourcePropType | undefined 
+export type TruckTypeProps = {
+    id: number, name: string, image: ImageSourcePropType | undefined, description: string | undefined
 }
 
 export type CountrySelectorProps = {
-  location: string;
-  setLocation: React.Dispatch<React.SetStateAction<string>>;
-  intOpLoc: string[];
-  setIntOpLoc: React.Dispatch<React.SetStateAction<string[]>>;
-  setLocaOpLoc: React.Dispatch<React.SetStateAction<string>>;
-   locaOpLoc : string
+    location: string;
+    setLocation: React.Dispatch<React.SetStateAction<string>>;
+    intOpLoc: string[];
+    setIntOpLoc: React.Dispatch<React.SetStateAction<string[]>>;
+    setLocaOpLoc: React.Dispatch<React.SetStateAction<string>>;
+    locaOpLoc: string
 }
 export type Truck = {
 
@@ -64,7 +64,7 @@ export const Countries = ['Zimbabwe',
 ]
 export type User = {
     uid: string,
-   createdAt: number | string; // required
+    createdAt: number | string; // required
 
     displayName?: string,
     photoURL?: string,

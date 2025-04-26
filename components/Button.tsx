@@ -58,7 +58,7 @@ const Button = ({
 
                         <ThemedText type='defaultSemiBold'
                             style={[{ verticalAlign: 'middle', textAlign: 'center' },
-                            type === 'white' ? { color: accent } : undefined,
+                            type === 'white' ? { color: '#0f9d58' } : undefined,
                             type === 'red' ? { color: 'white' } : undefined,
                             colors?.text ? { color: colors.text } : undefined,
                             ]}>

@@ -25,10 +25,12 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import { SpecifyTruckDetails } from "@/components/SpecifyTruckDetails";
 import { TruckTypeProps } from "@/types/types";
 
-import { Ionicons } from "@expo/vector-icons";
-import { wp } from "@/constants/common";
+import { Entypo, Ionicons } from "@expo/vector-icons";
+import { hp, wp } from "@/constants/common";
 
 import { useThemeColor } from '@/hooks/useThemeColor'
+import { Dropdown } from "react-native-element-dropdown";
+import { useAuth } from "@/context/AuthContext";
 function AddTrucks() {
 
   const icon = useThemeColor('icon')
@@ -119,7 +121,7 @@ function AddTrucks() {
 
 
   const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
-  const [otherTruckType , setOtherTruckType]= React.useState<string>("")
+  const [otherTruckType, setOtherTruckType] = React.useState<string>("")
 
   const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
   let [truckCapacity, setTruckCapacity] = React.useState("")
@@ -147,7 +149,7 @@ function AddTrucks() {
     setDriverDDsp(false)
     setTruckDDsp(false)
 
- 
+
 
     let truckImage, truckBookImage, trailerBookF, trailerBookSc, driverLicense, driverPassport;
 
@@ -231,13 +233,25 @@ function AddTrucks() {
     }
   };
 
+
+  const { user } = useAuth();
   console.log(formData.trailerType)
+  const truckTypes = [
+    { id: 0, name: 'Flat deck', image: require('@/assets/images/Trucks/images (2).jpeg') },
+    { id: 1, name: 'Bulk Trailer', image: require('@/assets/images/Trucks/download (1).jpeg') },
+    { id: 2, name: 'Low Bed', image: require('@/assets/images/Trucks/H805f1f51529345648d1da9e5fcd6807e2.jpg') },
+    { id: 3, name: 'Side Tipper', image: require('@/assets/images/Trucks/images (5).jpeg') },
+    { id: 4, name: 'Tautliner', image: require('@/assets/images/Trucks/download (3).jpeg') },
+    { id: 5, name: 'Tanker', image: require('@/assets/images/Trucks/images (7).jpeg') },
+    { id: 6, name: 'Other', image: require('@/assets/images/Trucks/download (4).jpeg') },
+    // { id: 7, name: 'All', image: '' },
+  ]
 
   return (
     <ScreenWrapper>
 
       <Heading page='Add Trucks' />
-      <TouchableOpacity onPress={() => setDspSpecTruckDet(true)} style={{ backgroundColor: "green" }} >
+      {/* <TouchableOpacity onPress={() => setDspSpecTruckDet(true)} style={{ backgroundColor: "green" }} >
         <ThemedText> Click here Select Truck Details </ThemedText>
       </TouchableOpacity>
 
@@ -253,7 +267,7 @@ function AddTrucks() {
         // Selecting Truck Type
         selectedTruckType={selectedTruckType}
         setSelectedTruckType={setSelectedTruckType}
-        otherTruckType ={otherTruckType}
+        otherTruckType={otherTruckType}
         setOtherTruckType={setOtherTruckType}
         // Selecting A country and location
         location={location}
@@ -262,7 +276,7 @@ function AddTrucks() {
         setIntOpLoc={setIntOpLoc}
         setLocaOpLoc={setLocaOpLoc}
         locaOpLoc={locaOpLoc}
-      />
+      /> */}
 
       {/* <CountrySelector
             location={location}
@@ -274,7 +288,7 @@ function AddTrucks() {
             dspAddLocation={dspAddLocation}
           /> */}
 
-      <View style={{ marginHorizontal: wp(1), marginBottom: wp(1), }} >
+      {/* <View style={{ marginHorizontal: wp(1), marginBottom: wp(1), }} >
 
         {(selectedTruckType || location || truckCapacity) &&
           <TouchableOpacity onPress={() => setDspSpecTruckDet(true)} style={{ padding: wp(2), flexDirection: 'row', backgroundColor: background, borderRadius: wp(6), marginBottom: wp(2), position: 'relative', }}>
@@ -325,13 +339,13 @@ function AddTrucks() {
         }
 
 
-      </View>
+      </View> */}
 
 
 
 
-      <ThemedText>{addingDocUpdate} </ThemedText>
-      <ThemedText>{uploadingImageUpdate} </ThemedText>
+      {/* <ThemedText>{addingDocUpdate} </ThemedText>
+      <ThemedText>{uploadingImageUpdate} </ThemedText> */}
 
 
 
@@ -340,7 +354,7 @@ function AddTrucks() {
 
 
 
-      <View style={{ alignItems: 'center', }} >
+      <View style={{ paddingHorizontal: wp(4) }} >
 
         <ErrorOverlay
           visible={dspFrstPageErr}
@@ -349,8 +363,8 @@ function AddTrucks() {
             !formData.trailerType && "Enter Trailer Type",
             !formData.maxloadCapacity && "Enter Maximum Load Capacity",
             !location && "Select were the truck can operate",
-            !selectedTruckType?.name &&"Select TrucK Type" ,
-            !truckCapacity && "select trcuk capacity" ,
+            !selectedTruckType?.name && "Select TrucK Type",
+            !truckCapacity && "select trcuk capacity",
             location && (!intOpLoc || !locaOpLoc) && "Select the country or countires the truck can operate",
           ].filter(Boolean) as string[]}
           onClose={() => setDspFrstPageErr(false)}
@@ -364,11 +378,11 @@ function AddTrucks() {
 
 
 
-        {ownerName && <View style={{ position: 'absolute', alignSelf: 'center', backgroundColor: background, top: 100, zIndex: 500, padding: 20, }} >
-            <TouchableOpacity onPress={()=>SetOwnerName("")} >
-              <ThemedText> CLick and close here  </ThemedText>
-              <ThemedText> Btn avaialble fr dvp will remove it  </ThemedText>
-            </TouchableOpacity>
+        {!ownerName && <View style={{ position: 'absolute', alignSelf: 'center', backgroundColor: background, top: 100, zIndex: 500, padding: 20, }} >
+          <TouchableOpacity onPress={() => SetOwnerName("")} >
+            <ThemedText> CLick and close here  </ThemedText>
+            <ThemedText> Btn avaialble fr dvp will remove it  </ThemedText>
+          </TouchableOpacity>
 
 
           <Input
@@ -411,36 +425,90 @@ function AddTrucks() {
 
 
 
-
-        {images[0] && !truckDetails && !driverDetails && <Image source={{ uri: images[0].uri }} style={{ width: 200, height: 200, }} />}
-        {!images[0] && <ThemedText>Truck Image</ThemedText>}
-        {!images[0] && <TouchableOpacity onPress={() => selectManyImages(setImages)} style={{ marginBottom: 9 }}>
-          <Fontisto name="camera" size={30} color="#6a0c0c" />
-        </TouchableOpacity>}
-
         <ScrollView>
+
+          <View style={{ backgroundColor: background, padding: wp(4), borderRadius: wp(3), marginBottom: wp(2) }}>
+            <ThemedText type="subtitle">
+              {user?.displayName || 'No Organisation Name!'}
+            </ThemedText>
+            <ThemedText type="tiny">
+              {user?.email || 'No Organisation Name!'}
+            </ThemedText>
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            {images[0] && !truckDetails && !driverDetails && <Image source={{ uri: images[0].uri }} style={{ width: wp(90), height: wp(90), marginBottom: 9, borderRadius: wp(4) }} />}
+            {!images[0] &&
+              <TouchableOpacity onPress={() => selectManyImages(setImages)} style={{ marginBottom: 9, width: wp(90), height: wp(90), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <Ionicons name="camera" size={wp(40)} color={icon + "4c"} />
+                <ThemedText color={icon + "4c"}>Add Image<ThemedText color="red">*</ThemedText></ThemedText>
+              </TouchableOpacity>}
+
+          </View>
+
+          <Dropdown
+            style={[styles.dropdown,]}
+            placeholderStyle={[styles.placeholderStyle, { color: background }]}
+            selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
+            data={truckTypes}
+            maxHeight={hp(60)}
+            labelField="name"
+            valueField="name"
+            placeholder="Select Country"
+            value={selectedTruckType?.name}
+            itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
+            activeColor={background}
+            containerStyle={{
+              borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
+              shadowOffset: {
+                width: 0,
+                height: 9,
+              },
+              shadowOpacity: 0.50,
+              shadowRadius: 12.35,
+
+              elevation: 19,
+              paddingVertical: wp(1)
+            }}
+            onChange={item => {
+              console.log(item);
+              setSelectedTruckType(item);
+            }}
+
+            renderLeftIcon={() => <></>}
+            renderRightIcon={() => <Entypo name="chevron-thin-down" size={wp(4)} color={icon} />}
+            renderItem={((item) =>
+              <View style={[styles.item, item.Id === selectedTruckType?.id && {}]}>
+                <ThemedText style={[{ textAlign: 'left', flex: 1 }, item.value === selectedTruckType?.id && { color: '#0f9d58' }]}>{item.name}</ThemedText>
+                {item.value === selectedTruckType?.id && (
+                  <Ionicons
+                    color={icon}
+                    name='checkmark-outline'
+                    size={wp(5)}
+                  />
+                )}
+              </View>
+            )}
+
+          />
 
           {spinnerItem && <ActivityIndicator size={34} />}
 
-          {!driverDetails && !truckDetails && <View style={{ width: 350, backgroundColor: background, overflow: 'hidden' }}>
-          
+          {!driverDetails && !truckDetails && <View style={{}}>
+
 
             <Input
               value={formData.trailerType}
-              placeholderTextColor="#6a0c0c"
               placeholder="Trailer Config"
               onChangeText={(text) => handleChange<FormData>(text, 'trailerType', setFormData)}
             />
 
             <Input
               value={formData.maxloadCapacity}
-              placeholderTextColor="#6a0c0c"
               placeholder="maximumWheight"
               onChangeText={(text) => handleChange<FormData>(text, 'maxloadCapacity', setFormData)}
             />
             <Input
               value={formData.additionalInfo}
-              placeholderTextColor="#6a0c0c"
               placeholder="Additional Information"
               onChangeText={(text) => handleChange<FormData>(text, 'additionalInfo', setFormData)}
             />
@@ -450,9 +518,9 @@ function AddTrucks() {
               <ThemedText style={{ flexWrap: 'wrap', }}>Selected: {intOpLoc.join(", ")}</ThemedText>
             )}
 
-          <TouchableOpacity onPress={togglrDriverDe} style={styles.nextPageBtn} >
-            <ThemedText style={{ fontWeight: "bold", color: 'white', fontSize: 16 }}>Done NEXT PAGE</ThemedText>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={togglrDriverDe} style={styles.nextPageBtn} >
+              <ThemedText style={{ fontWeight: "bold", color: 'white', fontSize: 16 }}>Done NEXT PAGE</ThemedText>
+            </TouchableOpacity>
           </View>}
 
 
@@ -470,35 +538,34 @@ function AddTrucks() {
 
               <ThemedText>Driver Details</ThemedText>
 
-              
 
 
-          {!countryCodeDriver && (
-            <View style={{
-              borderWidth: 1,
-              borderColor: '#ccc',
-              borderRadius: 10,
-              padding: 10,
-              backgroundColor: 'green',
-              flexDirection: 'row',
-              alignItems: 'center' ,
-            }}>
-              <CountryPicker
-                countryCode={callingCodeDriver as CountryCode}
-                withCountryNameButton={true}
-                withCallingCode={true}
-                withFilter={true}
-                onSelect={handleCountrySelectDriver}
-              />
-            </View>
-          )}
+
+              {!countryCodeDriver && (
+                <View style={{
+                  borderWidth: 1,
+                  borderColor: '#ccc',
+                  borderRadius: 10,
+                  padding: 10,
+                  backgroundColor: 'green',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}>
+                  <CountryPicker
+                    countryCode={callingCodeDriver as CountryCode}
+                    withCountryNameButton={true}
+                    withCallingCode={true}
+                    withFilter={true}
+                    onSelect={handleCountrySelectDriver}
+                  />
+                </View>
+              )}
 
               {/*  */}
               {countryCodeDriver && <ThemedText style={{ textAlign: 'center', color: 'green', fontWeight: 'bold', }} >Country Code : {countryCodeDriver}</ThemedText>}
               {!countryCodeDriver && <ThemedText>Click select country to choose country code</ThemedText>}
               <Input
                 value={formData.driverPhone}
-                placeholderTextColor="#6a0c0c"
                 placeholder="driverPhone"
                 onChangeText={(text) => handleChange<FormData>(text, 'driverPhone', setFormData)}
                 keyboardType="numeric"
@@ -665,5 +732,36 @@ const styles = StyleSheet.create({
     padding: wp(2),
     paddingHorizontal: wp(4),
     borderRadius: wp(4),
+  }, dropdown: {
+    padding: wp(3),
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  icon: {
+    marginRight: 5,
+  },
+  item: {
+    padding: 17,
+    gap: wp(2),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderRadius: wp(1)
+  },
+  textItem: {
+    flex: 1,
+    fontSize: 16,
+  },
+  placeholderStyle: {
+    fontSize: 16,
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+  },
+  iconStyle: {
+    marginRight: wp(2)
   },
 });

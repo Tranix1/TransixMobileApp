@@ -14,17 +14,12 @@ export default function RootLayout() {
     const [appIsReady, setAppIsReady] = useState(false);
 
 
-    // const [loaded] = useFonts({
-    //     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    //     Thin: require('../assets/fonts/Poppins/Poppins-Thin.ttf'),
-    //     Light: require('../assets/fonts/Poppins/Poppins-Light.ttf'),
-    //     Italic: require('../assets/fonts/Poppins/Poppins-Italic.ttf'),
-    //     Regular: require('../assets/fonts/Poppins/Poppins-Regular.ttf'),
-    //     Medium: require('../assets/fonts/Poppins/Poppins-Medium.ttf'),
-    //     SemiBold: require('../assets/fonts/Poppins/Poppins-SemiBold.ttf'),
-    //     Bold: require('../assets/fonts/Poppins/Poppins-Bold.ttf'),
-    //     ExtraBold: require('../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
-    // });
+    const [loaded] = useFonts({
+        SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+        sfbold: require('../assets/fonts/SFPRODISPLAYBOLD.ttf'),
+        sfregular: require('../assets/fonts/SFPRODISPLAYREGULAR.ttf'),
+        sfmedium: require('../assets/fonts/SFPRODISPLAYMEDIUM.ttf'),
+    });
 
     useEffect(() => {
         const checkFirstTime = async () => {
@@ -42,12 +37,12 @@ export default function RootLayout() {
             console.log('loaded Fonts ✅');
             checkFirstTime();
 
-            SplashScreen.hide();
+            SplashScreen.hideAsync();
         }
 
 
 
-    }, []);
+    }, [loaded]);
 
 
     return (
