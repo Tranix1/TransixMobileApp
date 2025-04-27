@@ -537,7 +537,7 @@ const NewContract = () => {
                                 <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }}>
                                     Where Truck Operates
                                 </ThemedText>
-                                <View style={{ gap: wp(3), padding: wp(3) }}>
+                                <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
                                     <TouchableNativeFeedback onPress={() => setLocation('international')}>
                                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                             <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
@@ -570,69 +570,11 @@ const NewContract = () => {
 
                                 </View>
                                 <Divider />
-                                <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, marginBottom: wp(3) }}>
-                                    Truck Capacity
-                                </ThemedText>
 
                                 <ThemedText type="defaultSemiBold" style={{ textAlign: 'center', marginVertical: wp(4) }}>
-                                    Select Tonnage
+                                    Select Truck Type
                                 </ThemedText>
-                                <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
-                                    {tonneSizes.map((tonnesize, index) =>
-                                        <>
-                                            <TouchableNativeFeedback key={index} onPress={() => setTruckCapacity(tonnesize)}>
-                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                    <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
-                                                        {tonnesize}
-                                                    </ThemedText>
-                                                    <CheckBox
-                                                        containerStyle={{ padding: wp(1) }}
-                                                        checked={truckCapacity === tonnesize}
-                                                        onPress={() => setTruckCapacity(tonnesize)}
-                                                        uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
-                                                        checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
-                                                    />
-                                                </View>
-                                            </TouchableNativeFeedback>
-                                            {tonneSizes.length > index + 1 &&
-                                                <Divider style={{ marginVertical: wp(0) }} />
-                                            }
-                                        </>
-                                    )}
 
-
-                                </View>
-                                <ThemedText type="defaultSemiBold" style={{ textAlign: 'center', marginVertical: wp(4) }}>
-                                    Select Litres
-                                </ThemedText>
-                                <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
-                                    {litresCapacity.map((litres, index) =>
-                                        <>
-                                            <TouchableNativeFeedback key={index} onPress={() => setDspTruckCapacity(litres)}>
-                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                    <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
-                                                        {litres}
-                                                    </ThemedText>
-                                                    <CheckBox
-                                                        containerStyle={{ padding: wp(1) }}
-                                                        checked={dspTruckCpacity === litres}
-                                                        onPress={() => setDspTruckCapacity(litres)}
-                                                        uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
-                                                        checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
-                                                    />
-                                                </View>
-                                            </TouchableNativeFeedback>
-                                            {litresCapacity.length > index + 1 &&
-                                                <Divider style={{ marginVertical: wp(0) }} />
-                                            }
-                                        </>
-                                    )}
-
-
-                                </View>
-                                <ThemedText type="defaultSemiBold" style={{ textAlign: 'center', marginVertical: wp(4) }}>
-                                    Select Litres
-                                </ThemedText>
                                 <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
                                     {truckTypes.map((truck, index) =>
                                         <>
@@ -661,10 +603,80 @@ const NewContract = () => {
                                             }
                                         </>
                                     )}
-
-
                                 </View>
 
+                                <Divider />
+                                {
+                                    selectedTruckType && selectedTruckType?.id < 5 &&
+                                    <>
+
+
+
+                                        <ThemedText type="defaultSemiBold" style={{ textAlign: 'center', marginVertical: wp(4) }}>
+                                            Select Tonnage
+                                        </ThemedText>
+                                        <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
+                                            {tonneSizes.map((tonnesize, index) =>
+                                                <>
+                                                    <TouchableNativeFeedback key={index} onPress={() => setTruckCapacity(tonnesize)}>
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                            <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
+                                                                {tonnesize}
+                                                            </ThemedText>
+                                                            <CheckBox
+                                                                containerStyle={{ padding: wp(1) }}
+                                                                checked={truckCapacity === tonnesize}
+                                                                onPress={() => setTruckCapacity(tonnesize)}
+                                                                uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
+                                                                checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
+                                                            />
+                                                        </View>
+                                                    </TouchableNativeFeedback>
+                                                    {tonneSizes.length > index + 1 &&
+                                                        <Divider style={{ marginVertical: wp(0) }} />
+                                                    }
+                                                </>
+                                            )}
+
+
+                                        </View>
+                                    </>
+                                }
+
+                                {
+                                    selectedTruckType && selectedTruckType?.id === 5 &&
+                                    <>
+
+                                        <ThemedText type="defaultSemiBold" style={{ textAlign: 'center', marginVertical: wp(4) }}>
+                                            Select Litres
+                                        </ThemedText>
+                                        <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
+                                            {litresCapacity.map((litres, index) =>
+                                                <>
+                                                    <TouchableNativeFeedback key={index} onPress={() => setDspTruckCapacity(litres)}>
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                            <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
+                                                                {litres}
+                                                            </ThemedText>
+                                                            <CheckBox
+                                                                containerStyle={{ padding: wp(1) }}
+                                                                checked={dspTruckCpacity === litres}
+                                                                onPress={() => setDspTruckCapacity(litres)}
+                                                                uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
+                                                                checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
+                                                            />
+                                                        </View>
+                                                    </TouchableNativeFeedback>
+                                                    {litresCapacity.length > index + 1 &&
+                                                        <Divider style={{ marginVertical: wp(0) }} />
+                                                    }
+                                                </>
+                                            )}
+
+
+                                        </View>
+                                    </>
+                                }
                             </View>
 
                             {/* <View style={styles.viewMainDsp}> */}

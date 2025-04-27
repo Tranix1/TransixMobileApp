@@ -248,7 +248,7 @@ const Index = () => {
                 </TouchableOpacity> */}
 
 
-                <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
+                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
                         <View style={{}}>
                             <MaterialCommunityIcons name="lightning-bolt-circle" size={wp(4)} color={icon} />
@@ -295,7 +295,7 @@ const Index = () => {
 
                 </View>
 
-                <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
+                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
 
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
                         <View style={{}}>
@@ -304,10 +304,11 @@ const Index = () => {
                         <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
                             Long-Term Contracts
                         </ThemedText>
-                        <TouchableOpacity>
-                            <ThemedText>
+                        <TouchableOpacity style={{ flexDirection: 'row', gap: wp(1) }}>
+                            <ThemedText type='tiny'>
                                 Open Contracts
                             </ThemedText>
+                            <Ionicons name='arrow-forward' color={icon} />
                         </TouchableOpacity>
                     </View>
                     <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>
@@ -326,7 +327,7 @@ const Index = () => {
                                 <TouchableOpacity style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
                                     <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
                                     <ThemedText color='#fff'>
-                                        Sign Contract
+                                        Create Contract
                                     </ThemedText>
                                 </TouchableOpacity>
                             </View>
@@ -339,7 +340,7 @@ const Index = () => {
                 </View>
 
 
-                <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
+                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
                         <View style={{ backgroundColor: '#6bacbf', borderRadius: wp(2), padding: wp(1.5) }}>
                             <Octicons name='verified' color={'#fff'} size={wp(4)} />
@@ -379,7 +380,7 @@ const Index = () => {
 
 
 
-                <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
+                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
                         <View style={{ backgroundColor: '#fb9274', borderRadius: wp(2), padding: wp(1.5) }}>
                             <Octicons name='verified' color={'#fff'} size={wp(4)} />
@@ -399,7 +400,7 @@ const Index = () => {
                     />
                 </View>
 
-                <View style={[styles.homefeature, { borderColor: coolGray, backgroundColor: background, }]}>
+                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
                         <View style={{ backgroundColor: '#bada5f', borderRadius: wp(2), padding: wp(1.5) }}>
                             <Octicons name='verified' color={'#fff'} size={wp(4)} />

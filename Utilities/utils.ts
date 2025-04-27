@@ -4,11 +4,11 @@ import * as ImagePicker from 'expo-image-picker';
 import type { ImagePickerAsset } from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 
-  // Reusable function to toggle local country
+// Reusable function to toggle local country
 export function toggleLocalCountry(
-  count: string, 
-  setLocaOpLoc: React.Dispatch<React.SetStateAction<string>>, 
-  setIntOpLoc: React.Dispatch<React.SetStateAction<string[]>>, 
+  count: string,
+  setLocaOpLoc: React.Dispatch<React.SetStateAction<string>>,
+  setIntOpLoc: React.Dispatch<React.SetStateAction<string[]>>,
 ): void {
   setIntOpLoc([]); // Clear international country selections
   setLocaOpLoc(count); // Set local country
@@ -16,8 +16,8 @@ export function toggleLocalCountry(
 
 // Reusable function to toggle international country
 export function toggleInternationalCountry(
-  country: string, 
-  setLocaOpLoc: React.Dispatch<React.SetStateAction<string>>, 
+  country: string,
+  setLocaOpLoc: React.Dispatch<React.SetStateAction<string>>,
   setIntOpLoc: React.Dispatch<React.SetStateAction<string[]>>
 ): void {
   setLocaOpLoc(''); // Clear local country
@@ -30,7 +30,7 @@ export function toggleInternationalCountry(
   });
 }
 
- 
+
 
 // Reusable Way to select many images and put them in an array
 // But it will select one by one not many at once 
@@ -41,7 +41,7 @@ type ImageAsset = {
 };
 
 export const selectManyImages = async (
-      setImages: React.Dispatch<React.SetStateAction<ImagePickerAsset[]>>
+  setImages: React.Dispatch<React.SetStateAction<ImagePickerAsset[]>>
 
 
 ) => {
@@ -53,9 +53,12 @@ export const selectManyImages = async (
   }
 
   const pickerResult = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsMultipleSelection: false, // allow multiple selection
-  }); 
+    mediaTypes: ['images'],
+    allowsEditing: true,
+    legacy: true,
+    aspect: [1, 1],
+    quality: .7,
+  });
 
   if (pickerResult.canceled || !pickerResult.assets?.length) {
     return;
@@ -93,7 +96,7 @@ export const selectManyImages = async (
 };
 
 // Handle Data change in a form in an nput element and set it to the corresponding variable
-  // utils/handleChange.ts
+// utils/handleChange.ts
 export function handleChange<T>(
   value: string | number | boolean,
   fieldName: keyof T,

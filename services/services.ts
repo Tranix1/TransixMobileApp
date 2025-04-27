@@ -31,13 +31,20 @@ export const formatDate = (_date: string | number = '', format?: string) => {
     }
 }
 
+
 export const cleanNumber = (text: string) => {
     if (!text) return '';
+    const d = text.split(' ').filter(Boolean).join('')
+    const cleaned = d.replace(/\D/g, "");
 
-    const cleaned = text;
-    return `${cleaned.slice(0, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7, 10)} ${cleaned.slice(10, 13)}`;
+    if (cleaned.length <= 3) {
+        return text;
+    } else if (cleaned.length <= 6) {
+        return `${cleaned.slice(0, 3)} ${cleaned.slice(3)}`;
+    } else {
+        return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6, 9)}`;
+    }
 };
-
 export const formatNumber = (num: number) => {
     if (num >= 1e9) {
         return (num / 1e9).toFixed(1).replace(/\.0$/, '') + 'B'; // Billions

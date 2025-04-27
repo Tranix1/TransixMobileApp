@@ -27,7 +27,7 @@ export type Truck = {
     id: string;
     imageUrl: string;
     isVerified: boolean;
-    location: string;
+    locations: string[];
     maximumWheight: string;
     onwerEmail: string;
     ownerName: string;

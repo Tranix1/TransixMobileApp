@@ -1,4 +1,4 @@
-import { FlatList, Image, ImageSourcePropType, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableNativeFeedback, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, FlatList, Image, ImageSourcePropType, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableNativeFeedback, TouchableOpacity, View } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { hp, wp } from '@/constants/common'
 import { ThemedText } from '@/components/ThemedText'
@@ -12,6 +12,7 @@ import BottomSheet, { BottomSheetScrollView, BottomSheetView } from '@gorhom/bot
 import SwithComponent from '@/components/Switch'
 import { BlurView } from 'expo-blur'
 import Button from '@/components/Button'
+import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore'
 
 const Index = () => {
 
@@ -32,26 +33,39 @@ const Index = () => {
 
     const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
 
-    const [trucks, setTrucks] = useState<Truck[] | null>(null)
+    const [trucks, setTrucks] = useState<Truck[]>([])
 
     const [selectedCountry, setSelectedCountry] = useState('All')
-    const [dspFilterLocal , setDspFilterLocal]= useState (false)
+    const [dspFilterLocal, setDspFilterLocal] = useState(false)
 
     const [truckTonnage, setTruckTonnage] = useState("All")
-
-    useEffect(() => {
-        LoadTructs();
-    }, [selectedTruckType])
+    const [refreshing, setRefreshing] = useState(false)
+    const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+    const [loadingMore, setLoadingMore] = useState(false);
 
     const LoadTructs = async () => {
-
         const maTrucks = await fetchDocuments("Trucks");
         if (maTrucks) {
-
-            setTrucks(maTrucks as Truck[])
+            setTrucks(maTrucks.data as Truck[])
+            setLastVisible(maTrucks.lastVisible)
         }
-
     }
+    useEffect(() => {
+        LoadTructs();
+    }, [])
+
+    const onRefresh = async () => {
+        try {
+            setRefreshing(true);
+            await LoadTructs();
+            setRefreshing(false);
+
+        } catch (error) {
+
+        }
+    };
+
+
     const [showfilter, setShowfilter] = useState(false)
 
     const truckTypes = [
@@ -83,6 +97,18 @@ const Index = () => {
         setFilterVerified(false)
     }
 
+    const loadMoreQuestions = async () => {
+
+        if (loadingMore || !lastVisible) return;
+        setLoadingMore(true);
+        const result = await fetchDocuments('questions', 10, lastVisible);
+        if (result) {
+            setTrucks([...trucks, ...result.data as Truck[]]);
+            setLastVisible(result.lastVisible);
+        }
+        setLoadingMore(false);
+    };
+
 
 
 
@@ -102,7 +128,7 @@ const Index = () => {
                             <View style={{ width: '95%', backgroundColor: bg, borderRadius: wp(4), padding: wp(4) }}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: wp(4) }}>
                                     <ThemedText type="default">Filter Trucks</ThemedText>
-                                    
+
                                     <TouchableOpacity onPress={() => setShowfilter(false)}>
                                         <Ionicons name="close" size={wp(5)} color={icon} />
                                     </TouchableOpacity>
@@ -111,21 +137,23 @@ const Index = () => {
 
 
 
-                                    <View style={{flexDirection:'row'}}>
-                                        
-                            <TouchableOpacity  onPress={() => {
-                                setSelectedCountry('International'); 
-                                 setDspFilterLocal(false); } } style={[styles.countryButton, { backgroundColor: background,marginRight:6 }, selectedCountry === 'International' && styles.countryButtonSelected]} >
-                            <ThemedText style={{ color: selectedCountry === 'International' ? 'white' : coolGray }}>International</ThemedText>
-                        </TouchableOpacity>
-                                <TouchableOpacity onPress={() => {
-                                    setDspFilterLocal(true); setSelectedCountry('All')  } } style={[styles.countryButton, { backgroundColor: background }, dspFilterLocal && styles.countryButtonSelected]} >
-                            <ThemedText style={{ color: dspFilterLocal ? 'white' : coolGray }}>Local </ThemedText>
-                        </TouchableOpacity>
-                            </View>
+                                    <View style={{ flexDirection: 'row' }}>
+
+                                        <TouchableOpacity onPress={() => {
+                                            setSelectedCountry('International');
+                                            setDspFilterLocal(false);
+                                        }} style={[styles.countryButton, { backgroundColor: background, marginRight: 6 }, selectedCountry === 'International' && styles.countryButtonSelected]} >
+                                            <ThemedText style={{ color: selectedCountry === 'International' ? 'white' : coolGray }}>International</ThemedText>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={() => {
+                                            setDspFilterLocal(true); setSelectedCountry('All')
+                                        }} style={[styles.countryButton, { backgroundColor: background }, dspFilterLocal && styles.countryButtonSelected]} >
+                                            <ThemedText style={{ color: dspFilterLocal ? 'white' : coolGray }}>Local </ThemedText>
+                                        </TouchableOpacity>
+                                    </View>
 
 
-                                  {dspFilterLocal &&  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: wp(2), gap: wp(3) }}>
+                                    {dspFilterLocal && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: wp(2), gap: wp(3) }}>
                                         <TouchableOpacity key={'all'} onPress={() => setSelectedCountry('All')} style={[styles.countryButton, { backgroundColor: background }, selectedCountry === 'All' && styles.countryButtonSelected]} >
                                             <ThemedText style={{ color: selectedCountry === 'All' ? 'white' : coolGray }}>All </ThemedText>
                                         </TouchableOpacity>
@@ -140,18 +168,20 @@ const Index = () => {
 
 
 
-                                     <View style={{flexDirection:'row'}}>
-                                        
-                            <TouchableOpacity  onPress={() => {
-                                setSelectedCountry('International'); 
-                                 setDspFilterLocal(false); } } style={[styles.countryButton, { backgroundColor: background,marginRight:6 }, selectedCountry === 'International' && styles.countryButtonSelected]} >
-                            <ThemedText style={{ color: selectedCountry === 'International' ? 'white' : coolGray }}>Cargo Trucks</ThemedText>
-                        </TouchableOpacity>
-                                <TouchableOpacity onPress={() => {
-                                    setDspFilterLocal(true); setSelectedCountry('All')  } } style={[styles.countryButton, { backgroundColor: background }, dspFilterLocal && styles.countryButtonSelected]} >
-                            <ThemedText style={{ color: dspFilterLocal ? 'white' : coolGray }}>Tankers </ThemedText>
-                        </TouchableOpacity>
-                            </View>              
+                                    <View style={{ flexDirection: 'row' }}>
+
+                                        <TouchableOpacity onPress={() => {
+                                            setSelectedCountry('International');
+                                            setDspFilterLocal(false);
+                                        }} style={[styles.countryButton, { backgroundColor: background, marginRight: 6 }, selectedCountry === 'International' && styles.countryButtonSelected]} >
+                                            <ThemedText style={{ color: selectedCountry === 'International' ? 'white' : coolGray }}>Cargo Trucks</ThemedText>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={() => {
+                                            setDspFilterLocal(true); setSelectedCountry('All')
+                                        }} style={[styles.countryButton, { backgroundColor: background }, dspFilterLocal && styles.countryButtonSelected]} >
+                                            <ThemedText style={{ color: dspFilterLocal ? 'white' : coolGray }}>Tankers </ThemedText>
+                                        </TouchableOpacity>
+                                    </View>
 
 
                                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: wp(2), gap: wp(3) }}>
@@ -169,7 +199,7 @@ const Index = () => {
 
                                     <SwithComponent value={filterVerified} handlePress={() => { setFilterVerified(!filterVerified); }} title='Show Verified' />
                                 </View>
-                              
+
 
                                 <Button
                                     onPress={() => {
@@ -182,10 +212,10 @@ const Index = () => {
                             </View>
                         </View>
                     </BlurView>
-                    
+
                 </Modal>
 
-                
+
             </SafeAreaView>
             <View style={[styles.container, { backgroundColor: bg }]}>
                 <View style={{
@@ -198,17 +228,17 @@ const Index = () => {
                     marginBottom: wp(1),
                 }} >
                     <View>
-    <View style={{ marginLeft: 5, marginBottom: -5 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-    <ThemedText type="title">
-        Trucks 
-    </ThemedText>
-        <Text style={{ fontSize: 13, marginLeft: 5 }}>
-            {selectedCountry !== "All" && selectedCountry !== "International" ? `Local ${selectedCountry}` : selectedCountry === "International" ? selectedCountry : null}
-        </Text>
-</View>
+                        <View style={{ marginLeft: 5, marginBottom: -5 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                                <ThemedText type="title">
+                                    Trucks
+                                </ThemedText>
+                                <Text style={{ fontSize: 13, marginLeft: 5 }}>
+                                    {selectedCountry !== "All" && selectedCountry !== "International" ? `Local ${selectedCountry}` : selectedCountry === "International" ? selectedCountry : null}
+                                </Text>
+                            </View>
 
-</View>
+                        </View>
                         <ThemedText type="tiny">Find a Truck for your Load Today</ThemedText>
                     </View>
                     <View style={{ flexDirection: 'row', gap: wp(2) }}>
@@ -242,12 +272,13 @@ const Index = () => {
                     ListHeaderComponent={() => <>
                         <View style={{ marginHorizontal: wp(1), marginBottom: wp(1), }}>
 
-                            <TouchableOpacity onPress={()=>setSelectedTruckType(null)}>
+                            <TouchableOpacity onPress={() => setSelectedTruckType(null)}>
 
-                                {selectedTruckType?.name&&  <ThemedText style={{alignSelf:'flex-end'}}>Truck type</ThemedText>}
+                                {selectedTruckType?.name && <ThemedText style={{ alignSelf: 'flex-end' }}>Truck type</ThemedText>}
                             </TouchableOpacity>
 
-                                {!selectedTruckType?.name&& <ScrollView horizontal contentContainerStyle={{ gap: wp(2) }} style={{marginBottom:10 , marginLeft:5 , marginTop:7}}>
+                            {!selectedTruckType?.name &&
+                                <ScrollView horizontal contentContainerStyle={{ gap: wp(2) }} style={{ marginBottom: 10, marginLeft: 5, marginTop: 7 }}>
                                     {truckTypes.map((item) => (
                                         <TouchableOpacity
                                             key={item.id}
@@ -264,7 +295,7 @@ const Index = () => {
                                                 marginBottom: wp(2),
                                                 backgroundColor: selectedTruckType?.id === item.id ? accent + '14' : background,
                                                 borderRadius: wp(4),
-                                                height:57 ,
+                                                height: 57,
                                             }}
                                         >
                                             <Image
@@ -284,7 +315,7 @@ const Index = () => {
 
 
 
-                            {(selectedTruckType || filterVerified || truckTonnage !== 'All') &&
+                            {/* {(selectedTruckType || filterVerified || truckTonnage !== 'All') &&
                                 <TouchableOpacity onPress={() => setShowfilter(true)} style={{ padding: wp(2), flexDirection: 'row', backgroundColor: background, borderRadius: wp(6), marginBottom: wp(2), position: 'relative' }}>
                                     {selectedTruckType &&
                                         <View style={{ marginRight: wp(2) }}>
@@ -325,9 +356,9 @@ const Index = () => {
                                         </TouchableNativeFeedback>
                                     </View>
                                 </TouchableOpacity>
-                            }
+                            } */}
 
-                            
+
                         </View>
                         {showfilter ?
                             <>
@@ -347,6 +378,38 @@ const Index = () => {
                     renderItem={({ item }) => (
                         <TruckItemComponent truck={item} />
                     )}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[accent]}
+                        />
+                    }
+                    onEndReached={loadMoreQuestions}
+                    onEndReachedThreshold={.5}
+                    ListFooterComponent={
+                        <View style={{ marginBottom: wp(10), marginTop: wp(6) }}>
+                            {
+                                loadingMore ?
+                                    <View style={{ flexDirection: "row", gap: wp(4), alignItems: 'center', justifyContent: 'center' }}>
+                                        <ThemedText type='tiny' style={{ color: icon }}>Loading More</ThemedText>
+                                        <ActivityIndicator size="small" color={accent} />
+                                    </View>
+                                    :
+                                    (!lastVisible && trucks.length > 0) ?
+                                        <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                                            <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>No more Trucks to Load
+                                            </ThemedText>
+                                            <Ionicons color={icon} style={{}} name='alert-circle-outline' size={wp(6)} />
+
+                                        </View>
+                                        : null
+
+
+                            }
+
+                        </View>
+                    }
                 />
 
             </View>

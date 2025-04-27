@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 20,
-    fontFamily: 'sfregular',
+    fontFamily: 'sfbold',
   },
   link: {
     lineHeight: 30,

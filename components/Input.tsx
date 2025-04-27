@@ -88,11 +88,13 @@ export default Input
 const styles = StyleSheet.create({
     input: {
         flex: 1,
-
+        fontFamily: 'sfregular',
+        fontSize: wp(4),
         minHeight: hp(5)
+
     },
     container: {
-        paddingVertical: wp(0),
+        paddingVertical: wp(1),
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
