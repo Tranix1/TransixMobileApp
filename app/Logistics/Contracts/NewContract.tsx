@@ -6,7 +6,7 @@ import CheckOutMakePayments from "@/components/CheckOutPayment";
 import { ErrorOverlay } from "@/components/ErrorOverLay";
 import { handleMakePayment } from "@/payments/operations";
 
-import { ContractsFormDataScndType } from "@/types/types";
+import { ContractsFormDataScndType, TankerTruckProps } from "@/types/types";
 import { ContractsFormDataType } from "@/types/types";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -134,14 +134,55 @@ const NewContract = () => {
     const truckTypes = [
         { id: 0, name: 'Flat deck', description: 'Ideal for transporting oversized or heavy loads.', image: require('@/assets/images/Trucks/images (2).jpeg') },
         { id: 1, name: 'Bulk Trailer', description: 'Used for carrying bulk materials like grains or minerals.', image: require('@/assets/images/Trucks/download (1).jpeg') },
-        { id: 2, name: 'Low Bed', description: 'Designed for transporting heavy machinery and equipment.', image: require('@/assets/images/Trucks/H805f1f51529345648d1da9e5fcd6807e2.jpg') },
+        { id: 2, name: 'Dropside', description: 'Truck with removable sides, perfect for transporting heavy and oversized goods.', image: require('@/assets/images/Trucks/8-ton-drop-side-truck.jpg') },
         { id: 3, name: 'Side Tipper', description: 'Suitable for unloading materials like sand or gravel.', image: require('@/assets/images/Trucks/images (5).jpeg') },
         { id: 4, name: 'Tautliner', description: 'Versatile truck with curtains for easy loading and unloading.', image: require('@/assets/images/Trucks/download (3).jpeg') },
         { id: 5, name: 'Tanker', description: 'Used for transporting liquids like fuel or chemicals.', image: require('@/assets/images/Trucks/images (7).jpeg') },
-        { id: 6, name: 'Other', description: 'Custom or specialized truck types for unique needs.', image: require('@/assets/images/Trucks/download (4).jpeg') },
+
+        { id: 6, name: 'Box', description: 'Enclosed truck ideal for transporting packaged goods, furniture, and electronics.', image: require('@/assets/images/Trucks/download (8).jpeg') },
+
+        { id: 7, name: 'Low Bed', description: 'Designed for transporting heavy machinery and equipment.', image: require('@/assets/images/Trucks/H805f1f51529345648d1da9e5fcd6807e2.jpg') },
+
+        { id: 8, name: 'Refrigerated', description: 'Temperature-controlled truck used for transporting perishable goods like food and medicine.', image: require('@/assets/images/Trucks/download (7).jpeg') },
+
+        { id: 9, name: 'Other', description: 'Custom or specialized truck types designed for unique transport needs.', image: require('@/assets/images/Trucks/download (4).jpeg') },
+
         // { id: 7, name: 'All', image: '' },
     ]
 
+
+    const tankerTypes = [
+        {
+            id: 0,
+            name: "Oil Tankers",
+            description: "Carry oil or its products.",
+            products: ["Crude oil", "Gasoline", "Diesel", "Jet fuel"]
+        },
+        {
+            id: 1,
+            name: "Chemical Tankers",
+            description: "Transport various liquid chemicals in bulk.",
+            products: ["Acids", "Vegetable oils", "Ethylene glycol", "Methanol"]
+        },
+        {
+            id: 2,
+            name: "Gas Carriers",
+            description: "Transport liquefied gases at very low temperatures or under high pressure.",
+            products: ["Liquefied Natural Gas (LNG)", "Liquefied Petroleum Gas (LPG)", "Propane", "Butane"]
+        },
+        {
+            id: 3,
+            name: "Food-Grade Tankers",
+            description: "Transporting liquid food products.",
+            products: ["Milk", "Juice", "Wine", "Edible oils"]
+        },
+        {
+            id: 4,
+            name: "Specialized Cargo Tankers",
+            description: "Tankers built for specific, unique liquid cargoes.",
+            products: ["Bitumen", "Slurry", "Molten sulfur", "Hydrogen"]
+        }
+    ];
 
 
 
@@ -394,12 +435,25 @@ const NewContract = () => {
 
 
     const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
+
     const [otherTruckType, setOtherTruckType] = React.useState<string>("")
+
+    const [typeOfTanker, setTypeOfTanker] = React.useState<TankerTruckProps | null>(null)
+
+
+
+    const [truckConfig, setTruckConfig] = React.useState("")
+    const [truckSuspension, setTruckSuspension] = React.useState("")
+
+    const [otherTruckSuspension, setOtherTruckSuspension] = React.useState("")
 
     const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
     const [truckCapacity, setTruckCapacity] = useState("")
 
     const [dspSpecTruckDet, setDspSpecTruckDet] = React.useState<boolean>(false)
+
+
+
 
     console.log(selectedTruckType)
 
@@ -570,73 +624,88 @@ const NewContract = () => {
 
                                 </View>
                                 <Divider />
-                                <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, marginBottom: wp(3) }}>
-                                    Truck Capacity
+
+
+                                <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }}>
+                                    Truck Config
                                 </ThemedText>
 
-                                <ThemedText type="defaultSemiBold" style={{ textAlign: 'center', marginVertical: wp(4) }}>
-                                    Select Tonnage
+                                <ScrollView horizontal >
+
+
+                                    <TouchableOpacity onPress={() => setTruckConfig("single Axle ")} style={
+                                        truckConfig === "single Axle " ? { backgroundColor: "green", margin: 6 } : { backgroundColor: "red", margin: 6 }} >
+                                        <ThemedText>single Axle </ThemedText>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity onPress={() => setTruckConfig("tandem")} style={truckConfig === "tandem" ? { backgroundColor: "green", margin: 6 } : { backgroundColor: "red", margin: 6 }} >
+                                        <ThemedText>tandem</ThemedText>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity onPress={() => setTruckConfig("triaxle")} style={truckConfig === "triaxle" ? { backgroundColor: "green", margin: 6 } : { backgroundColor: "red", margin: 6 }} >
+                                        <ThemedText>triaxle</ThemedText>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity onPress={() => setTruckConfig("MultiAxle")} style={truckConfig === "MultiAxle" ? { backgroundColor: "green", margin: 6 } : { backgroundColor: 'red', margin: 6 }} >
+                                        <ThemedText>MultiAxle</ThemedText>
+                                    </TouchableOpacity>
+
+                                </ScrollView>
+
+                                <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }} >
+                                    Truck Suspension
                                 </ThemedText>
-                                <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
-                                    {tonneSizes.map((tonnesize, index) =>
-                                        <>
-                                            <TouchableNativeFeedback key={index} onPress={() => setTruckCapacity(tonnesize)}>
-                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                    <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
-                                                        {tonnesize}
-                                                    </ThemedText>
-                                                    <CheckBox
-                                                        containerStyle={{ padding: wp(1) }}
-                                                        checked={truckCapacity === tonnesize}
-                                                        onPress={() => setTruckCapacity(tonnesize)}
-                                                        uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
-                                                        checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
-                                                    />
-                                                </View>
-                                            </TouchableNativeFeedback>
-                                            {tonneSizes.length > index + 1 &&
-                                                <Divider style={{ marginVertical: wp(0) }} />
-                                            }
-                                        </>
-                                    )}
+
+                                <ScrollView horizontal >
+                                    <TouchableOpacity style={
+                                        truckSuspension === "Link" ? { backgroundColor: "green", margin: 6 } : { backgroundColor: 'red', margin: 6 }} onPress={() => setTruckSuspension("Link")} >
+                                        <ThemedText>Link</ThemedText>
+
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity style={
+                                        truckSuspension === "Super Link" ? { backgroundColor: "green", margin: 6 } : { backgroundColor: 'red', margin: 6 }} onPress={() => setTruckSuspension("Super Link")} >
+                                        <ThemedText>Super Link</ThemedText>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity style={
+                                        truckSuspension === "Air suspension" ? { backgroundColor: "green", margin: 6 } : { backgroundColor: 'red', margin: 6 }} onPress={() => setTruckSuspension("Air suspension")} >
+                                        <ThemedText>Air suspen</ThemedText>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity style={
+                                        truckSuspension === "mechanical steel" ? { backgroundColor: "green", margin: 6 } : { backgroundColor: 'red', margin: 6 }} onPress={() => setTruckSuspension("mechanical steel")} >
+
+                                        <ThemedText>mechanical steel</ThemedText>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={
+                                        truckSuspension === "Other" ? { backgroundColor: "green", margin: 6 } : { backgroundColor: 'red', margin: 6 }} onPress={() => setTruckSuspension("Other")} >
+                                        <ThemedText>Other</ThemedText>
+                                    </TouchableOpacity>
+                                </ScrollView>
+
+                                {truckSuspension === "Other" && <View>
+                                    <Input
+                                        value={otherTruckSuspension}
+                                        placeholder="Second Commodity"
+                                        onChangeText={setOtherTruckSuspension}
+                                        style={{}}
+                                    />
+                                </View>}
+                                <Divider />
 
 
-                                </View>
+
+
+
+
                                 <ThemedText type="defaultSemiBold" style={{ textAlign: 'center', marginVertical: wp(4) }}>
-                                    Select Litres
-                                </ThemedText>
-                                <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
-                                    {litresCapacity.map((litres, index) =>
-                                        <>
-                                            <TouchableNativeFeedback key={index} onPress={() => setDspTruckCapacity(litres)}>
-                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                    <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
-                                                        {litres}
-                                                    </ThemedText>
-                                                    <CheckBox
-                                                        containerStyle={{ padding: wp(1) }}
-                                                        checked={dspTruckCpacity === litres}
-                                                        onPress={() => setDspTruckCapacity(litres)}
-                                                        uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
-                                                        checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
-                                                    />
-                                                </View>
-                                            </TouchableNativeFeedback>
-                                            {litresCapacity.length > index + 1 &&
-                                                <Divider style={{ marginVertical: wp(0) }} />
-                                            }
-                                        </>
-                                    )}
-
-
-                                </View>
-                                <ThemedText type="defaultSemiBold" style={{ textAlign: 'center', marginVertical: wp(4) }}>
-                                    Select Litres
+                                    Select Loading area
                                 </ThemedText>
                                 <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
                                     {truckTypes.map((truck, index) =>
-                                        <>
-                                            <TouchableNativeFeedback key={index} onPress={() => setSelectedTruckType(truck)}>
+                                        <View key={index}>
+                                            <TouchableNativeFeedback onPress={() => setSelectedTruckType(truck)}>
                                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(3) }}>
                                                     <Image source={truck.image} style={{ height: wp(25), width: wp(35), borderRadius: wp(2) }} />
                                                     <View style={{ flex: 1 }}>
@@ -659,8 +728,113 @@ const NewContract = () => {
                                             {truckTypes.length > index + 1 &&
                                                 <Divider style={{ marginVertical: wp(0) }} />
                                             }
-                                        </>
+                                        </View>
                                     )}
+
+
+                                    {selectedTruckType?.name === "Other" && <View>
+                                        <ThemedText>Name of the other loading area</ThemedText>
+                                        <Input
+                                            value={otherTruckType}
+                                            placeholder="Enter name of loading area"
+                                            onChangeText={setOtherTruckType}
+                                            style={{}}
+                                        />
+                                    </View>}
+
+
+
+
+                                    {selectedTruckType?.name === "Tanker" && <View>
+                                        {tankerTypes.map((truck, index) => (
+                                            <TouchableNativeFeedback key={truck.id} onPress={() => setTypeOfTanker(truck)} style={{ marginBottom: 9, }} >
+                                                <View >
+                                                    <ThemedText  >{truck.name}</ThemedText>
+                                                    <ThemedText >{truck.description}</ThemedText>
+                                                    {truck.products && truck.products.length > 0 && (
+                                                        <ThemedText >Products: {truck.products.join(', ')}</ThemedText>
+                                                    )}
+
+                                                </View>
+                                            </TouchableNativeFeedback>
+                                        ))}
+                                    </View>}
+
+
+
+                                    <Divider style={{ marginVertical: wp(0) }} />
+
+
+
+
+                                    <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, marginBottom: wp(3) }}>
+                                        Truck Capacity
+                                    </ThemedText>
+
+
+
+                                    {selectedTruckType?.name !== "Tanker" && <ThemedText type="defaultSemiBold" style={{ textAlign: 'center', marginVertical: wp(4) }}>
+                                        Select Tonnage
+                                    </ThemedText>}
+                                    {selectedTruckType?.name !== "Tanker" && <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
+                                        {tonneSizes.map((tonnesize, index) =>
+                                            <>
+                                                <TouchableNativeFeedback key={index} onPress={() => setTruckCapacity(tonnesize)}>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                        <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
+                                                            {tonnesize}
+                                                        </ThemedText>
+                                                        <CheckBox
+                                                            containerStyle={{ padding: wp(1) }}
+                                                            checked={truckCapacity === tonnesize}
+                                                            onPress={() => setTruckCapacity(tonnesize)}
+                                                            uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
+                                                            checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
+                                                        />
+                                                    </View>
+                                                </TouchableNativeFeedback>
+                                                {tonneSizes.length > index + 1 &&
+                                                    <Divider style={{ marginVertical: wp(0) }} />
+                                                }
+                                            </>
+                                        )}
+
+
+                                    </View>}
+
+
+
+                                    {selectedTruckType?.name === "Tanker" && <ThemedText type="defaultSemiBold" style={{ textAlign: 'center', marginVertical: wp(4) }}>
+                                        Select Litres
+                                    </ThemedText>}
+                                    {selectedTruckType?.name === "Tanker" && <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
+                                        {litresCapacity.map((litres, index) =>
+                                            <View key={index}>
+                                                <TouchableNativeFeedback onPress={() => setDspTruckCapacity(litres)}>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                        <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
+                                                            {litres}
+                                                        </ThemedText>
+                                                        <CheckBox
+                                                            containerStyle={{ padding: wp(1) }}
+                                                            checked={dspTruckCpacity === litres}
+                                                            onPress={() => setDspTruckCapacity(litres)}
+                                                            uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
+                                                            checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
+                                                        />
+                                                    </View>
+                                                </TouchableNativeFeedback>
+                                                {litresCapacity.length > index + 1 &&
+                                                    <Divider style={{ marginVertical: wp(0) }} />
+                                                }
+                                            </View>
+                                        )}
+
+
+                                    </View>}
+
+
+
 
 
                                 </View>

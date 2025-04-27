@@ -13,6 +13,9 @@ import SwithComponent from '@/components/Switch'
 import { BlurView } from 'expo-blur'
 import Button from '@/components/Button'
 
+import { SpecifyTruckDetails } from '@/components/SpecifyTruckDetails'
+import { TruckTypeProps } from '@/types/types'
+
 const Index = () => {
 
     const background = useThemeColor('backgroundLight')
@@ -30,7 +33,7 @@ const Index = () => {
 
 
 
-    const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
+    // const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
 
     const [trucks, setTrucks] = useState<Truck[] | null>(null)
 
@@ -41,7 +44,7 @@ const Index = () => {
 
     useEffect(() => {
         LoadTructs();
-    }, [selectedTruckType])
+    }, [])
 
     const LoadTructs = async () => {
 
@@ -83,11 +86,58 @@ const Index = () => {
         setFilterVerified(false)
     }
 
+   const [locationTruckS, setLocationTruckS] = useState<string>(""); // Track local or international selection
+    const [locaOpLocTruckS, setLocaOpLocTruckS] = useState<string>(""); // Track selected local country
+    const [intOpLocTruckS, setIntOpLocTruckS] = useState<string[]>([]); // Track international countries
 
+
+
+
+    const [otherTruckType, setOtherTruckType] = React.useState<string>("")
+
+
+
+
+    const [truckConfig , setTruckConfig]=React.useState("")
+    const [otherTruckConfig , setOtherTruckConfig]=React.useState("")
+
+    const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
+    const [truckCapacity, setTruckCapacity] = useState("")
+
+    const [dspSpecTruckDet, setDspSpecTruckDet] = React.useState<boolean>(false)
+
+
+    const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
+    
 
 
     return (
         <View style={{ flex: 1 }}>
+
+  <SpecifyTruckDetails
+                dspSpecTruckDet={showfilter}
+                setDspSpecTruckDet={setShowfilter}
+                // Truck Tonnage
+                dspTruckCpacity={dspTruckCpacity}
+                setDspTruckCapacity={setDspTruckCapacity}
+                truckCapacity={truckCapacity}
+                setTruckCapacity={setTruckCapacity}
+                // Selecting Truck Type
+                selectedTruckType={selectedTruckType}
+                setSelectedTruckType={setSelectedTruckType}
+                otherTruckType={otherTruckType}
+                setOtherTruckType={setOtherTruckType}
+                // Selecting A country and location
+                location={locationTruckS}
+                setLocation={setLocationTruckS}
+                intOpLoc={intOpLocTruckS}
+                setIntOpLoc={setIntOpLocTruckS}
+                setLocaOpLoc={setLocaOpLocTruckS}
+                locaOpLoc={locaOpLocTruckS}
+            />
+
+
+{/* 
             <SafeAreaView>
                 <Modal
                     visible={showfilter}
@@ -186,7 +236,7 @@ const Index = () => {
                 </Modal>
 
                 
-            </SafeAreaView>
+            </SafeAreaView> */}
             <View style={[styles.container, { backgroundColor: bg }]}>
                 <View style={{
                     backgroundColor: bg,
@@ -242,89 +292,58 @@ const Index = () => {
                     ListHeaderComponent={() => <>
                         <View style={{ marginHorizontal: wp(1), marginBottom: wp(1), }}>
 
-                            <TouchableOpacity onPress={()=>setSelectedTruckType(null)}>
-
-                                {selectedTruckType?.name&&  <ThemedText style={{alignSelf:'flex-end'}}>Truck type</ThemedText>}
-                            </TouchableOpacity>
-
-                                {!selectedTruckType?.name&& <ScrollView horizontal contentContainerStyle={{ gap: wp(2) }} style={{marginBottom:10 , marginLeft:5 , marginTop:7}}>
-                                    {truckTypes.map((item) => (
-                                        <TouchableOpacity
-                                            key={item.id}
-                                            onPress={() => {
-                                                setSelectedTruckType(item);
-                                                console.log('set ,', item);
-
-                                            }}
-                                            style={{
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                padding: wp(2),
-                                                paddingRight: wp(4),
-                                                marginBottom: wp(2),
-                                                backgroundColor: selectedTruckType?.id === item.id ? accent + '14' : background,
-                                                borderRadius: wp(4),
-                                                height:57 ,
-                                            }}
-                                        >
-                                            <Image
-                                                style={{ width: wp(19), height: wp(8), borderRadius: wp(2), marginRight: wp(2) }}
-                                                source={item.image}
-                                            />
-                                            <View>
-                                                <ThemedText type="subtitle">{item.name}</ThemedText>
-                                                <Ionicons style={{ alignSelf: 'flex-end' }} name={selectedTruckType?.id === item.id ? "checkmark-circle" : 'ellipse-outline'} size={wp(4)} color={accent} />
-                                            </View>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>}
+                          
 
 
 
 
 
 
-                            {(selectedTruckType || filterVerified || truckTonnage !== 'All') &&
-                                <TouchableOpacity onPress={() => setShowfilter(true)} style={{ padding: wp(2), flexDirection: 'row', backgroundColor: background, borderRadius: wp(6), marginBottom: wp(2), position: 'relative' }}>
-                                    {selectedTruckType &&
-                                        <View style={{ marginRight: wp(2) }}>
-                                            <Image style={{ width: wp(20), height: wp(15), borderRadius: wp(4) }} source={selectedTruckType.image} />
-                                        </View>
-                                    }
+                            {(selectedTruckType  || truckTonnage !== 'All') &&
+                                <TouchableOpacity onPress={() => setDspSpecTruckDet(true)} style={{ padding: wp(2), flexDirection: 'row', backgroundColor: background, borderRadius: wp(6), marginBottom: wp(2), position: 'relative', }}>
+            {selectedTruckType &&
+              <View style={{ marginRight: wp(2) }}>
+                <Image style={{ width: wp(20), height: wp(15), borderRadius: wp(4) }} source={selectedTruckType.image} />
+              </View>
+            }
 
-                                    <View style={{ flex: 1, justifyContent: 'space-between' }}>
-                                        {selectedTruckType &&
-                                            <ThemedText type='subtitle' style={{ flex: 1 }}>
-                                                {selectedTruckType?.name}
-                                            </ThemedText>
-                                        }
-                                        <ScrollView horizontal contentContainerStyle={{ gap: wp(2) }}>
-                                            {truckTonnage !== 'All' &&
-                                                <View style={[styles.countryButton, { backgroundColor: '#73c8a9' },]} >
-                                                    <ThemedText style={{ color: 'white' }}>
-                                                        {truckTonnage}
-                                                    </ThemedText>
-                                                </View>
-                                            }
-                                            {filterVerified &&
-                                                <View style={[styles.countryButton, { backgroundColor: '#73c8a9' },]} >
-                                                    <ThemedText style={{ color: 'white' }}>
-                                                        Verified Only
-                                                    </ThemedText>
-                                                </View>
-                                            }
+            <View style={{ flex: 1, justifyContent: 'center' }}>
+              {selectedTruckType &&
+                <ThemedText type='subtitle' style={{ marginBottom: wp(1) }}>
+                  {selectedTruckType?.name}
+                </ThemedText>
+              }
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: wp(2), alignItems: 'center' }}
+                style={{ flexGrow: 0 }}
+              >
+                {truckCapacity &&
+                  <View style={[styles.countryButton, { backgroundColor: '#73c8a9' }]}>
+                    <ThemedText style={{ color: 'white' }}>
+                      {truckCapacity}
+                    </ThemedText>
+                  </View>
+                }
+                {(intOpLocTruckS || locaOpLocTruckS) &&
+                  <View style={[styles.countryButton, { backgroundColor: '#73c8a9' }]}>
+                    <ThemedText style={{ color: 'white' }}>
+                      {locaOpLocTruckS || intOpLocTruckS}
+                    </ThemedText>
+                  </View>
+                }
+              </ScrollView>
+            </View>
 
-                                        </ScrollView>
-
-                                    </View>
-                                    <View style={{ overflow: 'hidden', borderRadius: wp(10), position: 'absolute', right: wp(4), top: wp(2) }}>
-                                        <TouchableNativeFeedback onPress={() => clearFilter()}>
-                                            <View style={{ padding: wp(2) }}>
-                                                <Ionicons name={'close'} size={wp(4)} color={icon} />
-                                            </View>
-                                        </TouchableNativeFeedback>
-                                    </View>
-                                </TouchableOpacity>
+            <View style={{ overflow: 'hidden', borderRadius: wp(10), position: 'absolute', right: wp(4), top: wp(2) }}>
+              <TouchableNativeFeedback onPress={() => clearFilter()}>
+                <View style={{ padding: wp(2) }}>
+                  <Ionicons name={'close'} size={wp(4)} color={icon} />
+                </View>
+              </TouchableNativeFeedback>
+            </View>
+          </TouchableOpacity>
                             }
 
                             
