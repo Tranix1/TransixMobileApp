@@ -6,7 +6,7 @@ import CheckOutMakePayments from "@/components/CheckOutPayment";
 import { ErrorOverlay } from "@/components/ErrorOverLay";
 import { handleMakePayment } from "@/payments/operations";
 
-import { ContractsFormDataScndType } from "@/types/types";
+import { ContractsFormDataScndType, TankerTruckProps } from "@/types/types";
 import { ContractsFormDataType } from "@/types/types";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -134,14 +134,55 @@ const NewContract = () => {
     const truckTypes = [
         { id: 0, name: 'Flat deck', description: 'Ideal for transporting oversized or heavy loads.', image: require('@/assets/images/Trucks/images (2).jpeg') },
         { id: 1, name: 'Bulk Trailer', description: 'Used for carrying bulk materials like grains or minerals.', image: require('@/assets/images/Trucks/download (1).jpeg') },
-        { id: 2, name: 'Low Bed', description: 'Designed for transporting heavy machinery and equipment.', image: require('@/assets/images/Trucks/H805f1f51529345648d1da9e5fcd6807e2.jpg') },
+        { id: 2, name: 'Dropside', description: 'Truck with removable sides, perfect for transporting heavy and oversized goods.', image: require('@/assets/images/Trucks/8-ton-drop-side-truck.jpg') },
         { id: 3, name: 'Side Tipper', description: 'Suitable for unloading materials like sand or gravel.', image: require('@/assets/images/Trucks/images (5).jpeg') },
         { id: 4, name: 'Tautliner', description: 'Versatile truck with curtains for easy loading and unloading.', image: require('@/assets/images/Trucks/download (3).jpeg') },
         { id: 5, name: 'Tanker', description: 'Used for transporting liquids like fuel or chemicals.', image: require('@/assets/images/Trucks/images (7).jpeg') },
-        { id: 6, name: 'Other', description: 'Custom or specialized truck types for unique needs.', image: require('@/assets/images/Trucks/download (4).jpeg') },
+
+        { id: 6, name: 'Box', description: 'Enclosed truck ideal for transporting packaged goods, furniture, and electronics.', image: require('@/assets/images/Trucks/download (8).jpeg') },
+
+        { id: 7, name: 'Low Bed', description: 'Designed for transporting heavy machinery and equipment.', image: require('@/assets/images/Trucks/H805f1f51529345648d1da9e5fcd6807e2.jpg') },
+
+        { id: 8, name: 'Refrigerated', description: 'Temperature-controlled truck used for transporting perishable goods like food and medicine.', image: require('@/assets/images/Trucks/download (7).jpeg') },
+
+        { id: 9, name: 'Other', description: 'Custom or specialized truck types designed for unique transport needs.', image: require('@/assets/images/Trucks/download (4).jpeg') },
+
         // { id: 7, name: 'All', image: '' },
     ]
 
+
+    const tankerTypes = [
+        {
+            id: 0,
+            name: "Oil Tankers",
+            description: "Carry oil or its products.",
+            products: ["Crude oil", "Gasoline", "Diesel", "Jet fuel"]
+        },
+        {
+            id: 1,
+            name: "Chemical Tankers",
+            description: "Transport various liquid chemicals in bulk.",
+            products: ["Acids", "Vegetable oils", "Ethylene glycol", "Methanol"]
+        },
+        {
+            id: 2,
+            name: "Gas Carriers",
+            description: "Transport liquefied gases at very low temperatures or under high pressure.",
+            products: ["Liquefied Natural Gas (LNG)", "Liquefied Petroleum Gas (LPG)", "Propane", "Butane"]
+        },
+        {
+            id: 3,
+            name: "Food-Grade Tankers",
+            description: "Transporting liquid food products.",
+            products: ["Milk", "Juice", "Wine", "Edible oils"]
+        },
+        {
+            id: 4,
+            name: "Specialized Cargo Tankers",
+            description: "Tankers built for specific, unique liquid cargoes.",
+            products: ["Bitumen", "Slurry", "Molten sulfur", "Hydrogen"]
+        }
+    ];
 
 
 
@@ -394,12 +435,25 @@ const NewContract = () => {
 
 
     const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
+
     const [otherTruckType, setOtherTruckType] = React.useState<string>("")
+
+    const [typeOfTanker, setTypeOfTanker] = React.useState<TankerTruckProps | null>(null)
+
+
+
+    const [truckConfig, setTruckConfig] = React.useState("")
+    const [truckSuspension, setTruckSuspension] = React.useState("")
+
+    const [otherTruckSuspension, setOtherTruckSuspension] = React.useState("")
 
     const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
     const [truckCapacity, setTruckCapacity] = useState("")
 
     const [dspSpecTruckDet, setDspSpecTruckDet] = React.useState<boolean>(false)
+
+
+
 
     console.log(selectedTruckType)
 

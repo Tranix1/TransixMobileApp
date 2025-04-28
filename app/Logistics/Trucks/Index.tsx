@@ -31,7 +31,7 @@ const Index = () => {
 
 
 
-    const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
+    // const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
 
     const [trucks, setTrucks] = useState<Truck[]>([])
 
@@ -114,6 +114,31 @@ const Index = () => {
 
     return (
         <View style={{ flex: 1 }}>
+
+            <SpecifyTruckDetails
+                dspSpecTruckDet={showfilter}
+                setDspSpecTruckDet={setShowfilter}
+                // Truck Tonnage
+                dspTruckCpacity={dspTruckCpacity}
+                setDspTruckCapacity={setDspTruckCapacity}
+                truckCapacity={truckCapacity}
+                setTruckCapacity={setTruckCapacity}
+                // Selecting Truck Type
+                selectedTruckType={selectedTruckType}
+                setSelectedTruckType={setSelectedTruckType}
+                otherTruckType={otherTruckType}
+                setOtherTruckType={setOtherTruckType}
+                // Selecting A country and location
+                location={locationTruckS}
+                setLocation={setLocationTruckS}
+                intOpLoc={intOpLocTruckS}
+                setIntOpLoc={setIntOpLocTruckS}
+                setLocaOpLoc={setLocaOpLocTruckS}
+                locaOpLoc={locaOpLocTruckS}
+            />
+
+
+            {/* 
             <SafeAreaView>
                 <Modal
                     visible={showfilter}
@@ -359,69 +384,71 @@ const Index = () => {
                             } */}
 
 
-                        </View>
-                        {showfilter ?
-                            <>
+        </View>
+                        {
+        showfilter ?
+            <>
 
-                            </>
-                            :
-                            <View style={{}}>
+            </>
+            :
+            <View style={{}}>
 
 
-                            </View>
-                        }
+            </View>
+    }
 
-                        {/* <View style={{ borderBottomWidth: .5, borderColor: icon, marginTop: wp(4), marginBottom: wp(2) }} /> */}
+    {/* <View style={{ borderBottomWidth: .5, borderColor: icon, marginTop: wp(4), marginBottom: wp(2) }} /> */ }
 
                     </>}
-                    data={trucks}
-                    renderItem={({ item }) => (
-                        <TruckItemComponent truck={item} />
-                    )}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            colors={[accent]}
-                        />
+data = { trucks }
+renderItem = {({ item }) => (
+    <TruckItemComponent truck={item} />
+)}
+refreshControl = {
+                        < RefreshControl
+refreshing = { refreshing }
+onRefresh = { onRefresh }
+colors = { [accent]}
+    />
                     }
-                    ListEmptyComponent={<View style={{ minHeight: hp(80), justifyContent: 'center' }}>
+ListEmptyComponent = {< View style = {{ minHeight: hp(80), justifyContent: 'center' }}>
 
-                        <ThemedText type='defaultSemiBold' style={{ textAlign: 'center' }}>
-                            No Trucks to Display!
-                        </ThemedText>
-                    </View>}
-                    onEndReached={loadMoreTrucks}
-                    onEndReachedThreshold={.5}
-                    ListFooterComponent={
-                        <View style={{ marginBottom: wp(10), marginTop: wp(6) }}>
-                            {
-                                loadingMore ?
-                                    <View style={{ flexDirection: "row", gap: wp(4), alignItems: 'center', justifyContent: 'center' }}>
+    <ThemedText type='defaultSemiBold' style={{ textAlign: 'center' }}>
+        No Trucks to Display!
+    </ThemedText>
+                    </View >}
+onEndReached = { loadMoreTrucks }
+onEndReachedThreshold = { .5}
+ListFooterComponent = {
+                        < View style = {{ marginBottom: wp(10), marginTop: wp(6) }}>
+{
+    loadingMore?
+        <View style = {{ flexDirection: "row", gap: wp(4), alignItems: 'center', justifyContent: 'center' }
+} >
                                         <ThemedText type='tiny' style={{ color: icon }}>Loading More</ThemedText>
                                         <ActivityIndicator size="small" color={accent} />
-                                    </View>
+                                    </View >
                                     :
-                                    (!lastVisible && trucks.length > 0) ?
-                                        <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                                            <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>No more Trucks to Load
-                                            </ThemedText>
-                                            <Ionicons color={icon} style={{}} name='alert-circle-outline' size={wp(6)} />
+(!lastVisible && trucks.length > 0) ?
+    <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+        <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>No more Trucks to Load
+        </ThemedText>
+        <Ionicons color={icon} style={{}} name='alert-circle-outline' size={wp(6)} />
 
-                                        </View>
-                                        : null
+    </View>
+    : null
 
 
                             }
 
-                        </View>
+                        </View >
                     }
                 />
 
-            </View>
+            </View >
 
 
-        </View>
+        </View >
     )
 }
 

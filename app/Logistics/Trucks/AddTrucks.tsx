@@ -112,10 +112,7 @@ function AddTrucks() {
   const [driverDetails, setDriverDDsp] = useState(false)
 
   function togglrDriverDe() {
-    if (!formData.trailerType || !formData.maxloadCapacity || !location || !selectedTruckType?.name || (!intOpLoc && !locaOpLoc)) {
-      setDspFrstPageErr(true)
-      return
-    }
+   
 
     setTruckDDsp(false)
     setDriverDDsp(prev => !prev)
