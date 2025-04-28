@@ -4,8 +4,8 @@ import { ImageSourcePropType } from "react-native";
 export type TruckTypeProps = {
     id: number, name: string, image: ImageSourcePropType | undefined, description: string | undefined
 }
-export type TankerTruckProps={
-    id:number , name:string ,description:string , products: string[]
+export type TankerTruckProps = {
+    id: number, name: string, description: string, products: string[]
 }
 export type CountrySelectorProps = {
     location: string;
@@ -48,14 +48,7 @@ export type Truck = {
     userId: string;
     withDetails: boolean;
 };
-export type Load = {
-    id: string;
-    imageUrl: string;
-    destination: string,
-    location: string,
-    distance: string,
-    offeredAmmount: string
-}
+
 
 export type Product = {
     id: string;
@@ -64,7 +57,7 @@ export type Product = {
     price: string
 }
 
-export type LoadFormData ={
+export type LoadFormData = {
     typeofLoad: string
     fromLocation: string
     toLocation: string
@@ -72,32 +65,35 @@ export type LoadFormData ={
     paymentTerms: string
     requirements: string
     alertMsg: string
-    fuelAvai : string
+    fuelAvai: string
     additionalInfo: string
-    links : number
-    triaxle : string
-    returnRate : number 
-    returnLoad : string
-    returnTerms : string
+    links: number
+    triaxle: string
+    returnRate: number
+    returnLoad: string
+    returnTerms: string
 }
 export type Load = {
-        id : string ;
-        userId: string; 
-        companyName: string;
-        contact: string;
-        expoPushToken : string  ;
-        deletionTime : number;
-         timeStamp: {
+    id: string,
+    distance: string,
+
+    destination: string,
+    userId: string;
+    companyName: string;
+    contact: string;
+    expoPushToken: string;
+    deletionTime: number;
+    timeStamp: {
         nanoseconds: number;
         seconds: number;
-        };
-        currency : string
-        perTonne : boolean  
-        activeLoading : boolean
-        location : string
-        roundTrip : boolean 
-        isVerified : boolean
-}&LoadFormData
+    };
+    currency: string
+    perTonne: boolean
+    activeLoading: boolean
+    location: string
+    roundTrip: boolean
+    isVerified: boolean
+} & LoadFormData
 
 // export const Countries = [
 //     'Zimbabwe', 'South Africa', 'Zambia'
