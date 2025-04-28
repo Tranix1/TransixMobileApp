@@ -97,11 +97,11 @@ const Index = () => {
         setFilterVerified(false)
     }
 
-    const loadMoreQuestions = async () => {
+    const loadMoreTrucks = async () => {
 
         if (loadingMore || !lastVisible) return;
         setLoadingMore(true);
-        const result = await fetchDocuments('questions', 10, lastVisible);
+        const result = await fetchDocuments('Trucks', 10, lastVisible);
         if (result) {
             setTrucks([...trucks, ...result.data as Truck[]]);
             setLastVisible(result.lastVisible);
@@ -228,7 +228,7 @@ const Index = () => {
                     marginBottom: wp(1),
                 }} >
                     <View>
-                        <View style={{ marginLeft: 5, marginBottom: -5 }}>
+                        <View style={{}}>
                             <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
                                 <ThemedText type="title">
                                     Trucks
@@ -385,7 +385,13 @@ const Index = () => {
                             colors={[accent]}
                         />
                     }
-                    onEndReached={loadMoreQuestions}
+                    ListEmptyComponent={<View style={{ minHeight: hp(80), justifyContent: 'center' }}>
+
+                        <ThemedText type='defaultSemiBold' style={{ textAlign: 'center' }}>
+                            No Trucks to Display!
+                        </ThemedText>
+                    </View>}
+                    onEndReached={loadMoreTrucks}
                     onEndReachedThreshold={.5}
                     ListFooterComponent={
                         <View style={{ marginBottom: wp(10), marginTop: wp(6) }}>

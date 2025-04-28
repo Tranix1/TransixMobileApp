@@ -46,6 +46,21 @@ export type Truck = {
     userId: string;
     withDetails: boolean;
 };
+export type Load = {
+    id: string;
+    imageUrl: string;
+    destination: string,
+    location: string,
+    distance: string,
+    offeredAmmount: string
+}
+
+export type Product = {
+    id: string;
+    imageUrl: string;
+    location: string,
+    price: string
+}
 
 
 // export const Countries = [
