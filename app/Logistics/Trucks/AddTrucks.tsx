@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, TouchableOpacity, Image, ActivityIndicator, StyleSheet, ScrollView, TouchableNativeFeedback } from "react-native"
+import React, { useEffect, useState } from "react";
+import { View, TouchableOpacity, Image, ActivityIndicator, StyleSheet, ScrollView, TouchableNativeFeedback, SafeAreaView, Modal, ToastAndroid } from "react-native"
 import inputstyles from "../../components/styles/inputElement";
 
 import type { ImagePickerAsset } from 'expo-image-picker';
@@ -25,16 +25,22 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import { SpecifyTruckDetails } from "@/components/SpecifyTruckDetails";
 import { TruckTypeProps } from "@/types/types";
 
-import { Entypo, Ionicons } from "@expo/vector-icons";
+import { AntDesign, Entypo, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { hp, wp } from "@/constants/common";
 
 import { useThemeColor } from '@/hooks/useThemeColor'
-import { Dropdown } from "react-native-element-dropdown";
+import { Dropdown, SelectCountry } from "react-native-element-dropdown";
 import { useAuth } from "@/context/AuthContext";
+import { router } from "expo-router";
+import { namedQuery } from "firebase/firestore";
+import Divider from "@/components/Divider";
+import { cleanNumber } from "@/services/services";
+import Button from "@/components/Button";
 function AddTrucks() {
 
   const icon = useThemeColor('icon')
   const background = useThemeColor('backgroundLight')
+  const coolGray = useThemeColor('coolGray')
   // const {truckType ,username ,contact , isVerified,isBlackListed ,blackLWarning,blockVerifiedU , verifiedLoad , fromLocation  , toLocation ,expoPushToken ,verifyOngoing ,truckTonnageG} = route.params
 
   interface FormData {
@@ -44,44 +50,44 @@ function AddTrucks() {
     maxloadCapacity: string;
   }
 
-  const [formData, setFormData] = React.useState<FormData>({
+  const [formData, setFormData] = useState<FormData>({
     additionalInfo: "",
     trailerType: "",
     driverPhone: "",
     maxloadCapacity: "",
   });
 
-  const [countryCodeDriver, setCountryCodeDriver] = React.useState("")
-  const [callingCodeDriver, setCallingCodeDriver] = React.useState('');
+  const [countryCodeDriver, setCountryCodeDriver] = useState("")
+  const [callingCodeDriver, setCallingCodeDriver] = useState('');
 
   const handleCountrySelectDriver = (country: Country): void => {
     setCallingCodeDriver(country.cca2);
     setCountryCodeDriver(country.callingCode[0] || ''); // Use first calling code, fallback to ''
   };
 
-  const [countryCodeTrOwner, setCountryCodeTrOwner] = React.useState("")
-  const [callingCodeTrOwner, setCallingCodeTrOwner] = React.useState('');
+  const [countryCodeTrOwner, setCountryCodeTrOwner] = useState("")
+  const [callingCodeTrOwner, setCallingCodeTrOwner] = useState('');
 
   const handleCountrySelectTrOwner = (country: Country): void => {
     setCallingCodeTrOwner(country.cca2);
     setCountryCodeTrOwner(country.callingCode[0] || ""); // use first calling code
   };
 
-  const [ownerName, SetOwnerName] = React.useState('yaya');
-  const [onwerEmail, setOwnerEmail] = React.useState('');
-  const [ownerPhoneNum, setOwnerCall] = React.useState('');
+  const [ownerName, SetOwnerName] = useState('yaya');
+  const [onwerEmail, setOwnerEmail] = useState('');
+  const [ownerPhoneNum, setOwnerCall] = useState('');
 
-  const [getOwnerDetails, setOwnerDetails] = React.useState<any>({}); // Better to define an interface/type
+  const [getOwnerDetails, setOwnerDetails] = useState<any>({}); // Better to define an interface/type
 
-  React.useEffect(() => {
+  useEffect(() => {
     getDocById('truckOwnerDetails', setOwnerDetails);
   }, []);
 
   console.log(getOwnerDetails?.ownerName, "owner");
 
-  const [ownerNameAddDb, SetOwnerNameAddDb] = React.useState('');
-  const [ownerEmailAddDb, setOwnerEmailAddDb] = React.useState('');
-  const [ownerPhonNumAddDb, setOwnerPhoneNum] = React.useState('');
+  const [ownerNameAddDb, SetOwnerNameAddDb] = useState('');
+  const [ownerEmailAddDb, setOwnerEmailAddDb] = useState('');
+  const [ownerPhonNumAddDb, setOwnerPhoneNum] = useState('');
 
   const handleUpdateDriverDetails = async () => {
 
@@ -93,7 +99,7 @@ function AddTrucks() {
   const [intOpLoc, setIntOpLoc] = useState<string[]>([]); // Track international countries
 
 
-  const [truckDetails, setTruckDDsp] = React.useState(false)
+  const [truckDetails, setTruckDDsp] = useState(false)
 
   function togglrTruckDe() {
     setTruckDDsp(prev => !prev)
@@ -101,9 +107,9 @@ function AddTrucks() {
   }
 
 
-  const [dspFrstPageErr, setDspFrstPageErr] = React.useState<boolean>(false)
+  const [dspFrstPageErr, setDspFrstPageErr] = useState<boolean>(false)
 
-  const [driverDetails, setDriverDDsp] = React.useState(false)
+  const [driverDetails, setDriverDDsp] = useState(false)
 
   function togglrDriverDe() {
    
@@ -117,13 +123,14 @@ function AddTrucks() {
 
 
 
+
   const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
-  const [otherTruckType, setOtherTruckType] = React.useState<string>("")
+  const [otherTruckType, setOtherTruckType] = useState<string>("")
 
-  const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
-  let [truckCapacity, setTruckCapacity] = React.useState("")
+  const [dspTruckCpacity, setDspTruckCapacity] = useState<string>("")
+  let [truckCapacity, setTruckCapacity] = useState("")
 
-  const [dspSpecTruckDet, setDspSpecTruckDet] = React.useState<boolean>(false)
+  const [dspSpecTruckDet, setDspSpecTruckDet] = useState<boolean>(false)
 
 
   const clearFilter = () => {
@@ -135,9 +142,9 @@ function AddTrucks() {
   }
 
 
-  const [spinnerItem, setSpinnerItem] = React.useState(false);
-  const [addingDocUpdate, setAddingDocUpdate] = React.useState("")
-  const [uploadingImageUpdate, setUploadImageUpdate] = React.useState("")
+  const [spinnerItem, setSpinnerItem] = useState(false);
+  const [addingDocUpdate, setAddingDocUpdate] = useState("")
+  const [uploadingImageUpdate, setUploadImageUpdate] = useState("")
 
 
 
@@ -147,9 +154,14 @@ function AddTrucks() {
     setTruckDDsp(false)
 
 
+    if (images.length < 4) {
+      ToastAndroid.show('Please Add all the required Images before Submiting', ToastAndroid.SHORT)
+      return;
+    }
+
 
     let truckImage, truckBookImage, trailerBookF, trailerBookSc, driverLicense, driverPassport;
-
+    setSpinnerItem(true)
 
     if (images.length < 5 && spinnerItem && selectedTruckType?.name !== "Rigid") {
       alert("Add All reuired images")
@@ -243,11 +255,25 @@ function AddTrucks() {
     { id: 6, name: 'Other', image: require('@/assets/images/Trucks/download (4).jpeg') },
     // { id: 7, name: 'All', image: '' },
   ]
+  const trailerConfigurations = [
+    { id: 0, name: 'Good' },
+    { id: 1, name: 'Bad' },
+    { id: 2, name: 'Other' }
+  ]
+  const countryCodes = [
+    { id: 0, name: '+263' },
+    { id: 1, name: '+27' },
+    { id: 2, name: '+243' }
+  ]
+
+  const [countryCode, setCountryCode] = useState<{ id: number, name: string }>({ id: 0, name: '+263' })
+  const [selectedTrailerConfig, setSelectedTrailerConfig] = useState<{ id: number, name: string } | null>()
+  const [ownerdetails, setOwnerdetails] = useState(false)
 
   return (
     <ScreenWrapper>
 
-      <Heading page='Add Trucks' />
+      <Heading page='Add Truck' />
       {/* <TouchableOpacity onPress={() => setDspSpecTruckDet(true)} style={{ backgroundColor: "green" }} >
         <ThemedText> Click here Select Truck Details </ThemedText>
       </TouchableOpacity>
@@ -375,45 +401,7 @@ function AddTrucks() {
 
 
 
-        {!ownerName && <View style={{ position: 'absolute', alignSelf: 'center', backgroundColor: background, top: 100, zIndex: 500, padding: 20, }} >
-          <TouchableOpacity onPress={() => SetOwnerName("")} >
-            <ThemedText> CLick and close here  </ThemedText>
-            <ThemedText> Btn avaialble fr dvp will remove it  </ThemedText>
-          </TouchableOpacity>
 
-
-          <Input
-            placeholder="Owner Name"
-            value={ownerNameAddDb}
-            onChangeText={(text) => SetOwnerNameAddDb(text)}
-          />
-
-          {countryCodeTrOwner && <ThemedText style={{ textAlign: 'center', color: 'green', fontWeight: 'bold', }} >Country Code : {countryCodeTrOwner}</ThemedText>}
-          {!countryCodeTrOwner && <ThemedText>Click select country to choose country code</ThemedText>}
-
-          <Input
-            placeholder="Owner Phon num"
-            value={ownerPhonNumAddDb}
-            onChangeText={(text) => setOwnerPhoneNum(text)}
-          />
-
-          <Input
-            placeholder="Owner Email"
-            value={ownerEmailAddDb}
-            onChangeText={(text) => setOwnerEmailAddDb(text)}
-          />
-
-          <View style={{ flexDirection: 'row', paddingTop: 10, justifyContent: 'space-evenly' }}>
-
-
-            <TouchableOpacity onPress={handleUpdateDriverDetails} style={{ backgroundColor: 'green', width: 100, height: 35, borderRadius: 5 }}>
-              <ThemedText style={{ color: 'white' }}>Save</ThemedText>
-            </TouchableOpacity>
-
-          </View>
-
-
-        </View>}
 
 
 
@@ -424,14 +412,132 @@ function AddTrucks() {
 
         <ScrollView>
 
-          <View style={{ backgroundColor: background, padding: wp(4), borderRadius: wp(3), marginBottom: wp(2) }}>
-            <ThemedText type="subtitle">
-              {user?.displayName || 'No Organisation Name!'}
-            </ThemedText>
-            <ThemedText type="tiny">
-              {user?.email || 'No Organisation Name!'}
-            </ThemedText>
+          <View style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
+            <View>
+              <ThemedText type="defaultSemiBold">
+                {user?.organisation || 'Set Owner Name!'}
+              </ThemedText>
+              <ThemedText type="tiny">
+                {user?.email || 'No Organisation Name!'}
+              </ThemedText>
+            </View>
+            <TouchableOpacity onPress={() => setOwnerdetails(true)}>
+              <FontAwesome6 name="user-gear" size={18} color={icon} />
+            </TouchableOpacity>
           </View>
+
+
+          <Modal visible={ownerdetails} statusBarTranslucent animationType="slide">
+            <View style={{ margin: wp(4), marginTop: hp(6) }}>
+
+              <View style={{ gap: wp(2) }} >
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
+                  <TouchableOpacity onPress={() => setOwnerdetails(false)}>
+                    <AntDesign name="close" color={icon} size={wp(4)} />
+                  </TouchableOpacity>
+                  <View style={{}}>
+                    <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >OWNER DETAILS</ThemedText>
+                  </View>
+                  <TouchableOpacity>
+                  </TouchableOpacity>
+                </View>
+
+
+                <ThemedText>
+                  Owner's Name
+                </ThemedText>
+                <Input
+                  placeholder="Owner's Name"
+                  value={ownerNameAddDb}
+                  onChangeText={(text) => SetOwnerNameAddDb(text)}
+                />
+
+                <ThemedText>
+                  Owner's Phone Number
+                </ThemedText>
+                <Input
+                  Icon={<>
+                    <Dropdown
+                      style={[{ width: wp(15) }]}
+                      selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
+                      data={countryCodes}
+                      maxHeight={hp(60)}
+                      labelField="name"
+                      valueField="name"
+                      placeholder="+00"
+                      value={countryCode?.name}
+                      itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
+                      activeColor={background}
+
+                      containerStyle={{
+                        borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
+                        width: wp(45),
+                        shadowOffset: {
+                          width: 0,
+                          height: 9,
+                        },
+                        shadowOpacity: 0.50,
+                        shadowRadius: 12.35,
+
+                        elevation: 19,
+                        paddingVertical: wp(1)
+                      }}
+                      onChange={item => {
+                        console.log(item);
+                        setCountryCode(item);
+                      }}
+
+                      renderLeftIcon={() => <></>}
+                      renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
+                      renderItem={((item, selected) =>
+                        <>
+                          <View style={[styles.item, selected && {}]}>
+                            <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
+                            {selected && (
+                              <Ionicons
+                                color={icon}
+                                name='checkmark-outline'
+                                size={wp(5)}
+                              />
+                            )}
+                          </View>
+                          <Divider />
+                        </>
+                      )}
+
+                    />
+                    <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
+                  </>}
+                  value={cleanNumber(ownerPhonNumAddDb)}
+                  maxLength={11}
+                  placeholder="700 000 000"
+                  onChangeText={(text) => setOwnerPhoneNum(cleanNumber(text))}
+                  keyboardType="numeric"
+                />
+
+                <ThemedText>
+                  Owner's Email
+                </ThemedText>
+                <Input
+                  placeholder="Owner Email"
+                  value={ownerEmailAddDb}
+                  onChangeText={(text) => setOwnerEmailAddDb(text)}
+                />
+
+
+
+
+                <Button onPress={handleUpdateDriverDetails} title="Save" />
+
+
+
+              </View>
+            </View>
+
+          </Modal>
+
+
+
           <View style={{ alignItems: 'center' }}>
             {images[0] && !truckDetails && !driverDetails && <Image source={{ uri: images[0].uri }} style={{ width: wp(90), height: wp(90), marginBottom: 9, borderRadius: wp(4) }} />}
             {!images[0] &&
@@ -441,71 +547,146 @@ function AddTrucks() {
               </TouchableOpacity>}
 
           </View>
-
-          <Dropdown
-            style={[styles.dropdown,]}
-            placeholderStyle={[styles.placeholderStyle, { color: background }]}
-            selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
-            data={truckTypes}
-            maxHeight={hp(60)}
-            labelField="name"
-            valueField="name"
-            placeholder="Select Country"
-            value={selectedTruckType?.name}
-            itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-            activeColor={background}
-            containerStyle={{
-              borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-              shadowOffset: {
-                width: 0,
-                height: 9,
-              },
-              shadowOpacity: 0.50,
-              shadowRadius: 12.35,
-
-              elevation: 19,
-              paddingVertical: wp(1)
-            }}
-            onChange={item => {
-              console.log(item);
-              setSelectedTruckType(item);
-            }}
-
-            renderLeftIcon={() => <></>}
-            renderRightIcon={() => <Entypo name="chevron-thin-down" size={wp(4)} color={icon} />}
-            renderItem={((item) =>
-              <View style={[styles.item, item.Id === selectedTruckType?.id && {}]}>
-                <ThemedText style={[{ textAlign: 'left', flex: 1 }, item.value === selectedTruckType?.id && { color: '#0f9d58' }]}>{item.name}</ThemedText>
-                {item.value === selectedTruckType?.id && (
-                  <Ionicons
-                    color={icon}
-                    name='checkmark-outline'
-                    size={wp(5)}
-                  />
-                )}
-              </View>
-            )}
-
-          />
-
-          {spinnerItem && <ActivityIndicator size={34} />}
-
-          {!driverDetails && !truckDetails && <View style={{}}>
+          <View style={{ gap: wp(2) }}>
 
 
-            <Input
-              value={formData.trailerType}
-              placeholder="Trailer Config"
-              onChangeText={(text) => handleChange<FormData>(text, 'trailerType', setFormData)}
+            <ThemedText>
+              Truck Type<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+            <Dropdown
+              style={[styles.dropdown,]}
+              selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
+              data={truckTypes}
+              maxHeight={hp(60)}
+              labelField="name"
+              valueField="name"
+              placeholder="Select Truck"
+              value={selectedTruckType?.name}
+              itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
+              activeColor={background}
+              containerStyle={{
+                borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 9,
+                },
+                shadowOpacity: 0.50,
+                shadowRadius: 12.35,
+
+                elevation: 19,
+                paddingVertical: wp(1)
+              }}
+              onChange={item => {
+                console.log(item);
+                setSelectedTruckType(item);
+              }}
+
+              renderLeftIcon={() => <></>}
+              renderRightIcon={() => <Entypo name="chevron-thin-down" size={wp(4)} color={icon} />}
+              renderItem={((item) =>
+                <View style={[styles.item, item.Id === selectedTruckType?.id && {}]}>
+                  <ThemedText style={[{ textAlign: 'left', flex: 1 }, item.id === selectedTruckType?.id && { color: '#0f9d58' }]}>{item.name}</ThemedText>
+                  {item.id === selectedTruckType?.id && (
+                    <Ionicons
+                      color={icon}
+                      name='checkmark-outline'
+                      size={wp(5)}
+                    />
+                  )}
+                </View>
+              )}
+
             />
+            {selectedTruckType?.name === 'Other' &&
+              <>
+                <ThemedText>
+                  Other Truck Type<ThemedText color="red">*</ThemedText>
+                </ThemedText>
+                <Input
+                  value={formData.trailerType}
+                  placeholder="Other Truck Type"
+                  onChangeText={(text) => handleChange<FormData>(text, 'trailerType', setFormData)}
+                />
+              </>
+            }
 
+            {/* Trailer Configgg */}
+
+            <ThemedText>
+              Trailer Configuration<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+            <Dropdown
+              style={[styles.dropdown,]}
+              selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
+              data={trailerConfigurations}
+              maxHeight={hp(60)}
+              labelField="name"
+              valueField="name"
+              placeholder="Select Trailer Configuration"
+              value={selectedTrailerConfig?.name}
+              itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
+              activeColor={background}
+              containerStyle={{
+                borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 9,
+                },
+                shadowOpacity: 0.50,
+                shadowRadius: 12.35,
+
+                elevation: 19,
+                paddingVertical: wp(1)
+              }}
+              onChange={item => {
+                console.log(item);
+                setSelectedTrailerConfig(item);
+              }}
+
+              renderLeftIcon={() => <></>}
+              renderRightIcon={() => <Entypo name="chevron-thin-down" size={wp(4)} color={icon} />}
+              renderItem={((item) =>
+                <View style={[styles.item, item.Id === selectedTruckType?.id && {}]}>
+                  <ThemedText style={[{ textAlign: 'left', flex: 1 }, item.id === selectedTruckType?.id && { color: '#0f9d58' }]}>{item.name}</ThemedText>
+                  {item.id === selectedTruckType?.id && (
+                    <Ionicons
+                      color={icon}
+                      name='checkmark-outline'
+                      size={wp(5)}
+                    />
+                  )}
+                </View>
+              )}
+
+            />
+            {
+              selectedTrailerConfig?.name === 'Other' &&
+              <>
+                <ThemedText>
+                  Other Trailer Configuration<ThemedText color="red">*</ThemedText>
+                </ThemedText>
+                <Input
+                  value={formData.trailerType}
+                  placeholder="Trailer Config"
+                  onChangeText={(text) => handleChange<FormData>(text, 'trailerType', setFormData)}
+                />
+              </>
+            }
+            <ThemedText>
+              Maximum Load Capacity<ThemedText color="red">*</ThemedText>
+            </ThemedText>
             <Input
               value={formData.maxloadCapacity}
-              placeholder="maximumWheight"
+              keyboardType="number-pad"
+              placeholder="0.0t"
               onChangeText={(text) => handleChange<FormData>(text, 'maxloadCapacity', setFormData)}
             />
+
+            <ThemedText>
+              Additional Information<ThemedText color="red">*</ThemedText>
+            </ThemedText>
             <Input
-              value={formData.additionalInfo}
+              value={formData.additionalInfo} multiline numberOfLines={8} containerStyles={{ minHeight: hp(8), justifyContent: 'flex-start' }}
               placeholder="Additional Information"
               onChangeText={(text) => handleChange<FormData>(text, 'additionalInfo', setFormData)}
             />
@@ -515,157 +696,188 @@ function AddTrucks() {
               <ThemedText style={{ flexWrap: 'wrap', }}>Selected: {intOpLoc.join(", ")}</ThemedText>
             )}
 
-            <TouchableOpacity onPress={togglrDriverDe} style={styles.nextPageBtn} >
+            {/* <TouchableOpacity onPress={togglrDriverDe} style={styles.nextPageBtn} >
               <ThemedText style={{ fontWeight: "bold", color: 'white', fontSize: 16 }}>Done NEXT PAGE</ThemedText>
-            </TouchableOpacity>
-          </View>}
+            </TouchableOpacity> */}
+            <Divider />
 
 
-
-          {<View>
-
-            <View style={{ alignSelf: 'center' }}>
-
-              {(!images[0] && !formData.trailerType || !formData.maxloadCapacity) && <ThemedText>Fill in all the Information </ThemedText>}
-              {(!images[0] && !formData.trailerType || !formData.maxloadCapacity) && <ThemedText>To add truck and driver details </ThemedText>}
+            <View style={{ marginVertical: wp(4) }}>
+              <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >DRIVER DETAILS</ThemedText>
             </View>
 
-
-            {driverDetails && <View style={{ justifyContent: 'center' }} >
-
-              <ThemedText>Driver Details</ThemedText>
-
-
-
-
-              {!countryCodeDriver && (
-                <View style={{
-                  borderWidth: 1,
-                  borderColor: '#ccc',
-                  borderRadius: 10,
-                  padding: 10,
-                  backgroundColor: 'green',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                }}>
-                  <CountryPicker
-                    countryCode={callingCodeDriver as CountryCode}
-                    withCountryNameButton={true}
-                    withCallingCode={true}
-                    withFilter={true}
-                    onSelect={handleCountrySelectDriver}
-                  />
-                </View>
-              )}
-
-              {/*  */}
-              {countryCodeDriver && <ThemedText style={{ textAlign: 'center', color: 'green', fontWeight: 'bold', }} >Country Code : {countryCodeDriver}</ThemedText>}
-              {!countryCodeDriver && <ThemedText>Click select country to choose country code</ThemedText>}
-              <Input
-                value={formData.driverPhone}
-                placeholder="driverPhone"
-                onChangeText={(text) => handleChange<FormData>(text, 'driverPhone', setFormData)}
-                keyboardType="numeric"
+            {/* 
+          {!countryCodeDriver && (
+            <View style={{
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 10,
+              padding: 10,
+              backgroundColor: 'green',
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}>
+              <CountryPicker
+                countryCode={callingCodeDriver as CountryCode}
+                withCountryNameButton={true}
+                withCallingCode={true}
+                withFilter={true}
+                onSelect={handleCountrySelectDriver}
               />
+            </View>
+          )} */}
+
+            {/*  */}
+            {/* {countryCodeDriver && <ThemedText style={{ textAlign: 'center', color: 'green', fontWeight: 'bold', }} >Country Code : {countryCodeDriver}</ThemedText>} */}
+            {/* {!countryCodeDriver && <ThemedText>Click select country to choose country code</ThemedText>} */}
+
+            <ThemedText>
+              Drivers Phone Number<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+            <Input
+              Icon={<>
+                <Dropdown
+                  style={[{ width: wp(15) }]}
+                  selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
+                  data={countryCodes}
+                  maxHeight={hp(60)}
+                  labelField="name"
+                  valueField="name"
+                  placeholder="+00"
+                  value={countryCode?.name}
+                  itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
+                  activeColor={background}
+
+                  containerStyle={{
+                    borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
+                    width: wp(45),
+                    shadowOffset: {
+                      width: 0,
+                      height: 9,
+                    },
+                    shadowOpacity: 0.50,
+                    shadowRadius: 12.35,
+
+                    elevation: 19,
+                    paddingVertical: wp(1)
+                  }}
+                  onChange={item => {
+                    console.log(item);
+                    setCountryCode(item);
+                  }}
+
+                  renderLeftIcon={() => <></>}
+                  renderRightIcon={() => <Entypo name="chevron-thin-down" size={wp(4)} color={icon} />}
+                  renderItem={((item, selected) =>
+                    <>
+                      <View style={[styles.item, selected && {}]}>
+                        <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
+                        {selected && (
+                          <Ionicons
+                            color={icon}
+                            name='checkmark-outline'
+                            size={wp(5)}
+                          />
+                        )}
+                      </View>
+                      <Divider />
+                    </>
+                  )}
+                />
+                <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
+              </>}
+              value={cleanNumber(formData.driverPhone)}
+              placeholder="700 000 000"
+              onChangeText={(text) => handleChange<FormData>(cleanNumber(text), 'driverPhone', setFormData)}
+              keyboardType="numeric"
+            />
+
+            <ThemedText>
+              Drivers Passport Image<ThemedText color="red">*</ThemedText>
+            </ThemedText>
 
 
-              {images[1] && !formData.driverPhone && <ThemedText>Dont forget to Enter driver Phone number</ThemedText>}
-
-              {images[1] && <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >DRIVER PASSPORT IMAGE</ThemedText>}
-              {images[1] && <Image source={{ uri: images[1].uri }} style={{ width: 200, height: 200, margin: 7 }} />}
-              {images[0] && !images[1] && <TouchableOpacity onPress={() => selectManyImages(setImages)} style={{ marginBottom: 9, backgroundColor: '#6a0c0c', height: 30, width: 150, justifyContent: 'center', alignSelf: 'center' }}>
-                <ThemedText style={{ backgroundColor: 'white', textAlign: 'center', color: 'black' }} >Driver PASSPORT</ThemedText>
-
-              </TouchableOpacity>}
-
-
-
-              {images[2] && <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >DRIVER ID IMAGE</ThemedText>}
-
-              {images[2] && <Image source={{ uri: images[2].uri }} style={{ width: 200, height: 200, margin: 7 }} />}
-              {images[0] && images[1] && !images[2] && <TouchableOpacity onPress={() => selectManyImages(setImages)} style={{ marginBottom: 9, backgroundColor: '#6a0c0c', height: 30, width: 150, justifyContent: 'center', alignSelf: 'center' }}>
-                <ThemedText style={{ backgroundColor: 'white', textAlign: 'center', color: 'black' }} >Driver Id Image </ThemedText>
-              </TouchableOpacity>}
-
-              {images[2] && !formData.driverPhone && <ThemedText>Enter the driver Phone number to continue</ThemedText>}
-              {images[2] && formData.driverPhone && <TouchableOpacity onPress={togglrTruckDe} style={styles.nextPageBtn} >
-                <ThemedText style={{ fontWeight: "bold", color: 'white', fontSize: 16 }}>Done NEXT PAGE</ThemedText>
-              </TouchableOpacity>}
-
-            </View>}
-
-            {images[3] && !truckDetails && !driverDetails && <TouchableOpacity onPress={togglrTruckDe} style={styles.buttonSelectStyle} >
-              <ThemedText  >Truck Details</ThemedText>
-            </TouchableOpacity>}
-
-            {truckDetails && <View >
-              <ThemedText>Truck Details</ThemedText>
+            {images[1] ?
+              <Image source={{ uri: images[1]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
+              :
+              <TouchableOpacity onPress={() => (images[0] && !images[1]) ? selectManyImages(setImages) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
+                <ThemedText color={icon + "4c"}>Add Drivers Passport<ThemedText color="red">*</ThemedText></ThemedText>
+              </TouchableOpacity>
+            }
 
 
-              <View style={{ justifyContent: 'center' }} >
-                {images[3] && <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >HORSE REG BOOK IMAGE</ThemedText>}
-                {images[3] && <Image source={{ uri: images[3].uri }} style={{ width: 200, height: 200, margin: 7 }} />}
-                {images[0] && images[1] && images[2] && !images[3] && <TouchableOpacity onPress={() => selectManyImages(setImages)} style={{ marginBottom: 9, backgroundColor: '#6a0c0c', height: 30, width: 150, justifyContent: 'center', alignSelf: 'center' }}>
-                  <ThemedText style={{ backgroundColor: 'white', color: 'black' }} >horse Reg Book Image </ThemedText>
-                </TouchableOpacity>}
+            <ThemedText>
+              Drivers ID Image<ThemedText color="red">*</ThemedText>
+            </ThemedText>
 
 
+            {images[2] ?
+              <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
+              :
+              <TouchableOpacity onPress={() => (images[0] && images[1]) ? selectManyImages(setImages) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
+                <ThemedText color={icon + "4c"}>Add ID Passport<ThemedText color="red">*</ThemedText></ThemedText>
+              </TouchableOpacity>
+            }
+            <Divider />
 
-                {images[4] && <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >Trailer Book Image</ThemedText>}
-                {images[4] && <Image source={{ uri: images[4].uri }} style={{ width: 200, height: 200, margin: 7 }} />}
-                {images[0] && images[1] && images[2] && images[3] && !images[4] && <ThemedText>First Trailer reg</ThemedText>}
-                {images[0] && images[1] && images[2] && images[3] && !images[4] && <TouchableOpacity onPress={() => selectManyImages(setImages)} style={{ marginBottom: 9, backgroundColor: '#6a0c0c', height: 30, width: 150, justifyContent: 'center', alignSelf: 'center' }}>
-                  <ThemedText style={{ backgroundColor: 'white', color: 'black' }} >Trailer Reg Book</ThemedText>
-                </TouchableOpacity>}
-              </View>
+            <View style={{ marginVertical: wp(4) }}>
+              <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >TRUCK DETAILS</ThemedText>
+            </View>
 
-              <View>
+            <View style={{ gap: wp(2) }}>
 
-                {images[5] && <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >TRAILER 2 REG BOOK IMAGE</ThemedText>}
-                {images[5] && <Image source={{ uri: images[5].uri }} style={{ width: 200, height: 200, margin: 7 }} />}
-
-                {images[0] && images[1] && images[2] && images[3] && images[4] && !images[5] && <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >Add If available or continue to add driver details</ThemedText>}
-                {images[4] && !images[5] && <ThemedText>Trailer 2 Reg </ThemedText>}
-                {images[0] && images[1] && images[2] && images[3] && images[4] && !images[5] && <TouchableOpacity onPress={() => selectManyImages(setImages)} style={{ marginBottom: 9, backgroundColor: '#6a0c0c', height: 30, width: 150, justifyContent: 'center', alignSelf: 'center' }}>
-                  <ThemedText style={{ backgroundColor: 'white', color: 'black' }} >Book Image </ThemedText>
-                </TouchableOpacity>}
-              </View>
-
-
-            </View>}
+              <ThemedText>
+                Horse Reg Book Image
+              </ThemedText>
 
 
+              {images[3] ?
+                <Image source={{ uri: images[3]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
+                :
+                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2]) ? selectManyImages(setImages) : ToastAndroid.show('Please add driver id image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                  <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
+                  <ThemedText color={icon + "4c"}>Horse Reg Book Image<ThemedText color="red">*</ThemedText></ThemedText>
+                </TouchableOpacity>
+              }
 
 
+              <ThemedText>
+                Trailer Book Image
+              </ThemedText>
 
 
-          </View>}
+              {images[4] ?
+                <Image source={{ uri: images[4]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
+                :
+                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3]) ? selectManyImages(setImages) : ToastAndroid.show('Please add horse reg image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                  <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
+                  <ThemedText color={icon + "4c"}>Trailer Book Image<ThemedText color="red">*</ThemedText></ThemedText>
+                </TouchableOpacity>
+              }
+
+              <ThemedText>
+                Trailer 2 Book Image (If Available)
+              </ThemedText>
 
 
+              {images[5] ?
+                <Image source={{ uri: images[5]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
+                :
+                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3] && images[4]) ? selectManyImages(setImages) : ToastAndroid.show('Please add trailer 1 book image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                  <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
+                  <ThemedText color={icon + "4c"}>Trailer 2 Book Image (optional)<ThemedText color="red">*</ThemedText></ThemedText>
+                </TouchableOpacity>
+              }
+            </View>
+          </View>
+          <View style={{ marginVertical: wp(4), marginBottom: hp(8), gap: wp(3) }}>
 
+            <ThemedText type="tiny" style={{ textAlign: 'center' }} color={coolGray}>{spinnerItem && 'The truck is being added Please wait!'} </ThemedText>
+            <Button loading={spinnerItem} title="SUBMIT" onPress={handleSubmit} />
+          </View>
 
-
-
-          {/* 
-    {!spinnerItem&&!verifiedLoad &&!isVerified?  <TouchableOpacity onPress={handleSubmit} style={{alignSelf :"center", backgroundColor : '#6a0c0c' , width : 100 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',marginTop:5}} >
-
-        <Text style={{color:'white'}} >submit</Text>
-
-        </TouchableOpacity>:
-        <Text style={{alignSelf:"center",fontStyle:'italic'}} >The truck is being added Please wait </Text>
-        } */}
-
-
-          {!spinnerItem ? images.length >= 5 && <TouchableOpacity onPress={handleSubmit} style={{ alignSelf: "center", backgroundColor: '#6a0c0c', width: 100, height: 30, borderRadius: 5, alignItems: 'center', justifyContent: 'center', marginTop: 5 }} >
-
-            <ThemedText style={{ color: 'white' }} >submit</ThemedText>
-
-          </TouchableOpacity> :
-            <ThemedText style={{ alignSelf: "center", fontStyle: 'italic' }} >The truck is being added Please wait </ThemedText>
-          }
-
-
-          <View style={{ height: 300 }} ></View>
         </ScrollView>
       </View>
 
@@ -733,6 +945,7 @@ const styles = StyleSheet.create({
     padding: wp(3),
     borderWidth: 1,
     borderColor: '#ccc',
+    paddingVertical: wp(4),
     borderRadius: 12,
     paddingHorizontal: 16,
     marginBottom: 16,

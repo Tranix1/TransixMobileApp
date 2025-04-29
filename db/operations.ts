@@ -19,7 +19,7 @@ export const addDocument = async (
         const docRef = await addDoc(collection(db, collectionName), {
             ...data,
             timeStamp: serverTimestamp(),
-            userId:auth.currentUser?.uid 
+            userId: auth.currentUser?.uid
         });
         onStatusUpdate("Doneee submitting to db");
         return docRef.id;
@@ -65,14 +65,28 @@ export const deleteDocument = async (collectionName: string, docId: string) => {
  * @param collectionName - The name of the Firestore collection.
  * @param filters - Optional filters for the query.
  */
-export const fetchDocuments = async (collectionName: string, filters: Array<any> = []) => {
+export const fetchDocuments = async (
+    collectionName: string,
+    limitCount: number = 10,
+    startAfterDoc?: any,
+    filters: Array<any> = []
+) => {
     try {
-        let dataQuery: Query<DocumentData> = collection(db, collectionName);
+        let dataQuery: Query<DocumentData> = query(collection(db, collectionName), limit(limitCount));
+
+        if (startAfterDoc) {
+            dataQuery = query(dataQuery, startAfter(startAfterDoc));
+        }
+
         if (filters.length > 0) {
             dataQuery = query(dataQuery, ...filters);
         }
+
         const querySnapshot = await getDocs(dataQuery);
-        return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+        const data = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+        return { data, lastVisible };
     } catch (error) {
         console.error("Error fetching documents:", error);
         throw error;
@@ -171,14 +185,14 @@ export const checkDocumentExists = async (collectionName: string, filters: Array
 //     }
 // };
 
-export const setDocuments = async (dbName:string , userData: object) => {
+export const setDocuments = async (dbName: string, userData: object) => {
     try {
-        if(auth.currentUser){
+        if (auth.currentUser) {
 
-        const userRef = doc(db,dbName , auth.currentUser?.uid); // Custom ID
-        await setDoc(userRef, userData, { merge: true });
+            const userRef = doc(db, dbName, auth.currentUser?.uid); // Custom ID
+            await setDoc(userRef, userData, { merge: true });
 
-        return true;
+            return true;
         }
     } catch (error) {
         console.error("Error adding user:", error);
@@ -187,24 +201,24 @@ export const setDocuments = async (dbName:string , userData: object) => {
 };
 
 export const getDocById = async (
-   dbName : string , 
-  setDocDetails: React.Dispatch<React.SetStateAction<any>> // use a better type if possible
+    dbName: string,
+    setDocDetails: React.Dispatch<React.SetStateAction<any>> // use a better type if possible
 ) => {
-  try {
-    if (auth.currentUser) {
-      const docRef = doc(db,dbName , auth.currentUser.uid);
+    try {
+        if (auth.currentUser) {
+            const docRef = doc(db, dbName, auth.currentUser.uid);
 
-      onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-          setDocDetails(docSnap.data()); // ✅ get the actual data
-        } else {
-          console.log('No such document!');
+            onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    setDocDetails(docSnap.data()); // ✅ get the actual data
+                } else {
+                    console.log('No such document!');
+                }
+            });
         }
-      });
+    } catch (err) {
+        console.error(err);
     }
-  } catch (err) {
-    console.error(err);
-  }
 };
 
 
@@ -233,30 +247,30 @@ export const readById = async (collectionName: string = 'laods', id: string) => 
 
 
 
-    
-  export  const uploadImage = async (
-    image: { uri: string } ,
-     collectionName:string ,
-      setUploadImageUpdate: (status: string) => void,
-      messageUpdate:string 
-      ) => {
-          try {
-      setUploadImageUpdate(`Adding Image ${messageUpdate}`) 
-    const response = await fetch(image.uri);
-    const blob = await response.blob();
 
-    const fileName = `${collectionName}/${Date.now()}`;
-    const storageRef = ref(storage, fileName);
+export const uploadImage = async (
+    image: { uri: string },
+    collectionName: string,
+    setUploadImageUpdate: (status: string) => void,
+    messageUpdate: string
+) => {
+    try {
+        setUploadImageUpdate(`Adding Image ${messageUpdate}`)
+        const response = await fetch(image.uri);
+        const blob = await response.blob();
 
-    await uploadBytes(storageRef, blob);
-    const imageUrl = await getDownloadURL(storageRef);
+        const fileName = `${collectionName}/${Date.now()}`;
+        const storageRef = ref(storage, fileName);
 
-    return imageUrl;
-      setUploadImageUpdate(`${messageUpdate}`) 
-  } catch (error) {
-    console.error('Image upload failed:', error);
-    return null;
-  }
+        await uploadBytes(storageRef, blob);
+        const imageUrl = await getDownloadURL(storageRef);
+
+        return imageUrl;
+        setUploadImageUpdate(`${messageUpdate}`)
+    } catch (error) {
+        console.error('Image upload failed:', error);
+        return null;
+    }
 };
 
 

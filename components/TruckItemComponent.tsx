@@ -1,6 +1,6 @@
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import React from 'react'
-import { Truck } from '@/types/types'
+import { Countries, Truck } from '@/types/types'
 import { wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { ThemedText } from './ThemedText'
@@ -19,7 +19,7 @@ const TruckItemComponent = ({ truck = {} as Truck }) => {
     const placeholder = require('@/assets/images/failedimage.jpg')
 
     return (
-        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id } })} style={[styles.container, { backgroundColor: background, borderColor: coolGray }]}>
+        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id } })} style={[styles.container, { backgroundColor: background, borderColor: backgroundLight }]}>
             <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truck.imageUrl }} style={styles.image} />
             <View style={styles.detailsContainer}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -43,28 +43,12 @@ const TruckItemComponent = ({ truck = {} as Truck }) => {
                             {truck.trailerType || 'N/A'}
                         </ThemedText>
                     </View>
+
                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
-
-                        <Ionicons name="location-outline" size={wp(4)} style={{ width: wp(6) }} color={icon} />
-                        {/* To show if its local on international truck */}
-                        <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
-                            Local/International
-                        </ThemedText>
-                    </View>
-
-                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
-
-                        <Ionicons name="location-outline" size={wp(4)} style={{ width: wp(6) }} color={icon} />
-                        {/* If local truck dispaly the county */}
-                        <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
-                            loc zim
-                        </ThemedText>
-                    </View>
-                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
                         {/* Else if international trucks diasplay were permits are availeble */}
-                        <Ionicons name="location-outline" size={wp(4)} style={{ width: wp(6) }} color={icon} />
+                        <FontAwesome6 name="map-location-dot" size={wp(4)} style={{ width: wp(6) }} color={icon} />
                         <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
-                          Malawi , Zambia , Moaza
+                            {Countries.map(item => item + ', ')}
                         </ThemedText>
                     </View>
 
@@ -77,17 +61,17 @@ const TruckItemComponent = ({ truck = {} as Truck }) => {
 
 
 
-                    {truck.isVerified &&
-                        <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center', gap: wp(2), borderWidth: .4, padding: wp(1), borderColor: coolGray }}>
-                            <Octicons name='verified' size={wp(3)} color={'#4eb3de'} />
-                            <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 13 }]}>
-                                Verified
-                            </ThemedText>
-                        </View>
-                    }
                 </View>
 
             </View>
+            {truck.isVerified &&
+                <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center', gap: wp(1), padding: wp(1), backgroundColor: background, position: 'absolute', left: wp(4), top: wp(4) }}>
+                    <Octicons name='verified' size={wp(3)} color={'#4eb3de'} />
+                    <ThemedText numberOfLines={1} type='tiny' style={[{ color: '#4eb3de', fontSize: 13 }]}>
+                        Verified
+                    </ThemedText>
+                </View>
+            }
         </TouchableOpacity>
     )
 }

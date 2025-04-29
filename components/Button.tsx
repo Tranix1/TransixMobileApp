@@ -54,13 +54,14 @@ const Button = ({
                     ]}
                     {...rest}
                 >
-                    <View style={{ flexDirection: 'row', gap: wp(1), justifyContent: 'center' }}>
+                    <View style={{ flexDirection: 'row', gap: wp(1), justifyContent: 'center', position: 'relative', flex: 1 }}>
 
                         <ThemedText type='defaultSemiBold'
                             style={[{ verticalAlign: 'middle', textAlign: 'center' },
                             type === 'white' ? { color: '#0f9d58' } : undefined,
                             type === 'red' ? { color: 'white' } : undefined,
                             colors?.text ? { color: colors.text } : undefined,
+                            !Icon && { flex: 1 }
                             ]}>
                             {title}
                         </ThemedText>
@@ -69,7 +70,7 @@ const Button = ({
                         }
 
                         {loading &&
-                            <ActivityIndicator style={{ position: 'absolute', right: 0 }} color={type === 'white' ? accent : 'white'} />
+                            <ActivityIndicator style={{ position: 'absolute', right: 0 }} color={type === 'white' ? '#0f9d58' : 'white'} />
                         }
                     </View>
                 </View>
@@ -87,6 +88,7 @@ const styles = StyleSheet.create({
         // width: '98%',
         alignItems: 'center',
         // borderRadius: wp(4)
+
     },
     green: {
 
