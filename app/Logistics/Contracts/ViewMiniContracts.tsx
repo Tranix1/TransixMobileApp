@@ -27,7 +27,7 @@ function LoadsContracts({  }) {
         
         if (maTrucks) {
 
-            setGetContracts(maTrucks as Contracts[]);
+            // setGetContracts(maTrucks as Contracts[]);
 
         }
 

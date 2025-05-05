@@ -120,21 +120,33 @@ export const listenToCollection = (collectionName: string, callback: Function, f
  * @param docPath - The path to the document to update in the transaction.
  * @param transactionCallback - A callback function to handle the transaction logic.
  */
-export const runFirestoreTransaction = async (docPath: string, transactionCallback: Function) => {
-    try {
-        const docRef = doc(db, docPath);
-        await runTransaction(db, async (transaction) => {
-            const docSnap = await transaction.get(docRef);
-            if (docSnap.exists()) {
-                const updatedData = transactionCallback(docSnap.data());
-                transaction.update(docRef, updatedData);
-            }
-        });
-    } catch (error) {
-        console.error("Error running transaction:", error);
-        throw error;
-    }
+
+
+type TransactionCallback = (data: any) => { [key: string]: any };
+
+export const runFirestoreTransaction = async (
+  docPath: string,
+  transactionCallback: TransactionCallback
+): Promise<void> => {
+  try {
+    const docRef = doc(db, docPath);
+    await runTransaction(db, async (transaction) => {
+      const docSnap = await transaction.get(docRef);
+
+      const updatedData = transactionCallback(docSnap.data());
+      if (updatedData && typeof updatedData === "object") {
+        transaction.update(docRef, updatedData);
+      }
+    });
+  } catch (error) {
+    console.error("Error running transaction:", error);
+    throw error;
+  }
 };
+
+
+
+
 
 /**
  * Paginate through Firestore documents.

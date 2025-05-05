@@ -108,3 +108,16 @@ export function handleChange<T>(
   }));
 }
 
+// Type for the toggle state object
+type ToggleState = { [id: string]: boolean };
+
+// Reusable function to toggle the state of a specific item by its ID
+export const toggleItemById = (
+  itemId: string,
+  setToggleState: React.Dispatch<React.SetStateAction<ToggleState>>
+) => {
+  setToggleState((prevState) => ({
+    ...prevState,
+    [itemId]: !prevState[itemId],
+  }));
+};

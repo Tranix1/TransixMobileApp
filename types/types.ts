@@ -61,15 +61,15 @@ export type LoadFormData = {
     typeofLoad: string
     fromLocation: string
     toLocation: string
-    ratePerTonne: number
+    ratePerTonne: string
     paymentTerms: string
     requirements: string
     alertMsg: string
     fuelAvai: string
     additionalInfo: string
-    links: number
+    links: string
     triaxle: string
-    returnRate: number
+    returnRate: string
     returnLoad: string
     returnTerms: string
 }
