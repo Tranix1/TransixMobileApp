@@ -72,7 +72,7 @@ export const fetchDocuments = async (
     filters: Array<any> = []
 ) => {
     try {
-        let dataQuery: Query<DocumentData> = query(collection(db, collectionName), limit(limitCount));
+        let dataQuery: Query<DocumentData> = query(collection(db, collectionName), limit(limitCount), orderBy('created_at', "desc"));
 
         if (startAfterDoc) {
             dataQuery = query(dataQuery, startAfter(startAfterDoc));
@@ -125,23 +125,23 @@ export const listenToCollection = (collectionName: string, callback: Function, f
 type TransactionCallback = (data: any) => { [key: string]: any };
 
 export const runFirestoreTransaction = async (
-  docPath: string,
-  transactionCallback: TransactionCallback
+    docPath: string,
+    transactionCallback: TransactionCallback
 ): Promise<void> => {
-  try {
-    const docRef = doc(db, docPath);
-    await runTransaction(db, async (transaction) => {
-      const docSnap = await transaction.get(docRef);
+    try {
+        const docRef = doc(db, docPath);
+        await runTransaction(db, async (transaction) => {
+            const docSnap = await transaction.get(docRef);
 
-      const updatedData = transactionCallback(docSnap.data());
-      if (updatedData && typeof updatedData === "object") {
-        transaction.update(docRef, updatedData);
-      }
-    });
-  } catch (error) {
-    console.error("Error running transaction:", error);
-    throw error;
-  }
+            const updatedData = transactionCallback(docSnap.data());
+            if (updatedData && typeof updatedData === "object") {
+                transaction.update(docRef, updatedData);
+            }
+        });
+    } catch (error) {
+        console.error("Error running transaction:", error);
+        throw error;
+    }
 };
 
 

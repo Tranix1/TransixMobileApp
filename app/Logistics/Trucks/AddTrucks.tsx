@@ -1,33 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Image, ActivityIndicator, StyleSheet, ScrollView, TouchableNativeFeedback, SafeAreaView, Modal, ToastAndroid } from "react-native"
 import inputstyles from "../../components/styles/inputElement";
-
 import type { ImagePickerAsset } from 'expo-image-picker';
-
 import CountryPicker from 'react-native-country-picker-modal';
 import { CountryCode } from 'react-native-country-picker-modal';
 import { Country } from 'react-native-country-picker-modal';
-
 import { addDocument, getDocById, setDocuments } from "@/db/operations";
 import { uploadImage } from "@/db/operations";
-
 import { selectManyImages, handleChange } from "@/Utilities/utils";
-
 import Fontisto from '@expo/vector-icons/Fontisto';
-
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
 import { ErrorOverlay } from "@/components/ErrorOverLay";
 import CountrySelector from "@/components/CountrySelector";
 import Heading from "@/components/Heading";
 import ScreenWrapper from "@/components/ScreenWrapper";
-
 import { SpecifyTruckDetails } from "@/components/SpecifyTruckDetails";
-import { TruckTypeProps } from "@/types/types";
-
-import { AntDesign, Entypo, FontAwesome6, Ionicons } from "@expo/vector-icons";
+import { Countries, Truck, TruckTypeProps } from "@/types/types";
+import { AntDesign, Entypo, FontAwesome, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { hp, wp } from "@/constants/common";
-
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { Dropdown, SelectCountry } from "react-native-element-dropdown";
 import { useAuth } from "@/context/AuthContext";
@@ -40,6 +31,7 @@ function AddTrucks() {
 
   const icon = useThemeColor('icon')
   const background = useThemeColor('backgroundLight')
+  const backG = useThemeColor('background')
   const coolGray = useThemeColor('coolGray')
   // const {truckType ,username ,contact , isVerified,isBlackListed ,blackLWarning,blockVerifiedU , verifiedLoad , fromLocation  , toLocation ,expoPushToken ,verifyOngoing ,truckTonnageG} = route.params
 
@@ -83,7 +75,6 @@ function AddTrucks() {
     getDocById('truckOwnerDetails', setOwnerDetails);
   }, []);
 
-  console.log(getOwnerDetails?.ownerName, "owner");
 
   const [ownerNameAddDb, SetOwnerNameAddDb] = useState('');
   const [ownerEmailAddDb, setOwnerEmailAddDb] = useState('');
@@ -112,7 +103,7 @@ function AddTrucks() {
   const [driverDetails, setDriverDDsp] = useState(false)
 
   function togglrDriverDe() {
-   
+
 
     setTruckDDsp(false)
     setDriverDDsp(prev => !prev)
@@ -145,6 +136,16 @@ function AddTrucks() {
   const [spinnerItem, setSpinnerItem] = useState(false);
   const [addingDocUpdate, setAddingDocUpdate] = useState("")
   const [uploadingImageUpdate, setUploadImageUpdate] = useState("")
+
+
+
+
+  const [showCountries, setShowCountries] = useState(false);
+  const [operationCountries, setOperationCountries] = useState<string[]>([]);
+
+
+
+
 
 
 
@@ -191,6 +192,12 @@ function AddTrucks() {
       truckBookImage = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "truck Book");
     }
 
+    if (!selectedTruckType)
+      return alert("Select Truck Type");
+
+    if (!user)
+      return alert("Please Login to your account to add a truck");
+
     setSpinnerItem(true)
     let withDetails = true
     try {
@@ -199,26 +206,26 @@ function AddTrucks() {
         // CompanyName : username ,
         // contact : contact ,
         imageUrl: truckImage,
-
         truckBookImage: truckBookImage,
         trailerBookF: trailerBookF,
         trailerBookSc: trailerBookSc,
         driverLicense: driverLicense,
         driverPassport: driverPassport,
+        created_at: new Date().toISOString(),
 
-        ownerName: ownerName,
-        onwerEmail: onwerEmail,
-        ownerPhoneNum: ownerPhoneNum,
+        CompanyName: user?.organisation,
+        ownerName: user?.organisation || ownerName,
+        onwerEmail: user?.email || onwerEmail,
+        ownerPhoneNum: user?.phoneNumber || ownerPhoneNum,
 
         location: location,
         intOpLoc: intOpLoc,
         locaOpLoc: locaOpLoc,
-
-        // userId : userId ,
-        truckType: selectedTruckType?.name,
+        locations: operationCountries,
+        userId: user.uid,
+        truckType: selectedTruckType.name,
         // isVerified : isVerified ,
         withDetails: withDetails,
-        // expoPushToken :expoPushToken , 
         deletionTime: Date.now() + 2 * 24 * 60 * 60 * 1000,
         truckTonnage: truckCapacity,
         ...formData,
@@ -236,7 +243,8 @@ function AddTrucks() {
       setImages([]);
       setSpinnerItem(false)
 
-
+      ToastAndroid.show('Truck Added successfully', ToastAndroid.SHORT)
+      router.back()
     } catch (err) {
       console.error(err);
     }
@@ -563,7 +571,7 @@ function AddTrucks() {
               placeholder="Select Truck"
               value={selectedTruckType?.name}
               itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-              activeColor={background}
+              activeColor={backG}
               containerStyle={{
                 borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
                 shadowOffset: {
@@ -610,7 +618,6 @@ function AddTrucks() {
               </>
             }
 
-            {/* Trailer Configgg */}
 
             <ThemedText>
               Trailer Configuration<ThemedText color="red">*</ThemedText>
@@ -682,11 +689,62 @@ function AddTrucks() {
               onChangeText={(text) => handleChange<FormData>(text, 'maxloadCapacity', setFormData)}
             />
 
+
+            <ThemedText>
+              Operation Countries<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+
+            <View style={{
+              paddingVertical: wp(1),
+
+              gap: wp(1),
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 12,
+              paddingHorizontal: 16,
+              marginBottom: 16,
+            }}>
+              <TouchableOpacity onPress={() => setShowCountries(!showCountries)} style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+                <ThemedText style={{ minHeight: hp(5), textAlignVertical: 'center' }}>
+                  Select Countrie(s)
+                </ThemedText>
+
+                <Ionicons name={showCountries ? 'chevron-up-outline' : "chevron-down"} size={wp(4)} color={icon} />
+              </TouchableOpacity>
+              {showCountries &&
+                <View>
+                  <Divider />
+                  {Countries.map((item) => {
+
+                    const active = operationCountries.some(x => x === item);
+
+                    return (
+                      <TouchableOpacity onPress={() => active ? setOperationCountries(operationCountries.filter(x => x !== item)) : setOperationCountries([...operationCountries, item])} style={{ padding: wp(2), marginVertical: wp(1), flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <ThemedText type="subtitle">
+                          {item}
+                        </ThemedText>
+
+                        <FontAwesome name={active ? 'check-square' : "square-o"} size={wp(5)} color={active ? '#0f9d58' : icon} />
+                      </TouchableOpacity>
+                    )
+                  }
+                  )}
+
+                </View>
+              }
+
+            </View>
+
+
             <ThemedText>
               Additional Information<ThemedText color="red">*</ThemedText>
             </ThemedText>
             <Input
-              value={formData.additionalInfo} multiline numberOfLines={8} containerStyles={{ minHeight: hp(8), justifyContent: 'flex-start' }}
+              value={formData.additionalInfo} multiline numberOfLines={8} style={{ verticalAlign: 'top', minHeight: hp(15) }} containerStyles={{}}
               placeholder="Additional Information"
               onChangeText={(text) => handleChange<FormData>(text, 'additionalInfo', setFormData)}
             />
@@ -959,7 +1017,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderRadius: wp(1)
+    borderRadius: wp(1),
+    marginBottom: 5
   },
   textItem: {
     flex: 1,

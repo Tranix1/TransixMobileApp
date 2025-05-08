@@ -16,21 +16,22 @@ export type CountrySelectorProps = {
     locaOpLoc: string
 }
 export type Truck = {
-
+    created_at: string,
+    truckName: string,
     CompanyName: string;
     additionalInfo: string;
-    contact: string;
     deletionTime: number;
     driverLicense: string;
     driverPassport: string;
     driverPhone: string;
-    expoPushToken: string;
     fromLocation: string;
+    location: string,
+    trailerModel: string,
     id: string;
     imageUrl: string;
     isVerified: boolean;
     locations: string[];
-    maximumWheight: string;
+    maxloadCapacity: string;
     onwerEmail: string;
     ownerName: string;
     ownerPhoneNum: string;
@@ -40,7 +41,6 @@ export type Truck = {
     };
     trailerBookF: string;
     trailerBookSc: string;
-    trailerModel: string;
     trailerType: string;
     truckBookImage: string;
     truckTonnage: string;
@@ -107,7 +107,8 @@ export const Countries = ['Zimbabwe',
     'Mozambique',
     'Zambia',
     'Botswana',
-    'Malawi'
+    'Malawi',
+    'Other'
 ]
 export type User = {
     uid: string,

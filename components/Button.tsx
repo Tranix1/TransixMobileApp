@@ -65,10 +65,10 @@ const Button = ({
                             ]}>
                             {title}
                         </ThemedText>
+
                         {Icon &&
                             Icon
                         }
-
                         {loading &&
                             <ActivityIndicator style={{ position: 'absolute', right: 0 }} color={type === 'white' ? '#0f9d58' : 'white'} />
                         }

@@ -13,10 +13,10 @@ interface RouteParams {
 }
 
 const AddLoadDB: React.FC<{ route: { params: RouteParams } }> = ({ route }) => {
-    const {  isVerified,   verifyOngoing } = route.params;
+    // const {  isVerified,   verifyOngoing } = route.params;
     const [error, setError] = useState<string>("");
     const loadsCollection = collection(db, "Loads");
-    const [formData, setFormData] = useState< LoadFormData>({
+    const [formData, setFormData] = useState<LoadFormData>({
         typeofLoad: "",
         fromLocation: "",
         toLocation: "",
@@ -88,7 +88,7 @@ const AddLoadDB: React.FC<{ route: { params: RouteParams } }> = ({ route }) => {
         setRoundTrip(prev => !prev);
     };
 
-    const handleTypedText = (value: string, fieldName: keyof  LoadFormData) => {
+    const handleTypedText = (value: string, fieldName: keyof LoadFormData) => {
         let parsedValue: string | number | null = value;
 
         if (fieldName === 'ratePerTonne' || fieldName === 'links' || fieldName === 'triaxle' || fieldName === 'returnRate') {
@@ -108,7 +108,7 @@ const AddLoadDB: React.FC<{ route: { params: RouteParams } }> = ({ route }) => {
 
     const handleSubmit = async () => {
 
-      
+
 
         if (returnLoadDisplay) {
             if (!formData.returnLoad || !formData.returnRate || !formData.returnTerms) {
@@ -129,7 +129,7 @@ const AddLoadDB: React.FC<{ route: { params: RouteParams } }> = ({ route }) => {
         } else if ((formData.ratePerTonne === null || formData.ratePerTonne === "") && (formData.links === null || formData.links === "") && (formData.triaxle === null || formData.triaxle === "")) {
             alert("Enter the rate");
             return;
-        } 
+        }
 
         setSpinnerItem(true);
 
@@ -144,7 +144,7 @@ const AddLoadDB: React.FC<{ route: { params: RouteParams } }> = ({ route }) => {
                 // expoPushToken: expoPushToken,
                 deletionTime: Date.now() + 3 * 24 * 60 * 60 * 1000,
                 // timeStamp: serverTimestamp(),
-                isVerified: isVerified,
+                // isVerified: isVerified,
                 currency: currency,
                 perTonne: perTonne,
                 activeLoading: activeLoading,
@@ -184,27 +184,30 @@ const AddLoadDB: React.FC<{ route: { params: RouteParams } }> = ({ route }) => {
 
     return (
         <View style={{ alignItems: 'center', }}>
-            {verifyOngoing && !isVerified && <TouchableOpacity onPress={() => Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`
-I aspire to become verified at the first level on Transix Now!
-To make this happen without any delays or uncertainties.
+            {/* {verifyOngoing && !isVerified && */}
+            <TouchableOpacity onPress={() => Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`
+                        I aspire to become verified at the first level on Transix Now!
+                        To make this happen without any delays or uncertainties.
 
-Provide:
-- Company Address
-- Company Details (e.g., Articles of Association, tax clearance, etc.)
-- National ID or Passport must match details in company details
+                        Provide:
+                        - Company Address
+                        - Company Details (e.g., Articles of Association, tax clearance, etc.)
+                        - National ID or Passport must match details in company details
 
-- Verify Address using Utility Bill (electricity, water, internet, gas),
-  Lease Agreement, Business Licence, Tax Document.
+                        - Verify Address using Utility Bill (electricity, water, internet, gas),
+                          Lease Agreement, Business Licence, Tax Document.
 
-- The document for Address must be from 3-6 months ago.
+                        - The document for Address must be from 3-6 months ago.
 
-There is a $5 monthly subscription fee, and you can choose for how long you want to be verified.
+                        There is a $5 monthly subscription fee, and you can choose for how long you want to be verified.
 
-The Future Of Transport And Logistics (Transix)
-`)} `)} style={{ marginBottom: 4, padding: 7, borderWidth: 3, borderColor: '#6a0c0c', borderRadius: 8, shadowColor: '#6a0c0c',
-                shadowOffset: { width: 3, height: 2 },
-                shadowOpacity: 0.7,
-                shadowRadius: 5, margin: 10 }}>
+                        The Future Of Transport And Logistics (Transix)
+                        `)} `)} style={{
+                    marginBottom: 4, padding: 7, borderWidth: 3, borderColor: '#6a0c0c', borderRadius: 8, shadowColor: '#6a0c0c',
+                    shadowOffset: { width: 3, height: 2 },
+                    shadowOpacity: 0.7,
+                    shadowRadius: 5, margin: 10
+                }}>
                 {<View style={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'white', zIndex: 66 }}>
                     <MaterialIcons name="verified" size={29} color="green" />
                 </View>}
@@ -213,7 +216,8 @@ The Future Of Transport And Logistics (Transix)
                     If You Are Legit
                 </Text>
                 <Text>Click Here to Verify Your Business and Loads</Text>
-            </TouchableOpacity>}
+            </TouchableOpacity>
+            {/* } */}
             <ScrollView showsVerticalScrollIndicator={false} >
 
                 {!localLoads && <View>

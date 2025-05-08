@@ -17,7 +17,7 @@ import { BlurView } from 'expo-blur';
 import FormatedText from "@/components/FormatedText";
 import Divider from "@/components/Divider";
 import { Truck, User } from "@/types/types";
-import { readById } from "@/db/operations";
+import { deleteDocument, readById } from "@/db/operations";
 import { Image } from 'expo-image'
 
 const TruckDetails = () => {
@@ -89,20 +89,20 @@ const TruckDetails = () => {
         checkSavedProducts();
     }, [])
 
-  const getowenerdata = async () => {
-    if (truckData.userId) {
-        const owner = await readById('personalData', truckData.userId);
+    const getowenerdata = async () => {
+        if (truckData.userId) {
+            const owner = await readById('personalData', truckData.userId);
 
-        if (owner) {
-            const user: User = {
-                ...owner,
-                uid: String(owner.id),
-                createdAt: (owner as any).createdAt ?? Date.now(), // fallback if missing
-            };
-            setPostUser(user);
+            if (owner) {
+                const user: User = {
+                    ...owner,
+                    uid: String(owner.id),
+                    createdAt: (owner as any).createdAt ?? Date.now(), // fallback if missing
+                };
+                setPostUser(user);
+            }
         }
-    }
-};
+    };
 
     // Function to toggle save state
     const toggleSaveProduct = async () => {
@@ -143,13 +143,70 @@ const TruckDetails = () => {
     const placeholder = require('@/assets/images/failedimage.jpg')
     return (
         <ScreenWrapper>
+            <Modal transparent statusBarTranslucent visible={modalVisible} animationType="fade">
+                <Pressable onPress={() => setModalVisible(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                    <BlurView intensity={100} style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center' }}>
+
+                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                            <View style={{ backgroundColor: backgroundLight, borderRadius: wp(4), padding: wp(4), width: wp(80), gap: wp(3) }}>
+                                <View style={{ alignItems: 'flex-end' }}>
+                                    <TouchableOpacity onPress={() => setModalVisible(false)}>
+                                        <Ionicons name="close-circle" size={wp(6)} color={icon} />
+                                    </TouchableOpacity>
+                                </View>
+                                <ThemedText type="title" style={{ textAlign: 'center', marginBottom: wp(4) }}>
+                                    Manage Truck
+                                </ThemedText>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setModalVisible(false);
+                                        router.push('/Logistics/Trucks/AddTrucks');
+                                    }}
+                                    style={{ backgroundColor: accent, alignItems: 'center', padding: wp(2), borderRadius: wp(4) }}
+                                >
+                                    <ThemedText color="#fff" type="subtitle">Edit Truck</ThemedText>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setModalVisible(false);
+                                        alertBox(
+                                            "Delete Truck",
+                                            "Are you sure you want to delete this truck?",
+                                            [
+                                                {
+                                                    title: "Delete",
+                                                    onPress: async () => {
+                                                        try {
+                                                            // Add delete logic here
+                                                            deleteDocument('trucks', truckData.id)
+                                                            alertBox("Success", "Truck deleted successfully", [], "success");
+                                                        } catch (error) {
+                                                            alertBox("Error", "Failed to delete truck", [], "error");
+                                                        }
+                                                    },
+                                                },
+                                            ],
+                                            "destructive"
+                                        );
+                                    }}
+                                    style={{ backgroundColor: '#FF5252', alignItems: 'center', padding: wp(2), borderRadius: wp(4) }}
+                                >
+                                    <ThemedText color="#fff" type="subtitle">Delete Truck</ThemedText>
+                                </TouchableOpacity>
+
+                            </View>
+                        </View>
+                    </BlurView>
+                </Pressable>
+            </Modal>
+
             {showAlert}
-            <Heading page={truckData.CompanyName || "Product Details"}
+            <Heading page={truckData.truckName || "Truck Details"}
                 rightComponent={
                     <View style={{ flexDirection: 'row', gap: wp(2), marginRight: wp(2) }}>
 
                         <View style={{ overflow: 'hidden', borderRadius: wp(2.4) }}>
-                            <TouchableNativeFeedback onPress={() => { }}>
+                            <TouchableNativeFeedback onPress={() => setModalVisible(true)}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: wp(2), padding: wp(1.5) }}>
                                     <Ionicons name='reorder-three-outline' size={wp(6)} color={icon} />
                                 </View>
@@ -190,10 +247,10 @@ const TruckDetails = () => {
 
                 <View style={{ padding: wp(4), borderRadius: wp(4), backgroundColor: backgroundLight }}>
                     <View style={{ flexDirection: 'row', gap: wp(6), justifyContent: 'center' }}>
-                        {(postOwner?.phoneNumber || truckData.contact) &&
+                        {(postOwner?.phoneNumber) &&
                             <View style={{ alignItems: 'center', gap: wp(1) }}>
                                 <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-                                    <TouchableNativeFeedback onPress={() => (postOwner?.phoneNumber || truckData.contact) && Linking.openURL(`tel:${(postOwner?.phoneNumber || truckData.contact)}`)}>
+                                    <TouchableNativeFeedback onPress={() => (postOwner?.phoneNumber) && Linking.openURL(`tel:${(postOwner?.phoneNumber)}`)}>
                                         <View style={{ width: wp(10), height: wp(10), backgroundColor: background, justifyContent: 'center', alignItems: 'center', borderRadius: wp(10) }}>
                                             <Ionicons name='call-outline' size={wp(5)} color={icon} />
                                         </View>
@@ -204,13 +261,13 @@ const TruckDetails = () => {
                                 </ThemedText>
                             </View>
                         }
-                        {(postOwner?.phoneNumber || truckData.contact) &&
+                        {(postOwner?.phoneNumber) &&
                             <View style={{ alignItems: 'center', gap: wp(1) }}>
                                 <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                                     <TouchableNativeFeedback
                                         onPress={() => {
                                             const message = `Hello ${postOwner?.displayName},\n\nI am interested in your product "${truckData.CompanyName}".\n`;
-                                            (postOwner?.phoneNumber || truckData.contact) && Linking.openURL(`sms:${(postOwner?.phoneNumber || truckData.contact)}?body=${encodeURIComponent(message)}`);
+                                            (postOwner?.phoneNumber) && Linking.openURL(`sms:${(postOwner?.phoneNumber)}?body=${encodeURIComponent(message)}`);
                                         }}
                                     >
                                         <View style={{ width: wp(10), height: wp(10), backgroundColor: background, justifyContent: 'center', alignItems: 'center', borderRadius: wp(10) }}>
@@ -223,13 +280,13 @@ const TruckDetails = () => {
                                 </ThemedText>
                             </View>
                         }
-                        {(postOwner?.phoneNumber || truckData.contact) &&
+                        {(postOwner?.phoneNumber) &&
                             <View style={{ alignItems: 'center', gap: wp(1) }}>
                                 <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                                     <TouchableNativeFeedback
                                         onPress={() => {
                                             const message = `Hello ${postOwner?.displayName},\n\nI am interested in your product "${truckData.CompanyName}".\n`;
-                                            (postOwner?.phoneNumber || truckData.contact) && Linking.openURL(`https://wa.me/${(postOwner?.phoneNumber || truckData.contact)}?text=${encodeURIComponent(message)}`);
+                                            (postOwner?.phoneNumber) && Linking.openURL(`https://wa.me/${(postOwner?.phoneNumber)}?text=${encodeURIComponent(message)}`);
                                         }}
                                     >
                                         <View style={{ width: wp(10), height: wp(10), backgroundColor: background, justifyContent: 'center', alignItems: 'center', borderRadius: wp(10) }}>
@@ -340,10 +397,10 @@ const TruckDetails = () => {
                     <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
                         <View style={{ flex: 1 }}>
                             <ThemedText type="tiny" style={{}}>
-                                Maximum Weight:
+                                Maximum Load Capacity
                             </ThemedText>
                             <ThemedText type="subtitle" style={{}}>
-                                {truckData.maximumWheight || '--'}
+                                {truckData.maxloadCapacity || '--'}
                             </ThemedText>
                         </View>
                         <ThemedText>|</ThemedText>
@@ -362,17 +419,33 @@ const TruckDetails = () => {
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1 }}>
                                 <ThemedText type="tiny" style={{}}>
-                                    Location
+                                    Operation Country{truckData.locations.length > 1 ? 's' : ''}
                                 </ThemedText>
                                 <ThemedText type="subtitle" style={{ marginBottom: wp(4) }}>
-                                    {truckData.fromLocation || '--'}
+                                    {truckData.locations.join(', ') || '--'}
                                 </ThemedText>
                             </View>
-                            {truckData.location &&
-                                <MaterialCommunityIcons name="google-maps" size={wp(6)} color={icon} />
-                            }
+
                         </View>
-                        {truckData.location &&
+
+
+                    </View>
+                    {truckData.location &&
+
+                        <View style={{}}>
+                            <View style={{ flexDirection: 'row' }}>
+                                <View style={{ flex: 1 }}>
+                                    <ThemedText type="tiny" style={{}}>
+                                        Location
+                                    </ThemedText>
+                                    <ThemedText type="subtitle" style={{ marginBottom: wp(4) }}>
+                                        {truckData.location || '--'}
+                                    </ThemedText>
+                                </View>
+                                {truckData.location &&
+                                    <MaterialCommunityIcons name="google-maps" size={wp(6)} color={icon} />
+                                }
+                            </View>
 
                             <Button
                                 onPress={() => {
@@ -384,9 +457,9 @@ const TruckDetails = () => {
                                 Icon={<Ionicons name='map-outline' size={wp(4)} color={"#00c16c"} />}
                             />
 
-                        }
 
-                    </View>
+                        </View>
+                    }
 
 
                     {truckData.additionalInfo &&
@@ -406,7 +479,7 @@ const TruckDetails = () => {
                             )}
                         </View>
                     }
-                  
+
 
 
 

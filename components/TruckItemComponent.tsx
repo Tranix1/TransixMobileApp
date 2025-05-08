@@ -48,16 +48,18 @@ const TruckItemComponent = ({ truck = {} as Truck }) => {
                         {/* Else if international trucks diasplay were permits are availeble */}
                         <FontAwesome6 name="map-location-dot" size={wp(4)} style={{ width: wp(6) }} color={icon} />
                         <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
-                            {Countries.map(item => item + ', ')}
+                            {truck.locations?.map(item => item + ', ') || 'N/A'}
                         </ThemedText>
                     </View>
 
-                    {/* <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
-                        <FontAwesome6 name="road" size={wp(4)} style={{ width: wp(6) }} color={icon} />
+                    <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
+                        <FontAwesome5 name="weight" size={wp(3.6)} style={{ width: wp(6) }} color={icon} />
                         <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
-                            {truck.toLocation || 'N/A'}
+                            {truck.truckTonnage || 'N/A'}
                         </ThemedText>
-                    </View> */}
+                    </View>
+
+
 
 
 
