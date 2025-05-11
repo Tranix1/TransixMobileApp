@@ -59,8 +59,6 @@ export type Product = {
 
 export type LoadFormData = {
     typeofLoad: string
-    fromLocation: string
-    toLocation: string
     ratePerTonne: string
     paymentTerms: string
     requirements: string
@@ -76,23 +74,22 @@ export type LoadFormData = {
 export type Load = {
     id: string,
     distance: string,
-
+    created_at: string,
     destination: string,
     userId: string;
     companyName: string;
     contact: string;
-    expoPushToken: string;
     deletionTime: number;
     timeStamp: {
         nanoseconds: number;
         seconds: number;
     };
     currency: string
-    perTonne: boolean
     activeLoading: boolean
     location: string
     roundTrip: boolean
     isVerified: boolean
+
 } & LoadFormData
 
 // export const Countries = [

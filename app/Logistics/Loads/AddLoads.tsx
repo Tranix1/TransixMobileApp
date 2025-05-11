@@ -8,6 +8,10 @@ import { Ionicons } from "@expo/vector-icons";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { wp } from "@/constants/common";
 import Heading from "@/components/Heading";
+import { router } from "expo-router";
+import { addDocument } from "@/db/operations";
+import { Load } from "@/types/types";
+import { useAuth } from "@/context/AuthContext";
 
 const AddLoadDB = () => {
     const [step, setStep] = useState(0);
@@ -16,6 +20,7 @@ const AddLoadDB = () => {
     const [typeofLoad, setTypeofLoad] = useState("");
     const [fromLocation, setFromLocation] = useState("");
     const [toLocation, setToLocation] = useState("");
+    const [distance, setDistance] = useState("");
     const [ratePerTonne, setRatePerTonne] = useState("");
     const [paymentTerms, setPaymentTerms] = useState("");
     const [requirements, setRequirements] = useState("");
@@ -34,8 +39,11 @@ const AddLoadDB = () => {
     const toggleDspFuelAvai = () => setDspFuelAvai((prev) => !prev);
     const toggleDspReturnLoad = () => setDspReturnLoad((prev) => !prev);
 
+
+
+    const { user } = useAuth();
     const handleSubmit = () => {
-        // Handle form submission logic
+
         console.log({
             typeofLoad,
             fromLocation,
@@ -50,6 +58,56 @@ const AddLoadDB = () => {
             returnRate,
             returnTerms,
         });
+
+        if (!typeofLoad || !fromLocation || !toLocation || !ratePerTonne || !paymentTerms) {
+            alert("Please fill in all required fields.");
+            return;
+        }
+
+        if (!user) {
+            alert("Please Login first");
+            return;
+        }
+        if (!user.organisation) {
+            alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
+            return;
+        }
+        const loadData = {
+            distance: distance,
+            userId: user?.uid,
+            companyName: user.organisation,
+            contact: user?.phoneNumber || '',
+            created_at: Date.now().toString(),
+            timeStamp: { nanoseconds: 0, seconds: Math.floor(Date.now() / 1000) },
+            isVerified: false,
+            typeofLoad,
+            destination: toLocation,
+            ratePerTonne,
+            paymentTerms,
+            requirements,
+            additionalInfo,
+            alertMsg: dspAlertMsg ? alertMsg : 'null',
+            fuelAvai: dspFuelAvai ? fuelAvai : 'null',
+            returnLoad,
+            returnRate,
+            returnTerms,
+            currency: "USD",
+            activeLoading: false,
+            location: fromLocation,
+            roundTrip: false,
+        };
+
+        try {
+
+            addDocument("Loads", loadData, (status) => console.log(`Status: ${status}`))
+
+            console.log("Submitting load data:", loadData);
+            alert("Load submitted successfully!");
+            router.back();
+        } catch (error) {
+            console.error("Error submitting load:", error);
+            alert("Failed to submit load. Please try again.");
+        }
     };
 
     return (
@@ -141,6 +199,15 @@ const AddLoadDB = () => {
                             <Input
                                 value={toLocation}
                                 onChangeText={setToLocation}
+                            />
+                            <ThemedText>
+                                Estimated Distance <ThemedText color="red">*</ThemedText>
+                            </ThemedText>
+                            <Input
+                                placeholder="0km"
+                                value={distance}
+                                onChangeText={setDistance}
+                                keyboardType="numeric"
                             />
                             <ThemedText>
                                 Rate Per Tonne<ThemedText color="red">*</ThemedText>
