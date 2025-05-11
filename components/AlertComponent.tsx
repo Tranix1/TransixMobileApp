@@ -1,4 +1,4 @@
-import { BackHandler, Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableHighlight, TouchableNativeFeedback, TouchableOpacity, View } from 'react-native'
+import { BackHandler, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableHighlight, TouchableNativeFeedback, TouchableOpacity, View } from 'react-native'
 import React, { useState } from 'react'
 import { ThemedText } from './ThemedText'
 import { hp, wp } from '@/constants/common';
@@ -50,29 +50,32 @@ const AlertComponent = ({ title, message, buttons, type = 'default', visible, on
     return (
         <SafeAreaView>
             <Modal statusBarTranslucent visible={isVisible} transparent animationType='fade'>
-                <Pressable onPressIn={() => hide()} style={{ flex: 1 }}>
+                <Pressable onPressIn={() => { }} style={{ flex: 1 }}>
                     <BlurView intensity={10} tint='systemMaterialDark' experimentalBlurMethod='dimezisBlurView' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', flex: 1, padding: wp(6), }}>
 
-                        <View style={{ backgroundColor: background, padding: wp(3), borderRadius: wp(4), gap: wp(2), }}>
-                            <ThemedText type='subtitle' style={[
-                                {
-                                    textAlign: 'center',
-                                },
-                                type === 'default' && { color: iconog },
-                                type === 'error' && { color: '#e50914' },
-                                type === 'destructive' && { color: '#ee1133' },
-                                type === 'laoding' && { color: '#F48024' },
-                                type === 'success' && { color: '#1db954' },
-                            ]
-                            }>
-                                {title}
-                            </ThemedText>
-                            <ThemedText style={[{ textAlign: 'center' },
-                            type === 'error' && { lineHeight: hp(3.5), textAlign: 'left' },
-                            ]} type='default'>
-                                {message}
-                            </ThemedText>
+                        <View style={{ backgroundColor: background, padding: wp(3), borderRadius: wp(4), gap: wp(2), maxHeight: hp(80) }}>
+                            <ScrollView>
 
+                                <ThemedText type='subtitle' style={[
+                                    {
+                                        textAlign: 'center',
+                                    },
+                                    type === 'default' && { color: iconog },
+                                    type === 'error' && { color: '#e50914' },
+                                    type === 'destructive' && { color: '#ee1133' },
+                                    type === 'laoding' && { color: '#F48024' },
+                                    type === 'success' && { color: '#1db954' },
+                                ]
+                                }>
+                                    {title}
+                                </ThemedText>
+                                <ThemedText style={[{ textAlign: 'center' },
+                                type === 'error' && { lineHeight: hp(3.5), textAlign: 'left' },
+                                ]} type='default'>
+                                    {message}
+                                </ThemedText>
+
+                            </ScrollView>
 
                             <View style={{ borderTopWidth: .5, borderColor: backgroundLight, marginTop: wp(3) }}>
 

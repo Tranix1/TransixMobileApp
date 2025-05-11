@@ -40,6 +40,8 @@ function AddTrucks() {
     trailerType: string;
     driverPhone: string;
     maxloadCapacity: string;
+    truckTonnage: string;
+    name: string;
   }
 
   const [formData, setFormData] = useState<FormData>({
@@ -47,6 +49,8 @@ function AddTrucks() {
     trailerType: "",
     driverPhone: "",
     maxloadCapacity: "",
+    truckTonnage: "",
+    name: "",
   });
 
   const [countryCodeDriver, setCountryCodeDriver] = useState("")
@@ -227,18 +231,12 @@ function AddTrucks() {
         // isVerified : isVerified ,
         withDetails: withDetails,
         deletionTime: Date.now() + 2 * 24 * 60 * 60 * 1000,
-        truckTonnage: truckCapacity,
         ...formData,
       }
 
       addDocument("Trucks", submitData, setAddingDocUpdate)
 
-      setFormData({
-        additionalInfo: "",
-        trailerType: "",
-        driverPhone: "",
-        maxloadCapacity: ""
-      });
+
 
       setImages([]);
       setSpinnerItem(false)
@@ -557,6 +555,14 @@ function AddTrucks() {
           </View>
           <View style={{ gap: wp(2) }}>
 
+            <ThemedText>
+              Truck Name<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+            <Input
+              value={formData.name}
+              placeholder=""
+              onChangeText={(text) => handleChange<FormData>(text, 'name', setFormData)}
+            />
 
             <ThemedText>
               Truck Type<ThemedText color="red">*</ThemedText>
@@ -679,6 +685,15 @@ function AddTrucks() {
                 />
               </>
             }
+            <ThemedText>
+              Tonnage<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+            <Input
+              value={formData.truckTonnage}
+              keyboardType="number-pad"
+              placeholder="0.0t"
+              onChangeText={(text) => handleChange<FormData>(text, 'truckTonnage', setFormData)}
+            />
             <ThemedText>
               Maximum Load Capacity<ThemedText color="red">*</ThemedText>
             </ThemedText>

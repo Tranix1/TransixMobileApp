@@ -201,7 +201,7 @@ const TruckDetails = () => {
             </Modal>
 
             {showAlert}
-            <Heading page={truckData.truckName || "Truck Details"}
+            <Heading page={truckData.name || "Truck Details"}
                 rightComponent={
                     <View style={{ flexDirection: 'row', gap: wp(2), marginRight: wp(2) }}>
 
@@ -331,9 +331,15 @@ const TruckDetails = () => {
                 <View style={{ gap: wp(4), paddingHorizontal: wp(2), marginBottom: wp(2), paddingVertical: wp(5), backgroundColor: background, borderRadius: wp(4), paddingBottom: wp(4) }}>
                     <View style={{}}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <ThemedText type="title" style={{ maxWidth: wp(80) }}>
-                                {truckData.CompanyName}
-                            </ThemedText>
+                            <View>
+
+                                <ThemedText type="title" style={{ maxWidth: wp(80), }}>
+                                    {truckData.CompanyName}
+                                </ThemedText>
+                                <ThemedText>
+                                    {truckData.name}
+                                </ThemedText>
+                            </View>
                             {truckData.isVerified &&
                                 <View style={{ flexDirection: 'row', alignSelf: 'center', borderRadius: wp(4), alignItems: 'center', gap: wp(2), borderWidth: .4, padding: wp(1), borderColor: coolGray }}>
                                     <Octicons name='verified' size={wp(3)} color={'#4eb3de'} />
@@ -400,7 +406,7 @@ const TruckDetails = () => {
                                 Maximum Load Capacity
                             </ThemedText>
                             <ThemedText type="subtitle" style={{}}>
-                                {truckData.maxloadCapacity || '--'}
+                                {truckData.maxloadCapacity || '--'}t
                             </ThemedText>
                         </View>
                         <ThemedText>|</ThemedText>
@@ -409,7 +415,7 @@ const TruckDetails = () => {
                                 Tonnage:
                             </ThemedText>
                             <ThemedText type="subtitle" style={{}}>
-                                {truckData.truckTonnage || '--'}
+                                {truckData.truckTonnage || '--'}t
                             </ThemedText>
                         </View>
 
@@ -419,10 +425,10 @@ const TruckDetails = () => {
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1 }}>
                                 <ThemedText type="tiny" style={{}}>
-                                    Operation Country{truckData.locations.length > 1 ? 's' : ''}
+                                    Operation Country{truckData.locations?.length > 1 ? 's' : ''}
                                 </ThemedText>
                                 <ThemedText type="subtitle" style={{ marginBottom: wp(4) }}>
-                                    {truckData.locations.join(', ') || '--'}
+                                    {truckData.locations?.join(', ') || '--'}
                                 </ThemedText>
                             </View>
 
@@ -467,11 +473,11 @@ const TruckDetails = () => {
                             <ThemedText type="tiny" style={{}}>
                                 Additional Infomation:
                             </ThemedText>
-                            <FormatedText numberOfLines={3} style={{ paddingTop: 0, }}>
+                            <ThemedText numberOfLines={3} style={{ paddingTop: 0, }}>
                                 {truckData.additionalInfo}
-                            </FormatedText>
+                            </ThemedText>
                             {truckData.additionalInfo.length > 100 && (
-                                <TouchableOpacity onPress={() => alertBox("Description", truckData.additionalInfo)}>
+                                <TouchableOpacity onPress={() => alertBox("Additional Infomation:", truckData.additionalInfo)}>
                                     <ThemedText type="tiny" style={{ color: accent, marginTop: wp(1) }}>
                                         Read More
                                     </ThemedText>

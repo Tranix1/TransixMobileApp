@@ -17,8 +17,7 @@ export type CountrySelectorProps = {
 }
 export type Truck = {
     created_at: string,
-    truckName: string,
-    CompanyName: string;
+    CompanyName?: string;
     additionalInfo: string;
     deletionTime: number;
     driverLicense: string;
@@ -42,9 +41,10 @@ export type Truck = {
     trailerBookF: string;
     trailerBookSc: string;
     trailerType: string;
-    truckBookImage: string;
+    truckBookImage?: string;
     truckTonnage: string;
     truckType: string;
+    name: string;
     userId: string;
     withDetails: boolean;
 };
