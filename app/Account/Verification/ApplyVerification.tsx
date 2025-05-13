@@ -17,10 +17,7 @@ interface FormData {
     addressWithProof: string;
 }
 
-interface RouteParams {
-    username: string;
-    contact: string;
-}
+
 
 interface DocumentAsset {
     uri: string;
@@ -28,8 +25,8 @@ interface DocumentAsset {
     fileSize: number;
 }
 
-const ApplyVerification: React.FC<{ route: { params: RouteParams } }> = ({ route }) => {
-    const { username, contact } = route.params;
+const ApplyVerification = () => {
+
     const [formData, setFormData] = useState<FormData>({
         buzLoc: "",
         phoneNumFrst: "",
@@ -172,8 +169,6 @@ const ApplyVerification: React.FC<{ route: { params: RouteParams } }> = ({ route
         try {
             const docRef = await addDoc(gitCollection, {
                 userId: userId,
-                companyName: username,
-                contact: contact,
                 pollUrl: pollUrl,
             });
 

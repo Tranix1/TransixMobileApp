@@ -9,6 +9,8 @@ import { collection,  serverTimestamp ,addDoc, query , where , doc,deleteDoc , r
 
 import { Truck } from "@/types/types";
 
+import { toggleItemById } from "@/Utilities/utils";
+
 function BookLContract({}){
 
 
@@ -43,30 +45,33 @@ const [bbVerifiedLoadD ,setbbVerifiedLoadD]=React.useState<Truck[] | []>([])
   }, []); 
 
 
-    const [ truckDetails , setTruckDDsp]=React.useState(false)
+    const [ truckDetails , setTruckDDsp]=React.useState<{ [key: string]: boolean }>({ ['']: false });
 
-  function togglrTruckDe(){
-    setTruckDDsp(prev=>!prev) 
-    setTruckBuzDDsp(false)
-    setDriverDDsp(false)
+  function togglrTruckDe(itemId:string){
+    toggleItemById(itemId , setTruckDDsp)
+    setTruckBuzDDsp({ ['']: false })
+    setDriverDDsp({ ['']: false })
   }
 
 
 
-  const [ truckBuzDe , setTruckBuzDDsp]=React.useState(false)
+  const [ truckBuzDe , setTruckBuzDDsp]=React.useState<{ [key: string]: boolean }>({ ['']: false });
 
-  function togglrTruckBuzDe(){
-    setTruckBuzDDsp(prev=>!prev)
-    setDriverDDsp(false)
-    setTruckDDsp(false)
+  function togglrTruckBuzDe(itemId : string){
+    toggleItemById(itemId , setTruckBuzDDsp)
+    setDriverDDsp({ ['']: false })
+    setTruckDDsp({ ['']: false } )
   }
 
-  const [driverDetails , setDriverDDsp]=React.useState(false)
+  const [driverDetails , setDriverDDsp]=React.useState<{ [key: string]: boolean }>({ ['']: false });
 
-  function togglrDriverDe(){
-     setTruckBuzDDsp(false)
-    setTruckDDsp(false)
-    setDriverDDsp(prev=>!prev)
+function togglrDriverDe(itemId : string ){
+    
+
+    toggleItemById(itemId , setDriverDDsp)
+     setTruckBuzDDsp({ ['']: false })
+    setTruckDDsp({ ['']: false })
+
   }
 
 
@@ -137,7 +142,7 @@ let renderElements = bbVerifiedLoadD.map((item)=>{
           const existingBBDoc = await checkExistixtBBDoc(`${userId}contractId ${item.timeStamp}`);
           if(!existingBBDoc){
 
-console.log('start adding')
+    console.log('start adding')
 
       const theCollection = collection(db, "trucksContracts");
         const docRef = await addDoc(theCollection, {
@@ -150,11 +155,11 @@ console.log('start adding')
         contractId : 'yayayyayaya' ,
         contractOnwerId : "papapapapapa" ,
         contractName :'banje' ,
-        approvedTrck : false
-        
-
+        approvedTrck : false ,
+        alreadyInContract : true ,
         })
-console.log('doneee adding')
+
+          alert('doneee adding')
         
           }else{
             alert("Truck alreadyy Booked")
@@ -163,8 +168,14 @@ console.log('doneee adding')
         }
     }
    
+    function removeFrmContract(){
+      // update doc were truck id and already inContract are true 
+      // save the contract id save reason for leaving it
+    }
     return(
-        <TouchableOpacity onPress={handleSubmitDetails} style={{marginBottom:18 , padding:10}}key={item.id} >
+        <View 
+        // onPress={handleSubmitDetails}
+         style={{marginBottom:70 , padding:10 ,borderWidth:2 , borderColor:'red'}}key={item.id} >
 
          {<Image source={{uri: item.imageUrl }} style={{ height : 250 , borderRadius: 10}} />}
 
@@ -182,51 +193,80 @@ console.log('doneee adding')
     
     
     )}
+      <TouchableOpacity onPress={handleSubmitDetails} style={{width:200 , backgroundColor:"blue"}}>
+        <Text style={{color:"white"}}>Select to contract</Text>
+      </TouchableOpacity>
 
+      <TouchableOpacity>
+        <Text>Remove from exisiting conrtract</Text>
+      </TouchableOpacity>
 
 
           <Text>{item.CompanyName} </Text>
 
-          <TouchableOpacity onPress={togglrTruckDe} style={styles.buttonSelectStyle} >
+          <TouchableOpacity
+           onPress={()=>togglrTruckDe(item.id) } style={styles.buttonSelectStyle} >
             <Text style={{color:'white'}} >Truck Details </Text>
           </TouchableOpacity>
-          {truckDetails &&<View> 
+          {truckDetails[item.id] &&<View> 
 
           <View style={{flexDirection :'row'}} >
               <Text style={{width :60}} >Trailer Type</Text>
               <Text>:  {item.trailerType}</Text>
             </View>
        
+<ScrollView horizontal style={{margin:10}} >
+           {item.truckBookImage&&  <View>
+            <Text style={{textAlign:'center'}} >Truck Image</Text>
+            <Image source={{uri: item.truckBookImage }} style={{ height : 250 , borderRadius: 10 ,width:300 , marginLeft:5 }} />
+            </View>}
 
-         {item.imageUrl&& <Image source={{uri: item.truckBookImage }} style={{ height : 250 , borderRadius: 10}} />}
-         {item.imageUrl&& <Image source={{uri: item.trailerBookF }} style={{ height : 250 , borderRadius: 10}} />}
-         {item.imageUrl&& <Image source={{uri: item.trailerBookSc  }} style={{ height : 250 , borderRadius: 10}} />}
+           { item.trailerBookF&&<View>
+            <Text style={{textAlign:'center'}}>Trailer Book</Text>
+          <Image source={{uri: item.trailerBookF }} style={{ height : 250 , borderRadius: 10 , width:300 , marginLeft:5 }} />
+            </View>}
 
+           { item.trailerBookSc&&<View>
+            <Text style={{textAlign:'center'}} >Second Trailer Book</Text>
+          <Image source={{uri: item.trailerBookSc  }} style={{ height : 250 , borderRadius: 10 , width:300 , marginLeft:5 }} />
+            </View>}
+
+</ScrollView>
          
             </View>}
 
-            <TouchableOpacity onPress={togglrDriverDe} style={styles.buttonStyle} >
+            <TouchableOpacity onPress={()=>togglrDriverDe(item.id) } style={styles.buttonStyle} >
               <Text>Driver Details</Text>
             </TouchableOpacity>
-          {driverDetails &&<View>
+          {driverDetails[item.id] &&<View>
 
 
-
-    
-
-         {item.imageUrl&& <Image source={{uri: item.driverLicense }} style={{ height : 250 , borderRadius: 10}} />}
-         {item.imageUrl&& <Image source={{uri: item.driverPassport}} style={{ height : 250 , borderRadius: 10}} />}
 
      <View style={{flexDirection :'row'}} >
         <Text style={{width :60}} >Driver Phone</Text>
         <Text>:  {item.driverPhone}</Text>
       </View>
+
+    <ScrollView horizontal>
+     {item.driverPassport&&  <View>
+            <Text style={{textAlign:'center'}} >Second Trailer Book</Text>
+
+         {item.driverLicense&& <Image source={{uri: item.driverLicense }} style={{ height : 250 , borderRadius: 10 , width:300 , marginLeft:5 }} />}
+      </View>}
+     {item.driverPassport&&  <View>
+
+            <Text style={{textAlign:'center'}} >Second Trailer Book</Text>
+         {<Image source={{uri: item.driverPassport}} style={{ height : 250 , borderRadius: 10, width:300 , marginLeft:5 }} />}
+      </View>}
+    </ScrollView>
+
+
         </View>}
 
-            <TouchableOpacity onPress={togglrTruckBuzDe} style ={styles.buttonSelectStyle} >
+            <TouchableOpacity onPress={()=>togglrTruckBuzDe(item.id)} style ={styles.buttonSelectStyle} >
               <Text style={{color:'white',fontSize :17}} >business Details</Text>
             </TouchableOpacity>
-           {truckBuzDe && <View>
+           {truckBuzDe[item.id] && <View>
               
      <View style={{flexDirection :'row'}} >
         <Text style={{width :60}} >Owner Phone Number</Text>
@@ -239,7 +279,7 @@ console.log('doneee adding')
     
          </View>}
 
-        </TouchableOpacity>
+        </View>
     )
 })
 

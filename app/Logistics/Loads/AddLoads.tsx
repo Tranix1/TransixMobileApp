@@ -44,7 +44,6 @@ const AddLoadDB = () => {
 // import { ThemedText } from "@/components/ThemedText";
 
 
-    const { user } = useAuth();
     const handleSubmit = () => {
 
         console.log({
@@ -67,21 +66,10 @@ const AddLoadDB = () => {
             return;
         }
 
-        if (!user) {
-            alert("Please Login first");
-            return;
-        }
-        if (!user.organisation) {
-            alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
-            return;
-        }
+     
         const loadData = {
             distance: distance,
-            userId: user?.uid,
-            companyName: user.organisation,
-            contact: user?.phoneNumber || '',
-            created_at: Date.now().toString(),
-            timeStamp: { nanoseconds: 0, seconds: Math.floor(Date.now() / 1000) },
+            deletionTime :Date.now() + 3 * 24 * 60 * 60 * 1000 ,
             isVerified: false,
             typeofLoad,
             destination: toLocation,

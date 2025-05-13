@@ -1,7 +1,7 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect,useState } from "react";
 
-import { View, Text, TouchableOpacity, ScrollView ,StyleSheet, Image, FlatList } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView ,StyleSheet, Image, FlatList ,RefreshControl, ActivityIndicator } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 import { fetchDocuments } from "@/db/operations";
@@ -10,25 +10,39 @@ import { Contracts } from '@/types/types'
 
 import { router } from "expo-router";
 
+import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore'
+
+import { ThemedText } from "@/components/ThemedText";
+import { useThemeColor } from '@/hooks/useThemeColor';
+import { hp,wp } from "@/constants/common";
 function LoadsContracts({  }) {
 
 
   const [contractLoc, setContraLoc] = React.useState(null)
-  const [getContracts, setGetContracts] = React.useState<Contracts[] | null>(null)
-    
+  const [getContracts, setGetContracts] = React.useState<Contracts[]>([])
+        const [refreshing, setRefreshing] = useState(false)
+    const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+    const [loadingMore, setLoadingMore] = useState(false);
 
-  const [dspLoadMoreBtn, setLoadMoreBtn] = React.useState(true)
-  const [LoadMoreData, setLoadMoreData] = React.useState(false)
+    const [showfilter, setShowfilter] = useState(false)
+
+
+
+  const accent = useThemeColor('accent')
+    const icon = useThemeColor('icon')
+    const background = useThemeColor('background')
+
 
 
     const LoadTructs = async () => {
 
-        const maTrucks = await fetchDocuments("loadsContracts");
+        const maTrucks = await fetchDocuments("Trucks" , 10, lastVisible);
         
         if (maTrucks) {
 
-            // setGetContracts(maTrucks as Contracts[]);
+            setGetContracts( maTrucks.data as Contracts[]);
 
+            setLastVisible(maTrucks.lastVisible)
         }
 
     }
@@ -38,15 +52,51 @@ function LoadsContracts({  }) {
 
   console.log(getContracts)
   
+   const onRefresh = async () => {
+        try {
+            setRefreshing(true);
+            await LoadTructs();
+            setRefreshing(false);
 
+        } catch (error) {
+
+        }
+    };
   
+  const loadMoreLoads = async () => {
+
+        if (loadingMore || !lastVisible) return;
+        setLoadingMore(true);
+        const result = await fetchDocuments('loadsContracts', 10, lastVisible);
+        if (result) {
+            setGetContracts([...getContracts, ...result.data as Contracts[]]);
+            setLastVisible(result.lastVisible);
+        }
+        setLoadingMore(false);
+    };
 
   return (
     <View style={{ paddingTop: 89, padding: 10 }} >
-
+      <Text>hiiii</Text>
            
 
-      {<FlatList  data={getContracts}   renderItem={({ item }) => (
+      {/* {<FlatList  data={getContracts}   renderItem={({ item }) => ( */}
+
+
+                    {/* )} /> } */}
+
+
+
+
+      {/* <FlatList  data={getContracts}   renderItem={({ item }) => ( */}
+
+
+         <FlatList
+                    keyExtractor={(item) => item.id.toString()}
+
+                    data={getContracts}
+                    renderItem={({ item }) => (
+                        // <LoadComponent item={item} />
                          <View
 //   key={item.id}
   style={{
@@ -74,7 +124,7 @@ function LoadsContracts({  }) {
   >
     9 Months Contract Available
   </Text>
-<Text>{item.formDataScnd.contractDuration} </Text>
+{/* <Text>{item.formDataScnd.contractDuration} </Text> */}
   <Text
     style={{
       fontStyle: 'italic',
@@ -121,7 +171,7 @@ function LoadsContracts({  }) {
   router.push({
     pathname: '/Logistics/Contracts/ViewContractDetails',
     params: {
-      item: JSON.stringify(item),
+      item: JSON.stringify('yaya'),
     },
   })
 }
@@ -133,7 +183,52 @@ function LoadsContracts({  }) {
   </TouchableOpacity>
 </View>
 
-                    )} /> }
+                    )}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[accent]}
+                        />
+                    }
+                    onEndReached={loadMoreLoads}
+                    onEndReachedThreshold={.5}
+                    ListEmptyComponent={<View style={{ minHeight: hp(80), justifyContent: 'center' }}>
+
+                        <ThemedText type='defaultSemiBold' style={{ textAlign: 'center' }}>
+                            No Loads to Display!
+                        </ThemedText>
+                        <ThemedText type='tiny' style={{ textAlign: 'center', marginTop: wp(2) }}>
+                            pull to refresh
+                        </ThemedText>
+                    </View>}
+                    ListFooterComponent={
+                        <View style={{ marginBottom: wp(10), marginTop: wp(6) }}>
+                            {
+                                loadingMore ?
+                                    <View style={{ flexDirection: "row", gap: wp(4), alignItems: 'center', justifyContent: 'center' }}>
+                                        <ThemedText type='tiny' style={{ color: icon }}>Loading More</ThemedText>
+                                        <ActivityIndicator size="small" color={accent} />
+                                    </View>
+                                    :
+                                    (!lastVisible && getContracts.length > 0) ?
+                                        <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                                            <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>No more Trucks to Load
+                                            </ThemedText>
+                                            <Ionicons color={icon} style={{}} name='alert-circle-outline' size={wp(6)} />
+
+                                        </View>
+                                        : null
+                            }
+
+                        </View>
+                    }
+                />
+
+
+
+
+
 
     </View>
   )

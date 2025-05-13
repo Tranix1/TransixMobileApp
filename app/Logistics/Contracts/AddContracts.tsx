@@ -2,8 +2,6 @@ import React, { useState, FC } from "react";
 
 import { View, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 
-import inputstyles from "../../components/styles/inputElement";
-
 import CheckOutMakePayments from "@/components/CheckOutPayment";
 import { ErrorOverlay } from "@/components/ErrorOverLay";
 import { handleMakePayment } from "@/payments/operations";

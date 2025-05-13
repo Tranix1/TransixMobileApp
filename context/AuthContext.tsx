@@ -32,6 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const setupUser = async (userData: any) => {
         if (userData) {
+            console.log(user?.organisation)
             const aditional = await readById('personalData', userData.uid)
             setUser({ ...userData, ...aditional })
             setIsSignedIN(true);
@@ -135,7 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             // Update the user's profile with the display name
             await updateProfile(user, { displayName: credentials.displayName });
-            const newUser = await setDocuments(user.uid, {
+            const newUser = await setDocuments("personalData", {
                 phoneNumber: null,
                 photoURL: null,
                 displayName: credentials.displayName,
@@ -203,7 +204,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
 
             if (user) {
-                await setDocuments(user.uid, {
+                await setDocuments("personalData" , {
                     ...credentials,
                 });
             }

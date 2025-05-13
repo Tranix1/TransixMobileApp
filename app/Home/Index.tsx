@@ -304,7 +304,8 @@ const Index = () => {
                         <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
                             Long-Term Contracts
                         </ThemedText>
-                        <TouchableOpacity style={{ flexDirection: 'row', gap: wp(1) }}>
+                        <TouchableOpacity style={{ flexDirection: 'row', gap: wp(1) }} 
+                        onPress={()=>router.push("/Logistics/Contracts/ViewMiniContracts")}>
                             <ThemedText type='tiny'>
                                 Open Contracts
                             </ThemedText>
