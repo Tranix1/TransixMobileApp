@@ -267,7 +267,7 @@ const Index = () => {
                             </ThemedText>
                         </View>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')} underlayColor={'#0f9d585a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#0f9d5824' }}>
+                            <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')}underlayColor={'#0f9d585a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#0f9d5824' }}>
                                 <Fontisto name="truck" size={wp(5)} color="#0f9d58" />
                             </TouchableHighlight>
                             <ThemedText type='tiny' style={{ textAlign: 'center' }}>
@@ -275,7 +275,7 @@ const Index = () => {
                             </ThemedText>
                         </View>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')} underlayColor={'#4285f45a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#4285f424' }}>
+                            <TouchableHighlight onPress={() => router.push("/Logistics/Loads/AddLoads")}  underlayColor={'#4285f45a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#4285f424' }}>
                                 <FontAwesome6 name="box" size={wp(5)} color="#4285f4" />
                             </TouchableHighlight>
                             <ThemedText type='tiny' style={{ textAlign: 'center' }}>
@@ -357,6 +357,7 @@ const Index = () => {
                         colors={{ text: '#6bacbf', bg: '#6bacbf24' }}
                         title='Get Verified'
                         Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"#6bacbf"} />}
+                        onPress={()=> router.push('/Account/Verification/ApplyVerification')}
                     />
                 </View>
 

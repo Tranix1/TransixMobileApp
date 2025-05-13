@@ -1,19 +1,24 @@
 import React, { useState } from "react";
 import { db, auth } from "../../components/config/fireBase";
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { View, TextInput, Text, Alert, TouchableOpacity, ActivityIndicator, StyleSheet, Linking, ScrollView } from "react-native";
+import { View, Alert, TouchableOpacity, ActivityIndicator, StyleSheet, Linking, ScrollView } from "react-native";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { LoadFormData } from "@/types/types";
 
+import ScreenWrapper from '@/components/ScreenWrapper';
+import Input from "@/components/Input";
+import { ThemedText } from "@/components/ThemedText";
 
 interface RouteParams {
-    isVerified: boolean;
+isVerified: boolean;
     verifyOngoing: boolean;
 }
 
 const AddLoadDB: React.FC<{ route: { params: RouteParams } }> = ({ route }) => {
-    const {  isVerified,   verifyOngoing } = route.params;
+    const isVerified= true
+    const verifyOngoing = true
+    
     const [error, setError] = useState<string>("");
     const loadsCollection = collection(db, "Loads");
     const [formData, setFormData] = useState< LoadFormData>({
@@ -181,58 +186,64 @@ const AddLoadDB: React.FC<{ route: { params: RouteParams } }> = ({ route }) => {
             setError(err.toString());
         }
     };
+    return(
+        <ScreenWrapper>
 
-    return (
-        <View style={{ alignItems: 'center', }}>
-            {verifyOngoing && !isVerified && <TouchableOpacity onPress={() => Linking.openURL(`whatsapp://send?phone=+263716325160  &text=${encodeURIComponent(`
-I aspire to become verified at the first level on Transix Now!
-To make this happen without any delays or uncertainties.
-
-Provide:
-- Company Address
-- Company Details (e.g., Articles of Association, tax clearance, etc.)
-- National ID or Passport must match details in company details
-
-- Verify Address using Utility Bill (electricity, water, internet, gas),
-  Lease Agreement, Business Licence, Tax Document.
-
-- The document for Address must be from 3-6 months ago.
-
-There is a $5 monthly subscription fee, and you can choose for how long you want to be verified.
-
-The Future Of Transport And Logistics (Transix)
-`)} `)} style={{ marginBottom: 4, padding: 7, borderWidth: 3, borderColor: '#6a0c0c', borderRadius: 8, shadowColor: '#6a0c0c',
+        <View style={{paddingHorizontal:20}} >
+                {verifyOngoing &&  <TouchableOpacity style={{ marginBottom: 4, padding: 7, borderWidth: 3, borderColor: '#6a0c0c', borderRadius: 8, shadowColor: '#6a0c0c',
                 shadowOffset: { width: 3, height: 2 },
                 shadowOpacity: 0.7,
                 shadowRadius: 5, margin: 10 }}>
                 {<View style={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'white', zIndex: 66 }}>
                     <MaterialIcons name="verified" size={29} color="green" />
                 </View>}
-                <Text style={{ alignSelf: 'flex-start', fontSize: 13, color: 'green', fontStyle: 'italic' }}>Ongoing Verification</Text>
-                <Text style={{ textAlign: 'center', fontSize: 17, color: "#6a0c0c", fontWeight: '500' }}>
+                <ThemedText style={{ alignSelf: 'flex-start', fontSize: 13, color: 'green', fontStyle: 'italic' }}>Ongoing Verification</ThemedText>
+                <ThemedText style={{ textAlign: 'center', fontSize: 17, color: "#6a0c0c", fontWeight: '500' }}>
                     If You Are Legit
-                </Text>
-                <Text>Click Here to Verify Your Business and Loads</Text>
+                </ThemedText>
+                <ThemedText>Click Here to Verify Your Business and Loads</ThemedText>
             </TouchableOpacity>}
-            <ScrollView showsVerticalScrollIndicator={false} >
 
-                {!localLoads && <View>
-
-                    <TextInput
+                     <Input
                         value={formData.typeofLoad}
                         placeholderTextColor="#6a0c0c"
                         placeholder="Type of Load"
                         onChangeText={(text) => handleTypedText(text, 'typeofLoad')}
                     />
 
-                    <TextInput
+                    <Input
                         value={formData.fromLocation}
                         placeholderTextColor="#6a0c0c"
                         placeholder="From Loacation"
                         onChangeText={(text) => handleTypedText(text, 'fromLocation')}
                     />
 
-                    <TextInput
+                    <Input
+                        value={formData.toLocation}
+                        placeholderTextColor="#6a0c0c"
+                        placeholder="To location"
+                        onChangeText={(text) => handleTypedText(text, 'toLocation')}
+                    />
+
+      <ScrollView showsVerticalScrollIndicator={false} >
+
+                {!localLoads && <View>
+
+                    <Input
+                        value={formData.typeofLoad}
+                        placeholderTextColor="#6a0c0c"
+                        placeholder="Type of Load"
+                        onChangeText={(text) => handleTypedText(text, 'typeofLoad')}
+                    />
+
+                    <Input
+                        value={formData.fromLocation}
+                        placeholderTextColor="#6a0c0c"
+                        placeholder="From Loacation"
+                        onChangeText={(text) => handleTypedText(text, 'fromLocation')}
+                    />
+
+                    <Input
                         value={formData.toLocation}
                         placeholderTextColor="#6a0c0c"
                         placeholder="To location"
@@ -245,16 +256,16 @@ The Future Of Transport And Logistics (Transix)
 
 
 
-                    {!trailerConfig && <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    {!trailerConfig && <View style={{ flexDirection: 'row', alignItems: 'center',width:250 }}>
 
                         <View>
                             <TouchableOpacity onPress={toggleCurrency}>
-                                {currency ? <Text style={styles.buttonIsFalse} >USD</Text> :
-                                    <Text style={styles.bttonIsTrue}>Rand </Text>}
+                                {currency ? <ThemedText style={styles.buttonIsFalse} >USD</ThemedText> :
+                                    <ThemedText style={styles.bttonIsTrue}>Rand </ThemedText>}
                             </TouchableOpacity>
                         </View>
 
-                        <TextInput
+                        <Input
                             onChangeText={(text) => handleTypedText(text, 'ratePerTonne')}
                             value={formData.ratePerTonne}
                             keyboardType="numeric"
@@ -263,14 +274,14 @@ The Future Of Transport And Logistics (Transix)
                             placeholder="Enter rate here"
                         />
                         <TouchableOpacity onPress={togglePerTonne} >
-                            {perTonne ? <Text style={styles.bttonIsTrue} >Per tonne</Text> :
-                                <Text style={styles.buttonIsFalse}>Per tonne</Text>}
+                            {perTonne ? <ThemedText style={styles.bttonIsTrue} >Per tonne</ThemedText> :
+                                <ThemedText style={styles.buttonIsFalse}>Per tonne</ThemedText>}
                         </TouchableOpacity>
                     </View>}
 
 
                     <TouchableOpacity onPress={toggleTrailerConfig} style={trailerConfig ? styles.bttonIsTrue : styles.buttonIsFalse} >
-                        <Text style={trailerConfig ? { color: 'white' } : null}  >Trailer config</Text>
+                        <ThemedText style={trailerConfig ? { color: 'white' } : null}  >Trailer config</ThemedText>
                     </TouchableOpacity>
 
 
@@ -279,16 +290,16 @@ The Future Of Transport And Logistics (Transix)
                     {trailerConfig && <View>
 
                         <View >
-                            <Text style={{ fontSize: 19, }} >Links </Text>
+                            <ThemedText style={{ fontSize: 19, }} >Links </ThemedText>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }} >
                                 <View>
                                     <TouchableOpacity onPress={toggleCurrency}>
-                                        {currency ? <Text style={styles.buttonIsFalse} >USD</Text> :
-                                            <Text style={styles.bttonIsTrue}>Rand </Text>}
+                                        {currency ? <ThemedText style={styles.buttonIsFalse} >USD</ThemedText> :
+                                            <ThemedText style={styles.bttonIsTrue}>Rand </ThemedText>}
                                     </TouchableOpacity>
                                 </View>
 
-                                <TextInput
+                                <Input
                                     onChangeText={(text) => handleTypedText(text, 'links')}
                                     value={formData.links}
                                     keyboardType="numeric"
@@ -297,24 +308,24 @@ The Future Of Transport And Logistics (Transix)
                                     placeholder="Enter Links rate"
                                 />
                                 <TouchableOpacity onPress={togglePerTonne} >
-                                    {perTonne ? <Text style={styles.bttonIsTrue} >Per tonne</Text> :
-                                        <Text style={styles.buttonIsFalse}>Per tonne</Text>}
+                                    {perTonne ? <ThemedText style={styles.bttonIsTrue} >Per tonne</ThemedText> :
+                                        <ThemedText style={styles.buttonIsFalse}>Per tonne</ThemedText>}
                                 </TouchableOpacity>
                             </View>
                         </View>
 
 
                         <View >
-                            <Text style={{ fontSize: 19, }}>Triaxle</Text>
+                            <ThemedText style={{ fontSize: 19, }}>Triaxle</ThemedText>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }} >
                                 <View>
                                     <TouchableOpacity onPress={toggleCurrency}>
-                                        {currency ? <Text style={styles.buttonIsFalse} >USD</Text> :
-                                            <Text style={styles.bttonIsTrue}>Rand </Text>}
+                                        {currency ? <ThemedText style={styles.buttonIsFalse} >USD</ThemedText> :
+                                            <ThemedText style={styles.bttonIsTrue}>Rand </ThemedText>}
                                     </TouchableOpacity>
                                 </View>
 
-                                <TextInput
+                                <Input
                                     onChangeText={(text) => handleTypedText(text, 'triaxle')}
                                     value={formData.triaxle}
                                     keyboardType="numeric"
@@ -323,8 +334,8 @@ The Future Of Transport And Logistics (Transix)
                                     placeholder="Enter triaxle rate"
                                 />
                                 <TouchableOpacity onPress={togglePerTonne} >
-                                    {perTonne ? <Text style={styles.bttonIsTrue} >Per tonne</Text> :
-                                        <Text style={styles.buttonIsFalse}>Per tonne</Text>}
+                                    {perTonne ? <ThemedText style={styles.bttonIsTrue} >Per tonne</ThemedText> :
+                                        <ThemedText style={styles.buttonIsFalse}>Per tonne</ThemedText>}
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -338,34 +349,34 @@ The Future Of Transport And Logistics (Transix)
 
 
                     {spinnerItem && <ActivityIndicator size={36} />}
-                    {error && <Text>{error} retry </Text>}
+                    {error && <ThemedText>{error} retry </ThemedText>}
 
-                    <TextInput
+                    <Input
                         value={formData.paymentTerms}
                         placeholderTextColor="#6a0c0c"
                         placeholder="Payment Terms"
                         onChangeText={(text) => handleTypedText(text, 'paymentTerms')}
                     />
-                    <TextInput
+                    <Input
                         value={formData.requirements}
                         placeholderTextColor="#6a0c0c"
                         placeholder="Requirements"
                         onChangeText={(text) => handleTypedText(text, 'requirements')}
                     />
 
-                    <TextInput
+                    <Input
                         value={formData.additionalInfo}
                         placeholderTextColor="#6a0c0c"
                         placeholder="Additional Information"
                         onChangeText={(text) => handleTypedText(text, 'additionalInfo')}
                     />
-                    {alertMsgD && <TextInput
+                    {alertMsgD && <Input
                         value={formData.alertMsg}
                         placeholderTextColor="#6a0c0c"
                         placeholder="Alert Message"
                         onChangeText={(text) => handleTypedText(text, 'alertMsg')}
                     />}
-                    {fuelAvaD && <TextInput
+                    {fuelAvaD && <Input
                         value={formData.fuelAvai}
                         placeholderTextColor="#6a0c0c"
                         placeholder="Fuel Availability"
@@ -374,20 +385,20 @@ The Future Of Transport And Logistics (Transix)
 
                     {returnLoadDisplay && <View>
 
-                        <TextInput
+                        <Input
                             value={formData.returnLoad}
                             placeholderTextColor="#6a0c0c"
                             placeholder="Return Load"
                             onChangeText={(text) => handleTypedText(text, 'returnLoad')}
                         />
-                        <TextInput
+                        <Input
                             value={formData.returnRate}
                             placeholderTextColor="#6a0c0c"
                             placeholder="Return Rate"
                             onChangeText={(text) => handleTypedText(text, 'returnRate')}
                             keyboardType="numeric"
                         />
-                        <TextInput
+                        <Input
                             value={formData.returnTerms}
                             placeholderTextColor="#6a0c0c"
                             placeholder="Return Terms"
@@ -399,20 +410,20 @@ The Future Of Transport And Logistics (Transix)
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 }} >
                         {<TouchableOpacity onPress={toggleAlertMsgD} style={alertMsgD ? styles.bttonIsTrue : styles.buttonIsFalse} >
 
-                            <Text style={alertMsgD ? { color: 'white' } : null} >Alert </Text>
+                            <ThemedText style={alertMsgD ? { color: 'white' } : null} >Alert </ThemedText>
                         </TouchableOpacity>}
 
                         {<TouchableOpacity onPress={toggleFuelMsgD} style={fuelAvaD ? styles.bttonIsTrue : styles.buttonIsFalse} >
-                            <Text style={fuelAvaD ? { color: 'white' } : null} >Fuel </Text>
+                            <ThemedText style={fuelAvaD ? { color: 'white' } : null} >Fuel </ThemedText>
                         </TouchableOpacity>}
 
 
                         {<TouchableOpacity onPress={toggleDspRetunLoad} style={returnLoadDisplay ? styles.bttonIsTrue : styles.buttonIsFalse} >
-                            <Text style={returnLoadDisplay ? { color: 'white' } : null} >Return Load </Text>
+                            <ThemedText style={returnLoadDisplay ? { color: 'white' } : null} >Return Load </ThemedText>
                         </TouchableOpacity>}
 
                         {<TouchableOpacity onPress={toggleRundTripAlert} style={roundTrip ? styles.bttonIsTrue : styles.buttonIsFalse} >
-                            <Text style={roundTrip ? { color: 'white' } : null} >Round Trip</Text>
+                            <ThemedText style={roundTrip ? { color: 'white' } : null} >Round Trip</ThemedText>
                         </TouchableOpacity>}
 
                     </View>
@@ -420,63 +431,71 @@ The Future Of Transport And Logistics (Transix)
 
                 {localLoads && <View style={{ alignSelf: 'center' }} >
                     <TouchableOpacity onPress={() => specifyLocation('Zimbabwe')} style={styles.buttonStyle} >
-                        <Text style={{ color: '#6a0c0c' }}>Zimbabwe </Text>
+                        <ThemedText style={{ color: '#6a0c0c' }}>Zimbabwe </ThemedText>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => specifyLocation('SouthAfrica')} style={styles.buttonStyle} >
-                        <Text style={{ color: '#6a0c0c' }} >  South Africa</Text>
+                        <ThemedText style={{ color: '#6a0c0c' }} >  South Africa</ThemedText>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => specifyLocation('Namibia')} style={styles.buttonStyle}>
-                        <Text style={{ color: '#6a0c0c' }}>Namibia </Text>
+                        <ThemedText style={{ color: '#6a0c0c' }}>Namibia </ThemedText>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => specifyLocation('Tanzania')} style={styles.buttonStyle}>
-                        <Text style={{ color: '#6a0c0c' }}> Tanzania</Text>
+                        <ThemedText style={{ color: '#6a0c0c' }}> Tanzania</ThemedText>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => specifyLocation('Mozambique')} style={styles.buttonStyle}>
-                        <Text style={{ color: '#6a0c0c' }}>Mozambique </Text>
+                        <ThemedText style={{ color: '#6a0c0c' }}>Mozambique </ThemedText>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => specifyLocation('Zambia')} style={styles.buttonStyle}>
-                        <Text style={{ color: '#6a0c0c' }}> Zambia</Text>
+                        <ThemedText style={{ color: '#6a0c0c' }}> Zambia</ThemedText>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => specifyLocation('Botswana')} style={styles.buttonStyle} >
-                        <Text style={{ color: '#6a0c0c' }}>Botswana </Text>
+                        <ThemedText style={{ color: '#6a0c0c' }}>Botswana </ThemedText>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => specifyLocation('Malawi')} style={styles.buttonStyle} >
-                        <Text style={{ color: '#6a0c0c' }}>Malawi </Text>
+                        <ThemedText style={{ color: '#6a0c0c' }}>Malawi </ThemedText>
                     </TouchableOpacity>
 
                 </View>
                 }
 
-                {location !== "International" && <Text>local load for {location} </Text>}
+                {location !== "International" && <ThemedText>local load for {location} </ThemedText>}
                 <View style={{ flexDirection: 'row', marginBottom: 6, justifyContent: 'space-between', width: 200, alignSelf: 'center' }}>
 
                     <TouchableOpacity onPress={toggleActiveLoading}>
-                        {!activeLoading ? <Text style={styles.buttonIsFalse}>Active Loading</Text> :
-                            <Text style={styles.bttonIsTrue}>Active Loading </Text>}
+                        {!activeLoading ? <ThemedText style={styles.buttonIsFalse}>Active Loading</ThemedText> :
+                            <ThemedText style={styles.bttonIsTrue}>Active Loading </ThemedText>}
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={toggleLocalLoads} style={{}}>
-                        <Text style={styles.buttonIsFalse}>Local loads </Text>
+                        <ThemedText style={styles.buttonIsFalse}>Local loads </ThemedText>
                     </TouchableOpacity>
 
                 </View>
                 {!spinnerItem ? <TouchableOpacity onPress={handleSubmit} style={{ backgroundColor: '#6a0c0c', width: 80, height: 30, borderRadius: 5, alignItems: 'center', justifyContent: 'center', alignSelf: 'center' }}>
-                    <Text style={{ color: 'white' }}>submit</Text>
+                    <ThemedText style={{ color: 'white' }}>submit</ThemedText>
                 </TouchableOpacity>
-                    : <Text style={{ alignSelf: "center", fontStyle: 'italic' }}>Load is being added Please wait</Text>
+                    : <ThemedText style={{ alignSelf: "center", fontStyle: 'italic' }}>Load is being added Please wait</ThemedText>
                 }
 
                 <View style={{ height: 300 }} ></View>
             </ScrollView>
+
+
+
+
+
         </View>
-    );
+
+        </ScreenWrapper>
+    )
+
 };
 
 export default React.memo(AddLoadDB);
