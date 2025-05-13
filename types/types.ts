@@ -16,21 +16,21 @@ export type CountrySelectorProps = {
     locaOpLoc: string
 }
 export type Truck = {
-
-    CompanyName: string;
+    created_at: string,
+    CompanyName?: string;
     additionalInfo: string;
-    contact: string;
     deletionTime: number;
     driverLicense: string;
     driverPassport: string;
     driverPhone: string;
-    expoPushToken: string;
     fromLocation: string;
+    location: string,
+    trailerModel: string,
     id: string;
     imageUrl: string;
     isVerified: boolean;
     locations: string[];
-    maximumWheight: string;
+    maxloadCapacity: string;
     onwerEmail: string;
     ownerName: string;
     ownerPhoneNum: string;
@@ -40,11 +40,11 @@ export type Truck = {
     };
     trailerBookF: string;
     trailerBookSc: string;
-    trailerModel: string;
     trailerType: string;
-    truckBookImage: string;
+    truckBookImage?: string;
     truckTonnage: string;
     truckType: string;
+    name: string;
     userId: string;
     withDetails: boolean;
 };
@@ -59,8 +59,6 @@ export type Product = {
 
 export type LoadFormData = {
     typeofLoad: string
-    fromLocation: string
-    toLocation: string
     ratePerTonne: string
     paymentTerms: string
     requirements: string
@@ -76,23 +74,22 @@ export type LoadFormData = {
 export type Load = {
     id: string,
     distance: string,
-
+    created_at: string,
     destination: string,
     userId: string;
     companyName: string;
     contact: string;
-    expoPushToken: string;
     deletionTime: number;
     timeStamp: {
         nanoseconds: number;
         seconds: number;
     };
     currency: string
-    perTonne: boolean
     activeLoading: boolean
     location: string
     roundTrip: boolean
     isVerified: boolean
+
 } & LoadFormData
 
 // export const Countries = [
@@ -107,7 +104,8 @@ export const Countries = ['Zimbabwe',
     'Mozambique',
     'Zambia',
     'Botswana',
-    'Malawi'
+    'Malawi',
+    'Other'
 ]
 export type User = {
     uid: string,
