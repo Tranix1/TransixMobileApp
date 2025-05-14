@@ -33,7 +33,6 @@ export const addDocument = async (
             userId: auth.currentUser?.uid ,
             companyName: user?.organisation,
             contact: user?.phoneNumber || '',
-            created_at: Date.now().toString(),
 
         });
         onStatusUpdate("Doneee submitting to db");
@@ -87,7 +86,7 @@ export const fetchDocuments = async (
     filters: Array<any> = []
 ) => {
     try {
-        let dataQuery: Query<DocumentData> = query(collection(db, collectionName), limit(limitCount), orderBy('created_at', "desc"));
+        let dataQuery: Query<DocumentData> = query(collection(db, collectionName), limit(limitCount), orderBy('timeStamp', "desc"));
 
         if (startAfterDoc) {
             dataQuery = query(dataQuery, startAfter(startAfterDoc));

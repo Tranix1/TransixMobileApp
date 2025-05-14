@@ -77,6 +77,125 @@ const Index = () => {
     );
 
 
+
+        
+
+        interface DataItem {
+        topic: string;
+        description: string;
+        id : number
+        }
+
+        const theData: DataItem[] = [
+
+
+
+                      
+
+        {
+            id :1 ,
+             topic: "Long-Term Contracts" ,
+         description: 'Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.' 
+        },
+
+        {
+            id:2 , 
+            topic: "First Level Verification" ,
+             description: 'We encourage all legit business to be verified\nIncrease business trust and credibility by verifying your company.'
+             },
+        { 
+            id : 3 , 
+            topic: "GIT (Goods in transit Insuarance)" ,
+            description: 'Ensures financial protection for trucks and cargo, keeping your business secure.'  ,
+             },
+        { 
+            id : 4 ,
+             topic: "Tracking" ,
+              description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!' },
+        { 
+            id : 5 , 
+            topic: "Warehouse", 
+            description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!' },
+        {
+             id : 6 , 
+             topic: "Truck Stop",
+            description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!' },
+        ];
+
+
+        const [filteredData, setFilteredData] = useState<DataItem[]>([]);
+  const [textTyped, setTextTyped] = useState<string>("");
+
+  const handleFilter = (text: string) => {
+    const searchWord = text;
+    setTextTyped(text);
+
+    const newFilter = theData.filter((value) => {
+      const combinedText = `${value.topic} ${value.description}`;
+      return combinedText.toLowerCase().includes(searchWord.toLowerCase());
+    });
+
+    if (searchWord === "") {
+      setFilteredData([]);
+    } else {
+      setFilteredData(newFilter);
+    }
+  };
+
+  const clearInput = () => {
+    setFilteredData([]);
+    setTextTyped("");
+  };
+
+ 
+interface HomeItemProps {
+  topic: string;
+  description: string;
+  mainColor: string;
+  background: string;
+  icon: string;
+  buttonTitle: string; 
+  btnBackground : string;
+}
+
+const HomeItemView: React.FC<HomeItemProps> = ({
+  topic,
+  description,
+  mainColor,
+  btnBackground,
+  background,
+  icon,
+  buttonTitle,
+}) => (
+  <View style={[styles.homefeature, { borderColor: mainColor, }]}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }}>
+      <View style={{ backgroundColor: mainColor , borderRadius: wp(2), padding: wp(1.5) }}>
+        <Octicons name='verified' color={'#fff'} size={wp(4)} />
+      </View>
+      <ThemedText type='subtitle' color={mainColor}  style={{ fontWeight: 'bold', fontSize: wp(4.5) }} >
+        {topic}
+      </ThemedText>
+    </View>
+
+    <ThemedText
+      type='default'
+      numberOfLines={0}
+        style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}
+    >
+      {description}
+    </ThemedText>
+
+    <Button
+      colors={{ text: mainColor, bg: btnBackground}}
+      title={buttonTitle} // ✅ Dynamic title
+      Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={mainColor} />}
+    />
+  </View>
+);
+
+
+console.log("filtred Data", filteredData)
+
     return (
 
         <View style={{ flex: 1 }}>
@@ -240,7 +359,9 @@ const Index = () => {
                     </View> */}
 
                 <View style={{ margin: wp(4), marginTop: 0 }}>
-                    <Input placeholder='Search...' Icon={<EvilIcons name='search' size={wp(6)} />} containerStyles={{ backgroundColor: backgroundColor }} />
+                    <Input placeholder='Search...' Icon={<EvilIcons name='search' size={wp(6)} />} containerStyles={{ backgroundColor: backgroundColor }} 
+                    onChangeText={(text) => handleFilter(text)}  
+                    />
                 </View>
 
                 {/* <TouchableOpacity onPress={() => router.push("/Logistics/AddHome")} >
@@ -248,7 +369,7 @@ const Index = () => {
                 </TouchableOpacity> */}
 
 
-                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
+               {!textTyped&& <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
                         <View style={{}}>
                             <MaterialCommunityIcons name="lightning-bolt-circle" size={wp(4)} color={icon} />
@@ -293,9 +414,20 @@ const Index = () => {
 
                     </View>
 
-                </View>
+                </View>}
 
-                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
+
+
+
+
+
+
+
+
+               {filteredData.map((item)=>(  <View>
+
+
+               {item.id ===1 && <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
 
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
                         <View style={{}}>
@@ -313,7 +445,7 @@ const Index = () => {
                         </TouchableOpacity>
                     </View>
                     <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>
-                        Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
+                        {item.description}
                     </ThemedText>
 
                     <FlatList data={[]}
@@ -338,89 +470,193 @@ const Index = () => {
 
 
 
-                </View>
+                </View>}
 
 
-                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
+
+
+
+
+ {item.id=== 2&&  <HomeItemView
+                topic={item.topic}
+                description={item.description}
+                mainColor="#6bacbf"
+                background="#fb9274"
+                icon="#333"
+                buttonTitle="Get Verified"
+                btnBackground="#6bacbf24"
+                />}              
+
+
+     {item.id=== 3&&  <HomeItemView
+                topic={item.topic}
+                description={item.description}
+                mainColor="#fb9274"
+                background="#fb9274"
+                icon="#333"
+                buttonTitle="Get Verified"
+                btnBackground="#fb927424"
+                />}
+
+               {item.id=== 4&&  <HomeItemView
+                topic={item.topic}
+                description={item.description}
+                mainColor="#bada5f"
+                background="#ffffff"
+                icon="#333"
+                buttonTitle="Get Verified"
+                btnBackground="#bada5f24"
+                />}
+
+        {item.id=== 5&&  <HomeItemView
+                topic={item.topic}
+                description={item.description}
+                mainColor="#bada5f"
+                background="#ffffff"
+                icon="#333"
+                buttonTitle="Get Verified"
+                btnBackground="#bada5f24"
+                />}
+                
+                  {item.id=== 6&&  <HomeItemView
+                topic={item.topic}
+                description={item.description}
+                mainColor="#bada5f"
+                background="#ffffff"
+                icon="#333"
+                buttonTitle="Get Verified"
+                btnBackground="#bada5f24"
+                />} 
+            
+
+                   
+
+
+              
+
+
+
+                </View> ) )}
+
+
+  {!textTyped && theData.map((item)=>(  <View>
+
+
+               {item.id ===1 && <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
+
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
-                        <View style={{ backgroundColor: '#6bacbf', borderRadius: wp(2), padding: wp(1.5) }}>
-                            <Octicons name='verified' color={'#fff'} size={wp(4)} />
+                        <View style={{}}>
+                            <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} />
                         </View>
-                        <ThemedText type='subtitle' color={'#6bacbf'} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
-                            First Level Verification
+                        <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
+                            Long-Term Contracts
                         </ThemedText>
+                        <TouchableOpacity style={{ flexDirection: 'row', gap: wp(1) }} 
+                        onPress={()=>router.push("/Logistics/Contracts/ViewMiniContracts")}>
+                            <ThemedText type='tiny'>
+                                Open Contracts
+                            </ThemedText>
+                            <Ionicons name='arrow-forward' color={icon} />
+                        </TouchableOpacity>
                     </View>
-                    <ThemedText color={icon} type='default' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}>
-                        We encourage all legit business to be verified{'\n'}
-                        Increase business trust and credibility by verifying your company.
+                    <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>
+                        {item.description}
                     </ThemedText>
-                    <Button
-                        colors={{ text: '#6bacbf', bg: '#6bacbf24' }}
-                        title='Get Verified'
-                        Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"#6bacbf"} />}
-                        onPress={()=> router.push('/Account/Verification/ApplyVerification')}
+
+                    <FlatList data={[]}
+                        renderItem={(item) => (<></>)}
+                        ListEmptyComponent={<>
+                            <View style={{ marginVertical: wp(15), alignItems: 'center', gap: wp(4) }}>
+
+                                <ThemedText>
+                                    Create contract and start transporting loads today!
+                                </ThemedText>
+
+                                <TouchableOpacity style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
+                                    <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
+                                    <ThemedText color='#fff'>
+                                        Create Contract
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            </View>
+                        </>}
                     />
-                </View>
 
 
-                {/* <View style={{ flexDirection: 'row', gap: wp(2), marginBottom: wp(5), paddingHorizontal: wp(2) }}>
-                    <View style={{ borderWidth: .5, borderColor: accent, padding: wp(3), borderRadius: wp(6), flex: 1, alignItems: 'center' }}>
-                        <ThemedText color={accent}>
-                            Add Logistics
-                        </ThemedText>
-                    </View>
-                    <View style={{
-                        borderWidth: .5, borderColor: accent, padding: wp(3), borderRadius: wp(6), flex: 1, alignItems: 'center'
-                    }}>
-                        <ThemedText color={accent}>
-                            Add To Store
-                        </ThemedText>
-                    </View>
-                </View> */}
+
+
+                </View>}
 
 
 
 
 
-                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
-                    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
-                        <View style={{ backgroundColor: '#fb9274', borderRadius: wp(2), padding: wp(1.5) }}>
-                            <Octicons name='verified' color={'#fff'} size={wp(4)} />
-                        </View>
-                        <ThemedText type='subtitle' color={'#fb9274'} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
-                            GIT (Goods in transit Insuarance)
-                        </ThemedText>
-                    </View>
-                    <ThemedText color={icon} type='default' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}>
-                        Ensures financial protection for trucks and cargo, keeping your
-                        business secure.
-                    </ThemedText>
-                    <Button
-                        colors={{ text: '#fb9274', bg: '#fb927424' }}
-                        title='Get Verified'
-                        Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"#fb9274"} />}
-                    />
-                </View>
 
-                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
-                    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
-                        <View style={{ backgroundColor: '#bada5f', borderRadius: wp(2), padding: wp(1.5) }}>
-                            <Octicons name='verified' color={'#fff'} size={wp(4)} />
-                        </View>
-                        <ThemedText type='subtitle' color={'#bada5f'} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
-                            T & L Events
-                        </ThemedText>
-                    </View>
-                    <ThemedText color={icon} type='default' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}>
-                        Get your tickets now for upcoming transport & logistics events!{'\n'}
-                        Featuring : burnouts, car shows, expos, conferences, racing and tournaments!
-                    </ThemedText>
-                    <Button
-                        colors={{ text: '#bada5f', bg: '#bada5f24' }}
-                        title='Get Verified'
-                        Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"##bada5f"} />}
-                    />
-                </View>
+ {item.id=== 2&&  <HomeItemView
+                topic={item.topic}
+                description={item.description}
+                mainColor="#6bacbf"
+                background="#fb9274"
+                icon="#333"
+                buttonTitle="Get Verified"
+                btnBackground="#6bacbf24"
+                />}              
+
+
+     {item.id=== 3&&  <HomeItemView
+                topic={item.topic}
+                description={item.description}
+                mainColor="#fb9274"
+                background="#fb9274"
+                icon="#333"
+                buttonTitle="Get Verified"
+                btnBackground="#fb927424"
+                />}
+
+               {item.id=== 4&&  <HomeItemView
+                topic={item.topic}
+                description={item.description}
+                mainColor="#bada5f"
+                background="#ffffff"
+                icon="#333"
+                buttonTitle="Get Verified"
+                btnBackground="#bada5f24"
+                />}
+
+        {item.id=== 5&&  <HomeItemView
+                topic={item.topic}
+                description={item.description}
+                mainColor="#bada5f"
+                background="#ffffff"
+                icon="#333"
+                buttonTitle="Get Verified"
+                btnBackground="#bada5f24"
+                />}
+                
+                  {item.id=== 6&&  <HomeItemView
+                topic={item.topic}
+                description={item.description}
+                mainColor="#bada5f"
+                background="#ffffff"
+                icon="#333"
+                buttonTitle="Get Verified"
+                btnBackground="#bada5f24"
+                />} 
+            
+
+                   
+
+
+              
+
+
+
+                </View> ) )}
+
+
+
+
+
 
 
             </ScrollView>

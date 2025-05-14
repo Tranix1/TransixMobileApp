@@ -5,11 +5,12 @@ import { auth ,db} from "../../components/config/fireBase";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Ionicons } from "@expo/vector-icons";
 
-import { collection,  serverTimestamp ,addDoc, query , where , doc,deleteDoc , runTransaction , setDoc,onSnapshot,getDocs } from 'firebase/firestore';
+import { collection,  serverTimestamp ,addDoc, query , where ,onSnapshot,getDocs } from 'firebase/firestore';
 
 import { Truck } from "@/types/types";
 
 import { toggleItemById } from "@/Utilities/utils";
+import { updateDocument } from "@/db/operations";
 
 function BookLContract({}){
 
@@ -122,7 +123,7 @@ const [trucksInContract , setTrucksInContract] = React.useState<BookJob[] | []>(
     const checkExistixtBBDoc = async (trckContractId:string) => {
       console.log("Checking truck is booked")
     const chatsRef = collection(db, 'trucksContracts'); // Reference to the 'ppleInTouch' collection
-    const chatQuery = query(chatsRef, where('trckContractId', '==', trckContractId )); // Query for matching chat ID
+    const chatQuery = query(chatsRef, where('trckContractId', '==', trckContractId ),where('alreadyInContract', '==', true )  ); // Query for matching chat ID
 
       const querySnapshot = await getDocs(chatQuery);  
      // Check if any documents exist with the chat ID
@@ -168,10 +169,9 @@ let renderElements = bbVerifiedLoadD.map((item)=>{
         }
     }
    
-    function removeFrmContract(){
-      // update doc were truck id and already inContract are true 
-      // save the contract id save reason for leaving it
-    }
+
+
+
     return(
         <View 
         // onPress={handleSubmitDetails}
@@ -181,26 +181,53 @@ let renderElements = bbVerifiedLoadD.map((item)=>{
 
          
 
+
+
+
  {trucksInContract.map((scndItem) => {
- 
+
+     function removeFrmContract(){
+      console.log("removing truc from contract")
+
+      updateDocument("trucksContracts" , scndItem.id , 
+      {
+        alreadyInContract: false,
+            reasonForLeaving: "hahahah",
+            contractId: "asdsadasdas",
+            truckInfo: {
+                timestamp: serverTimestamp() 
+            }})
+      console.log("done removing truck")
+    }
  return(
    <View key={scndItem.id}> 
-    {(Number(item.timeStamp) === Number(scndItem.truckInfo.timeStamp)) && (
+
+    
+
+
+
+    {(Number(item.timeStamp) === Number(scndItem.truckInfo.timeStamp )) && (
+      <View>
         <Text>Truck Is Booked</Text>
+
+    <View style={{flexDirection:"row"}}>
+      <TouchableOpacity onPress={removeFrmContract} style={{width:200 , backgroundColor:"red"}} >
+        <Text>Remove from exisiting conrtract</Text>
+      </TouchableOpacity>
+       </View>
+      </View>
       )}
+      
+
       </View>
     )}
     
     
     )}
-      <TouchableOpacity onPress={handleSubmitDetails} style={{width:200 , backgroundColor:"blue"}}>
+
+      <TouchableOpacity onPress={handleSubmitDetails} style={{width:200 , backgroundColor:"blue"}} >
         <Text style={{color:"white"}}>Select to contract</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity>
-        <Text>Remove from exisiting conrtract</Text>
-      </TouchableOpacity>
-
 
           <Text>{item.CompanyName} </Text>
 
