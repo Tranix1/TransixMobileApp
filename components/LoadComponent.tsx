@@ -1,45 +1,42 @@
-import React, { useEffect, useState } from 'react';
-import { View,  TouchableOpacity, ActivityIndicator, StyleSheet, Linking, } from 'react-native';
-import { auth, db } from '../app/components/config/fireBase';
-import {
-  serverTimestamp,
-  where,
-  doc,
-  deleteDoc,
-} from 'firebase/firestore';
+import { StyleSheet, TouchableOpacity, View, ActivityIndicator, Linking } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { Load } from '@/types/types'
+import { wp } from '@/constants/common'
+import { useThemeColor } from '@/hooks/useThemeColor'
+import { ThemedText } from './ThemedText'
+import { Image } from 'expo-image'
+import { Feather, FontAwesome5, FontAwesome6, Fontisto, Ionicons, MaterialIcons, Octicons } from '@expo/vector-icons'
+import { router } from 'expo-router'
+import { auth, db } from '../app/components/config/fireBase'
+import { serverTimestamp, where, doc, deleteDoc } from 'firebase/firestore'
+import { addDocument, checkDocumentExists, runFirestoreTransaction, setDocuments } from '@/db/operations'
+import Input from './Input'
+import { formatCurrency } from '@/services/services'
 
+const DspAllLoads = ({ item = {} as Load }) => {
+  const backgroundLight = useThemeColor('backgroundLight')
+  const background = useThemeColor('background')
+  const coolGray = useThemeColor('coolGray')
+  const icon = useThemeColor('icon')
+  const textColor = useThemeColor('text')
+  const accent = useThemeColor('accent')
 
-import { addDocument,checkDocumentExists, runFirestoreTransaction,setDocuments } from '@/db/operations';
-
-import Input from './Input';
-import { ThemedText } from './ThemedText';
-
-import { router } from 'expo-router';
-
-
-import { toggleItemById } from '@/Utilities/utils';
-
-// import { useNavigation, useRoute, ParamListBase } from '@react-navigation/native';
-// import { Ionicons } from '@expo/vector-icons';
-
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-// import {useNavigate,useParams} from 'react-router-dom';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-
-
-import { Load } from '@/types/types';
-
-
-function DspAllLoads  ({ item = {} as Load }) {
-
-
-  
   const [loadsList, setLoadsList] = useState<Load[]>([]);
+  const [contactDisplay, setContactDisplay] = React.useState<{ [key: string]: boolean }>({ ['']: false });
+  const [bidDisplay, setBidDisplay] = React.useState<{ [key: string]: boolean }>({ ['']: false });
+  const [dspMoreInfo, setDspMoreInfo] = React.useState<{ [key: string]: boolean }>({ ['']: false });
+  const [spinnerItem, setSpinnerItem] = React.useState<Load | null>(null);
+  const [currencyBid, setCurrencyBid] = React.useState(true);
+  const [perTonneBid, setPerTonneBid] = React.useState(false);
+  const [bidRate, setBidRate] = React.useState('');
+  const [bidLinks, setBidLinks] = React.useState('');
+  const [bidTriaxle, setBdTriaxle] = React.useState('');
+  const [addingUpdate, setAddingUpdate] = React.useState("")
+
   const deleteLoad = async (id: string) => {
     try {
       const loadsDocRef = doc(db, 'Loads', id);
       await deleteDoc(loadsDocRef);
-      // Remove the deleted item from loadsList
       setLoadsList((prevLoadsList) => prevLoadsList.filter((item) => item.id !== id));
     } catch (error) {
       console.error('Error deleting item:', error);
@@ -47,540 +44,772 @@ function DspAllLoads  ({ item = {} as Load }) {
   };
 
   const checkAndDeleteExpiredItems = () => {
-      const deletionTime = item.deletionTime;
-      const timeRemaining = deletionTime - Date.now();
-      if (timeRemaining <= 0) {
-        deleteLoad(item.id);
-      } else {
-        setTimeout(() => {
-          deleteLoad(item.id);
-        }, timeRemaining); // This might not work as expected
-      }
+    const deletionTime = item.deletionTime;
+    const timeRemaining = deletionTime - Date.now();
+    if (timeRemaining <= 0) {
+      // deleteLoad(item.id);
+    } else {
+      setTimeout(() => {
+        // deleteLoad(item.id);
+      }, timeRemaining);
+    }
   };
+
   setTimeout(() => {
     checkAndDeleteExpiredItems();
   }, 1000);
 
-  const [contactDisplay, setContactDisplay] = React.useState<{ [key: string]: boolean }>({ ['']: false });
- 
-  const [bidDisplay, setBidDisplay] = React.useState<{ [key: string]: boolean }>({ ['']: false });
- 
-  const [dspMoreInfo, setDspMoreInfo] = React.useState<{ [key: string]: boolean }>({ ['']: false });
-  const [spinnerItem, setSpinnerItem] = React.useState<Load | null>(null);
-
   const checkExistiDoc = async (docId: string): Promise<boolean> => {
-    return await checkDocumentExists('bookings',[where('docId', '==', docId) ] )
+    return await checkDocumentExists('bookings', [where('docId', '==', docId)])
   };
 
   const checkExistixtBBDoc = async (receriverId: string): Promise<boolean> => {
-      return await checkDocumentExists('bidBookingStats', [where('receriverId', '==', receriverId ) ]  )
-   };
+    return await checkDocumentExists('bidBookingStats', [where('receriverId', '==', receriverId)])
+  };
 
-  const [currencyBid, setCurrencyBid] = React.useState(true);
   function toggleCurrencyBid() {
     setCurrencyBid((prev) => !prev);
   }
 
-  const [perTonneBid, setPerTonneBid] = React.useState(false);
   function togglePerTonneBid() {
     setPerTonneBid((prev) => !prev);
   }
 
-  const [bidRate, setBidRate] = React.useState('');
-  const [bidLinks, setBidLinks] = React.useState('');
-  const [bidTriaxle, setBdTriaxle] = React.useState('');
-
-
   function replaceSpacesWithPercent(url: string): string {
     return url.replace(/ /g, '%20');
   }
+  function toggleItemById(
+    id: string,
+    setDisplayState: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>
+  ): void {
+    setDisplayState((prevState) => ({
+      ...prevState,
+      [id]: !prevState[id],
+    }));
+  }
 
-const [addingUpdate , setAddingUpdate]= React.useState("")
+  const handleSubmit = async (clickedItem: Load, dbName: 'bookings' | 'biddings') => {
+    setSpinnerItem(clickedItem);
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+      alert('User not authenticated');
+      setSpinnerItem(null);
+      return;
+    }
 
+    try {
+      let theRate = bidRate && bidDisplay[item.id] ? bidRate : item.ratePerTonne;
+      let thelinksRate = bidLinks && bidDisplay[item.id] ? bidLinks : item.links
+      let thetriaxleRate = bidTriaxle && bidDisplay[item.id] ? bidTriaxle : item.triaxle
+      let currencyB = currencyBid && bidDisplay[item.id] ? currencyBid : item.currency;
+      let perTonneB = perTonneBid && bidDisplay[item.id] ? perTonneBid : item.ratePerTonne
 
-    const handleSubmit = async (clickedItem: Load, dbName: 'bookings' | 'biddings') => {
-      setSpinnerItem(clickedItem);
-
-
-      const userId = auth.currentUser?.uid;
-      if (!userId) {
-        alert('User not authenticated');
-        setSpinnerItem(null);
-        return;
+      let docId = `${userId}${item.typeofLoad}${theRate}${item.userId}`;
+      let existingChat;
+      if (dbName === 'bookings') {
+        existingChat = await checkExistiDoc(docId);
       }
-      try {
 
-        let theRate =  bidRate&&bidDisplay[item.id]?        bidRate : item.ratePerTonne;
-        let thelinksRate= bidLinks&&bidDisplay[item.id]?     bidLinks :item.links
-        let thetriaxleRate= bidTriaxle&&bidDisplay[item.id]? bidTriaxle : item.triaxle
-        let currencyB = currencyBid&&bidDisplay[item.id]?    currencyBid : item.currency ;
-        let perTonneB = perTonneBid&&bidDisplay[item.id]?    perTonneBid : item.perTonne
-
-        
-
-        let docId = `${userId}${item.typeofLoad}${theRate }${item.userId}`;
-
-        let existingChat;
-        if (dbName === 'bookings') {
-          existingChat = await checkExistiDoc(docId);
-        }
-
-
-
-       
-        let submitexpoPushToken = item.expoPushToken ? item.expoPushToken : null;
-
-        if (!existingChat) {
-          if (item.isVerified) {
-            setBidDisplay({ ['']: false });
-            setBidRate('');
-            setBidLinks('');
-            setBdTriaxle('');
-            setSpinnerItem(null);
-          router.push({
-  pathname: '/Logistics/Contracts/ViewContractDetails',
-    params: {
-        data: JSON.stringify({
-        itemName: item.typeofLoad,
-        fromLocation: item.fromLocation,
-        toLocation: item.toLocation,
-        bookerId: userId,
-        ownerName: item.companyName,
-        ownerId: item.userId,
-        Accept: null,
-        isVerified: item.isVerified,
-        msgReceiverId: userId,
-        docId: docId,
-        rate: theRate,
-        linksRate: thelinksRate,
-        triaxleRate: thetriaxleRate,
-        currencyB: currencyB,
-        perTonneB: perTonneB,
-        loadId: item.id,
-        deletionTime: Date.now() + 4 * 24 * 60 * 60 * 1000,
-        dbName: dbName,
-        expoPushToken: submitexpoPushToken,
-        }),
-    },
-    });
-            return;
-          } else {
-
-            //  Sedning a notification
-            let theRateD: string | undefined;
-
-            if (theRate) {
-              theRateD = `Rate ${theRate} ${perTonneB ? 'per tonne' : ''} `;
-            } else if (thelinksRate && thetriaxleRate) {
-              theRateD = `Links ${thelinksRate} Triaxle ${thetriaxleRate} ${perTonneB ? 'per tonne' : ''} `;
-            } else if (thetriaxleRate) {
-              theRateD = `Triaxle ${thetriaxleRate} ${perTonneB ? 'per tonne' : ''} `;
-            } else if (thelinksRate) {
-              theRateD = `Links ${thelinksRate} ${perTonneB? 'per tonne' : ''} `;
-            }
-
-            let message = `${item.typeofLoad} ${dbName === 'bookings' ? 'Booked' : 'Bidded'} Rate ${theRateD} `;
-            let tittle = `From ${item.fromLocation} to ${item.toLocation} `;
-            if (item.expoPushToken) {
-            //   await sendPushNotification(item.expoPushToken, message, tittle, dbName);
-            }
-            //  Sending a notification end here
-            
-                
-               addDocument(dbName , {
-              itemName: item.typeofLoad,
-              fromLocation: item.fromLocation,
-              toLocation: item.toLocation,
-              bookerId: userId,
-            //   bookerName: username,
-              ownerName: item.companyName,
-              ownerId: item.userId,
-            //   contact: contactG,
-              Accept: null,
-              isVerified: item.isVerified,
-              msgReceiverId: userId,
-            //   docId: docId,
-              rate: theRate,
-              linksRate: thelinksRate,
-              triaxleRate: thetriaxleRate,
-              currencyB: currencyB,
-              perTonneB: perTonneB,
-              loadId: item.id,
-              deletionTime: Date.now() + 5 * 24 * 60 * 60 * 1000,
-              timestamp: serverTimestamp(),
-               },  setAddingUpdate )            
-          }
-
-
+      if (!existingChat) {
+        if (item.isVerified) {
+          setBidDisplay({ ['']: false });
           setBidRate('');
           setBidLinks('');
           setBdTriaxle('');
-          setBidDisplay({ ['']: false });
-          alert(`${!bidDisplay[item.id] ? 'booking' : 'bidding'} was successfull`);
+          setSpinnerItem(null);
+          router.push({
+            pathname: '/Logistics/Contracts/ViewContractDetails',
+            params: {
+              data: JSON.stringify({
+                itemName: item.typeofLoad,
+                location: item.location,
+                destination: item.destination,
+                bookerId: userId,
+                ownerName: item.companyName,
+                ownerId: item.userId,
+                Accept: null,
+                isVerified: item.isVerified,
+                msgReceiverId: userId,
+                docId: docId,
+                rate: theRate,
+                linksRate: thelinksRate,
+                triaxleRate: thetriaxleRate,
+                currencyB: currencyB,
+                perTonneB: perTonneB,
+                loadId: item.id,
+                deletionTime: Date.now() + 4 * 24 * 60 * 60 * 1000,
+                dbName: dbName,
+              }),
+            },
+          });
+          return;
         } else {
-          alert(`Already ${!bidDisplay[item.id] ? 'booked' : 'bidded'} this Item!`);
-        }
+          let theRateD: string | undefined;
+          if (theRate) {
+            theRateD = `Rate ${theRate} ${perTonneB ? 'per tonne' : ''} `;
+          } else if (thelinksRate && thetriaxleRate) {
+            theRateD = `Links ${thelinksRate} Triaxle ${thetriaxleRate} ${perTonneB ? 'per tonne' : ''} `;
+          } else if (thetriaxleRate) {
+            theRateD = `Triaxle ${thetriaxleRate} ${perTonneB ? 'per tonne' : ''} `;
+          } else if (thelinksRate) {
+            theRateD = `Links ${thelinksRate} ${perTonneB ? 'per tonne' : ''} `;
+          }
 
+          let message = `${item.typeofLoad} ${dbName === 'bookings' ? 'Booked' : 'Bidded'} Rate ${theRateD} `;
+          let tittle = `From ${item.location} to ${item.destination} `;
 
-        const existingBBDoc = await checkExistixtBBDoc(item.userId);
-        let newBiddedDoc = 0;
-        let newBOOKEDDoc = 0;
-
-        dbName === 'bookings' ? (newBOOKEDDoc = 1) : (newBiddedDoc = 1);
-        // Chat doesn't exist, add it to 'ppleInTouch'
-        if (!existingBBDoc) {
-          await setDocuments( 'bidBookingStats' ,{
-            bookingdocs: newBOOKEDDoc,
-            biddingdocs: newBiddedDoc,
+          addDocument(dbName, {
+            itemName: item.typeofLoad,
+            location: item.location,
+            destination: item.destination,
+            bookerId: userId,
+            ownerName: item.companyName,
+            ownerId: item.userId,
+            Accept: null,
+            isVerified: item.isVerified,
+            msgReceiverId: userId,
+            rate: theRate,
+            linksRate: thelinksRate,
+            triaxleRate: thetriaxleRate,
+            currencyB: currencyB,
+            perTonneB: perTonneB,
+            loadId: item.id,
+            deletionTime: Date.now() + 5 * 24 * 60 * 60 * 1000,
             timestamp: serverTimestamp(),
-            receriverId: item.userId
-          })
-          
-        }
-        else {
-
-            await runFirestoreTransaction(`bidBookingStats/${item.userId}`, (data) => {
-                const currentBiddingDocs = data.biddingdocs || 0;
-                const currentBookingsDocs = data.bookingdocs || 0;
-
-                return dbName !== "bookings"
-                    ? { biddingdocs: currentBiddingDocs + 1 }
-                    : { bookingdocs: currentBookingsDocs + 1 };
-                });
+          }, setAddingUpdate)
         }
 
-        setSpinnerItem(null);
-
-      } catch (err: any) {
-        alert(err.toString());
-        setSpinnerItem(null);
+        setBidRate('');
+        setBidLinks('');
+        setBdTriaxle('');
+        setBidDisplay({ ['']: false });
+        alert(`${!bidDisplay[item.id] ? 'booking' : 'bidding'} was successfull`);
+      } else {
+        alert(`Already ${!bidDisplay[item.id] ? 'booked' : 'bidded'} this Item!`);
       }
-    };
 
+      const existingBBDoc = await checkExistixtBBDoc(item.userId);
+      let newBiddedDoc = 0;
+      let newBOOKEDDoc = 0;
 
+      dbName === 'bookings' ? (newBOOKEDDoc = 1) : (newBiddedDoc = 1);
+      if (!existingBBDoc) {
+        await setDocuments('bidBookingStats', {
+          bookingdocs: newBOOKEDDoc,
+          biddingdocs: newBiddedDoc,
+          timestamp: serverTimestamp(),
+          receriverId: item.userId
+        })
+      } else {
+        await runFirestoreTransaction(`bidBookingStats/${item.userId}`, (data) => {
+          const currentBiddingDocs = data.biddingdocs || 0;
+          const currentBookingsDocs = data.bookingdocs || 0;
 
+          return dbName !== "bookings"
+            ? { biddingdocs: currentBiddingDocs + 1 }
+            : { bookingdocs: currentBookingsDocs + 1 };
+        });
+      }
 
-
-    let theRateM: string | undefined;
-
-    if (item.ratePerTonne) {
-      theRateM = `Rate ${item.ratePerTonne} ${item.perTonne ? 'per tonne' : ''} `;
-    } else if (item.links && item.triaxle) {
-      theRateM = `Links ${item.links} Triaxle ${item.triaxle} ${item.ratePerTonne ? 'per tonne' : ''} `;
+      setSpinnerItem(null);
+    } catch (err: any) {
+      alert(err.toString());
+      setSpinnerItem(null);
     }
-    else if (item.triaxle) {
-      theRateM = `Triaxle ${item.triaxle} ${item.ratePerTonne ? 'per tonne' : ''} `;
-    } else if (item.links) {
-      theRateM = `Links ${item.links} ${item.ratePerTonne ? 'per tonne' : ''} `;
-    }
+  };
 
-    const url = `https://transix.net/selectedUserLoads/${item.userId}/${item.companyName}/${item.deletionTime}`;
-    const updatedUrl = replaceSpacesWithPercent(url);
+  let theRateM: string | undefined;
+  if (item.ratePerTonne) {
+    theRateM = `Rate ${item.ratePerTonne} ${item.ratePerTonne ? 'per tonne' : ''} `;
+  } else if (item.links && item.triaxle) {
+    theRateM = `Links ${item.links} Triaxle ${item.triaxle} ${item.ratePerTonne ? 'per tonne' : ''} `;
+  } else if (item.triaxle) {
+    theRateM = `Triaxle ${item.triaxle} ${item.ratePerTonne ? 'per tonne' : ''} `;
+  } else if (item.links) {
+    theRateM = `Links ${item.links} ${item.ratePerTonne ? 'per tonne' : ''} `;
+  }
 
-       const message =  `${item.companyName}
+  const url = `https://transix.net/selectedUserLoads/${item.userId}/${item.companyName}/${item.deletionTime}`;
+  const updatedUrl = replaceSpacesWithPercent(url);
+  const message = `${item.companyName}
         Is this Load still available
-        ${item.typeofLoad} from ${item.fromLocation} to ${item.toLocation}
+        ${item.typeofLoad} from ${item.location} to ${item.destination}
         ${theRateM}
 
-        From: ${updatedUrl} `  // Set your desired message here
+        From: ${updatedUrl}`;
 
-    let contactMe = (
-      <View style={{ paddingLeft: 30 }}>
+  const contactMe = (
+    <View style={{ paddingLeft: wp(4) }}>
+      {auth.currentUser && <TouchableOpacity style={[styles.contactButton, { borderColor: accent }]}>
+        <ThemedText style={{ color: accent }}>Message now</ThemedText>
+        <MaterialIcons name="chat" size={wp(6)} color={accent} />
+      </TouchableOpacity>}
 
-        {auth.currentUser && <TouchableOpacity style={{ height: 30, flexDirection: 'row', alignItems: 'center',  borderWidth: 1, borderColor: '#008080', justifyContent: 'center', marginBottom: 5, marginTop: 6 }} >
-          <ThemedText style={{ color: "#008080" }} >Message now</ThemedText>
-          <MaterialIcons name="chat" size={24} color="#008080" />
+      <TouchableOpacity
+        onPress={() => Linking.openURL(`whatsapp://send?phone=${item.contact}&text=${encodeURIComponent(message)}`)}
+        style={[styles.contactButton, { borderColor: '#25D366' }]}
+      >
+        <ThemedText style={{ color: "#25D366" }}>WhatsApp</ThemedText>
+        <FontAwesome6 name="whatsapp" size={wp(6)} color="#25D366" />
+      </TouchableOpacity>
 
-        </TouchableOpacity>}
+      <TouchableOpacity
+        onPress={() => Linking.openURL(`tel:${item.contact}`)}
+        style={[styles.contactButton, { borderColor: '#0074D9' }]}
+      >
+        <ThemedText style={{ color: '#0074D9' }}>Phone call</ThemedText>
+        <MaterialIcons name="call" size={wp(6)} color="#0074D9" />
+      </TouchableOpacity>
+    </View>
+  );
 
-        <TouchableOpacity onPress={() => Linking.openURL(`whatsapp://send?phone=${item.contact}&text=${encodeURIComponent(message)}`)} style={{ height: 30, flexDirection: 'row', alignItems: 'center',  borderWidth: 1, borderColor: '#25D366', justifyContent: 'center', marginBottom: 6 }} >
-          <ThemedText style={{ color: "#25D366" }} >WhatsApp </ThemedText>
-          <FontAwesome6 name="whatsapp" size={24} color="#25D366" />
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.contact}`)} style={{ height: 30, flexDirection: 'row', alignItems: 'center',  borderWidth: 1, borderColor: '#0074D9', justifyContent: 'center', marginBottom: 4 }} >
-          <ThemedText style={{ color: '#0074D9' }} >Phone call</ThemedText>
-          <MaterialIcons name="call" size={24} color="#0074D9" />
-        </TouchableOpacity>
-
-      </View>)
-
-    let bidNow = (
-      <View style={{ position: 'absolute', bottom: 0, backgroundColor: 'white', flex: 1, padding: 7, width: 360, alignItems: 'center' }}>
-
-        {spinnerItem === item ? (
-          <ActivityIndicator size={34} />
-        ) : <View >
-
-          {item.ratePerTonne && <View style={{ flexDirection: 'row', alignItems: 'center', }} >
-
-            <TouchableOpacity onPress={toggleCurrencyBid}>
-              {currencyBid ? <ThemedText style={styles.buttonIsFalse} >USD</ThemedText> :
-                <ThemedText style={styles.bttonIsTrue}>Rand </ThemedText>}
-            </TouchableOpacity>
-
-            <Input
-              onChangeText={(text) => setBidRate(text)}
-            //   name="ratePerTonne"
-              value={bidRate}
-              keyboardType="numeric"
-              placeholderTextColor="#6a0c0c"
-              style={{ height: 30, borderBottomWidth: 2, borderBottomColor: "#6a0c0c", marginBottom: 10, padding: 0, paddingLeft: 20, width: 180 }}
-              placeholder="Bid rate here"
-            />
-            <TouchableOpacity onPress={togglePerTonneBid} >
-              {perTonneBid ? <ThemedText style={styles.bttonIsTrue} >Per tonne</ThemedText> :
-                <ThemedText style={styles.buttonIsFalse}>Per tonne</ThemedText>}
-            </TouchableOpacity>
-          </View>}
-
-
-          {item.links || item.triaxle ? <View>
-            {item.links && <View style={{ flexDirection: 'row', alignItems: 'center', }} >
-
+  const bidNow = (
+    <View style={[styles.bidContainer, { backgroundColor: background }]}>
+      {spinnerItem === item ? (
+        <ActivityIndicator size={wp(8)} />
+      ) : (
+        <View>
+          {item.ratePerTonne && (
+            <View style={styles.bidRow}>
               <TouchableOpacity onPress={toggleCurrencyBid}>
-                {currencyBid ? <ThemedText style={styles.buttonIsFalse} >USD</ThemedText> :
-                  <ThemedText style={styles.bttonIsTrue}>Rand </ThemedText>}
+                <ThemedText style={currencyBid ? styles.buttonFalse : styles.buttonTrue}>
+                  {currencyBid ? "USD" : "RAND"}
+                </ThemedText>
               </TouchableOpacity>
 
               <Input
-                onChangeText={(text) => setBidLinks(text)}
-                // name="ratePerTonne"
-                value={bidLinks}
+                onChangeText={(text) => setBidRate(text)}
+                value={bidRate}
                 keyboardType="numeric"
-                placeholderTextColor="#6a0c0c"
-                style={{ height: 30, borderBottomWidth: 2, borderBottomColor: "#6a0c0c", marginBottom: 10, padding: 0, paddingLeft: 20, width: 180 }}
-                placeholder="Bid Links rate"
+                placeholderTextColor={coolGray}
+                style={styles.bidInput}
+                placeholder="Bid rate here"
               />
-              <TouchableOpacity onPress={togglePerTonneBid} >
-                {perTonneBid ? <ThemedText style={styles.bttonIsTrue} >Per tonne</ThemedText> :
-                  <ThemedText style={styles.buttonIsFalse}>Per tonne</ThemedText>}
+
+              <TouchableOpacity onPress={togglePerTonneBid}>
+                <ThemedText style={perTonneBid ? styles.buttonTrue : styles.buttonFalse}>
+                  Per tonne
+                </ThemedText>
               </TouchableOpacity>
-            </View>}
-
-
-
-            {item.triaxle && <View style={{ flexDirection: 'row', alignItems: 'center', }} >
-
-              <TouchableOpacity onPress={toggleCurrencyBid}>
-                {currencyBid ? <ThemedText style={styles.buttonIsFalse} >USD</ThemedText> :
-                  <ThemedText style={styles.bttonIsTrue}>Rand </ThemedText>}
-              </TouchableOpacity>
-
-              <Input
-                onChangeText={(text) => setBdTriaxle(text)}
-                // name="ratePerTonne"
-                value={bidTriaxle}
-                keyboardType="numeric"
-                placeholderTextColor="#6a0c0c"
-                style={{ height: 30, borderBottomWidth: 2, borderBottomColor: "#6a0c0c", marginBottom: 10, padding: 0, paddingLeft: 20, width: 180, marginTop: 5 }}
-                placeholder="Bid triaxle rate"
-              />
-              <TouchableOpacity onPress={togglePerTonneBid} >
-                {perTonneBid ? <ThemedText style={styles.bttonIsTrue} >Per tonne</ThemedText> :
-                  <ThemedText style={styles.buttonIsFalse}>Per tonne</ThemedText>}
-              </TouchableOpacity>
-            </View>}
-
-
-          </View> : null}
-
-
-        </View>}
-
-
-        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
-
-          <TouchableOpacity onPress={() => toggleItemById(item.id,setBidDisplay)} style={{ backgroundColor: '#6a0c0c', padding: 1, paddingLeft: 7, paddingRight: 7, borderRadius: 3, marginRight: 12 }} >
-            <ThemedText style={{ color: 'white' }}>Cancel </ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => handleSubmit(item, "biddings" as 'biddings')} style={{ backgroundColor: '#228B22', padding: 1, paddingLeft: 7, paddingRight: 7, borderRadius: 3 }} >
-            <ThemedText style={{ color: 'white' }}> Send</ThemedText>
-          </TouchableOpacity>
-
-        </View>
-
-      </View>
-    )
-
-
-    const getFirstThreeLetters = (str: string | undefined): string => {
-    return str ? str.slice(0, 3) : '';
-    };
-
-    // Example usage
-    const myString = item.companyName;
-    const firstLetter = getFirstThreeLetters(myString);
-
-
-
-    return (
-      <View key={item.id} style={{ marginBottom: 8, padding: 7, borderWidth: 2, borderColor: 'black', borderRadius: 8, shadowColor: '#6a0c0c', shadowOffset: { width: 1, height: 2 }, shadowOpacity: 0.7, shadowRadius: 5, overflow: 'hidden', }} >
-
-        {item.isVerified && <View style={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'white', zIndex: 66 }} >
-          <MaterialIcons name="verified" size={26} color="green" />
-        </View>}
-        <ThemedText style={{ color: '#6a0c0c',  textAlign: 'center', fontSize: 21, fontWeight: '600' }}  >{item.companyName} </ThemedText>
-
-        {<View style={{ flexDirection: 'row', margin: 4 }} >
-
-          {item.returnLoad && <View style={{ backgroundColor: '#6a0c0c', paddingLeft: 4, paddingRight: 4, marginLeft: 7 }} >
-            <ThemedText style={{ color: 'white' }} >Return Load</ThemedText>
-          </View>}
-
-          {item.roundTrip && <View style={{ backgroundColor: '#6a0c0c', paddingLeft: 4, paddingRight: 4, marginLeft: 7 }} >
-            <ThemedText style={{ color: 'white' }} >Round Trip</ThemedText>
-          </View>}
-
-          {item.fuelAvai && <View style={{ backgroundColor: '#6a0c0c', paddingLeft: 4, paddingRight: 4, marginLeft: 7 }} >
-            <ThemedText style={{ color: 'white' }} >Fuel</ThemedText>
-          </View>}
-
-        </View>}
-        <View style={{ flexDirection: 'row', width: 245 }} >
-          <ThemedText style={{ width: 100 }} >Commodity</ThemedText>
-          <ThemedText style={{ textOverflow: 'ellipsis' }} >:  {item.typeofLoad} </ThemedText>
-        </View>
-
-        <View style={{ flexDirection: 'row', width: 245 }} >
-          <ThemedText style={{ width: 100 }} >Route</ThemedText>
-          <ThemedText style={{ textOverflow: 'ellipsis' }} >:  from  {item.fromLocation}  to  {item.toLocation} </ThemedText>
-        </View>
-
-        {!item.links && !item.triaxle && <View style={{ flexDirection: 'row', width: 245 }} >
-          <ThemedText style={{ width: 100, color: 'green', fontWeight: 'bold', fontSize: 16 }} >Rate</ThemedText>
-          <ThemedText style={{ color: 'green', fontWeight: 'bold', fontSize: 16 }} >:  {item.currency ? "USD" : "RAND"} {item.ratePerTonne} {item.perTonne ? "Per tonne" : null} </ThemedText>
-        </View>}
-
-        {item.links && <View style={{ flexDirection: 'row', width: 245 }} >
-          <ThemedText style={{ width: 100, color: 'green', fontWeight: 'bold', fontSize: 16 }} >Links</ThemedText>
-          <ThemedText style={{ color: 'green', fontWeight: 'bold', fontSize: 16 }} >:  {item.currency ? "USD" : "RAND"} {item.links} {item.perTonne ? "Per tonne" : null} </ThemedText>
-        </View>}
-
-        {item.triaxle && <View style={{ flexDirection: 'row', width: 245 }} >
-          <ThemedText style={{ width: 100, color: 'green', fontWeight: 'bold', fontSize: 16 }} >Triaxle</ThemedText>
-          <ThemedText style={{ color: 'green', fontWeight: 'bold', fontSize: 16 }} >:  {item.currency ? "USD" : "RAND"} {item.triaxle} {item.perTonne ? "Per tonne" : null} </ThemedText>
-        </View>}
-
-        {!contactDisplay[item.id] && <View>
-
-          {!<View style={{ flexDirection: 'row', width: 245 }} >
-            <ThemedText style={{ width: 100 }} >Contact</ThemedText>
-            {!item.isVerified && <ThemedText style={{ textOverflow: 'ellipsis' }} >:  {item.contact}</ThemedText>}
-          </View>}
-
-          <View style={{ flexDirection: 'row', width: 245 }} >
-            <ThemedText style={{ width: 100 }} >Payment Terms</ThemedText>
-            <ThemedText style={{ textOverflow: 'ellipsis' }} >: {item.paymentTerms}</ThemedText>
-          </View>
-
-          {item.requirements && <View style={{ flexDirection: 'row', width: 245 }} >
-            <ThemedText style={{ width: 100 }} >Requirements</ThemedText>
-            <ThemedText style={{ textOverflow: 'ellipsis' }} >: {item.requirements}</ThemedText>
-          </View>}
-          {item.activeLoading && <ThemedText style={{ fontSize: 17, color: "#FF8C00" }} >Active Loading.... </ThemedText>}
-          {dspMoreInfo[item.id] && <View>
-            {item.fuelAvai && <View style={{ flexDirection: 'row', marginTop: 5, width: 245 }} >
-              <ThemedText style={{ width: 100 }} >Fuel </ThemedText>
-              <ThemedText style={{ textOverflow: 'ellipsis' }}  >:  {item.fuelAvai} </ThemedText>
-            </View>}
-            {item.additionalInfo && <View style={{ flexDirection: 'row', width: 245 }} >
-              <ThemedText style={{ width: 100 }} >Additional info </ThemedText>
-              {<ThemedText style={{ textOverflow: 'ellipsis' }} >:  {item.additionalInfo} </ThemedText>}
-            </View>}
-
-
-            {item.alertMsg && <View style={{ flexDirection: 'row', marginTop: 5, width: 245 }} >
-              <ThemedText style={{ width: 100, backgroundColor: 'rgba(220, 20, 60, 0.8)', color: 'white', textAlign: 'center', fontSize: 15 }} >Alert</ThemedText>
-              <ThemedText style={{ paddingRight: 7, backgroundColor: 'rgba(220, 20, 60, 0.8)', color: 'white', fontSize: 15, textOverflow: 'ellipsis' }} >:  {item.alertMsg} </ThemedText>
-            </View>}
-
-            {item.returnLoad && <View style={{ marginTop: 5, width: 245 }} >
-              <ThemedText style={{ alignSelf: 'center', color: "rgba(220, 20, 60, 0.8)", fontSize: 16, margin: 3 }} >Return Load</ThemedText>
-              {item.returnLoad && <View style={{ flexDirection: 'row' }} >
-                <ThemedText style={{ width: 100 }} >R Cargo</ThemedText>
-                {<ThemedText style={{ textOverflow: 'ellipsis' }} >:  {item.returnLoad} </ThemedText>}
-              </View>}
-              {item.returnRate && <View style={{ flexDirection: 'row', width: 245 }} >
-                <ThemedText style={{ width: 100 }} >R Rate</ThemedText>
-                {<ThemedText style={{ textOverflow: 'ellipsis' }} >:  {item.returnRate} </ThemedText>}
-              </View>}
-              {item.returnTerms && <View style={{ flexDirection: 'row', width: 245 }} >
-                <ThemedText style={{ width: 100 }} >R Terms</ThemedText>
-                {<ThemedText style={{ textOverflow: 'ellipsis' }} >:  {item.returnTerms} </ThemedText>}
-              </View>}
-            </View>}
-          </View>}
-
-
-          {!contactDisplay[item.id] && <TouchableOpacity onPress={() => toggleItemById(item.id,setDspMoreInfo)} >
-            <ThemedText style={{ color: 'green', fontWeight: 'bold', fontSize: 16 }} >{dspMoreInfo[item.id] ? "See Less" : "See more"} </ThemedText>
-          </TouchableOpacity>}
-        </View>}
-
-        {contactDisplay[item.id] && contactMe}
-
-        {bidDisplay[item.id] && bidNow}
-
-        {!bidDisplay[item.id] && <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-
-          { <TouchableOpacity onPress={() => toggleItemById(item.id,setContactDisplay)} style={{ width: 120, height: 30, alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', borderRadius: 8, margin: 5 }} >
-            <ThemedText style={{ color: 'white' }} > Get In Touch Now</ThemedText>
-          </TouchableOpacity>}
-          <TouchableOpacity 
-        //   onPress={() => navigation.navigate('selectedUserLoads', { userId: item.userId, companyNameG: item.companyName })} 
-          style={{ width: 120, height: 30, alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', borderRadius: 8, margin: 5 }} >
-            <ThemedText style={{ color: 'white' }}>All {firstLetter}  Loads </ThemedText>
-          </TouchableOpacity>
-
-        </View>}
-
-
-
-        {auth.currentUser ? !bidDisplay[item.id] && !contactDisplay[item.id] &&  <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }} >
-          {spinnerItem === item ? (
-            <ActivityIndicator size={34} />
-          ) : (
-            <TouchableOpacity style={{ width: 90, height: 30, alignItems: "center", justifyContent: 'center', backgroundColor: '#6a0c0c', borderRadius: 8, alignSelf: 'center', margin: 5 }} onPress={() => handleSubmit(item, "bookings" as 'bookings')}>
-              <ThemedText style={{ color: 'white' }} >Book</ThemedText>
-            </TouchableOpacity>
+            </View>
           )}
 
-          <TouchableOpacity onPress={() => toggleItemById(item.id,setBidDisplay)} style={{ width: 90, height: 30, alignItems: "center", justifyContent: 'center', backgroundColor: '#6a0c0c', borderRadius: 8, alignSelf: 'center', margin: 5 }} >
-            <ThemedText style={{ color: 'white' }} >Bid</ThemedText>
-          </TouchableOpacity>
+          {(item.links || item.triaxle) && (
+            <View>
+              {item.links && (
+                <View style={styles.bidRow}>
+                  <TouchableOpacity onPress={toggleCurrencyBid}>
+                    <ThemedText style={currencyBid ? styles.buttonFalse : styles.buttonTrue}>
+                      {currencyBid ? "USD" : "RAND"}
+                    </ThemedText>
+                  </TouchableOpacity>
 
-          <TouchableOpacity style={{ width: 90, height: 30, alignItems: "center", justifyContent: 'center', backgroundColor: '#6a0c0c', borderRadius: 8, alignSelf: 'center', margin: 5 }} >
-            <ThemedText style={{ color: 'white' }} >Message</ThemedText>
-          </TouchableOpacity>
-        </View> :
-          <ThemedText style={{ color: 'red' }}> Sign In to Book Bid and Message </ThemedText>
-        }
+                  <Input
+                    onChangeText={(text) => setBidLinks(text)}
+                    value={bidLinks}
+                    keyboardType="numeric"
+                    placeholderTextColor={coolGray}
+                    style={styles.bidInput}
+                    placeholder="Bid Links rate"
+                  />
 
+                  <TouchableOpacity onPress={togglePerTonneBid}>
+                    <ThemedText style={perTonneBid ? styles.buttonTrue : styles.buttonFalse}>
+                      Per tonne
+                    </ThemedText>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {item.triaxle && (
+                <View style={styles.bidRow}>
+                  <TouchableOpacity onPress={toggleCurrencyBid}>
+                    <ThemedText style={currencyBid ? styles.buttonFalse : styles.buttonTrue}>
+                      {currencyBid ? "USD" : "RAND"}
+                    </ThemedText>
+                  </TouchableOpacity>
+
+                  <Input
+                    onChangeText={(text) => setBdTriaxle(text)}
+                    value={bidTriaxle}
+                    keyboardType="numeric"
+                    placeholderTextColor={coolGray}
+                    style={styles.bidInput}
+                    placeholder="Bid triaxle rate"
+                  />
+
+                  <TouchableOpacity onPress={togglePerTonneBid}>
+                    <ThemedText style={perTonneBid ? styles.buttonTrue : styles.buttonFalse}>
+                      Per tonne
+                    </ThemedText>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+      )}
+
+      <View style={styles.bidActions}>
+        <TouchableOpacity
+          onPress={() => toggleItemById(item.id, setBidDisplay)}
+          style={[styles.bidActionButton, { backgroundColor: coolGray }]}
+        >
+          <ThemedText style={{ color: 'white' }}>Cancel</ThemedText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => handleSubmit(item, "biddings" as 'biddings')}
+          style={[styles.bidActionButton, { backgroundColor: accent }]}
+        >
+          <ThemedText style={{ color: 'white' }}>Send</ThemedText>
+        </TouchableOpacity>
       </View>
-    )
+    </View>
+  );
+
+  const getFirstThreeLetters = (str: string | undefined): string => {
+    return str ? str.slice(0, 3) : '';
+  };
+  const firstLetter = getFirstThreeLetters(item.companyName);
+
+  return (
+    <TouchableOpacity
+      style={[styles.container, { backgroundColor: background, borderColor: accent }]}
+      activeOpacity={0.8}
+    >
 
 
-}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'space-between', marginBottom: wp(1) }}>
+
+        <ThemedText type='subtitle' style={[styles.title, { color: textColor }]}>
+          {item.companyName}
+        </ThemedText>
+
+        <View style={styles.tagsContainer}>
+          <ThemedText type='title' style={[{ color: textColor, fontSize: wp(4.5) }]}>
+            {formatCurrency(item.ratePerTonne ? item.ratePerTonne : item.links ? item.links : item.triaxle)}
+          </ThemedText>
+        </View>
+      </View>
+
+      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+          <Feather name="package" size={wp(4)} style={styles.icon} color={icon} />
+          <ThemedText type='subtitle'>
+            {item.typeofLoad}
+          </ThemedText>
+        </View>
+        <View style={styles.tagsContainer}>
+          {item.returnLoad && (
+            <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+              <ThemedText type='tiny' style={{}}>Return Load</ThemedText>
+            </View>
+          )}
+          {item.roundTrip && (
+            <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+              <ThemedText type='tiny' style={{}}>Round Trip</ThemedText>
+            </View>
+          )}
+          {/* {item.fuelAvai && (
+            <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+              <ThemedText style={{ color: 'white' }}>Fuel</ThemedText>
+            </View>
+          )} */}
+          {!item.isVerified && (
+            <View style={[styles.tag, { backgroundColor: backgroundLight, flexDirection: 'row', alignItems: 'center', gap: wp(1) }]}>
+              <Octicons name='verified' size={wp(3)} color={'#4eb3de'} />
+              <ThemedText type='tiny' style={{ color: '#4eb3de', fontSize: wp(3) }}>
+                Verified
+              </ThemedText>
+            </View>
+          )}
+        </View>
+      </View>
+      <View style={[styles.detailRow, { backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+
+          <View style={{ gap: wp(1), flex: 2, }}>
+            <ThemedText type='default' style={{ color: coolGray }}>
+              From
+            </ThemedText>
+            <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
+              {item.location}
+            </ThemedText>
+          </View>
+          <View style={{ gap: wp(1), flex: 2, }}>
+            <ThemedText type='default' style={{ color: coolGray }}>
+              To
+            </ThemedText>
+            <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
+              {item.destination}
+            </ThemedText>
+          </View>
+        </View>
+      </View>
+
+      {item.distance && (
+        <View style={[styles.detailRow, { backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }]}>
+          <ThemedText type='default' style={{ flex: 2 }}>
+            Estimated Distance
+          </ThemedText>
+          <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+            {item.distance} km
+          </ThemedText>
+        </View>
+      )}
+
+      {/* {!item.links && !item.triaxle && item.ratePerTonne && (
+          <View style={styles.detailRow}>
+            <FontAwesome5 name="money-bill-wave" size={wp(4)} style={styles.icon} color={icon} />
+            <ThemedText type='default' style={{ color: accent, fontWeight: 'bold' }}>
+              {item.currency ? "USD" : "RAND"} {item.ratePerTonne} {item.ratePerTonne ? "Per tonne" : null}
+            </ThemedText>
+          </View>
+        )}
+
+      {item.links && (
+        <View style={styles.detailRow}>
+          <FontAwesome5 name="link" size={wp(4)} style={styles.icon} color={icon} />
+          <ThemedText type='default' style={{ color: accent, fontWeight: 'bold' }}>
+            {item.currency ? "USD" : "RAND"} {item.links} {item.ratePerTonne ? "Per tonne" : null}
+          </ThemedText>
+        </View>
+      )} */}
+
+      {/* {item.triaxle && (
+        <View style={styles.detailRow}>
+          <FontAwesome5 name="truck" size={wp(4)} style={styles.icon} color={icon} />
+          <ThemedText type='default' style={{ color: accent, fontWeight: 'bold' }}>
+            {item.currency ? "USD" : "RAND"} {item.triaxle} {item.ratePerTonne ? "Per tonne" : null}
+          </ThemedText>
+        </View>
+      )} */}
+
+      {!contactDisplay[item.id] && (
+        <View style={[{ backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2), flex: 1, gap: wp(2) }]}>
+
+          {item.requirements &&
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+              <ThemedText type='default' style={{ flex: 2 }}>
+                Payment Terms
+              </ThemedText>
+              <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                {item.paymentTerms}
+              </ThemedText>
+            </View>
+          }
+          {item.requirements &&
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+              <ThemedText type='default' style={{ flex: 2 }}>
+                Requirements
+              </ThemedText>
+              <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                {item.requirements}
+              </ThemedText>
+            </View>
+          }
 
 
-export default DspAllLoads
+
+          {/* {item.activeLoading && (
+            <View style={styles.detailRow}>
+              <FontAwesome5 name="clock" size={wp(4)} style={styles.icon} color="#FF8C00" />
+              <ThemedText type='default' style={{ color: "#FF8C00" }}>
+                Active Loading....
+              </ThemedText>
+            </View>
+          )} */}
+
+          {dspMoreInfo[item.id] && (
+            <View>
+              {item.fuelAvai && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+                  <ThemedText type='default' style={{ flex: 2 }}>
+                    Fuel Terms
+                  </ThemedText>
+                  <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                    {item.fuelAvai}
+                  </ThemedText>
+                </View>
+              )}
+
+              {item.additionalInfo && (
+                <View style={{ flex: 1, gap: wp(2), marginTop: wp(2) }}>
+                  <ThemedText type='tiny' style={{ flex: 2 }}>
+                    Additional Info
+                  </ThemedText>
+                  <ThemedText numberOfLines={8} type='default' style={{ flex: 1 }}>
+                    {item.additionalInfo}
+                  </ThemedText>
+                </View>
+              )}
+
+              {item.alertMsg && (
+                <View style={[styles.detailRow, { backgroundColor: 'rgba(220, 20, 60, 0.8)', padding: wp(2), borderRadius: wp(2) }]}>
+                  <FontAwesome5 name="exclamation-triangle" size={wp(4)} style={styles.icon} color="white" />
+                  <ThemedText type='default' style={{ color: 'white' }}>
+                    {item.alertMsg}
+                  </ThemedText>
+                </View>
+              )}
+
+              {item.returnLoad && (
+                <View style={{ marginTop: wp(2) }}>
+                  <ThemedText type='tiny' style={{ marginBottom: wp(1) }}>
+                    Return Load
+                  </ThemedText>
+
+                  {item.returnLoad && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+                      <ThemedText type='default' style={{ flex: 2 }}>
+                        Load Details
+                      </ThemedText>
+                      <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                        {item.returnLoad}
+                      </ThemedText>
+                    </View>
+                  )}
+                  {item.returnRate && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+                      <ThemedText type='default' style={{ flex: 2 }}>
+                        Return Rate
+                      </ThemedText>
+                      <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                        {item.returnRate}
+                      </ThemedText>
+                    </View>
+                  )}
+                  {item.returnTerms && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+                      <ThemedText type='default' style={{ flex: 2 }}>
+                        Return Terms
+                      </ThemedText>
+                      <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                        {item.returnTerms}
+                      </ThemedText>
+                    </View>
+                  )}
+
+
+
+
+
+                </View>
+              )}
+            </View>
+          )}
+
+          <TouchableOpacity onPress={() => toggleItemById(item.id, setDspMoreInfo)}>
+            <ThemedText type='default' style={{ color: accent, fontWeight: 'bold', textAlign: 'center', marginTop: wp(2) }}>
+              {dspMoreInfo[item.id] ? "see less" : "see more"}
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* {contactDisplay[item.id] && contactMe}
+
+      {bidDisplay[item.id] && bidNow} */}
+
+      {!bidDisplay[item.id] && (
+
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            onPress={() => toggleItemById(item.id, setContactDisplay)}
+            style={[styles.actionButton, { backgroundColor: coolGray }]}
+          >
+            <ThemedText style={{ color: 'white' }}>Get In Touch Now</ThemedText>
+            <Ionicons name="chevron-up" size={wp(3)} color="white" />
+          </TouchableOpacity>
+
+          {/* <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: accent }]}
+          >
+            <ThemedText style={{ color: 'white' }}>All {item.companyName} Loads</ThemedText>
+          </TouchableOpacity> */}
+
+
+          {auth.currentUser ? (
+            !bidDisplay[item.id] && !contactDisplay[item.id] && (
+              <View style={{ flexDirection: 'row', gap: wp(2) }}>
+                {spinnerItem === item ? (
+                  <ActivityIndicator size={wp(8)} color={accent} />
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      onPress={() => handleSubmit(item, "bookings" as 'bookings')}
+                      style={[styles.actionButton, { backgroundColor: coolGray }]}
+                    >
+                      <ThemedText style={{ color: 'white' }}>Book</ThemedText>
+                      <Ionicons name="chevron-up" size={wp(3)} color="white" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => toggleItemById(item.id, setBidDisplay)}
+                      style={[styles.actionButton, { backgroundColor: coolGray }]}
+                    >
+                      <ThemedText style={{ color: 'white' }}>Bid</ThemedText>
+                      <Ionicons name="chevron-up" size={wp(3)} color="white" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.actionButton, { backgroundColor: coolGray }]}
+                    >
+                      <ThemedText style={{ color: 'white' }}>Message</ThemedText>
+                      <Ionicons name="chevron-up" size={wp(3)} color="white" />
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            )
+          ) : (
+            <ThemedText type='default' style={{ color: 'red', textAlign: 'center', marginTop: wp(2) }}>
+              Sign In to Book Bid and Message
+            </ThemedText>
+          )}
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+};
+
+export default DspAllLoads;
 
 const styles = StyleSheet.create({
-    buttonIsFalse : {
-     borderWidth : 1 ,
-     borderColor : '#6a0c0c' ,
-     paddingLeft :4 , 
-     paddingRight:4 ,
-     color:"black"
-    //  marginLeft : 6
-   } , 
-    bttonIsTrue:{
-    backgroundColor : '#6a0c0c' ,
-     paddingLeft :4 ,
-     paddingRight:4 ,
-     color :'white' 
-
-    }
+  container: {
+    margin: wp(2),
+    borderWidth: 0.5,
+    borderRadius: wp(4),
+    paddingHorizontal: wp(4),
+    paddingBottom: wp(4),
+    paddingVertical: wp(2),
+    shadowColor: '#3535353b',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 13
+  },
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: wp(1),
+    padding: wp(1),
+    backgroundColor: 'white',
+    position: 'absolute',
+    right: wp(4),
+    top: wp(4),
+    borderRadius: wp(4),
+  },
+  title: {
+    marginBottom: wp(2),
+    fontSize: wp(5)
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    gap: wp(2),
+    marginBottom: wp(2)
+  },
+  tag: {
+    paddingHorizontal: wp(3),
+    paddingVertical: wp(1),
+    borderRadius: wp(2),
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: wp(1),
+  },
+  icon: {
+    width: wp(6),
+    marginRight: wp(2)
+  },
+  contactButton: {
+    height: wp(8),
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    justifyContent: 'center',
+    marginBottom: wp(2),
+    borderRadius: wp(2),
+    paddingHorizontal: wp(2)
+  },
+  bidContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: wp(3),
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0'
+  },
+  bidRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: wp(2)
+  },
+  bidInput: {
+    height: wp(8),
+    borderBottomWidth: 1,
+    borderBottomColor: '#6a0c0c',
+    padding: 0,
+    paddingLeft: wp(4),
+    width: wp(45),
+    marginHorizontal: wp(2)
+  },
+  buttonTrue: {
+    backgroundColor: '#6a0c0c',
+    paddingHorizontal: wp(2),
+    paddingVertical: wp(1),
+    color: 'white',
+    borderRadius: wp(1)
+  },
+  buttonFalse: {
+    borderWidth: 1,
+    borderColor: '#6a0c0c',
+    paddingHorizontal: wp(2),
+    paddingVertical: wp(1),
+    color: 'black',
+    borderRadius: wp(1)
+  },
+  bidActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    marginTop: wp(2)
+  },
+  bidActionButton: {
+    paddingHorizontal: wp(4),
+    paddingVertical: wp(1),
+    borderRadius: wp(1)
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    marginTop: wp(2),
+    gap: wp(2)
+  },
+  actionButton: {
+    alignItems: "center",
+    justifyContent: 'center',
+    borderRadius: wp(2),
+    padding: wp(1),
+    paddingHorizontal: wp(2),
+    flexDirection: 'row',
+    gap: wp(1),
+  },
+  bookingButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    marginTop: wp(3)
+  },
+  bookingButton: {
+    width: wp(25),
+    height: wp(10),
+    alignItems: "center",
+    justifyContent: 'center',
+    borderRadius: wp(2),
+  }
 });
+
+function toggleItemById(id: string, setBidDisplay: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>): void {
+  throw new Error('Function not implemented.')
+}

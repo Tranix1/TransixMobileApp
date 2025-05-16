@@ -6,7 +6,7 @@ import CheckOutMakePayments from "@/components/CheckOutPayment";
 import { ErrorOverlay } from "@/components/ErrorOverLay";
 import { handleMakePayment } from "@/payments/operations";
 
-import { ContractsFormDataScndType, TankerTruckProps } from "@/types/types";
+import { ContractsFormDataScndType, Countries, TankerTruckProps } from "@/types/types";
 import { ContractsFormDataType } from "@/types/types";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -15,9 +15,9 @@ import Input from "@/components/Input";
 import { useThemeColor } from '@/hooks/useThemeColor';
 import Heading from '@/components/Heading';
 import ScreenWrapper from '@/components/ScreenWrapper';
-import { wp } from "@/constants/common";
+import { hp, wp } from "@/constants/common";
 import Divider from "@/components/Divider";
-import { EvilIcons, Ionicons } from "@expo/vector-icons";
+import { EvilIcons, FontAwesome, Ionicons } from "@expo/vector-icons";
 import Button from "@/components/Button";
 import { useAuth } from "@/context/AuthContext";
 import { CheckBox } from 'react-native-elements';
@@ -112,6 +112,11 @@ const NewContract = () => {
     const [dspReturnRate, setDspReturnRate] = useState(false);
 
     const [step, setStep] = useState(0);
+
+    const [showCountries, setShowCountries] = useState(false);
+    const [operationCountries, setOperationCountries] = useState<string[]>([]);
+
+
 
     const litresCapacity = [
         '300L',
@@ -392,6 +397,7 @@ const NewContract = () => {
         contractLocation: location,
         interCountries: interOpCount,
         localCountr: locaOpCount,
+        locations: operationCountries,
         manyRoutesAllocaton: manyRoutesAllocaton,
         manyRoutesAssign: manyRoutesAssign,
         formData: {
@@ -440,7 +446,7 @@ const NewContract = () => {
     const [otherTruckType, setOtherTruckType] = React.useState<string>("")
 
     const [typeOfTanker, setTypeOfTanker] = React.useState<TankerTruckProps | null>(null)
-console.log(typeOfTanker)
+    console.log(typeOfTanker)
 
 
     const [truckConfig, setTruckConfig] = React.useState("")
@@ -452,6 +458,7 @@ console.log(typeOfTanker)
     const [truckCapacity, setTruckCapacity] = useState("")
 
     const [dspSpecTruckDet, setDspSpecTruckDet] = React.useState<boolean>(false)
+
 
 
 
@@ -526,8 +533,8 @@ console.log(typeOfTanker)
 
 
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: wp(6), alignItems: 'center' }}>
-                {['Truck Details', 'Load Details', 'Return Load', 'Contract Details'].map((stepLabel, index) => (
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: wp(6), alignItems: 'center', marginBottom: wp(2) }}>
+                {['Truck Details', 'Load Details', 'Return\nLoad', 'Contract Details'].map((stepLabel, index) => (
                     <View key={index} style={{ alignItems: 'center', flexDirection: 'row', flex: index > 0 ? 1 : 0, }}>
                         {index > 0 && (
                             <View
@@ -592,7 +599,7 @@ console.log(typeOfTanker)
                                 <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }}>
                                     Where Truck Operates
                                 </ThemedText>
-                                <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
+                                {/* <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
                                     <TouchableNativeFeedback onPress={() => setLocation('international')}>
                                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                             <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
@@ -623,6 +630,53 @@ console.log(typeOfTanker)
                                         </View>
                                     </TouchableNativeFeedback>
 
+                                </View> */}
+
+
+
+                                <View style={{
+                                    paddingVertical: wp(1),
+
+                                    gap: wp(1),
+                                    borderWidth: 1,
+                                    borderColor: '#ccc',
+                                    borderRadius: 12,
+                                    paddingHorizontal: 16,
+                                    marginBottom: 16,
+                                }}>
+                                    <TouchableOpacity onPress={() => setShowCountries(!showCountries)} style={{
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                    }}>
+                                        <ThemedText style={{ minHeight: hp(5), textAlignVertical: 'center' }}>
+                                            Select Countrie(s)
+                                        </ThemedText>
+
+                                        <Ionicons name={showCountries ? 'chevron-up-outline' : "chevron-down"} size={wp(4)} color={iconcolor} />
+                                    </TouchableOpacity>
+                                    {showCountries &&
+                                        <View>
+                                            <Divider />
+                                            {Countries.map((item) => {
+
+                                                const active = operationCountries.some(x => x === item);
+
+                                                return (
+                                                    <TouchableOpacity onPress={() => active ? setOperationCountries(operationCountries.filter(x => x !== item)) : setOperationCountries([...operationCountries, item])} style={{ padding: wp(2), marginVertical: wp(1), flexDirection: 'row', justifyContent: 'space-between' }}>
+                                                        <ThemedText type="subtitle">
+                                                            {item}
+                                                        </ThemedText>
+
+                                                        <FontAwesome name={active ? 'check-square' : "square-o"} size={wp(5)} color={active ? '#0f9d58' : iconcolor} />
+                                                    </TouchableOpacity>
+                                                )
+                                            }
+                                            )}
+
+                                        </View>
+                                    }
+
                                 </View>
 
 
@@ -632,77 +686,71 @@ console.log(typeOfTanker)
 
 
 
+
                                 <Divider />
 
 
-                              
+
 
                                 <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, marginTop: wp(4) }}>
                                     Truck Config
                                 </ThemedText>
 
-                                <ScrollView horizontal style={{ marginVertical: wp(3) }}>
+                                <ScrollView showsHorizontalScrollIndicator={false} horizontal style={{ marginVertical: wp(3) }}>
                                     {["single Axle ", "tandem", "triaxle", "MultiAxle"].map(config => (
                                         <TouchableOpacity
                                             key={config}
                                             onPress={() => setTruckConfig(config)}
                                             style={{
-                                                backgroundColor: truckConfig === config ? "green" : "red",
+                                                backgroundColor: truckConfig === config ? accent : backgroundLight,
                                                 margin: 6,
                                                 padding: wp(2),
-                                                borderRadius: wp(2),
+                                                paddingHorizontal: wp(4),
+                                                borderRadius: wp(4),
                                             }}
                                         >
-                                            <ThemedText>{config}</ThemedText>
+                                            <ThemedText type="defaultSemiBold" color={truckConfig === config ? 'white' : text}>{config}</ThemedText>
                                         </TouchableOpacity>
                                     ))}
                                 </ScrollView>
 
-                              
+
 
                                 <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, marginTop: wp(4) }}>
                                     Truck Suspension
                                 </ThemedText>
 
-                                <ScrollView horizontal style={{ marginVertical: wp(3) }}>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: wp(3) }}>
                                     {["Link", "Super Link", "Air suspension", "mechanical steel", "Other"].map(suspension => (
                                         <TouchableOpacity
                                             key={suspension}
                                             onPress={() => setTruckSuspension(suspension)}
                                             style={{
-                                                backgroundColor: truckSuspension === suspension ? "green" : "red",
+                                                backgroundColor: truckSuspension === suspension ? accent : backgroundLight,
                                                 margin: 6,
                                                 padding: wp(2),
-                                                borderRadius: wp(2),
+                                                paddingHorizontal: wp(4),
+                                                borderRadius: wp(4),
                                             }}
                                         >
-                                            <ThemedText>{suspension}</ThemedText>
+                                            <ThemedText color={truckSuspension === suspension ? 'white' : text} type="defaultSemiBold">{suspension}</ThemedText>
                                         </TouchableOpacity>
                                     ))}
                                 </ScrollView>
 
                                 {truckSuspension === "Other" && (
-                                    <View style={{ marginTop: wp(2) }}>
+                                    <View style={{ gap: wp(2) }}>
+
+                                        <ThemedText>Specify Suspension Type</ThemedText>
                                         <Input
                                             value={otherTruckSuspension}
                                             placeholder="Specify Suspension Type"
                                             onChangeText={setOtherTruckSuspension}
+                                            style={{}}
                                         />
                                     </View>
+
                                 )}
-
-                                <Divider />
-
-
-
-
-
-
-
-
-
-
-
 
 
                                 <Divider />
@@ -758,7 +806,7 @@ console.log(typeOfTanker)
                                 {selectedTruckType?.name === "Tanker" && <View>
                                     {tankerTypes.map((truck, index) => (
                                         <TouchableNativeFeedback key={truck.id} onPress={() => setTypeOfTanker(truck)} >
-                                            <View style={{ margin: 9,backgroundColor:"green" }} >
+                                            <View style={{ margin: 9, backgroundColor: "green" }} >
                                                 <ThemedText  >{truck.name}</ThemedText>
                                                 <ThemedText >{truck.description}</ThemedText>
                                                 {truck.products && truck.products.length > 0 && (
