@@ -1,4 +1,4 @@
-import { ActivityIndicator, RefreshControl, StyleSheet, Text, TouchableNativeFeedback, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, RefreshControl, StyleSheet, Text, TouchableNativeFeedback, TouchableOpacity, View, Modal } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { fetchDocuments } from '@/db/operations';
 import { Load } from '@/types/types';
@@ -17,6 +17,8 @@ const Index = () => {
     const [loadingMore, setLoadingMore] = useState(false);
     const [Loads, setLoads] = useState<Load[]>([])
     const [showfilter, setShowfilter] = useState(false)
+    const [selectedLoad, setSelectedLoad] = useState<Load | null>(null);
+    const [showSheet, setShowSheet] = useState(false);
 
     const accent = useThemeColor('accent')
     const icon = useThemeColor('icon')
@@ -87,16 +89,15 @@ const Index = () => {
                     </View>
                 </View>
 
-
-
-
-
                 <FlatList
                     keyExtractor={(item) => item.id.toString()}
 
                     data={Loads}
                     renderItem={({ item }) => (
-                        <LoadComponent item={item} />
+                        <LoadComponent item={item} ondetailsPress={() => {
+                            setSelectedLoad(item);
+                            setShowSheet(true);
+                        }} />
                     )}
                     refreshControl={
                         <RefreshControl
@@ -138,24 +139,66 @@ const Index = () => {
                         </View>
                     }
                 />
+                <Modal
+                    visible={showSheet}
+                    animationType="slide"
+                    transparent
+                    onRequestClose={() => setShowSheet(false)}
+                >
+                    <View style={{
+                        flex: 1,
+                        justifyContent: 'flex-end',
+                        backgroundColor: 'rgba(0,0,0,0.3)'
+                    }}>
+                        <View style={{
+                            backgroundColor: '#fff',
+                            borderTopLeftRadius: 18,
+                            borderTopRightRadius: 18,
+                            padding: wp(5),
+                            minHeight: hp(40),
+                            maxHeight: hp(80)
+                        }}>
+                            <TouchableOpacity
+                                onPress={() => setShowSheet(false)}
+                                style={{ alignSelf: 'flex-end', marginBottom: wp(2) }}
+                            >
+                                <Ionicons name="close" size={wp(7)} color="#333" />
+                            </TouchableOpacity>
+                            {selectedLoad ? (
+                                <>
+                                    <ThemedText type="title">{selectedLoad.typeofLoad}</ThemedText>
+                                    <ThemedText>From: {selectedLoad.fromLocation}</ThemedText>
+                                    <ThemedText>To: {selectedLoad.toLocation}</ThemedText>
+                                    <ThemedText>Rate: {selectedLoad.ratePerTonne}</ThemedText>
+                                    <ThemedText>Payment Terms: {selectedLoad.paymentTerms}</ThemedText>
+                                    <ThemedText>Requirements: {selectedLoad.requirements}</ThemedText>
+                                    <ThemedText>Additional Info: {selectedLoad.additionalInfo}</ThemedText>
+                                    {/* Add more fields as needed */}
+                                </>
+                            ) : (
+                                <ThemedText>No details available.</ThemedText>
+                            )}
+                        </View>
+                    </View>
+                </Modal>
             </View>
         </View>
     )
 }
 
-      //   {rendereIterms}
-      //   {!dspLoadMoreBtn && loadsList.length <= 0 && location&&<ThemedText style={{fontSize:19 ,fontWeight:'bold'}} >Do Not Have Local loads </ThemedText> }
-      //  {!dspLoadMoreBtn && loadsList.length <= 0  && location &&<TouchableOpacity onPress={handleShareApp} >
-      //    <ThemedText style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more loads</ThemedText>
-      //  </TouchableOpacity>}
+//   {rendereIterms}
+//   {!dspLoadMoreBtn && loadsList.length <= 0 && location&&<ThemedText style={{fontSize:19 ,fontWeight:'bold'}} >Do Not Have Local loads </ThemedText> }
+//  {!dspLoadMoreBtn && loadsList.length <= 0  && location &&<TouchableOpacity onPress={handleShareApp} >
+//    <ThemedText style={{fontSize : 20 , textDecorationLine:'underline'}} >Please share or recommend our app for more loads</ThemedText>
+//  </TouchableOpacity>}
 
-       
 
-          
-       
-    // </ScrollView> }
 
-       {/* {localLoads && <View style={{alignItems : 'center' , paddingTop : 30}}>
+
+
+// </ScrollView> }
+
+{/* {localLoads && <View style={{alignItems : 'center' , paddingTop : 30}}>
         <TouchableOpacity  onPress={()=>specifyLocation('Zimbabwe')} style={styles.buttonStyleCounry}  >
           <Text style={{color:'#6a0c0c'}}>Zimbabwe </Text>
         </TouchableOpacity>
@@ -188,55 +231,12 @@ const Index = () => {
         </TouchableOpacity>
        </View> } */}
 
-       
+
 //     </View>
 //   )
 
 // }
-export default React.memo( Index)
-
-// const styles = StyleSheet.create({
-//     buttonStyle : {
-//         height : 30,
-//         justifyContent : 'center' , 
-//         alignItems : 'center' ,
-//         // paddingLeft : 10,
-//         // paddingRight : 10 ,
-//         width : 100 ,
-//         marginBottom: 10 ,
-//         borderWidth: 2 ,
-//         borderColor:"#6a0c0c" ,
-//         borderRadius: 10,
-//         backgroundColor:'#228B22' 
-//     } ,
-//     buttonStyleCounry :{
-//         height : 40,
-//         justifyContent : 'center' , 
-//         alignItems : 'center' ,
-//         width : 150 ,
-//         marginBottom: 15 ,
-//         borderWidth:2 ,
-//         borderColor:"#6a0c0c",
-//         borderRadius:10
-//     },
-  
-//     buttonIsFalse : {
-//      borderWidth : 1 ,
-//      borderColor : '#6a0c0c' ,
-//      paddingLeft :4 , 
-//      paddingRight:4 ,
-//     //  marginLeft : 6
-//    } , 
-//     bttonIsTrue:{
-//     backgroundColor : '#6a0c0c' ,
-//      paddingLeft :4 ,
-//      paddingRight:4 ,
-//      color :'white' 
-
-//     }
-// });
-
-
+export default React.memo(Index)
 
 const styles = StyleSheet.create({
     container: {

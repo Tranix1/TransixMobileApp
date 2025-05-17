@@ -1,4 +1,4 @@
-import { StyleSheet, TouchableOpacity, View, ActivityIndicator, Linking } from 'react-native'
+import { StyleSheet, TouchableOpacity, View, ActivityIndicator, Linking, TouchableHighlight } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { Load } from '@/types/types'
 import { wp } from '@/constants/common'
@@ -13,7 +13,7 @@ import { addDocument, checkDocumentExists, runFirestoreTransaction, setDocuments
 import Input from './Input'
 import { formatCurrency } from '@/services/services'
 
-const DspAllLoads = ({ item = {} as Load }) => {
+const DspAllLoads = ({ item = {} as Load, ondetailsPress = () => { } }) => {
   const backgroundLight = useThemeColor('backgroundLight')
   const background = useThemeColor('background')
   const coolGray = useThemeColor('coolGray')
@@ -424,6 +424,10 @@ const DspAllLoads = ({ item = {} as Load }) => {
               </ThemedText>
             </View>
           )}
+
+          <TouchableHighlight underlayColor={backgroundLight} onPress={() => { }} style={{ backgroundColor: background, padding: wp(1), borderRadius: wp(90) }}>
+            <Ionicons name='ellipsis-vertical' size={wp(4)} />
+          </TouchableHighlight>
         </View>
       </View>
       <View style={[styles.detailRow, { backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }]}>
@@ -611,7 +615,7 @@ const DspAllLoads = ({ item = {} as Load }) => {
       {/* {contactDisplay[item.id] && contactMe}
 
       {bidDisplay[item.id] && bidNow} */}
-
+      {/*
       {!bidDisplay[item.id] && (
 
         <View style={styles.actionButtons}>
@@ -623,11 +627,11 @@ const DspAllLoads = ({ item = {} as Load }) => {
             <Ionicons name="chevron-up" size={wp(3)} color="white" />
           </TouchableOpacity>
 
-          {/* <TouchableOpacity
+          <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: accent }]}
           >
             <ThemedText style={{ color: 'white' }}>All {item.companyName} Loads</ThemedText>
-          </TouchableOpacity> */}
+          </TouchableOpacity> 
 
 
           {auth.currentUser ? (
@@ -670,6 +674,7 @@ const DspAllLoads = ({ item = {} as Load }) => {
           )}
         </View>
       )}
+        */}
     </TouchableOpacity>
   );
 };

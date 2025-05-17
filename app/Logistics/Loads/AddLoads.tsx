@@ -42,7 +42,7 @@ const AddLoadDB = () => {
 
 
     const { user } = useAuth();
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
 
         console.log({
             typeofLoad,
@@ -99,11 +99,13 @@ const AddLoadDB = () => {
 
         try {
 
-            addDocument("Loads", loadData, (status) => console.log(`Status: ${status}`))
+            const doc = await addDocument("Loads", loadData, (status) => console.log(`Status: ${status}`))
 
-            console.log("Submitting load data:", loadData);
-            alert("Load submitted successfully!");
-            router.back();
+            if (doc) {
+                console.log("Submitting load data:", loadData);
+                alert("Load submitted successfully!");
+                router.back();
+            }
         } catch (error) {
             console.error("Error submitting load:", error);
             alert("Failed to submit load. Please try again.");
@@ -249,6 +251,7 @@ const AddLoadDB = () => {
                                 Additional Information<ThemedText color="red">*</ThemedText>
                             </ThemedText>
                             <Input
+                                multiline
                                 value={additionalInfo}
                                 onChangeText={setAdditionalInfo}
                             />
