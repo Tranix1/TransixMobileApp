@@ -99,13 +99,11 @@ const AddLoadDB = () => {
 
         try {
 
-            const doc = await addDocument("Loads", loadData, (status) => console.log(`Status: ${status}`))
+            addDocument("Loads", loadData, (status) => console.log(`Status: ${status}`))
 
-            if (doc) {
-                console.log("Submitting load data:", loadData);
-                alert("Load submitted successfully!");
-                router.back();
-            }
+            console.log("Submitting load data:", loadData);
+            alert("Load submitted successfully!");
+            router.back();
         } catch (error) {
             console.error("Error submitting load:", error);
             alert("Failed to submit load. Please try again.");

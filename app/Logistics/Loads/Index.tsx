@@ -147,7 +147,7 @@ const Index = () => {
                 {/* Gorhom BottomSheet for details */}
                 <BottomSheet
                     ref={bottomSheetRef}
-                    index={-1}
+                    index={1}
                     snapPoints={['55%', '80%']}
                     enablePanDownToClose
                     onClose={() => setShowSheet(false)}
