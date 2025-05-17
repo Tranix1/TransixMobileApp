@@ -1,5 +1,5 @@
 import { ActivityIndicator, RefreshControl, StyleSheet, Text, TouchableNativeFeedback, TouchableOpacity, View, Modal } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { fetchDocuments } from '@/db/operations';
 import { Load } from '@/types/types';
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
@@ -9,6 +9,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import LoadComponent from '@/components/LoadComponent';
+import BottomSheet from '@gorhom/bottom-sheet';
 
 const Index = () => {
 
@@ -19,11 +20,12 @@ const Index = () => {
     const [showfilter, setShowfilter] = useState(false)
     const [selectedLoad, setSelectedLoad] = useState<Load | null>(null);
     const [showSheet, setShowSheet] = useState(false);
+    const bottomSheetRef = useRef<BottomSheet>(null);
 
     const accent = useThemeColor('accent')
     const icon = useThemeColor('icon')
     const background = useThemeColor('background')
-    const backgroundLight = useThemeColor('backgroundLight')
+    const backgroundLight = useThemeColor('background')
     const LoadTructs = async () => {
         const maLoads = await fetchDocuments("Loads");
         console.log(maLoads);
@@ -97,6 +99,9 @@ const Index = () => {
                         <LoadComponent item={item} ondetailsPress={() => {
                             setSelectedLoad(item);
                             setShowSheet(true);
+                            setTimeout(() => {
+                                bottomSheetRef.current?.expand();
+                            }, 10);
                         }} />
                     )}
                     refreshControl={
@@ -139,48 +144,42 @@ const Index = () => {
                         </View>
                     }
                 />
-                <Modal
-                    visible={showSheet}
-                    animationType="slide"
-                    transparent
-                    onRequestClose={() => setShowSheet(false)}
+                {/* Gorhom BottomSheet for details */}
+                <BottomSheet
+                    ref={bottomSheetRef}
+                    index={-1}
+                    snapPoints={['55%', '80%']}
+                    enablePanDownToClose
+                    onClose={() => setShowSheet(false)}
+                    style={{ backgroundColor: '#fff' }}
                 >
                     <View style={{
+                        paddingHorizontal: wp(4),
+                        paddingVertical: wp(2),
                         flex: 1,
-                        justifyContent: 'flex-end',
-                        backgroundColor: 'rgba(0,0,0,0.3)'
                     }}>
-                        <View style={{
-                            backgroundColor: '#fff',
-                            borderTopLeftRadius: 18,
-                            borderTopRightRadius: 18,
-                            padding: wp(5),
-                            minHeight: hp(40),
-                            maxHeight: hp(80)
-                        }}>
-                            <TouchableOpacity
-                                onPress={() => setShowSheet(false)}
-                                style={{ alignSelf: 'flex-end', marginBottom: wp(2) }}
-                            >
-                                <Ionicons name="close" size={wp(7)} color="#333" />
-                            </TouchableOpacity>
-                            {selectedLoad ? (
-                                <>
-                                    <ThemedText type="title">{selectedLoad.typeofLoad}</ThemedText>
-                                    <ThemedText>From: {selectedLoad.fromLocation}</ThemedText>
-                                    <ThemedText>To: {selectedLoad.toLocation}</ThemedText>
-                                    <ThemedText>Rate: {selectedLoad.ratePerTonne}</ThemedText>
-                                    <ThemedText>Payment Terms: {selectedLoad.paymentTerms}</ThemedText>
-                                    <ThemedText>Requirements: {selectedLoad.requirements}</ThemedText>
-                                    <ThemedText>Additional Info: {selectedLoad.additionalInfo}</ThemedText>
-                                    {/* Add more fields as needed */}
-                                </>
-                            ) : (
-                                <ThemedText>No details available.</ThemedText>
-                            )}
-                        </View>
+                        <TouchableOpacity
+                            onPress={() => bottomSheetRef.current?.close()}
+                            style={{ alignSelf: 'flex-end', marginBottom: wp(2) }}
+                        >
+                            <Ionicons name="close" size={wp(7)} color="#333" />
+                        </TouchableOpacity>
+                        {selectedLoad ? (
+                            <>
+                                <ThemedText type="title">{selectedLoad.typeofLoad}</ThemedText>
+                                <ThemedText>From: {selectedLoad.location || selectedLoad.location}</ThemedText>
+                                <ThemedText>To: {selectedLoad.destination || selectedLoad.destination}</ThemedText>
+                                <ThemedText>Rate: {selectedLoad.ratePerTonne}</ThemedText>
+                                <ThemedText>Payment Terms: {selectedLoad.paymentTerms}</ThemedText>
+                                <ThemedText>Requirements: {selectedLoad.requirements}</ThemedText>
+                                <ThemedText>Additional Info: {selectedLoad.additionalInfo}</ThemedText>
+                                {/* Add more fields as needed */}
+                            </>
+                        ) : (
+                            <ThemedText>No details available.</ThemedText>
+                        )}
                     </View>
-                </Modal>
+                </BottomSheet>
             </View>
         </View>
     )
