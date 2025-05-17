@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     interface LoginResponse {
         success: boolean;
-        message?: string;
+        message: string;
     }
 
     const Login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 }
             }
 
-            return { success: false, message: errorMessage };
+            return { success: false, message: errorMessage ?? "An unexpected error occurred. Please try again." };
         }
     };
 
@@ -206,7 +206,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
 
             if (user) {
-                await setDocuments("personalData" , {
+                await setDocuments("personalData", {
                     ...credentials,
                 });
             }

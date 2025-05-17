@@ -250,9 +250,7 @@ const Index = () => {
                     </View> */}
 
                 <View style={{ margin: wp(4), marginTop: 0 }}>
-                    <Input placeholder='Search...' Icon={<EvilIcons name='search' size={wp(6)} />} containerStyles={{ backgroundColor: backgroundColor }}
-                        onChangeText={(text) => handleFilter(text)}
-                    />
+                    <Input placeholder='Search...' Icon={<EvilIcons name='search' size={wp(6)} />} containerStyles={{ backgroundColor: backgroundColor }} />
                 </View>
 
                 {/* <TouchableOpacity onPress={() => router.push("/Logistics/AddHome")} >
@@ -260,7 +258,7 @@ const Index = () => {
                 </TouchableOpacity> */}
 
 
-                {!textTyped && <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
+                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
                         <View style={{}}>
                             <MaterialCommunityIcons name="lightning-bolt-circle" size={wp(4)} color={icon} />
@@ -305,20 +303,9 @@ const Index = () => {
 
                     </View>
 
-                </View>}
+                </View>
 
-
-
-
-
-
-
-
-
-                {filteredData.map((item) => (<View>
-
-
-                    {item.id === 1 && <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
+                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
 
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
                         <View style={{}}>
@@ -403,48 +390,48 @@ const Index = () => {
 
 
 
-                    <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
-                        <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
-                            <View style={{ backgroundColor: '#fb9274', borderRadius: wp(2), padding: wp(1.5) }}>
-                                <Octicons name='verified' color={'#fff'} size={wp(4)} />
-                            </View>
-                            <ThemedText type='subtitle' color={'#fb9274'} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
-                                GIT (Goods in transit Insuarance)
-                            </ThemedText>
+                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
+                    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
+                        <View style={{ backgroundColor: '#fb9274', borderRadius: wp(2), padding: wp(1.5) }}>
+                            <Octicons name='verified' color={'#fff'} size={wp(4)} />
                         </View>
-                        <ThemedText color={icon} type='default' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}>
-                            Ensures financial protection for trucks and cargo, keeping your
-                            business secure.
+                        <ThemedText type='subtitle' color={'#fb9274'} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
+                            GIT (Goods in transit Insuarance)
                         </ThemedText>
-                        <Button
-                            colors={{ text: '#fb9274', bg: '#fb927424' }}
-                            title='Get Verified'
-                            Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"#fb9274"} />}
-                        />
                     </View>
+                    <ThemedText color={icon} type='default' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}>
+                        Ensures financial protection for trucks and cargo, keeping your
+                        business secure.
+                    </ThemedText>
+                    <Button
+                        colors={{ text: '#fb9274', bg: '#fb927424' }}
+                        title='Get Verified'
+                        Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"#fb9274"} />}
+                    />
+                </View>
 
-                    <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
-                        <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
-                            <View style={{ backgroundColor: '#bada5f', borderRadius: wp(2), padding: wp(1.5) }}>
-                                <Octicons name='verified' color={'#fff'} size={wp(4)} />
-                            </View>
-                            <ThemedText type='subtitle' color={'#bada5f'} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
-                                T & L Events
-                            </ThemedText>
+                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
+                    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
+                        <View style={{ backgroundColor: '#bada5f', borderRadius: wp(2), padding: wp(1.5) }}>
+                            <Octicons name='verified' color={'#fff'} size={wp(4)} />
                         </View>
-                        <ThemedText color={icon} type='default' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}>
-                            Get your tickets now for upcoming transport & logistics events!{'\n'}
-                            Featuring : burnouts, car shows, expos, conferences, racing and tournaments!
+                        <ThemedText type='subtitle' color={'#bada5f'} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
+                            T & L Events
                         </ThemedText>
-                        <Button
-                            colors={{ text: '#bada5f', bg: '#bada5f24' }}
-                            title='Get Verified'
-                            Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"##bada5f"} />}
-                        />
                     </View>
+                    <ThemedText color={icon} type='default' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}>
+                        Get your tickets now for upcoming transport & logistics events!{'\n'}
+                        Featuring : burnouts, car shows, expos, conferences, racing and tournaments!
+                    </ThemedText>
+                    <Button
+                        colors={{ text: '#bada5f', bg: '#bada5f24' }}
+                        title='Get Verified'
+                        Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"##bada5f"} />}
+                    />
+                </View>
 
 
-                </ScrollView>
+            </ScrollView>
 
         </View>
     )

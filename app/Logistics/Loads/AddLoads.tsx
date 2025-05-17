@@ -8,6 +8,10 @@ import { Ionicons } from "@expo/vector-icons";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { wp } from "@/constants/common";
 import Heading from "@/components/Heading";
+import { router } from "expo-router";
+import { addDocument } from "@/db/operations";
+import { Load } from "@/types/types";
+import { useAuth } from "@/context/AuthContext";
 
 const AddLoadDB = () => {
     const [step, setStep] = useState(0);
@@ -16,6 +20,7 @@ const AddLoadDB = () => {
     const [typeofLoad, setTypeofLoad] = useState("");
     const [fromLocation, setFromLocation] = useState("");
     const [toLocation, setToLocation] = useState("");
+    const [distance, setDistance] = useState("");
     const [ratePerTonne, setRatePerTonne] = useState("");
     const [paymentTerms, setPaymentTerms] = useState("");
     const [requirements, setRequirements] = useState("");
@@ -34,8 +39,11 @@ const AddLoadDB = () => {
     const toggleDspFuelAvai = () => setDspFuelAvai((prev) => !prev);
     const toggleDspReturnLoad = () => setDspReturnLoad((prev) => !prev);
 
+
+
+    const { user } = useAuth();
     const handleSubmit = () => {
-        // Handle form submission logic
+
         console.log({
             typeofLoad,
             fromLocation,
@@ -56,10 +64,21 @@ const AddLoadDB = () => {
             return;
         }
 
-
+        if (!user) {
+            alert("Please Login first");
+            return;
+        }
+        if (!user.organisation) {
+            alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
+            return;
+        }
         const loadData = {
             distance: distance,
-            deletionTime: Date.now() + 3 * 24 * 60 * 60 * 1000,
+            userId: user?.uid,
+            companyName: user.organisation,
+            contact: user?.phoneNumber || '',
+            created_at: Date.now().toString(),
+            timeStamp: { nanoseconds: 0, seconds: Math.floor(Date.now() / 1000) },
             isVerified: false,
             typeofLoad,
             destination: toLocation,
@@ -90,6 +109,7 @@ const AddLoadDB = () => {
             alert("Failed to submit load. Please try again.");
         }
     };
+
     return (
         <ScreenWrapper fh={false}>
 
@@ -159,11 +179,51 @@ const AddLoadDB = () => {
                                 Load Details
                             </ThemedText>
                             <Divider />
-                            <Input value={typeofLoad} placeholder="Type of Load" onChangeText={setTypeofLoad} />
-                            <Input value={fromLocation} placeholder="From Location" onChangeText={setFromLocation} />
-                            <Input value={toLocation} placeholder="To Location" onChangeText={setToLocation} />
-                            <Input value={ratePerTonne} placeholder="Rate Per Tonne" onChangeText={setRatePerTonne} keyboardType="numeric" />
-                            <Input value={paymentTerms} placeholder="Payment Terms" onChangeText={setPaymentTerms} />
+                            <ThemedText>
+                                Type of Load<ThemedText color="red">*</ThemedText>
+                            </ThemedText>
+                            <Input
+                                value={typeofLoad}
+                                onChangeText={setTypeofLoad}
+                            />
+                            <ThemedText>
+                                From Location<ThemedText color="red">*</ThemedText>
+                            </ThemedText>
+                            <Input
+                                value={fromLocation}
+                                onChangeText={setFromLocation}
+                            />
+                            <ThemedText>
+                                To Location<ThemedText color="red">*</ThemedText>
+                            </ThemedText>
+                            <Input
+                                value={toLocation}
+                                onChangeText={setToLocation}
+                            />
+                            <ThemedText>
+                                Estimated Distance <ThemedText color="red">*</ThemedText>
+                            </ThemedText>
+                            <Input
+                                placeholder="0km"
+                                value={distance}
+                                onChangeText={setDistance}
+                                keyboardType="numeric"
+                            />
+                            <ThemedText>
+                                Rate Per Tonne<ThemedText color="red">*</ThemedText>
+                            </ThemedText>
+                            <Input
+                                value={ratePerTonne}
+                                keyboardType="numeric"
+                                onChangeText={setRatePerTonne}
+                            />
+                            <ThemedText>
+                                Payment Terms<ThemedText color="red">*</ThemedText>
+                            </ThemedText>
+                            <Input
+                                value={paymentTerms}
+                                onChangeText={setPaymentTerms}
+                            />
                         </View>
                         <Divider />
                         <View style={styles.viewMainDsp}>
@@ -178,11 +238,43 @@ const AddLoadDB = () => {
                                 Additional Info
                             </ThemedText>
                             <Divider />
-                            <Input value={requirements} placeholder="Requirements" onChangeText={setRequirements} />
-                            <Input value={additionalInfo} placeholder="Additional Information" onChangeText={setAdditionalInfo} />
-                            {dspAlertMsg && <Input value={alertMsg} placeholder="Alert Message" onChangeText={setAlertMsg} />}
+                            <ThemedText>
+                                Requirements<ThemedText color="red">*</ThemedText>
+                            </ThemedText>
+                            <Input
+                                value={requirements}
+                                onChangeText={setRequirements}
+                            />
+                            <ThemedText>
+                                Additional Information<ThemedText color="red">*</ThemedText>
+                            </ThemedText>
+                            <Input
+                                value={additionalInfo}
+                                onChangeText={setAdditionalInfo}
+                            />
+                            {dspAlertMsg && (
+                                <>
+                                    <ThemedText>
+                                        Alert Message<ThemedText color="red">*</ThemedText>
+                                    </ThemedText>
+                                    <Input
+                                        value={alertMsg}
+                                        onChangeText={setAlertMsg}
+                                    />
+                                </>
+                            )}
                             <Button onPress={toggleDspAlertMsg} title={dspAlertMsg ? "Hide Alert Message" : "Add Alert Message"} />
-                            {dspFuelAvai && <Input value={fuelAvai} placeholder="Fuel Availability" onChangeText={setFuelAvai} />}
+                            {dspFuelAvai && (
+                                <>
+                                    <ThemedText>
+                                        Fuel Availability<ThemedText color="red">*</ThemedText>
+                                    </ThemedText>
+                                    <Input
+                                        value={fuelAvai}
+                                        onChangeText={setFuelAvai}
+                                    />
+                                </>
+                            )}
                             <Button onPress={toggleDspFuelAvai} title={dspFuelAvai ? "Hide Fuel Info" : "Add Fuel Info"} />
                         </View>
                         <Divider />
@@ -199,9 +291,28 @@ const AddLoadDB = () => {
                                 Return Load
                             </ThemedText>
                             <Divider />
-                            <Input value={returnLoad} placeholder="Return Load" onChangeText={setReturnLoad} />
-                            <Input value={returnRate} placeholder="Return Rate" onChangeText={setReturnRate} keyboardType="numeric" />
-                            <Input value={returnTerms} placeholder="Return Terms" onChangeText={setReturnTerms} />
+                            <ThemedText>
+                                Return Load<ThemedText color="red">*</ThemedText>
+                            </ThemedText>
+                            <Input
+                                value={returnLoad}
+                                onChangeText={setReturnLoad}
+                            />
+                            <ThemedText>
+                                Return Rate<ThemedText color="red">*</ThemedText>
+                            </ThemedText>
+                            <Input
+                                value={returnRate}
+                                keyboardType="numeric"
+                                onChangeText={setReturnRate}
+                            />
+                            <ThemedText>
+                                Return Terms<ThemedText color="red">*</ThemedText>
+                            </ThemedText>
+                            <Input
+                                value={returnTerms}
+                                onChangeText={setReturnTerms}
+                            />
                         </View>
                         <Divider />
                         <View style={styles.viewMainDsp}>
