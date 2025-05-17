@@ -17,19 +17,17 @@ interface FormData {
     addressWithProof: string;
 }
 
-interface RouteParams {
-    username: string;
-    contact: string;
-}
-
 interface DocumentAsset {
+    name:string
     uri: string;
-    name: string;
-    fileSize: number;
+    size: number;
+    // Add any other properties here
 }
 
-const ApplyVerification: React.FC<{ route: { params: RouteParams } }> = ({ route }) => {
-    const { username, contact } = route.params;
+
+
+const ApplyVerification = () => {
+
     const [formData, setFormData] = useState<FormData>({
         buzLoc: "",
         phoneNumFrst: "",
@@ -48,29 +46,40 @@ const ApplyVerification: React.FC<{ route: { params: RouteParams } }> = ({ route
     const [spinnerItem, setSpinnerItem] = useState<boolean>(false);
     const [selectedDocuments, setSelectedDocumentS] = useState<DocumentAsset[]>([]);
 
-    const pickDocument = async () => {
-        let result = await DocumentPicker.getDocumentAsync();
+   const pickDocument = async () => {
+  try {
+    const result = await DocumentPicker.getDocumentAsync({
+  type: ['application/pdf', 'image/*'], // allow only PDFs and images
+  copyToCacheDirectory: true, // optional: ensures the file is accessible in your app's cache
+});
 
-        if (result.canceled) {
-            return;
-        }
+    if (result.canceled) return;
 
-        if (result.assets && result.assets.length > 0) {
-            const firstAsset = result.assets[result.assets.length - 1];
-            if (firstAsset.uri) {
-                // if (firstAsset.size > 0.5 * 1024 * 1024) {
-                //     alert('The selected document must not be more than 0.5MB.');
-                //     return;
-                // }
-
-                // setSelectedDocumentS(prevDocs => [...prevDocs, firstAsset]);
-            } else {
-                alert('Selected document URI is undefined');
-            }
-        } else {
-            alert('No assets found in the picker result');
-        }
+    const assets = result.assets;
+    if (!assets || assets.length === 0) {
+      alert('No assets found in the picker result');
+      return;
     }
+
+    const firstAsset = assets[assets.length - 1];
+
+    if (!firstAsset.uri) {
+      alert('Selected document URI is undefined');
+      return;
+    }
+
+    if (firstAsset.size !== undefined && firstAsset.size > 0.5 * 1024 * 1024) {
+      alert('The selected document must not be more than 0.5MB.');
+      return;
+    }
+
+    setSelectedDocumentS((prevDocs) => [...prevDocs, firstAsset] as DocumentAsset[]);
+  } catch (error) {
+    console.error('Error picking document:', error);
+    alert('An error occurred while picking the document.');
+  }
+};
+
 
     const [countryCode, setCountryCode] = useState<string | null>(null);
     const [callingCode, setCallingCode] = useState<string>('');
@@ -80,10 +89,10 @@ const ApplyVerification: React.FC<{ route: { params: RouteParams } }> = ({ route
         // setCountryCode(country.callingCode);
     };
 
-    const [enterCompDw, setEntCompDe] = useState<boolean>(false);
+    const [enterCompDw, setEntCompDe] = useState<boolean>(true);
     const [directorDetails, setDirectorDet] = useState<boolean>(false);
     const [addressWithProof, setAdressWithProof] = useState<boolean>(false);
-    const [paymentPage, setPaymentPage] = useState<boolean>(true);
+    const [paymentPage, setPaymentPage] = useState<boolean>(false);
 
 
     function goToPersnalInfoF() {
@@ -172,8 +181,6 @@ const ApplyVerification: React.FC<{ route: { params: RouteParams } }> = ({ route
         try {
             const docRef = await addDoc(gitCollection, {
                 userId: userId,
-                companyName: username,
-                contact: contact,
                 pollUrl: pollUrl,
             });
 

@@ -50,8 +50,46 @@ const AddLoadDB = () => {
             returnRate,
             returnTerms,
         });
-    };
 
+        if (!typeofLoad || !fromLocation || !toLocation || !ratePerTonne || !paymentTerms) {
+            alert("Please fill in all required fields.");
+            return;
+        }
+
+
+        const loadData = {
+            distance: distance,
+            deletionTime: Date.now() + 3 * 24 * 60 * 60 * 1000,
+            isVerified: false,
+            typeofLoad,
+            destination: toLocation,
+            ratePerTonne,
+            paymentTerms,
+            requirements,
+            additionalInfo,
+            alertMsg: dspAlertMsg ? alertMsg : 'null',
+            fuelAvai: dspFuelAvai ? fuelAvai : 'null',
+            returnLoad,
+            returnRate,
+            returnTerms,
+            currency: "USD",
+            activeLoading: false,
+            location: fromLocation,
+            roundTrip: false,
+        };
+
+        try {
+
+            addDocument("Loads", loadData, (status) => console.log(`Status: ${status}`))
+
+            console.log("Submitting load data:", loadData);
+            alert("Load submitted successfully!");
+            router.back();
+        } catch (error) {
+            console.error("Error submitting load:", error);
+            alert("Failed to submit load. Please try again.");
+        }
+    };
     return (
         <ScreenWrapper fh={false}>
 

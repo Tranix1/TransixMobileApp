@@ -18,7 +18,7 @@ const itemString = typeof params.item === 'string' ? params.item : undefined;
 
 const parsedItem = itemString ? (JSON.parse(itemString) as ContractItem) : null;
 
-console.log(parsedItem?.formData.commodity)
+// console.log(parsedItem?.formData.commodity)
 
     return (
         <View style={{paddingTop:100}} >

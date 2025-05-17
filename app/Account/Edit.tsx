@@ -56,10 +56,11 @@ const Edit = () => {
         try {
             const update = await updateAccount(data);
             if (update.success) {
+                alert("hiiiiiiii")
                 router.replace('/Account/Index')
             }
         } catch (error) {
-
+            console.error("errror", error)
         }
 
     }

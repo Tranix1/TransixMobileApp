@@ -79,7 +79,7 @@ const Index = () => {
                         <DetailRow label="Country" value={user?.country || 'N/A'} />
                         <DetailRow label="Address" value={user?.address || 'N/A'} />
                         <DetailRow label="Organization" value={user?.organisation || 'N/A'} />
-                        <DetailRow label="Created At" value={formatDate(user?.createdAt)} />
+                        <DetailRow label="Created At" value={formatDate(user?.createdAt||"N/A")} />
                     </View>
                 </View>
 

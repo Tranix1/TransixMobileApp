@@ -2,24 +2,38 @@ import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, where, o
 import { db, auth } from "../app/components/config/fireBase";
 import { getDownloadURL, ref, uploadBytes, } from "firebase/storage";
 import { storage } from "./fireBaseConfig";
+import { useAuth } from "@/context/AuthContext";
 
 /**
  * Add a document to a Firestore collection.
  * @param collectionName - The name of the Firestore collection.
  * @param data - The data to add to the collection.
  */
+
+
 export const addDocument = async (
     collectionName: string,
     data: object,
     onStatusUpdate: (status: string) => void,
-) => {
-    try {
-
+    ) => {
+        try {
+        const { user } = useAuth();
+               if (!user) {
+            alert("Please Login first");
+            return;
+        }
+        if (!user?.organisation) {
+            alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
+            return;
+        }
         onStatusUpdate("now submitting to db");
         const docRef = await addDoc(collection(db, collectionName), {
             ...data,
             timeStamp: serverTimestamp(),
-            userId: auth.currentUser?.uid
+            userId: auth.currentUser?.uid ,
+            companyName: user?.organisation,
+            contact: user?.phoneNumber || '',
+
         });
         onStatusUpdate("Doneee submitting to db");
         return docRef.id;
@@ -72,7 +86,7 @@ export const fetchDocuments = async (
     filters: Array<any> = []
 ) => {
     try {
-        let dataQuery: Query<DocumentData> = query(collection(db, collectionName), limit(limitCount), orderBy('created_at', "desc"));
+        let dataQuery: Query<DocumentData> = query(collection(db, collectionName), limit(limitCount), orderBy('timeStamp', "desc"));
 
         if (startAfterDoc) {
             dataQuery = query(dataQuery, startAfter(startAfterDoc));
@@ -143,9 +157,6 @@ export const runFirestoreTransaction = async (
         throw error;
     }
 };
-
-
-
 
 
 /**
