@@ -39,12 +39,10 @@ const AddLoadDB = () => {
     const toggleDspFuelAvai = () => setDspFuelAvai((prev) => !prev);
     const toggleDspReturnLoad = () => setDspReturnLoad((prev) => !prev);
 
-// import ScreenWrapper from '@/components/ScreenWrapper';
-// import Input from "@/components/Input";
-// import { ThemedText } from "@/components/ThemedText";
 
 
-    const handleSubmit = () => {
+    const { user } = useAuth();
+    const handleSubmit = async () => {
 
         console.log({
             typeofLoad,
@@ -66,10 +64,21 @@ const AddLoadDB = () => {
             return;
         }
 
-     
+        if (!user) {
+            alert("Please Login first");
+            return;
+        }
+        if (!user.organisation) {
+            alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
+            return;
+        }
         const loadData = {
             distance: distance,
-            deletionTime :Date.now() + 3 * 24 * 60 * 60 * 1000 ,
+            userId: user?.uid,
+            companyName: user.organisation,
+            contact: user?.phoneNumber || '',
+            created_at: Date.now().toString(),
+            timeStamp: { nanoseconds: 0, seconds: Math.floor(Date.now() / 1000) },
             isVerified: false,
             typeofLoad,
             destination: toLocation,
@@ -100,6 +109,7 @@ const AddLoadDB = () => {
             alert("Failed to submit load. Please try again.");
         }
     };
+
     return (
         <ScreenWrapper fh={false}>
 
@@ -239,6 +249,7 @@ const AddLoadDB = () => {
                                 Additional Information<ThemedText color="red">*</ThemedText>
                             </ThemedText>
                             <Input
+                                multiline
                                 value={additionalInfo}
                                 onChangeText={setAdditionalInfo}
                             />

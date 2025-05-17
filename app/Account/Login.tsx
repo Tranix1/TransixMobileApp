@@ -18,6 +18,8 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [acceptTerms, setAcceptTerms] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const backgroundLight = useThemeColor('backgroundLight')
     const background = useThemeColor('background')
@@ -30,17 +32,18 @@ const Login = () => {
 
     const onsubmit = async () => {
         if (!email || !password) {
-            alert('Please fill in all fields');
+            setError('Please fill in all fields');
             return;
         }
-
-
-        const res = await Login({ email, password })
-        if (res.success) {
-
+        setError(null);
+        setLoading(true);
+        const res = await Login({ email, password });
+        setLoading(false);
+        if (!res.success) {
+            setError(res.message || "Login failed. Please try again.");
         }
-        
-          }
+
+    }
 
 
     return (
@@ -50,6 +53,11 @@ const Login = () => {
 
                 <ThemedText type='title' style={styles.header}>Login</ThemedText>
 
+                {error && (
+                    <ThemedText style={{ color: 'red', marginBottom: 12, textAlign: 'center' }}>
+                        {error}
+                    </ThemedText>
+                )}
 
                 <ThemedText style={styles.label}>Email</ThemedText>
                 <Input
@@ -72,8 +80,8 @@ const Login = () => {
 
 
 
-                <TouchableOpacity onPress={() => onsubmit()} style={[styles.signUpButton, { backgroundColor: accent }]}>
-                    <ThemedText color='#fff' type='subtitle'>Sign up</ThemedText>
+                <TouchableOpacity onPress={() => onsubmit()} style={[styles.signUpButton, { backgroundColor: accent }]} disabled={loading}>
+                    <ThemedText color='#fff' type='subtitle'>{loading ? "Loading..." : "Sign up"}</ThemedText>
                 </TouchableOpacity>
 
                 <ThemedText type='tiny' color={coolGray} style={styles.dividerText}>Or Register with</ThemedText>
@@ -84,7 +92,7 @@ const Login = () => {
                             Facebook
                         </ThemedText>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.socialButton, { backgroundColor: backgroundLight } ]}><MaterialCommunityIcons name="google" size={24} color="#DB4437" />
+                    <TouchableOpacity style={[styles.socialButton, { backgroundColor: backgroundLight }]}><MaterialCommunityIcons name="google" size={24} color="#DB4437" />
                         <ThemedText>
                             Google
                         </ThemedText>

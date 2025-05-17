@@ -34,7 +34,7 @@ const Settings = () => {
                         source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
                     />
                     <View style={{ flex: 1 }}>
-                        <ThemedText type='title'>{user?.organisation || 'Not Logged In'}</ThemedText>
+                        <ThemedText type='title'>{user?.organisation || '-'}</ThemedText>
                         <ThemedText type='tiny' color={icon}>{user?.email || 'Click button below to login'}</ThemedText>
                         {!user &&
                             <View style={{ marginTop: wp(2) }}>
@@ -57,10 +57,10 @@ const Settings = () => {
                     <ThemedText style={{ margin: wp(4) }} type='subtitle'>Account</ThemedText>
                 }
                 {user &&
-                    <View style={{ gap: wp(1), padding: wp(2), marginBottom: wp(4), borderWidth: 1, borderColor: backgroundLight, borderRadius: wp(4) }}>
+                    <View style={{ gap: wp(1), padding: wp(2), marginBottom: wp(4), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
                         <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
                             <TouchableNativeFeedback onPress={() => router.push('/Account/Edit')}>
-                                <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                     <AntDesign name='edit' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                     <View>
                                         <ThemedText type='default'>
@@ -70,10 +70,9 @@ const Settings = () => {
                                 </View>
                             </TouchableNativeFeedback>
                         </View>
-                        <Divider />
                         <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
                             <TouchableNativeFeedback onPress={() => logout()}>
-                                <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                     <AntDesign name='logout' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                     <View>
                                         <ThemedText type='default'>
@@ -83,10 +82,9 @@ const Settings = () => {
                                 </View>
                             </TouchableNativeFeedback>
                         </View>
-                        <Divider />
                         <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
                             <TouchableNativeFeedback onPress={() => router.push('/Account/Edit')}>
-                                <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                     <AntDesign name='deleteuser' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                     <View>
                                         <ThemedText color='#ff0f35' type='default'>

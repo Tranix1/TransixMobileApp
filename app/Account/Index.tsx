@@ -64,7 +64,7 @@ const Index = () => {
                 {/* User Details Section */}
                 <View style={[styles.card, { backgroundColor: background, borderColor: backgroundLight }]}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: wp(2) }}>
-                        <ThemedText style={styles.cardTitle}>User Details</ThemedText>
+                        <ThemedText style={styles.cardTitle}>Details</ThemedText>
                         <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
                             <TouchableNativeFeedback onPress={() => router.push('/Account/Edit')}>
                                 <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>

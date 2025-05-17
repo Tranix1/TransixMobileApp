@@ -232,7 +232,7 @@ console.log("filtred Data", filteredData)
                                         </TouchableNativeFeedback>
                                     </View>
                                     <ThemedText type='title' color={accent} style={{ flex: 1, textAlign: 'center' }}>
-                                        TRANSIX
+                                        Transix
                                     </ThemedText>
                                     <View style={{ overflow: 'hidden', borderRadius: wp(10), width: wp(8) }}>
                                         {/* <TouchableNativeFeedback>
@@ -269,9 +269,12 @@ console.log("filtred Data", filteredData)
                                                         </View>
                                                     }
                                                 </View>
-
-                                                <Button title='Manage Account' onPress={() => router.push('/Account/Index')}
-                                                    Icon={<AntDesign name='arrowright' size={wp(4)} color={accent} style={{ marginLeft: wp(1) }} />} />
+                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: backgroundColor, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push('/Account/Index')}>
+                                                    <MaterialIcons name="manage-accounts" size={wp(5)} color={accent} style={{ marginLeft: wp(1) }} />
+                                                    <ThemedText>
+                                                        Manage Account
+                                                    </ThemedText>
+                                                </TouchableOpacity>
                                             </View>
                                             :
                                             <View style={{ gap: wp(4), }}>
@@ -287,9 +290,14 @@ console.log("filtred Data", filteredData)
 
                                                     </View>
                                                 </View>
+                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: backgroundColor, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push('/Account/Login')}>
+                                                    <AntDesign name='login' size={wp(3)} color={accent} style={{ marginLeft: wp(1) }} />
+                                                    <ThemedText>
+                                                        Login Now
+                                                    </ThemedText>
+                                                </TouchableOpacity>
 
-                                                <Button title='Login Now' onPress={() => router.push('/Account/Login')}
-                                                    Icon={<AntDesign name='login' size={wp(4)} color={accent} style={{ marginLeft: wp(1) }} />} />
+
                                             </View>
                                         }
                                     </View>
@@ -373,9 +381,7 @@ console.log("filtred Data", filteredData)
                     </View> */}
 
                 <View style={{ margin: wp(4), marginTop: 0 }}>
-                    <Input placeholder='Search...' Icon={<EvilIcons name='search' size={wp(6)} />} containerStyles={{ backgroundColor: backgroundColor }} 
-                    onChangeText={(text) => handleFilter(text)}  
-                    />
+                    <Input placeholder='Search...' Icon={<EvilIcons name='search' size={wp(6)} />} containerStyles={{ backgroundColor: backgroundColor }} />
                 </View>
 
                 {/* <TouchableOpacity onPress={() => router.push("/Logistics/AddHome")} >
@@ -383,7 +389,7 @@ console.log("filtred Data", filteredData)
                 </TouchableOpacity> */}
 
 
-               {!textTyped&& <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
+                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
                         <View style={{}}>
                             <MaterialCommunityIcons name="lightning-bolt-circle" size={wp(4)} color={icon} />
@@ -402,7 +408,7 @@ console.log("filtred Data", filteredData)
                             </ThemedText>
                         </View>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')}underlayColor={'#0f9d585a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#0f9d5824' }}>
+                            <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')} underlayColor={'#0f9d585a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#0f9d5824' }}>
                                 <Fontisto name="truck" size={wp(5)} color="#0f9d58" />
                             </TouchableHighlight>
                             <ThemedText type='tiny' style={{ textAlign: 'center' }}>
@@ -419,16 +425,16 @@ console.log("filtred Data", filteredData)
                         </View>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
                             <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')} underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
-                                <Fontisto name="truck" size={wp(5)} color="#F48024" />
+                                <Fontisto name="dollar" size={wp(5)} color="#F48024" />
                             </TouchableHighlight>
                             <ThemedText type='tiny' style={{ textAlign: 'center' }}>
-                                Add Truck
+                                Sell Products
                             </ThemedText>
                         </View>
 
                     </View>
 
-                </View>}
+                </View>
 
 
 
@@ -452,8 +458,7 @@ console.log("filtred Data", filteredData)
                         <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
                             Long-Term Contracts
                         </ThemedText>
-                        <TouchableOpacity style={{ flexDirection: 'row', gap: wp(1) }} 
-                        onPress={()=>router.push("/Logistics/Contracts/ViewMiniContracts")}>
+                        <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/Index')} style={{ flexDirection: 'row', gap: wp(1) }}>
                             <ThemedText type='tiny'>
                                 Open Contracts
                             </ThemedText>
@@ -461,7 +466,7 @@ console.log("filtred Data", filteredData)
                         </TouchableOpacity>
                     </View>
                     <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>
-                        {item.description}
+                        Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
                     </ThemedText>
 
                     <FlatList data={[]}
@@ -476,7 +481,7 @@ console.log("filtred Data", filteredData)
                                 <TouchableOpacity style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
                                     <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
                                     <ThemedText color='#fff'>
-                                        Create Contract
+                                        Book Contracts
                                     </ThemedText>
                                 </TouchableOpacity>
                             </View>
@@ -486,7 +491,7 @@ console.log("filtred Data", filteredData)
 
 
 
-                </View>}
+                </View>
 
 
  {item.id=== 2&&  <HomeItemView
@@ -549,47 +554,38 @@ console.log("filtred Data", filteredData)
                {item.id ===1 && <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
 
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
-                        <View style={{}}>
-                            <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} />
+                        <View style={{ backgroundColor: '#6bacbf', borderRadius: wp(2), padding: wp(1.5) }}>
+                            <Octicons name='verified' color={'#fff'} size={wp(4)} />
                         </View>
-                        <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
-                            Long-Term Contracts
+                        <ThemedText type='subtitle' color={'#6bacbf'} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
+                            First Level Verification
                         </ThemedText>
-                        <TouchableOpacity style={{ flexDirection: 'row', gap: wp(1) }} 
-                        onPress={()=>router.push("/Logistics/Contracts/ViewMiniContracts")}>
-                            <ThemedText type='tiny'>
-                                Open Contracts
-                            </ThemedText>
-                            <Ionicons name='arrow-forward' color={icon} />
-                        </TouchableOpacity>
                     </View>
-                    <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>
-                        {item.description}
+                    <ThemedText color={icon} type='default' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}>
+                        We encourage all legit business to be verified{'\n'}
+                        Increase business trust and credibility by verifying your company.
                     </ThemedText>
-
-                    <FlatList data={[]}
-                        renderItem={(item) => (<></>)}
-                        ListEmptyComponent={<>
-                            <View style={{ marginVertical: wp(15), alignItems: 'center', gap: wp(4) }}>
-
-                                <ThemedText>
-                                    Create contract and start transporting loads today!
-                                </ThemedText>
-
-                                <TouchableOpacity style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
-                                    <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
-                                    <ThemedText color='#fff'>
-                                        Create Contract
-                                    </ThemedText>
-                                </TouchableOpacity>
-                            </View>
-                        </>}
+                    <Button
+                        colors={{ text: '#6bacbf', bg: '#6bacbf24' }}
+                        title='Get Verified'
+                        Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"#6bacbf"} />}
                     />
-
-
-
-
                 </View>}
+                
+                {/* <View style={{ flexDirection: 'row', gap: wp(2), marginBottom: wp(5), paddingHorizontal: wp(2) }}>
+                    <View style={{ borderWidth: .5, borderColor: accent, padding: wp(3), borderRadius: wp(6), flex: 1, alignItems: 'center' }}>
+                        <ThemedText color={accent}>
+                            Add Logistics
+                        </ThemedText>
+                    </View>
+                    <View style={{
+                        borderWidth: .5, borderColor: accent, padding: wp(3), borderRadius: wp(6), flex: 1, alignItems: 'center'
+                    }}>
+                        <ThemedText color={accent}>
+                            Add To Store
+                        </ThemedText>
+                    </View>
+                </View> */}
 
 
 
