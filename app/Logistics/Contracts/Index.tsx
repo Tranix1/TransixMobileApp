@@ -12,7 +12,6 @@ import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/useThemeColor';
 const Index = () => {
 
-  const [contractLoc, setContraLoc] = React.useState<string>("")
 
   const icon = useThemeColor('icon')
   return (

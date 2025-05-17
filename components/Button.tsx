@@ -30,7 +30,7 @@ const Button = ({
     colors,
     onPress,
     ...rest
-}: buttonProps & { onPress?: () => void }) => {
+}: buttonProps & { onPress?: () => void } ) => {
 
     const backgroundColor = useThemeColor('backgroundLight');
     const background = useThemeColor('background');

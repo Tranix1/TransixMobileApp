@@ -202,8 +202,6 @@ let renderElements = bbVerifiedLoadD.map((item)=>{
  return(
    <View key={scndItem.id}> 
 
-    
-
 
 
     {(Number(item.timeStamp) === Number(scndItem.truckInfo.timeStamp )) && (

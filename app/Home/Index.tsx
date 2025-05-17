@@ -40,7 +40,7 @@ const Index = () => {
                         </TouchableNativeFeedback>
                     </View>
                     <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-                        <TouchableNativeFeedback>
+                        <TouchableNativeFeedback onPress={()=>router.push("/Search/Index")} >
                             <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
                                 <EvilIcons name='search' size={wp(6)} color={icon} />
                             </View>
@@ -152,10 +152,13 @@ interface HomeItemProps {
   topic: string;
   description: string;
   mainColor: string;
-  background: string;
   icon: string;
   buttonTitle: string; 
   btnBackground : string;
+  btnPressValue : () => void  ;
+  
+  isAvaialble: boolean ;
+
 }
 
 const HomeItemView: React.FC<HomeItemProps> = ({
@@ -163,9 +166,10 @@ const HomeItemView: React.FC<HomeItemProps> = ({
   description,
   mainColor,
   btnBackground,
-  background,
   icon,
   buttonTitle,
+  isAvaialble ,
+  btnPressValue
 }) => (
   <View style={[styles.homefeature, { borderColor: mainColor, }]}>
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }}>
@@ -176,6 +180,14 @@ const HomeItemView: React.FC<HomeItemProps> = ({
         {topic}
       </ThemedText>
     </View>
+    
+     <View>
+
+   {!isAvaialble && <View style={{position:'absolute' , top:0 , left:0  , right:0 , bottom:-60 , backgroundColor:"rgba(0,0,0,0.5)" ,zIndex :10 , alignItems:'center',}} >
+    
+        <ThemedText style={{color:"red",marginTop:30}} > Coming Soon</ThemedText>
+        
+    </View>}
 
     <ThemedText
       type='default'
@@ -184,8 +196,10 @@ const HomeItemView: React.FC<HomeItemProps> = ({
     >
       {description}
     </ThemedText>
+ </View>
 
     <Button
+     onPress={btnPressValue}
       colors={{ text: mainColor, bg: btnBackground}}
       title={buttonTitle} // ✅ Dynamic title
       Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={mainColor} />}
@@ -421,10 +435,12 @@ console.log("filtred Data", filteredData)
 
 
 
+                {filteredData.length <= 0 && textTyped && (<View>
+                    <Text> The service u searched is not yet available</Text>
+                </View> ) }
 
 
-
-               {filteredData.map((item)=>(  <View>
+               {/* {filteredData.map((item)=>(  <View>
 
 
                {item.id ===1 && <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
@@ -473,17 +489,12 @@ console.log("filtred Data", filteredData)
                 </View>}
 
 
-
-
-
-
  {item.id=== 2&&  <HomeItemView
                 topic={item.topic}
                 description={item.description}
                 mainColor="#6bacbf"
-                background="#fb9274"
                 icon="#333"
-                buttonTitle="Get Verified"
+                buttonTitle="Get Verfied"
                 btnBackground="#6bacbf24"
                 />}              
 
@@ -494,7 +505,7 @@ console.log("filtred Data", filteredData)
                 mainColor="#fb9274"
                 background="#fb9274"
                 icon="#333"
-                buttonTitle="Get Verified"
+                buttonTitle="Be insuered"
                 btnBackground="#fb927424"
                 />}
 
@@ -514,7 +525,7 @@ console.log("filtred Data", filteredData)
                 mainColor="#bada5f"
                 background="#ffffff"
                 icon="#333"
-                buttonTitle="Get Verified"
+                buttonTitle="Visit Warehouse"
                 btnBackground="#bada5f24"
                 />}
                 
@@ -524,19 +535,12 @@ console.log("filtred Data", filteredData)
                 mainColor="#bada5f"
                 background="#ffffff"
                 icon="#333"
-                buttonTitle="Get Verified"
+                buttonTitle="Visit Truck stop"
                 btnBackground="#bada5f24"
                 />} 
             
 
-                   
-
-
-              
-
-
-
-                </View> ) )}
+                </View> ) )} */}
 
 
   {!textTyped && theData.map((item)=>(  <View>
@@ -589,17 +593,15 @@ console.log("filtred Data", filteredData)
 
 
 
-
-
-
  {item.id=== 2&&  <HomeItemView
                 topic={item.topic}
                 description={item.description}
                 mainColor="#6bacbf"
-                background="#fb9274"
                 icon="#333"
-                buttonTitle="Get Verified"
+                buttonTitle="Get Verfied"
                 btnBackground="#6bacbf24"
+                isAvaialble={true}
+                btnPressValue={()=>router.push("/Account/Verification/ApplyVerification")}
                 />}              
 
 
@@ -607,56 +609,47 @@ console.log("filtred Data", filteredData)
                 topic={item.topic}
                 description={item.description}
                 mainColor="#fb9274"
-                background="#fb9274"
                 icon="#333"
-                buttonTitle="Get Verified"
+                buttonTitle="Be insuered"
                 btnBackground="#fb927424"
+                isAvaialble={true}
+                btnPressValue={()=>router.push("/Compliances/GITInsuarance/Index")}
                 />}
 
                {item.id=== 4&&  <HomeItemView
                 topic={item.topic}
                 description={item.description}
                 mainColor="#bada5f"
-                background="#ffffff"
                 icon="#333"
                 buttonTitle="Get Verified"
                 btnBackground="#bada5f24"
+                isAvaialble={false}
+                btnPressValue={()=>router.push("/Compliances/GITInsuarance/Index")}
                 />}
 
         {item.id=== 5&&  <HomeItemView
                 topic={item.topic}
                 description={item.description}
                 mainColor="#bada5f"
-                background="#ffffff"
                 icon="#333"
-                buttonTitle="Get Verified"
+                buttonTitle="Visit Warehouse"
                 btnBackground="#bada5f24"
+                isAvaialble={false}
+                btnPressValue={()=>router.push("/Account/Verification/ApplyVerification")}
                 />}
                 
                   {item.id=== 6&&  <HomeItemView
                 topic={item.topic}
                 description={item.description}
                 mainColor="#bada5f"
-                background="#ffffff"
                 icon="#333"
-                buttonTitle="Get Verified"
+                buttonTitle="Visit Truck stop"
                 btnBackground="#bada5f24"
-                />} 
-            
-
-                   
-
-
-              
-
-
+                isAvaialble={false}
+                btnPressValue={()=>router.push("/Account/Verification/ApplyVerification")}
+                />}     
 
                 </View> ) )}
-
-
-
-
-
 
 
             </ScrollView>
