@@ -9,7 +9,7 @@ import { ToastAndroid } from "react-native";
 
 const AuthContext = createContext({
     signUp: async (credentials: any) => { },
-    Login: async (credentials: any) => ({ success: false }),
+    Login: async (credentials: any) => ({ success: false, message: "" }),
     isSignedIn: false,
     user: null as User | null,
     setupUser: async (userData: any) => { },
@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             await AsyncStorage.setItem("user", JSON.stringify({ ...user }));
 
             router.dismissAll();
-            return { success: true };
+            return { success: true, message: 'Login successful' };
 
         } catch (error: any) {
             const errorCode = error.message.match(/\(([^)]+)\)/)?.[1];
@@ -126,6 +126,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: string;
         password: string;
         displayName: string;
+        organisation: string;
     }
 
     const signUp = async (credentials: SignUpCredentials): Promise<void> => {
@@ -139,11 +140,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 phoneNumber: null,
                 photoURL: null,
                 displayName: credentials.displayName,
+                organisation: credentials.displayName,
                 uid: user.uid,
                 email: user.email,
             });
 
-            setUser({ uid: user.uid, email: user.email, displayName: user.displayName, phoneNumber: user.phoneNumber, photoURL: user.photoURL, } as User);
+            setUser({ uid: user.uid, email: user.email, displayName: user.displayName, phoneNumber: user.phoneNumber, photoURL: user.photoURL, organisation: user.displayName } as User);
 
             setIsSignedIN(true);
             router.back();

@@ -77,6 +77,8 @@ const Index = () => {
     );
 
 
+
+
     return (
 
         <View style={{ flex: 1 }}>
@@ -99,7 +101,7 @@ const Index = () => {
                                         </TouchableNativeFeedback>
                                     </View>
                                     <ThemedText type='title' color={accent} style={{ flex: 1, textAlign: 'center' }}>
-                                        TRANSIX
+                                        Transix
                                     </ThemedText>
                                     <View style={{ overflow: 'hidden', borderRadius: wp(10), width: wp(8) }}>
                                         {/* <TouchableNativeFeedback>
@@ -136,9 +138,12 @@ const Index = () => {
                                                         </View>
                                                     }
                                                 </View>
-
-                                                <Button title='Manage Account' onPress={() => router.push('/Account/Index')}
-                                                    Icon={<AntDesign name='arrowright' size={wp(4)} color={accent} style={{ marginLeft: wp(1) }} />} />
+                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: backgroundColor, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push('/Account/Index')}>
+                                                    <MaterialIcons name="manage-accounts" size={wp(5)} color={accent} style={{ marginLeft: wp(1) }} />
+                                                    <ThemedText>
+                                                        Manage Account
+                                                    </ThemedText>
+                                                </TouchableOpacity>
                                             </View>
                                             :
                                             <View style={{ gap: wp(4), }}>
@@ -154,9 +159,14 @@ const Index = () => {
 
                                                     </View>
                                                 </View>
+                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: backgroundColor, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push('/Account/Login')}>
+                                                    <AntDesign name='login' size={wp(3)} color={accent} style={{ marginLeft: wp(1) }} />
+                                                    <ThemedText>
+                                                        Login Now
+                                                    </ThemedText>
+                                                </TouchableOpacity>
 
-                                                <Button title='Login Now' onPress={() => router.push('/Account/Login')}
-                                                    Icon={<AntDesign name='login' size={wp(4)} color={accent} style={{ marginLeft: wp(1) }} />} />
+
                                             </View>
                                         }
                                     </View>
@@ -284,10 +294,10 @@ const Index = () => {
                         </View>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
                             <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')} underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
-                                <Fontisto name="truck" size={wp(5)} color="#F48024" />
+                                <Fontisto name="dollar" size={wp(5)} color="#F48024" />
                             </TouchableHighlight>
                             <ThemedText type='tiny' style={{ textAlign: 'center' }}>
-                                Add Truck
+                                Sell Products
                             </ThemedText>
                         </View>
 
@@ -304,7 +314,7 @@ const Index = () => {
                         <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
                             Long-Term Contracts
                         </ThemedText>
-                        <TouchableOpacity style={{ flexDirection: 'row', gap: wp(1) }}>
+                        <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/Index')} style={{ flexDirection: 'row', gap: wp(1) }}>
                             <ThemedText type='tiny'>
                                 Open Contracts
                             </ThemedText>
@@ -327,7 +337,7 @@ const Index = () => {
                                 <TouchableOpacity style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
                                     <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
                                     <ThemedText color='#fff'>
-                                        Create Contract
+                                        Book Contracts
                                     </ThemedText>
                                 </TouchableOpacity>
                             </View>

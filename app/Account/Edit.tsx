@@ -87,6 +87,14 @@ const Edit = () => {
                 <ScrollView>
 
 
+                    <ThemedText style={styles.label}>Organisation Logo</ThemedText>
+
+                    <View style={[styles.input, { height: hp(14), justifyContent: 'center', alignItems: 'center' }]}>
+                        <Ionicons name='image-outline' size={wp(8)} color={icon} />
+                        <ThemedText style={styles.label}>Click To Add Logo</ThemedText>
+                    </View>
+
+
                     <ThemedText style={styles.label}>Organisation Name</ThemedText>
                     <Input
                         containerStyles={styles.input}

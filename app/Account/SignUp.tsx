@@ -40,7 +40,7 @@ const Index = () => {
             return;
         }
 
-        signUp({ displayName: fullname, email, password })
+        signUp({ displayName: fullname, email, password, organisation: fullname })
             .then(() => {
                 alert('Sign up successful');
                 router.replace('/Account/Login');
@@ -55,10 +55,10 @@ const Index = () => {
                 <Image contentFit='contain' source={require('@/assets/trialogo.svg')} style={styles.logo} />
 
                 <ThemedText type='title' style={styles.header}>Sign up</ThemedText>
-                <ThemedText style={styles.label}>Full Name</ThemedText>
+                <ThemedText style={styles.label}>Organisation</ThemedText>
                 <Input
                     containerStyles={styles.input}
-                    placeholder="Your Name"
+                    placeholder="Organisation"
                     value={fullname}
                     onChangeText={setFullName}
                 />
