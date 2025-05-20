@@ -183,7 +183,7 @@ const HomeItemView: React.FC<HomeItemProps> = ({
     
      <View>
 
-   {!isAvaialble && <View style={{position:'absolute' , top:0 , left:0  , right:0 , bottom:-60 , backgroundColor:"rgba(0,0,0,0.5)" ,zIndex :10 , alignItems:'center',}} >
+   {!isAvaialble && <View style={{position:'absolute' , top:0 , left:0  , right:0 , bottom:-60 ,zIndex :10 , alignItems:'center',backgroundColor:background==="#0f0e11"? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)" , }} >
     
         <ThemedText style={{color:"red",marginTop:30}} > Coming Soon</ThemedText>
         
@@ -301,7 +301,17 @@ console.log("filtred Data", filteredData)
                                             </View>
                                         }
                                     </View>
-                                    <TouchableNativeFeedback>
+                                      <TouchableNativeFeedback onPress={()=>router.push("/BooksAndBids/SlctBidsAndBooks")} >
+                                        <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View>
+                                                <ThemedText type='default'>
+                                                    Bookoings and Biddings
+                                                </ThemedText>
+                                            </View>
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                    <TouchableNativeFeedback onPress={()=>router.push("/UserUploads/Contracts")}>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <Ionicons name="reader" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -311,7 +321,7 @@ console.log("filtred Data", filteredData)
                                             </View>
                                         </View>
                                     </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback>
+                                    <TouchableNativeFeedback onPress={()=>router.push("/UserUploads/Trucks.")} >
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -321,7 +331,7 @@ console.log("filtred Data", filteredData)
                                             </View>
                                         </View>
                                     </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback>
+                                    <TouchableNativeFeedback onPress={()=>router.push("/UserUploads/Loads")}>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="boxes-stacked" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -355,6 +365,7 @@ console.log("filtred Data", filteredData)
                                             </View>
                                         </TouchableNativeFeedback>
                                     </View>
+                                    
                                 </View>
                                 <TouchableNativeFeedback onPress={() => router.push('/Account/Settings')}>
                                     <View style={{ paddingHorizontal: wp(4), flexDirection: 'row', gap: wp(3), paddingVertical: wp(4) }}>
@@ -551,25 +562,49 @@ console.log("filtred Data", filteredData)
   {!textTyped && theData.map((item)=>(  <View>
 
 
-               {item.id ===1 && <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
+
+                      {item.id ===1 && <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
 
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
-                        <View style={{ backgroundColor: '#6bacbf', borderRadius: wp(2), padding: wp(1.5) }}>
-                            <Octicons name='verified' color={'#fff'} size={wp(4)} />
+                        <View style={{}}>
+                            <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} />
                         </View>
-                        <ThemedText type='subtitle' color={'#6bacbf'} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
-                            First Level Verification
+                        <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
+                            Long-Term Contracts
                         </ThemedText>
+                        <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ flexDirection: 'row', gap: wp(1) }}>
+                            <ThemedText type='tiny'>
+                                Open Contracts
+                            </ThemedText>
+                            <Ionicons name='arrow-forward' color={icon} />
+                        </TouchableOpacity>
                     </View>
-                    <ThemedText color={icon} type='default' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}>
-                        We encourage all legit business to be verified{'\n'}
-                        Increase business trust and credibility by verifying your company.
+                    <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>
+                        Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
                     </ThemedText>
-                    <Button
-                        colors={{ text: '#6bacbf', bg: '#6bacbf24' }}
-                        title='Get Verified'
-                        Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={"#6bacbf"} />}
+
+                    <FlatList data={[]}
+                        renderItem={(item) => (<></>)}
+                        ListEmptyComponent={<>
+                            <View style={{ marginVertical: wp(15), alignItems: 'center', gap: wp(4) }}>
+
+                                <ThemedText>
+                                    Create contract and start transporting loads today!
+                                </ThemedText>
+
+                                <TouchableOpacity style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
+                                    <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
+                                    <ThemedText color='#fff'>
+                                        Book Contracts
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            </View>
+                        </>}
                     />
+
+
+
+
                 </View>}
                 
                 {/* <View style={{ flexDirection: 'row', gap: wp(2), marginBottom: wp(5), paddingHorizontal: wp(2) }}>
