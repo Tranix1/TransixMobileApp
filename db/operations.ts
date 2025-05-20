@@ -11,19 +11,16 @@ import { storage } from "./fireBaseConfig";
 
 export const addDocument = async (
     collectionName: string,
-    data: object,
-    onStatusUpdate: (status: string) => void,
-    ) => {
-        try {
+    data: object
 
-        onStatusUpdate("now submitting to db");
+) => {
+    try {
         const docRef = await addDoc(collection(db, collectionName), {
             ...data,
             timeStamp: serverTimestamp(),
-            userId: auth.currentUser?.uid ,
+            userId: auth.currentUser?.uid,
 
         });
-        onStatusUpdate("Doneee submitting to db");
         return docRef.id;
     } catch (error) {
         console.error("Error adding document:", error);

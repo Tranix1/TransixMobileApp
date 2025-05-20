@@ -1,28 +1,28 @@
-      
+
 const { Paynow } = require("paynow");
- import { addDocument } from "@/db/operations";     
+import { addDocument } from "@/db/operations";
 
 
-    export async function handleMakePayment(
+export async function handleMakePayment(
   ammount: number,
   paymentPurpose: string,
-  onStatusUpdate: (status: string) => void ,
-  dbName:string ,
-  dbData : object
+  onStatusUpdate: (status: string) => void,
+  dbName: string,
+  dbData: object
 ) {
 
-    let uniqueRecepipt = Math.floor(100000000000 + Math.random() * 900000000000).toString() 
+  let uniqueRecepipt = Math.floor(100000000000 + Math.random() * 900000000000).toString()
 
 
   let paynow = new Paynow("20036", "e33d1e4a-26df-4c10-91ab-c29bca24c96f");
 
-  let payment = paynow.createPayment( `${uniqueRecepipt}r`, "kelvinyaya8@gmail.com");
+  let payment = paynow.createPayment(`${uniqueRecepipt}r`, "kelvinyaya8@gmail.com");
 
   paynow.resultUrl = "https://transix.net";
   paynow.returnUrl = "https://transix.net";
 
   // Add items/services
-  payment.add(paymentPurpose , ammount );
+  payment.add(paymentPurpose, ammount);
 
   try {
     onStatusUpdate("🔃 Initiating payment...");
@@ -39,7 +39,7 @@ const { Paynow } = require("paynow");
 
           if (status.status === "paid") {
             console.log("✅ Payment Complete!");
-            addDocument(dbName , {...dbData , pollUrl:pollUrl },onStatusUpdate )
+            addDocument(dbName, { ...dbData, pollUrl: pollUrl }, onStatusUpdate)
 
             clearInterval(pollInterval);
           } else if (status.status === "cancelled" || status.status === "failed") {

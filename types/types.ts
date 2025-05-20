@@ -80,7 +80,7 @@ export type Load = {
     companyName: string;
     contact: string;
     deletionTime: number;
-    timeStamp: {
+    timeStamp?: {
         nanoseconds: number;
         seconds: number;
     };

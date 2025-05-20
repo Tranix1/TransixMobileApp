@@ -200,7 +200,7 @@ console.log(addingDocUpdate)
           ...formData,
         }
 
-        addDocument("Trucks", submitData, setAddingDocUpdate)
+        addDocument("Trucks", submitData )
 
         // setImages([]);
         setSpinnerItem(false)
