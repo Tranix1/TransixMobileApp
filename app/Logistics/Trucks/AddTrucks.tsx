@@ -119,7 +119,9 @@ function AddTrucks() {
 
 
 
-  const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
+const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
+  const [selectedTruckCapacity , setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>()
+
   const [otherTruckType, setOtherTruckType] = useState<string>("")
 
   const [dspTruckCpacity, setDspTruckCapacity] = useState<string>("")
@@ -249,6 +251,12 @@ function AddTrucks() {
   };
 
 
+
+  const [countryCode, setCountryCode] = useState<{ id: number, name: string }>({ id: 0, name: '+263' })
+  const [selectedTrailerConfig, setSelectedTrailerConfig] = useState<{ id: number, name: string } | null>()
+  const [selectedTruckSuspension, setSelectedTruckSuspension] = useState<{ id: number, name: string } | null>()
+  const [ownerdetails, setOwnerdetails] = useState(false)
+
   const { user } = useAuth();
   console.log(formData.trailerType)
   const truckTypes = [
@@ -262,126 +270,112 @@ function AddTrucks() {
     // { id: 7, name: 'All', image: '' },
   ]
   const trailerConfigurations = [
-    { id: 0, name: 'Good' },
-    { id: 1, name: 'Bad' },
-    { id: 2, name: 'Other' }
+    { id: 0, name: "single Axle" },
+    { id: 1, name: "tandem" },
+    { id: 2, name: "triaxle"  },
+    { id: 3, name: "MultiAxle" },
+    { id: 4, name: 'Other' }
   ]
+  const truckSuspensions =[
+
+    { id: 1, name: "Link" },
+    { id: 2, name: "Super Link" },
+    { id: 3, name: "Air suspension" },
+    { id: 4, name: "mechanical steel"  },
+    { id: 5, name: "Other"  },
+  ]
+
+
+      const litresCapacity = [
+    { id: 0, name: '300L'},
+    { id: 1, name: '400L'},
+    { id: 2, name: '500L'},
+    { id: 3, name: '700L'},
+    { id: 4, name: '800L' },
+    { id: 5, name: '900L'},
+    ]
+
+    const tonneSizes = [
+    { id: 0, name: '1-3 T' },
+    { id: 1, name: '3-6 T' },
+    { id: 2, name: '7-10 T'},
+    { id: 3, name: '11-13 T'},
+    { id: 4, name: '12-15 T'},
+    { id: 5, name: '16-20 T'},
+    { id: 6, name: '20T++'},
+    ];
+
+
   const countryCodes = [
     { id: 0, name: '+263' },
     { id: 1, name: '+27' },
     { id: 2, name: '+243' }
   ]
 
-  const [countryCode, setCountryCode] = useState<{ id: number, name: string }>({ id: 0, name: '+263' })
-  const [selectedTrailerConfig, setSelectedTrailerConfig] = useState<{ id: number, name: string } | null>()
-  const [ownerdetails, setOwnerdetails] = useState(false)
+
+interface DropDownItemProps {
+  allData:   object[]; 
+  selectedItem: any;
+  setSelectedItem: any;
+  placeholder :string
+}
+
+
+const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSelectedItem,placeholder }) => (
+  <View  >
+         <Dropdown
+              style={[styles.dropdown,]}
+              selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
+              data={allData}
+              maxHeight={hp(60)}
+              labelField="name"
+              valueField="name"
+              placeholder={placeholder}
+              value={selectedItem?.name}
+              itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
+              activeColor={backG}
+              containerStyle={{
+                borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 9,
+                },
+                shadowOpacity: 0.50,
+                shadowRadius: 12.35,
+
+                elevation: 19,
+                paddingVertical: wp(1)
+              }}
+              onChange={item => {
+                console.log(item);
+                setSelectedItem(item);
+              }}
+
+              renderLeftIcon={() => <></>}
+              renderRightIcon={() => <Entypo name="chevron-thin-down" size={wp(4)} color={icon} />}
+              renderItem={((item) =>
+                <View style={[styles.item, item.Id === selectedItem?.id && {}]}>
+                  <ThemedText style={[{ textAlign: 'left', flex: 1 }, item.id === selectedItem?.id && { color: '#0f9d58' }]}>{item.name}</ThemedText>
+                  {item.id === selectedItem?.id && (
+                    <Ionicons
+                      color={icon}
+                      name='checkmark-outline'
+                      size={wp(5)}
+                    />
+                  )}
+                </View>
+              )}
+
+            />
+  </View>
+);
+
 
   return (
     <ScreenWrapper>
 
       <Heading page='Add Truck' />
-      {/* <TouchableOpacity onPress={() => setDspSpecTruckDet(true)} style={{ backgroundColor: "green" }} >
-        <ThemedText> Click here Select Truck Details </ThemedText>
-      </TouchableOpacity>
-
-
-      <SpecifyTruckDetails
-        dspSpecTruckDet={dspSpecTruckDet}
-        setDspSpecTruckDet={setDspSpecTruckDet}
-        // Truck Tonnage
-        dspTruckCpacity={dspTruckCpacity}
-        setDspTruckCapacity={setDspTruckCapacity}
-        truckCapacity={truckCapacity}
-        setTruckCapacity={setTruckCapacity}
-        // Selecting Truck Type
-        selectedTruckType={selectedTruckType}
-        setSelectedTruckType={setSelectedTruckType}
-        otherTruckType={otherTruckType}
-        setOtherTruckType={setOtherTruckType}
-        // Selecting A country and location
-        location={location}
-        setLocation={setLocation}
-        intOpLoc={intOpLoc}
-        setIntOpLoc={setIntOpLoc}
-        setLocaOpLoc={setLocaOpLoc}
-        locaOpLoc={locaOpLoc}
-      /> */}
-
-      {/* <CountrySelector
-            location={location}
-            setLocation={setLocation}
-            intOpLoc={intOpLoc}
-            setIntOpLoc={setIntOpLoc}
-            setLocaOpLoc={setLocaOpLoc}
-            setDspAddLocation={setDspAddLocation}
-            dspAddLocation={dspAddLocation}
-          /> */}
-
-      {/* <View style={{ marginHorizontal: wp(1), marginBottom: wp(1), }} >
-
-        {(selectedTruckType || location || truckCapacity) &&
-          <TouchableOpacity onPress={() => setDspSpecTruckDet(true)} style={{ padding: wp(2), flexDirection: 'row', backgroundColor: background, borderRadius: wp(6), marginBottom: wp(2), position: 'relative', }}>
-            {selectedTruckType &&
-              <View style={{ marginRight: wp(2) }}>
-                <Image style={{ width: wp(20), height: wp(15), borderRadius: wp(4) }} source={selectedTruckType.image} />
-              </View>
-            }
-
-            <View style={{ flex: 1, justifyContent: 'center' }}>
-              {selectedTruckType &&
-                <ThemedText type='subtitle' style={{ marginBottom: wp(1) }}>
-                  {selectedTruckType?.name}
-                </ThemedText>
-              }
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: wp(2), alignItems: 'center' }}
-                style={{ flexGrow: 0 }}
-              >
-                {truckCapacity &&
-                  <View style={[styles.countryButton, { backgroundColor: '#73c8a9' }]}>
-                    <ThemedText style={{ color: 'white' }}>
-                      {truckCapacity}
-                    </ThemedText>
-                  </View>
-                }
-                {(intOpLoc || locaOpLoc) &&
-                  <View style={[styles.countryButton, { backgroundColor: '#73c8a9' }]}>
-                    <ThemedText style={{ color: 'white' }}>
-                      {locaOpLoc || intOpLoc}
-                    </ThemedText>
-                  </View>
-                }
-              </ScrollView>
-            </View>
-
-            <View style={{ overflow: 'hidden', borderRadius: wp(10), position: 'absolute', right: wp(4), top: wp(2) }}>
-              <TouchableNativeFeedback onPress={() => clearFilter()}>
-                <View style={{ padding: wp(2) }}>
-                  <Ionicons name={'close'} size={wp(4)} color={icon} />
-                </View>
-              </TouchableNativeFeedback>
-            </View>
-          </TouchableOpacity>
-
-        }
-
-
-      </View> */}
-
-
-
-
-      {/* <ThemedText>{addingDocUpdate} </ThemedText>
-      <ThemedText>{uploadingImageUpdate} </ThemedText> */}
-
-
-
-
-
-
-
+     
 
       <View style={{ paddingHorizontal: wp(4) }} >
 
@@ -398,21 +392,6 @@ function AddTrucks() {
           ].filter(Boolean) as string[]}
           onClose={() => setDspFrstPageErr(false)}
         />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -567,50 +546,9 @@ function AddTrucks() {
             <ThemedText>
               Truck Type<ThemedText color="red">*</ThemedText>
             </ThemedText>
-            <Dropdown
-              style={[styles.dropdown,]}
-              selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
-              data={truckTypes}
-              maxHeight={hp(60)}
-              labelField="name"
-              valueField="name"
-              placeholder="Select Truck"
-              value={selectedTruckType?.name}
-              itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-              activeColor={backG}
-              containerStyle={{
-                borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                shadowOffset: {
-                  width: 0,
-                  height: 9,
-                },
-                shadowOpacity: 0.50,
-                shadowRadius: 12.35,
+          
+            <DropDownItem   allData={truckTypes} selectedItem={selectedTruckType} setSelectedItem={setSelectedTruckType} placeholder="Select Truck" />
 
-                elevation: 19,
-                paddingVertical: wp(1)
-              }}
-              onChange={item => {
-                console.log(item);
-                setSelectedTruckType(item);
-              }}
-
-              renderLeftIcon={() => <></>}
-              renderRightIcon={() => <Entypo name="chevron-thin-down" size={wp(4)} color={icon} />}
-              renderItem={((item) =>
-                <View style={[styles.item, item.Id === selectedTruckType?.id && {}]}>
-                  <ThemedText style={[{ textAlign: 'left', flex: 1 }, item.id === selectedTruckType?.id && { color: '#0f9d58' }]}>{item.name}</ThemedText>
-                  {item.id === selectedTruckType?.id && (
-                    <Ionicons
-                      color={icon}
-                      name='checkmark-outline'
-                      size={wp(5)}
-                    />
-                  )}
-                </View>
-              )}
-
-            />
             {selectedTruckType?.name === 'Other' &&
               <>
                 <ThemedText>
@@ -625,53 +563,29 @@ function AddTrucks() {
             }
 
 
+
+         { selectedTruckType?.name !=="Tanker" &&   <ThemedText>
+              Truck Tonnage<ThemedText color="red">*</ThemedText>
+            </ThemedText>}
+            
+        {  selectedTruckType?.name !=="Tanker" &&<DropDownItem   allData={tonneSizes} selectedItem={selectedTruckCapacity} setSelectedItem={setSelectedTruckCapacity} placeholder="Select Tonnage" />}
+       
+
+                    { selectedTruckType?.name ==="Tanker" &&    <ThemedText>
+              Truck Litres<ThemedText color="red">*</ThemedText>
+            </ThemedText>}
+            
+        {  selectedTruckType?.name ==="Tanker" &&<DropDownItem   allData={litresCapacity} selectedItem={selectedTruckCapacity} setSelectedItem={setSelectedTruckCapacity} placeholder="Select Litres" />}
+       
+      
+
+
             <ThemedText>
               Trailer Configuration<ThemedText color="red">*</ThemedText>
             </ThemedText>
-            <Dropdown
-              style={[styles.dropdown,]}
-              selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
-              data={trailerConfigurations}
-              maxHeight={hp(60)}
-              labelField="name"
-              valueField="name"
-              placeholder="Select Trailer Configuration"
-              value={selectedTrailerConfig?.name}
-              itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-              activeColor={background}
-              containerStyle={{
-                borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                shadowOffset: {
-                  width: 0,
-                  height: 9,
-                },
-                shadowOpacity: 0.50,
-                shadowRadius: 12.35,
+        <DropDownItem   allData={trailerConfigurations} selectedItem={selectedTrailerConfig} setSelectedItem={setSelectedTrailerConfig} placeholder="Select Truck Configuration" />
+          
 
-                elevation: 19,
-                paddingVertical: wp(1)
-              }}
-              onChange={item => {
-                console.log(item);
-                setSelectedTrailerConfig(item);
-              }}
-
-              renderLeftIcon={() => <></>}
-              renderRightIcon={() => <Entypo name="chevron-thin-down" size={wp(4)} color={icon} />}
-              renderItem={((item) =>
-                <View style={[styles.item, item.Id === selectedTruckType?.id && {}]}>
-                  <ThemedText style={[{ textAlign: 'left', flex: 1 }, item.id === selectedTruckType?.id && { color: '#0f9d58' }]}>{item.name}</ThemedText>
-                  {item.id === selectedTruckType?.id && (
-                    <Ionicons
-                      color={icon}
-                      name='checkmark-outline'
-                      size={wp(5)}
-                    />
-                  )}
-                </View>
-              )}
-
-            />
             {
               selectedTrailerConfig?.name === 'Other' &&
               <>
@@ -685,15 +599,33 @@ function AddTrucks() {
                 />
               </>
             }
-            <ThemedText>
-              Tonnage<ThemedText color="red">*</ThemedText>
+            
+
+      <ThemedText>
+              Truck Suspension<ThemedText color="red">*</ThemedText>
             </ThemedText>
-            <Input
-              value={formData.truckTonnage}
-              keyboardType="number-pad"
-              placeholder="0.0t"
-              onChangeText={(text) => handleChange<FormData>(text, 'truckTonnage', setFormData)}
-            />
+        <DropDownItem   allData={truckSuspensions} selectedItem={selectedTruckSuspension} setSelectedItem={setSelectedTruckSuspension} placeholder="Select Truck Suspension"  />
+           
+            {
+              setSelectedTruckSuspension?.name === 'Other' &&
+              <>
+                <ThemedText>
+                  Other Truck Suspension<ThemedText color="red">*</ThemedText>
+                </ThemedText>
+                <Input
+                  value={formData.trailerType}
+                  placeholder="Trailer Config"
+                  onChangeText={(text) => handleChange<FormData>(text, 'trailerType', setFormData)}
+                />
+              </>
+            }
+
+
+
+
+
+
+          
             <ThemedText>
               Maximum Load Capacity<ThemedText color="red">*</ThemedText>
             </ThemedText>

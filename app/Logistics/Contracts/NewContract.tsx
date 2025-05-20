@@ -194,23 +194,6 @@ const NewContract = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     function toggleDspCommodity() {
         setDspCommodity(prev => !prev);
     }

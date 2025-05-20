@@ -54,8 +54,11 @@ const Index = () => {
 
     const LoadTructs = async () => {        
         let filters 
+        if(location){
+            
+        }
         if(dspTruckCpacity){
-             filters = [where("status", "==", "active")]; // Adjust filter to your fiel
+             filters = [where("status", "==", dspTruckCpacity)]; // Adjust filter to your fiel
         }else {
             filters = undefined
         }
@@ -96,6 +99,7 @@ const Index = () => {
         }
         setLoadingMore(false);
     };
+
 
     return (
         <View style={{ flex: 1 }}>
