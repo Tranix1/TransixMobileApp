@@ -207,6 +207,7 @@ function BookLContract({ }) {
 
 
 
+
               {(Number(item.timeStamp) === Number(scndItem.truckInfo.timeStamp)) && (
                 <View>
                   <Text>Truck Is Booked</Text>

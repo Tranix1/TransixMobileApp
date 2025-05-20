@@ -12,7 +12,7 @@ import BottomSheet, { BottomSheetScrollView, BottomSheetView } from '@gorhom/bot
 import SwithComponent from '@/components/Switch'
 import { BlurView } from 'expo-blur'
 import Button from '@/components/Button'
-import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore'
+import { DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore'
 
 import { TruckTypeProps } from '@/types/types'
 import { SpecifyTruckDetails } from '@/components/SpecifyTruckDetails'
@@ -24,14 +24,6 @@ const Index = () => {
     const accent = useThemeColor('accent')
     const icon = useThemeColor('icon')
 
-    const bottomSheetRef = useRef<BottomSheet>(null);
-
-    // callbacks
-    const handleSheetChanges = useCallback((index: number) => {
-        console.log('handleSheetChanges', index);
-    }, []);
-
-
 
     // const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
 
@@ -40,13 +32,39 @@ const Index = () => {
     const [selectedCountry, setSelectedCountry] = useState('All')
     const [dspFilterLocal, setDspFilterLocal] = useState(false)
 
-    const [truckTonnage, setTruckTonnage] = useState("All")
+
+
+    const [locationTruckS, setLocationTruckS] = useState<string>(""); // Track local or international selection
+    const [locaOpLocTruckS, setLocaOpLocTruckS] = useState<string>(""); // Track selected local country
+    const [intOpLocTruckS, setIntOpLocTruckS] = useState<string[]>([]); // Track international countries
+
+    const [otherTruckType, setOtherTruckType] = React.useState<string>("")
+
+
+    const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
+    const [truckCapacity, setTruckCapacity] = useState("")
+
+    const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
+
+
     const [refreshing, setRefreshing] = useState(false)
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
 
+
     const LoadTructs = async () => {
-        const maTrucks = await fetchDocuments("Trucks");
+        let filters
+        if (location) {
+
+        }
+        if (dspTruckCpacity) {
+            filters = [where("status", "==", dspTruckCpacity)]; // Adjust filter to your fiel
+        } else {
+            filters = undefined
+        }
+
+        const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
+
         if (maTrucks) {
             setTrucks(maTrucks.data as Truck[])
             setLastVisible(maTrucks.lastVisible)
@@ -70,35 +88,6 @@ const Index = () => {
 
     const [showfilter, setShowfilter] = useState(false)
 
-    const truckTypes = [
-        { id: 0, name: 'Flat deck', image: require('@/assets/images/Trucks/images (2).jpeg') },
-        { id: 1, name: 'Bulk Trailer', image: require('@/assets/images/Trucks/download (1).jpeg') },
-        { id: 2, name: 'Low Bed', image: require('@/assets/images/Trucks/H805f1f51529345648d1da9e5fcd6807e2.jpg') },
-        { id: 3, name: 'Side Tipper', image: require('@/assets/images/Trucks/images (5).jpeg') },
-        { id: 4, name: 'Tautliner', image: require('@/assets/images/Trucks/download (3).jpeg') },
-        { id: 5, name: 'Tanker', image: require('@/assets/images/Trucks/images (7).jpeg') },
-        { id: 6, name: 'Rigid', image: require('@/assets/images/Trucks/download (4).jpeg') },
-        // { id: 7, name: 'All', image: '' },
-    ]
-
-    const [filterVerified, setFilterVerified] = useState(false)
-
-    const tonneSizes = [
-        '1-3 T',
-        '3-6 T',
-        '7-10 T',
-        '11-13 T',
-        '12-15 T',
-        '16-20 T',
-        '20+ T',
-    ]
-
-    const clearFilter = () => {
-        setSelectedTruckType(null)
-        setTruckTonnage('All')
-        setFilterVerified(false)
-    }
-
     const loadMoreTrucks = async () => {
 
         if (loadingMore || !lastVisible) return;
@@ -110,30 +99,6 @@ const Index = () => {
         }
         setLoadingMore(false);
     };
-
-
-    const [locationTruckS, setLocationTruckS] = useState<string>(""); // Track local or international selection
-    const [locaOpLocTruckS, setLocaOpLocTruckS] = useState<string>(""); // Track selected local country
-    const [intOpLocTruckS, setIntOpLocTruckS] = useState<string[]>([]); // Track international countries
-
-
-
-
-    const [otherTruckType, setOtherTruckType] = React.useState<string>("")
-
-
-
-
-    const [truckConfig, setTruckConfig] = React.useState("")
-    const [otherTruckConfig, setOtherTruckConfig] = React.useState("")
-
-    const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
-    const [truckCapacity, setTruckCapacity] = useState("")
-
-    const [dspSpecTruckDet, setDspSpecTruckDet] = React.useState<boolean>(false)
-
-
-    const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
 
 
     return (

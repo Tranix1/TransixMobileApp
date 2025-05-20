@@ -36,7 +36,7 @@ function LoadsContracts({ }) {
 
   const LoadTructs = async () => {
 
-    const maTrucks = await fetchDocuments("Trucks", 10, lastVisible);
+    const maTrucks = await fetchDocuments("loadsContracts", 10, lastVisible);
 
     if (maTrucks) {
 
@@ -171,7 +171,7 @@ function LoadsContracts({ }) {
                 router.push({
                   pathname: '/Logistics/Contracts/ViewContractDetails',
                   params: {
-                    item: JSON.stringify('yaya'),
+                    itemG: encodeURIComponent(JSON.stringify(item)), // key is "itemG"
                   },
                 })
               }
