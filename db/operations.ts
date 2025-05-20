@@ -2,8 +2,6 @@ import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, where, o
 import { db, auth } from "../app/components/config/fireBase";
 import { getDownloadURL, ref, uploadBytes, } from "firebase/storage";
 import { storage } from "./fireBaseConfig";
-import { useAuth } from "@/context/AuthContext";
-
 /**
  * Add a document to a Firestore collection.
  * @param collectionName - The name of the Firestore collection.
@@ -17,22 +15,12 @@ export const addDocument = async (
     onStatusUpdate: (status: string) => void,
     ) => {
         try {
-        const { user } = useAuth();
-               if (!user) {
-            alert("Please Login first");
-            return;
-        }
-        if (!user?.organisation) {
-            alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
-            return;
-        }
+
         onStatusUpdate("now submitting to db");
         const docRef = await addDoc(collection(db, collectionName), {
             ...data,
             timeStamp: serverTimestamp(),
             userId: auth.currentUser?.uid ,
-            companyName: user?.organisation,
-            contact: user?.phoneNumber || '',
 
         });
         onStatusUpdate("Doneee submitting to db");

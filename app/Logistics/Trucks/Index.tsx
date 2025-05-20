@@ -1,17 +1,12 @@
-import { ActivityIndicator, FlatList, Image, ImageSourcePropType, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableNativeFeedback, TouchableOpacity, View } from 'react-native'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { ActivityIndicator, FlatList, RefreshControl,  StyleSheet, Text, TouchableNativeFeedback, View } from 'react-native'
+import React, { useEffect,  useState } from 'react'
 import { hp, wp } from '@/constants/common'
 import { ThemedText } from '@/components/ThemedText'
 import { useThemeColor } from '@/hooks/useThemeColor'
-import { Entypo, Ionicons } from '@expo/vector-icons'
+import { Ionicons } from '@expo/vector-icons'
 import { fetchDocuments } from '@/db/operations'
-import { Countries, Truck } from '@/types/types'
+import { Truck } from '@/types/types'
 import TruckItemComponent from '@/components/TruckItemComponent'
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import BottomSheet, { BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
-import SwithComponent from '@/components/Switch'
-import { BlurView } from 'expo-blur'
-import Button from '@/components/Button'
 import { DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore'
 
 import { TruckTypeProps } from '@/types/types'
@@ -54,16 +49,8 @@ const Index = () => {
 
     const LoadTructs = async () => {        
         let filters 
-        if(location){
             
-        }
-        if(dspTruckCpacity){
-             filters = [where("status", "==", dspTruckCpacity)]; // Adjust filter to your fiel
-        }else {
-            filters = undefined
-        }
-
-          const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
+               const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
 
         if (maTrucks) {
             setTrucks(maTrucks.data as Truck[])
