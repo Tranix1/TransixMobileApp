@@ -5,15 +5,17 @@ import { wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { ThemedText } from './ThemedText'
 import { Image } from 'expo-image'
-import { Feather, FontAwesome5, FontAwesome6, Fontisto, Ionicons, MaterialIcons, Octicons } from '@expo/vector-icons'
+import { AntDesign, EvilIcons, Feather, FontAwesome5, FontAwesome6, Fontisto, Ionicons, MaterialIcons, Octicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { auth, db } from '../app/components/config/fireBase'
 import { serverTimestamp, where, doc, deleteDoc } from 'firebase/firestore'
 import { addDocument, checkDocumentExists, runFirestoreTransaction, setDocuments } from '@/db/operations'
 import Input from './Input'
 import { formatCurrency } from '@/services/services'
+import Divider from './Divider'
+import FormatedText from './FormatedText'
 
-const DspAllLoads = ({ item = {} as Load, ondetailsPress = () => { } }) => {
+const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string) => { }, ondetailsPress = () => { } }) => {
   const backgroundLight = useThemeColor('backgroundLight')
   const background = useThemeColor('background')
   const coolGray = useThemeColor('coolGray')
@@ -32,6 +34,7 @@ const DspAllLoads = ({ item = {} as Load, ondetailsPress = () => { } }) => {
   const [bidLinks, setBidLinks] = React.useState('');
   const [bidTriaxle, setBdTriaxle] = React.useState('');
   const [addingUpdate, setAddingUpdate] = React.useState("")
+  const [expand, setExpand] = useState(false)
 
   const deleteLoad = async (id: string) => {
     try {
@@ -80,12 +83,12 @@ const DspAllLoads = ({ item = {} as Load, ondetailsPress = () => { } }) => {
   }
   function toggleItemById(
     id: string,
-    setDisplayState: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>
   ): void {
-    setDisplayState((prevState) => ({
-      ...prevState,
-      [id]: !prevState[id],
-    }));
+    setExpand(!expand)
+    if (!expand)
+      expandId(id)
+    else
+      expandId('')
   }
 
   const handleSubmit = async (clickedItem: Load, dbName: 'bookings' | 'biddings') => {
@@ -176,7 +179,7 @@ const DspAllLoads = ({ item = {} as Load, ondetailsPress = () => { } }) => {
             loadId: item.id,
             deletionTime: Date.now() + 5 * 24 * 60 * 60 * 1000,
             timestamp: serverTimestamp(),
-          }, setAddingUpdate)
+          })
         }
 
         setBidRate('');
@@ -352,7 +355,7 @@ const DspAllLoads = ({ item = {} as Load, ondetailsPress = () => { } }) => {
 
       <View style={styles.bidActions}>
         <TouchableOpacity
-          onPress={() => toggleItemById(item.id, setBidDisplay)}
+          onPress={() => toggleItemById(item.id)}
           style={[styles.bidActionButton, { backgroundColor: coolGray }]}
         >
           <ThemedText style={{ color: 'white' }}>Cancel</ThemedText>
@@ -373,6 +376,16 @@ const DspAllLoads = ({ item = {} as Load, ondetailsPress = () => { } }) => {
   };
   const firstLetter = getFirstThreeLetters(item.companyName);
 
+
+  useEffect(() => {
+    if (expandID === item.id) {
+      setExpand(true)
+    } else {
+      setExpand(false)
+    }
+  }, [expandID])
+
+
   return (
     <TouchableOpacity
       style={[styles.container, { backgroundColor: background, borderColor: accent }]}
@@ -385,20 +398,23 @@ const DspAllLoads = ({ item = {} as Load, ondetailsPress = () => { } }) => {
         <ThemedText type='subtitle' style={[styles.title, { color: textColor }]}>
           {item.companyName}
         </ThemedText>
+        <TouchableHighlight underlayColor={backgroundLight} onPress={ondetailsPress} style={{ backgroundColor: background, padding: wp(1), borderRadius: wp(90) }}>
+          <Ionicons name='ellipsis-vertical' size={wp(4)} color={icon} />
+        </TouchableHighlight>
 
-        <View style={styles.tagsContainer}>
-          <ThemedText type='title' style={[{ color: textColor, fontSize: wp(4.5) }]}>
-            {formatCurrency(item.ratePerTonne ? item.ratePerTonne : item.links ? item.links : item.triaxle)}
-          </ThemedText>
-        </View>
       </View>
 
       <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-          <Feather name="package" size={wp(4)} style={styles.icon} color={icon} />
-          <ThemedText type='subtitle'>
-            {item.typeofLoad}
-          </ThemedText>
+          {/* <Feather name="package" size={wp(4)} style={styles.icon} color={icon} /> */}
+          <View style={{ marginBottom: wp(1) }}>
+            <ThemedText type='tiny' color={coolGray}>
+              Load
+            </ThemedText>
+            <ThemedText type='subtitle'>
+              {item.typeofLoad}
+            </ThemedText>
+          </View>
         </View>
         <View style={styles.tagsContainer}>
           {item.returnLoad && (
@@ -417,17 +433,12 @@ const DspAllLoads = ({ item = {} as Load, ondetailsPress = () => { } }) => {
             </View>
           )} */}
           {!item.isVerified && (
-            <View style={[styles.tag, { backgroundColor: backgroundLight, flexDirection: 'row', alignItems: 'center', gap: wp(1) }]}>
-              <Octicons name='verified' size={wp(3)} color={'#4eb3de'} />
-              <ThemedText type='tiny' style={{ color: '#4eb3de', fontSize: wp(3) }}>
-                Verified
-              </ThemedText>
+            <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(1) }]}>
+              <Octicons name='verified' size={wp(4)} color={'#4eb3de'} />
             </View>
           )}
 
-          <TouchableHighlight underlayColor={backgroundLight} onPress={() => { }} style={{ backgroundColor: background, padding: wp(1), borderRadius: wp(90) }}>
-            <Ionicons name='ellipsis-vertical' size={wp(4)} />
-          </TouchableHighlight>
+
         </View>
       </View>
       <View style={[styles.detailRow, { backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }]}>
@@ -462,6 +473,16 @@ const DspAllLoads = ({ item = {} as Load, ondetailsPress = () => { } }) => {
           </ThemedText>
         </View>
       )}
+      {item.distance && (
+        <View style={[styles.detailRow, { backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }]}>
+          <ThemedText type='default' style={{ flex: 2 }}>
+            Rate Per Tonne
+          </ThemedText>
+          <ThemedText type='subtitle' style={[{ color: textColor, fontSize: wp(4.5), lineHeight: wp(5), flex: 2 }]}>
+            {formatCurrency(item.ratePerTonne ? item.ratePerTonne : item.links ? item.links : item.triaxle)}
+          </ThemedText>
+        </View>
+      )}
 
       {/* {!item.links && !item.triaxle && item.ratePerTonne && (
           <View style={styles.detailRow}>
@@ -490,33 +511,42 @@ const DspAllLoads = ({ item = {} as Load, ondetailsPress = () => { } }) => {
         </View>
       )} */}
 
-      {!contactDisplay[item.id] && (
-        <View style={[{ backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2), flex: 1, gap: wp(2) }]}>
+      <View style={[{ marginTop: wp(1), backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2), flex: 1, gap: wp(2) }]}>
 
-          {item.requirements &&
-            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-              <ThemedText type='default' style={{ flex: 2 }}>
-                Payment Terms
-              </ThemedText>
-              <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-                {item.paymentTerms}
-              </ThemedText>
-            </View>
-          }
-          {item.requirements &&
-            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-              <ThemedText type='default' style={{ flex: 2 }}>
-                Requirements
-              </ThemedText>
-              <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-                {item.requirements}
-              </ThemedText>
-            </View>
-          }
+        {item.requirements &&
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+            <ThemedText type='default' style={{ flex: 2 }}>
+              Payment Terms
+            </ThemedText>
+            <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+              {item.paymentTerms}
+            </ThemedText>
+          </View>
+        }
+        {item.fuelAvai && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+            <ThemedText type='default' style={{ flex: 2 }}>
+              Fuel Terms
+            </ThemedText>
+            <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+              {item.fuelAvai}
+            </ThemedText>
+          </View>
+        )}
+        {item.requirements &&
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+            <ThemedText type='default' style={{ flex: 2 }}>
+              Requirements
+            </ThemedText>
+            <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+              {item.requirements}
+            </ThemedText>
+          </View>
+        }
 
 
 
-          {/* {item.activeLoading && (
+        {/* {item.activeLoading && (
             <View style={styles.detailRow}>
               <FontAwesome5 name="clock" size={wp(4)} style={styles.icon} color="#FF8C00" />
               <ThemedText type='default' style={{ color: "#FF8C00" }}>
@@ -525,92 +555,85 @@ const DspAllLoads = ({ item = {} as Load, ondetailsPress = () => { } }) => {
             </View>
           )} */}
 
-          {dspMoreInfo[item.id] && (
-            <View>
-              {item.fuelAvai && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-                  <ThemedText type='default' style={{ flex: 2 }}>
-                    Fuel Terms
-                  </ThemedText>
-                  <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-                    {item.fuelAvai}
-                  </ThemedText>
-                </View>
-              )}
+        {expand && (
+          <View>
 
-              {item.additionalInfo && (
-                <View style={{ flex: 1, gap: wp(2), marginTop: wp(2) }}>
-                  <ThemedText type='tiny' style={{ flex: 2 }}>
-                    Additional Info
-                  </ThemedText>
-                  <ThemedText numberOfLines={8} type='default' style={{ flex: 1 }}>
-                    {item.additionalInfo}
-                  </ThemedText>
-                </View>
-              )}
+            <Divider />
 
-              {item.alertMsg && (
-                <View style={[styles.detailRow, { backgroundColor: 'rgba(220, 20, 60, 0.8)', padding: wp(2), borderRadius: wp(2) }]}>
-                  <FontAwesome5 name="exclamation-triangle" size={wp(4)} style={styles.icon} color="white" />
-                  <ThemedText type='default' style={{ color: 'white' }}>
-                    {item.alertMsg}
-                  </ThemedText>
-                </View>
-              )}
+            {item.additionalInfo && (
+              <View style={{ flex: 1, gap: wp(2), marginTop: wp(2) }}>
+                <ThemedText type='tiny' style={{ flex: 2 }}>
+                  Additional Info
+                </ThemedText>
+                <FormatedText numberOfLines={8} style={{ flex: 1 }}>
+                  {item.additionalInfo}
+                </FormatedText>
+              </View>
+            )}
+            {/* 
+            {item.alertMsg && (
+              <View style={[styles.detailRow, { borderColor: 'rgba(220, 20, 60, 0.8)', padding: wp(1), paddingHorizontal: wp(2), gap: wp(1), borderWidth: .5, borderRadius: wp(2) }]}>
+                <FontAwesome5 name="exclamation-triangle" size={wp(3)} style={styles.icon} color="rgba(220, 20, 60, 0.8)" />
+                <ThemedText type='default' style={{ color: 'rgba(220, 20, 60, 0.8)' }}>
+                  {item.alertMsg}
+                </ThemedText>
+              </View>
+            )} */}
 
-              {item.returnLoad && (
-                <View style={{ marginTop: wp(2) }}>
-                  <ThemedText type='tiny' style={{ marginBottom: wp(1) }}>
-                    Return Load
-                  </ThemedText>
+            <Divider style={{ marginTop: wp(2) }} />
+            {item.returnLoad && (
+              <View style={{ marginTop: wp(2), gap: wp(2) }}>
+                <ThemedText type='tiny' style={{ marginBottom: wp(1) }}>
+                  Return Load
+                </ThemedText>
 
-                  {item.returnLoad && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-                      <ThemedText type='default' style={{ flex: 2 }}>
-                        Load Details
-                      </ThemedText>
-                      <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-                        {item.returnLoad}
-                      </ThemedText>
-                    </View>
-                  )}
-                  {item.returnRate && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-                      <ThemedText type='default' style={{ flex: 2 }}>
-                        Return Rate
-                      </ThemedText>
-                      <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-                        {item.returnRate}
-                      </ThemedText>
-                    </View>
-                  )}
-                  {item.returnTerms && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-                      <ThemedText type='default' style={{ flex: 2 }}>
-                        Return Terms
-                      </ThemedText>
-                      <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-                        {item.returnTerms}
-                      </ThemedText>
-                    </View>
-                  )}
+                {item.returnLoad && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+                    <ThemedText type='default' style={{ flex: 2 }}>
+                      Load Details
+                    </ThemedText>
+                    <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                      {item.returnLoad}
+                    </ThemedText>
+                  </View>
+                )}
+                {item.returnRate && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+                    <ThemedText type='default' style={{ flex: 2 }}>
+                      Return Rate
+                    </ThemedText>
+                    <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                      {item.returnRate}
+                    </ThemedText>
+                  </View>
+                )}
+                {item.returnTerms && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+                    <ThemedText type='default' style={{ flex: 2 }}>
+                      Return Terms
+                    </ThemedText>
+                    <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                      {item.returnTerms}
+                    </ThemedText>
+                  </View>
+                )}
 
 
 
 
 
-                </View>
-              )}
-            </View>
-          )}
+              </View>
+            )}
+          </View>
+        )}
 
-          <TouchableOpacity onPress={() => toggleItemById(item.id, setDspMoreInfo)}>
-            <ThemedText type='default' style={{ color: accent, fontWeight: 'bold', textAlign: 'center', marginTop: wp(2) }}>
-              {dspMoreInfo[item.id] ? "see less" : "see more"}
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
-      )}
+      </View>
+      <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: wp(1), marginTop: wp(2) }} onPress={() => toggleItemById(item.id)}>
+        <EvilIcons color={icon} size={wp(6)} name={expand ? 'chevron-up' : 'chevron-down'} />
+        {/* <ThemedText type='default' style={{}}>
+            {expand ? "less" : "more"}
+          </ThemedText> */}
+      </TouchableOpacity>
 
       {/* {contactDisplay[item.id] && contactMe}
 
@@ -685,7 +708,7 @@ const styles = StyleSheet.create({
   container: {
     margin: wp(2),
     borderWidth: 0.5,
-    borderRadius: wp(4),
+    borderRadius: wp(6),
     paddingHorizontal: wp(4),
     paddingBottom: wp(4),
     paddingVertical: wp(2),
@@ -716,18 +739,17 @@ const styles = StyleSheet.create({
     marginBottom: wp(2)
   },
   tag: {
-    paddingHorizontal: wp(3),
+    paddingHorizontal: wp(2),
     paddingVertical: wp(1),
-    borderRadius: wp(2),
+    borderRadius: wp(4),
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: wp(1),
+    marginTop: wp(1),
   },
   icon: {
     width: wp(6),
-    marginRight: wp(2)
   },
   contactButton: {
     height: wp(8),

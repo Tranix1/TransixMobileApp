@@ -13,12 +13,12 @@ import { useAuth } from "@/context/AuthContext";
 
 export const addDocument = async (
     collectionName: string,
-    data: object,
-    onStatusUpdate: (status: string) => void,
-    ) => {
-        try {
+    data: object
+
+) => {
+    try {
         const { user } = useAuth();
-               if (!user) {
+        if (!user) {
             alert("Please Login first");
             return;
         }
@@ -26,16 +26,14 @@ export const addDocument = async (
             alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
             return;
         }
-        onStatusUpdate("now submitting to db");
         const docRef = await addDoc(collection(db, collectionName), {
             ...data,
             timeStamp: serverTimestamp(),
-            userId: auth.currentUser?.uid ,
+            userId: auth.currentUser?.uid,
             companyName: user?.organisation,
             contact: user?.phoneNumber || '',
 
         });
-        onStatusUpdate("Doneee submitting to db");
         return docRef.id;
     } catch (error) {
         console.error("Error adding document:", error);

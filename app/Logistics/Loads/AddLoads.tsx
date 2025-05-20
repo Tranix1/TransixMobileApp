@@ -98,8 +98,9 @@ const AddLoadDB = () => {
         };
 
         try {
-
-            addDocument("Loads", loadData, (status) => console.log(`Status: ${status}`))
+            // Ensure addDocument is not a React hook or using hooks internally.
+            // If it is, refactor addDocument to be a plain async function.
+            await addDocument("Loads", loadData);
 
             console.log("Submitting load data:", loadData);
             alert("Load submitted successfully!");

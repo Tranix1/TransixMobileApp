@@ -112,29 +112,29 @@ const Index = () => {
     };
 
 
- const [locationTruckS, setLocationTruckS] = useState<string>(""); // Track local or international selection
-     const [locaOpLocTruckS, setLocaOpLocTruckS] = useState<string>(""); // Track selected local country
-     const [intOpLocTruckS, setIntOpLocTruckS] = useState<string[]>([]); // Track international countries
- 
- 
- 
- 
-     const [otherTruckType, setOtherTruckType] = React.useState<string>("")
- 
- 
- 
- 
-     const [truckConfig , setTruckConfig]=React.useState("")
-     const [otherTruckConfig , setOtherTruckConfig]=React.useState("")
- 
-     const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
-     const [truckCapacity, setTruckCapacity] = useState("")
- 
-     const [dspSpecTruckDet, setDspSpecTruckDet] = React.useState<boolean>(false)
- 
- 
-     const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
-     
+    const [locationTruckS, setLocationTruckS] = useState<string>(""); // Track local or international selection
+    const [locaOpLocTruckS, setLocaOpLocTruckS] = useState<string>(""); // Track selected local country
+    const [intOpLocTruckS, setIntOpLocTruckS] = useState<string[]>([]); // Track international countries
+
+
+
+
+    const [otherTruckType, setOtherTruckType] = React.useState<string>("")
+
+
+
+
+    const [truckConfig, setTruckConfig] = React.useState("")
+    const [otherTruckConfig, setOtherTruckConfig] = React.useState("")
+
+    const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
+    const [truckCapacity, setTruckCapacity] = useState("")
+
+    const [dspSpecTruckDet, setDspSpecTruckDet] = React.useState<boolean>(false)
+
+
+    const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
+
 
     return (
         <View style={{ flex: 1 }}>
@@ -142,27 +142,27 @@ const Index = () => {
 
 
 
-  <SpecifyTruckDetails
-                 dspSpecTruckDet={showfilter}
-                 setDspSpecTruckDet={setShowfilter}
-                 // Truck Tonnage
-                 dspTruckCpacity={dspTruckCpacity}
-                 setDspTruckCapacity={setDspTruckCapacity}
-                 truckCapacity={truckCapacity}
-                 setTruckCapacity={setTruckCapacity}
-                 // Selecting Truck Type
-                 selectedTruckType={selectedTruckType}
-                 setSelectedTruckType={setSelectedTruckType}
-                 otherTruckType={otherTruckType}
-                 setOtherTruckType={setOtherTruckType}
-                 // Selecting A country and location
-                 location={locationTruckS}
-                 setLocation={setLocationTruckS}
-                 intOpLoc={intOpLocTruckS}
-                 setIntOpLoc={setIntOpLocTruckS}
-                 setLocaOpLoc={setLocaOpLocTruckS}
-                 locaOpLoc={locaOpLocTruckS}
-             />
+            <SpecifyTruckDetails
+                dspSpecTruckDet={showfilter}
+                setDspSpecTruckDet={setShowfilter}
+                // Truck Tonnage
+                dspTruckCpacity={dspTruckCpacity}
+                setDspTruckCapacity={setDspTruckCapacity}
+                truckCapacity={truckCapacity}
+                setTruckCapacity={setTruckCapacity}
+                // Selecting Truck Type
+                selectedTruckType={selectedTruckType}
+                setSelectedTruckType={setSelectedTruckType}
+                otherTruckType={otherTruckType}
+                setOtherTruckType={setOtherTruckType}
+                // Selecting A country and location
+                location={locationTruckS}
+                setLocation={setLocationTruckS}
+                intOpLoc={intOpLocTruckS}
+                setIntOpLoc={setIntOpLocTruckS}
+                setLocaOpLoc={setLocaOpLocTruckS}
+                locaOpLoc={locaOpLocTruckS}
+            />
 
 
 
@@ -228,9 +228,9 @@ const Index = () => {
                     ListHeaderComponent={() => <>
                         <View style={{ marginHorizontal: wp(1), marginBottom: wp(1), }}>
 
-                           
 
-                          
+
+
 
 
 
@@ -287,7 +287,7 @@ const Index = () => {
 
 
 
-                        
+
                         {showfilter ?
                             <>
 

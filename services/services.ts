@@ -4,7 +4,6 @@ export const formatDate = (_date: string | number = '', format?: string) => {
 
     const createdData = new Date(_date);
     const date = new Date();
-    console.log(_date);
 
 
     const createdDate = new Date(createdData);
