@@ -40,7 +40,7 @@ const Index = () => {
                         </TouchableNativeFeedback>
                     </View>
                     <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-                        <TouchableNativeFeedback onPress={()=>router.push("/Search/Index")} >
+                        <TouchableNativeFeedback onPress={() => router.push("/Search/Index")} >
                             <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
                                 <EvilIcons name='search' size={wp(6)} color={icon} />
                             </View>
@@ -78,137 +78,140 @@ const Index = () => {
 
 
 
-        
 
-        interface DataItem {
+
+    interface DataItem {
         topic: string;
         description: string;
-        id : number
-        }
+        id: number
+    }
 
-        const theData: DataItem[] = [
+    const theData: DataItem[] = [
 
 
 
-                      
+
 
         {
-            id :1 ,
-             topic: "Long-Term Contracts" ,
-         description: 'Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.' 
+            id: 1,
+            topic: "Long-Term Contracts",
+            description: 'Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.'
         },
 
         {
-            id:2 , 
-            topic: "First Level Verification" ,
-             description: 'We encourage all legit business to be verified\nIncrease business trust and credibility by verifying your company.'
-             },
-        { 
-            id : 3 , 
-            topic: "GIT (Goods in transit Insuarance)" ,
-            description: 'Ensures financial protection for trucks and cargo, keeping your business secure.'  ,
-             },
-        { 
-            id : 4 ,
-             topic: "Tracking" ,
-              description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!' },
-        { 
-            id : 5 , 
-            topic: "Warehouse", 
-            description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!' },
+            id: 2,
+            topic: "First Level Verification",
+            description: 'We encourage all legit business to be verified\nIncrease business trust and credibility by verifying your company.'
+        },
         {
-             id : 6 , 
-             topic: "Truck Stop",
-            description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!' },
-        ];
+            id: 3,
+            topic: "GIT (Goods in transit Insuarance)",
+            description: 'Ensures financial protection for trucks and cargo, keeping your business secure.',
+        },
+        {
+            id: 4,
+            topic: "Tracking",
+            description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!'
+        },
+        {
+            id: 5,
+            topic: "Warehouse",
+            description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!'
+        },
+        {
+            id: 6,
+            topic: "Truck Stop",
+            description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!'
+        },
+    ];
 
 
-        const [filteredData, setFilteredData] = useState<DataItem[]>([]);
-  const [textTyped, setTextTyped] = useState<string>("");
+    const [filteredData, setFilteredData] = useState<DataItem[]>([]);
+    const [textTyped, setTextTyped] = useState<string>("");
 
-  const handleFilter = (text: string) => {
-    const searchWord = text;
-    setTextTyped(text);
+    const handleFilter = (text: string) => {
+        const searchWord = text;
+        setTextTyped(text);
 
-    const newFilter = theData.filter((value) => {
-      const combinedText = `${value.topic} ${value.description}`;
-      return combinedText.toLowerCase().includes(searchWord.toLowerCase());
-    });
+        const newFilter = theData.filter((value) => {
+            const combinedText = `${value.topic} ${value.description}`;
+            return combinedText.toLowerCase().includes(searchWord.toLowerCase());
+        });
 
-    if (searchWord === "") {
-      setFilteredData([]);
-    } else {
-      setFilteredData(newFilter);
+        if (searchWord === "") {
+            setFilteredData([]);
+        } else {
+            setFilteredData(newFilter);
+        }
+    };
+
+    const clearInput = () => {
+        setFilteredData([]);
+        setTextTyped("");
+    };
+
+
+    interface HomeItemProps {
+        topic: string;
+        description: string;
+        mainColor: string;
+        icon: string;
+        buttonTitle: string;
+        btnBackground: string;
+        btnPressValue: () => void;
+
+        isAvaialble: boolean;
+
     }
-  };
 
-  const clearInput = () => {
-    setFilteredData([]);
-    setTextTyped("");
-  };
+    const HomeItemView: React.FC<HomeItemProps> = ({
+        topic,
+        description,
+        mainColor,
+        btnBackground,
+        icon,
+        buttonTitle,
+        isAvaialble,
+        btnPressValue
+    }) => (
+        <View style={[styles.homefeature, { borderColor: mainColor, }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }}>
+                <View style={{ backgroundColor: mainColor, borderRadius: wp(2), padding: wp(1.5) }}>
+                    <Octicons name='verified' color={'#fff'} size={wp(4)} />
+                </View>
+                <ThemedText type='subtitle' color={mainColor} style={{ fontWeight: 'bold', fontSize: wp(4.5) }} >
+                    {topic}
+                </ThemedText>
+            </View>
 
- 
-interface HomeItemProps {
-  topic: string;
-  description: string;
-  mainColor: string;
-  icon: string;
-  buttonTitle: string; 
-  btnBackground : string;
-  btnPressValue : () => void  ;
-  
-  isAvaialble: boolean ;
+            <View>
 
-}
+                {!isAvaialble && <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: -60, zIndex: 10, alignItems: 'center', backgroundColor: background === "#0f0e11" ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)", }} >
 
-const HomeItemView: React.FC<HomeItemProps> = ({
-  topic,
-  description,
-  mainColor,
-  btnBackground,
-  icon,
-  buttonTitle,
-  isAvaialble ,
-  btnPressValue
-}) => (
-  <View style={[styles.homefeature, { borderColor: mainColor, }]}>
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }}>
-      <View style={{ backgroundColor: mainColor , borderRadius: wp(2), padding: wp(1.5) }}>
-        <Octicons name='verified' color={'#fff'} size={wp(4)} />
-      </View>
-      <ThemedText type='subtitle' color={mainColor}  style={{ fontWeight: 'bold', fontSize: wp(4.5) }} >
-        {topic}
-      </ThemedText>
-    </View>
-    
-     <View>
+                    <ThemedText style={{ color: "red", marginTop: 30 }} > Coming Soon</ThemedText>
 
-   {!isAvaialble && <View style={{position:'absolute' , top:0 , left:0  , right:0 , bottom:-60 ,zIndex :10 , alignItems:'center',backgroundColor:background==="#0f0e11"? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)" , }} >
-    
-        <ThemedText style={{color:"red",marginTop:30}} > Coming Soon</ThemedText>
-        
-    </View>}
+                </View>}
 
-    <ThemedText
-      type='default'
-      numberOfLines={0}
-        style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}
-    >
-      {description}
-    </ThemedText>
- </View>
+                <ThemedText
+                    type='default'
+                    numberOfLines={0}
+                    style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}
+                >
+                    {description}
+                </ThemedText>
+            </View>
 
-    <Button
-     onPress={btnPressValue}
-      colors={{ text: mainColor, bg: btnBackground}}
-      title={buttonTitle} // ✅ Dynamic title
-      Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={mainColor} />}
-    />
-  </View>
-);
+            <Button
+                onPress={btnPressValue}
+                colors={{ text: mainColor, bg: btnBackground }}
+                title={buttonTitle} // ✅ Dynamic title
+                Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={mainColor} />}
+            />
+        </View>
+    );
 
 
-console.log("filtred Data", filteredData)
+    console.log("filtred Data", filteredData)
 
     return (
 
@@ -301,7 +304,7 @@ console.log("filtred Data", filteredData)
                                             </View>
                                         }
                                     </View>
-                                      <TouchableNativeFeedback onPress={()=>router.push("/BooksAndBids/SlctBidsAndBooks")} >
+                                    <TouchableNativeFeedback onPress={() => router.push("/BooksAndBids/SlctBidsAndBooks")} >
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -311,7 +314,7 @@ console.log("filtred Data", filteredData)
                                             </View>
                                         </View>
                                     </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={()=>router.push("/UserUploads/Contracts")}>
+                                    <TouchableNativeFeedback onPress={() => router.push("/UserUploads/Contracts")}>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <Ionicons name="reader" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -321,7 +324,7 @@ console.log("filtred Data", filteredData)
                                             </View>
                                         </View>
                                     </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={()=>router.push("/UserUploads/Trucks.")} >
+                                    <TouchableNativeFeedback onPress={() => router.push("/UserUploads/Trucks.")} >
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -331,7 +334,7 @@ console.log("filtred Data", filteredData)
                                             </View>
                                         </View>
                                     </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={()=>router.push("/UserUploads/Loads")}>
+                                    <TouchableNativeFeedback onPress={() => router.push("/UserUploads/Loads")}>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="boxes-stacked" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -365,7 +368,7 @@ console.log("filtred Data", filteredData)
                                             </View>
                                         </TouchableNativeFeedback>
                                     </View>
-                                    
+
                                 </View>
                                 <TouchableNativeFeedback onPress={() => router.push('/Account/Settings')}>
                                     <View style={{ paddingHorizontal: wp(4), flexDirection: 'row', gap: wp(3), paddingVertical: wp(4) }}>
@@ -454,10 +457,10 @@ console.log("filtred Data", filteredData)
 
                 {filteredData.length <= 0 && textTyped && (<View>
                     <Text> The service u searched is not yet available</Text>
-                </View> ) }
+                </View>)}
 
 
-               {/* {filteredData.map((item)=>(  <View>
+                {/* {filteredData.map((item)=>(  <View>
 
 
                {item.id ===1 && <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
@@ -559,55 +562,52 @@ console.log("filtred Data", filteredData)
                 </View> ) )} */}
 
 
-  {!textTyped && theData.map((item)=>(  <View>
+                {!textTyped && theData.map((item) => (<View>
 
 
 
-                      {item.id ===1 && <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
+                    {item.id === 1 && <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
 
-                    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
-                        <View style={{}}>
-                            <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} />
-                        </View>
-                        <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
-                            Long-Term Contracts
-                        </ThemedText>
-                        <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ flexDirection: 'row', gap: wp(1) }}>
-                            <ThemedText type='tiny'>
-                                Open Contracts
-                            </ThemedText>
-                            <Ionicons name='arrow-forward' color={icon} />
-                        </TouchableOpacity>
-                    </View>
-                    <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>
-                        Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
-                    </ThemedText>
-
-                    <FlatList data={[]}
-                        renderItem={(item) => (<></>)}
-                        ListEmptyComponent={<>
-                            <View style={{ marginVertical: wp(15), alignItems: 'center', gap: wp(4) }}>
-
-                                <ThemedText>
-                                    Create contract and start transporting loads today!
-                                </ThemedText>
-
-                                <TouchableOpacity style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
-                                    <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
-                                    <ThemedText color='#fff'>
-                                        Book Contracts
-                                    </ThemedText>
-                                </TouchableOpacity>
+                        <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
+                            <View style={{}}>
+                                <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} />
                             </View>
-                        </>}
-                    />
+                            <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
+                                Long-Term Contracts
+                            </ThemedText>
+                            <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ flexDirection: 'row', gap: wp(1) }}>
+                                <ThemedText type='tiny'>
+                                    Open Contracts
+                                </ThemedText>
+                                <Ionicons name='arrow-forward' color={icon} />
+                            </TouchableOpacity>
+                        </View>
+                        <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>
+                            Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
+                        </ThemedText>
+
+
+
+                        <View style={{ marginVertical: wp(15), alignItems: 'center', gap: wp(4) }}>
+
+                            <ThemedText>
+                                Create contract and start transporting loads today!
+                            </ThemedText>
+
+                            <TouchableOpacity style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
+                                <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
+                                <ThemedText color='#fff'>
+                                    Book Contracts
+                                </ThemedText>
+                            </TouchableOpacity>
+                        </View>
 
 
 
 
-                </View>}
-                
-                {/* <View style={{ flexDirection: 'row', gap: wp(2), marginBottom: wp(5), paddingHorizontal: wp(2) }}>
+                    </View>}
+
+                    {/* <View style={{ flexDirection: 'row', gap: wp(2), marginBottom: wp(5), paddingHorizontal: wp(2) }}>
                     <View style={{ borderWidth: .5, borderColor: accent, padding: wp(3), borderRadius: wp(6), flex: 1, alignItems: 'center' }}>
                         <ThemedText color={accent}>
                             Add Logistics
@@ -624,63 +624,63 @@ console.log("filtred Data", filteredData)
 
 
 
- {item.id=== 2&&  <HomeItemView
-                topic={item.topic}
-                description={item.description}
-                mainColor="#6bacbf"
-                icon="#333"
-                buttonTitle="Get Verfied"
-                btnBackground="#6bacbf24"
-                isAvaialble={true}
-                btnPressValue={()=>router.push("/Account/Verification/ApplyVerification")}
-                />}              
+                    {item.id === 2 && <HomeItemView
+                        topic={item.topic}
+                        description={item.description}
+                        mainColor="#6bacbf"
+                        icon="#333"
+                        buttonTitle="Get Verfied"
+                        btnBackground="#6bacbf24"
+                        isAvaialble={true}
+                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")}
+                    />}
 
 
-     {item.id=== 3&&  <HomeItemView
-                topic={item.topic}
-                description={item.description}
-                mainColor="#fb9274"
-                icon="#333"
-                buttonTitle="Be insuered"
-                btnBackground="#fb927424"
-                isAvaialble={true}
-                btnPressValue={()=>router.push("/Compliances/GITInsuarance/Index")}
-                />}
+                    {item.id === 3 && <HomeItemView
+                        topic={item.topic}
+                        description={item.description}
+                        mainColor="#fb9274"
+                        icon="#333"
+                        buttonTitle="Be insuered"
+                        btnBackground="#fb927424"
+                        isAvaialble={true}
+                        btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")}
+                    />}
 
-               {item.id=== 4&&  <HomeItemView
-                topic={item.topic}
-                description={item.description}
-                mainColor="#bada5f"
-                icon="#333"
-                buttonTitle="Get Verified"
-                btnBackground="#bada5f24"
-                isAvaialble={false}
-                btnPressValue={()=>router.push("/Compliances/GITInsuarance/Index")}
-                />}
+                    {item.id === 4 && <HomeItemView
+                        topic={item.topic}
+                        description={item.description}
+                        mainColor="#bada5f"
+                        icon="#333"
+                        buttonTitle="Get Verified"
+                        btnBackground="#bada5f24"
+                        isAvaialble={false}
+                        btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")}
+                    />}
 
-        {item.id=== 5&&  <HomeItemView
-                topic={item.topic}
-                description={item.description}
-                mainColor="#bada5f"
-                icon="#333"
-                buttonTitle="Visit Warehouse"
-                btnBackground="#bada5f24"
-                isAvaialble={false}
-                btnPressValue={()=>router.push("/Account/Verification/ApplyVerification")}
-                />}
-                
-                  {item.id=== 6&&  <HomeItemView
-                topic={item.topic}
-                description={item.description}
-                mainColor="#bada5f"
-                icon="#333"
-                buttonTitle="Visit Truck stop"
-                btnBackground="#bada5f24"
-                isAvaialble={false}
-                btnPressValue={()=>router.push("/Account/Verification/ApplyVerification")}
-                />}     
+                    {item.id === 5 && <HomeItemView
+                        topic={item.topic}
+                        description={item.description}
+                        mainColor="#bada5f"
+                        icon="#333"
+                        buttonTitle="Visit Warehouse"
+                        btnBackground="#bada5f24"
+                        isAvaialble={false}
+                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")}
+                    />}
 
-                </View> ) )}
+                    {item.id === 6 && <HomeItemView
+                        topic={item.topic}
+                        description={item.description}
+                        mainColor="#bada5f"
+                        icon="#333"
+                        buttonTitle="Visit Truck stop"
+                        btnBackground="#bada5f24"
+                        isAvaialble={false}
+                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")}
+                    />}
+
+                </View>))}
 
 
             </ScrollView>

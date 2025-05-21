@@ -449,7 +449,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
               From
             </ThemedText>
             <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
-              {item.fromLocation}
+              {item.location}
             </ThemedText>
           </View>
           <View style={{ gap: wp(1), flex: 2, }}>
@@ -457,7 +457,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
               To
             </ThemedText>
             <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
-              {item.toLocation}
+              {item.destination}
             </ThemedText>
           </View>
         </View>
@@ -558,17 +558,19 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
         {expand && (
           <View>
 
-            <Divider />
-
             {item.additionalInfo && (
-              <View style={{ flex: 1, gap: wp(2), marginTop: wp(2) }}>
-                <ThemedText type='tiny' style={{ flex: 2 }}>
-                  Additional Info
-                </ThemedText>
-                <FormatedText numberOfLines={8} style={{ flex: 1 }}>
-                  {item.additionalInfo}
-                </FormatedText>
-              </View>
+              <>
+                <Divider />
+
+                <View style={{ flex: 1, gap: wp(2), marginTop: wp(2) }}>
+                  <ThemedText type='tiny' style={{ flex: 2 }}>
+                    Additional Info
+                  </ThemedText>
+                  <FormatedText numberOfLines={8} style={{ flex: 1 }}>
+                    {item.additionalInfo}
+                  </FormatedText>
+                </View>
+              </>
             )}
             {/* 
             {item.alertMsg && (

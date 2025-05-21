@@ -1,5 +1,5 @@
-import { ActivityIndicator, FlatList, RefreshControl,  StyleSheet, Text, TouchableNativeFeedback, View } from 'react-native'
-import React, { useEffect,  useState } from 'react'
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableNativeFeedback, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { hp, wp } from '@/constants/common'
 import { ThemedText } from '@/components/ThemedText'
 import { useThemeColor } from '@/hooks/useThemeColor'
@@ -38,10 +38,10 @@ const Index = () => {
 
     const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
     const [truckCapacity, setTruckCapacity] = useState("")
-    
 
-    const [truckConfig , setTruckConfig]=React.useState("")
-    const [truckSuspension , setTruckSuspension]=React.useState("")
+
+    const [truckConfig, setTruckConfig] = React.useState("")
+    const [truckSuspension, setTruckSuspension] = React.useState("")
 
     const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
 
@@ -52,14 +52,14 @@ const Index = () => {
 
     console.log(truckCapacity)
 
-    const LoadTructs = async () => {        
-   let filters: any[] = [];
+    const LoadTructs = async () => {
+        let filters: any[] = [];
 
-    if (truckCapacity) {
-        filters.push(where("truckCapacity", "==", truckCapacity));
-    }
+        if (truckCapacity) {
+            filters.push(where("truckCapacity", "==", truckCapacity));
+        }
 
-    const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
+        const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
 
         if (maTrucks) {
             setTrucks(maTrucks.data as Truck[])
@@ -84,7 +84,7 @@ const Index = () => {
 
     const [showfilter, setShowfilter] = useState(false)
 
-        const loadMoreTrucks = async () => {
+    const loadMoreTrucks = async () => {
         if (loadingMore || !lastVisible) return;
 
         setLoadingMore(true);
@@ -136,10 +136,10 @@ const Index = () => {
                 setLocaOpLoc={setLocaOpLocTruckS}
                 locaOpLoc={locaOpLocTruckS}
                 // Truck Config and suspension
-                 truckConfig={truckConfig}
-                 setTruckConfig={setTruckConfig}
-                 truckSuspension={truckSuspension}
-                 setTruckSuspension={setTruckSuspension}
+                truckConfig={truckConfig}
+                setTruckConfig={setTruckConfig}
+                truckSuspension={truckSuspension}
+                setTruckSuspension={setTruckSuspension}
 
             />
 
