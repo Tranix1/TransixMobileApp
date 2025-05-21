@@ -1,32 +1,32 @@
 import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, Image, ActivityIndicator, StyleSheet, ScrollView, TouchableNativeFeedback, SafeAreaView, Modal, ToastAndroid } from "react-native"
-import inputstyles from "../../components/styles/inputElement";
+import { View, TouchableOpacity, Image,  StyleSheet, ScrollView,  Modal, ToastAndroid } from "react-native"
+
+import {truckType, cargoArea,tankerTypes,trailerConfigurations,truckSuspensions,litresCapacity,tonneSizes,countryCodes } from "@/data/appConstants";
+
+
 import type { ImagePickerAsset } from 'expo-image-picker';
-import CountryPicker from 'react-native-country-picker-modal';
-import { CountryCode } from 'react-native-country-picker-modal';
-import { Country } from 'react-native-country-picker-modal';
 import { addDocument, getDocById, setDocuments } from "@/db/operations";
 import { uploadImage } from "@/db/operations";
 import { selectManyImages, handleChange } from "@/Utilities/utils";
-import Fontisto from '@expo/vector-icons/Fontisto';
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
 import { ErrorOverlay } from "@/components/ErrorOverLay";
-import CountrySelector from "@/components/CountrySelector";
 import Heading from "@/components/Heading";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import { SpecifyTruckDetails } from "@/components/SpecifyTruckDetails";
 import { Countries, Truck, TruckTypeProps } from "@/types/types";
 import { AntDesign, Entypo, FontAwesome, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { hp, wp } from "@/constants/common";
 import { useThemeColor } from '@/hooks/useThemeColor'
-import { Dropdown, SelectCountry } from "react-native-element-dropdown";
+import { Dropdown,  } from "react-native-element-dropdown";
 import { useAuth } from "@/context/AuthContext";
 import { router } from "expo-router";
-import { namedQuery } from "firebase/firestore";
 import Divider from "@/components/Divider";
 import { cleanNumber } from "@/services/services";
 import Button from "@/components/Button";
+
+import { DropDownItem } from "@/components/DropDown";
+import { TruckFormData } from "@/types/types";
+
 function AddTrucks() {
 
   const icon = useThemeColor('icon')
@@ -35,46 +35,27 @@ function AddTrucks() {
   const coolGray = useThemeColor('coolGray')
   // const {truckType ,username ,contact , isVerified,isBlackListed ,blackLWarning,blockVerifiedU , verifiedLoad , fromLocation  , toLocation ,expoPushToken ,verifyOngoing ,truckTonnageG} = route.params
 
-  interface FormData {
-    additionalInfo: string;
-    trailerType: string;
-    driverPhone: string;
-    maxloadCapacity: string;
-    truckTonnage: string;
-    name: string;
-  }
 
-  const [formData, setFormData] = useState<FormData>({
+
+  const [formData, setFormData] = useState<TruckFormData>({
     additionalInfo: "",
-    trailerType: "",
     driverPhone: "",
     maxloadCapacity: "",
-    truckTonnage: "",
-    name: "",
+    truckName: "",
+    otherTruckSuspension :"" ,
+    otherCargoArea : "" ,
+    otherTruckConfig : "" ,
+    otherTankerType : ""
   });
 
-  const [countryCodeDriver, setCountryCodeDriver] = useState("")
-  const [callingCodeDriver, setCallingCodeDriver] = useState('');
+interface TruckOwner {
+  ownerName: string;
+  ownerPhoneNum: string;
+  ownerEmail: string;
+}
 
-  const handleCountrySelectDriver = (country: Country): void => {
-    setCallingCodeDriver(country.cca2);
-    setCountryCodeDriver(country.callingCode[0] || ''); // Use first calling code, fallback to ''
-  };
-
-  const [countryCodeTrOwner, setCountryCodeTrOwner] = useState("")
-  const [callingCodeTrOwner, setCallingCodeTrOwner] = useState('');
-
-  const handleCountrySelectTrOwner = (country: Country): void => {
-    setCallingCodeTrOwner(country.cca2);
-    setCountryCodeTrOwner(country.callingCode[0] || ""); // use first calling code
-  };
-
-  const [ownerName, SetOwnerName] = useState('yaya');
-  const [onwerEmail, setOwnerEmail] = useState('');
-  const [ownerPhoneNum, setOwnerCall] = useState('');
-
-  const [getOwnerDetails, setOwnerDetails] = useState<any>({}); // Better to define an interface/type
-
+// Then use it like this:
+const [getOwnerDetails, setOwnerDetails] = useState<TruckOwner | null>(null);
   useEffect(() => {
     getDocById('truckOwnerDetails', setOwnerDetails);
   }, []);
@@ -85,80 +66,43 @@ function AddTrucks() {
   const [ownerPhonNumAddDb, setOwnerPhoneNum] = useState('');
 
   const handleUpdateDriverDetails = async () => {
-
+    console.log("start addd")
     await setDocuments("truckOwnerDetails", { ownerName: ownerNameAddDb, ownerPhoneNum: ownerPhonNumAddDb, ownerEmail: ownerEmailAddDb, })
+    console.log("Donee Adding")
   };
-
-  const [location, setLocation] = useState<string>(""); // Track local or international selection
-  const [locaOpLoc, setLocaOpLoc] = useState<string>(""); // Track selected local country
-  const [intOpLoc, setIntOpLoc] = useState<string[]>([]); // Track international countries
-
-
-  const [truckDetails, setTruckDDsp] = useState(false)
-
-  function togglrTruckDe() {
-    setTruckDDsp(prev => !prev)
-    setDriverDDsp(false)
-  }
 
 
   const [dspFrstPageErr, setDspFrstPageErr] = useState<boolean>(false)
 
-  const [driverDetails, setDriverDDsp] = useState(false)
-
-  function togglrDriverDe() {
-
-
-    setTruckDDsp(false)
-    setDriverDDsp(prev => !prev)
-  }
 
   // const [images, setImages] = useState([]);
   const [images, setImages] = useState<ImagePickerAsset[]>([]);
 
 
-
-
-const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
-  const [selectedTruckCapacity , setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>()
-
-  const [otherTruckType, setOtherTruckType] = useState<string>("")
-
-  const [dspTruckCpacity, setDspTruckCapacity] = useState<string>("")
-  let [truckCapacity, setTruckCapacity] = useState("")
-
-  const [dspSpecTruckDet, setDspSpecTruckDet] = useState<boolean>(false)
-
-
-  const clearFilter = () => {
-    setSelectedTruckType(null)
-    setTruckCapacity('')
-    setLocation("")
-    setLocaOpLoc("")
-    setIntOpLoc([])
-  }
-
-
-  const [spinnerItem, setSpinnerItem] = useState(false);
-  const [addingDocUpdate, setAddingDocUpdate] = useState("")
-  const [uploadingImageUpdate, setUploadImageUpdate] = useState("")
-
-
+const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(null)
+const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string } | null>(null)
+const [selectedTankerType, setSelectedTankerType] = useState<{ id: number, name: string } | null>(null)
+  const [selectedTruckCapacity , setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>(null)
 
 
   const [showCountries, setShowCountries] = useState(false);
   const [operationCountries, setOperationCountries] = useState<string[]>([]);
 
+  const [countryCode, setCountryCode] = useState<{ id: number, name: string }>({ id: 0, name: '+263' })
+  const [selectedTrailerConfig, setSelectedTrailerConfig] = useState<{ id: number, name: string } | null>()
+  const [selectedTruckSuspension, setSelectedTruckSuspension] = useState<{ id: number, name: string } | null>()
+  const [ownerdetails, setOwnerdetails] = useState(false)
 
-
-
-
-
+  
+  const [spinnerItem, setSpinnerItem] = useState(false);
+  const [addingDocUpdate, setAddingDocUpdate] = useState("")
+  const [uploadingImageUpdate, setUploadImageUpdate] = useState("")
+  
+  const { user } = useAuth();
+console.log(uploadingImageUpdate)
+console.log(addingDocUpdate)
 
   const handleSubmit = async () => {
-
-    setDriverDDsp(false)
-    setTruckDDsp(false)
 
 
     if (images.length < 4) {
@@ -170,15 +114,15 @@ const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null
     let truckImage, truckBookImage, trailerBookF, trailerBookSc, driverLicense, driverPassport;
     setSpinnerItem(true)
 
-    if (images.length < 5 && spinnerItem && selectedTruckType?.name !== "Rigid") {
+    if (images.length < 5 && spinnerItem && selectedCargoArea?.name !== "Rigid") {
       alert("Add All reuired images")
       setSpinnerItem(false)
       return
-    } else if (images.length > 6 && spinnerItem && selectedTruckType?.name !== "Rigid") {
+    } else if (images.length > 6 && spinnerItem && selectedCargoArea?.name !== "Rigid") {
       alert("You added too many images click restart addig images")
       setSpinnerItem(false)
       return
-    } else if ((images.length === 5 || images.length === 6) && selectedTruckType?.name !== "Rigid") {
+    } else if ((images.length === 5 || images.length === 6) && selectedCargoArea?.name !== "Rigid") {
 
       truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, " truck Image");
       driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
@@ -189,7 +133,7 @@ const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null
       trailerBookSc = images.length === 5 ? await uploadImage(images[5], "Trucks", setUploadImageUpdate, "trailer Book sec") : null;
 
 
-    } else if (images.length === 4 && spinnerItem && selectedTruckType?.name === "Rigid") {
+    } else if (images.length === 4 && spinnerItem && selectedCargoArea?.name === "Rigid") {
 
       truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "truck Image");
       driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
@@ -198,177 +142,62 @@ const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null
       truckBookImage = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "truck Book");
     }
 
-    if (!selectedTruckType)
+    if (!selectedCargoArea)
       return alert("Select Truck Type");
 
-    if (!user)
+    if (!user){
+
       return alert("Please Login to your account to add a truck");
+    }
 
     setSpinnerItem(true)
-    let withDetails = true
+
+  if (!user) {
+            alert("Please Login first");
+            return;
+        }
+        if (!user.organisation) {
+            alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
+            return;
+        }
+
     try {
 
       const submitData = {
-        // CompanyName : username ,
-        // contact : contact ,
+     CompanyName: user.organisation,
+     contact: user?.phoneNumber || '',
         imageUrl: truckImage,
         truckBookImage: truckBookImage,
-        trailerBookF: trailerBookF,
-        trailerBookSc: trailerBookSc,
-        driverLicense: driverLicense,
-        driverPassport: driverPassport,
-        created_at: new Date().toISOString(),
+          trailerBookF: trailerBookF,
+          trailerBookSc: trailerBookSc,
+          driverLicense: driverLicense,
+          driverPassport: driverPassport,
 
-        CompanyName: user?.organisation,
-        ownerName: user?.organisation || ownerName,
-        onwerEmail: user?.email || onwerEmail,
-        ownerPhoneNum: user?.phoneNumber || ownerPhoneNum,
+          ownerName: getOwnerDetails?.ownerName ,
+          onwerEmail: getOwnerDetails?.ownerEmail ,
+          ownerPhoneNum: getOwnerDetails?.ownerPhoneNum ,
 
-        location: location,
-        intOpLoc: intOpLoc,
-        locaOpLoc: locaOpLoc,
-        locations: operationCountries,
-        userId: user.uid,
-        truckType: selectedTruckType.name,
-        // isVerified : isVerified ,
-        withDetails: withDetails,
-        deletionTime: Date.now() + 2 * 24 * 60 * 60 * 1000,
-        ...formData,
+          locations: operationCountries,
+          truckType: selectedTruckType?.name , 
+          cargoArea: selectedCargoArea.name,
+          tankerType : selectedTankerType ? selectedTankerType?.name : null ,
+          truckCapacity : selectedTruckCapacity?.name ,
+          truckConfig : selectedTrailerConfig?.name ,
+          truckSuspensions : selectedTruckSuspension?.name ,
+          ...formData,
+        }
+
+        addDocument("Trucks", submitData )
+
+        // setImages([]);
+        setSpinnerItem(false)
+
+        ToastAndroid.show('Truck Added successfully', ToastAndroid.SHORT)
+
+      } catch (err) {
+        console.error(err);
       }
-
-      addDocument("Trucks", submitData, setAddingDocUpdate)
-
-
-
-      setImages([]);
-      setSpinnerItem(false)
-
-      ToastAndroid.show('Truck Added successfully', ToastAndroid.SHORT)
-      router.back()
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-
-
-  const [countryCode, setCountryCode] = useState<{ id: number, name: string }>({ id: 0, name: '+263' })
-  const [selectedTrailerConfig, setSelectedTrailerConfig] = useState<{ id: number, name: string } | null>()
-  const [selectedTruckSuspension, setSelectedTruckSuspension] = useState<{ id: number, name: string } | null>()
-  const [ownerdetails, setOwnerdetails] = useState(false)
-
-  const { user } = useAuth();
-  console.log(formData.trailerType)
-  const truckTypes = [
-    { id: 0, name: 'Flat deck', image: require('@/assets/images/Trucks/images (2).jpeg') },
-    { id: 1, name: 'Bulk Trailer', image: require('@/assets/images/Trucks/download (1).jpeg') },
-    { id: 2, name: 'Low Bed', image: require('@/assets/images/Trucks/H805f1f51529345648d1da9e5fcd6807e2.jpg') },
-    { id: 3, name: 'Side Tipper', image: require('@/assets/images/Trucks/images (5).jpeg') },
-    { id: 4, name: 'Tautliner', image: require('@/assets/images/Trucks/download (3).jpeg') },
-    { id: 5, name: 'Tanker', image: require('@/assets/images/Trucks/images (7).jpeg') },
-    { id: 6, name: 'Other', image: require('@/assets/images/Trucks/download (4).jpeg') },
-    // { id: 7, name: 'All', image: '' },
-  ]
-  const trailerConfigurations = [
-    { id: 0, name: "single Axle" },
-    { id: 1, name: "tandem" },
-    { id: 2, name: "triaxle"  },
-    { id: 3, name: "MultiAxle" },
-    { id: 4, name: 'Other' }
-  ]
-  const truckSuspensions =[
-
-    { id: 1, name: "Link" },
-    { id: 2, name: "Super Link" },
-    { id: 3, name: "Air suspension" },
-    { id: 4, name: "mechanical steel"  },
-    { id: 5, name: "Other"  },
-  ]
-
-
-      const litresCapacity = [
-    { id: 0, name: '300L'},
-    { id: 1, name: '400L'},
-    { id: 2, name: '500L'},
-    { id: 3, name: '700L'},
-    { id: 4, name: '800L' },
-    { id: 5, name: '900L'},
-    ]
-
-    const tonneSizes = [
-    { id: 0, name: '1-3 T' },
-    { id: 1, name: '3-6 T' },
-    { id: 2, name: '7-10 T'},
-    { id: 3, name: '11-13 T'},
-    { id: 4, name: '12-15 T'},
-    { id: 5, name: '16-20 T'},
-    { id: 6, name: '20T++'},
-    ];
-
-
-  const countryCodes = [
-    { id: 0, name: '+263' },
-    { id: 1, name: '+27' },
-    { id: 2, name: '+243' }
-  ]
-
-
-interface DropDownItemProps {
-  allData:   object[]; 
-  selectedItem: any;
-  setSelectedItem: any;
-  placeholder :string
-}
-
-
-const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSelectedItem,placeholder }) => (
-  <View  >
-         <Dropdown
-              style={[styles.dropdown,]}
-              selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
-              data={allData}
-              maxHeight={hp(60)}
-              labelField="name"
-              valueField="name"
-              placeholder={placeholder}
-              value={selectedItem?.name}
-              itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-              activeColor={backG}
-              containerStyle={{
-                borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                shadowOffset: {
-                  width: 0,
-                  height: 9,
-                },
-                shadowOpacity: 0.50,
-                shadowRadius: 12.35,
-
-                elevation: 19,
-                paddingVertical: wp(1)
-              }}
-              onChange={item => {
-                console.log(item);
-                setSelectedItem(item);
-              }}
-
-              renderLeftIcon={() => <></>}
-              renderRightIcon={() => <Entypo name="chevron-thin-down" size={wp(4)} color={icon} />}
-              renderItem={((item) =>
-                <View style={[styles.item, item.Id === selectedItem?.id && {}]}>
-                  <ThemedText style={[{ textAlign: 'left', flex: 1 }, item.id === selectedItem?.id && { color: '#0f9d58' }]}>{item.name}</ThemedText>
-                  {item.id === selectedItem?.id && (
-                    <Ionicons
-                      color={icon}
-                      name='checkmark-outline'
-                      size={wp(5)}
-                    />
-                  )}
-                </View>
-              )}
-
-            />
-  </View>
-);
+    };
 
 
   return (
@@ -383,12 +212,12 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
           visible={dspFrstPageErr}
           title="Missing important details on Truck Details"
           errors={[
-            !formData.trailerType && "Enter Trailer Type",
+            // !formData.trailerType && "Enter Trailer Type",
             !formData.maxloadCapacity && "Enter Maximum Load Capacity",
-            !location && "Select were the truck can operate",
-            !selectedTruckType?.name && "Select TrucK Type",
-            !truckCapacity && "select trcuk capacity",
-            location && (!intOpLoc || !locaOpLoc) && "Select the country or countires the truck can operate",
+            !showCountries && "Select were the truck can operate",
+            !selectedCargoArea?.name && "Select TrucK Type",
+            !selectedTruckCapacity && "select trcuk capacity",
+            operationCountries.length <=0 && "Select the country or countires the truck can operate",
           ].filter(Boolean) as string[]}
           onClose={() => setDspFrstPageErr(false)}
         />
@@ -413,6 +242,8 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
 
 
           <Modal visible={ownerdetails} statusBarTranslucent animationType="slide">
+            <ScreenWrapper>
+
             <View style={{ margin: wp(4), marginTop: hp(6) }}>
 
               <View style={{ gap: wp(2) }} >
@@ -509,26 +340,22 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
                   onChangeText={(text) => setOwnerEmailAddDb(text)}
                 />
 
-
-
-
                 <Button onPress={handleUpdateDriverDetails} title="Save" />
-
-
 
               </View>
             </View>
+            </ScreenWrapper>
 
           </Modal>
 
 
 
           <View style={{ alignItems: 'center' }}>
-            {images[0] && !truckDetails && !driverDetails && <Image source={{ uri: images[0].uri }} style={{ width: wp(90), height: wp(90), marginBottom: 9, borderRadius: wp(4) }} />}
+            {images[0]   && <Image source={{ uri: images[0].uri }} style={{ width: wp(90), height: wp(90), marginBottom: 9, borderRadius: wp(4) }} />}
             {!images[0] &&
-              <TouchableOpacity onPress={() => selectManyImages(setImages)} style={{ marginBottom: 9, width: wp(90), height: wp(90), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+              <TouchableOpacity onPress={() => selectManyImages(setImages,true)} style={{ marginBottom: 9, width: wp(90), height: wp(90), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                 <Ionicons name="camera" size={wp(40)} color={icon + "4c"} />
-                <ThemedText color={icon + "4c"}>Add Image<ThemedText color="red">*</ThemedText></ThemedText>
+                <ThemedText color={icon + "4c"}>Add Truck Image<ThemedText color="red">*</ThemedText></ThemedText>
               </TouchableOpacity>}
 
           </View>
@@ -538,44 +365,70 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
               Truck Name<ThemedText color="red">*</ThemedText>
             </ThemedText>
             <Input
-              value={formData.name}
+              value={formData.truckName}
               placeholder=""
-              onChangeText={(text) => handleChange<FormData>(text, 'name', setFormData)}
+              onChangeText={(text) => handleChange<TruckFormData>(text, 'truckName', setFormData)}
             />
 
-            <ThemedText>
+           <ThemedText>
               Truck Type<ThemedText color="red">*</ThemedText>
             </ThemedText>
           
-            <DropDownItem   allData={truckTypes} selectedItem={selectedTruckType} setSelectedItem={setSelectedTruckType} placeholder="Select Truck" />
+            <DropDownItem   allData={truckType} selectedItem={selectedTruckType} setSelectedItem={setSelectedTruckType} placeholder="Select Truck Type" />
 
-            {selectedTruckType?.name === 'Other' &&
+
+            <ThemedText>
+              Cargo Area<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+          
+            <DropDownItem   allData={cargoArea} selectedItem={selectedCargoArea} setSelectedItem={setSelectedCargoArea} placeholder="Select cargo area" />
+     {selectedCargoArea?.name === 'Other' &&
               <>
                 <ThemedText>
                   Other Truck Type<ThemedText color="red">*</ThemedText>
                 </ThemedText>
                 <Input
-                  value={formData.trailerType}
+                  value={formData.otherCargoArea}
                   placeholder="Other Truck Type"
-                  onChangeText={(text) => handleChange<FormData>(text, 'trailerType', setFormData)}
+                  onChangeText={(text) => handleChange< TruckFormData>(text, 'otherCargoArea', setFormData)}
+                />
+              </>
+            }
+
+
+               { selectedCargoArea?.name ==="Tanker" &&    <ThemedText>
+              Tanker Type<ThemedText color="red">*</ThemedText>
+            </ThemedText>}
+
+           { selectedCargoArea?.name ==="Tanker" &&  <DropDownItem   allData={tankerTypes} selectedItem={selectedTankerType} setSelectedItem={setSelectedTankerType} placeholder="Select Truck" />}
+
+            {(selectedTankerType?.name === 'Other'|| selectedTankerType?.name ==="Specialized Cargo") &&
+              <>
+                <ThemedText>
+                  Other Tanker Type<ThemedText color="red">*</ThemedText>
+                </ThemedText>
+                <Input
+                  value={formData.otherTankerType}
+                  placeholder="Other Truck Type"
+                  onChangeText={(text) => handleChange< TruckFormData>(text, 'otherTankerType', setFormData)}
                 />
               </>
             }
 
 
 
-         { selectedTruckType?.name !=="Tanker" &&   <ThemedText>
+         { selectedCargoArea?.name !=="Tanker" &&   <ThemedText>
               Truck Tonnage<ThemedText color="red">*</ThemedText>
             </ThemedText>}
             
-        {  selectedTruckType?.name !=="Tanker" &&<DropDownItem   allData={tonneSizes} selectedItem={selectedTruckCapacity} setSelectedItem={setSelectedTruckCapacity} placeholder="Select Tonnage" />}
+        {  selectedCargoArea?.name !=="Tanker" &&<DropDownItem   allData={tonneSizes} selectedItem={selectedTruckCapacity} setSelectedItem={setSelectedTruckCapacity} placeholder="Select Tonnage" />}
        
 
-                    { selectedTruckType?.name ==="Tanker" &&    <ThemedText>
+                    { selectedCargoArea?.name ==="Tanker" &&    <ThemedText>
               Truck Litres<ThemedText color="red">*</ThemedText>
             </ThemedText>}
             
-        {  selectedTruckType?.name ==="Tanker" &&<DropDownItem   allData={litresCapacity} selectedItem={selectedTruckCapacity} setSelectedItem={setSelectedTruckCapacity} placeholder="Select Litres" />}
+        {  selectedCargoArea?.name ==="Tanker" &&<DropDownItem   allData={litresCapacity} selectedItem={selectedTruckCapacity} setSelectedItem={setSelectedTruckCapacity} placeholder="Select Litres" />}
        
       
 
@@ -593,9 +446,9 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
                   Other Trailer Configuration<ThemedText color="red">*</ThemedText>
                 </ThemedText>
                 <Input
-                  value={formData.trailerType}
+                  value={formData.otherTruckConfig}
                   placeholder="Trailer Config"
-                  onChangeText={(text) => handleChange<FormData>(text, 'trailerType', setFormData)}
+                  onChangeText={(text) => handleChange< TruckFormData>(text, 'otherTruckConfig', setFormData)}
                 />
               </>
             }
@@ -607,25 +460,19 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
         <DropDownItem   allData={truckSuspensions} selectedItem={selectedTruckSuspension} setSelectedItem={setSelectedTruckSuspension} placeholder="Select Truck Suspension"  />
            
             {
-              setSelectedTruckSuspension?.name === 'Other' &&
+              selectedTruckSuspension?.name === 'Other' &&
               <>
                 <ThemedText>
                   Other Truck Suspension<ThemedText color="red">*</ThemedText>
                 </ThemedText>
                 <Input
-                  value={formData.trailerType}
-                  placeholder="Trailer Config"
-                  onChangeText={(text) => handleChange<FormData>(text, 'trailerType', setFormData)}
+                  value={formData.otherTruckSuspension}
+                  placeholder="Trailer Suspension"
+                  onChangeText={(text) => handleChange< TruckFormData>(text, 'otherTruckSuspension', setFormData)}
                 />
               </>
             }
 
-
-
-
-
-
-          
             <ThemedText>
               Maximum Load Capacity<ThemedText color="red">*</ThemedText>
             </ThemedText>
@@ -633,7 +480,7 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
               value={formData.maxloadCapacity}
               keyboardType="number-pad"
               placeholder="0.0t"
-              onChangeText={(text) => handleChange<FormData>(text, 'maxloadCapacity', setFormData)}
+              onChangeText={(text) => handleChange< TruckFormData>(text, 'maxloadCapacity', setFormData)}
             />
 
 
@@ -693,17 +540,11 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
             <Input
               value={formData.additionalInfo} multiline numberOfLines={8} style={{ verticalAlign: 'top', minHeight: hp(15) }} containerStyles={{}}
               placeholder="Additional Information"
-              onChangeText={(text) => handleChange<FormData>(text, 'additionalInfo', setFormData)}
+              onChangeText={(text) => handleChange< TruckFormData>(text, 'additionalInfo', setFormData)}
             />
 
 
-            {intOpLoc.length > 0 && (
-              <ThemedText style={{ flexWrap: 'wrap', }}>Selected: {intOpLoc.join(", ")}</ThemedText>
-            )}
-
-            {/* <TouchableOpacity onPress={togglrDriverDe} style={styles.nextPageBtn} >
-              <ThemedText style={{ fontWeight: "bold", color: 'white', fontSize: 16 }}>Done NEXT PAGE</ThemedText>
-            </TouchableOpacity> */}
+          
             <Divider />
 
 
@@ -711,30 +552,7 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
               <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >DRIVER DETAILS</ThemedText>
             </View>
 
-            {/* 
-          {!countryCodeDriver && (
-            <View style={{
-              borderWidth: 1,
-              borderColor: '#ccc',
-              borderRadius: 10,
-              padding: 10,
-              backgroundColor: 'green',
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}>
-              <CountryPicker
-                countryCode={callingCodeDriver as CountryCode}
-                withCountryNameButton={true}
-                withCallingCode={true}
-                withFilter={true}
-                onSelect={handleCountrySelectDriver}
-              />
-            </View>
-          )} */}
-
-            {/*  */}
-            {/* {countryCodeDriver && <ThemedText style={{ textAlign: 'center', color: 'green', fontWeight: 'bold', }} >Country Code : {countryCodeDriver}</ThemedText>} */}
-            {/* {!countryCodeDriver && <ThemedText>Click select country to choose country code</ThemedText>} */}
+        
 
             <ThemedText>
               Drivers Phone Number<ThemedText color="red">*</ThemedText>
@@ -793,7 +611,7 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
               </>}
               value={cleanNumber(formData.driverPhone)}
               placeholder="700 000 000"
-              onChangeText={(text) => handleChange<FormData>(cleanNumber(text), 'driverPhone', setFormData)}
+              onChangeText={(text) => handleChange< TruckFormData>(cleanNumber(text), 'driverPhone', setFormData)}
               keyboardType="numeric"
             />
 
@@ -805,7 +623,7 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
             {images[1] ?
               <Image source={{ uri: images[1]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
               :
-              <TouchableOpacity onPress={() => (images[0] && !images[1]) ? selectManyImages(setImages) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+              <TouchableOpacity onPress={() => (images[0] && !images[1]) ? selectManyImages(setImages, true) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                 <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                 <ThemedText color={icon + "4c"}>Add Drivers Passport<ThemedText color="red">*</ThemedText></ThemedText>
               </TouchableOpacity>
@@ -820,7 +638,7 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
             {images[2] ?
               <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
               :
-              <TouchableOpacity onPress={() => (images[0] && images[1]) ? selectManyImages(setImages) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+              <TouchableOpacity onPress={() => (images[0] && images[1]) ? selectManyImages(setImages,true) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                 <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                 <ThemedText color={icon + "4c"}>Add ID Passport<ThemedText color="red">*</ThemedText></ThemedText>
               </TouchableOpacity>
@@ -841,7 +659,7 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
               {images[3] ?
                 <Image source={{ uri: images[3]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
                 :
-                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2]) ? selectManyImages(setImages) : ToastAndroid.show('Please add driver id image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2]) ? selectManyImages(setImages,false) : ToastAndroid.show('Please add driver id image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                   <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                   <ThemedText color={icon + "4c"}>Horse Reg Book Image<ThemedText color="red">*</ThemedText></ThemedText>
                 </TouchableOpacity>
@@ -856,7 +674,7 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
               {images[4] ?
                 <Image source={{ uri: images[4]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
                 :
-                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3]) ? selectManyImages(setImages) : ToastAndroid.show('Please add horse reg image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3]) ? selectManyImages(setImages,false) : ToastAndroid.show('Please add horse reg image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                   <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                   <ThemedText color={icon + "4c"}>Trailer Book Image<ThemedText color="red">*</ThemedText></ThemedText>
                 </TouchableOpacity>
@@ -870,7 +688,7 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
               {images[5] ?
                 <Image source={{ uri: images[5]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
                 :
-                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3] && images[4]) ? selectManyImages(setImages) : ToastAndroid.show('Please add trailer 1 book image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3] && images[4]) ? selectManyImages(setImages,false) : ToastAndroid.show('Please add trailer 1 book image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                   <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                   <ThemedText color={icon + "4c"}>Trailer 2 Book Image (optional)<ThemedText color="red">*</ThemedText></ThemedText>
                 </TouchableOpacity>
@@ -894,59 +712,8 @@ const DropDownItem: React.FC<DropDownItemProps> = ({ allData,selectedItem,setSel
 
 export default AddTrucks;
 
-
 const styles = StyleSheet.create({
-  buttonStyle: {
-    height: 35,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 150,
-    marginTop: 10,
-    borderWidth: 2,
-    borderColor: "#6a0c0c",
-    borderRadius: 10,
-    alignSelf: 'center'
-  },
-  buttonSelectStyle: {
-    height: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 200,
-    marginTop: 10,
-    borderWidth: 2,
-    borderColor: "#6a0c0c",
-    borderRadius: 10,
-    alignSelf: 'center',
-    marginBottom: 10
-
-  },
-  buttonIsFalse: {
-    borderWidth: 1,
-    borderColor: '#6a0c0c',
-    paddingLeft: 4,
-    paddingRight: 4,
-    alignSelf: 'center'
-
-    //  marginLeft : 6
-  },
-  nextPageBtn: {
-    height: 35,
-    width: 170,
-    backgroundColor: '#1E90FF',
-    borderRadius: 8,
-    alignSelf: 'flex-end',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  }, countryButton: {
-    padding: wp(2),
-    paddingHorizontal: wp(4),
-    borderRadius: wp(4),
-  }, dropdown: {
+  dropdown: {
     padding: wp(3),
     borderWidth: 1,
     borderColor: '#ccc',
@@ -954,9 +721,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     marginBottom: 16,
-  },
-  icon: {
-    marginRight: 5,
   },
   item: {
     padding: 17,
@@ -967,17 +731,7 @@ const styles = StyleSheet.create({
     borderRadius: wp(1),
     marginBottom: 5
   },
-  textItem: {
-    flex: 1,
-    fontSize: 16,
-  },
-  placeholderStyle: {
-    fontSize: 16,
-  },
   selectedTextStyle: {
     fontSize: 16,
-  },
-  iconStyle: {
-    marginRight: wp(2)
   },
 });

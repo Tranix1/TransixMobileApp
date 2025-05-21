@@ -33,6 +33,11 @@ type SpecifyTruckDetailsProps = {
   otherTruckType: string
   setOtherTruckType: React.Dispatch<React.SetStateAction<string>>
 
+truckConfig: string ;
+setTruckConfig :React.Dispatch<React.SetStateAction<string>>;
+truckSuspension : string ;
+setTruckSuspension :React.Dispatch<React.SetStateAction<string>>;
+
 } & CountrySelectorProps;
 export const SpecifyTruckDetails: React.FC<SpecifyTruckDetailsProps> = ({
   dspSpecTruckDet, setDspSpecTruckDet, dspTruckCpacity, setDspTruckCapacity, otherTruckType, setOtherTruckType, truckCapacity, setTruckCapacity, selectedTruckType, setSelectedTruckType, location,
@@ -41,17 +46,16 @@ export const SpecifyTruckDetails: React.FC<SpecifyTruckDetailsProps> = ({
   setIntOpLoc,
   setLocaOpLoc,
   locaOpLoc,
+ truckConfig ,
+ setTruckConfig ,
+truckSuspension ,
+setTruckSuspension
 }) => {
 
   const bg = useThemeColor('background')
   const accent = useThemeColor('accent')
   const icon = useThemeColor('icon')
 
-
-
-
-    const [truckConfig , setTruckConfig]=React.useState("")
-    const [truckSuspension , setTruckSuspension]=React.useState("")
 
 
 
@@ -109,7 +113,7 @@ export const SpecifyTruckDetails: React.FC<SpecifyTruckDetailsProps> = ({
                 />
 
 
-                <ConfigAdnSuspension />
+                <ConfigAdnSuspension  truckConfig={truckConfig} setTruckConfig={setTruckConfig} truckSuspension={truckSuspension} setTruckSuspension={setTruckSuspension} />
 
 
 

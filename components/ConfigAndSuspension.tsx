@@ -4,10 +4,14 @@ import { ThemedText } from "./ThemedText";
 import { hp, wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor';
 
-function ConfigAdnSuspension(){
+type ConfigAdnSuspensionProps ={
 
-    const [truckConfig , setTruckConfig]=React.useState("")
-    const [truckSuspension , setTruckSuspension]=React.useState("")
+truckConfig: string ;
+setTruckConfig :React.Dispatch<React.SetStateAction<string>>;
+truckSuspension : string ;
+setTruckSuspension :React.Dispatch<React.SetStateAction<string>>;
+}
+const  ConfigAdnSuspension: React.FC<ConfigAdnSuspensionProps>= ({truckConfig , setTruckConfig , truckSuspension , setTruckSuspension})=>{
     const accent = useThemeColor('accent');
     const backgroundLight = useThemeColor('backgroundLight');
     const text = useThemeColor('text');

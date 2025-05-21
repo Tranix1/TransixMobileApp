@@ -449,7 +449,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
               From
             </ThemedText>
             <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
-              {item.location}
+              {item.fromLocation}
             </ThemedText>
           </View>
           <View style={{ gap: wp(1), flex: 2, }}>
@@ -457,7 +457,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
               To
             </ThemedText>
             <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
-              {item.destination}
+              {item.toLocation}
             </ThemedText>
           </View>
         </View>

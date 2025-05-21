@@ -1,17 +1,12 @@
-import { ActivityIndicator, FlatList, Image, ImageSourcePropType, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableNativeFeedback, TouchableOpacity, View } from 'react-native'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { ActivityIndicator, FlatList, RefreshControl,  StyleSheet, Text, TouchableNativeFeedback, View } from 'react-native'
+import React, { useEffect,  useState } from 'react'
 import { hp, wp } from '@/constants/common'
 import { ThemedText } from '@/components/ThemedText'
 import { useThemeColor } from '@/hooks/useThemeColor'
-import { Entypo, Ionicons } from '@expo/vector-icons'
+import { Ionicons } from '@expo/vector-icons'
 import { fetchDocuments } from '@/db/operations'
-import { Countries, Truck } from '@/types/types'
+import { Truck } from '@/types/types'
 import TruckItemComponent from '@/components/TruckItemComponent'
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import BottomSheet, { BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
-import SwithComponent from '@/components/Switch'
-import { BlurView } from 'expo-blur'
-import Button from '@/components/Button'
 import { DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore'
 
 import { TruckTypeProps } from '@/types/types'
@@ -43,6 +38,10 @@ const Index = () => {
 
     const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
     const [truckCapacity, setTruckCapacity] = useState("")
+    
+
+    const [truckConfig , setTruckConfig]=React.useState("")
+    const [truckSuspension , setTruckSuspension]=React.useState("")
 
     const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
 
@@ -51,19 +50,16 @@ const Index = () => {
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
 
+    console.log(truckCapacity)
 
-    const LoadTructs = async () => {
-        let filters
-        if (location) {
+    const LoadTructs = async () => {        
+   let filters: any[] = [];
 
-        }
-        if (dspTruckCpacity) {
-            filters = [where("status", "==", dspTruckCpacity)]; // Adjust filter to your fiel
-        } else {
-            filters = undefined
-        }
+    if (truckCapacity) {
+        filters.push(where("truckCapacity", "==", truckCapacity));
+    }
 
-        const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
+    const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
 
         if (maTrucks) {
             setTrucks(maTrucks.data as Truck[])
@@ -72,7 +68,7 @@ const Index = () => {
     }
     useEffect(() => {
         LoadTructs();
-    }, [])
+    }, [truckCapacity])
 
     const onRefresh = async () => {
         try {
@@ -88,17 +84,29 @@ const Index = () => {
 
     const [showfilter, setShowfilter] = useState(false)
 
-    const loadMoreTrucks = async () => {
-
+        const loadMoreTrucks = async () => {
         if (loadingMore || !lastVisible) return;
+
         setLoadingMore(true);
-        const result = await fetchDocuments('Trucks', 10, lastVisible);
+
+        // Reapply the filters here
+        let filters: any[] = [];
+
+        if (truckCapacity) {
+            filters.push(where("truckCapacity", "==", truckCapacity));
+        }
+
+        // Fetch with the same filters and pagination
+        const result = await fetchDocuments('Trucks', 10, lastVisible, filters);
+
         if (result) {
-            setTrucks([...trucks, ...result.data as Truck[]]);
+            setTrucks(prev => [...prev, ...(result.data as Truck[])]);
             setLastVisible(result.lastVisible);
         }
+
         setLoadingMore(false);
     };
+
 
 
     return (
@@ -127,8 +135,13 @@ const Index = () => {
                 setIntOpLoc={setIntOpLocTruckS}
                 setLocaOpLoc={setLocaOpLocTruckS}
                 locaOpLoc={locaOpLocTruckS}
-            />
+                // Truck Config and suspension
+                 truckConfig={truckConfig}
+                 setTruckConfig={setTruckConfig}
+                 truckSuspension={truckSuspension}
+                 setTruckSuspension={setTruckSuspension}
 
+            />
 
 
 

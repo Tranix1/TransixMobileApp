@@ -78,7 +78,6 @@ const AddLoadDB = () => {
             companyName: user.organisation,
             contact: user?.phoneNumber || '',
             created_at: Date.now().toString(),
-            timeStamp: { nanoseconds: 0, seconds: Math.floor(Date.now() / 1000) },
             isVerified: false,
             typeofLoad,
             destination: toLocation,
@@ -95,6 +94,7 @@ const AddLoadDB = () => {
             activeLoading: false,
             location: fromLocation,
             roundTrip: false,
+          deletionTime: Date.now() + 2 * 24 * 60 * 60 * 1000,
         };
 
         try {
@@ -104,7 +104,6 @@ const AddLoadDB = () => {
 
             console.log("Submitting load data:", loadData);
             alert("Load submitted successfully!");
-            router.back();
         } catch (error) {
             console.error("Error submitting load:", error);
             alert("Failed to submit load. Please try again.");

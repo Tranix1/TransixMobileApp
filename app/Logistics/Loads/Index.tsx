@@ -24,9 +24,8 @@ const Index = () => {
     const [refreshing, setRefreshing] = useState(false)
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
-    const [Loads, setLoads] = useState<Load[]>([
-
-    ])
+    const [Loads, setLoads] = useState<Load[]>([])
+    
     const [showfilter, setShowfilter] = useState(false)
     const [selectedLoad, setSelectedLoad] = useState<Load | null>(null);
     const [showSheet, setShowSheet] = useState(false);
@@ -242,7 +241,7 @@ const Index = () => {
                                                         From
                                                     </ThemedText>
                                                     <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
-                                                        {selectedLoad.location}
+                                                        {selectedLoad.fromLocation}
                                                     </ThemedText>
                                                 </View>
                                                 <View style={{ gap: wp(1), flex: 2, }}>
@@ -250,7 +249,7 @@ const Index = () => {
                                                         To
                                                     </ThemedText>
                                                     <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
-                                                        {selectedLoad.destination}
+                                                        {selectedLoad.toLocation}
                                                     </ThemedText>
                                                 </View>
                                             </View>

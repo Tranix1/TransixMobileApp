@@ -2,8 +2,6 @@ import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, where, o
 import { db, auth } from "../app/components/config/fireBase";
 import { getDownloadURL, ref, uploadBytes, } from "firebase/storage";
 import { storage } from "./fireBaseConfig";
-import { useAuth } from "@/context/AuthContext";
-
 /**
  * Add a document to a Firestore collection.
  * @param collectionName - The name of the Firestore collection.
@@ -17,22 +15,10 @@ export const addDocument = async (
 
 ) => {
     try {
-        const { user } = useAuth();
-        if (!user) {
-            alert("Please Login first");
-            return;
-        }
-        if (!user?.organisation) {
-            alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
-            return;
-        }
         const docRef = await addDoc(collection(db, collectionName), {
             ...data,
             timeStamp: serverTimestamp(),
             userId: auth.currentUser?.uid,
-            companyName: user?.organisation,
-            contact: user?.phoneNumber || '',
-
         });
         return docRef.id;
     } catch (error) {
@@ -84,7 +70,11 @@ export const fetchDocuments = async (
     filters: Array<any> = []
 ) => {
     try {
-        let dataQuery: Query<DocumentData> = query(collection(db, collectionName), limit(limitCount), orderBy('timeStamp', "desc"));
+        let dataQuery: Query<DocumentData> = query(
+            collection(db, collectionName),
+            orderBy('timeStamp', "desc"), // ensure the field exists
+            limit(limitCount),
+        );
 
         if (startAfterDoc) {
             dataQuery = query(dataQuery, startAfter(startAfterDoc));
@@ -104,6 +94,7 @@ export const fetchDocuments = async (
         throw error;
     }
 };
+
 
 /**
  * Listen to real-time updates in a Firestore collection.
