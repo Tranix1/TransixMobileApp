@@ -50,8 +50,12 @@ export const updateDocument = async (collectionName: string, docId: string, data
  */
 export const deleteDocument = async (collectionName: string, docId: string) => {
     try {
+        console.log("hiiiii")
         const docRef = doc(db, collectionName, docId);
+
+        console.log("hiiiii2")
         await deleteDoc(docRef);
+        console.log("hiiiii3")
     } catch (error) {
         console.error("Error deleting document:", error);
         throw error;

@@ -29,13 +29,10 @@ export type CountrySelectorProps = {
 export type Truck = {
 
     created_at: string,
-    CompanyName?: string;
+    CompanyName : string;
     driverLicense: string;
     driverPassport: string;
 
-
-    trailerModel: string,
-    
     id: string;
     imageUrl: string;
     isVerified: boolean;

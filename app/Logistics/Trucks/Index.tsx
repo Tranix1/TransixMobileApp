@@ -52,23 +52,77 @@ const Index = () => {
 
     console.log(truckCapacity)
 
-    const LoadTructs = async () => {        
-   let filters: any[] = [];
+type Truck = {
+  id: string;
+  locations: string[];
+  truckCapacity?: string;
+  truckConfig?: string;
+  truckSuspensions?: string;
+  // Add other fields as needed
+};
 
-    if (truckCapacity) {
-        filters.push(where("truckCapacity", "==", truckCapacity));
+const LoadTructs= async () => {
+  let filters: any[] = [];
+  const selectedCountries = ["Namibia", ]; // This can be dynamic later
+
+  // Apply filters for truck properties first
+  if (truckCapacity) {
+    filters.push(where("truckCapacity", "==", truckCapacity));
+  } else if (truckConfig) {
+    filters.push(where("truckConfig", "==", truckConfig));
+  } else if (truckSuspension) {
+    filters.push(where("truckSuspensions", "==", truckSuspension));
+  }
+
+  // Conditionally add the country filter
+  if (locationTruckS) { // Assuming locationTruckS is a boolean indicating whether to filter by location
+    // Use array-contains-any for basic matching as in your default
+    filters.push(where("locations", "array-contains-any", selectedCountries));
+  }
+
+  // Fetch data from Firestore with the initially applied filters
+  const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
+
+  let trucksToSet: Truck[] = [];
+
+  if (maTrucks && maTrucks.data) {
+    // If locationTruckS is true, we need to do the client-side filtering for ALL selected countries
+    if (locationTruckS) {
+      trucksToSet = (maTrucks.data as Truck[]).filter(truck =>
+        selectedCountries.every(country => truck.locations?.includes(country))
+      );
+    } else {
+      // Otherwise, use the data as fetched (which would be filtered only by truck properties)
+      trucksToSet = maTrucks.data as Truck[];
     }
 
-    const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
+    setTrucks(trucksToSet);
+    setLastVisible(maTrucks.lastVisible);
+  }
+};
 
-        if (maTrucks) {
-            setTrucks(maTrucks.data as Truck[])
-            setLastVisible(maTrucks.lastVisible)
-        }
-    }
+//     const LoadTructs = async () => {        
+//    let filters: any[] = [];
+
+//          if (truckCapacity) filters.push(where("truckCapacity", "==", truckCapacity));
+//         else if(truckConfig)filters.push(where("truckConfig", "==", truckConfig));
+//         else if(truckSuspension) filters.push(where("truckSuspensions", "==", truckSuspension));
+//         else if(locationTruckS) filters.push(where("locations", "array-contains-any", ["Namibia","Tanzania"]));
+        
+
+//     const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
+
+//         if (maTrucks) {
+//             setTrucks(maTrucks.data as Truck[])
+//             setLastVisible(maTrucks.lastVisible)
+//         }
+//     }
+
+
+
     useEffect(() => {
         LoadTructs();
-    }, [truckCapacity])
+    }, [truckCapacity,truckConfig,truckSuspension,locationTruckS])
 
     const onRefresh = async () => {
         try {
@@ -82,19 +136,21 @@ const Index = () => {
     };
 
 
+    console.log(locationTruckS)
     const [showfilter, setShowfilter] = useState(false)
 
         const loadMoreTrucks = async () => {
         if (loadingMore || !lastVisible) return;
 
-        setLoadingMore(true);
+        setLoadingMore(true)    ;
 
         // Reapply the filters here
         let filters: any[] = [];
 
-        if (truckCapacity) {
-            filters.push(where("truckCapacity", "==", truckCapacity));
-        }
+        if (truckCapacity) filters.push(where("truckCapacity", "==", truckCapacity));
+        else if(truckConfig)filters.push(where("truckConfig", "==", truckConfig));
+        else if(truckSuspension) filters.push(where("truckSuspensions", "==", truckSuspension));
+        else if(locationTruckS) filters.push(where("locations", "array-contains-any", ["Namibia","Tanzania"]));
 
         // Fetch with the same filters and pagination
         const result = await fetchDocuments('Trucks', 10, lastVisible, filters);

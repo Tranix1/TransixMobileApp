@@ -5,7 +5,7 @@ import { wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { ThemedText } from './ThemedText'
 import { Image } from 'expo-image'
-import { FontAwesome5, FontAwesome6, Fontisto, Ionicons, Octicons } from '@expo/vector-icons'
+import { FontAwesome5, FontAwesome6, Fontisto, Octicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 
 const TruckItemComponent = ({ truck = {} as Truck }) => {

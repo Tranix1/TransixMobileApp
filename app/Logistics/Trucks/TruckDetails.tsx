@@ -157,7 +157,7 @@ const TruckDetails = () => {
                                                     onPress: async () => {
                                                         try {
                                                             // Add delete logic here
-                                                            deleteDocument('trucks', truckData.id)
+                                                            deleteDocument('Trucks', truckData.id)
                                                             alertBox("Success", "Truck deleted successfully", [], "success");
                                                         } catch (error) {
                                                             alertBox("Error", "Failed to delete truck", [], "error");
@@ -332,8 +332,17 @@ const TruckDetails = () => {
 
 
                     </View>
-                    {/* <Divider /> */}
-                    <View style={{}}>
+                       <View style={{ flexDirection: 'row' }}>
+                            <View style={{ flex: 1 }}>
+                                <ThemedText type="tiny" style={{}}>
+                                    Truck Model
+                                </ThemedText>
+                                <ThemedText type="subtitle" style={{}}>
+                                    {truckData.truckName || '--'}
+                                </ThemedText>
+                            </View>
+
+                        </View>
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1 }}>
                                 <ThemedText type="tiny" style={{}}>
@@ -347,9 +356,7 @@ const TruckDetails = () => {
                         </View>
 
 
-                    </View>
                     {/* <Divider /> */}
-                    <View style={{}}>
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1 }}>
                                 <ThemedText type="tiny" style={{}}>
@@ -360,7 +367,6 @@ const TruckDetails = () => {
                                 </ThemedText>
                             </View>
 
-                        </View>
 
 
                     </View>
@@ -464,7 +470,9 @@ const TruckDetails = () => {
 
 
 
-
+                    <TouchableOpacity>
+                        <ThemedText>View Trucks</ThemedText>
+                    </TouchableOpacity>
 
 
 
