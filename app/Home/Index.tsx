@@ -395,7 +395,7 @@ const Index = () => {
                     </View> */}
 
                 <View style={{ margin: wp(4), marginTop: 0 }}>
-                    <Input placeholder='Search...' Icon={<EvilIcons name='search' size={wp(6)} />} containerStyles={{ backgroundColor: backgroundColor }} />
+                    <Input placeholder='Search...' Icon={<EvilIcons name='search' size={wp(6)} color={icon} />} containerStyles={{ backgroundColor: backgroundColor, borderRadius: wp(8) }} />
                 </View>
 
                 {/* <TouchableOpacity onPress={() => router.push("/Logistics/AddHome")} >
@@ -438,7 +438,7 @@ const Index = () => {
                             </ThemedText>
                         </View>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')} underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
+                            <TouchableHighlight onPress={() => router.push('/Transport/Store/CreateProduct')} underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
                                 <Fontisto name="dollar" size={wp(5)} color="#F48024" />
                             </TouchableHighlight>
                             <ThemedText type='tiny' style={{ textAlign: 'center' }}>

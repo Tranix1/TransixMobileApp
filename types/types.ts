@@ -16,16 +16,16 @@ export type CountrySelectorProps = {
     locaOpLoc: string
 }
 
-   export type TruckFormData= {
+export type TruckFormData = {
     additionalInfo: string;
     driverPhone: string;
     maxloadCapacity: string;
     truckName: string;
-    otherTruckSuspension : string ;
-    otherCargoArea : string;
-    otherTruckConfig : string;
-    otherTankerType : string ;
-  }
+    otherTruckSuspension: string;
+    otherCargoArea: string;
+    otherTruckConfig: string;
+    otherTankerType: string;
+}
 export type Truck = {
 
     created_at: string,
@@ -35,12 +35,12 @@ export type Truck = {
 
 
     trailerModel: string,
-    
+
     id: string;
     imageUrl: string;
     isVerified: boolean;
     locations: string[];
-    
+
     onwerEmail: string;
     ownerName: string;
     ownerPhoneNum: string;
@@ -53,28 +53,109 @@ export type Truck = {
     truckBookImage?: string;
     truckType: string;
     truckCapacity: string;
-    truckConfig : string;
+    truckConfig: string;
     truckSuspensions: string;
     cargoArea: string;
-    tankerType : string
+    tankerType: string
     name: string;
     userId: string;
     withDetails: boolean;
-}&TruckFormData ;
+} & TruckFormData;
 
 
-export type Product = {
-    id: string;
-    imageUrl: string;
-    location: string,
-    price: string
+export interface Product {
+    // Core product information
+    id?: string; // Adding optional ID for Firebase documents
+    title: string;
+    description: string;
+    price: number;
+    currency: string;
+    category: string;
+    condition: 'new' | 'used';
+    images: string[];
+    createdAt: Date;
+    updatedAt: Date | null;
+
+    // Location information
+    location: {
+        address: string;
+        city: string;
+        coordinates?: {
+            latitude: number;
+            longitude: number;
+        } | null;
+    };
+
+    // User/seller information
+    seller: {
+        id: string;
+        name: string;
+        contact: string;
+        isVerified: boolean;
+        pushToken?: string; // For notifications
+    };
+
+    // Product-specific details (conditional based on category)
+    details: {
+        // For vehicles
+        vehicle?: {
+            type: string;
+            make: string;
+            model: string;
+            year: number;
+            mileage: number;
+            engine: string;
+            transmission: string;
+            fuelType: string;
+        } | null;
+
+        // For property
+        property?: {
+            type: string;
+            bedrooms?: number;
+            bathrooms?: number;
+            squareFootage?: number;
+        } | null;
+
+        // General details for any product
+        general?: {
+            brand?: string;
+            model?: string;
+            dimensions?: string;
+            weight?: number;
+            color?: string;
+        } | null;
+    };
+
+    // Transaction details
+    transaction: {
+        type: 'sell' | 'rent' | 'swap';
+        priceNegotiable: boolean;
+        deliveryAvailable: boolean;
+        deliveryCost?: number;
+        swapPreferences?: string;
+    };
+
+    // Marketplace visibility
+    visibility: {
+        featured: boolean;
+        promoted: boolean;
+        frontPage: boolean;
+    };
+
+    // System metadata
+    metadata: {
+        views: number;
+        saves: number;
+        status: 'active' | 'sold' | 'expired' | 'removed';
+    };
 }
 
 export type LoadFormData = {
     typeofLoad: string
     ratePerTonne: string
-    fromLocation : string
-    toLocation:string 
+    fromLocation: string
+    toLocation: string
     paymentTerms: string
     requirements: string
     alertMsg: string

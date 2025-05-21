@@ -57,8 +57,8 @@ export const formatNumber = (num: number) => {
     return num.toString(); // Less than 1000
 }
 
-export const formatCurrency = (val: string, decimalPlaces: number = 2, currencySymbol: string = '$') => {
-    const amount = parseFloat(val);
+export const formatCurrency = (val: string | number, decimalPlaces: number = 2, currencySymbol: string = '$') => {
+    const amount = typeof val === 'string' ? parseFloat(val) : val;
     if (isNaN(amount) || typeof amount !== 'number') return `${currencySymbol}0`;
 
     return `${currencySymbol}${amount
