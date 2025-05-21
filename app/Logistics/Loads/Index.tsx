@@ -97,7 +97,7 @@ const Index = () => {
 
     return (
 
-        <View style={[styles.container, { backgroundColor: background }]}>
+        <View style={[styles.container, { backgroundColor: background, flex: 1 }]}>
             <View style={{
                 backgroundColor: background,
                 paddingHorizontal: wp(2),
@@ -127,7 +127,7 @@ const Index = () => {
 
             <FlatList
                 keyExtractor={(item) => item.id.toString()}
-
+                contentContainerStyle={{}}
                 data={Loads}
                 renderItem={({ item }) => (
                     <LoadComponent item={item} expandID={expandId} expandId={(s) => setExpandID(s)} ondetailsPress={() => {
@@ -188,7 +188,7 @@ const Index = () => {
                 onClose={() => { setShowSheet(false); setBottomMode('') }}
                 backdropComponent={renderBackdrop}
                 backgroundStyle={{ backgroundColor: background }}
-                containerStyle={{ marginBottom: wp(14) }}
+                containerStyle={{ paddingBottom: wp(14) }}
                 handleStyle={{ borderTopEndRadius: wp(5), borderTopStartRadius: wp(5) }}
             >
                 <BottomSheetView>

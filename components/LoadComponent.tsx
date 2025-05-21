@@ -432,7 +432,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
               <ThemedText style={{ color: 'white' }}>Fuel</ThemedText>
             </View>
           )} */}
-          {!item.isVerified && (
+          {item.isVerified && (
             <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(1) }]}>
               <Octicons name='verified' size={wp(4)} color={'#4eb3de'} />
             </View>
