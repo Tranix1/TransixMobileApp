@@ -38,6 +38,10 @@ const Index = () => {
 
     const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
     const [truckCapacity, setTruckCapacity] = useState("")
+    
+
+    const [truckConfig , setTruckConfig]=React.useState("")
+    const [truckSuspension , setTruckSuspension]=React.useState("")
 
     const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
 
@@ -46,11 +50,16 @@ const Index = () => {
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
 
+    console.log(truckCapacity)
 
     const LoadTructs = async () => {        
-        let filters 
-            
-               const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
+   let filters: any[] = [];
+
+    if (truckCapacity) {
+        filters.push(where("truckCapacity", "==", truckCapacity));
+    }
+
+    const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
 
         if (maTrucks) {
             setTrucks(maTrucks.data as Truck[])
@@ -59,7 +68,7 @@ const Index = () => {
     }
     useEffect(() => {
         LoadTructs();
-    }, [])
+    }, [truckCapacity])
 
     const onRefresh = async () => {
         try {
@@ -75,17 +84,29 @@ const Index = () => {
 
     const [showfilter, setShowfilter] = useState(false)
 
-    const loadMoreTrucks = async () => {
-
+        const loadMoreTrucks = async () => {
         if (loadingMore || !lastVisible) return;
+
         setLoadingMore(true);
-        const result = await fetchDocuments('Trucks', 10, lastVisible);
+
+        // Reapply the filters here
+        let filters: any[] = [];
+
+        if (truckCapacity) {
+            filters.push(where("truckCapacity", "==", truckCapacity));
+        }
+
+        // Fetch with the same filters and pagination
+        const result = await fetchDocuments('Trucks', 10, lastVisible, filters);
+
         if (result) {
-            setTrucks([...trucks, ...result.data as Truck[]]);
+            setTrucks(prev => [...prev, ...(result.data as Truck[])]);
             setLastVisible(result.lastVisible);
         }
+
         setLoadingMore(false);
     };
+
 
 
     return (
@@ -114,8 +135,13 @@ const Index = () => {
                 setIntOpLoc={setIntOpLocTruckS}
                 setLocaOpLoc={setLocaOpLocTruckS}
                 locaOpLoc={locaOpLocTruckS}
-            />
+                // Truck Config and suspension
+                 truckConfig={truckConfig}
+                 setTruckConfig={setTruckConfig}
+                 truckSuspension={truckSuspension}
+                 setTruckSuspension={setTruckSuspension}
 
+            />
 
 
 

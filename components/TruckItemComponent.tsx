@@ -37,10 +37,11 @@ const TruckItemComponent = ({ truck = {} as Truck }) => {
                 <View style={{ gap: wp(3), paddingHorizontal: wp(2), marginTop: wp(1) }}>
 
 
+                      
                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
                         <FontAwesome5 name="truck-loading" size={wp(3.6)} style={{ width: wp(6) }} color={icon} />
                         <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
-                            {truck.trailerType || 'N/A'}
+                            {truck.cargoArea || 'N/A'}
                         </ThemedText>
                     </View>
 
@@ -55,7 +56,7 @@ const TruckItemComponent = ({ truck = {} as Truck }) => {
                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
                         <FontAwesome5 name="weight" size={wp(3.6)} style={{ width: wp(6) }} color={icon} />
                         <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
-                            {truck.truckTonnage || 'N/A'}
+                            {truck.truckCapacity|| 'N/A'}
                         </ThemedText>
                     </View>
 

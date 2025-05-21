@@ -1,5 +1,9 @@
 
-  export const truckTypes = [
+  export const truckType =[
+      { id: 0, name: "Rigid" },
+    { id: 1, name: "Semi Truck" },
+  ]
+  export const cargoArea = [
     { id: 0, name: 'Flat deck', image: require('@/assets/images/Trucks/images (2).jpeg') },
     { id: 1, name: 'Bulk Trailer', image: require('@/assets/images/Trucks/download (1).jpeg') },
     { id: 2, name: 'Low Bed', image: require('@/assets/images/Trucks/H805f1f51529345648d1da9e5fcd6807e2.jpg') },

@@ -41,8 +41,9 @@ type ImageAsset = {
 };
 
 export const selectManyImages = async (
-  setImages: React.Dispatch<React.SetStateAction<ImagePickerAsset[]>>
+  setImages: React.Dispatch<React.SetStateAction<ImagePickerAsset[]>>,
 
+  enableEditing : boolean 
 
 ) => {
   const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -54,9 +55,9 @@ export const selectManyImages = async (
 
   const pickerResult = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
-    allowsEditing: true,
+    allowsEditing: enableEditing ?true :false ,
     legacy: true,
-    aspect: [1, 1],
+     aspect: [1, 1],
     quality: .7,
   });
 

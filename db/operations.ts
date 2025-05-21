@@ -19,7 +19,6 @@ export const addDocument = async (
             ...data,
             timeStamp: serverTimestamp(),
             userId: auth.currentUser?.uid,
-
         });
         return docRef.id;
     } catch (error) {
@@ -71,7 +70,11 @@ export const fetchDocuments = async (
     filters: Array<any> = []
 ) => {
     try {
-        let dataQuery: Query<DocumentData> = query(collection(db, collectionName), limit(limitCount), orderBy('timeStamp', "desc"));
+        let dataQuery: Query<DocumentData> = query(
+            collection(db, collectionName),
+            orderBy('timeStamp', "desc"), // ensure the field exists
+            limit(limitCount),
+        );
 
         if (startAfterDoc) {
             dataQuery = query(dataQuery, startAfter(startAfterDoc));
@@ -91,6 +94,7 @@ export const fetchDocuments = async (
         throw error;
     }
 };
+
 
 /**
  * Listen to real-time updates in a Firestore collection.

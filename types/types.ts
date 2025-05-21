@@ -15,22 +15,32 @@ export type CountrySelectorProps = {
     setLocaOpLoc: React.Dispatch<React.SetStateAction<string>>;
     locaOpLoc: string
 }
+
+   export type TruckFormData= {
+    additionalInfo: string;
+    driverPhone: string;
+    maxloadCapacity: string;
+    truckName: string;
+    otherTruckSuspension : string ;
+    otherCargoArea : string;
+    otherTruckConfig : string;
+    otherTankerType : string ;
+  }
 export type Truck = {
+
     created_at: string,
     CompanyName?: string;
-    additionalInfo: string;
-    deletionTime: number;
     driverLicense: string;
     driverPassport: string;
-    driverPhone: string;
-    fromLocation: string;
-    location: string,
+
+
     trailerModel: string,
+    
     id: string;
     imageUrl: string;
     isVerified: boolean;
     locations: string[];
-    maxloadCapacity: string;
+    
     onwerEmail: string;
     ownerName: string;
     ownerPhoneNum: string;
@@ -40,14 +50,17 @@ export type Truck = {
     };
     trailerBookF: string;
     trailerBookSc: string;
-    trailerType: string;
     truckBookImage?: string;
-    truckTonnage: string;
     truckType: string;
+    truckCapacity: string;
+    truckConfig : string;
+    truckSuspensions: string;
+    cargoArea: string;
+    tankerType : string
     name: string;
     userId: string;
     withDetails: boolean;
-};
+}&TruckFormData ;
 
 
 export type Product = {
@@ -60,6 +73,8 @@ export type Product = {
 export type LoadFormData = {
     typeofLoad: string
     ratePerTonne: string
+    fromLocation : string
+    toLocation:string 
     paymentTerms: string
     requirements: string
     alertMsg: string
@@ -90,12 +105,7 @@ export type Load = {
     roundTrip: boolean
     isVerified: boolean
 
-} & LoadFormData
-
-// export const Countries = [
-//     'Zimbabwe', 'South Africa', 'Zambia'
-//     , 'Botswana', 'Namibia', 'Mozambique', 'Angola', 'Kenya', 'Tanzania', 'Uganda', 'Rwanda', 'Burundi', 'Malawi', 'Lesotho', 'Eswatini', 'Ethiopia', 'Somalia', 'Ghana', 'Nigeria', 'Cameroon', 'Senegal', 'Ivory Coast', 'Mali', 'Chad', 'Sudan', 'South Sudan', 'Liberia', 'Sierra Leone', 'Gambia', 'Guinea', 'Guinea-Bissau', 'Equatorial Guinea', 'Congo', 'Democratic Republic of the Congo', 'Central African Republic', 'Mauritania', 'Niger', 'Togo', 'Benin', 'Burkina Faso', 'Djibouti', 'Eritrea', 'Comoros', 'Seychelles', 'Cape Verde', 'Madagascar', 'Mauritius'
-// ]
+} & LoadFormData;
 
 export const Countries = ['Zimbabwe',
     'South Africa',

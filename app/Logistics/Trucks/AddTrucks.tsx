@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Image,  StyleSheet, ScrollView,  Modal, ToastAndroid } from "react-native"
 
-import { truckTypes,tankerTypes,trailerConfigurations,truckSuspensions,litresCapacity,tonneSizes,countryCodes } from "@/data/appConstants";
+import {truckType, cargoArea,tankerTypes,trailerConfigurations,truckSuspensions,litresCapacity,tonneSizes,countryCodes } from "@/data/appConstants";
 
 
 import type { ImagePickerAsset } from 'expo-image-picker';
@@ -25,6 +25,7 @@ import { cleanNumber } from "@/services/services";
 import Button from "@/components/Button";
 
 import { DropDownItem } from "@/components/DropDown";
+import { TruckFormData } from "@/types/types";
 
 function AddTrucks() {
 
@@ -34,28 +35,15 @@ function AddTrucks() {
   const coolGray = useThemeColor('coolGray')
   // const {truckType ,username ,contact , isVerified,isBlackListed ,blackLWarning,blockVerifiedU , verifiedLoad , fromLocation  , toLocation ,expoPushToken ,verifyOngoing ,truckTonnageG} = route.params
 
-  interface FormData {
-    additionalInfo: string;
-    trailerType: string;
-    driverPhone: string;
-    maxloadCapacity: string;
-    truckTonnage: string;
-    truckName: string;
-    otherTruckSuspension : string ;
-    otherTruckType : string;
-    otherTruckConfig : string;
-    otherTankerType : string ;
-  }
 
-  const [formData, setFormData] = useState<FormData>({
+
+  const [formData, setFormData] = useState<TruckFormData>({
     additionalInfo: "",
-    trailerType: "",
     driverPhone: "",
     maxloadCapacity: "",
-    truckTonnage: "",
     truckName: "",
     otherTruckSuspension :"" ,
-    otherTruckType : "" ,
+    otherCargoArea : "" ,
     otherTruckConfig : "" ,
     otherTankerType : ""
   });
@@ -91,8 +79,9 @@ const [getOwnerDetails, setOwnerDetails] = useState<TruckOwner | null>(null);
   const [images, setImages] = useState<ImagePickerAsset[]>([]);
 
 
-const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
-const [selectedTankerType, setSelectedTankerType] = useState<TruckTypeProps | null>(null)
+const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(null)
+const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string } | null>(null)
+const [selectedTankerType, setSelectedTankerType] = useState<{ id: number, name: string } | null>(null)
   const [selectedTruckCapacity , setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>(null)
 
 
@@ -125,15 +114,15 @@ console.log(addingDocUpdate)
     let truckImage, truckBookImage, trailerBookF, trailerBookSc, driverLicense, driverPassport;
     setSpinnerItem(true)
 
-    if (images.length < 5 && spinnerItem && selectedTruckType?.name !== "Rigid") {
+    if (images.length < 5 && spinnerItem && selectedCargoArea?.name !== "Rigid") {
       alert("Add All reuired images")
       setSpinnerItem(false)
       return
-    } else if (images.length > 6 && spinnerItem && selectedTruckType?.name !== "Rigid") {
+    } else if (images.length > 6 && spinnerItem && selectedCargoArea?.name !== "Rigid") {
       alert("You added too many images click restart addig images")
       setSpinnerItem(false)
       return
-    } else if ((images.length === 5 || images.length === 6) && selectedTruckType?.name !== "Rigid") {
+    } else if ((images.length === 5 || images.length === 6) && selectedCargoArea?.name !== "Rigid") {
 
       truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, " truck Image");
       driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
@@ -144,7 +133,7 @@ console.log(addingDocUpdate)
       trailerBookSc = images.length === 5 ? await uploadImage(images[5], "Trucks", setUploadImageUpdate, "trailer Book sec") : null;
 
 
-    } else if (images.length === 4 && spinnerItem && selectedTruckType?.name === "Rigid") {
+    } else if (images.length === 4 && spinnerItem && selectedCargoArea?.name === "Rigid") {
 
       truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "truck Image");
       driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
@@ -153,7 +142,7 @@ console.log(addingDocUpdate)
       truckBookImage = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "truck Book");
     }
 
-    if (!selectedTruckType)
+    if (!selectedCargoArea)
       return alert("Select Truck Type");
 
     if (!user){
@@ -172,7 +161,6 @@ console.log(addingDocUpdate)
             return;
         }
 
-    let withDetails = true
     try {
 
       const submitData = {
@@ -190,13 +178,12 @@ console.log(addingDocUpdate)
           ownerPhoneNum: getOwnerDetails?.ownerPhoneNum ,
 
           locations: operationCountries,
-          truckType: selectedTruckType.name,
+          truckType: selectedTruckType?.name , 
+          cargoArea: selectedCargoArea.name,
           tankerType : selectedTankerType ? selectedTankerType?.name : null ,
           truckCapacity : selectedTruckCapacity?.name ,
           truckConfig : selectedTrailerConfig?.name ,
           truckSuspensions : selectedTruckSuspension?.name ,
-          // isVerified : isVerified ,
-          withDetails: withDetails,
           ...formData,
         }
 
@@ -225,10 +212,10 @@ console.log(addingDocUpdate)
           visible={dspFrstPageErr}
           title="Missing important details on Truck Details"
           errors={[
-            !formData.trailerType && "Enter Trailer Type",
+            // !formData.trailerType && "Enter Trailer Type",
             !formData.maxloadCapacity && "Enter Maximum Load Capacity",
             !showCountries && "Select were the truck can operate",
-            !selectedTruckType?.name && "Select TrucK Type",
+            !selectedCargoArea?.name && "Select TrucK Type",
             !selectedTruckCapacity && "select trcuk capacity",
             operationCountries.length <=0 && "Select the country or countires the truck can operate",
           ].filter(Boolean) as string[]}
@@ -366,9 +353,9 @@ console.log(addingDocUpdate)
           <View style={{ alignItems: 'center' }}>
             {images[0]   && <Image source={{ uri: images[0].uri }} style={{ width: wp(90), height: wp(90), marginBottom: 9, borderRadius: wp(4) }} />}
             {!images[0] &&
-              <TouchableOpacity onPress={() => selectManyImages(setImages)} style={{ marginBottom: 9, width: wp(90), height: wp(90), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+              <TouchableOpacity onPress={() => selectManyImages(setImages,true)} style={{ marginBottom: 9, width: wp(90), height: wp(90), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                 <Ionicons name="camera" size={wp(40)} color={icon + "4c"} />
-                <ThemedText color={icon + "4c"}>Add Image<ThemedText color="red">*</ThemedText></ThemedText>
+                <ThemedText color={icon + "4c"}>Add Truck Image<ThemedText color="red">*</ThemedText></ThemedText>
               </TouchableOpacity>}
 
           </View>
@@ -380,33 +367,40 @@ console.log(addingDocUpdate)
             <Input
               value={formData.truckName}
               placeholder=""
-              onChangeText={(text) => handleChange<FormData>(text, 'truckName', setFormData)}
+              onChangeText={(text) => handleChange<TruckFormData>(text, 'truckName', setFormData)}
             />
+
+           <ThemedText>
+              Truck Type<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+          
+            <DropDownItem   allData={truckType} selectedItem={selectedTruckType} setSelectedItem={setSelectedTruckType} placeholder="Select Truck Type" />
+
 
             <ThemedText>
               Cargo Area<ThemedText color="red">*</ThemedText>
             </ThemedText>
           
-            <DropDownItem   allData={truckTypes} selectedItem={selectedTruckType} setSelectedItem={setSelectedTruckType} placeholder="Select Truck" />
-     {selectedTruckType?.name === 'Other' &&
+            <DropDownItem   allData={cargoArea} selectedItem={selectedCargoArea} setSelectedItem={setSelectedCargoArea} placeholder="Select cargo area" />
+     {selectedCargoArea?.name === 'Other' &&
               <>
                 <ThemedText>
                   Other Truck Type<ThemedText color="red">*</ThemedText>
                 </ThemedText>
                 <Input
-                  value={formData.otherTruckType}
+                  value={formData.otherCargoArea}
                   placeholder="Other Truck Type"
-                  onChangeText={(text) => handleChange<FormData>(text, 'otherTruckType', setFormData)}
+                  onChangeText={(text) => handleChange< TruckFormData>(text, 'otherCargoArea', setFormData)}
                 />
               </>
             }
 
 
-               { selectedTruckType?.name ==="Tanker" &&    <ThemedText>
+               { selectedCargoArea?.name ==="Tanker" &&    <ThemedText>
               Tanker Type<ThemedText color="red">*</ThemedText>
             </ThemedText>}
 
-           { selectedTruckType?.name ==="Tanker" &&  <DropDownItem   allData={tankerTypes} selectedItem={selectedTankerType} setSelectedItem={setSelectedTankerType} placeholder="Select Truck" />}
+           { selectedCargoArea?.name ==="Tanker" &&  <DropDownItem   allData={tankerTypes} selectedItem={selectedTankerType} setSelectedItem={setSelectedTankerType} placeholder="Select Truck" />}
 
             {(selectedTankerType?.name === 'Other'|| selectedTankerType?.name ==="Specialized Cargo") &&
               <>
@@ -416,25 +410,25 @@ console.log(addingDocUpdate)
                 <Input
                   value={formData.otherTankerType}
                   placeholder="Other Truck Type"
-                  onChangeText={(text) => handleChange<FormData>(text, 'otherTankerType', setFormData)}
+                  onChangeText={(text) => handleChange< TruckFormData>(text, 'otherTankerType', setFormData)}
                 />
               </>
             }
 
 
 
-         { selectedTruckType?.name !=="Tanker" &&   <ThemedText>
+         { selectedCargoArea?.name !=="Tanker" &&   <ThemedText>
               Truck Tonnage<ThemedText color="red">*</ThemedText>
             </ThemedText>}
             
-        {  selectedTruckType?.name !=="Tanker" &&<DropDownItem   allData={tonneSizes} selectedItem={selectedTruckCapacity} setSelectedItem={setSelectedTruckCapacity} placeholder="Select Tonnage" />}
+        {  selectedCargoArea?.name !=="Tanker" &&<DropDownItem   allData={tonneSizes} selectedItem={selectedTruckCapacity} setSelectedItem={setSelectedTruckCapacity} placeholder="Select Tonnage" />}
        
 
-                    { selectedTruckType?.name ==="Tanker" &&    <ThemedText>
+                    { selectedCargoArea?.name ==="Tanker" &&    <ThemedText>
               Truck Litres<ThemedText color="red">*</ThemedText>
             </ThemedText>}
             
-        {  selectedTruckType?.name ==="Tanker" &&<DropDownItem   allData={litresCapacity} selectedItem={selectedTruckCapacity} setSelectedItem={setSelectedTruckCapacity} placeholder="Select Litres" />}
+        {  selectedCargoArea?.name ==="Tanker" &&<DropDownItem   allData={litresCapacity} selectedItem={selectedTruckCapacity} setSelectedItem={setSelectedTruckCapacity} placeholder="Select Litres" />}
        
       
 
@@ -454,7 +448,7 @@ console.log(addingDocUpdate)
                 <Input
                   value={formData.otherTruckConfig}
                   placeholder="Trailer Config"
-                  onChangeText={(text) => handleChange<FormData>(text, 'otherTruckConfig', setFormData)}
+                  onChangeText={(text) => handleChange< TruckFormData>(text, 'otherTruckConfig', setFormData)}
                 />
               </>
             }
@@ -474,7 +468,7 @@ console.log(addingDocUpdate)
                 <Input
                   value={formData.otherTruckSuspension}
                   placeholder="Trailer Suspension"
-                  onChangeText={(text) => handleChange<FormData>(text, 'otherTruckSuspension', setFormData)}
+                  onChangeText={(text) => handleChange< TruckFormData>(text, 'otherTruckSuspension', setFormData)}
                 />
               </>
             }
@@ -486,7 +480,7 @@ console.log(addingDocUpdate)
               value={formData.maxloadCapacity}
               keyboardType="number-pad"
               placeholder="0.0t"
-              onChangeText={(text) => handleChange<FormData>(text, 'maxloadCapacity', setFormData)}
+              onChangeText={(text) => handleChange< TruckFormData>(text, 'maxloadCapacity', setFormData)}
             />
 
 
@@ -546,7 +540,7 @@ console.log(addingDocUpdate)
             <Input
               value={formData.additionalInfo} multiline numberOfLines={8} style={{ verticalAlign: 'top', minHeight: hp(15) }} containerStyles={{}}
               placeholder="Additional Information"
-              onChangeText={(text) => handleChange<FormData>(text, 'additionalInfo', setFormData)}
+              onChangeText={(text) => handleChange< TruckFormData>(text, 'additionalInfo', setFormData)}
             />
 
 
@@ -617,7 +611,7 @@ console.log(addingDocUpdate)
               </>}
               value={cleanNumber(formData.driverPhone)}
               placeholder="700 000 000"
-              onChangeText={(text) => handleChange<FormData>(cleanNumber(text), 'driverPhone', setFormData)}
+              onChangeText={(text) => handleChange< TruckFormData>(cleanNumber(text), 'driverPhone', setFormData)}
               keyboardType="numeric"
             />
 
@@ -629,7 +623,7 @@ console.log(addingDocUpdate)
             {images[1] ?
               <Image source={{ uri: images[1]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
               :
-              <TouchableOpacity onPress={() => (images[0] && !images[1]) ? selectManyImages(setImages) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+              <TouchableOpacity onPress={() => (images[0] && !images[1]) ? selectManyImages(setImages, true) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                 <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                 <ThemedText color={icon + "4c"}>Add Drivers Passport<ThemedText color="red">*</ThemedText></ThemedText>
               </TouchableOpacity>
@@ -644,7 +638,7 @@ console.log(addingDocUpdate)
             {images[2] ?
               <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
               :
-              <TouchableOpacity onPress={() => (images[0] && images[1]) ? selectManyImages(setImages) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+              <TouchableOpacity onPress={() => (images[0] && images[1]) ? selectManyImages(setImages,true) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                 <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                 <ThemedText color={icon + "4c"}>Add ID Passport<ThemedText color="red">*</ThemedText></ThemedText>
               </TouchableOpacity>
@@ -665,7 +659,7 @@ console.log(addingDocUpdate)
               {images[3] ?
                 <Image source={{ uri: images[3]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
                 :
-                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2]) ? selectManyImages(setImages) : ToastAndroid.show('Please add driver id image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2]) ? selectManyImages(setImages,false) : ToastAndroid.show('Please add driver id image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                   <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                   <ThemedText color={icon + "4c"}>Horse Reg Book Image<ThemedText color="red">*</ThemedText></ThemedText>
                 </TouchableOpacity>
@@ -680,7 +674,7 @@ console.log(addingDocUpdate)
               {images[4] ?
                 <Image source={{ uri: images[4]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
                 :
-                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3]) ? selectManyImages(setImages) : ToastAndroid.show('Please add horse reg image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3]) ? selectManyImages(setImages,false) : ToastAndroid.show('Please add horse reg image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                   <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                   <ThemedText color={icon + "4c"}>Trailer Book Image<ThemedText color="red">*</ThemedText></ThemedText>
                 </TouchableOpacity>
@@ -694,7 +688,7 @@ console.log(addingDocUpdate)
               {images[5] ?
                 <Image source={{ uri: images[5]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
                 :
-                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3] && images[4]) ? selectManyImages(setImages) : ToastAndroid.show('Please add trailer 1 book image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3] && images[4]) ? selectManyImages(setImages,false) : ToastAndroid.show('Please add trailer 1 book image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                   <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                   <ThemedText color={icon + "4c"}>Trailer 2 Book Image (optional)<ThemedText color="red">*</ThemedText></ThemedText>
                 </TouchableOpacity>

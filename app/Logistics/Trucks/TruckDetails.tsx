@@ -1,21 +1,15 @@
-import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Modal, TouchableNativeFeedback, SafeAreaView, Switch, Linking, Pressable } from "react-native";
+import { View, ScrollView, RefreshControl, TouchableOpacity, Modal, TouchableNativeFeedback,  Linking, Pressable } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { ThemedText } from "@/components/ThemedText";
 import Heading from "@/components/Heading";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { AntDesign, FontAwesome6, Ionicons, MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
+import {  Ionicons,  Octicons } from "@expo/vector-icons";
 import { hp, wp } from "@/constants/common";
-import { ReactElement, useCallback, useEffect, useRef, useState } from "react";
-import { FlatList, GestureHandlerRootView } from "react-native-gesture-handler";
-import { useAnimatedScrollHandler } from "react-native-reanimated";
-import Button from "@/components/Button";
-import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
+import { ReactElement,  useEffect,  useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 import { BlurView } from 'expo-blur';
-import FormatedText from "@/components/FormatedText";
-import Divider from "@/components/Divider";
 import { Truck, User } from "@/types/types";
 import { deleteDocument, readById } from "@/db/operations";
 import { Image } from 'expo-image'
@@ -31,13 +25,8 @@ const TruckDetails = () => {
     const { truckid } = useLocalSearchParams();
 
     const [truckData, setTruckData] = useState<Truck>({} as Truck)
-    const [items, setItems] = useState<Truck[] | []>([]);
-    const [selectedImage, setSelectedImage] = useState("");
     const [modalVisible, setModalVisible] = useState(false);
     const [refreshing, setRefreshing] = useState(false)
-    const [applyDeliveryFee, setApplyDeliveryFee] = useState(false)
-    const [totalPrce, setTotalPrice] = useState(0);
-    const [cartCount, setCartCount] = useState(0);
     const [isSaved, setIsSaved] = useState(false);
 
 
@@ -61,18 +50,8 @@ const TruckDetails = () => {
 
     };
 
-    const bottomSheetRef = useRef<BottomSheet>(null);
 
-    // callbacks
-    const handleSheetChanges = useCallback((index: number) => {
-        console.log('handleSheetChanges', index);
-    }, []);
-    const renderBackdrop = useCallback(
-        (props: any) => <BottomSheetBackdrop {...props} opacity={0.4} appearsOnIndex={0} disappearsOnIndex={-1} />,
-        []
-    );
-
-    const [postOwner, setPostUser] = useState<User>();
+      const [postOwner, setPostUser] = useState<User>();
 
     useEffect(() => {
         getData();
@@ -374,10 +353,10 @@ const TruckDetails = () => {
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1 }}>
                                 <ThemedText type="tiny" style={{}}>
-                                    Trailer Type
-                                </ThemedText>
+                                    Cargo Area
+                                    </ThemedText>
                                 <ThemedText type="subtitle" style={{}}>
-                                    {truckData.trailerType || '--'}
+                                    {truckData.cargoArea !=="Other" ? truckData.cargoArea : truckData.otherCargoArea }
                                 </ThemedText>
                             </View>
 
@@ -385,21 +364,46 @@ const TruckDetails = () => {
 
 
                     </View>
-                    <View style={{}}>
+                      {truckData.cargoArea ==="Tanker"&& <View style={{}}>
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1 }}>
                                 <ThemedText type="tiny" style={{}}>
-                                    Trailer Model
+                                    Tanker Type
+                                    </ThemedText>
+                              { 
+                               <ThemedText type="subtitle" style={{}}>
+                                    {truckData.tankerType !=="Other"?  truckData.tankerType : truckData.otherTankerType }
                                 </ThemedText>
-                                <ThemedText type="subtitle" style={{}}>
-                                    {truckData.trailerModel || '--'}
-                                </ThemedText>
+                                }
                             </View>
 
                         </View>
 
 
+                    </View>  }      
+
+  <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
+                        <View style={{ flex: 1 }}>
+                            <ThemedText type="tiny" style={{}}>
+                                Suspension
+                            </ThemedText>
+                            <ThemedText type="subtitle" style={{}}>
+                                {truckData.truckSuspensions==="Other" ? truckData.truckSuspensions : truckData.otherTruckSuspension }
+                            </ThemedText>
+                        </View>
+                        <ThemedText>|</ThemedText>
+                        <View style={{ flex: 1 }}>
+                            <ThemedText type="tiny" style={{}}>
+                                Configuration:
+                            </ThemedText>
+                            <ThemedText type="subtitle" style={{}}>
+                                {truckData.truckConfig !=="Other" ?  truckData.truckConfig : truckData.otherTruckConfig}
+                            </ThemedText>
+                        </View>
+
                     </View>
+
+
                     <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
                         <View style={{ flex: 1 }}>
                             <ThemedText type="tiny" style={{}}>
@@ -412,10 +416,10 @@ const TruckDetails = () => {
                         <ThemedText>|</ThemedText>
                         <View style={{ flex: 1 }}>
                             <ThemedText type="tiny" style={{}}>
-                                Tonnage:
+                                Capacity:
                             </ThemedText>
                             <ThemedText type="subtitle" style={{}}>
-                                {truckData.truckTonnage || '--'}t
+                                {truckData.truckCapacity || '--'}t
                             </ThemedText>
                         </View>
 
@@ -436,36 +440,7 @@ const TruckDetails = () => {
 
 
                     </View>
-                    {truckData.location &&
-
-                        <View style={{}}>
-                            <View style={{ flexDirection: 'row' }}>
-                                <View style={{ flex: 1 }}>
-                                    <ThemedText type="tiny" style={{}}>
-                                        Location
-                                    </ThemedText>
-                                    <ThemedText type="subtitle" style={{ marginBottom: wp(4) }}>
-                                        {truckData.location || '--'}
-                                    </ThemedText>
-                                </View>
-                                {truckData.location &&
-                                    <MaterialCommunityIcons name="google-maps" size={wp(6)} color={icon} />
-                                }
-                            </View>
-
-                            <Button
-                                onPress={() => {
-                                    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(truckData.location)}`;
-                                    Linking.openURL(url);
-                                }}
-                                colors={{ text: '#00c16c', bg: '#00c16c24' }}
-                                title="Open in Google Maps"
-                                Icon={<Ionicons name='map-outline' size={wp(4)} color={"#00c16c"} />}
-                            />
-
-
-                        </View>
-                    }
+                  
 
 
                     {truckData.additionalInfo &&
@@ -507,11 +482,3 @@ const TruckDetails = () => {
 
 export default TruckDetails
 
-const styles = StyleSheet.create({
-    image: {
-        flex: 1,
-        width: wp(60),
-        height: wp(40),
-        borderRadius: wp(4),
-    },
-})
