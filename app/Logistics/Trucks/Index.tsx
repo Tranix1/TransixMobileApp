@@ -25,15 +25,10 @@ const Index = () => {
     const [trucks, setTrucks] = useState<Truck[]>([])
 
     const [selectedCountry, setSelectedCountry] = useState('All')
-    const [dspFilterLocal, setDspFilterLocal] = useState(false)
-
-
 
     const [locationTruckS, setLocationTruckS] = useState<string>(""); // Track local or international selection
-    const [locaOpLocTruckS, setLocaOpLocTruckS] = useState<string>(""); // Track selected local country
-    const [intOpLocTruckS, setIntOpLocTruckS] = useState<string[]>([]); // Track international countries
 
-    const [otherTruckType, setOtherTruckType] = React.useState<string>("")
+    const [tankerType, setTankerType] = React.useState<string>("")
 
 
     const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
@@ -43,7 +38,7 @@ const Index = () => {
     const [truckConfig, setTruckConfig] = React.useState("")
     const [truckSuspension, setTruckSuspension] = React.useState("")
 
-    const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
+    const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(null)
 
 
     const [refreshing, setRefreshing] = useState(false)
@@ -51,45 +46,43 @@ const Index = () => {
     const [loadingMore, setLoadingMore] = useState(false);
 
 
-const LoadTructs= async () => {
-  let filters: any[] = [];
-  const selectedCountries = ["Zimbabwe", ]; // This can be dynamic later
+    const [operationCountries, setOperationCountries] = useState<string[]>([]);
 
-  // Apply filters for truck properties first
-  if (truckCapacity) {
-    filters.push(where("truckCapacity", "==", truckCapacity));
-  } else if (truckConfig) {
-    filters.push(where("truckConfig", "==", truckConfig));
-  } else if (truckSuspension) {
-    filters.push(where("truckSuspensions", "==", truckSuspension));
-  }
 
-  // Conditionally add the country filter
-  if (locationTruckS) { // Assuming locationTruckS is a boolean indicating whether to filter by location
-    // Use array-contains-any for basic matching as in your default
-    filters.push(where("locations", "array-contains-any", selectedCountries));
-  }
 
-  // Fetch data from Firestore with the initially applied filters
-  const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
+    const LoadTructs = async () => {
+        let filters: any[] = [];
 
-  let trucksToSet: Truck[] = [];
+        // Apply filters for truck properties first
 
-  if (maTrucks && maTrucks.data) {
-    // If locationTruckS is true, we need to do the client-side filtering for ALL selected countries
-    if (locationTruckS) {
-      trucksToSet = (maTrucks.data as Truck[]).filter(truck =>
-        selectedCountries.every(country => truck.locations?.includes(country))
-      );
-    } else {
-      // Otherwise, use the data as fetched (which would be filtered only by truck properties)
-      trucksToSet = maTrucks.data as Truck[];
-    }
+        if (truckCapacity) filters.push(where("truckCapacity", "==", truckCapacity));
+        if (truckConfig) filters.push(where("truckConfig", "==", truckConfig));
+        if (truckSuspension) filters.push(where("truckSuspensions", "==", truckSuspension));
+        if (selectedCargoArea) filters.push(where("cargoArea", "==", selectedCargoArea?.name));
+        if (tankerType && selectedCargoArea) filters.push(where("tankerType", "==", tankerType))
+        // Conditionally add the country filter
+        if (operationCountries.length > 0) filters.push(where("locations", "array-contains-any", operationCountries));
 
-    setTrucks(trucksToSet);
-    setLastVisible(maTrucks.lastVisible);
-  }
-};
+        // Fetch data from Firestore with the initially applied filters
+        const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
+
+        let trucksToSet: Truck[] = [];
+
+        if (maTrucks && maTrucks.data) {
+            // If locationTruckS is true, we need to do the client-side filtering for ALL selected countries
+            if (operationCountries.length > 0) {
+                trucksToSet = (maTrucks.data as Truck[]).filter(truck =>
+                    operationCountries.every(country => truck.locations?.includes(country))
+                );
+            } else {
+                // Otherwise, use the data as fetched (which would be filtered only by truck properties)
+                trucksToSet = maTrucks.data as Truck[];
+            }
+
+            setTrucks(trucksToSet);
+            setLastVisible(maTrucks.lastVisible);
+        }
+    };
 
 
 
@@ -97,7 +90,7 @@ const LoadTructs= async () => {
 
     useEffect(() => {
         LoadTructs();
-    }, [truckCapacity,truckConfig,truckSuspension,locationTruckS])
+    }, [truckCapacity, truckConfig, truckSuspension, operationCountries])
 
     const onRefresh = async () => {
         try {
@@ -110,28 +103,40 @@ const LoadTructs= async () => {
         }
     };
 
-
-    console.log(locationTruckS)
     const [showfilter, setShowfilter] = useState(false)
 
     const loadMoreTrucks = async () => {
         if (loadingMore || !lastVisible) return;
 
-        setLoadingMore(true)    ;
+        setLoadingMore(true);
 
-        // Reapply the filters here
         let filters: any[] = [];
 
+        // Apply the same filters as in LoadTructs
         if (truckCapacity) filters.push(where("truckCapacity", "==", truckCapacity));
-        else if(truckConfig)filters.push(where("truckConfig", "==", truckConfig));
-        else if(truckSuspension) filters.push(where("truckSuspensions", "==", truckSuspension));
-        else if(locationTruckS) filters.push(where("locations", "array-contains-any", ["Namibia","Tanzania"]));
+        if (truckConfig) filters.push(where("truckConfig", "==", truckConfig));
+        if (truckSuspension) filters.push(where("truckSuspensions", "==", truckSuspension));
+        if (selectedCargoArea) filters.push(where("cargoArea", "==", selectedCargoArea?.name));
+        if (tankerType && selectedCargoArea) filters.push(where("tankerType", "==", tankerType));
+        if (operationCountries.length > 0) {
+            // Firestore limits to 10 elements in array-contains-any
+            filters.push(where("locations", "array-contains-any", operationCountries.slice(0, 10)));
+        }
 
-        // Fetch with the same filters and pagination
+        // Fetch with pagination
         const result = await fetchDocuments('Trucks', 10, lastVisible, filters);
 
-        if (result) {
-            setTrucks(prev => [...prev, ...(result.data as Truck[])]);
+        if (result && result.data) {
+            let newTrucks = result.data as Truck[];
+
+            // Apply client-side filtering for "must include all selected countries"
+            if (operationCountries.length > 0) {
+                newTrucks = newTrucks.filter(truck =>
+                    operationCountries.every(country => truck.locations?.includes(country))
+                );
+            }
+
+            setTrucks(prev => [...prev, ...newTrucks]);
             setLastVisible(result.lastVisible);
         }
 
@@ -150,22 +155,16 @@ const LoadTructs= async () => {
                 dspSpecTruckDet={showfilter}
                 setDspSpecTruckDet={setShowfilter}
                 // Truck Tonnage
-                dspTruckCpacity={dspTruckCpacity}
-                setDspTruckCapacity={setDspTruckCapacity}
                 truckCapacity={truckCapacity}
                 setTruckCapacity={setTruckCapacity}
                 // Selecting Truck Type
-                selectedTruckType={selectedTruckType}
-                setSelectedTruckType={setSelectedTruckType}
-                otherTruckType={otherTruckType}
-                setOtherTruckType={setOtherTruckType}
+                selectedTruckType={selectedCargoArea}
+                setSelectedTruckType={setSelectedCargoArea}
+                tankerType={tankerType}
+                setTankerType={setTankerType}
                 // Selecting A country and location
-                location={locationTruckS}
-                setLocation={setLocationTruckS}
-                intOpLoc={intOpLocTruckS}
-                setIntOpLoc={setIntOpLocTruckS}
-                setLocaOpLoc={setLocaOpLocTruckS}
-                locaOpLoc={locaOpLocTruckS}
+                operationCountries={operationCountries}
+                setOperationCountries={setOperationCountries}
                 // Truck Config and suspension
                 truckConfig={truckConfig}
                 setTruckConfig={setTruckConfig}

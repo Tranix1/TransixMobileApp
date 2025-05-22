@@ -14,7 +14,6 @@ import { Entypo, Ionicons } from '@expo/vector-icons'
 
 import { hp, wp } from '@/constants/common'
 
-import { CountrySelectorProps } from '@/types/types';
 
 import ConfigAdnSuspension from "./ConfigAndSuspension";
 
@@ -22,43 +21,37 @@ type SpecifyTruckDetailsProps = {
   dspSpecTruckDet: boolean;
   setDspSpecTruckDet: React.Dispatch<React.SetStateAction<boolean>>;
   // Selecting Truck Tonnage
-  dspTruckCpacity: string;
-  setDspTruckCapacity: React.Dispatch<React.SetStateAction<string>>
   truckCapacity: string;
   setTruckCapacity: React.Dispatch<React.SetStateAction<string>>;
 
   // Select Truck Details 
   selectedTruckType: TruckTypeProps | null;
   setSelectedTruckType: React.Dispatch<React.SetStateAction<TruckTypeProps | null>>;
-  otherTruckType: string
-  setOtherTruckType: React.Dispatch<React.SetStateAction<string>>
+  tankerType: string
+  setTankerType: React.Dispatch<React.SetStateAction<string>>
 
 truckConfig: string ;
 setTruckConfig :React.Dispatch<React.SetStateAction<string>>;
 truckSuspension : string ;
-setTruckSuspension :React.Dispatch<React.SetStateAction<string>>;
+setTruckSuspension :React.Dispatch<React.SetStateAction<string>> ;
 
-} & CountrySelectorProps;
+operationCountries : string[]
+setOperationCountries :React.Dispatch<React.SetStateAction<string[] >> ;
+} 
 export const SpecifyTruckDetails: React.FC<SpecifyTruckDetailsProps> = ({
-  dspSpecTruckDet, setDspSpecTruckDet, dspTruckCpacity, setDspTruckCapacity, otherTruckType, setOtherTruckType, truckCapacity, setTruckCapacity, selectedTruckType, setSelectedTruckType, location,
-  setLocation,
-  intOpLoc,
-  setIntOpLoc,
-  setLocaOpLoc,
-  locaOpLoc,
+  dspSpecTruckDet, setDspSpecTruckDet,   tankerType,  setTankerType, truckCapacity, setTruckCapacity, selectedTruckType, setSelectedTruckType,
+
+operationCountries,
+setOperationCountries ,
  truckConfig ,
  setTruckConfig ,
 truckSuspension ,
-setTruckSuspension
+setTruckSuspension ,
 }) => {
 
   const bg = useThemeColor('background')
   const accent = useThemeColor('accent')
   const icon = useThemeColor('icon')
-
-
-
-
 
 
   return (
@@ -104,30 +97,25 @@ setTruckSuspension
 
 
                 <CountrySelector
-                  location={location}
-                  setLocation={setLocation}
-                  intOpLoc={intOpLoc}
-                  setIntOpLoc={setIntOpLoc}
-                  setLocaOpLoc={setLocaOpLoc}
-                  locaOpLoc={locaOpLoc}
+                operationCountries = {operationCountries}
+              setOperationCountries={setOperationCountries}
                 />
 
 
                 <ConfigAdnSuspension  truckConfig={truckConfig} setTruckConfig={setTruckConfig} truckSuspension={truckSuspension} setTruckSuspension={setTruckSuspension} />
 
-
-
                 <SlctTruckCapacity
-                  dspTruckCpacity={dspTruckCpacity}
-                  setDspTruckCapacity={setDspTruckCapacity}
                   truckTonnage={truckCapacity}
                   setTruckTonnage={setTruckCapacity}
+
+                  selectedTruckType={selectedTruckType}
                 />
+
                 <SpecifyTruckType
                   selectedTruckType={selectedTruckType}
                   setSelectedTruckType={setSelectedTruckType}
-                  otherTruckType={otherTruckType}
-                  setOtherTruckType={setOtherTruckType}
+                  tankerType={tankerType}
+                  setTankerType={setTankerType}
                 />
 
                 {/* You can add more components here, like filters, toggles, etc. */}

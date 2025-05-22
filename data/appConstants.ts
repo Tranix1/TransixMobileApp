@@ -4,14 +4,21 @@
     { id: 1, name: "Semi Truck" },
   ]
   export const cargoArea = [
-    { id: 0, name: 'Flat deck', image: require('@/assets/images/Trucks/images (2).jpeg') },
-    { id: 1, name: 'Bulk Trailer', image: require('@/assets/images/Trucks/download (1).jpeg') },
-    { id: 2, name: 'Low Bed', image: require('@/assets/images/Trucks/H805f1f51529345648d1da9e5fcd6807e2.jpg') },
-    { id: 3, name: 'Side Tipper', image: require('@/assets/images/Trucks/images (5).jpeg') },
-    { id: 4, name: 'Tautliner', image: require('@/assets/images/Trucks/download (3).jpeg') },
-    { id: 5, name: 'Tanker', image: require('@/assets/images/Trucks/images (7).jpeg') },
-    { id: 6, name: 'Other', image: require('@/assets/images/Trucks/download (4).jpeg') },
-    // { id: 7, name: 'All', image: '' },
+  { id: 0, name: 'Flat deck', description: 'Ideal for transporting oversized or heavy loads.', image: require('@/assets/images/Trucks/images (2).jpeg') },
+        { id: 1, name: 'Bulk Trailer', description: 'Used for carrying bulk materials like grains or minerals.', image: require('@/assets/images/Trucks/download (1).jpeg') },
+        { id: 2, name: 'Dropside', description: 'Truck with removable sides, perfect for transporting heavy and oversized goods.', image: require('@/assets/images/Trucks/8-ton-drop-side-truck.jpg') },
+        { id: 3, name: 'Side Tipper', description: 'Suitable for unloading materials like sand or gravel.', image: require('@/assets/images/Trucks/images (5).jpeg') },
+        { id: 4, name: 'Tautliner', description: 'Versatile truck with curtains for easy loading and unloading.', image: require('@/assets/images/Trucks/download (3).jpeg') },
+
+        { id: 5, name: 'Box', description: 'Enclosed truck ideal for transporting packaged goods, furniture, and electronics.', image: require('@/assets/images/Trucks/download (8).jpeg') },
+
+        { id: 6, name: 'Low Bed', description: 'Designed for transporting heavy machinery and equipment.', image: require('@/assets/images/Trucks/H805f1f51529345648d1da9e5fcd6807e2.jpg') },
+
+        { id: 7, name: 'Refrigerated', description: 'Temperature-controlled truck used for transporting perishable goods like food and medicine.', image: require('@/assets/images/Trucks/download (7).jpeg') },
+
+        { id: 8, name: 'Tanker', description: 'Used for transporting liquids like fuel or chemicals.', image: require('@/assets/images/Trucks/images (7).jpeg') },
+
+        { id: 9, name: 'Other', description: 'Custom or specialized truck types designed for unique transport needs.', image: require('@/assets/images/Trucks/download (4).jpeg') },
   ]
   export const tankerTypes = [
         {

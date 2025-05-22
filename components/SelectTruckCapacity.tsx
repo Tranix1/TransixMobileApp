@@ -1,28 +1,24 @@
-import React, { useState, FC } from "react";
+import React, { FC } from "react";
 import { TouchableOpacity, View, ScrollView, StyleSheet, } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { wp } from '@/constants/common'
 
 import { useThemeColor } from '@/hooks/useThemeColor'
-
-import Button from "./Button";
+import { TruckTypeProps } from "@/types/types";
 interface SlctTruckCapacityProps {
     truckTonnage: string;
     setTruckTonnage: React.Dispatch<React.SetStateAction<string>>;
-    dspTruckCpacity: string;
-    setDspTruckCapacity: React.Dispatch<React.SetStateAction<string>>;
+    selectedTruckType: TruckTypeProps | null;
 }
 
 export const SlctTruckCapacity: FC<SlctTruckCapacityProps> = ({
     truckTonnage,
     setTruckTonnage,
-    dspTruckCpacity,
-    setDspTruckCapacity,
+    selectedTruckType
 
 }) => {
     const background = useThemeColor('backgroundLight');
     const coolGray = useThemeColor('coolGray');
-    const [dspTruckTonnage, setDspTrucTonage] = React.useState<boolean>(false)
 
     const litresCapacity = [
         '300L',
@@ -45,17 +41,8 @@ export const SlctTruckCapacity: FC<SlctTruckCapacityProps> = ({
 
     return (
         <View>
-            <ThemedText>Truck Capacity</ThemedText>
-            <View style={{ flexDirection: 'row', marginBottom: 8 }}>
-
-                <TouchableOpacity onPress={() => setDspTruckCapacity("Tonnage")} style={[styles.countryButton, { backgroundColor: background, marginRight: 6 }, dspTruckCpacity === "Tonnage" && styles.countryButtonSelected]} >
-                    <ThemedText style={{ color: dspTruckCpacity === "Tonnage" ? 'white' : coolGray }}>Tonnage</ThemedText>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={() => setDspTruckCapacity("Litres")} style={[styles.countryButton, { backgroundColor: background }, dspTruckCpacity === "Litres" && styles.countryButtonSelected]} >
-                    <ThemedText style={{ color: dspTruckCpacity === "Litres" ? 'white' : coolGray }}>Litres </ThemedText>
-                </TouchableOpacity>
-            </View>
+            <ThemedText>Truck Capacity {selectedTruckType?.name === "Tanker" ? "Litres":"Tonnage" } </ThemedText>
+       
 
             <ScrollView
                 horizontal
@@ -66,39 +53,21 @@ export const SlctTruckCapacity: FC<SlctTruckCapacityProps> = ({
                 }}
             >
 
-
-
-                {dspTruckCpacity === "Tonnage" && tonneSizes.map((item, index) => (
-                    <TouchableOpacity
-                        key={index}
-                        onPress={() => setTruckTonnage(item)}
-                        style={[
-                            styles.countryButton,
-                            { backgroundColor: background },
-                            truckTonnage === item && styles.countryButtonSelected,
-                        ]}
-                    >
-                        <ThemedText style={{ color: truckTonnage === item ? 'white' : coolGray }}>
-                            {item}
-                        </ThemedText>
-                    </TouchableOpacity>
-                ))}
-
-                {dspTruckCpacity === "Litres" && litresCapacity.map((item, index) => (
-                    <TouchableOpacity
-                        key={index}
-                        onPress={() => setTruckTonnage(item)}
-                        style={[
-                            styles.countryButton,
-                            { backgroundColor: background },
-                            truckTonnage === item && styles.countryButtonSelected,
-                        ]}
-                    >
-                        <ThemedText style={{ color: truckTonnage === item ? 'white' : coolGray }}>
-                            {item}
-                        </ThemedText>
-                    </TouchableOpacity>
-                ))}
+        {(selectedTruckType?.name === "Tanker" ? litresCapacity : tonneSizes).map((item, index) => (
+        <TouchableOpacity
+            key={index}
+            onPress={() => setTruckTonnage(item)}
+            style={[
+            styles.countryButton,
+            { backgroundColor: background },
+            truckTonnage === item && styles.countryButtonSelected,
+            ]}
+        >
+            <ThemedText style={{ color: truckTonnage === item ? 'white' : coolGray }}>
+            {item}
+            </ThemedText>
+        </TouchableOpacity>
+        ))}
 
             </ScrollView>
         </View>

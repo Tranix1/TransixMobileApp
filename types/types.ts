@@ -1,4 +1,3 @@
-import { UserInfo, UserMetadata } from "firebase/auth";
 import { ImageSourcePropType } from "react-native";
 
 export type TruckTypeProps = {
@@ -7,14 +6,7 @@ export type TruckTypeProps = {
 export type TankerTruckProps = {
     id: number, name: string, description: string, products: string[]
 }
-export type CountrySelectorProps = {
-    location: string;
-    setLocation: React.Dispatch<React.SetStateAction<string>>;
-    intOpLoc: string[];
-    setIntOpLoc: React.Dispatch<React.SetStateAction<string[]>>;
-    setLocaOpLoc: React.Dispatch<React.SetStateAction<string>>;
-    locaOpLoc: string
-}
+
 
 export type TruckFormData = {
     additionalInfo: string;

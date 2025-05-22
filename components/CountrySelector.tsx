@@ -4,82 +4,71 @@ import { TouchableOpacity,View,ScrollView,StyleSheet } from 'react-native';
 import { ThemedText } from './ThemedText';  // Assuming you have this component
 import { SlctCountryBtn } from './SlctCountryBtn';  // Assuming this button is present
 import { toggleLocalCountry, toggleInternationalCountry } from '../Utilities/utils';
+import { AntDesign, Entypo, FontAwesome, FontAwesome6, Ionicons } from "@expo/vector-icons";
 
 import Button from './Button';
-import { CountrySelectorProps } from '@/types/types';
+// import { CountrySelectorProps } from '@/types/types';
+
+import { Countries } from '@/types/types';
+import Divider from "@/components/Divider";
 
 import { hp, wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
+ type CountrySelectorProps ={
 
+
+operationCountries : string[]
+setOperationCountries :React.Dispatch<React.SetStateAction<string[] >> ;
+}
 const CountrySelector: React.FC<CountrySelectorProps> = ({
-  location,
-  setLocation,
-  intOpLoc,
-  setIntOpLoc,
-  setLocaOpLoc,
-  locaOpLoc ,
+ 
+
+operationCountries ,
+setOperationCountries
 
 }) => {
-      const background = useThemeColor('backgroundLight');
-    const coolGray = useThemeColor('coolGray');
+
+    const text = useThemeColor('text');
+   const background = useThemeColor('backgroundLight')
+    const bg = useThemeColor('background')
+    const coolGray = useThemeColor('coolGray')
+    const accent = useThemeColor('accent')
+    const backgroundLight = useThemeColor('backgroundLight');
+    const icon = useThemeColor('icon')
 
   return (
     <View>
-          
     <ThemedText>Were can the truck Operat e</ThemedText>
-
-   <View style={{flexDirection:'row',marginBottom:9}}>
-                                        
-                            <TouchableOpacity  onPress={() => {setLocation("Local")} } style={[styles.countryButton, { backgroundColor: background,marginRight:6 }, location === "Local" && styles.countryButtonSelected]} >
-                            <ThemedText style={{ color: location === "Local" ? 'white' : coolGray }}>Local</ThemedText>
-                        </TouchableOpacity>
-
-                                <TouchableOpacity  onPress={() => setLocation("International") } style={[styles.countryButton, { backgroundColor: background }, location === "International" && styles.countryButtonSelected]} >
-                            <ThemedText style={{ color: location === "International"? 'white' : coolGray }}>International </ThemedText>
-                        </TouchableOpacity>
-                            </View>
+  
 
 
-          {intOpLoc.length > 0 && (
-            <ThemedText>Selected: {intOpLoc.join(", ")}</ThemedText>
-          )}
-          {location === "Local" && <ThemedText>Selected {locaOpLoc} </ThemedText>}
+ <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: wp(3) }}>
+                                    {Countries.map(item =>{
 
-    <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{
-                    paddingHorizontal: wp(2),
-                    gap: wp(3),
-                }}
-            >
-      {location === "Local" &&(
-        <>
-          {["Zimbabwe", "SouthAfrica", "Namibia", "Tanzania", "Mozambique", "Zambia", "Botswana", "Malawi"].map((country) => (
-            <SlctCountryBtn
-              key={country}
-              isSelected={locaOpLoc.includes(country)}
-              selectedLoc={country}
-              onPress={() => toggleLocalCountry(country, setLocaOpLoc, setIntOpLoc,  )}
-            />
-          ))}
-        </>
-      )}
-      {location === "International" && (
-        <>
-          {["Zimbabwe", "SouthAfrica", "Namibia", "Tanzania", "Mozambique", "Zambia", "Botswana", "Malawi"].map((country) => (
-            <SlctCountryBtn
-              key={country}
-              selectedLoc={country}
-              isSelected={intOpLoc.includes(country)}
-              onPress={() => toggleInternationalCountry(country, setLocaOpLoc, setIntOpLoc)}
-            />
-          ))}
-         
-        </>
-      )}
+                              const active = operationCountries.some(x => x === item);
+                                      return (
+                                        <TouchableOpacity
+                                            key={item}
+                                            onPress={() => active ? setOperationCountries(operationCountries.filter(x => x !== item)) : setOperationCountries([...operationCountries, item])}
+                                            style={{
+                                                backgroundColor: active ? accent : backgroundLight,
+                                                margin: 6,
+                                                padding: wp(2),
+                                                paddingHorizontal: wp(4),
+                                                borderRadius: wp(4),
+                                            }}
+                                        >
+                                            <ThemedText color={active ? 'white' : text} type="defaultSemiBold">{item}</ThemedText>
+                                        </TouchableOpacity>
+                                    )} )}
+                                </ScrollView>
 
- </ScrollView>
+
+
+
+
+
+
     </View>
   );
 };
