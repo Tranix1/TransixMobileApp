@@ -50,20 +50,10 @@ const Index = () => {
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
 
-    console.log(truckCapacity)
-
-type Truck = {
-  id: string;
-  locations: string[];
-  truckCapacity?: string;
-  truckConfig?: string;
-  truckSuspensions?: string;
-  // Add other fields as needed
-};
 
 const LoadTructs= async () => {
   let filters: any[] = [];
-  const selectedCountries = ["Namibia", ]; // This can be dynamic later
+  const selectedCountries = ["Zimbabwe", ]; // This can be dynamic later
 
   // Apply filters for truck properties first
   if (truckCapacity) {
@@ -101,22 +91,7 @@ const LoadTructs= async () => {
   }
 };
 
-//     const LoadTructs = async () => {        
-//    let filters: any[] = [];
 
-//          if (truckCapacity) filters.push(where("truckCapacity", "==", truckCapacity));
-//         else if(truckConfig)filters.push(where("truckConfig", "==", truckConfig));
-//         else if(truckSuspension) filters.push(where("truckSuspensions", "==", truckSuspension));
-//         else if(locationTruckS) filters.push(where("locations", "array-contains-any", ["Namibia","Tanzania"]));
-        
-
-//     const maTrucks = await fetchDocuments("Trucks", 10, undefined, filters);
-
-//         if (maTrucks) {
-//             setTrucks(maTrucks.data as Truck[])
-//             setLastVisible(maTrucks.lastVisible)
-//         }
-//     }
 
 
 
