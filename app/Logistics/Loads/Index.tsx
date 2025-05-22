@@ -1,6 +1,6 @@
-import { ActivityIndicator, RefreshControl, StyleSheet, Text, TouchableNativeFeedback, TouchableOpacity, View, Modal, Linking } from 'react-native'
+import { ActivityIndicator, RefreshControl, StyleSheet, Text, TouchableNativeFeedback, TouchableOpacity, View, Modal, Linking, ScrollView, ToastAndroid } from 'react-native'
 import React, { useEffect, useState, useRef, useCallback } from 'react'
-import { fetchDocuments } from '@/db/operations';
+import { deleteDocument, fetchDocuments } from '@/db/operations';
 import { Load } from '@/types/types';
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import { ThemedText } from '@/components/ThemedText';
@@ -9,7 +9,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { FlatList } from 'react-native';
 import { AntDesign, FontAwesome6, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import LoadComponent from '@/components/LoadComponent';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
 import { Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Input from '@/components/Input';
 import { useAuth } from '@/context/AuthContext';
@@ -25,7 +25,7 @@ const Index = () => {
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
     const [Loads, setLoads] = useState<Load[]>([])
-    
+
     const [showfilter, setShowfilter] = useState(false)
     const [selectedLoad, setSelectedLoad] = useState<Load | null>(null);
     const [showSheet, setShowSheet] = useState(false);
@@ -92,11 +92,27 @@ const Index = () => {
         // setPerTonneBid((prev) => !prev);
     }
 
+    const deleteMyLoad = async (loadID: string) => {
+
+        try {
+            const deleting = await deleteDocument('Loads', loadID)
+
+            if (deleting) {
+                bottomSheetRef.current?.close();
+                ToastAndroid.show('Successfully Deleted My Load', ToastAndroid.SHORT)
+                onRefresh()
+            }
+        } catch (error) {
+
+        }
+
+    }
+
 
 
     return (
 
-        <View style={[styles.container, { backgroundColor: background }]}>
+        <View style={[styles.container, { backgroundColor: background, flex: 1 }]}>
             <View style={{
                 backgroundColor: background,
                 paddingHorizontal: wp(2),
@@ -126,7 +142,7 @@ const Index = () => {
 
             <FlatList
                 keyExtractor={(item) => item.id.toString()}
-
+                contentContainerStyle={{}}
                 data={Loads}
                 renderItem={({ item }) => (
                     <LoadComponent item={item} expandID={expandId} expandId={(s) => setExpandID(s)} ondetailsPress={() => {
@@ -183,11 +199,12 @@ const Index = () => {
             <BottomSheet
                 ref={bottomSheetRef}
                 index={-1}
+                enableContentPanningGesture={false}
                 enablePanDownToClose
                 onClose={() => { setShowSheet(false); setBottomMode('') }}
                 backdropComponent={renderBackdrop}
                 backgroundStyle={{ backgroundColor: background }}
-                containerStyle={{ marginBottom: wp(14) }}
+                containerStyle={{ paddingBottom: wp(14) }}
                 handleStyle={{ borderTopEndRadius: wp(5), borderTopStartRadius: wp(5) }}
             >
                 <BottomSheetView>
@@ -277,173 +294,243 @@ const Index = () => {
                                         )}
                                     </View>
                                 }
-                                {bottomMode === 'Bid' &&
-                                    <View style={[{
-                                        borderColor: accent, borderWidth: .5, padding: wp(2), borderRadius: wp(6),
-                                    }]}>
-                                        <View style={{ gap: wp(2) }}>
-                                            <ThemedText type='subtitle' color={coolGray} style={{ textAlign: 'center' }}>
-                                                Bid
-                                            </ThemedText>
-                                            {
-                                                selectedLoad.ratePerTonne && (
-                                                    <View style={{}}>
-                                                        <TouchableOpacity onPress={toggleCurrencyBid}>
-                                                            <ThemedText >
-                                                                Bid Rate ({true ? "USD" : "RAND"})
-                                                            </ThemedText>
-                                                        </TouchableOpacity>
+                                {selectedLoad.userId !== user?.uid &&
+                                    <>
+                                        {bottomMode === 'Bid' &&
+                                            <View style={[{
+                                                borderColor: accent, borderWidth: .5, padding: wp(2), borderRadius: wp(6),
+                                            }]}>
+                                                <View style={{ gap: wp(2) }}>
+                                                    <ThemedText type='subtitle' color={coolGray} style={{ textAlign: 'center' }}>
+                                                        Bid
+                                                    </ThemedText>
+                                                    {
+                                                        selectedLoad.ratePerTonne && (
+                                                            <View style={{}}>
+                                                                <TouchableOpacity onPress={toggleCurrencyBid}>
+                                                                    <ThemedText >
+                                                                        Bid Rate ({true ? "USD" : "RAND"})
+                                                                    </ThemedText>
+                                                                </TouchableOpacity>
 
-                                                        <Input
-                                                            onChangeText={(text) => setBidRate(text)}
-                                                            value={bidRate}
-                                                            keyboardType="numeric"
-                                                            placeholderTextColor={coolGray}
-                                                            placeholder="Bid rate"
-                                                        />
+                                                                <Input
+                                                                    onChangeText={(text) => setBidRate(text)}
+                                                                    value={bidRate}
+                                                                    keyboardType="numeric"
+                                                                    placeholderTextColor={coolGray}
+                                                                    placeholder="Bid rate"
+                                                                />
 
-                                                        {/* <TouchableOpacity onPress={togglePerTonneBid}>
+                                                                {/* <TouchableOpacity onPress={togglePerTonneBid}>
                                                         <ThemedText >
                                                             Per tonne
                                                         </ThemedText>
                                                     </TouchableOpacity> */}
-                                                    </View>
-                                                )
-                                            }
+                                                            </View>
+                                                        )
+                                                    }
 
-                                            {(selectedLoad.links || selectedLoad.triaxle) && (
-                                                <View>
-                                                    {selectedLoad.links && (
-                                                        <View style={{}}>
-                                                            <TouchableOpacity onPress={toggleCurrencyBid}>
-                                                                <ThemedText >
-                                                                    Bid Links Rate ({true ? "USD" : "RAND"})
-                                                                </ThemedText>
-                                                            </TouchableOpacity>
+                                                    {(selectedLoad.links || selectedLoad.triaxle) && (
+                                                        <View>
+                                                            {selectedLoad.links && (
+                                                                <View style={{}}>
+                                                                    <TouchableOpacity onPress={toggleCurrencyBid}>
+                                                                        <ThemedText >
+                                                                            Bid Links Rate ({true ? "USD" : "RAND"})
+                                                                        </ThemedText>
+                                                                    </TouchableOpacity>
 
-                                                            <Input
-                                                                onChangeText={(text) => setBidLinks(text)}
-                                                                value={bidLinks}
-                                                                keyboardType="numeric"
-                                                                placeholderTextColor={coolGray}
-                                                                placeholder="Bid Links rate"
-                                                            />
+                                                                    <Input
+                                                                        onChangeText={(text) => setBidLinks(text)}
+                                                                        value={bidLinks}
+                                                                        keyboardType="numeric"
+                                                                        placeholderTextColor={coolGray}
+                                                                        placeholder="Bid Links rate"
+                                                                    />
 
-                                                            {/* <TouchableOpacity onPress={togglePerTonneBid}>
+                                                                    {/* <TouchableOpacity onPress={togglePerTonneBid}>
                                                             <ThemedText >
                                                                 Per tonne
                                                             </ThemedText>
                                                         </TouchableOpacity> */}
-                                                        </View>
-                                                    )}
+                                                                </View>
+                                                            )}
 
-                                                    {selectedLoad.triaxle && (
-                                                        <View style={{}}>
-                                                            <TouchableOpacity onPress={toggleCurrencyBid}>
-                                                                <ThemedText >
-                                                                    Bid triaxle Rate ({true ? "USD" : "RAND"})
-                                                                </ThemedText>
-                                                            </TouchableOpacity>
+                                                            {selectedLoad.triaxle && (
+                                                                <View style={{}}>
+                                                                    <TouchableOpacity onPress={toggleCurrencyBid}>
+                                                                        <ThemedText >
+                                                                            Bid triaxle Rate ({true ? "USD" : "RAND"})
+                                                                        </ThemedText>
+                                                                    </TouchableOpacity>
 
-                                                            <Input
-                                                                onChangeText={(text) => setBidTriaxle(text)}
-                                                                value={bidTriaxle}
-                                                                keyboardType="numeric"
-                                                                placeholderTextColor={coolGray}
-                                                                placeholder="Bid triaxle rate"
-                                                            />
+                                                                    <Input
+                                                                        onChangeText={(text) => setBidTriaxle(text)}
+                                                                        value={bidTriaxle}
+                                                                        keyboardType="numeric"
+                                                                        placeholderTextColor={coolGray}
+                                                                        placeholder="Bid triaxle rate"
+                                                                    />
 
-                                                            {/* <TouchableOpacity
+                                                                    {/* <TouchableOpacity
                                                             onPress={togglePerTonneBid}>
                                                             <ThemedText>
                                                                 Per tonne
                                                             </ThemedText>
                                                         </TouchableOpacity> */}
+                                                                </View>
+                                                            )}
                                                         </View>
                                                     )}
                                                 </View>
-                                            )}
-                                        </View>
 
-                                        <View style={{ flexDirection: 'row', gap: wp(2) }}>
-                                            <TouchableOpacity
-                                                onPress={() => setBottomMode('')}
-                                                style={[{ backgroundColor: coolGray, flex: 2, padding: wp(3), borderRadius: wp(4), alignItems: 'center' }]}
-                                            >
-                                                <ThemedText style={{ color: 'white' }}>Cancel</ThemedText>
-                                            </TouchableOpacity>
+                                                <View style={{ flexDirection: 'row', gap: wp(2) }}>
+                                                    <TouchableOpacity
+                                                        onPress={() => setBottomMode('')}
+                                                        style={[{ backgroundColor: coolGray, flex: 2, padding: wp(3), borderRadius: wp(4), alignItems: 'center' }]}
+                                                    >
+                                                        <ThemedText style={{ color: 'white' }}>Cancel</ThemedText>
+                                                    </TouchableOpacity>
 
-                                            <TouchableOpacity
-                                                // onPress={() => handleSubmit(item, "biddings" as 'biddings')} { text: '#0f9d58', bg: '#0f9d5824' }
-                                                style={[{ backgroundColor: '#0f9d5824', flex: 2, padding: wp(3), borderRadius: wp(4), alignItems: 'center' }]}
-                                            >
-                                                <ThemedText style={{ color: '#0f9d58' }}>Send</ThemedText>
-                                            </TouchableOpacity>
-                                        </View>
-                                    </View>
-                                }
+                                                    <TouchableOpacity
+                                                        // onPress={() => handleSubmit(item, "biddings" as 'biddings')} { text: '#0f9d58', bg: '#0f9d5824' }
+                                                        style={[{ backgroundColor: '#0f9d5824', flex: 2, padding: wp(3), borderRadius: wp(4), alignItems: 'center' }]}
+                                                    >
+                                                        <ThemedText style={{ color: '#0f9d58' }}>Send</ThemedText>
+                                                    </TouchableOpacity>
+                                                </View>
+                                            </View>
+                                        }
 
-                                {bottomMode === '' &&
-                                    <>
+                                        {bottomMode === '' &&
+                                            <>
+                                                <View>
+                                                    <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => setBottomMode('Book')}>
+                                                        <ThemedText color='white'>
+                                                            Book Load
+                                                        </ThemedText>
+                                                    </TouchableOpacity>
+
+                                                </View>
+                                                <View>
+                                                    <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => setBottomMode('Bid')}>
+                                                        <ThemedText color='white'>
+                                                            Bid
+                                                        </ThemedText>
+                                                    </TouchableOpacity>
+
+                                                </View>
+                                            </>
+                                        }
                                         <View>
-                                            <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => setBottomMode('Book')}>
+                                            <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push('/Account/Login')}>
                                                 <ThemedText color='white'>
-                                                    Book Load
+                                                    View Loads By {' '}
+                                                    <ThemedText style={{ textDecorationLine: 'underline', color: 'white' }}>
+                                                        {selectedLoad.companyName}
+                                                    </ThemedText>
                                                 </ThemedText>
-                                            </TouchableOpacity>
-
-                                        </View>
-                                        <View>
-                                            <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => setBottomMode('Bid')}>
-                                                <ThemedText color='white'>
-                                                    Bid
-                                                </ThemedText>
+                                                <AntDesign name='arrowright' size={wp(3)} color={'white'} style={{ marginLeft: wp(1) }} />
                                             </TouchableOpacity>
 
                                         </View>
                                     </>
                                 }
-                                <View>
-                                    <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push('/Account/Login')}>
-                                        <ThemedText color='white'>
-                                            View Loads By {' '}
-                                            <ThemedText style={{ textDecorationLine: 'underline', color: 'white' }}>
-                                                {selectedLoad.companyName}
-                                            </ThemedText>
-                                        </ThemedText>
-                                        <AntDesign name='arrowright' size={wp(3)} color={'white'} style={{ marginLeft: wp(1) }} />
-                                    </TouchableOpacity>
-
-                                </View>
 
 
-
-                                <View style={{ paddingVertical: wp(4), flexDirection: 'row', gap: wp(8), marginTop: 'auto' }}>
-                                    <View style={{ alignItems: 'center' }}>
-                                        <TouchableOpacity style={[{ backgroundColor: coolGray, height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}>
-                                            <Ionicons name="chatbubble-ellipses" size={wp(6)} color={'white'} />
-                                        </TouchableOpacity>
-                                        <ThemedText color={coolGray} style={{}}>Message</ThemedText>
+                                {selectedLoad.userId !== user?.uid ?
+                                    <View style={{ paddingVertical: wp(4), flexDirection: 'row', gap: wp(5), marginTop: 'auto' }}>
+                                        <View style={{ alignItems: 'center' }}>
+                                            <TouchableOpacity style={[{ backgroundColor: coolGray, height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}>
+                                                <Ionicons name="chatbubble-ellipses" size={wp(6)} color={'white'} />
+                                            </TouchableOpacity>
+                                            <ThemedText color={coolGray} style={{}}>Message</ThemedText>
+                                        </View>
+                                        <View style={{ alignItems: 'center' }}>
+                                            <TouchableOpacity
+                                                onPress={() => Linking.openURL(`whatsapp://send?phone=${selectedLoad.contact}&text=${encodeURIComponent('message')}`)}
+                                                style={[{ backgroundColor: '#25D366', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                            >
+                                                <FontAwesome6 name="whatsapp" size={wp(6)} color="#fff" />
+                                            </TouchableOpacity>
+                                            <ThemedText style={{ color: coolGray }}>WhatsApp</ThemedText>
+                                        </View>
+                                        <View style={{ alignItems: 'center' }}>
+                                            <TouchableOpacity
+                                                onPress={() => Linking.openURL(`tel:${selectedLoad.contact}`)}
+                                                style={[{ backgroundColor: '#0074D9', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                            >
+                                                <MaterialIcons name="call" size={wp(6)} color="#fff" />
+                                            </TouchableOpacity>
+                                            <ThemedText style={{ color: coolGray }}>Phone Call</ThemedText>
+                                        </View>
+                                        <View style={{ alignItems: 'center' }}>
+                                            <TouchableOpacity
+                                                onPress={() => Linking.openURL(`tel:${selectedLoad.contact}`)}
+                                                style={[{ backgroundColor: '#4285f45a', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                            >
+                                                <Ionicons name="copy" size={wp(5)} color="#4285f4" />
+                                            </TouchableOpacity>
+                                            <ThemedText style={{ color: coolGray }}>Copy Link</ThemedText>
+                                        </View>
+                                        <View style={{ alignItems: 'center' }}>
+                                            <TouchableOpacity
+                                                onPress={() => Linking.openURL(`tel:${selectedLoad.contact}`)}
+                                                style={[{ backgroundColor: '#7373735a', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                            >
+                                                <Ionicons name="arrow-redo" size={wp(5)} color="#737373" />
+                                            </TouchableOpacity>
+                                            <ThemedText style={{ color: coolGray }}>Share</ThemedText>
+                                        </View>
                                     </View>
-                                    <View style={{ alignItems: 'center' }}>
-                                        <TouchableOpacity
-                                            onPress={() => Linking.openURL(`whatsapp://send?phone=${selectedLoad.contact}&text=${encodeURIComponent('message')}`)}
-                                            style={[{ backgroundColor: '#25D366', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
-                                        >
-                                            <FontAwesome6 name="whatsapp" size={wp(6)} color="#fff" />
-                                        </TouchableOpacity>
-                                        <ThemedText style={{ color: coolGray }}>WhatsApp</ThemedText>
-                                    </View>
-                                    <View style={{ alignItems: 'center' }}>
-                                        <TouchableOpacity
-                                            onPress={() => Linking.openURL(`tel:${selectedLoad.contact}`)}
-                                            style={[{ backgroundColor: '#0074D9', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
-                                        >
-                                            <MaterialIcons name="call" size={wp(6)} color="#fff" />
-                                        </TouchableOpacity>
-                                        <ThemedText style={{ color: coolGray }}>Phone Call</ThemedText>
-                                    </View>
-                                </View>
+                                    :
+                                    <BottomSheetScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: wp(4), flexDirection: 'row', gap: wp(5), marginTop: 'auto' }}>
+                                        <View style={{ alignItems: 'center' }}>
+                                            <TouchableOpacity style={[{ backgroundColor: coolGray, height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}>
+                                                <FontAwesome6 name="edit" size={wp(5)} color={'white'} />
+                                            </TouchableOpacity>
+                                            <ThemedText color={coolGray} style={{}}>Edit Load</ThemedText>
+                                        </View>
+                                        <View style={{ alignItems: 'center' }}>
+                                            <TouchableOpacity
+                                                onPress={() => deleteMyLoad(selectedLoad.id)}
+                                                style={[{ backgroundColor: '#ff0000', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                            >
+                                                <FontAwesome6 name="trash" size={wp(5)} color="#fff" />
+                                            </TouchableOpacity>
+                                            <ThemedText style={{ color: coolGray }}>Delete Load</ThemedText>
+                                        </View>
+                                        <View style={{ alignItems: 'center' }}>
+                                            <TouchableOpacity
+                                                onPress={() => Linking.openURL(`whatsapp://send?phone=${selectedLoad.contact}&text=${encodeURIComponent('message')}`)}
+                                                style={[{ backgroundColor: '#25D366', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                            >
+                                                <FontAwesome6 name="whatsapp" size={wp(6)} color="#fff" />
+                                            </TouchableOpacity>
+                                            <ThemedText style={{ color: coolGray }}>WhatsApp</ThemedText>
+                                        </View>
+                                        <View style={{ alignItems: 'center' }}>
+                                            <TouchableOpacity
+                                                onPress={() => Linking.openURL(`tel:${selectedLoad.contact}`)}
+                                                style={[{ backgroundColor: '#4285f45a', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                            >
+                                                <Ionicons name="copy" size={wp(5)} color="#4285f4" />
+                                            </TouchableOpacity>
+                                            <ThemedText style={{ color: coolGray }}>Copy Link</ThemedText>
+                                        </View>
+                                        <View style={{ alignItems: 'center' }}>
+                                            <TouchableOpacity
+                                                onPress={() => Linking.openURL(`tel:${selectedLoad.contact}`)}
+                                                style={[{ backgroundColor: '#7373735a', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                            >
+                                                <Ionicons name="arrow-redo" size={wp(5)} color="#737373" />
+                                            </TouchableOpacity>
+                                            <ThemedText style={{ color: coolGray }}>Share</ThemedText>
+                                        </View>
+
+                                    </BottomSheetScrollView>
+                                }
+
                                 {/* Add more fields as needed */}
                             </>
                         ) : (

@@ -45,24 +45,15 @@ const AddLoadDB = () => {
     const handleSubmit = async () => {
 
         console.log({
-            typeofLoad,
-            fromLocation,
-            toLocation,
-            ratePerTonne,
-            paymentTerms,
-            requirements,
-            additionalInfo,
-            alertMsg,
-            fuelAvai,
-            returnLoad,
-            returnRate,
-            returnTerms,
+            toLocation, fromLocation
         });
 
         if (!typeofLoad || !fromLocation || !toLocation || !ratePerTonne || !paymentTerms) {
             alert("Please fill in all required fields.");
             return;
         }
+
+        console.log(user);
 
         if (!user) {
             alert("Please Login first");
@@ -85,8 +76,8 @@ const AddLoadDB = () => {
             paymentTerms,
             requirements,
             additionalInfo,
-            alertMsg: dspAlertMsg ? alertMsg : 'null',
-            fuelAvai: dspFuelAvai ? fuelAvai : 'null',
+            alertMsg: alertMsg,
+            fuelAvai: fuelAvai,
             returnLoad,
             returnRate,
             returnTerms,
@@ -94,7 +85,7 @@ const AddLoadDB = () => {
             activeLoading: false,
             location: fromLocation,
             roundTrip: false,
-          deletionTime: Date.now() + 2 * 24 * 60 * 60 * 1000,
+            deletionTime: Date.now() + 2 * 24 * 60 * 60 * 1000,
         };
 
         try {
@@ -104,6 +95,7 @@ const AddLoadDB = () => {
 
             console.log("Submitting load data:", loadData);
             alert("Load submitted successfully!");
+            router.back()
         } catch (error) {
             console.error("Error submitting load:", error);
             alert("Failed to submit load. Please try again.");

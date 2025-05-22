@@ -1,5 +1,5 @@
-import { ActivityIndicator, FlatList, RefreshControl,  StyleSheet, Text, TouchableNativeFeedback, View } from 'react-native'
-import React, { useEffect,  useState } from 'react'
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableNativeFeedback, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { hp, wp } from '@/constants/common'
 import { ThemedText } from '@/components/ThemedText'
 import { useThemeColor } from '@/hooks/useThemeColor'
@@ -38,10 +38,10 @@ const Index = () => {
 
     const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
     const [truckCapacity, setTruckCapacity] = useState("")
-    
 
-    const [truckConfig , setTruckConfig]=React.useState("")
-    const [truckSuspension , setTruckSuspension]=React.useState("")
+
+    const [truckConfig, setTruckConfig] = React.useState("")
+    const [truckSuspension, setTruckSuspension] = React.useState("")
 
     const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
 
@@ -114,7 +114,7 @@ const LoadTructs= async () => {
     console.log(locationTruckS)
     const [showfilter, setShowfilter] = useState(false)
 
-        const loadMoreTrucks = async () => {
+    const loadMoreTrucks = async () => {
         if (loadingMore || !lastVisible) return;
 
         setLoadingMore(true)    ;
@@ -167,10 +167,10 @@ const LoadTructs= async () => {
                 setLocaOpLoc={setLocaOpLocTruckS}
                 locaOpLoc={locaOpLocTruckS}
                 // Truck Config and suspension
-                 truckConfig={truckConfig}
-                 setTruckConfig={setTruckConfig}
-                 truckSuspension={truckSuspension}
-                 setTruckSuspension={setTruckSuspension}
+                truckConfig={truckConfig}
+                setTruckConfig={setTruckConfig}
+                truckSuspension={truckSuspension}
+                setTruckSuspension={setTruckSuspension}
 
             />
 
