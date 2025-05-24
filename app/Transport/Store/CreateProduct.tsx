@@ -356,7 +356,7 @@ const CreateProduct = () => {
     };
 
     return (
-        <ScreenWrapper>
+        <ScreenWrapper fh={false}>
             <Heading page="Create Product" />
 
             <ErrorOverlay
@@ -446,8 +446,8 @@ const CreateProduct = () => {
                             <DropDownItem
                                 allData={[
                                     { id: 1, name: "USD" },
-                                    { id: 2, name: "EUR" },
-                                    { id: 3, name: "ZAR" }
+                                    { id: 2, name: "RSA" },
+                                    { id: 3, name: "ZWG" }
                                 ]}
                                 selectedItem={{ name: formData.currency }}
                                 setSelectedItem={(item: any) => handleChange("currency", item.name)}

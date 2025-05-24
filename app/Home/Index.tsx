@@ -32,7 +32,7 @@ const Index = () => {
                     <ThemedText type="tiny">The future of Transport & Logistics</ThemedText>
                 </View>
                 <View style={{ flexDirection: 'row', gap: wp(2) }}>
-                    <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
+                    {/* <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                         <TouchableNativeFeedback >
                             <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
                                 <Entypo name='archive' size={wp(6)} color={icon} />
@@ -45,7 +45,7 @@ const Index = () => {
                                 <EvilIcons name='search' size={wp(6)} color={icon} />
                             </View>
                         </TouchableNativeFeedback>
-                    </View>
+                    </View> */}
                     <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                         <TouchableNativeFeedback onPress={() => { setIsVisible(true) }}>
                             <View style={{ padding: wp(2) }}>
@@ -63,6 +63,7 @@ const Index = () => {
     const backgroundColor = useThemeColor('backgroundLight')
     const background = useThemeColor('background')
     const coolGray = useThemeColor('coolGray')
+    const textlight = useThemeColor('textlight')
 
     const [isVisible, setIsVisible] = useState(true)
 
@@ -395,7 +396,13 @@ const Index = () => {
                     </View> */}
 
                 <View style={{ margin: wp(4), marginTop: 0 }}>
-                    <Input placeholder='Search...' Icon={<EvilIcons name='search' size={wp(6)} color={icon} />} containerStyles={{ backgroundColor: backgroundColor, borderRadius: wp(8) }} />
+                    <TouchableOpacity onPress={() => router.push("/Search/Index")}
+                        style={{ backgroundColor: backgroundColor, borderRadius: wp(8), padding: wp(3), flexDirection: 'row', gap: wp(2), borderWidth: .4, borderColor: icon }}>
+                        <EvilIcons name='search' size={wp(6)} color={icon} />
+                        <ThemedText color={textlight}>
+                            Search..
+                        </ThemedText>
+                    </TouchableOpacity>
                 </View>
 
                 {/* <TouchableOpacity onPress={() => router.push("/Logistics/AddHome")} >
@@ -575,7 +582,7 @@ const Index = () => {
                             <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
                                 Long-Term Contracts
                             </ThemedText>
-                            <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ flexDirection: 'row', gap: wp(1) }}>
+                            <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/Index')} style={{ flexDirection: 'row', gap: wp(1) }}>
                                 <ThemedText type='tiny'>
                                     Open Contracts
                                 </ThemedText>

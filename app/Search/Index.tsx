@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, TouchableOpacity, TextInput, Share } from "react-native";
+import { View, ScrollView, TouchableOpacity, TextInput, Share, TouchableHighlight } from "react-native";
 
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from "../components/config/fireBase";
 
-import { Ionicons } from "@expo/vector-icons";
+import { EvilIcons, Ionicons } from "@expo/vector-icons";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { ThemedText } from "@/components/ThemedText";
 import ScreenWrapper from "@/components/ScreenWrapper";
+import { router } from "expo-router";
+import { wp } from "@/constants/common";
+import Input from "@/components/Input";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 interface Load {
   id: string;
@@ -126,7 +130,7 @@ function SearchIterms({ navigation }: SearchItermsProps) {
         {value.isVerified && <View style={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'white', zIndex: 66 }} >
           <MaterialIcons name="verified" size={24} color="green" />
         </View>}
-        <ThemedText style={{ color: '#6a0c0c',  textAlign: 'center', fontSize: 17 }}>{value.CompanyName} </ThemedText>
+        <ThemedText style={{ color: '#6a0c0c', textAlign: 'center', fontSize: 17 }}>{value.CompanyName} </ThemedText>
         <ThemedText >from {value.fromLocation} to {value.toLocation} </ThemedText>
         {value.truckTonnage && <ThemedText> Truck Ton : {value.truckTonnage}</ThemedText>}
         <ThemedText>Trailer Type : {value.truckType}</ThemedText>
@@ -141,7 +145,7 @@ function SearchIterms({ navigation }: SearchItermsProps) {
         {value.isVerified && <View style={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'white', zIndex: 66 }} >
           <MaterialIcons name="verified" size={24} color="green" />
         </View>}
-        <ThemedText style={{ color: '#6a0c0c',  textAlign: 'center', fontSize: 17 }}>{value.companyName} </ThemedText>
+        <ThemedText style={{ color: '#6a0c0c', textAlign: 'center', fontSize: 17 }}>{value.companyName} </ThemedText>
         <ThemedText style={{ fontSize: 17 }} >Commodity {value.typeofLoad}  </ThemedText>
         <ThemedText style={{ color: 'green', fontWeight: 'bold', fontSize: 15 }} >Rate {value.ratePerTonne} </ThemedText>
         <ThemedText >from {value.fromLocation} to {value.toLocation} </ThemedText>
@@ -183,13 +187,19 @@ Experience the future of transportation and logistics!`;
       alert(error.message);
     }
   };
-  return (
-      <ScreenWrapper>
 
-      <View style={{ height: 84,  paddingTop: 15, alignItems: 'center', justifyContent: 'center', borderColor: '#6a0c0c', borderWidth: 2 }} >
+  const accent = useThemeColor('accent')
+  const icon = useThemeColor('icon')
+  const backgroundColor = useThemeColor('backgroundLight')
+  const background = useThemeColor('background')
+  const coolGray = useThemeColor('coolGray')
+  return (
+    <ScreenWrapper>
+
+      {/* <View style={{ height: 84, paddingTop: 15, alignItems: 'center', justifyContent: 'center', borderColor: '#6a0c0c', borderWidth: 2 }} >
 
         <View style={{ flexDirection: 'row', height: 40, backgroundColor: '#6a0c0c', alignItems: 'center' }}>
-          <TouchableOpacity style={{ marginRight: 10 }} onPress={() => navigation.goBack()}>
+          <TouchableOpacity style={{ marginRight: 10 }} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={30} color="white" style={{ marginLeft: 10 }} />
           </TouchableOpacity>
           <TextInput
@@ -198,12 +208,27 @@ Experience the future of transportation and logistics!`;
             style={{ height: 40, flex: 1, fontSize: 17, backgroundColor: '#6a0c0c', color: 'white' }}
             placeholderTextColor="white"
           />
+
         </View>
 
 
+      </View> */}
+      <View style={{ margin: wp(4), marginTop: wp(3), flexDirection: 'row', gap: 2, alignItems: 'center' }}>
+        <TouchableHighlight
+          underlayColor={'#7f7f7f1c'}
+          onPress={() => router.back()}
+          style={{ padding: wp(2.5), marginLeft: wp(0), borderRadius: wp(5), marginBottom: wp(3) }}
+        >
+          <Ionicons name='chevron-back' size={wp(5)} color={icon} />
+        </TouchableHighlight>
+        <Input onChangeText={(text) => handleFilter(text)}
+          placeholder='Search...'
+          autoFocus
+          Icon={<EvilIcons name='search' size={wp(6)} color={icon} />}
+          isDynamicwidth
+          containerStyles={{ backgroundColor: backgroundColor, borderRadius: wp(8), flex: 1 }} />
       </View>
 
-   
 
 
       {allTrucks.length <= 0 && loadsList.length <= 0 && <ThemedText>Loading......</ThemedText>}
@@ -225,7 +250,7 @@ Experience the future of transportation and logistics!`;
         {filteredDataTrucks.length > 0 && <ScrollView >
           {<ThemedText  >
             {allTrucks.length > 0 && filteredDataTrucks.length <= 0 ? "Trucks Not Available" : "Available Trucks"}
-             </ThemedText>}
+          </ThemedText>}
           {displaySearchedTrucks}
         </ScrollView>}
 
@@ -237,7 +262,7 @@ Experience the future of transportation and logistics!`;
         <ThemedText style={{ fontSize: 20, textDecorationLine: 'underline' }} > Share or recommend our app for more services and  products!</ThemedText>
       </TouchableOpacity>}
 
-      </ScreenWrapper>
+    </ScreenWrapper>
   );
 }
 export default React.memo(SearchIterms);

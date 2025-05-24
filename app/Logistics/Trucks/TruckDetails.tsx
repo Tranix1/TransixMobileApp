@@ -1,18 +1,19 @@
-import { View, ScrollView, RefreshControl, TouchableOpacity, Modal, TouchableNativeFeedback,  Linking, Pressable } from "react-native";
+import { View, ScrollView, RefreshControl, TouchableOpacity, Modal, TouchableNativeFeedback, Linking, Pressable } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { ThemedText } from "@/components/ThemedText";
 import Heading from "@/components/Heading";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import {  Ionicons,  Octicons } from "@expo/vector-icons";
+import { Ionicons, Octicons } from "@expo/vector-icons";
 import { hp, wp } from "@/constants/common";
-import { ReactElement,  useEffect,  useState } from "react";
+import { ReactElement, useEffect, useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 import { BlurView } from 'expo-blur';
 import { Truck, User } from "@/types/types";
 import { deleteDocument, readById } from "@/db/operations";
 import { Image } from 'expo-image'
+import { useAuth } from "@/context/AuthContext";
 
 const TruckDetails = () => {
 
@@ -29,7 +30,7 @@ const TruckDetails = () => {
     const [refreshing, setRefreshing] = useState(false)
     const [isSaved, setIsSaved] = useState(false);
 
-
+    const { user } = useAuth();
     const getData = async () => {
         try {
             setRefreshing(true)
@@ -51,7 +52,7 @@ const TruckDetails = () => {
     };
 
 
-      const [postOwner, setPostUser] = useState<User>();
+    const [postOwner, setPostUser] = useState<User>();
 
     useEffect(() => {
         getData();
@@ -183,14 +184,15 @@ const TruckDetails = () => {
             <Heading page={truckData.name || "Truck Details"}
                 rightComponent={
                     <View style={{ flexDirection: 'row', gap: wp(2), marginRight: wp(2) }}>
-
-                        <View style={{ overflow: 'hidden', borderRadius: wp(2.4) }}>
-                            <TouchableNativeFeedback onPress={() => setModalVisible(true)}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: wp(2), padding: wp(1.5) }}>
-                                    <Ionicons name='reorder-three-outline' size={wp(6)} color={icon} />
-                                </View>
-                            </TouchableNativeFeedback>
-                        </View>
+                        {user?.uid === truckData.userId &&
+                            <View style={{ overflow: 'hidden', borderRadius: wp(2.4) }}>
+                                <TouchableNativeFeedback onPress={() => setModalVisible(true)}>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: wp(2), padding: wp(1.5) }}>
+                                        <Ionicons name='reorder-three-outline' size={wp(6)} color={icon} />
+                                    </View>
+                                </TouchableNativeFeedback>
+                            </View>
+                        }
                     </View>} />
             <ScrollView
                 refreshControl={
@@ -332,69 +334,69 @@ const TruckDetails = () => {
 
 
                     </View>
-                       <View style={{ flexDirection: 'row' }}>
-                            <View style={{ flex: 1 }}>
-                                <ThemedText type="tiny" style={{}}>
-                                    Truck Model
-                                </ThemedText>
-                                <ThemedText type="subtitle" style={{}}>
-                                    {truckData.truckName || '--'}
-                                </ThemedText>
-                            </View>
-
+                    <View style={{ flexDirection: 'row' }}>
+                        <View style={{ flex: 1 }}>
+                            <ThemedText type="tiny" style={{}}>
+                                Truck Model
+                            </ThemedText>
+                            <ThemedText type="subtitle" style={{}}>
+                                {truckData.truckName || '--'}
+                            </ThemedText>
                         </View>
-                        <View style={{ flexDirection: 'row' }}>
-                            <View style={{ flex: 1 }}>
-                                <ThemedText type="tiny" style={{}}>
-                                    Truck Type
-                                </ThemedText>
-                                <ThemedText type="subtitle" style={{}}>
-                                    {truckData.truckType || '--'}
-                                </ThemedText>
-                            </View>
 
+                    </View>
+                    <View style={{ flexDirection: 'row' }}>
+                        <View style={{ flex: 1 }}>
+                            <ThemedText type="tiny" style={{}}>
+                                Truck Type
+                            </ThemedText>
+                            <ThemedText type="subtitle" style={{}}>
+                                {truckData.truckType || '--'}
+                            </ThemedText>
                         </View>
+
+                    </View>
 
 
                     {/* <Divider /> */}
-                        <View style={{ flexDirection: 'row' }}>
-                            <View style={{ flex: 1 }}>
-                                <ThemedText type="tiny" style={{}}>
-                                    Cargo Area
-                                    </ThemedText>
-                                <ThemedText type="subtitle" style={{}}>
-                                    {truckData.cargoArea !=="Other" ? truckData.cargoArea : truckData.otherCargoArea }
-                                </ThemedText>
-                            </View>
+                    <View style={{ flexDirection: 'row' }}>
+                        <View style={{ flex: 1 }}>
+                            <ThemedText type="tiny" style={{}}>
+                                Cargo Area
+                            </ThemedText>
+                            <ThemedText type="subtitle" style={{}}>
+                                {truckData.cargoArea !== "Other" ? truckData.cargoArea : truckData.otherCargoArea}
+                            </ThemedText>
+                        </View>
 
 
 
                     </View>
-                      {truckData.cargoArea ==="Tanker"&& <View style={{}}>
+                    {truckData.cargoArea === "Tanker" && <View style={{}}>
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1 }}>
                                 <ThemedText type="tiny" style={{}}>
                                     Tanker Type
-                                    </ThemedText>
-                              { 
-                               <ThemedText type="subtitle" style={{}}>
-                                    {truckData.tankerType !=="Other"?  truckData.tankerType : truckData.otherTankerType }
                                 </ThemedText>
+                                {
+                                    <ThemedText type="subtitle" style={{}}>
+                                        {truckData.tankerType !== "Other" ? truckData.tankerType : truckData.otherTankerType}
+                                    </ThemedText>
                                 }
                             </View>
 
                         </View>
 
 
-                    </View>  }      
+                    </View>}
 
-  <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
                         <View style={{ flex: 1 }}>
                             <ThemedText type="tiny" style={{}}>
                                 Suspension
                             </ThemedText>
                             <ThemedText type="subtitle" style={{}}>
-                                {truckData.truckSuspensions==="Other" ? truckData.truckSuspensions : truckData.otherTruckSuspension }
+                                {truckData.truckSuspensions === "Other" ? truckData.truckSuspensions : truckData.otherTruckSuspension}
                             </ThemedText>
                         </View>
                         <ThemedText>|</ThemedText>
@@ -403,7 +405,7 @@ const TruckDetails = () => {
                                 Configuration:
                             </ThemedText>
                             <ThemedText type="subtitle" style={{}}>
-                                {truckData.truckConfig !=="Other" ?  truckData.truckConfig : truckData.otherTruckConfig}
+                                {truckData.truckConfig !== "Other" ? truckData.truckConfig : truckData.otherTruckConfig}
                             </ThemedText>
                         </View>
 
@@ -446,7 +448,7 @@ const TruckDetails = () => {
 
 
                     </View>
-                  
+
 
 
                     {truckData.additionalInfo &&

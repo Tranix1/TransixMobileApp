@@ -646,7 +646,7 @@ const NewContract = () => {
                                                 const active = operationCountries.some(x => x === item);
 
                                                 return (
-                                                    <TouchableOpacity onPress={() => active ? setOperationCountries(operationCountries.filter(x => x !== item)) : setOperationCountries([...operationCountries, item])} style={{ padding: wp(2), marginVertical: wp(1), flexDirection: 'row', justifyContent: 'space-between' }}>
+                                                    <TouchableOpacity key={item} onPress={() => active ? setOperationCountries(operationCountries.filter(x => x !== item)) : setOperationCountries([...operationCountries, item])} style={{ padding: wp(2), marginVertical: wp(1), flexDirection: 'row', justifyContent: 'space-between' }}>
                                                         <ThemedText type="subtitle">
                                                             {item}
                                                         </ThemedText>
@@ -744,7 +744,7 @@ const NewContract = () => {
 
                                 <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
                                     {truckTypes.map((truck, index) =>
-                                        <>
+                                        <View key={index}>
                                             <TouchableNativeFeedback key={index} onPress={() => setSelectedTruckType(truck)}>
                                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(3) }}>
                                                     <Image source={truck.image} style={{ height: wp(25), width: wp(35), borderRadius: wp(2) }} />
@@ -768,7 +768,7 @@ const NewContract = () => {
                                             {truckTypes.length > index + 1 &&
                                                 <Divider style={{ marginVertical: wp(0) }} />
                                             }
-                                        </>
+                                        </View>
                                     )}
                                 </View>
 
@@ -816,7 +816,7 @@ const NewContract = () => {
                                 </ThemedText>}
                                 {selectedTruckType?.name !== "Tanker" && <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
                                     {tonneSizes.map((tonnesize, index) =>
-                                        <>
+                                        <View key={index}>
                                             <TouchableNativeFeedback key={index} onPress={() => setTruckCapacity(tonnesize)}>
                                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                     <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
@@ -834,7 +834,7 @@ const NewContract = () => {
                                             {tonneSizes.length > index + 1 &&
                                                 <Divider style={{ marginVertical: wp(0) }} />
                                             }
-                                        </>
+                                        </View>
                                     )}
 
 
