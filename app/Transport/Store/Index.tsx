@@ -41,7 +41,7 @@ const StorePage = () => {
     const textColor = useThemeColor('text')
 
     const loadProducts = async () => {
-        const result = await fetchDocuments("Shop")
+        const result = await fetchDocuments("products")
         if (result.data?.length) {
             setProducts(result.data as Product[])
             setLastVisible(result.lastVisible)
@@ -65,7 +65,7 @@ const StorePage = () => {
     const loadMoreProducts = async () => {
         if (loadingMore || !lastVisible) return
         setLoadingMore(true)
-        const result = await fetchDocuments('Shop', 10, lastVisible)
+        const result = await fetchDocuments('products', 10, lastVisible)
         if (result) {
             setProducts([...products, ...result.data as Product[]])
             setLastVisible(result.lastVisible)

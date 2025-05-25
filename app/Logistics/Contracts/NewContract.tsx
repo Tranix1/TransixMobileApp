@@ -30,6 +30,8 @@ import { SlctTruckCapacity } from "@/components/SelectTruckCapacity";
 import { SpecifyTruckType } from "@/components/SelectTruckType";
 import { Image } from "expo-image";
 
+
+
 const NewContract = () => {
     const backgroundLight = useThemeColor('backgroundLight');
     const background = useThemeColor('background');

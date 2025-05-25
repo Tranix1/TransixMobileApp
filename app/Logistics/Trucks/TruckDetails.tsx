@@ -472,8 +472,8 @@ const TruckDetails = () => {
 
 
 
-                    <TouchableOpacity>
-                        <ThemedText>View Trucks</ThemedText>
+                    <TouchableOpacity style={{height:45 , backgroundColor:"green",width:240,borderRadius:21,justifyContent:"center",alignItems:"center",alignSelf:"center"}} >
+                        <ThemedText style={{color:"white"}} >View Trucks {truckData.CompanyName} </ThemedText>
                     </TouchableOpacity>
 
 

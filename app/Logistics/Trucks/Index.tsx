@@ -1,4 +1,4 @@
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableNativeFeedback, View } from 'react-native'
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableNativeFeedback, View, TouchableOpacity, Image, ScrollView } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { hp, wp } from '@/constants/common'
 import { ThemedText } from '@/components/ThemedText'
@@ -11,6 +11,7 @@ import { DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore'
 
 import { TruckTypeProps } from '@/types/types'
 import { SpecifyTruckDetails } from '@/components/SpecifyTruckDetails'
+import { cargoArea } from '@/data/appConstants'
 const Index = () => {
 
     const background = useThemeColor('backgroundLight')
@@ -90,7 +91,7 @@ const Index = () => {
 
     useEffect(() => {
         LoadTructs();
-    }, [truckCapacity, truckConfig, truckSuspension, operationCountries])
+    }, [truckCapacity, truckConfig, truckSuspension, operationCountries,selectedCargoArea])
 
     const onRefresh = async () => {
         try {
@@ -104,6 +105,8 @@ const Index = () => {
     };
 
     const [showfilter, setShowfilter] = useState(false)
+
+  
 
     const loadMoreTrucks = async () => {
         if (loadingMore || !lastVisible) return;
@@ -143,7 +146,13 @@ const Index = () => {
         setLoadingMore(false);
     };
 
-
+    function clearFilter() {
+        setOperationCountries([])
+        setTruckConfig("")
+        setTruckCapacity("")
+        setTruckSuspension("")
+        setSelectedCargoArea(null)
+    }
 
     return (
         <View style={{ flex: 1 }}>
@@ -245,48 +254,94 @@ const Index = () => {
 
 
 
-                            {/* {(selectedTruckType || filterVerified || truckTonnage !== 'All') &&
-                                <TouchableOpacity onPress={() => setShowfilter(true)} style={{ padding: wp(2), flexDirection: 'row', backgroundColor: background, borderRadius: wp(6), marginBottom: wp(2), position: 'relative' }}>
-                                    {selectedTruckType &&
+                            {(selectedCargoArea || truckSuspension || truckConfig || operationCountries.length>0 ||truckCapacity) && (
+                                <TouchableOpacity
+                                    onPress={() =>{ 
+                                        clearFilter()
+                                        setShowfilter(true)
+                                    }}
+                                    style={{
+                                        padding: wp(2),
+                                        flexDirection: 'row',
+                                        backgroundColor: background,
+                                        borderRadius: wp(6),
+                                        marginBottom: wp(2),
+                                        position: 'relative',
+                                        alignItems: 'center',
+                                    }}
+                                >
+                                    {selectedCargoArea?.image && (
                                         <View style={{ marginRight: wp(2) }}>
-                                            <Image style={{ width: wp(20), height: wp(15), borderRadius: wp(4) }} source={selectedTruckType.image} />
+                                            <Image
+                                                source={selectedCargoArea.image}
+                                                style={{
+                                                    width: wp(20),
+                                                    height: wp(15),
+                                                    borderRadius: wp(4),
+                                                    resizeMode: 'cover',
+                                                }}
+                                            />
                                         </View>
-                                    }
+                                    )}
 
-                                    <View style={{ flex: 1, justifyContent: 'space-between' }}>
-                                        {selectedTruckType &&
-                                            <ThemedText type='subtitle' style={{ flex: 1 }}>
-                                                {selectedTruckType?.name}
+                                    <View style={{ flex: 1 }}>
+                                        {selectedCargoArea?.name && (
+                                            <ThemedText type="subtitle" style={{ marginBottom: wp(1) }}>
+                                                {selectedCargoArea.name}
                                             </ThemedText>
-                                        }
-                                        <ScrollView horizontal contentContainerStyle={{ gap: wp(2) }}>
-                                            {truckTonnage !== 'All' &&
-                                                <View style={[styles.countryButton, { backgroundColor: '#73c8a9' },]} >
-                                                    <ThemedText style={{ color: 'white' }}>
-                                                        {truckTonnage}
-                                                    </ThemedText>
-                                                </View>
-                                            }
-                                            {filterVerified &&
-                                                <View style={[styles.countryButton, { backgroundColor: '#73c8a9' },]} >
-                                                    <ThemedText style={{ color: 'white' }}>
-                                                        Verified Only
-                                                    </ThemedText>
-                                                </View>
-                                            }
+                                        )}
 
+                                        <ScrollView
+                                            horizontal
+                                            showsHorizontalScrollIndicator={false}
+                                            contentContainerStyle={{ gap: wp(2) }}
+                                        >
+                                            {truckCapacity && (
+                                                <View style={[styles.countryButton, { backgroundColor: '#73c8a9' }]}>
+                                                    <ThemedText style={{ color: 'white' }}>
+                                                        { truckCapacity}
+                                                    </ThemedText>
+                                                </View>
+                                            )}
+                                                 {truckConfig&& (
+                                                <View style={[styles.countryButton, { backgroundColor: '#73c8a9' }]}>
+                                                    <ThemedText style={{ color: 'white' }}>
+                                                        {truckConfig}
+                                                    </ThemedText>
+                                                </View>
+                                            )}
+                                                 {truckSuspension && (
+                                                <View style={[styles.countryButton, { backgroundColor: '#73c8a9' }]}>
+                                                    <ThemedText style={{ color: 'white' }}>
+                                                        {truckSuspension}
+                                                    </ThemedText>
+                                                </View>
+                                            )}
                                         </ScrollView>
-
+                                        <ThemedText style={{textAlign:"center"}} >
+                                            
+                                    {operationCountries?.map(item => item + ', ') || 'N/A'}
+                                        </ThemedText>
                                     </View>
-                                    <View style={{ overflow: 'hidden', borderRadius: wp(10), position: 'absolute', right: wp(4), top: wp(2) }}>
-                                        <TouchableNativeFeedback onPress={() => clearFilter()}>
+
+                                    <View
+                                        style={{
+                                            overflow: 'hidden',
+                                            borderRadius: wp(10),
+                                            position: 'absolute',
+                                            right: wp(2),
+                                            top: wp(2)
+                                        }}
+                                    >
+                                        <TouchableNativeFeedback onPress={clearFilter}>
                                             <View style={{ padding: wp(2) }}>
-                                                <Ionicons name={'close'} size={wp(4)} color={icon} />
+                                                <Ionicons name="close" size={wp(4)} color={icon} />
                                             </View>
                                         </TouchableNativeFeedback>
                                     </View>
                                 </TouchableOpacity>
-                            } */}
+                            )}
+
 
 
                         </View>
@@ -368,8 +423,8 @@ const styles = StyleSheet.create({
         flex: 1,
         margin: wp(2)
     }, countryButton: {
-        padding: wp(2),
-        paddingHorizontal: wp(4),
+        padding: wp(1),
+        paddingHorizontal: wp(3),
         borderRadius: wp(4)
 
     }, countryButtonSelected: {

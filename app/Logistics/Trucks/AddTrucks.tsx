@@ -222,7 +222,9 @@ console.log(addingDocUpdate)
           onClose={() => setDspFrstPageErr(false)}
         />
 
-
+         {!uploadingImageUpdate && <View style={{height:25 , backgroundColor:"red",width:180, margin :10, justifyContent:"center",alignItems:"center"   , position:"absolute",top:0,zIndex:100, alignSelf:"center" }} >
+            <ThemedText > {uploadingImageUpdate} pana </ThemedText>
+          </View>}
 
         <ScrollView>
 

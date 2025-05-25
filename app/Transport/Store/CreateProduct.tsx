@@ -40,35 +40,106 @@ const CreateProduct = () => {
     // Product categories
     const productCategories = [
         { id: 1, name: "Vehicle" },
-        { id: 2, name: "Property" },
-        { id: 3, name: "Electronics" },
-        { id: 4, name: "Furniture" },
-        { id: 5, name: "Other" }
+        { id: 2, name: "Trailers" },
+        { id: 3, name: "Container" },
+        { id: 4, name: "Spares" },
+        { id: 5, name: "Service Provider" },
+        { id: 6, name: "Other" }
     ];
 
     // Vehicle types
     const vehicleTypes = [
         { id: 1, name: "Sedan" },
         { id: 2, name: "SUV" },
-        { id: 3, name: "Truck" },
-        { id: 4, name: "Motorcycle" },
+        { id: 2, name: "Vans" },
+        { id: 2, name: "Pickup Trucks" },
+        { id: 2, name: "Hatchbeacks" },
+        { id: 3, name: "Convetibles" },
+        { id: 4, name: "Crissovers" },
         { id: 5, name: "Other" }
     ];
 
-    // Property types
-    const propertyTypes = [
-        { id: 1, name: "House" },
-        { id: 2, name: "Apartment" },
-        { id: 3, name: "Land" },
-        { id: 4, name: "Commercial" },
-        { id: 5, name: "Other" }
-    ];
+
+    const heavyEupementType =[
+
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+    ]
+    const cargiTrucksType =[
+        
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+    ]
+
+
+    const vehicleMake =[
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+    ]
+    const cargoTruckMake =[
+
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+    ]
+    const heavyEupementMake =[
+
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+        { id: 1, name: "Sedan" },
+    ]
+
+    
 
     // Transaction types
     const transactionTypes = [
         { id: 1, name: "Sell" },
         { id: 2, name: "Rent" },
-        { id: 3, name: "Swap" }
+        { id: 4, name: "Hire" },
+        { id: 5, name: "Swap" },
     ];
 
     // States
@@ -144,21 +215,21 @@ const CreateProduct = () => {
     // Handle form submission
     const handleSubmit = async () => {
         // Validate required fields
-        const requiredFields = [
-            !formData.title && "Product title is required",
-            !formData.description && "Description is required",
-            !formData.price && "Price is required",
-            !selectedCategory && "Category is required",
-            !selectedTransaction && "Transaction type is required",
-            images.length === 0 && "At least one image is required",
-            !formData.location && "Location is required"
-        ].filter(Boolean);
+        // const requiredFields = [
+        //     !formData.title && "Product title is required",
+        //     !formData.description && "Description is required",
+        //     !formData.price && "Price is required",
+        //     !selectedCategory && "Category is required",
+        //     !selectedTransaction && "Transaction type is required",
+        //     images.length === 0 && "At least one image is required",
+        //     !formData.location && "Location is required"
+        // ].filter(Boolean);
 
-        if (requiredFields.length > 0) {
-            setShowErrors(true);
-            ToastAndroid.show("Please fill all required fields", ToastAndroid.SHORT);
-            return;
-        }
+        // if (requiredFields.length > 0) {
+        //     setShowErrors(true);
+        //     ToastAndroid.show("Please fill all required fields", ToastAndroid.SHORT);
+        //     return;
+        // }
 
         setIsSubmitting(true);
 
@@ -239,12 +310,11 @@ const CreateProduct = () => {
                         )}
 
                         <ThemedText type="defaultSemiBold">Make</ThemedText>
-                        <Input
-                            placeholder="e.g. Toyota"
-                            onChangeText={(text) => handleNestedChange("details", "vehicle", {
-                                ...formData.details?.vehicle,
-                                make: text
-                            })}
+                       <DropDownItem
+                            allData={vehicleTypes}
+                            selectedItem={selectedType}
+                            setSelectedItem={setSelectedType}
+                            placeholder="Select vehicle type"
                         />
 
                         <ThemedText type="defaultSemiBold">Model</ThemedText>
@@ -278,48 +348,7 @@ const CreateProduct = () => {
                     </>
                 );
 
-            case "Property":
-                return (
-                    <>
-                        <ThemedText type="defaultSemiBold">Property Type</ThemedText>
-                        <DropDownItem
-                            allData={propertyTypes}
-                            selectedItem={selectedType}
-                            setSelectedItem={setSelectedType}
-                            placeholder="Select property type"
-                        />
-
-                        <ThemedText type="defaultSemiBold">Bedrooms</ThemedText>
-                        <Input
-                            placeholder="Number of bedrooms"
-                            keyboardType="numeric"
-                            onChangeText={(text) => handleNestedChange("details", "property", {
-                                ...formData.details?.property,
-                                bedrooms: parseInt(text) || 0
-                            })}
-                        />
-
-                        <ThemedText type="defaultSemiBold">Bathrooms</ThemedText>
-                        <Input
-                            placeholder="Number of bathrooms"
-                            keyboardType="numeric"
-                            onChangeText={(text) => handleNestedChange("details", "property", {
-                                ...formData.details?.property,
-                                bathrooms: parseInt(text) || 0
-                            })}
-                        />
-
-                        <ThemedText type="defaultSemiBold">Square Footage</ThemedText>
-                        <Input
-                            placeholder="Area in square feet"
-                            keyboardType="numeric"
-                            onChangeText={(text) => handleNestedChange("details", "property", {
-                                ...formData.details?.property,
-                                squareFootage: parseInt(text) || 0
-                            })}
-                        />
-                    </>
-                );
+         
 
             default:
                 return (
@@ -414,13 +443,19 @@ const CreateProduct = () => {
                     <ThemedText type="subtitle">Basic Information</ThemedText>
                     <Divider />
 
-                    <ThemedText type="defaultSemiBold">Title</ThemedText>
+                    <ThemedText type="defaultSemiBold">Product Name</ThemedText>
                     <Input
-                        placeholder="Product title"
+                        placeholder="Product Name"
                         value={formData.title}
                         onChangeText={(text) => handleChange("title", text)}
                     />
 
+                <ThemedText type="defaultSemiBold">Product Location</ThemedText>
+                    <Input
+                        placeholder="Product Name"
+                        value={formData.title}
+                        onChangeText={(text) => handleChange("title", text)}
+                    />
                     <ThemedText type="defaultSemiBold">Description</ThemedText>
                     <Input
                         placeholder="Detailed description"
@@ -441,7 +476,7 @@ const CreateProduct = () => {
                                 onChangeText={(text) => handleChange("price", parseFloat(text) || 0)}
                             />
                         </View>
-                        <View style={{ width: wp(20), marginLeft: wp(2) }}>
+                        <View style={{ width: wp(30), marginLeft: wp(2) }}>
                             <ThemedText type="defaultSemiBold">Currency</ThemedText>
                             <DropDownItem
                                 allData={[
