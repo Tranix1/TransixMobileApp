@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { router } from 'expo-router';
@@ -11,11 +11,17 @@ import Heading from '@/components/Heading';
 import { Entypo, Ionicons } from '@expo/vector-icons';
 import { Dropdown } from 'react-native-element-dropdown';
 import { Countries } from '@/types/types';
+import type { ImagePickerAsset } from 'expo-image-picker';
+import { selectManyImages } from '@/Utilities/utils';
+import { uploadImage } from "@/db/operations";
 
 const Edit = () => {
 
     const { user, updateAccount } = useAuth();
 
+
+    const [imagelogo, setLogo] = useState<ImagePickerAsset[]>([]);
+    const [imageUpdate, setUploadImageUpdate] = React.useState("")
 
     const [organisation, setOrganisation] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -45,18 +51,18 @@ const Edit = () => {
     }, [])
 
     const Submit = async () => {
+        const logoImage = await uploadImage(imagelogo[0], "Trucks", setUploadImageUpdate, "Logo");
         const data = {
             country: selectedValue.value,
             address: address,
             phoneNumber: phoneNumber,
-            organisation: organisation
+            organisation: organisation,
+            photoURL: logoImage
         }
-        console.log(data);
 
         try {
             const update = await updateAccount(data);
             if (update.success) {
-                alert("hiiiiiiii")
                 router.replace('/Account/Index')
             }
         } catch (error) {
@@ -66,20 +72,7 @@ const Edit = () => {
     }
 
 
-    const renderItem = (item: any) => {
-        return (
-            <View style={[styles.item, item.value === selectedValue.value && {}]}>
-                <ThemedText style={[{ textAlign: 'left', flex: 1 }, item.value === selectedValue.value && { color: accent }]}>{item.value}</ThemedText>
-                {item.value === selectedValue.value && (
-                    <Ionicons
-                        color={icon}
-                        name='checkmark-outline'
-                        size={wp(5)}
-                    />
-                )}
-            </View>
-        );
-    };
+
     return (
         <ScreenWrapper>
             <View style={styles.container}>
@@ -90,10 +83,14 @@ const Edit = () => {
 
                     <ThemedText style={styles.label}>Organisation Logo</ThemedText>
 
-                    <View style={[styles.input, { height: hp(14), justifyContent: 'center', alignItems: 'center' }]}>
+                    {imagelogo[0] && <Image source={{ uri: imagelogo[0].uri }} style={{ width: wp(90), height: wp(90), marginBottom: 9, borderRadius: wp(4) }} />}
+                    {!imagelogo[0] && <TouchableOpacity 
+                    style={[styles.input, { height: hp(14), justifyContent: 'center', alignItems: 'center' }]}
+                    onPress={() => selectManyImages(setLogo, true)}
+                    >
                         <Ionicons name='image-outline' size={wp(8)} color={icon} />
                         <ThemedText style={styles.label}>Click To Add Logo</ThemedText>
-                    </View>
+                    </TouchableOpacity>}
 
 
                     <ThemedText style={styles.label}>Organisation Name</ThemedText>

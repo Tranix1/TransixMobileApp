@@ -278,8 +278,8 @@ export const uploadImage = async (
         await uploadBytes(storageRef, blob);
         const imageUrl = await getDownloadURL(storageRef);
 
+        setUploadImageUpdate(`Done Adding`)
         return imageUrl;
-        setUploadImageUpdate(`${messageUpdate}`)
     } catch (error) {
         console.error('Image upload failed:', error);
         return null;
