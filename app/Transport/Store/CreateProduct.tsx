@@ -27,7 +27,10 @@ import { formatCurrency } from "@/services/services";
 import { Product } from "@/types/types";
 import { DropDownItem } from "@/components/DropDown";
 import { router } from "expo-router";
+import { getDownloadURL, ref, uploadBytes, } from "firebase/storage";
+import { storage } from "@/db/fireBaseConfig";
 
+import type { ImagePickerAsset } from 'expo-image-picker';
 const CreateProduct = () => {
     // Theme colors
     const background = useThemeColor('background');
@@ -179,7 +182,14 @@ const CreateProduct = () => {
     // States
     const [vehicleType , setVehicleType]=React.useState("smallVehicle")
     const [vehicleMake , setVehicleMake]=React.useState("smallVehicle")
-    const [images, setImages] = useState<any[]>([]);
+  const [images, setImages] = useState<ImagePickerAsset[]>([]);
+
+  if(images.length > 4){
+        setImages([]);
+    alert('You can only select up to 4 images.');
+    return; // Exit if more than 4 images
+  }
+
     const [uploadProgress, setUploadProgress] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showErrors, setShowErrors] = useState(false);
@@ -239,15 +249,9 @@ const CreateProduct = () => {
 
     // Handle image selection
     const handleSelectImages = async () => {
-        try {
-            // const selectedImages = await selectManyImages();
-            // if (selectedImages) {
-            //     setImages(selectedImages);
-            // }
-        } catch (error) {
-            ToastAndroid.show("Error selecting images", ToastAndroid.SHORT);
-        }
+       
     };
+
 
     // Handle form submission
     const handleSubmit = async () => {
@@ -268,6 +272,25 @@ const CreateProduct = () => {
         //     return;
         // }
 
+
+
+    let imageUrls = [];
+ for (const asset of images) {
+          
+      const response = await fetch(asset.uri);
+        const blob = await response.blob();
+        const storageRef = ref(storage, `Shop/` + new Date().getTime());
+        
+        // Upload the image
+        const snapshot = await uploadBytes(storageRef, blob);
+
+        // Get the download URL
+        const imageUrl = await getDownloadURL(storageRef);
+
+        imageUrls.push(imageUrl);
+        
+        }
+
         setIsSubmitting(true);
 
         try {
@@ -287,7 +310,7 @@ const CreateProduct = () => {
             // Prepare product data
             const productData = {
                 ...formData,
-                images: uploadedImages,
+                images:imageUrls ,
                 category: selectedCategory.name,
                 seller: {
                     id: user?.uid || "",
@@ -346,9 +369,21 @@ const CreateProduct = () => {
                         </TouchableOpacity>
                     </View>
 
-                    <ThemedText type="defaultSemiBold">Vehicle Type</ThemedText>
+
+                    {vehicleType === "cargoTrucks"&& <View>
+                        <ThemedText> Truck Type</ThemedText>
+                           <DropDownItem
+                            allData={[ { id : 1 , name : "semi Truck"}, {id : 2 , name:"rigid"}  ]}
+                            selectedItem={selectedType}
+                            setSelectedItem={setSelectedType}
+                            placeholder="Select vehicle type"
+                        />
+                    </View>  }
+
+
+                    <ThemedText type="defaultSemiBold">  {vehicleType !== "cargoTrucks" ?  "Vehicle Type":"Cargo Area" }  </ThemedText>
                         <DropDownItem
-                            allData={ vehicleType ==="smallVehicle"? smallVehicleTypes : vehicleType === "cargoTrucks"? cargoVehiType : heavyEupementType }
+                            allData={ vehicleType ==="smallVehicle"? smallVehicleTypes : vehicleType === "cargoTrucks" ? cargoVehiType : heavyEupementType }
                             selectedItem={selectedType}
                             setSelectedItem={setSelectedType}
                             placeholder="Select vehicle type"
@@ -366,7 +401,7 @@ const CreateProduct = () => {
 
                         <ThemedText type="defaultSemiBold">Make</ThemedText>
                        <DropDownItem
-                            allData={ vehicleMake ==="smallVehicle"? smallVehicleMake : vehicleType === "cargoTrucks"? cargoTruckMake : heavyEupementMake}
+                            allData={ vehicleType ==="smallVehicle"? smallVehicleMake : vehicleType === "cargoTrucks"? cargoTruckMake : heavyEupementMake}
                             selectedItem={selectedMake}
                             setSelectedItem={setSelectedMake}
                             placeholder="Select vehicle Make"
@@ -521,7 +556,7 @@ const CreateProduct = () => {
                         ) : (
                             <TouchableOpacity
                                 style={styles.addImageButton}
-                                onPress={handleSelectImages}
+                                onPress={()=>selectManyImages(setImages , true, true) }
                             >
                                 <Ionicons name="camera" size={wp(10)} color={iconColor} />
                                 <ThemedText>Add Images</ThemedText>
