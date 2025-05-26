@@ -48,91 +48,120 @@ const CreateProduct = () => {
     ];
 
     // Vehicle types
-    const vehicleTypes = [
+    const smallVehicleTypes = [
         { id: 1, name: "Sedan" },
-        { id: 2, name: "SUV" },
-        { id: 2, name: "Vans" },
-        { id: 2, name: "Pickup Trucks" },
-        { id: 2, name: "Hatchbeacks" },
-        { id: 3, name: "Convetibles" },
-        { id: 4, name: "Crissovers" },
-        { id: 5, name: "Other" }
+        { id: 3, name: "SUV" },
+        { id: 4, name: "Vans" },
+        { id: 5, name: "Pickup Trucks" },
+        { id: 6, name: "Hatchbeacks" },
+        { id: 7, name: "Convetibles" },
+        { id: 8, name: "Crissovers" },
+        { id: 9, name: "Other" }
     ];
 
 
     const heavyEupementType =[
 
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
+        { id: 1, name: "Tipper" },
+        { id: 2, name: "Excavator" },
+        { id: 3, name: "Bulldozer" },
+        { id: 4, name: "Compactors" },
+        { id: 5, name: "Graders" },
+        { id: 6, name: "ConcreteMixer" },
+        { id: 7, name: "TrackedLoader" },
+        { id: 8, name: "Pavers" },
+        { id: 9, name: "otherHeavyB" },
     ]
-    const cargiTrucksType =[
+    const cargoVehiType =[
         
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
+        { id: 1, name: "ParcelVans" },
+        { id: 2, name: "BoxTrucks" },
+        { id: 3, name: "FlatbedTrucks" },
+        { id: 4, name: "RefrigeratedTrucks" },
+        { id: 5, name: "TankerTrucks" },
+        { id: 6, name: "CurtainsideTrucks" },
+        { id: 7, name: "otherCargos" },
+        { id: 8, name: "otherCargos" },
     ]
 
 
-    const vehicleMake =[
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
+    const smallVehicleMake =[
+        { id: 1, name: "Toyota" },
+        { id: 2, name: "MercedesBenz" },
+        { id: 3, name: "BMW" },
+        { id: 4, name: "Honda" },
+        { id: 5, name: "NISSAN" },
+        { id: 6, name: "MAZDA" },
+        { id: 7, name: "Volkswagen" },
+        { id: 8, name: "Ford" },
+        { id: 9, name: "Isuzu" },
+        { id: 10, name: "Chevrolet" },
+        { id: 11, name: "Hyundai" },
+        { id: 12, name: "Renault" },
+        { id: 13, name: "Mitsubishi" },
+        { id: 14, name: "Kia" },
+        { id: 15, name: "otherMakes" },
     ]
     const cargoTruckMake =[
 
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
+        { id: 1, name: "cargoMercedesBenz" },
+        { id: 2, name: "cargoMAN" },
+        { id: 3, name: "cargoScania" },
+        { id: 4, name: "cargoHowo" },
+        { id: 5, name: "cargoVolvo" },
+        { id: 6, name: "cargoDAF" },
+        { id: 7, name: "cargoIveco" },
+        { id: 8, name: "cargoUD" },
+        { id: 9, name: "cargoIsuzu" },
+        { id: 10, name: "cargoMitsubishiFuso" },
+        { id: 11, name: "cargoHino" },
     ]
     const heavyEupementMake =[
 
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
-        { id: 1, name: "Sedan" },
+        { id: 1, name: "heavyCaterpillar" },
+        { id: 2, name: "heavyVolvo" },
+        { id: 3, name: "heavyJohnDeere" },
+        { id: 4, name: "heavyHyundai" },
+        { id: 5, name: "heavySany" },
+        { id: 6, name: "heavyKobelco" },
+        { id: 7, name: "heavyXCMG" },
+        { id: 8, name: "heavyBobcat" },
+        { id: 9, name: "heavyHitachi" },
+        { id: 10, name: "heavyManitou" },
+        { id: 11, name: "heavyKubota" },
+        { id: 12, name: "heavyOtherM" },
     ]
 
     
+
+
+    // Cargo Area Types
+    const cargoAreaTypes =[
+
+        { id: 1, name: "Bulktrailer" },
+        { id: 1, name: "SideTipper" },
+        { id: 1, name: "Tautliner" },
+        { id: 1, name: "Flatbed" },
+        { id: 1, name: "Tanker" },
+        { id: 1, name: "Refrigerated" },
+        { id: 1, name: "CarHauler" },
+        { id: 1, name: "UtilityTrailer" },
+        { id: 1, name: "Lowboy" },
+        { id: 1, name: "otherTrailer" },
+    ]
+
+    // Types of service providers
+    const serviceProivderType =[
+
+        { id: 1, name: "AutoMechanic" },
+        { id: 1, name: "HeavyDutyMechanic" },
+        { id: 1, name: "MotoMechanic" },
+        { id: 1, name: "AutoTechnician" },
+        { id: 1, name: "MotoTechnician" },
+        { id: 1, name: "HeavyEquipmentTechnician" },
+        { id: 1, name: "Warehouse" },
+        { id: 1, name: "other" },
+    ]
 
     // Transaction types
     const transactionTypes = [
@@ -142,13 +171,21 @@ const CreateProduct = () => {
         { id: 5, name: "Swap" },
     ];
 
+
+
+
+
+    
     // States
+    const [vehicleType , setVehicleType]=React.useState("smallVehicle")
+    const [vehicleMake , setVehicleMake]=React.useState("smallVehicle")
     const [images, setImages] = useState<any[]>([]);
     const [uploadProgress, setUploadProgress] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showErrors, setShowErrors] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<any>(null);
     const [selectedType, setSelectedType] = useState<any>(null);
+    const [selectedMake, setSelectedMake] = useState<any>(null);
     const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
     const [locationModalVisible, setLocationModalVisible] = useState(false);
     const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
@@ -291,9 +328,27 @@ const CreateProduct = () => {
             case "Vehicle":
                 return (
                     <>
-                        <ThemedText type="defaultSemiBold">Vehicle Type</ThemedText>
+                    <ThemedText type="defaultSemiBold">Vehicle Category</ThemedText>
+
+
+                        <TouchableOpacity onPress={()=>setVehicleType("smallVehicle") } >
+                            <ThemedText>Small vehicle</ThemedText> 
+                        </TouchableOpacity>
+                    <View style={{flexDirection:"row"}} >
+
+
+                        <TouchableOpacity onPress={()=>setVehicleType("heavyEquipment") }>
+                            <ThemedText>Heavy Equipment </ThemedText>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={()=>setVehicleType("cargoTrucks") }>
+                            <ThemedText>Cargo Trucks</ThemedText>
+                        </TouchableOpacity>
+                    </View>
+
+                    <ThemedText type="defaultSemiBold">Vehicle Type</ThemedText>
                         <DropDownItem
-                            allData={vehicleTypes}
+                            allData={ vehicleType ==="smallVehicle"? smallVehicleTypes : vehicleType === "cargoTrucks"? cargoVehiType : heavyEupementType }
                             selectedItem={selectedType}
                             setSelectedItem={setSelectedType}
                             placeholder="Select vehicle type"
@@ -311,10 +366,10 @@ const CreateProduct = () => {
 
                         <ThemedText type="defaultSemiBold">Make</ThemedText>
                        <DropDownItem
-                            allData={vehicleTypes}
-                            selectedItem={selectedType}
-                            setSelectedItem={setSelectedType}
-                            placeholder="Select vehicle type"
+                            allData={ vehicleMake ==="smallVehicle"? smallVehicleMake : vehicleType === "cargoTrucks"? cargoTruckMake : heavyEupementMake}
+                            selectedItem={selectedMake}
+                            setSelectedItem={setSelectedMake}
+                            placeholder="Select vehicle Make"
                         />
 
                         <ThemedText type="defaultSemiBold">Model</ThemedText>
@@ -348,6 +403,43 @@ const CreateProduct = () => {
                     </>
                 );
 
+
+            case "Trailer": 
+            return(
+                <>
+                  <ThemedText type="defaultSemiBold">Trailer Type</ThemedText>
+                        <DropDownItem
+                            allData={ vehicleType ==="smallVehicle"? smallVehicleTypes : vehicleType === "cargoTrucks"? cargoVehiType : heavyEupementType }
+                            selectedItem={selectedType}
+                            setSelectedItem={setSelectedType}
+                            placeholder="Select vehicle type"
+                        />
+                </>
+            )
+              case "Container": 
+            return(
+                <>
+                  <ThemedText type="defaultSemiBold">Vehicle Type</ThemedText>
+                        <DropDownItem
+                            allData={ vehicleType ==="smallVehicle"? smallVehicleTypes : vehicleType === "cargoTrucks"? cargoVehiType : heavyEupementType }
+                            selectedItem={selectedType}
+                            setSelectedItem={setSelectedType}
+                            placeholder="Select vehicle type"
+                        />
+                </>
+            )
+              case "Service Provider": 
+            return(
+                <>
+                  <ThemedText type="defaultSemiBold">Vehicle Type</ThemedText>
+                        <DropDownItem
+                            allData={ vehicleType ==="smallVehicle"? smallVehicleTypes : vehicleType === "cargoTrucks"? cargoVehiType : heavyEupementType }
+                            selectedItem={selectedType}
+                            setSelectedItem={setSelectedType}
+                            placeholder="Select vehicle type"
+                        />
+                </>
+            )
          
 
             default:
