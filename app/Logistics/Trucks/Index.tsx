@@ -11,8 +11,11 @@ import { DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore'
 
 import { TruckTypeProps } from '@/types/types'
 import { SpecifyTruckDetails } from '@/components/SpecifyTruckDetails'
-import { cargoArea } from '@/data/appConstants'
-const Index = () => {
+import { useAuth } from '@/context/AuthContext'
+import { useLocalSearchParams } from 'expo-router'
+import ScreenWrapper from '@/components/ScreenWrapper'
+import { FinalReturnComponent } from '@/components/TrucksHomePage'
+ const Index = () => {
 
     const background = useThemeColor('backgroundLight')
     const bg = useThemeColor('background')
@@ -20,7 +23,9 @@ const Index = () => {
     const accent = useThemeColor('accent')
     const icon = useThemeColor('icon')
 
-
+  const { dspPersonalTrucks } = useLocalSearchParams();
+    const { user } = useAuth();
+    console.log(dspPersonalTrucks)
     // const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
 
     const [trucks, setTrucks] = useState<Truck[]>([])
@@ -116,6 +121,7 @@ const Index = () => {
         let filters: any[] = [];
 
         // Apply the same filters as in LoadTructs
+        if(dspPersonalTrucks)filters.push(where("truckCapacity", "==", user?.uid));
         if (truckCapacity) filters.push(where("truckCapacity", "==", truckCapacity));
         if (truckConfig) filters.push(where("truckConfig", "==", truckConfig));
         if (truckSuspension) filters.push(where("truckSuspensions", "==", truckSuspension));
@@ -153,265 +159,76 @@ const Index = () => {
         setTruckSuspension("")
         setSelectedCargoArea(null)
     }
-
+    
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{flex:1}}>
 
-
-
-
-            <SpecifyTruckDetails
-                dspSpecTruckDet={showfilter}
-                setDspSpecTruckDet={setShowfilter}
-                // Truck Tonnage
-                truckCapacity={truckCapacity}
-                setTruckCapacity={setTruckCapacity}
-                // Selecting Truck Type
-                selectedTruckType={selectedCargoArea}
-                setSelectedTruckType={setSelectedCargoArea}
-                tankerType={tankerType}
-                setTankerType={setTankerType}
-                // Selecting A country and location
-                operationCountries={operationCountries}
-                setOperationCountries={setOperationCountries}
-                // Truck Config and suspension
-                truckConfig={truckConfig}
-                setTruckConfig={setTruckConfig}
-                truckSuspension={truckSuspension}
-                setTruckSuspension={setTruckSuspension}
-
-            />
-
-
-
-
-
-
-
-
-
-            <View style={[styles.container, { backgroundColor: bg }]}>
-                <View style={{
-                    backgroundColor: bg,
-                    paddingHorizontal: wp(2),
-                    paddingVertical: wp(1),
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: wp(1),
-                }} >
-                    <View>
-                        <View style={{}}>
-                            <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                                <ThemedText type="title">
-                                    Trucks
-                                </ThemedText>
-                                <Text style={{ fontSize: 13, marginLeft: 5 }}>
-                                    {selectedCountry !== "All" && selectedCountry !== "International" ? `Local ${selectedCountry}` : selectedCountry === "International" ? selectedCountry : null}
-                                </Text>
-                            </View>
-
-                        </View>
-                        <ThemedText type="tiny">Find a Truck for your Load Today</ThemedText>
-                    </View>
-                    <View style={{ flexDirection: 'row', gap: wp(2) }}>
-
-                        <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-                            <TouchableNativeFeedback onPress={() => setShowfilter(true)}>
-                                <View style={{ padding: wp(2) }}>
-                                    <Ionicons name={'filter'} size={wp(4)} color={icon} />
-                                </View>
-                            </TouchableNativeFeedback>
-                        </View>
-                    </View>
-                </View>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                <FlatList
-                    keyExtractor={(item) => item.id.toString()}
-                    ListHeaderComponent={() => <>
-                        <View style={{ marginHorizontal: wp(1), marginBottom: wp(1), }}>
-
-
-
-
-
-
-
-
-
-
-                            {(selectedCargoArea || truckSuspension || truckConfig || operationCountries.length>0 ||truckCapacity) && (
-                                <TouchableOpacity
-                                    onPress={() =>{ 
-                                        clearFilter()
-                                        setShowfilter(true)
-                                    }}
-                                    style={{
-                                        padding: wp(2),
-                                        flexDirection: 'row',
-                                        backgroundColor: background,
-                                        borderRadius: wp(6),
-                                        marginBottom: wp(2),
-                                        position: 'relative',
-                                        alignItems: 'center',
-                                    }}
-                                >
-                                    {selectedCargoArea?.image && (
-                                        <View style={{ marginRight: wp(2) }}>
-                                            <Image
-                                                source={selectedCargoArea.image}
-                                                style={{
-                                                    width: wp(20),
-                                                    height: wp(15),
-                                                    borderRadius: wp(4),
-                                                    resizeMode: 'cover',
-                                                }}
-                                            />
-                                        </View>
-                                    )}
-
-                                    <View style={{ flex: 1 }}>
-                                        {selectedCargoArea?.name && (
-                                            <ThemedText type="subtitle" style={{ marginBottom: wp(1) }}>
-                                                {selectedCargoArea.name}
-                                            </ThemedText>
-                                        )}
-
-                                        <ScrollView
-                                            horizontal
-                                            showsHorizontalScrollIndicator={false}
-                                            contentContainerStyle={{ gap: wp(2) }}
-                                        >
-                                            {truckCapacity && (
-                                                <View style={[styles.countryButton, { backgroundColor: '#73c8a9' }]}>
-                                                    <ThemedText style={{ color: 'white' }}>
-                                                        { truckCapacity}
-                                                    </ThemedText>
-                                                </View>
-                                            )}
-                                                 {truckConfig&& (
-                                                <View style={[styles.countryButton, { backgroundColor: '#73c8a9' }]}>
-                                                    <ThemedText style={{ color: 'white' }}>
-                                                        {truckConfig}
-                                                    </ThemedText>
-                                                </View>
-                                            )}
-                                                 {truckSuspension && (
-                                                <View style={[styles.countryButton, { backgroundColor: '#73c8a9' }]}>
-                                                    <ThemedText style={{ color: 'white' }}>
-                                                        {truckSuspension}
-                                                    </ThemedText>
-                                                </View>
-                                            )}
-                                        </ScrollView>
-                                        <ThemedText style={{textAlign:"center"}} >
-                                            
-                                    {operationCountries?.map(item => item + ', ') || 'N/A'}
-                                        </ThemedText>
-                                    </View>
-
-                                    <View
-                                        style={{
-                                            overflow: 'hidden',
-                                            borderRadius: wp(10),
-                                            position: 'absolute',
-                                            right: wp(2),
-                                            top: wp(2)
-                                        }}
-                                    >
-                                        <TouchableNativeFeedback onPress={clearFilter}>
-                                            <View style={{ padding: wp(2) }}>
-                                                <Ionicons name="close" size={wp(4)} color={icon} />
-                                            </View>
-                                        </TouchableNativeFeedback>
-                                    </View>
-                                </TouchableOpacity>
-                            )}
-
-
-
-                        </View>
-
-
-
-
-
-
-                        {showfilter ?
-                            <>
-
-                            </>
-                            :
-                            <View style={{}}>
-
-
-                            </View>
-                        }
-
-                        {/* <View style={{ borderBottomWidth: .5, borderColor: icon, marginTop: wp(4), marginBottom: wp(2) }} /> */}
-
-                    </>}
-                    data={trucks}
-                    renderItem={({ item }) => (
-                        <TruckItemComponent truck={item} />
-                    )}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            colors={[accent]}
-                        />
-                    }
-                    ListEmptyComponent={<View style={{ minHeight: hp(80), justifyContent: 'center' }}>
-
-                        <ThemedText type='defaultSemiBold' style={{ textAlign: 'center' }}>
-                            No Trucks to Display!
-                        </ThemedText>
-                    </View>}
-                    onEndReached={loadMoreTrucks}
-                    onEndReachedThreshold={.5}
-                    ListFooterComponent={
-                        <View style={{ marginBottom: wp(10), marginTop: wp(6) }}>
-                            {
-                                loadingMore ?
-                                    <View style={{ flexDirection: "row", gap: wp(4), alignItems: 'center', justifyContent: 'center' }}>
-                                        <ThemedText type='tiny' style={{ color: icon }}>Loading More</ThemedText>
-                                        <ActivityIndicator size="small" color={accent} />
-                                    </View>
-                                    :
-                                    (!lastVisible && trucks.length > 0) ?
-                                        <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                                            <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>No more Trucks to Load
-                                            </ThemedText>
-                                            <Ionicons color={icon} style={{}} name='alert-circle-outline' size={wp(6)} />
-
-                                        </View>
-                                        : null
-
-
-                            }
-
-                        </View>
-                    }
+           {!dspPersonalTrucks && <View style={{flex:1}}>
+              <FinalReturnComponent
+                    // ... pass all props
+                    showfilter={showfilter}
+                    setShowfilter={setShowfilter}
+                    truckCapacity={truckCapacity}
+                    setTruckCapacity={setTruckCapacity}
+                    selectedCargoArea={selectedCargoArea}
+                    setSelectedTruckType={setSelectedCargoArea}
+                    tankerType={tankerType}
+                    setTankerType={setTankerType}
+                    operationCountries={operationCountries}
+                    setOperationCountries={setOperationCountries}
+                    truckConfig={truckConfig}
+                    setTruckConfig={setTruckConfig}
+                    truckSuspension={truckSuspension}
+                    // setTruckSuspension={setTruckSuspension}
+                    dspPersonalTrucks={!!dspPersonalTrucks}
+                    user={user}
+                    trucks={trucks}
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    loadMoreTrucks={loadMoreTrucks}
+                    lastVisible={lastVisible}
+                    loadingMore={loadingMore}
+                    clearFilter={clearFilter}
+                    selectedCountry={selectedCountry}
+                     bg={bg}         // ADDED
+                    icon={icon}     // ADDED
+                    accent={accent} // ADDED
+                    background={background} // ADDED
                 />
-
-            </View>
-
-
+            </View>}
+              {dspPersonalTrucks && <ScreenWrapper >
+              <FinalReturnComponent
+                    // ... pass all props
+                    showfilter={showfilter}
+                    setShowfilter={setShowfilter}
+                    truckCapacity={truckCapacity}
+                    setTruckCapacity={setTruckCapacity}
+                    selectedCargoArea={selectedCargoArea}
+                    setSelectedTruckType={setSelectedCargoArea}
+                    tankerType={tankerType}
+                    setTankerType={setTankerType}
+                    operationCountries={operationCountries}
+                    setOperationCountries={setOperationCountries}
+                    truckConfig={truckConfig}
+                    setTruckConfig={setTruckConfig}
+                    truckSuspension={truckSuspension}
+                    // setTruckSuspension={setTruckSuspension}
+                    dspPersonalTrucks={!!dspPersonalTrucks}
+                    user={user}
+                    trucks={trucks}
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    loadMoreTrucks={loadMoreTrucks}
+                    lastVisible={lastVisible}
+                    loadingMore={loadingMore}
+                    clearFilter={clearFilter}
+                    selectedCountry={selectedCountry}
+                     bg={bg}         // ADDED
+                    icon={icon}     // ADDED
+                    accent={accent} // ADDED
+                    background={background} // ADDED
+                />
+            </ScreenWrapper>}
         </View>
     )
 }

@@ -281,3 +281,27 @@ export type Contracts = {
     formDataScnd: ContractsFormDataScndType;
     contractId: string;
 }
+
+
+
+export type SpecifyTruckDetailsProps = {
+  dspSpecTruckDet: boolean;
+  setDspSpecTruckDet: React.Dispatch<React.SetStateAction<boolean>>;
+  // Selecting Truck Tonnage
+  truckCapacity: string;
+  setTruckCapacity: React.Dispatch<React.SetStateAction<string>>;
+
+  // Select Truck Details 
+  selectedTruckType: TruckTypeProps | null;
+  setSelectedTruckType: React.Dispatch<React.SetStateAction<TruckTypeProps | null>>;
+  tankerType: string
+  setTankerType: React.Dispatch<React.SetStateAction<string>>
+
+truckConfig: string ;
+setTruckConfig :React.Dispatch<React.SetStateAction<string>>;
+truckSuspension : string ;
+setTruckSuspension :React.Dispatch<React.SetStateAction<string>> ;
+
+operationCountries : string[]
+setOperationCountries :React.Dispatch<React.SetStateAction<string[] >> ;
+} 

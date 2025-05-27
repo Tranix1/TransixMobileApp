@@ -120,6 +120,7 @@ const TruckDetails = () => {
         )
 
     }
+
     const placeholder = require('@/assets/images/failedimage.jpg')
     return (
         <ScreenWrapper>
@@ -476,16 +477,8 @@ const TruckDetails = () => {
                         <ThemedText style={{color:"white"}} >View Trucks {truckData.CompanyName} </ThemedText>
                     </TouchableOpacity>
 
-
-
                 </View>
-
-
             </ScrollView>
-
-
-
-
         </ScreenWrapper >
     )
 }

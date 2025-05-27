@@ -9,11 +9,15 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 import { router } from "expo-router";
 import { addDocument } from "@/db/operations";
-import { Load } from "@/types/types";
 import { useAuth } from "@/context/AuthContext";
 import { DropDownItem } from "@/components/DropDown";
 
 import { hp, wp } from "@/constants/common";
+
+import { AddTruckDetails } from "@/components/AddTruckDetails";
+import { TruckFormData } from "@/types/types";
+import { TruckTypeProps } from "@/types/types";
+
 
 const AddLoadDB = () => {
     const [step, setStep] = useState(0);
@@ -37,27 +41,52 @@ const AddLoadDB = () => {
     const [dspFuelAvai, setDspFuelAvai] = useState(false);
     const [dspReturnLoad, setDspReturnLoad] = useState(false);
 
-    const [selectedRateType , setSelectedRateType]=React.useState({ id: 1, name: "Solid" })
+    const [selectedRateType, setSelectedRateType] = React.useState({ id: 1, name: "Solid" })
+
+    // Truck Form Data
+    const [formDataTruck, setFormDataTruck] = useState<TruckFormData>({
+        additionalInfo: "",
+        driverPhone: "",
+        maxloadCapacity: "",
+        truckName: "",
+        otherTruckSuspension: "",
+        otherCargoArea: "",
+        otherTruckConfig: "",
+        otherTankerType: ""
+    });
 
     const toggleDspAlertMsg = () => setDspAlertMsg((prev) => !prev);
     const toggleDspFuelAvai = () => setDspFuelAvai((prev) => !prev);
     const toggleDspReturnLoad = () => setDspReturnLoad((prev) => !prev);
 
+    const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(null)
+    const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string } | null>(null)
+    const [selectedTankerType, setSelectedTankerType] = useState<{ id: number, name: string } | null>(null)
+    const [selectedTruckCapacity, setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>(null)
+    const [showCountries, setShowCountries] = useState(false);
+    const [operationCountries, setOperationCountries] = useState<string[]>([]);
+    const [selectedTrailerConfig, setSelectedTrailerConfig] = useState<{ id: number, name: string } | null>(null)
+    const [selectedTruckSuspension, setSelectedTruckSuspension] = useState<{ id: number, name: string } | null>(null)
 
 
-    const { user } = useAuth();
+    const { user,alertBox } = useAuth();
     const handleSubmit = async () => {
+             const MissingDriverDetails= [
+          !typeofLoad && "",
+          !fromLocation && "",
+          !toLocation && "",
+          !ratePerTonne && "",
+          !paymentTerms && "",
+        ]
 
-        console.log({
-            toLocation, fromLocation
-        });
-
-        if (!typeofLoad || !fromLocation || !toLocation || !ratePerTonne || !paymentTerms) {
-            alert("Please fill in all required fields.");
+   if (MissingDriverDetails.length > 0) {
+            // setContractDErr(true);
+            alertBox("Missing Load Details", MissingDriverDetails.join("\n"), [], "error");
             return;
         }
 
-        console.log(user);
+      
+
 
         if (!user) {
             alert("Please Login first");
@@ -119,7 +148,7 @@ const AddLoadDB = () => {
                 </View>
             } />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: wp(6), alignItems: 'center' }}>
-                {['Load Details', 'Additional Info', 'Return Load',"Truck Req"].map((stepLabel, index) => (
+                {['Load Details', 'Additional Info', 'Return Load', "Truck Req"].map((stepLabel, index) => (
                     <View key={index} style={{ alignItems: 'center', flexDirection: 'row', flex: index > 0 ? 1 : 0 }}>
                         {index > 0 && (
                             <View
@@ -211,43 +240,43 @@ const AddLoadDB = () => {
 
 
 
-       <View style={styles.row}>
-         <View style={{ width: wp(21), marginRight: wp(2) }}>
-                            <ThemedText type="defaultSemiBold">Currency</ThemedText>
-                            <DropDownItem
-                                allData={[
-                                   { id: 1, name: "USD" },
-                                    { id: 2, name: "RSA" },
-                                    { id: 3, name: "ZWG" }
-                                ]}
-                                selectedItem={selectedRateType}
-                                setSelectedItem={setSelectedRateType}
-                                placeholder=""
-                            />
-                        </View>
-                        <View style={{ flex: 1, }}>
-                            <ThemedText type="defaultSemiBold" style={{textAlign:"center"}}>Rate</ThemedText>
-                          
-                            <Input
-                                value={ratePerTonne}
-                                keyboardType="numeric"
-                                onChangeText={setRatePerTonne}
-                            />
-                        </View>
-                        <View style={{ width: wp(28), marginLeft: wp(2) }}>
-                            <ThemedText type="defaultSemiBold">Model</ThemedText>
-                            <DropDownItem
-                                allData={[
-                                    { id: 1, name: "Solid" },
-                                    { id: 2, name: "/ Tonne" },
-                                    { id: 3, name: "/ KM" }
-                                ]}
-                                selectedItem={selectedRateType}
-                                setSelectedItem={setSelectedRateType}
-                                placeholder=""
-                            />
-                        </View>
-                    </View>
+                            <View style={styles.row}>
+                                <View style={{ width: wp(21), marginRight: wp(2) }}>
+                                    <ThemedText type="defaultSemiBold">Currency</ThemedText>
+                                    <DropDownItem
+                                        allData={[
+                                            { id: 1, name: "USD" },
+                                            { id: 2, name: "RSA" },
+                                            { id: 3, name: "ZWG" }
+                                        ]}
+                                        selectedItem={selectedRateType}
+                                        setSelectedItem={setSelectedRateType}
+                                        placeholder=""
+                                    />
+                                </View>
+                                <View style={{ flex: 1, }}>
+                                    <ThemedText type="defaultSemiBold" style={{ textAlign: "center" }}>Rate</ThemedText>
+
+                                    <Input
+                                        value={ratePerTonne}
+                                        keyboardType="numeric"
+                                        onChangeText={setRatePerTonne}
+                                    />
+                                </View>
+                                <View style={{ width: wp(28), marginLeft: wp(2) }}>
+                                    <ThemedText type="defaultSemiBold">Model</ThemedText>
+                                    <DropDownItem
+                                        allData={[
+                                            { id: 1, name: "Solid" },
+                                            { id: 2, name: "/ Tonne" },
+                                            { id: 3, name: "/ KM" }
+                                        ]}
+                                        selectedItem={selectedRateType}
+                                        setSelectedItem={setSelectedRateType}
+                                        placeholder=""
+                                    />
+                                </View>
+                            </View>
 
 
 
@@ -357,9 +386,28 @@ const AddLoadDB = () => {
                         </View>
                     </ScrollView>
                 )}
-                {step === 3 && ( <ScrollView>
-
-                </ScrollView>) }
+                {step === 3 && (<ScrollView>
+                    <AddTruckDetails
+                        selectedTruckType={selectedTruckType}
+                        setSelectedTruckType={setSelectedTruckType}
+                        selectedCargoArea={selectedCargoArea}
+                        setSelectedCargoArea={setSelectedCargoArea}
+                        selectedTankerType={selectedTankerType}
+                        setSelectedTankerType={setSelectedTankerType}
+                        selectedTruckCapacity={selectedTruckCapacity}
+                        setSelectedTruckCapacity={setSelectedTruckCapacity}
+                        selectedTrailerConfig={selectedTrailerConfig}
+                        setSelectedTrailerConfig={setSelectedTrailerConfig}
+                        selectedTruckSuspension={selectedTruckSuspension}
+                        setSelectedTruckSuspension={setSelectedTruckSuspension}
+                        formData={formDataTruck}
+                        setFormData={setFormDataTruck}
+                        showCountries={showCountries}
+                        setShowCountries={setShowCountries}
+                        operationCountries={operationCountries}
+                        setOperationCountries={setOperationCountries}
+                    />
+                </ScrollView>)}
             </View>
         </ScreenWrapper>
     );
@@ -379,7 +427,7 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         overflow: "hidden",
     },
-     row: {
+    row: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: hp(1),

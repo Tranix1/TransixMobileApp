@@ -325,7 +325,8 @@ const Index = () => {
                                             </View>
                                         </View>
                                     </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={() => router.push("/UserUploads/Trucks.")} >
+                                    <TouchableNativeFeedback onPress={
+                                        () => router.push({ pathname: '/Logistics/Trucks/Index', params: { dspPersonalTrucks: "true"} })} >
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>

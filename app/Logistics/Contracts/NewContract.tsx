@@ -213,17 +213,7 @@ const NewContract = () => {
         setEnterLocs(prev => !prev)
     }
 
-    function toggleDspTruckRequired() {
-        setDspTruckRequired(prev => !prev);
-    }
-
-    function toggleDspRate() {
-        setDspRate(prev => !prev);
-    }
-
-    function toggleDspOtherRequirements() {
-        setDspOtherRequirements(prev => !prev);
-    }
+  
 
     function toggleDspReturnCommodity() {
         setDspReturnCommodity(prev => !prev);
@@ -233,30 +223,7 @@ const NewContract = () => {
         setDspReturnRate(prev => !prev);
     }
 
-    const [dspRturnnLoads, setDspReturnLoads] = React.useState(false);
-
-    function toggleDspReturnLoads() {
-        setDspReturnLoads(true);
-        setDspContractD(false);
-        setDspLoadDe(false)
-    }
-
-    const [dspContractD, setDspContractD] = React.useState(false);
-
-    function toggleDspContractD() {
-        setDspContractD(true);
-        setDspReturnLoads(false);
-        setDspLoadDe(false)
-    }
-
-    const [dsoLoadDe, setDspLoadDe] = React.useState(true)
-    function dspLoadDet() {
-        setDspLoadDe(true)
-        setDspContractD(false);
-        setDspReturnLoads(false);
-    }
-
-    // The button used to  dispaly ore or less info 
+       // The button used to  dispaly ore or less info 
     type ToggleMLBtnProps = {
         whatTToggle: (...args: any[]) => void;
         theTittle: string;
@@ -304,17 +271,7 @@ const NewContract = () => {
         isSelected?: boolean;
     };
 
-    const SlctCountryBtn = ({ selectedLoc, onPress, isSelected }: SlctCountryBtnProps) => (
-        <TouchableOpacity
-            onPress={onPress}
-            style={[
-                styles.buttonStyle,
-                { backgroundColor: isSelected ? '#6a0c0c' : '#eee' },
-            ]}
-        >
-            <ThemedText style={{ color: isSelected ? 'white' : '#6a0c0c' }}>{selectedLoc}</ThemedText>
-        </TouchableOpacity>
-    );
+   
 
     const [dspCheckOutP, setDspCheckout] = React.useState<boolean>(false)
 
@@ -420,18 +377,11 @@ const NewContract = () => {
     const { alertBox } = useAuth();
 
 
-    const [locationTruckS, setLocationTruckS] = useState<string>(""); // Track local or international selection
-    const [locaOpLocTruckS, setLocaOpLocTruckS] = useState<string>(""); // Track selected local country
-    const [intOpLocTruckS, setIntOpLocTruckS] = useState<string[]>([]); // Track international countries
-
-
-
     const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null)
 
     const [otherTruckType, setOtherTruckType] = React.useState<string>("")
 
     const [typeOfTanker, setTypeOfTanker] = React.useState<TankerTruckProps | null>(null)
-    console.log(typeOfTanker)
 
 
     const [truckConfig, setTruckConfig] = React.useState("")
@@ -441,24 +391,6 @@ const NewContract = () => {
 
     const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
     const [truckCapacity, setTruckCapacity] = useState("")
-
-    const [dspSpecTruckDet, setDspSpecTruckDet] = React.useState<boolean>(false)
-
-
-
-
-
-    console.log(selectedTruckType)
-
-    const clearFilter = () => {
-        setSelectedTruckType(null)
-        setTruckCapacity('')
-        setLocation("")
-        setLocaOpLoc("")
-        setIntOpLoc([])
-    }
-
-
 
 
 
@@ -477,39 +409,6 @@ const NewContract = () => {
                 </View>
             }
             />
-
-
-
-
-            {/* <TouchableOpacity onPress={() => setDspSpecTruckDet(true)} style={{ backgroundColor: "green" }} >
-                <ThemedText> Click here Select Truck Details </ThemedText>
-            </TouchableOpacity> */}
-
-            {/* <SpecifyTruckDetails
-                dspSpecTruckDet={dspSpecTruckDet}
-                setDspSpecTruckDet={setDspSpecTruckDet}
-                // Truck Tonnage
-                dspTruckCpacity={dspTruckCpacity}
-                setDspTruckCapacity={setDspTruckCapacity}
-                truckCapacity={truckCapacity}
-                setTruckCapacity={setTruckCapacity}
-                // Selecting Truck Type
-                selectedTruckType={selectedTruckType}
-                setSelectedTruckType={setSelectedTruckType}
-                otherTruckType={otherTruckType}
-                setOtherTruckType={setOtherTruckType}
-                // Selecting A country and location
-                location={locationTruckS}
-                setLocation={setLocationTruckS}
-                intOpLoc={intOpLocTruckS}
-                setIntOpLoc={setIntOpLocTruckS}
-                setLocaOpLoc={setLocaOpLocTruckS}
-                locaOpLoc={locaOpLocTruckS}
-            /> */}
-
-
-
-
 
 
 
@@ -584,38 +483,6 @@ const NewContract = () => {
                                 <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }}>
                                     Where Truck Operates
                                 </ThemedText>
-                                {/* <View style={{ gap: wp(3), padding: wp(3), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
-                                    <TouchableNativeFeedback onPress={() => setLocation('international')}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                            <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
-                                                International
-                                            </ThemedText>
-                                            <CheckBox
-                                                checked={location === 'international'}
-                                                onPress={() => setLocation('international')}
-                                                uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
-                                                checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
-                                                containerStyle={{ padding: 0 }}
-                                            />
-                                        </View>
-                                    </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={() => setLocation('local')}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                            <ThemedText type="defaultSemiBold" style={{ flex: 1 }}>
-                                                Local
-                                            </ThemedText>
-                                            <CheckBox
-                                                checked={location === 'local'}
-                                                onPress={() => setLocation('local')}
-                                                uncheckedIcon={<Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />}
-                                                checkedIcon={<EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />}
-
-                                                containerStyle={{ padding: 0 }}
-                                            />
-                                        </View>
-                                    </TouchableNativeFeedback>
-
-                                </View> */}
 
 
 
@@ -664,18 +531,7 @@ const NewContract = () => {
 
                                 </View>
 
-
-
-
-
-
-
-
-
                                 <Divider />
-
-
-
 
                                 <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15, marginTop: wp(4) }}>
                                     Truck Config
@@ -880,28 +736,6 @@ const NewContract = () => {
 
 
                             </View>
-                            {/* <View style={styles.viewMainDsp}> */}
-                            {/* <CountrySelector
-                                location={location}
-                                setLocation={setLocation}
-                                intOpLoc={interOpCount}
-                                setIntOpLoc={setIntOpLoc}
-                                setLocaOpLoc={setLocaOpLoc}
-                                locaOpLoc={locaOpCount}
-                            /> */}
-
-                            {/* <SlctTruckCapacity
-                                dspTruckCpacity={dspTruckCpacity}
-                                setDspTruckCapacity={setDspTruckCapacity}
-                                truckTonnage={truckCapacity}
-                                setTruckTonnage={setTruckCapacity}
-                            /> */}
-                            {/* <SpecifyTruckType
-                                selectedTruckType={selectedTruckType}
-                                setSelectedTruckType={setSelectedTruckType}
-                                otherTruckType={otherTruckType}
-                                setOtherTruckType={setOtherTruckType}
-                            /> */}
 
                         </View>
                         <Divider />
@@ -1641,34 +1475,9 @@ const NewContract = () => {
             </View>
 
 
-            <ErrorOverlay
-                visible={dspLoadDErr}
-                title="Missing important details on load"
-                errors={[
-                    !commodityFirst && "Enter at least one commodity",
-                    // !formDataScnd.paymentTerms && "Enter the payment terms",
-                    // !formData.location.frst && "Enter from location or first location",
-                    // !formData.location.scnd && "Enter destination location",
-                    // !formData.trckRequired && "Enter at least one type of truck required",
-                    // !formData.otherRequirements.frst && "Enter at least one requirement",
-                    // !formData.rate.solidFrst && "Enter the solid rate",
-                ].filter(Boolean) as string[]}
-                onClose={() => setLoadDspError(false)}
-            />
+           
 
-            <ErrorOverlay
-                visible={dspContrDErro}
-                title="Missing important details on contracts"
-                errors={[
-                    !loadsPerWeek && "Enter loads per week",
-                    !contractDuration && "Enter contract duration",
-                    !startingDate && "Enter when the contract is starting",
-                    !fuelAvailability && "Enter if fuel is available and how it's distributed",
-                    !bookingClosingDate && "Enter booking closing date",
-                    !locaOpCount && interOpCount.length === 0 && "Select country the loads will operate",
-                ].filter(Boolean) as string[]}
-                onClose={() => setContractDErr(false)}
-            />
+         
 
         </ScreenWrapper >
 

@@ -27,6 +27,8 @@ import Button from "@/components/Button";
 import { DropDownItem } from "@/components/DropDown";
 import { TruckFormData } from "@/types/types";
 
+import { AddTruckDetails } from "@/components/AddTruckDetails";
+
 function AddTrucks() {
 
   const icon = useThemeColor('icon')
@@ -89,20 +91,43 @@ const [selectedTankerType, setSelectedTankerType] = useState<{ id: number, name:
   const [operationCountries, setOperationCountries] = useState<string[]>([]);
 
   const [countryCode, setCountryCode] = useState<{ id: number, name: string }>({ id: 0, name: '+263' })
-  const [selectedTrailerConfig, setSelectedTrailerConfig] = useState<{ id: number, name: string } | null>()
-  const [selectedTruckSuspension, setSelectedTruckSuspension] = useState<{ id: number, name: string } | null>()
+  const [selectedTrailerConfig, setSelectedTrailerConfig] = useState<{ id: number, name: string } | null>(null)
+  const [selectedTruckSuspension, setSelectedTruckSuspension] = useState<{ id: number, name: string } | null>(null)
   const [ownerdetails, setOwnerdetails] = useState(false)
 
   
   const [spinnerItem, setSpinnerItem] = useState(false);
-  const [addingDocUpdate, setAddingDocUpdate] = useState("")
   const [uploadingImageUpdate, setUploadImageUpdate] = useState("")
   
-  const { user } = useAuth();
+  const { user,alertBox } = useAuth();
 console.log(uploadingImageUpdate)
-console.log(addingDocUpdate)
 
   const handleSubmit = async () => {
+      const missingTruckDetails = [
+            !formData.truckName && "Enter the payment terms",
+            !selectedTruckType && "Enter the payment terms",
+            !selectedCargoArea && "Enter loads per week",
+             selectedCargoArea?.name==="Tanker" && !selectedTankerType && "Enter contract duration",
+            !selectedTruckCapacity && "Enter the starting date",
+            !selectedTrailerConfig && "Enter fuel availability details",
+            !selectedTruckSuspension && "Enter the booking closing date",
+            operationCountries.length <=0  && "Select the country the loads will operate in",
+        ].filter(Boolean);
+
+       if (missingTruckDetails.length > 0) {
+            // setContractDErr(true);
+            alertBox("Missing Truck Details", missingTruckDetails.join("\n"), [], "error");
+            return;
+        }
+        const MissingDriverDetails= [
+          !formData.driverPhone && "",
+        ]
+   if (missingTruckDetails.length > 0) {
+            // setContractDErr(true);
+            alertBox("Missing Driver Details", MissingDriverDetails.join("\n"), [], "error");
+            return;
+        }
+
 
 
     if (images.length < 4) {
@@ -208,21 +233,7 @@ console.log(addingDocUpdate)
 
       <View style={{ paddingHorizontal: wp(4) }} >
 
-        <ErrorOverlay
-          visible={dspFrstPageErr}
-          title="Missing important details on Truck Details"
-          errors={[
-            // !formData.trailerType && "Enter Trailer Type",
-            !formData.maxloadCapacity && "Enter Maximum Load Capacity",
-            !showCountries && "Select were the truck can operate",
-            !selectedCargoArea?.name && "Select TrucK Type",
-            !selectedTruckCapacity && "select trcuk capacity",
-            operationCountries.length <=0 && "Select the country or countires the truck can operate",
-          ].filter(Boolean) as string[]}
-          onClose={() => setDspFrstPageErr(false)}
-        />
-
-         {!uploadingImageUpdate && <View style={{height:25 , backgroundColor:"red",width:180, margin :10, justifyContent:"center",alignItems:"center"   , position:"absolute",top:0,zIndex:100, alignSelf:"center" }} >
+                {!uploadingImageUpdate && <View style={{height:25 , backgroundColor:"red",width:180, margin :10, justifyContent:"center",alignItems:"center"   , position:"absolute",top:0,zIndex:100, alignSelf:"center" }} >
             <ThemedText > {uploadingImageUpdate} pana </ThemedText>
           </View>}
 
@@ -372,168 +383,26 @@ console.log(addingDocUpdate)
               onChangeText={(text) => handleChange<TruckFormData>(text, 'truckName', setFormData)}
             />
 
-           <ThemedText>
-              Truck Type<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-          
-            <DropDownItem   allData={truckType} selectedItem={selectedTruckType} setSelectedItem={setSelectedTruckType} placeholder="Select Truck Type" />
-
-
-            <ThemedText>
-              Cargo Area<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-          
-            <DropDownItem   allData={cargoArea} selectedItem={selectedCargoArea} setSelectedItem={setSelectedCargoArea} placeholder="Select cargo area" />
-     {selectedCargoArea?.name === 'Other' &&
-              <>
-                <ThemedText>
-                  Other Truck Type<ThemedText color="red">*</ThemedText>
-                </ThemedText>
-                <Input
-                  value={formData.otherCargoArea}
-                  placeholder="Other Truck Type"
-                  onChangeText={(text) => handleChange< TruckFormData>(text, 'otherCargoArea', setFormData)}
-                />
-              </>
-            }
-
-
-               { selectedCargoArea?.name ==="Tanker" &&    <ThemedText>
-              Tanker Type<ThemedText color="red">*</ThemedText>
-            </ThemedText>}
-
-           { selectedCargoArea?.name ==="Tanker" &&  <DropDownItem   allData={tankerTypes} selectedItem={selectedTankerType} setSelectedItem={setSelectedTankerType} placeholder="Select Truck" />}
-
-            {(selectedTankerType?.name === 'Other'|| selectedTankerType?.name ==="Specialized Cargo") &&
-              <>
-                <ThemedText>
-                  Other Tanker Type<ThemedText color="red">*</ThemedText>
-                </ThemedText>
-                <Input
-                  value={formData.otherTankerType}
-                  placeholder="Other Truck Type"
-                  onChangeText={(text) => handleChange< TruckFormData>(text, 'otherTankerType', setFormData)}
-                />
-              </>
-            }
-
-
-
-         { selectedCargoArea?.name !=="Tanker" &&   <ThemedText>
-              Truck Tonnage<ThemedText color="red">*</ThemedText>
-            </ThemedText>}
-            
-        {  selectedCargoArea?.name !=="Tanker" &&<DropDownItem   allData={tonneSizes} selectedItem={selectedTruckCapacity} setSelectedItem={setSelectedTruckCapacity} placeholder="Select Tonnage" />}
-       
-
-                    { selectedCargoArea?.name ==="Tanker" &&    <ThemedText>
-              Truck Litres<ThemedText color="red">*</ThemedText>
-            </ThemedText>}
-            
-        {  selectedCargoArea?.name ==="Tanker" &&<DropDownItem   allData={litresCapacity} selectedItem={selectedTruckCapacity} setSelectedItem={setSelectedTruckCapacity} placeholder="Select Litres" />}
-       
-      
-
-
-            <ThemedText>
-              Trailer Configuration<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-        <DropDownItem   allData={trailerConfigurations} selectedItem={selectedTrailerConfig} setSelectedItem={setSelectedTrailerConfig} placeholder="Select Truck Configuration" />
-          
-
-            {
-              selectedTrailerConfig?.name === 'Other' &&
-              <>
-                <ThemedText>
-                  Other Trailer Configuration<ThemedText color="red">*</ThemedText>
-                </ThemedText>
-                <Input
-                  value={formData.otherTruckConfig}
-                  placeholder="Trailer Config"
-                  onChangeText={(text) => handleChange< TruckFormData>(text, 'otherTruckConfig', setFormData)}
-                />
-              </>
-            }
-            
-
-      <ThemedText>
-              Truck Suspension<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-        <DropDownItem   allData={truckSuspensions} selectedItem={selectedTruckSuspension} setSelectedItem={setSelectedTruckSuspension} placeholder="Select Truck Suspension"  />
-           
-            {
-              selectedTruckSuspension?.name === 'Other' &&
-              <>
-                <ThemedText>
-                  Other Truck Suspension<ThemedText color="red">*</ThemedText>
-                </ThemedText>
-                <Input
-                  value={formData.otherTruckSuspension}
-                  placeholder="Trailer Suspension"
-                  onChangeText={(text) => handleChange< TruckFormData>(text, 'otherTruckSuspension', setFormData)}
-                />
-              </>
-            }
-
-            <ThemedText>
-              Maximum Load Capacity<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-            <Input
-              value={formData.maxloadCapacity}
-              keyboardType="number-pad"
-              placeholder="0.0t"
-              onChangeText={(text) => handleChange< TruckFormData>(text, 'maxloadCapacity', setFormData)}
-            />
-
-
-            <ThemedText>
-              Operation Countries<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-
-            <View style={{
-              paddingVertical: wp(1),
-
-              gap: wp(1),
-              borderWidth: 1,
-              borderColor: '#ccc',
-              borderRadius: 12,
-              paddingHorizontal: 16,
-              marginBottom: 16,
-            }}>
-              <TouchableOpacity onPress={() => setShowCountries(!showCountries)} style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}>
-                <ThemedText style={{ minHeight: hp(5), textAlignVertical: 'center' }}>
-                  Select Countrie(s)
-                </ThemedText>
-
-                <Ionicons name={showCountries ? 'chevron-up-outline' : "chevron-down"} size={wp(4)} color={icon} />
-              </TouchableOpacity>
-              {showCountries &&
-                <View>
-                  <Divider />
-                  {Countries.map((item) => {
-
-                    const active = operationCountries.some(x => x === item);
-
-                    return (
-                      <TouchableOpacity onPress={() => active ? setOperationCountries(operationCountries.filter(x => x !== item)) : setOperationCountries([...operationCountries, item])} style={{ padding: wp(2), marginVertical: wp(1), flexDirection: 'row', justifyContent: 'space-between' }}>
-                        <ThemedText type="subtitle">
-                          {item}
-                        </ThemedText>
-
-                        <FontAwesome name={active ? 'check-square' : "square-o"} size={wp(5)} color={active ? '#0f9d58' : icon} />
-                      </TouchableOpacity>
-                    )
-                  }
-                  )}
-
-                </View>
-              }
-
-            </View>
+         <AddTruckDetails   
+              selectedTruckType ={selectedTruckType}
+              setSelectedTruckType={setSelectedTruckType}
+              selectedCargoArea ={selectedCargoArea}
+              setSelectedCargoArea ={setSelectedCargoArea}
+              selectedTankerType={selectedTankerType} 
+              setSelectedTankerType={setSelectedTankerType}
+              selectedTruckCapacity={selectedTruckCapacity}
+              setSelectedTruckCapacity={setSelectedTruckCapacity}
+              selectedTrailerConfig={selectedTrailerConfig} 
+              setSelectedTrailerConfig = {setSelectedTrailerConfig}
+              selectedTruckSuspension={selectedTruckSuspension}
+              setSelectedTruckSuspension={setSelectedTruckSuspension} 
+              formData={formData}
+              setFormData={setFormData}
+              showCountries={showCountries} 
+              setShowCountries={setShowCountries}
+              operationCountries={operationCountries}
+              setOperationCountries={setOperationCountries}
+         />      
 
 
             <ThemedText>
@@ -667,7 +536,7 @@ console.log(addingDocUpdate)
                 </TouchableOpacity>
               }
 
-
+            {selectedTruckType?.name !=="Rigid" &&<View>
               <ThemedText>
                 Trailer Book Image
               </ThemedText>
@@ -695,7 +564,10 @@ console.log(addingDocUpdate)
                   <ThemedText color={icon + "4c"}>Trailer 2 Book Image (optional)<ThemedText color="red">*</ThemedText></ThemedText>
                 </TouchableOpacity>
               }
-            </View>
+            </View>}
+
+              </View> 
+
           </View>
           <View style={{ marginVertical: wp(4), marginBottom: hp(8), gap: wp(3) }}>
 
