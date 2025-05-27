@@ -179,7 +179,7 @@ import { FinalReturnComponent } from '@/components/TrucksHomePage'
                     truckConfig={truckConfig}
                     setTruckConfig={setTruckConfig}
                     truckSuspension={truckSuspension}
-                    // setTruckSuspension={setTruckSuspension}
+                    setTruckSuspension={setTruckSuspension}
                     dspPersonalTrucks={!!dspPersonalTrucks}
                     user={user}
                     trucks={trucks}
@@ -212,7 +212,7 @@ import { FinalReturnComponent } from '@/components/TrucksHomePage'
                     truckConfig={truckConfig}
                     setTruckConfig={setTruckConfig}
                     truckSuspension={truckSuspension}
-                    // setTruckSuspension={setTruckSuspension}
+                    setTruckSuspension={setTruckSuspension}
                     dspPersonalTrucks={!!dspPersonalTrucks}
                     user={user}
                     trucks={trucks}
