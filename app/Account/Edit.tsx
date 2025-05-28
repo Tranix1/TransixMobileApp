@@ -83,10 +83,10 @@ const Edit = () => {
 
                     <ThemedText style={styles.label}>Organisation Logo</ThemedText>
 
-                    {imagelogo[0] && <Image source={{ uri: imagelogo[0].uri }} style={{ width: wp(90), height: wp(90), marginBottom: 9, borderRadius: wp(4) }} />}
-                    {!imagelogo[0] && <TouchableOpacity 
-                    style={[styles.input, { height: hp(14), justifyContent: 'center', alignItems: 'center' }]}
-                    onPress={() => selectManyImages(setLogo, true)}
+                    {imagelogo[0] && <Image source={{ uri: imagelogo[0].uri }} style={{ width: wp(40), height: wp(40), margin: 'auto', marginBottom: 9, borderRadius: wp(4) }} />}
+                    {!imagelogo[0] && <TouchableOpacity
+                        style={[styles.input, { height: hp(14), justifyContent: 'center', alignItems: 'center' }]}
+                        onPress={() => selectManyImages(setLogo, true)}
                     >
                         <Ionicons name='image-outline' size={wp(8)} color={icon} />
                         <ThemedText style={styles.label}>Click To Add Logo</ThemedText>
