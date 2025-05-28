@@ -258,7 +258,7 @@ const Index = () => {
                                                         From
                                                     </ThemedText>
                                                     <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
-                                                        {selectedLoad.fromLocation}
+                                                        {selectedLoad.location}
                                                     </ThemedText>
                                                 </View>
                                                 <View style={{ gap: wp(1), flex: 2, }}>
@@ -266,7 +266,7 @@ const Index = () => {
                                                         To
                                                     </ThemedText>
                                                     <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
-                                                        {selectedLoad.toLocation}
+                                                        {selectedLoad.destination}
                                                     </ThemedText>
                                                 </View>
                                             </View>

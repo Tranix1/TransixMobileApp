@@ -63,7 +63,7 @@ const CreateProduct = () => {
     ];
 
 
-    const heavyEupementType =[
+    const heavyEupementType = [
 
         { id: 1, name: "Tipper" },
         { id: 2, name: "Excavator" },
@@ -75,8 +75,8 @@ const CreateProduct = () => {
         { id: 8, name: "Pavers" },
         { id: 9, name: "otherHeavyB" },
     ]
-    const cargoVehiType =[
-        
+    const cargoVehiType = [
+
         { id: 1, name: "ParcelVans" },
         { id: 2, name: "BoxTrucks" },
         { id: 3, name: "FlatbedTrucks" },
@@ -88,7 +88,7 @@ const CreateProduct = () => {
     ]
 
 
-    const smallVehicleMake =[
+    const smallVehicleMake = [
         { id: 1, name: "Toyota" },
         { id: 2, name: "MercedesBenz" },
         { id: 3, name: "BMW" },
@@ -105,7 +105,7 @@ const CreateProduct = () => {
         { id: 14, name: "Kia" },
         { id: 15, name: "otherMakes" },
     ]
-    const cargoTruckMake =[
+    const cargoTruckMake = [
 
         { id: 1, name: "cargoMercedesBenz" },
         { id: 2, name: "cargoMAN" },
@@ -119,7 +119,7 @@ const CreateProduct = () => {
         { id: 10, name: "cargoMitsubishiFuso" },
         { id: 11, name: "cargoHino" },
     ]
-    const heavyEupementMake =[
+    const heavyEupementMake = [
 
         { id: 1, name: "heavyCaterpillar" },
         { id: 2, name: "heavyVolvo" },
@@ -135,11 +135,11 @@ const CreateProduct = () => {
         { id: 12, name: "heavyOtherM" },
     ]
 
-    
+
 
 
     // Cargo Area Types
-    const cargoAreaTypes =[
+    const cargoAreaTypes = [
 
         { id: 1, name: "Bulktrailer" },
         { id: 1, name: "SideTipper" },
@@ -154,7 +154,7 @@ const CreateProduct = () => {
     ]
 
     // Types of service providers
-    const serviceProivderType =[
+    const serviceProivderType = [
 
         { id: 1, name: "AutoMechanic" },
         { id: 1, name: "HeavyDutyMechanic" },
@@ -178,17 +178,17 @@ const CreateProduct = () => {
 
 
 
-    
-    // States
-    const [vehicleType , setVehicleType]=React.useState("smallVehicle")
-    const [vehicleMake , setVehicleMake]=React.useState("smallVehicle")
-  const [images, setImages] = useState<ImagePickerAsset[]>([]);
 
-  if(images.length > 4){
+    // States
+    const [vehicleType, setVehicleType] = React.useState("smallVehicle")
+    const [vehicleMake, setVehicleMake] = React.useState("smallVehicle")
+    const [images, setImages] = useState<ImagePickerAsset[]>([]);
+
+    if (images.length > 4) {
         setImages([]);
-    alert('You can only select up to 4 images.');
-    return; // Exit if more than 4 images
-  }
+        alert('You can only select up to 4 images.');
+        return; // Exit if more than 4 images
+    }
 
     const [uploadProgress, setUploadProgress] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -249,7 +249,7 @@ const CreateProduct = () => {
 
     // Handle image selection
     const handleSelectImages = async () => {
-       
+
     };
 
 
@@ -274,21 +274,21 @@ const CreateProduct = () => {
 
 
 
-    let imageUrls = [];
- for (const asset of images) {
-          
-      const response = await fetch(asset.uri);
-        const blob = await response.blob();
-        const storageRef = ref(storage, `Shop/` + new Date().getTime());
-        
-        // Upload the image
-        const snapshot = await uploadBytes(storageRef, blob);
+        let imageUrls = [];
+        for (const asset of images) {
 
-        // Get the download URL
-        const imageUrl = await getDownloadURL(storageRef);
+            const response = await fetch(asset.uri);
+            const blob = await response.blob();
+            const storageRef = ref(storage, `Shop/` + new Date().getTime());
 
-        imageUrls.push(imageUrl);
-        
+            // Upload the image
+            const snapshot = await uploadBytes(storageRef, blob);
+
+            // Get the download URL
+            const imageUrl = await getDownloadURL(storageRef);
+
+            imageUrls.push(imageUrl);
+
         }
 
         setIsSubmitting(true);
@@ -310,11 +310,11 @@ const CreateProduct = () => {
             // Prepare product data
             const productData = {
                 ...formData,
-                images:imageUrls ,
+                images: imageUrls,
                 category: selectedCategory.name,
                 seller: {
                     id: user?.uid || "",
-                    name: user?.displayName || "Anonymous",
+                    name: user?.organisation || "Anonymous",
                     contact: user?.phoneNumber || "",
                     isVerified: false
                 },
@@ -351,39 +351,39 @@ const CreateProduct = () => {
             case "Vehicle":
                 return (
                     <>
-                    <ThemedText type="defaultSemiBold">Vehicle Category</ThemedText>
+                        <ThemedText type="defaultSemiBold">Vehicle Category</ThemedText>
 
 
-                        <TouchableOpacity onPress={()=>setVehicleType("smallVehicle") } >
-                            <ThemedText>Small vehicle</ThemedText> 
+                        <TouchableOpacity onPress={() => setVehicleType("smallVehicle")} >
+                            <ThemedText>Small vehicle</ThemedText>
                         </TouchableOpacity>
-                    <View style={{flexDirection:"row"}} >
+                        <View style={{ flexDirection: "row" }} >
 
 
-                        <TouchableOpacity onPress={()=>setVehicleType("heavyEquipment") }>
-                            <ThemedText>Heavy Equipment </ThemedText>
-                        </TouchableOpacity>
+                            <TouchableOpacity onPress={() => setVehicleType("heavyEquipment")}>
+                                <ThemedText>Heavy Equipment </ThemedText>
+                            </TouchableOpacity>
 
-                        <TouchableOpacity onPress={()=>setVehicleType("cargoTrucks") }>
-                            <ThemedText>Cargo Trucks</ThemedText>
-                        </TouchableOpacity>
-                    </View>
-
-
-                    {vehicleType === "cargoTrucks"&& <View>
-                        <ThemedText> Truck Type</ThemedText>
-                           <DropDownItem
-                            allData={[ { id : 1 , name : "semi Truck"}, {id : 2 , name:"rigid"}  ]}
-                            selectedItem={selectedType}
-                            setSelectedItem={setSelectedType}
-                            placeholder="Select vehicle type"
-                        />
-                    </View>  }
+                            <TouchableOpacity onPress={() => setVehicleType("cargoTrucks")}>
+                                <ThemedText>Cargo Trucks</ThemedText>
+                            </TouchableOpacity>
+                        </View>
 
 
-                    <ThemedText type="defaultSemiBold">  {vehicleType !== "cargoTrucks" ?  "Vehicle Type":"Cargo Area" }  </ThemedText>
+                        {vehicleType === "cargoTrucks" && <View>
+                            <ThemedText> Truck Type</ThemedText>
+                            <DropDownItem
+                                allData={[{ id: 1, name: "semi Truck" }, { id: 2, name: "rigid" }]}
+                                selectedItem={selectedType}
+                                setSelectedItem={setSelectedType}
+                                placeholder="Select vehicle type"
+                            />
+                        </View>}
+
+
+                        <ThemedText type="defaultSemiBold">  {vehicleType !== "cargoTrucks" ? "Vehicle Type" : "Cargo Area"}  </ThemedText>
                         <DropDownItem
-                            allData={ vehicleType ==="smallVehicle"? smallVehicleTypes : vehicleType === "cargoTrucks" ? cargoVehiType : heavyEupementType }
+                            allData={vehicleType === "smallVehicle" ? smallVehicleTypes : vehicleType === "cargoTrucks" ? cargoVehiType : heavyEupementType}
                             selectedItem={selectedType}
                             setSelectedItem={setSelectedType}
                             placeholder="Select vehicle type"
@@ -400,8 +400,8 @@ const CreateProduct = () => {
                         )}
 
                         <ThemedText type="defaultSemiBold">Make</ThemedText>
-                       <DropDownItem
-                            allData={ vehicleType ==="smallVehicle"? smallVehicleMake : vehicleType === "cargoTrucks"? cargoTruckMake : heavyEupementMake}
+                        <DropDownItem
+                            allData={vehicleType === "smallVehicle" ? smallVehicleMake : vehicleType === "cargoTrucks" ? cargoTruckMake : heavyEupementMake}
                             selectedItem={selectedMake}
                             setSelectedItem={setSelectedMake}
                             placeholder="Select vehicle Make"
@@ -439,43 +439,43 @@ const CreateProduct = () => {
                 );
 
 
-            case "Trailer": 
-            return(
-                <>
-                  <ThemedText type="defaultSemiBold">Trailer Type</ThemedText>
+            case "Trailer":
+                return (
+                    <>
+                        <ThemedText type="defaultSemiBold">Trailer Type</ThemedText>
                         <DropDownItem
-                            allData={ vehicleType ==="smallVehicle"? smallVehicleTypes : vehicleType === "cargoTrucks"? cargoVehiType : heavyEupementType }
+                            allData={vehicleType === "smallVehicle" ? smallVehicleTypes : vehicleType === "cargoTrucks" ? cargoVehiType : heavyEupementType}
                             selectedItem={selectedType}
                             setSelectedItem={setSelectedType}
                             placeholder="Select vehicle type"
                         />
-                </>
-            )
-              case "Container": 
-            return(
-                <>
-                  <ThemedText type="defaultSemiBold">Vehicle Type</ThemedText>
+                    </>
+                )
+            case "Container":
+                return (
+                    <>
+                        <ThemedText type="defaultSemiBold">Vehicle Type</ThemedText>
                         <DropDownItem
-                            allData={ vehicleType ==="smallVehicle"? smallVehicleTypes : vehicleType === "cargoTrucks"? cargoVehiType : heavyEupementType }
+                            allData={vehicleType === "smallVehicle" ? smallVehicleTypes : vehicleType === "cargoTrucks" ? cargoVehiType : heavyEupementType}
                             selectedItem={selectedType}
                             setSelectedItem={setSelectedType}
                             placeholder="Select vehicle type"
                         />
-                </>
-            )
-              case "Service Provider": 
-            return(
-                <>
-                  <ThemedText type="defaultSemiBold">Vehicle Type</ThemedText>
+                    </>
+                )
+            case "Service Provider":
+                return (
+                    <>
+                        <ThemedText type="defaultSemiBold">Vehicle Type</ThemedText>
                         <DropDownItem
-                            allData={ vehicleType ==="smallVehicle"? smallVehicleTypes : vehicleType === "cargoTrucks"? cargoVehiType : heavyEupementType }
+                            allData={vehicleType === "smallVehicle" ? smallVehicleTypes : vehicleType === "cargoTrucks" ? cargoVehiType : heavyEupementType}
                             selectedItem={selectedType}
                             setSelectedItem={setSelectedType}
                             placeholder="Select vehicle type"
                         />
-                </>
-            )
-         
+                    </>
+                )
+
 
             default:
                 return (
@@ -556,7 +556,7 @@ const CreateProduct = () => {
                         ) : (
                             <TouchableOpacity
                                 style={styles.addImageButton}
-                                onPress={()=>selectManyImages(setImages , true, true) }
+                                onPress={() => selectManyImages(setImages, true, true)}
                             >
                                 <Ionicons name="camera" size={wp(10)} color={iconColor} />
                                 <ThemedText>Add Images</ThemedText>
@@ -577,12 +577,12 @@ const CreateProduct = () => {
                         onChangeText={(text) => handleChange("title", text)}
                     />
 
-                <ThemedText type="defaultSemiBold">Product Location</ThemedText>
+                    {/* <ThemedText type="defaultSemiBold">Product Location</ThemedText>
                     <Input
-                        placeholder="Product Name"
-                        value={formData.title}
-                        onChangeText={(text) => handleChange("title", text)}
-                    />
+                        placeholder="Location"
+                        value={formData.location?.address}
+                        onChangeText={(text) => handleChange("location.address", text)}
+                    /> */}
                     <ThemedText type="defaultSemiBold">Description</ThemedText>
                     <Input
                         placeholder="Detailed description"
