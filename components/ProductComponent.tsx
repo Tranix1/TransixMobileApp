@@ -89,32 +89,12 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
         </View>
     )
 
-    const renderGeneralDetails = () => (
-        <View style={styles.detailSection}>
-            {product.details.general?.brand && (
-                <View style={styles.detailRow}>
-                    <ThemedText type='default' style={{ flex: 1 }}>Brand:</ThemedText>
-                    <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
-                        {product.details.general.brand}
-                    </ThemedText>
-                </View>
-            )}
-
-            {product.details.general?.model && (
-                <View style={styles.detailRow}>
-                    <ThemedText type='default' style={{ flex: 1 }}>Model:</ThemedText>
-                    <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
-                        {product.details.general.model}
-                    </ThemedText>
-                </View>
-            )}
-        </View>
-    )
+  
 
     return (
-        <TouchableOpacity
+        <View
             style={[styles.container, { backgroundColor: background }]}
-            activeOpacity={0.8}
+            // activeOpacity={0.8}
         >
             {/* Header with seller info and options */}
             <View style={styles.header}>
@@ -167,11 +147,27 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
                         {product.condition === 'new' ? 'New' : 'Used'}
                     </ThemedText>
                 </View>
-                <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+               { product.category!=="Vehicle" && <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
                     <ThemedText type='tiny'>
                         {product.category}
                     </ThemedText>
+                </View>}
+                 {product.category==="Vehicle" &&  <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+                    <ThemedText type='tiny'>
+                        {product.vehicleType}
+                    </ThemedText>
+                </View>}
+                  <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+                    <ThemedText type='tiny'>
+                        {product.bodyStyle}
+                    </ThemedText>
                 </View>
+                  <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+                    <ThemedText type='tiny' >
+                        {product.bodyMake}
+                    </ThemedText>
+                </View>
+               
             </View>
 
             {/* Location */}
@@ -205,8 +201,8 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
                     </ThemedText>
 
                     {/* Category-specific details */}
-                    {product.category === 'vehicle' && renderVehicleDetails()}
-                    {product.category !== 'vehicle' && renderGeneralDetails()}
+                    {product.category === 'Vehicle' && renderVehicleDetails()}
+                    {/* {product.category !== 'vehicle' && renderGeneralDetails()} */}
 
                     {/* Transaction Details */}
                     <View style={styles.detailSection}>
@@ -259,7 +255,7 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
                     color={icon}
                 />
             </TouchableOpacity>
-        </TouchableOpacity>
+        </View>
     )
 }
 

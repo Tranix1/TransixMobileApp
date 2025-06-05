@@ -57,23 +57,18 @@ export interface Product {
     id?: string; // Adding optional ID for Firebase documents
     title: string;
     description: string;
+    deliveryCost : string  ;
+    swapPreferences : string ;
     price: number;
     currency: string;
     category: string;
+
     condition: 'new' | 'used';
     images: string[];
     createdAt: Date;
     updatedAt: Date | null;
 
-    // Location information
-    location: {
-        address: string;
-        city: string;
-        coordinates?: {
-            latitude: number;
-            longitude: number;
-        } | null;
-    };
+ 
 
     // User/seller information
     seller: {
@@ -89,39 +84,32 @@ export interface Product {
         // For vehicles
         vehicle?: {
             type: string;
+            otherType: string;
             make: string;
+            otherMake: string;
             model: string;
             year: number;
             mileage: number;
             engine: string;
             transmission: string;
             fuelType: string;
+            horsePower : string
         } | null;
 
-        // For property
-        property?: {
-            type: string;
-            bedrooms?: number;
-            bathrooms?: number;
-            squareFootage?: number;
-        } | null;
+    trailers?: {
+        otherType: string ;
+        otherMake : string;
+    }
 
-        // General details for any product
-        general?: {
-            brand?: string;
-            model?: string;
-            dimensions?: string;
-            weight?: number;
-            color?: string;
-        } | null;
+     
+
     };
 
     // Transaction details
     transaction: {
         type: 'sell' | 'rent' | 'swap';
         priceNegotiable: boolean;
-        deliveryAvailable: boolean;
-        deliveryCost?: number;
+        deliveryCost?: string;
         swapPreferences?: string;
     };
 
