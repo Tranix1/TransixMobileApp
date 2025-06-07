@@ -182,8 +182,7 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
             <View style={styles.detailRow}>
                 <FontAwesome5 name="exchange-alt" size={wp(4)} style={styles.icon} color={icon} />
                 <ThemedText type='default'>
-                    {product.transaction.type === 'sell' ? 'For Sale' :
-                        product.transaction.type === 'rent' ? 'For Rent' : 'For Swap'}
+                    {product.transaction.type }
                 </ThemedText>
                 {product.transaction.swapPreferences && (
                     <ThemedText type='default' style={{ marginLeft: wp(2) }}>

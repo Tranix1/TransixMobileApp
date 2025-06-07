@@ -15,7 +15,7 @@ import { ErrorOverlay } from '@/components/ErrorOverLay';
 import Heading from '@/components/Heading';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { hp, wp } from "@/constants/common";
-import {  Ionicons, } from "@expo/vector-icons";
+import { Ionicons, } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import Divider from "@/components/Divider";
 import Button from "@/components/Button";
@@ -29,6 +29,11 @@ import { storage } from "@/db/fireBaseConfig";
 
 import type { ImagePickerAsset } from 'expo-image-picker';
 import { truckType } from "@/data/appConstants";
+
+
+import { truckSuspensions, trailerConfigurations as truckConfigurations } from "@/data/appConstants";
+
+
 const CreateProduct = () => {
     // Theme colors
     const background = useThemeColor('background');
@@ -153,6 +158,7 @@ const CreateProduct = () => {
     const transactionTypes = [
         { id: 1, name: "Sell" },
         { id: 2, name: "Rent" },
+        { id: 3, name: "Rent to Buy" },
         { id: 4, name: "Hire" },
         { id: 5, name: "Swap" },
     ];
@@ -213,13 +219,13 @@ const CreateProduct = () => {
 
 
     // States
-    const [ vehicleType, setVehicleType] = React.useState<{ id: number; name: string } | null> (null);
+    const [vehicleType, setVehicleType] = React.useState<{ id: number; name: string } | null>(null);
 
     const [images, setImages] = useState<ImagePickerAsset[]>([]);
 
-    if (images.length > 4) {
+    if (images.length > 5) {
         setImages([]);
-        alert('You can only select up to 4 images.');
+        alert('You can only select up to 5 images.');
         return; // Exit if more than 4 images
     }
 
@@ -228,45 +234,48 @@ const CreateProduct = () => {
     const [showErrors, setShowErrors] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<any>(null);
     const [selectedType, setSelectedType] = useState<any>(null);
+    const [selectedTruckSuspension, setSrlectedTruckSuspension] = React.useState<{ id: number; name: string } | null>(null)
+    const [selectedTruckConfig, setSelectedTruckConfig] = React.useState<{ id: number; name: string } | null>(null)
     const [selectedTruckType, setSelectedTruckType] = useState<{ id: number; name: string } | null>(null);
     const [selectedMake, setSelectedMake] = useState<any>(null);
     const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
-    const [selectedSparePartName , setSelectedSparePartName]=React.useState("")
+    const [selectedSparePartName, setSelectedSparePartName] = React.useState("")
 
-    const [priceNegotiable , setPriceNegotiable]=React.useState(false)
-     function togglePriceNegotiable() {
+    const [priceNegotiable, setPriceNegotiable] = React.useState(false)
+    function togglePriceNegotiable() {
         setPriceNegotiable(prev => !prev)
-     }
-     const [deliveryAvailable, setDeliveryAvailable] =React.useState(false)
-     function toggleDeliveryAvailable(){
+    }
+    const [deliveryAvailable, setDeliveryAvailable] = React.useState(false)
+    function toggleDeliveryAvailable() {
         setDeliveryAvailable(prev => !prev)
-     }
+    }
 
-        const [vehicleTransimission , setVehicleTransission]=React.useState("")
-        const [vehcileFuel , setVehicleFuel]= React.useState("")
+    const [vehicleTransimission, setVehicleTransission] = React.useState("")
+    const [vehcileFuel, setVehicleFuel] = React.useState("")
 
 
 
-   
+
 
     // Form data
-    const [formData, setFormData] = useState<Partial<Product>> ({
+    const [formData, setFormData] = useState<Partial<Product>>({
         title: "",
         description: "",
-        price: 0,
+        price: '',
         currency: "USD",
+        model: "USD",
         condition: "used",
-        deliveryCost : "" ,
-        swapPreferences : "" ,
+        deliveryCost: "",
+        swapPreferences: "",
         details: {
             vehicle: null,
         },
-      
+
     });
 
 
 
-     
+
 
     console.log(formData.details?.vehicle?.otherType)
 
@@ -333,36 +342,39 @@ const CreateProduct = () => {
             const productData = {
 
                 ...formData,
-                   transaction: {
-            type: "sell",
-            priceNegotiable: priceNegotiable,
-            deliveryAvailable: deliveryAvailable,
-            deliveryCost: formData.deliveryCost,
-            swapPreferences: formData.swapPreferences
-        },
-        details: {
-            vehicle: null,
-            property: null,
-            general: null
-        },
-        location: {
-            address: "",
-            city: "",
-            coordinates: null
-        },
+                transaction: {
+                    type: "sell",
+                    priceNegotiable: priceNegotiable,
+                    deliveryAvailable: deliveryAvailable,
+                    deliveryCost: formData.deliveryCost,
+                    swapPreferences: formData.swapPreferences
+                },
+                details: {
+                    vehicle: null,
+                    property: null,
+                    general: null
+                },
+                location: {
+                    address: "",
+                    city: "",
+                    coordinates: null
+                },
+                truckDetails: {
+                    truckConfig: selectedTruckConfig?.name,
+                    truckSuspension: selectedTruckConfig?.name,
+                    truckruckType: selectedTruckType?.name,
+
+                },
 
                 images: imageUrls,
 
-                bodyStyle:selectedType.name ,
-                bodyMake:selectedMake.name ,
+                bodyStyle: selectedType.name,
+                bodyMake: selectedMake.name,
                 category: selectedCategory.name,
-                vehicleType : vehicleType?.name,
 
+                vehicleType: vehicleType.,
 
-
-
-                selectedSparePartName: selectedSparePartName ,
-
+                selectedSparePartName: selectedSparePartName,
 
                 seller: {
                     id: user?.uid || "",
@@ -410,21 +422,21 @@ const CreateProduct = () => {
 
 
                         <DropDownItem
-                            allData={[ 
-                        {id: 1, name: "small vehicle"} ,
-                        {id: 2, name: "cargo vehicle"} ,
-                        {id: 3, name: "heavy Equip"} 
-                            ] }
-                            selectedItem={ vehicleType}
+                            allData={[
+                                { id: 1, name: "small vehicle" },
+                                { id: 2, name: "cargo vehicle" },
+                                { id: 3, name: "heavy Equip" }
+                            ]}
+                            selectedItem={vehicleType}
                             setSelectedItem={setVehicleType}
                             placeholder="Select vehicle type"
                         />
 
 
-                        { vehicleType?.name === "cargo vehicle" && <View>
+                        {vehicleType?.name === "cargo vehicle" && <View>
                             <ThemedText> Truck Type</ThemedText>
                             <DropDownItem
-                                allData={[{ id: 1, name: "semi Truck" }, { id: 2, name: "rigid" } , { id: 3, name: "Truck Horse" } ]}
+                                allData={[{ id: 1, name: "semi Truck" }, { id: 2, name: "rigid" }, { id: 3, name: "Truck Horse" }]}
                                 selectedItem={selectedTruckType}
                                 setSelectedItem={setSelectedTruckType}
                                 placeholder="Select Truck type"
@@ -439,33 +451,33 @@ const CreateProduct = () => {
 
 
 
-                           {selectedTruckType?.name !=="Truck Horse"&& <View> 
+                        {selectedTruckType?.name !== "Truck Horse" && <View>
 
-                        <ThemedText type="defaultSemiBold">  { vehicleType?.name !== "cargo vehicle" ? "Vehicle Type" : "Cargo Area"}  </ThemedText>
-                       <DropDownItem
-                            allData={
-                            vehicleType?.name === "small vehicle" ? smallVehicleTypes :  vehicleType?.name === "cargo vehicle" ?  cargoVehiType  : heavyEupementType}
-                            selectedItem={selectedType}
-                            setSelectedItem={setSelectedType}
-                            placeholder="Select vehicle type"
-                        />
-
-
-                        {["(Other) Small Veh. Type", "(Other) Cargo Veh. Type", "(Other) Heavy Equip. Type"].includes(selectedType?.name) && (
-                            <Input
-                                placeholder="Specify  type"
-                                onChangeText={(text) => handleNestedChange("details", "vehicle", {
-                                    ...formData.details?.vehicle,
-                                    otherType: text
-                                })}
+                            <ThemedText type="defaultSemiBold">  {vehicleType?.name !== "cargo vehicle" ? "Vehicle Type" : "Cargo Area"}  </ThemedText>
+                            <DropDownItem
+                                allData={
+                                    vehicleType?.name === "small vehicle" ? smallVehicleTypes : vehicleType?.name === "cargo vehicle" ? cargoVehiType : heavyEupementType}
+                                selectedItem={selectedType}
+                                setSelectedItem={setSelectedType}
+                                placeholder="Select vehicle type"
                             />
-                        )}
+
+
+                            {["(Other) Small Veh. Type", "(Other) Cargo Veh. Type", "(Other) Heavy Equip. Type"].includes(selectedType?.name) && (
+                                <Input
+                                    placeholder="Specify  type"
+                                    onChangeText={(text) => handleNestedChange("details", "vehicle", {
+                                        ...formData.details?.vehicle,
+                                        otherType: text
+                                    })}
+                                />
+                            )}
                         </View>}
 
 
                         <ThemedText type="defaultSemiBold">Make</ThemedText>
                         <DropDownItem
-                            allData={ vehicleType?.name === "small vehicle" ? smallVehicleMake :  vehicleType?.name === "cargo vehicle" ? cargoTruckMake : heavyEupementMake}
+                            allData={vehicleType?.name === "small vehicle" ? smallVehicleMake : vehicleType?.name === "cargo vehicle" ? cargoTruckMake : heavyEupementMake}
                             selectedItem={selectedMake}
                             setSelectedItem={setSelectedMake}
                             placeholder="Select vehicle Make"
@@ -481,45 +493,48 @@ const CreateProduct = () => {
                             />
                         )}
 
+                        {vehicleType?.name === "cargo vehicle" && <View>
 
-<ThemedText>Config</ThemedText>
-        <DropDownItem
-                            allData={ vehicleType?.name === "small vehicle" ? smallVehicleMake :  vehicleType?.name === "cargo vehicle" ? cargoTruckMake : heavyEupementMake}
-                            selectedItem={selectedMake}
-                            setSelectedItem={setSelectedMake}
-                            placeholder="Select vehicle Make"
-                        />
 
-                        {["(Other) Small Veh. Make", "(Other) Cargo Veh. Make", "(Other) Heavy Equip. Make"].includes(selectedMake?.name) && (
-                            <Input
-                                placeholder="Specify vehicle type"
-                                onChangeText={(text) => handleNestedChange("details", "vehicle", {
-                                    ...formData.details?.vehicle,
-                                    otherMake: text
-                                })}
+                            <ThemedText>Config</ThemedText>
+                            <DropDownItem
+                                allData={truckConfigurations}
+                                selectedItem={selectedTruckConfig}
+                                setSelectedItem={setSelectedTruckConfig}
+                                placeholder="Select Truck Config"
                             />
-                        )}
 
-                        <ThemedText>Suspension</ThemedText>
+                            {selectedTruckConfig?.name === "Other" && (
+                                <Input
+                                    placeholder="Specify vehicle Config"
+                                    onChangeText={(text) => handleNestedChange("details", "vehicle", {
+                                        ...formData.details?.vehicle,
+                                        otherTruckConfig: text
+                                    })}
+                                />
+                            )}
 
-        <DropDownItem
-                            allData={ vehicleType?.name === "small vehicle" ? smallVehicleMake :  vehicleType?.name === "cargo vehicle" ? cargoTruckMake : heavyEupementMake}
-                            selectedItem={selectedMake}
-                            setSelectedItem={setSelectedMake}
-                            placeholder="Select vehicle Make"
-                        />
+                            <ThemedText>Suspension</ThemedText>
 
-                        {["(Other) Small Veh. Make", "(Other) Cargo Veh. Make", "(Other) Heavy Equip. Make"].includes(selectedMake?.name) && (
-                            <Input
-                                placeholder="Specify vehicle type"
-                                onChangeText={(text) => handleNestedChange("details", "vehicle", {
-                                    ...formData.details?.vehicle,
-                                    otherMake: text
-                                })}
+                            <DropDownItem
+                                allData={truckSuspensions}
+                                selectedItem={selectedTruckSuspension}
+                                setSelectedItem={setSrlectedTruckSuspension}
+                                placeholder="Select Truck Suspension"
                             />
-                        )}
+
+                            {selectedTruckSuspension?.name === "Other" && (
+                                <Input
+                                    placeholder="Specify vehicle Suspension"
+                                    onChangeText={(text) => handleNestedChange("details", "vehicle", {
+                                        ...formData.details?.vehicle,
+                                        otherTruckSuspension: text
+                                    })}
+                                />
+                            )}
 
 
+                        </View>}
 
 
 
@@ -533,17 +548,17 @@ const CreateProduct = () => {
                             })}
                         />
 
-                     {(selectedTruckType?.name ==="semi Truck" ||selectedTruckType?.name ==="Truck Horse" ) &&<View>    
-                  <ThemedText type="defaultSemiBold">Horse Power</ThemedText>
-                        <Input
-                            placeholder="e.g. 50000"
-                            keyboardType="numeric"
-                            onChangeText={(text) => handleNestedChange("details", "vehicle", {
-                                ...formData.details?.vehicle,
-                                horsePower: parseInt(text) || 0
-                            })}
-                        />
- </View>}
+                        {(selectedTruckType?.name === "semi Truck" || selectedTruckType?.name === "Truck Horse") && <View>
+                            <ThemedText type="defaultSemiBold">Horse Power</ThemedText>
+                            <Input
+                                placeholder="e.g. 50000"
+                                keyboardType="numeric"
+                                onChangeText={(text) => handleNestedChange("details", "vehicle", {
+                                    ...formData.details?.vehicle,
+                                    horsePower: parseInt(text) || 0
+                                })}
+                            />
+                        </View>}
 
 
 
@@ -570,79 +585,79 @@ const CreateProduct = () => {
 
 
 
-                            <Divider/>
+                        <Divider />
 
 
 
-                            <ThemedText type="defaultSemiBold">Transmission</ThemedText>
+                        <ThemedText type="defaultSemiBold">Transmission</ThemedText>
 
 
 
-   <View style={styles.row}>
-                                <TouchableOpacity
-                                    style={[
-                                        styles.checkbox,
-                                        vehicleTransimission ==="(Auto)"  && styles.checkboxSelected
-                                    ]}
-                                    onPress={()=>setVehicleTransission("(Auto)") }
-                                >
-                                    <Ionicons
-                                        name={vehicleTransimission ==="(Auto)" ? "checkbox" : "square-outline"}
-                                        size={wp(5)}
-                                        color={vehicleTransimission ==="(Auto)"? accent : iconColor}
-                                    />
-                                    <ThemedText style={{ marginLeft: wp(2) }}>(Auto)</ThemedText>
-                                </TouchableOpacity>
+                        <View style={styles.row}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.checkbox,
+                                    vehicleTransimission === "(Auto)" && styles.checkboxSelected
+                                ]}
+                                onPress={() => setVehicleTransission("(Auto)")}
+                            >
+                                <Ionicons
+                                    name={vehicleTransimission === "(Auto)" ? "checkbox" : "square-outline"}
+                                    size={wp(5)}
+                                    color={vehicleTransimission === "(Auto)" ? accent : iconColor}
+                                />
+                                <ThemedText style={{ marginLeft: wp(2) }}>(Auto)</ThemedText>
+                            </TouchableOpacity>
 
 
-                                <TouchableOpacity
-                                    style={[
-                                        styles.checkbox,
-                                        vehicleTransimission ==="Manual"  && styles.checkboxSelected
-                                    ]}
-                                    onPress={()=>setVehicleTransission("Manual") }
-                                >
-                                    <Ionicons
-                                        name={vehicleTransimission ==="Manual"  ? "checkbox" : "square-outline"}
-                                        size={wp(5)}
-                                        color={vehicleTransimission ==="Manual"  ? accent : iconColor}
-                                    />
-                                    <ThemedText style={{ marginLeft: wp(2) }}>Manual</ThemedText>
-                                </TouchableOpacity>
-                                  <TouchableOpacity
-                                    style={[
-                                        styles.checkbox,
-                                        vehicleTransimission ==="semi_Auto" && styles.checkboxSelected
-                                    ]}
-                                    onPress={()=>setVehicleTransission("semi_Auto") }
-                                >
-                                    <Ionicons
-                                        name={vehicleTransimission ==="semi_Auto" ? "checkbox" : "square-outline"}
-                                        size={wp(5)}
-                                        color={vehicleTransimission ==="semi_Auto"  ? accent : iconColor}
-                                    />
-                                    <ThemedText style={{ marginLeft: wp(2) ,fontSize:15} }  >semi_Auto</ThemedText>
-                                </TouchableOpacity>
-                                  <TouchableOpacity
-                                    style={[
-                                        styles.checkbox,
-                                        vehicleTransimission ==="other" && styles.checkboxSelected
-                                    ]}
-                                    onPress={()=>setVehicleTransission("other") }
-                                >
-                                    <Ionicons
-                                        name={vehicleTransimission ==="other"  ? "checkbox" : "square-outline"}
-                                        size={wp(5)}
-                                        color={vehicleTransimission ==="other"  ? accent : iconColor}
-                                    />
-                                    <ThemedText style={{ marginLeft: wp(2) }}>other</ThemedText>
-                                </TouchableOpacity>
-                            </View>
+                            <TouchableOpacity
+                                style={[
+                                    styles.checkbox,
+                                    vehicleTransimission === "Manual" && styles.checkboxSelected
+                                ]}
+                                onPress={() => setVehicleTransission("Manual")}
+                            >
+                                <Ionicons
+                                    name={vehicleTransimission === "Manual" ? "checkbox" : "square-outline"}
+                                    size={wp(5)}
+                                    color={vehicleTransimission === "Manual" ? accent : iconColor}
+                                />
+                                <ThemedText style={{ marginLeft: wp(2) }}>Manual</ThemedText>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.checkbox,
+                                    vehicleTransimission === "semi_Auto" && styles.checkboxSelected
+                                ]}
+                                onPress={() => setVehicleTransission("semi_Auto")}
+                            >
+                                <Ionicons
+                                    name={vehicleTransimission === "semi_Auto" ? "checkbox" : "square-outline"}
+                                    size={wp(5)}
+                                    color={vehicleTransimission === "semi_Auto" ? accent : iconColor}
+                                />
+                                <ThemedText style={{ marginLeft: wp(2), fontSize: 15 }}  >semi_Auto</ThemedText>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.checkbox,
+                                    vehicleTransimission === "other" && styles.checkboxSelected
+                                ]}
+                                onPress={() => setVehicleTransission("other")}
+                            >
+                                <Ionicons
+                                    name={vehicleTransimission === "other" ? "checkbox" : "square-outline"}
+                                    size={wp(5)}
+                                    color={vehicleTransimission === "other" ? accent : iconColor}
+                                />
+                                <ThemedText style={{ marginLeft: wp(2) }}>other</ThemedText>
+                            </TouchableOpacity>
+                        </View>
 
 
 
 
-                     { vehicleTransimission ==="other" &&  <Input
+                        {vehicleTransimission === "other" && <Input
                             placeholder="e.g. 50000"
                             keyboardType="numeric"
                             onChangeText={(text) => handleNestedChange("details", "vehicle", {
@@ -652,80 +667,80 @@ const CreateProduct = () => {
                         />}
 
 
-                            <Divider/>
+                        <Divider />
 
 
-                            <ThemedText type="defaultSemiBold">Fuel Type</ThemedText>
-         <View style={styles.row}>
-                                <TouchableOpacity
-                                    style={[
-                                        styles.checkbox,
-                                        vehcileFuel==="Petrol" && styles.checkboxSelected
-                                    ]}
-                                    onPress={()=>setVehicleFuel("Petrol") }
-                                >
-                                    <Ionicons
-                                        name={vehcileFuel==="Petrol"  ? "checkbox" : "square-outline"}
-                                        size={wp(5)}
-                                        color={vehcileFuel==="Petrol" ? accent : iconColor}
-                                    />
-                                    <ThemedText style={{ marginLeft: wp(2) }}>Petrol</ThemedText>
-                                </TouchableOpacity>
+                        <ThemedText type="defaultSemiBold">Fuel Type</ThemedText>
+                        <View style={styles.row}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.checkbox,
+                                    vehcileFuel === "Petrol" && styles.checkboxSelected
+                                ]}
+                                onPress={() => setVehicleFuel("Petrol")}
+                            >
+                                <Ionicons
+                                    name={vehcileFuel === "Petrol" ? "checkbox" : "square-outline"}
+                                    size={wp(5)}
+                                    color={vehcileFuel === "Petrol" ? accent : iconColor}
+                                />
+                                <ThemedText style={{ marginLeft: wp(2) }}>Petrol</ThemedText>
+                            </TouchableOpacity>
 
 
-                                <TouchableOpacity
-                                    style={[
-                                        styles.checkbox,
-                                        vehcileFuel==="Diesel" && styles.checkboxSelected
-                                    ]}
-                                    onPress={()=>setVehicleFuel("Diesel") }
-                                >
-                                    <Ionicons
-                                        name={vehcileFuel==="Diesel"  ? "checkbox" : "square-outline"}
-                                        size={wp(5)}
-                                        color={vehcileFuel==="Diesel"  ? accent : iconColor}
-                                    />
-                                    <ThemedText style={{ marginLeft: wp(2) }}>Diesel</ThemedText>
-                                </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.checkbox,
+                                    vehcileFuel === "Diesel" && styles.checkboxSelected
+                                ]}
+                                onPress={() => setVehicleFuel("Diesel")}
+                            >
+                                <Ionicons
+                                    name={vehcileFuel === "Diesel" ? "checkbox" : "square-outline"}
+                                    size={wp(5)}
+                                    color={vehcileFuel === "Diesel" ? accent : iconColor}
+                                />
+                                <ThemedText style={{ marginLeft: wp(2) }}>Diesel</ThemedText>
+                            </TouchableOpacity>
 
 
-                     <TouchableOpacity
-                                    style={[
-                                        styles.checkbox,
-                                        vehcileFuel==="Hybrid" && styles.checkboxSelected
-                                    ]}
-                                    onPress={()=>setVehicleFuel("Hybrid") }
-                                >
-                                    <Ionicons
-                                        name={vehcileFuel==="Hybrid"  ? "checkbox" : "square-outline"}
-                                        size={wp(5)}
-                                        color={vehcileFuel==="Hybrid"  ? accent : iconColor}
-                                    />
-                                    <ThemedText style={{ marginLeft: wp(2) }}>Hybrid</ThemedText>
-                                </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.checkbox,
+                                    vehcileFuel === "Hybrid" && styles.checkboxSelected
+                                ]}
+                                onPress={() => setVehicleFuel("Hybrid")}
+                            >
+                                <Ionicons
+                                    name={vehcileFuel === "Hybrid" ? "checkbox" : "square-outline"}
+                                    size={wp(5)}
+                                    color={vehcileFuel === "Hybrid" ? accent : iconColor}
+                                />
+                                <ThemedText style={{ marginLeft: wp(2) }}>Hybrid</ThemedText>
+                            </TouchableOpacity>
 
-  <TouchableOpacity
-                                    style={[
-                                        styles.checkbox,
-                                        vehcileFuel==="other"  && styles.checkboxSelected
-                                    ]}
-                                    onPress={()=>setVehicleFuel("other") }
-                                >
-                                    <Ionicons
-                                        name={vehcileFuel==="other"  ? "checkbox" : "square-outline"}
-                                        size={wp(5)}
-                                        color={vehcileFuel==="other"  ? accent : iconColor}
-                                    />
-                                    <ThemedText style={{ marginLeft: wp(2) }}>other</ThemedText>
-                                </TouchableOpacity>
-                            </View>
-
-
+                            <TouchableOpacity
+                                style={[
+                                    styles.checkbox,
+                                    vehcileFuel === "other" && styles.checkboxSelected
+                                ]}
+                                onPress={() => setVehicleFuel("other")}
+                            >
+                                <Ionicons
+                                    name={vehcileFuel === "other" ? "checkbox" : "square-outline"}
+                                    size={wp(5)}
+                                    color={vehcileFuel === "other" ? accent : iconColor}
+                                />
+                                <ThemedText style={{ marginLeft: wp(2) }}>other</ThemedText>
+                            </TouchableOpacity>
+                        </View>
 
 
-                        
 
-                      {vehcileFuel==="other"  &&  <Input
+
+
+
+                        {vehcileFuel === "other" && <Input
                             placeholder="e.g. 50000"
                             keyboardType="numeric"
                             onChangeText={(text) => handleNestedChange("details", "vehicle", {
@@ -734,7 +749,7 @@ const CreateProduct = () => {
                             })}
                         />}
 
-                        
+
                     </>
                 );
 
@@ -747,27 +762,19 @@ const CreateProduct = () => {
                             allData={trailerType}
                             selectedItem={selectedType}
                             setSelectedItem={setSelectedType}
-                            placeholder="Select vehicle type"
+                            placeholder="Select Trailer type"
                         />
-                        {["(Other) Small Veh. Make", "(Other) Cargo Veh. Make", "(Other) Heavy Equip. Make"].includes(selectedMake?.name) && (
+                        {["(Other) Trailer. Type"].includes(selectedType?.name) && (
                             <Input
                                 placeholder="Specify vehicle type"
                                 onChangeText={(text) => handleNestedChange("details", "vehicle", {
-                                    ...formData.details?.vehicle,
-                                    type: text
+                                    ...formData.details?.trailers,
+                                    otherType: text
                                 })}
                             />
                         )}
 
-                        {["(Other) Trailer. Type"].includes(selectedMake?.name) && (
-                            <Input
-                                placeholder="Specify vehicle type"
-                                onChangeText={(text) => handleNestedChange("details", "vehicle", {
-                                    ...formData.details?.vehicle,
-                                    type: text
-                                })}
-                            />
-                        )}
+
                         <ThemedText type="defaultSemiBold">Trailer Type</ThemedText>
 
                         <DropDownItem
@@ -776,15 +783,59 @@ const CreateProduct = () => {
                             setSelectedItem={setSelectedMake}
                             placeholder="Select vehicle type"
                         />
+
+
                         {["(Other) Trailer. Make"].includes(selectedMake?.name) && (
                             <Input
-                                placeholder="Specify vehicle type"
+                                placeholder="Specify Traler Make"
                                 onChangeText={(text) => handleNestedChange("details", "vehicle", {
-                                    ...formData.details?.vehicle,
-                                    type: text
+                                    ...formData.details?.trailers,
+                                    otherMakea: text
                                 })}
                             />
                         )}
+
+                        <ThemedText>Config</ThemedText>
+                        <DropDownItem
+                            allData={truckConfigurations}
+                            selectedItem={selectedTruckConfig}
+                            setSelectedItem={setSelectedTruckConfig}
+                            placeholder="Select Truck Config"
+                        />
+
+                        {selectedTruckConfig?.name === "Other" && (
+                            <Input
+                                placeholder="Specify Trailer Config"
+                                onChangeText={(text) => handleNestedChange("details", "vehicle", {
+                                    ...formData.details?.trailers,
+                                    otherTrailerConfig: text
+                                })}
+                            />
+                        )}
+
+                        <ThemedText>Suspension</ThemedText>
+
+                        <DropDownItem
+                            allData={truckSuspensions}
+                            selectedItem={selectedTruckSuspension}
+                            setSelectedItem={setSrlectedTruckSuspension}
+                            placeholder="Select Truck Suspension"
+                        />
+
+                        {selectedTruckSuspension?.name === "Other" && (
+                            <Input
+                                placeholder="Specify Trailer Suspension"
+                                onChangeText={(text) => handleNestedChange("details", "vehicle", {
+                                    ...formData.details?.trailers,
+                                    otherTrailerSuspension: text
+                                })}
+                            />
+                        )}
+
+
+
+
+
                     </>
                 )
             case "Container":
@@ -797,30 +848,30 @@ const CreateProduct = () => {
                             setSelectedItem={setSelectedType}
                             placeholder="Select vehicle type"
                         />
-                               {["(Other) Container. Type"].includes(selectedMake?.name) && (
-                                        <Input
-                                            placeholder="Specify vehicle type"
-                                            onChangeText={(text) => handleNestedChange("details", "vehicle", {
-                                                ...formData.details?.vehicle,
-                                                type: text
-                                            })}
-                                        />
-                                    )}
+                        {["(Other) Container. Type"].includes(selectedMake?.name) && (
+                            <Input
+                                placeholder="Specify vehicle type"
+                                onChangeText={(text) => handleNestedChange("details", "vehicle", {
+                                    ...formData.details?.vehicle,
+                                    type: text
+                                })}
+                            />
+                        )}
                         <DropDownItem
                             allData={containerMake}
                             selectedItem={selectedMake}
                             setSelectedItem={setSelectedType}
                             placeholder="Select vehicle type"
                         />
-                               {["(Other) Container. Make"].includes(selectedMake?.name) && (
-                                        <Input
-                                            placeholder="Specify vehicle type"
-                                            onChangeText={(text) => handleNestedChange("details", "vehicle", {
-                                                ...formData.details?.vehicle,
-                                                type: text
-                                            })}
-                                        />
-                                    )}
+                        {["(Other) Container. Make"].includes(selectedMake?.name) && (
+                            <Input
+                                placeholder="Specify vehicle type"
+                                onChangeText={(text) => handleNestedChange("details", "vehicle", {
+                                    ...formData.details?.vehicle,
+                                    type: text
+                                })}
+                            />
+                        )}
                     </>
                 )
             case "Service Provider":
@@ -834,7 +885,7 @@ const CreateProduct = () => {
                             placeholder="Select vehicle type"
                         />
                         <DropDownItem
-                            allData={ vehicleType?.name === "smallVehicle" ? smallVehicleTypes :  vehicleType?.name === "cargoTrucks" ? cargoVehiType : heavyEupementType}
+                            allData={vehicleType?.name === "smallVehicle" ? smallVehicleTypes : vehicleType?.name === "cargoTrucks" ? cargoVehiType : heavyEupementType}
                             selectedItem={selectedMake}
                             setSelectedItem={setSelectedMake}
                             placeholder="Select vehicle type"
@@ -846,19 +897,19 @@ const CreateProduct = () => {
                 return (
                     <>
 
-                       
+
                         <ThemedText type="defaultSemiBold">Spare Part category</ThemedText>
                         <DropDownItem
-                            allData={[ 
-                        {id: 1, name: "small vehicle"} ,
-                        {id: 1, name: "cargo vehicle"} ,
-                        {id: 1, name: "heavy Equip"} 
-                            ] }
-                            selectedItem={ vehicleType}
+                            allData={[
+                                { id: 1, name: "small vehicle" },
+                                { id: 1, name: "cargo vehicle" },
+                                { id: 1, name: "heavy Equip" }
+                            ]}
+                            selectedItem={vehicleType}
                             setSelectedItem={setVehicleType}
                             placeholder="Select vehicle type"
                         />
-                             
+
                         <ThemedText type="defaultSemiBold">Spare Part Type</ThemedText>
                         <DropDownItem
                             allData={sparesType}
@@ -867,8 +918,8 @@ const CreateProduct = () => {
                             placeholder="Select vehicle type"
                         />
 
-                      
-                        { vehicleType?.name === "cargoTrucks" && <View>
+
+                        {vehicleType?.name === "cargoTrucks" && <View>
                             <ThemedText> Truck Type</ThemedText>
                             <DropDownItem
                                 allData={[{ id: 1, name: "semi Truck" }, { id: 2, name: "rigid" }]}
@@ -882,9 +933,9 @@ const CreateProduct = () => {
 
 
 
-                        <ThemedText type="defaultSemiBold">  { vehicleType?.name !== "cargoTrucks" ? "Vehicle Type" : "Cargo Area"}  </ThemedText>
+                        <ThemedText type="defaultSemiBold">  {vehicleType?.name !== "cargoTrucks" ? "Vehicle Type" : "Cargo Area"}  </ThemedText>
                         <DropDownItem
-                            allData={ vehicleType?.name === "small vehicle" ? smallVehicleTypes :  vehicleType?.name === "cargo vehicle" ? cargoVehiType : heavyEupementType}
+                            allData={vehicleType?.name === "small vehicle" ? smallVehicleTypes : vehicleType?.name === "cargo vehicle" ? cargoVehiType : heavyEupementType}
                             selectedItem={selectedType}
                             setSelectedItem={setSelectedType}
                             placeholder="Select vehicle type"
@@ -904,7 +955,7 @@ const CreateProduct = () => {
 
                         <ThemedText type="defaultSemiBold">Make</ThemedText>
                         <DropDownItem
-                            allData={ vehicleType?.name === "small vehicle" ? smallVehicleMake :  vehicleType?.name === "cargo vehicle" ? cargoTruckMake : heavyEupementMake}
+                            allData={vehicleType?.name === "small vehicle" ? smallVehicleMake : vehicleType?.name === "cargo vehicle" ? cargoTruckMake : heavyEupementMake}
                             selectedItem={selectedMake}
                             setSelectedItem={setSelectedMake}
                             placeholder="Select vehicle Make"
@@ -925,9 +976,9 @@ const CreateProduct = () => {
 
 
 
-          <ThemedText type="defaultSemiBold">  { vehicleType?.name !== "cargoTrucks" ? "Vehicle Type" : "Cargo Area"}  </ThemedText>
+                        <ThemedText type="defaultSemiBold">  {vehicleType?.name !== "cargoTrucks" ? "Vehicle Type" : "Cargo Area"}  </ThemedText>
                         <DropDownItem
-                            allData={ vehicleType?.name === "smallVehicle" ? smallVehicleTypes :  vehicleType?.name === "cargoTrucks" ? cargoVehiType : heavyEupementType}
+                            allData={vehicleType?.name === "smallVehicle" ? smallVehicleTypes : vehicleType?.name === "cargoTrucks" ? cargoVehiType : heavyEupementType}
                             selectedItem={selectedType}
                             setSelectedItem={setSelectedType}
                             placeholder="Select vehicle type"
@@ -947,7 +998,7 @@ const CreateProduct = () => {
 
                         <ThemedText type="defaultSemiBold">Make</ThemedText>
                         <DropDownItem
-                            allData={ vehicleType?.name === "smallVehicle" ? smallVehicleMake :  vehicleType?.name === "cargoTrucks" ? cargoTruckMake : heavyEupementMake}
+                            allData={vehicleType?.name === "smallVehicle" ? smallVehicleMake : vehicleType?.name === "cargoTrucks" ? cargoTruckMake : heavyEupementMake}
                             selectedItem={selectedMake}
                             setSelectedItem={setSelectedMake}
                             placeholder="Select vehicle Make"
@@ -1026,6 +1077,10 @@ const CreateProduct = () => {
                             </TouchableOpacity>
                         )}
                     </View>
+
+                    <TouchableOpacity onPress={() => selectManyImages(setImages, true, true)}>
+                        <ThemedText>Add {5 - images.length} left </ThemedText>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Basic Information */}
@@ -1040,7 +1095,7 @@ const CreateProduct = () => {
                         onChangeText={(text) => handleChange("title", text)}
                     />
 
-                <ThemedText type="defaultSemiBold">Description</ThemedText>
+                    <ThemedText type="defaultSemiBold">Description</ThemedText>
                     <Input
                         placeholder="Detailed description"
                         multiline
@@ -1050,7 +1105,7 @@ const CreateProduct = () => {
                         style={styles.textArea}
                     />
 
-                 
+
 
                     <View style={styles.row}>
                         <View style={{ flex: 1 }}>
@@ -1089,7 +1144,7 @@ const CreateProduct = () => {
                 {/* Transaction Details */}
                 <View style={[styles.section, { backgroundColor: backgroundLight }]}>
                     <ThemedText type="subtitle">Transaction Details</ThemedText>
-                    
+
 
                     <ThemedText type="defaultSemiBold">Transaction Type</ThemedText>
                     <DropDownItem
@@ -1099,9 +1154,9 @@ const CreateProduct = () => {
                         placeholder="Transaction type"
                     />
 
-  <View style={styles.row}>
+                    <View style={[styles.row, { height: 68 }]}>
 
-  <View style={{ width: wp(21), marginLeft: wp(2) }}>
+                        <View style={{ width: wp(21), marginRight: wp(2) }}>
                             <ThemedText type="defaultSemiBold">Currency</ThemedText>
                             <DropDownItem
                                 allData={[
@@ -1116,16 +1171,16 @@ const CreateProduct = () => {
                         </View>
 
                         <View style={{ flex: 1 }}>
-                            
+
                             <ThemedText type="defaultSemiBold">Price</ThemedText>
                             <Input
-                                placeholder="0.00"
+                                placeholder="ammont"
                                 keyboardType="numeric"
                                 value={formData.price?.toString()}
-                                onChangeText={(text) => handleChange("price", parseFloat(text) || 0)}
+                                onChangeText={(text) => handleChange("price", text)}
                             />
                         </View>
-                        <View style={{ width: wp(27 ), marginLeft: wp(2) }}>
+                        {["Rent", "Hire"].includes(selectedTransaction?.name) && <View style={{ width: wp(27), marginLeft: wp(2) }}>
                             <ThemedText type="defaultSemiBold">Model</ThemedText>
                             <DropDownItem
                                 allData={[
@@ -1135,11 +1190,11 @@ const CreateProduct = () => {
                                     { id: 3, name: "/month" },
                                     { id: 3, name: "/year" }
                                 ]}
-                                selectedItem={{ name: formData.currency }}
-                                setSelectedItem={(item: any) => handleChange("currency", item.name)}
+                                selectedItem={{ name: formData.model }}
+                                setSelectedItem={(item: any) => handleChange("model", item.name)}
                                 placeholder=""
                             />
-                        </View>
+                        </View>}
                     </View>
 
 
@@ -1148,71 +1203,62 @@ const CreateProduct = () => {
                     <Divider />
 
 
-                            <View style={styles.row}>
-                                <TouchableOpacity
-                                    style={[
-                                        styles.checkbox,
-                                        priceNegotiable && styles.checkboxSelected
-                                    ]}
-                                    onPress={togglePriceNegotiable}
-                                >
-                                    <Ionicons
-                                        name={priceNegotiable ? "checkbox" : "square-outline"}
-                                        size={wp(5)}
-                                        color={priceNegotiable? accent : iconColor}
-                                    />
-                                    <ThemedText style={{ marginLeft: wp(2) }}>Price Negotiable</ThemedText>
-                                </TouchableOpacity>
+                    <View style={styles.row}>
+                        <TouchableOpacity
+                            style={[
+                                styles.checkbox,
+                                priceNegotiable && styles.checkboxSelected
+                            ]}
+                            onPress={togglePriceNegotiable}
+                        >
+                            <Ionicons
+                                name={priceNegotiable ? "checkbox" : "square-outline"}
+                                size={wp(5)}
+                                color={priceNegotiable ? accent : iconColor}
+                            />
+                            <ThemedText style={{ marginLeft: wp(2) }}>Price Negotiable</ThemedText>
+                        </TouchableOpacity>
 
 
-                                <TouchableOpacity
-                                    style={[
-                                        styles.checkbox,
-                                        deliveryAvailable && styles.checkboxSelected
-                                    ]}
-                                    onPress={toggleDeliveryAvailable}
-                                >
-                                    <Ionicons
-                                        name={deliveryAvailable ? "checkbox" : "square-outline"}
-                                        size={wp(5)}
-                                        color={deliveryAvailable ? accent : iconColor}
-                                    />
-                                    <ThemedText style={{ marginLeft: wp(2) }}>Delivery Available</ThemedText>
-                                </TouchableOpacity>
-                            </View>
+                        <TouchableOpacity
+                            style={[
+                                styles.checkbox,
+                                deliveryAvailable && styles.checkboxSelected
+                            ]}
+                            onPress={toggleDeliveryAvailable}
+                        >
+                            <Ionicons
+                                name={deliveryAvailable ? "checkbox" : "square-outline"}
+                                size={wp(5)}
+                                color={deliveryAvailable ? accent : iconColor}
+                            />
+                            <ThemedText style={{ marginLeft: wp(2) }}>Delivery Available</ThemedText>
+                        </TouchableOpacity>
+                    </View>
 
-                            {deliveryAvailable && (
-                                <Input
-                                    placeholder="Delivery cost"
-                                    keyboardType="numeric"
-                                    value={formData.deliveryCost}
-                                    onChangeText={(text) => handleChange("deliveryCost", text)}
-                                />
-                            )}
+                    {deliveryAvailable && (
+                        <Input
+                            placeholder="Delivery cost"
+                            keyboardType="numeric"
+                            value={formData.deliveryCost}
+                            onChangeText={(text) => handleChange("deliveryCost", text)}
+                        />
+                    )}
 
-                            {selectedTransaction?.name === "Swap" && (
-                                <Input
-                                    placeholder="Swap preferences"
-                                    value={formData.swapPreferences}
-                                    onChangeText={(text) => handleChange("swapPreferences", text)}
-                                />
-                            )}
+                    {selectedTransaction?.name === "Swap" && (
+                        <Input
+                            placeholder="Swap preferences"
+                            value={formData.swapPreferences}
+                            onChangeText={(text) => handleChange("swapPreferences", text)}
+                        />
+                    )}
 
 
 
 
                 </View>
 
-
-
-
-
-
-
-
-
-
-                              {/* Submit Button */}
+                {/* Submit Button */}
                 <View style={styles.submitButton}>
                     <Button
                         title={isSubmitting ? "Creating..." : "Create Product"}
@@ -1228,7 +1274,7 @@ const CreateProduct = () => {
                 </View>
             </ScrollView>
 
-                             
+
 
         </ScreenWrapper>
     );

@@ -59,17 +59,28 @@ export interface Product {
     description: string;
     deliveryCost : string  ;
     swapPreferences : string ;
-    price: number;
+    price: number | string ;
     currency: string;
+    model:string
     category: string;
 
     condition: 'new' | 'used';
     images: string[];
+    bodyStyle : string ;
+    bodyMake : string ;
+    vehicleType : string ;  
+
     createdAt: Date;
     updatedAt: Date | null;
 
- 
 
+ 
+  truckDetails :{
+            truckConfig: string ;
+            truckSuspension : string;
+            truckruckType : string ;
+
+        },
     // User/seller information
     seller: {
         id: string;
@@ -94,15 +105,16 @@ export interface Product {
             transmission: string;
             fuelType: string;
             horsePower : string
+            otherTruckConfig : string;
+            otherTruckSuspension : string;
         } | null;
 
     trailers?: {
         otherType: string ;
         otherMake : string;
+        otherTrailerConfig : string;
+        otherTrailerSuspension : string;
     }
-
-     
-
     };
 
     // Transaction details
@@ -111,6 +123,8 @@ export interface Product {
         priceNegotiable: boolean;
         deliveryCost?: string;
         swapPreferences?: string;
+        deliveryAvailable : boolean ;
+            
     };
 
     // Marketplace visibility
@@ -126,6 +140,12 @@ export interface Product {
         saves: number;
         status: 'active' | 'sold' | 'expired' | 'removed';
     };
+
+     location: {
+            address: string;
+            city: string;
+            coordinates: null;
+        }
 }
 
 export type LoadFormData = {
