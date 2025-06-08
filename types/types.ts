@@ -70,6 +70,9 @@ export interface Product {
     bodyMake : string ;
     vehicleType : string ;  
 
+    vehcileFuel: string;
+    vehicleTransimission : string;
+
     createdAt: Date;
     updatedAt: Date | null;
 
@@ -78,9 +81,12 @@ export interface Product {
   truckDetails :{
             truckConfig: string ;
             truckSuspension : string;
-            truckruckType : string ;
-
+            truckType : string ;
+            semiTrailerCapacity : string
+            semiTrailerSuspension  : string ;
+            semiTrailerConfig : string;
         },
+
     // User/seller information
     seller: {
         id: string;
@@ -104,7 +110,8 @@ export interface Product {
             engine: string;
             transmission: string;
             fuelType: string;
-            horsePower : string
+            horsePower : string;
+            truckCapacity : string
             otherTruckConfig : string;
             otherTruckSuspension : string;
         } | null;

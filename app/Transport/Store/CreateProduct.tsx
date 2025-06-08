@@ -236,6 +236,9 @@ const CreateProduct = () => {
     const [selectedType, setSelectedType] = useState<any>(null);
     const [selectedTruckSuspension, setSrlectedTruckSuspension] = React.useState<{ id: number; name: string } | null>(null)
     const [selectedTruckConfig, setSelectedTruckConfig] = React.useState<{ id: number; name: string } | null>(null)
+    const [selectedSemiTrailerSuspension, setSlctedSemiTrailerSuspension] = React.useState<{ id: number; name: string } | null>(null)
+    const [selectedSemiTrailerConfig, setSelectedSemiTrailerConfig] = React.useState<{ id: number; name: string } | null>(null)
+    const [selectedTruckCapacity, setSelectedTruckCapacity] = React.useState<{ id: number; name: string } | null>(null)
     const [selectedTruckType, setSelectedTruckType] = useState<{ id: number; name: string } | null>(null);
     const [selectedMake, setSelectedMake] = useState<any>(null);
     const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
@@ -343,36 +346,34 @@ const CreateProduct = () => {
 
                 ...formData,
                 transaction: {
-                    type: "sell",
+                    type: selectedTransaction,
                     priceNegotiable: priceNegotiable,
                     deliveryAvailable: deliveryAvailable,
                     deliveryCost: formData.deliveryCost,
                     swapPreferences: formData.swapPreferences
                 },
-                details: {
-                    vehicle: null,
-                    property: null,
-                    general: null
-                },
+              
                 location: {
                     address: "",
                     city: "",
                     coordinates: null
                 },
                 truckDetails: {
-                    truckConfig: selectedTruckConfig?.name,
-                    truckSuspension: selectedTruckConfig?.name,
-                    truckruckType: selectedTruckType?.name,
-
+                    truckConfig: selectedTruckConfig?.name||null ,
+                    truckSuspension: selectedTruckSuspension?.name ||null,
+                    truckCapacity : selectedTruckCapacity?.name ||null ,
+                    truckType: selectedTruckType?.name||null,
                 },
-
+                
+                vehicleTransimission: vehicleTransimission ,
+                vehcileFuel : vehcileFuel ,
                 images: imageUrls,
 
                 bodyStyle: selectedType.name,
                 bodyMake: selectedMake.name,
                 category: selectedCategory.name,
 
-                vehicleType: vehicleType.,
+                vehicleType: vehicleType?.name      ,
 
                 selectedSparePartName: selectedSparePartName,
 
@@ -445,13 +446,7 @@ const CreateProduct = () => {
 
 
 
-
-
-
-
-
-
-                        {selectedTruckType?.name !== "Truck Horse" && <View>
+                        {selectedTruckType?.name !== "semi Truck" && selectedTruckType?.name !== "Truck Horse" && <View>
 
                             <ThemedText type="defaultSemiBold">  {vehicleType?.name !== "cargo vehicle" ? "Vehicle Type" : "Cargo Area"}  </ThemedText>
                             <DropDownItem
@@ -572,6 +567,18 @@ const CreateProduct = () => {
                             })}
                         />
 
+                                <ThemedText type="defaultSemiBold">Engine</ThemedText>
+                        <Input
+                            placeholder="e.g. Camry"
+                            onChangeText={(text) => handleNestedChange("details", "vehicle", {
+                                ...formData.details?.vehicle,
+                                engine: text
+                            })}
+                        />    
+
+
+
+
                         <ThemedText type="defaultSemiBold">Mileage (km)</ThemedText>
                         <Input
                             placeholder="e.g. 50000"
@@ -662,7 +669,7 @@ const CreateProduct = () => {
                             keyboardType="numeric"
                             onChangeText={(text) => handleNestedChange("details", "vehicle", {
                                 ...formData.details?.vehicle,
-                                transmission: parseInt(text) || 0
+                                transmission: parseInt(text)|| 0
                             })}
                         />}
 
@@ -748,6 +755,66 @@ const CreateProduct = () => {
                                 fuelType: parseInt(text) || 0
                             })}
                         />}
+
+
+
+
+
+                      {selectedTruckType?.name ==="semi Truck" &&  <View>
+                        <ThemedText>Trailer Details</ThemedText>
+
+                           <ThemedText type="defaultSemiBold">Capacity (Tonnage) </ThemedText>
+                           <Input
+                            placeholder="Truck capacity"
+                            onChangeText={(text) => handleNestedChange("details", "vehicle", {
+                                ...formData.details?.vehicle,
+                                truckCapacity: text
+                            })}
+                        />    
+
+                        <TouchableOpacity>
+                        <ThemedText>Same As Truck </ThemedText>
+                        </TouchableOpacity>
+
+                            <ThemedText>Config</ThemedText>
+                            <DropDownItem
+                                allData={truckConfigurations}
+                                selectedItem={selectedSemiTrailerConfig}
+                                setSelectedItem={setSelectedSemiTrailerConfig}
+                                placeholder="Select Truck Config"
+                            />
+
+                            {selectedTruckConfig?.name === "Other" && (
+                                <Input
+                                    placeholder="Specify vehicle Config"
+                                    onChangeText={(text) => handleNestedChange("details", "vehicle", {
+                                        ...formData.details?.vehicle,
+                                        otherTruckConfig: text
+                                    })}
+                                />
+                            )}
+
+                            <ThemedText>Suspension</ThemedText>
+
+                            <DropDownItem
+                                allData={truckSuspensions}
+                                selectedItem={selectedSemiTrailerSuspension}
+                                setSelectedItem={setSlctedSemiTrailerSuspension}
+                                placeholder="Select Truck Suspension"
+                            />
+
+                            {selectedTruckSuspension?.name === "Other" && (
+                                <Input
+                                    placeholder="Specify vehicle Suspension"
+                                    onChangeText={(text) => handleNestedChange("details", "vehicle", {
+                                        ...formData.details?.vehicle,
+                                        otherTruckSuspension: text
+                                    })}
+                                />
+                            )}
+
+
+                        </View>}         
 
 
                     </>
@@ -931,8 +998,7 @@ const CreateProduct = () => {
 
 
 
-
-
+                          {selectedTruckType?.name !=="semi Truck" && selectedTruckType?.name !=="semi Truck" &&  <View>
                         <ThemedText type="defaultSemiBold">  {vehicleType?.name !== "cargoTrucks" ? "Vehicle Type" : "Cargo Area"}  </ThemedText>
                         <DropDownItem
                             allData={vehicleType?.name === "small vehicle" ? smallVehicleTypes : vehicleType?.name === "cargo vehicle" ? cargoVehiType : heavyEupementType}
@@ -940,6 +1006,9 @@ const CreateProduct = () => {
                             setSelectedItem={setSelectedType}
                             placeholder="Select vehicle type"
                         />
+                          </View> } 
+
+
 
                         {["(Other) Small Veh. Type", "(Other) Cargo Veh. Type", "(Other) Heavy Equip. Type"].includes(selectedType?.name) && (
                             <Input

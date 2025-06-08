@@ -60,7 +60,7 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
     const renderVehicleDetails = () => (
         <View style={styles.detailSection}>
             <View style={styles.detailRow}>
-                <ThemedText type='default' style={{ flex: 1 }}>Make/Model:</ThemedText>
+                <ThemedText type='default' style={{ flex: 1 }}>Model:</ThemedText>
                 <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
                     {product.details.vehicle?.make} {product.details.vehicle?.model}
                 </ThemedText>
@@ -73,6 +73,13 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
                 </ThemedText>
             </View>
 
+             <View style={styles.detailRow}>
+                <ThemedText type='default' style={{ flex: 1 }}>Engine:</ThemedText>
+                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                    {product.details.vehicle?.engine}
+                </ThemedText>
+            </View>
+
             <View style={styles.detailRow}>
                 <ThemedText type='default' style={{ flex: 1 }}>Mileage:</ThemedText>
                 <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
@@ -80,12 +87,106 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
                 </ThemedText>
             </View>
 
+           <View style={styles.detailRow}>
+                <ThemedText type='default' style={{ flex: 1 }}>Fuel:</ThemedText>
+                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                    {product.vehcileFuel}
+                </ThemedText>
+            </View>
+
             <View style={styles.detailRow}>
                 <ThemedText type='default' style={{ flex: 1 }}>Transmission:</ThemedText>
                 <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
-                    {product.details.vehicle?.transmission}
+                    {product.vehicleTransimission}
                 </ThemedText>
             </View>
+
+
+        {product.vehicleType==="cargo vehicle"  &&  <View>
+
+            <View style={styles.detailRow}>
+                <ThemedText type='default' style={{ flex: 1 }}>Type:</ThemedText>
+                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                    {product.truckDetails?.truckType}
+                </ThemedText>
+
+            </View>
+
+
+            {product.truckDetails?.truckType ==="rigid"&& <View>
+
+               <View style={styles.detailRow}>
+                <ThemedText type='default' style={{ flex: 1 }}>Cargo Area:</ThemedText>
+                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                    {product.bodyStyle}
+                </ThemedText>
+            </View>
+
+            <View style={styles.detailRow}>
+                <ThemedText type='default' style={{ flex: 1 }}>Capacity:</ThemedText>
+                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                    {product.details.vehicle?.truckCapacity}
+                </ThemedText>
+            </View>
+                </View>}  
+
+
+           { product.truckDetails?.truckType !=="rigid"&&<View style={styles.detailRow}>
+                <ThemedText type='default' style={{ flex: 1 }}>Horse Power:</ThemedText>
+                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                    {product.details.vehicle?.horsePower}
+                </ThemedText>
+            </View>}
+
+
+            <View style={styles.detailRow}>
+                <ThemedText type='default' style={{ flex: 1 }}>Suspension:</ThemedText>
+                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                    {product.truckDetails.truckSuspension}
+                </ThemedText>
+            </View>
+
+            <View style={styles.detailRow}>
+                <ThemedText type='default' style={{ flex: 1 }}>Config:</ThemedText>
+                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                    {product.truckDetails.truckConfig}
+                </ThemedText>
+            </View>
+
+
+            </View>}
+
+
+           { product.truckDetails?.truckType ==="semi Truck"&&<View>
+
+                <ThemedText>Trailer Details</ThemedText> 
+                   <View style={styles.detailRow}>
+                <ThemedText type='default' style={{ flex: 1 }}>Cargo Area:</ThemedText>
+                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                    {product.bodyStyle}
+                </ThemedText>
+            </View>
+                  <View style={styles.detailRow}>
+                <ThemedText type='default' style={{ flex: 1 }}>Capacity:</ThemedText>
+                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                    {product.details.vehicle?.truckCapacity}
+                </ThemedText>
+            </View>
+                <View style={styles.detailRow}>
+                <ThemedText type='default' style={{ flex: 1 }}>Suspension:</ThemedText>
+                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                    {product.truckDetails.truckSuspension}
+                </ThemedText>
+            </View>
+                <View style={styles.detailRow}>
+                <ThemedText type='default' style={{ flex: 1 }}>Config:</ThemedText>
+                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                    {product.truckDetails.truckConfig}
+                </ThemedText>
+            </View>
+               
+            </View>}
+
         </View>
     )
 

@@ -212,14 +212,27 @@ const StorePage = () => {
                                     {bottomMode === '' && (
                                         <View style={[styles.productDetails, { backgroundColor: backgroundLight }]}>
                                             <View style={styles.detailSection}>
-                                                <View style={styles.detailRow}>
+
+
+                                                  <View style={styles.detailRow}>
                                                     <ThemedText type='default' style={{ color: coolGray }}>
                                                         Category
                                                     </ThemedText>
                                                     <ThemedText type='defaultSemiBold'>
-                                                        {selectedProduct.category}
+                                                        {selectedProduct.vehicleType}
                                                     </ThemedText>
                                                 </View>
+                                                  <View style={styles.detailRow}>
+                                                    <ThemedText type='default' style={{ color: coolGray }}>
+                                                        Body Style
+                                                    </ThemedText>
+                                                    <ThemedText type='defaultSemiBold'>
+                                                        {selectedProduct.bodyStyle}
+                                                    </ThemedText>
+                                                </View>
+
+
+                                         
                                                 <View style={styles.detailRow}>
                                                     <ThemedText type='default' style={{ color: coolGray }}>
                                                         Condition
