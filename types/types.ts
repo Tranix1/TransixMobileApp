@@ -55,11 +55,11 @@ export type Truck = {
 export interface Product {
     // Core product information
     id?: string; // Adding optional ID for Firebase documents
-    title: string;
+    productLocation: string;
     description: string;
     deliveryCost : string  ;
     swapPreferences : string ;
-    price: number | string ;
+    price: number |null ;
     currency: string;
     model:string
     category: string;

@@ -5,7 +5,7 @@ import {
     StyleSheet,
     ScrollView,
     ToastAndroid,
-    Modal
+    Modal,
 } from "react-native";
 import { Image as ExpoImage } from 'expo-image';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -15,11 +15,11 @@ import { ErrorOverlay } from '@/components/ErrorOverLay';
 import Heading from '@/components/Heading';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { hp, wp } from "@/constants/common";
-import { Ionicons, } from "@expo/vector-icons";
+import { Ionicons,AntDesign,FontAwesome6 } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import Divider from "@/components/Divider";
 import Button from "@/components/Button";
-import { uploadImage, addDocument } from "@/db/operations";
+import { uploadImage, addDocument, getDocById, setDocuments } from "@/db/operations";
 import { selectManyImages } from "@/Utilities/utils";
 import { Product } from "@/types/types";
 import { DropDownItem } from "@/components/DropDown";
@@ -29,13 +29,16 @@ import { storage } from "@/db/fireBaseConfig";
 
 import type { ImagePickerAsset } from 'expo-image-picker';
 
-import { productCategories  , smallVehicleMake , smallVehicleTypes , heavyEupementMake, heavyEupementType , cargoTruckMake,cargoVehiType , serviceProivderType,transactionTypes,containerType , containerMake,trailerType,trailerMake,sparesType } from "@/data/appConstants";
+import { productCategories  , smallVehicleMake , smallVehicleTypes , heavyEupementMake, heavyEupementType , cargoTruckMake,cargoVehiType , serviceProivderType,transactionTypes,containerType , containerMake,trailerType,trailerMake,sparesType, Countries } from "@/data/appConstants";
 
 import { truckSuspensions, trailerConfigurations as truckConfigurations } from "@/data/appConstants";
 
 
+
+
 const CreateProduct = () => {
     // Theme colors
+  const icon = useThemeColor('icon')
     const background = useThemeColor('background');
     const backgroundLight = useThemeColor('backgroundLight');
     const iconColor = useThemeColor('icon');
@@ -60,6 +63,8 @@ const CreateProduct = () => {
     const [uploadProgress, setUploadProgress] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showErrors, setShowErrors] = useState(false);
+    const [buyOSelling , setBuyOselling]=React.useState("")
+
     const [selectedCategory, setSelectedCategory] = useState<any>(null);
     const [selectedType, setSelectedType] = useState<any>(null);
     const [selectedTruckSuspension, setSrlectedTruckSuspension] = React.useState<{ id: number; name: string } | null> (null)
@@ -90,9 +95,9 @@ const CreateProduct = () => {
 
     // Form data
     const [formData, setFormData] = useState<Partial<Product>>({
-        title: "",
+        productLocation: "",
         description: "",
-        price: '',
+        price: null,
         currency: "USD",
         model: "USD",
         condition: "used",
@@ -169,12 +174,41 @@ const CreateProduct = () => {
                 })
             );
 
+
+              let priceRange = null
+                if(formData.price){
+
+        if (formData.price < 1500) {
+            priceRange= "0 - 1.5k"
+        } else if (formData.price >= 1500 && formData.price < 2500)  {
+            priceRange ="1.5 - 2.5";
+        } else if (formData.price >= 2500 && formData.price < 5000)  {
+            priceRange = "2.5k - 5k" ;
+        } else if (formData.price >= 5000 && formData.price < 10000)  {
+            priceRange = "5k - 10k" ;
+        } else if (formData.price >= 10000 && formData.price < 25000)  {
+            priceRange = "10k - 25k" ;
+        } else if (formData.price >= 25000 && formData.price < 45000)  {
+            priceRange = "25k - 45k" ;
+        } else if (formData.price >= 45000 && formData.price < 65000)  {
+            priceRange = "45k - 65k"
+        } else if (formData.price >= 65000 && formData.price < 80000)  {
+            priceRange = "65k - 100k"
+        } else if (formData.price >= 80000 && formData.price < 100000)  {
+            priceRange = "80k - 100k"
+        } else if (formData.price >= 100000 )  {
+            priceRange = "100k +++"
+        }
+                }
+
             // Prepare product data
             const productData = {
 
                 ...formData,
+                
                 transaction: {
                     type: selectedTransaction?.name,
+                    priceRange : priceRange ,
                     priceNegotiable: priceNegotiable,
                     deliveryAvailable: deliveryAvailable,
                     deliveryCost: formData.deliveryCost,
@@ -358,8 +392,6 @@ const CreateProduct = () => {
 
 
                         </View>}
-
-
 
 
                         <ThemedText type="defaultSemiBold">Model</ThemedText>
@@ -922,24 +954,130 @@ const CreateProduct = () => {
 
 
 
+
+  const [storedetails, setStoredetails] = useState(false)
+
+  const [selectedStoreCountry, setSelectedStoreCountry] = useState<{ id: number; name: string } | null>(null);
+
+  const [storeNamedDb, setStoreName] = useState('');
+  const [storeLocationAddDb, SetStoreLocationAddDb] = useState('');
+  const [ownerEmailAddDb, setStoreEmailAddDb] = useState('');
+  const [storePhonNumAddDb, setOwnerPhoneNum] = useState('');
+
+  const handleUpdateStoreDetails = async () => {
+    console.log("start addd")
+    await setDocuments("storeDetails", { storeNamedDb: storeNamedDb, storePhoneNum: storePhonNumAddDb, ownerEmail: ownerEmailAddDb,  exactLocation : storeLocationAddDb,storeCountry : selectedStoreCountry?.name })
+    console.log("Donee Adding")
+  };
+
+
+const [storeDetails, setStoreDetails] = useState(null);
+  React.useEffect(() => {
+    getDocById('storeDetails', setStoreDetails);
+  }, []);
+
+
+
+
+
     return (
         <ScreenWrapper fh={false}>
             <Heading page="Create Product" />
 
-            <ErrorOverlay
-                visible={showErrors}
-                title="Missing Required Fields"
-                errors={[
-                    !formData.title && "Product title is required",
-                    !formData.description && "Description is required",
-                    !formData.price && "Price is required",
-                    !selectedCategory && "Category is required",
-                    !selectedTransaction && "Transaction type is required",
-                    images.length === 0 && "At least one image is required",
+  <View style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
+            <View>
+              <ThemedText type="defaultSemiBold">
+                {user?.organisation || 'Set Owner Name!'}
+              </ThemedText>
+              <ThemedText type="tiny">
+                {user?.email || 'No Organisation Name!'}
+              </ThemedText>
+            </View>
+            <TouchableOpacity onPress={() => setStoredetails(true)}>
+              <FontAwesome6 name="user-gear" size={18} color={icon} />
+            </TouchableOpacity>
+          </View>
 
-                ].filter(Boolean) as string[]}
-                onClose={() => setShowErrors(false)}
-            />
+
+
+
+
+
+
+   <Modal visible={storedetails} statusBarTranslucent animationType="slide">
+            <ScreenWrapper>
+
+            <View style={{ margin: wp(4), marginTop: hp(6) }}>
+
+              <View style={{ gap: wp(2) }} >
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
+                  <TouchableOpacity onPress={() => setStoredetails(false)}>
+                    <AntDesign name="close" color={icon} size={wp(4)} />
+                  </TouchableOpacity>
+                    <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >STORE DETAILS</ThemedText>
+                </View>
+                <ThemedText>
+                  Store Name
+                </ThemedText>
+                <Input
+                  placeholder="Store Name"
+                  value={storeNamedDb}
+                  onChangeText={(text) => setStoreName(text)}
+                />
+
+        
+                <ThemedText>
+                  Store Location
+                </ThemedText>
+
+        
+                <ThemedText>
+                  Country
+                </ThemedText>
+                    <DropDownItem
+                        allData={Countries}
+                        selectedItem={selectedStoreCountry}
+                        setSelectedItem={setSelectedStoreCountry}
+                        placeholder="Store Country"
+                    />
+        
+                <ThemedText>
+                  Exacact Location
+                </ThemedText>
+                <Input
+                  placeholder="Owner's Name"
+                  value={storeLocationAddDb}
+                  onChangeText={(text) => SetStoreLocationAddDb(text)}
+                />
+          
+
+
+
+                <ThemedText>
+                  Store Phone Number
+                </ThemedText>
+        
+                <ThemedText>
+                  Store Email
+                </ThemedText>
+                <Input
+                  placeholder="Owner Email"
+                  value={ownerEmailAddDb}
+                  onChangeText={(text) => setStoreEmailAddDb(text)}
+                />
+
+                <Button onPress={handleUpdateStoreDetails} title="Save" />
+
+              </View>
+            </View>
+            </ScreenWrapper>
+
+          </Modal>
+
+
+
+
+        
 
             <ScrollView contentContainerStyle={styles.container}>
                 {/* Product Images */}
@@ -975,9 +1113,9 @@ const CreateProduct = () => {
                         )}
                     </View>
 
-                    <TouchableOpacity onPress={() => selectManyImages(setImages, true, true)}>
+                   {images.length > 0 && <TouchableOpacity onPress={() => selectManyImages(setImages, true, true)}>
                         <ThemedText>Add {5 - images.length} left </ThemedText>
-                    </TouchableOpacity>
+                    </TouchableOpacity>}
                 </View>
 
                 {/* Basic Information */}
@@ -985,22 +1123,42 @@ const CreateProduct = () => {
                     <ThemedText type="subtitle">Basic Information</ThemedText>
                     <Divider />
 
-                    <ThemedText type="defaultSemiBold">Product Name</ThemedText>
-                    <Input
-                        placeholder="Product Name"
-                        value={formData.title}
-                        onChangeText={(text) => handleChange("title", text)}
-                    />
+               
+           <ThemedText >Are you selling or looking?</ThemedText>
 
-                    <ThemedText type="defaultSemiBold">Description</ThemedText>
-                    <Input
-                        placeholder="Detailed description"
-                        multiline
-                        numberOfLines={4}
-                        value={formData.description}
-                        onChangeText={(text) => handleChange("description", text)}
-                        style={styles.textArea}
-                    />
+    <View style={styles.row}>
+                        <TouchableOpacity
+                            style={[
+                                styles.checkbox,
+                                buyOSelling && styles.checkboxSelected
+                            ]}
+                            onPress={()=>setBuyOselling("sellOffers")}
+                        >
+                            <Ionicons
+                                name={buyOSelling=="sellOffers" ? "checkbox" : "square-outline"}
+                                size={wp(5)}
+                                color={buyOSelling==="sellOffers" ? accent : iconColor}
+                            />
+                            <ThemedText style={{ marginLeft: wp(2) }}>Selling</ThemedText>
+                        </TouchableOpacity>
+
+
+                        <TouchableOpacity
+                            style={[
+                                styles.checkbox,
+                                buyOSelling && styles.checkboxSelected
+                            ]}
+                            onPress={()=>setBuyOselling("buyRequests")}
+                        >
+                            <Ionicons
+                                name={buyOSelling==="buyRequests" ? "checkbox" : "square-outline"}
+                                size={wp(5)}
+                                color={buyOSelling=="buyRequests" ? accent : iconColor}
+                            />
+                            <ThemedText style={{ marginLeft: wp(2) }}>Looking</ThemedText>
+                        </TouchableOpacity>
+                    </View>
+
 
 
 
@@ -1155,6 +1313,30 @@ const CreateProduct = () => {
 
                 </View>
 
+                     <View style={[styles.section, { backgroundColor: backgroundLight }]} >
+                    <Divider />
+
+                      <ThemedText type="defaultSemiBold">Product Location</ThemedText>
+
+                             <Input
+                                placeholder="Product Location"
+                                value={formData.productLocation}
+                                onChangeText={(text) => handleChange("productLocation", text)}
+                            />
+
+
+                      <ThemedText type="defaultSemiBold">Description</ThemedText>
+                    <Input
+                        placeholder="Detailed description"
+                        multiline
+                        numberOfLines={4}
+                        value={formData.description}
+                        onChangeText={(text) => handleChange("description", text)}
+                        style={styles.textArea}
+                    />
+                    <Divider />
+
+                        </View>   
                 {/* Submit Button */}
                 <View style={styles.submitButton}>
                     <Button

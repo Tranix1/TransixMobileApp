@@ -13,6 +13,7 @@ import { Entypo, Ionicons } from '@expo/vector-icons'
 
 import { hp, wp } from '@/constants/common'
 
+import {  productCategories  , smallVehicleMake , smallVehicleTypes , heavyEupementMake, heavyEupementType , cargoTruckMake,cargoVehiType , serviceProivderType,transactionTypes,containerType , containerMake,trailerType,trailerMake,sparesType  } from "@/data/appConstants";
 
 import ConfigAdnSuspension from "./ConfigAndSuspension";
 
@@ -31,10 +32,22 @@ export const SpecifyProductDetails: React.FC<SpecifyProductDetailsProps> = ({
   const icon = useThemeColor('icon')
   const background = useThemeColor('backgroundLight');
   const coolGray = useThemeColor('coolGray');
-  
+    const backgroundLight = useThemeColor('backgroundLight');
+    const iconColor = useThemeColor('icon');
+    const textColor = useThemeColor('text');
+
+const [buyOSelling , setBuyOselling]=React.useState("")
+
   const [selectedCountry , setSelectedCountry]=React.useState<{ id: number; name: string } | null> (null)
+  const [selectedProdCategry , setSelectedProdctCategory]=React.useState<{ id: number; name: string } | null> (null)
+  const [selectedVehiType ,setSelectedVehiType]=React.useState<{ id: number; name: string } | null> (null)
 
 
+  const [selectedBudget , setSelectedBudget]=React.useState<{ id: number; name: string } | null> (null)
+  const [selectedTransType ,setSelectedTransType]=React.useState<{ id: number; name: string } | null> (null)
+
+    const [slectedBodyType , setSelectedBodyType]=React.useState<{ id: number; name: string } | null>(null)
+    const [slectedMae , setSelectedMake]=React.useState<{ id: number; name: string } | null>(null)
 
 
   const Countries = [
@@ -51,15 +64,16 @@ export const SpecifyProductDetails: React.FC<SpecifyProductDetailsProps> = ({
 
 
       const budgest = [
-        { id: 1, name: "Zimbabwe" },
-        { id: 2, name: "South Africa" },
-        { id: 3, name: "Namibia" },
-        { id: 4, name: "Tanzania" },
-        { id: 6, name: "Mozambique" },
-        { id: 7, name: "Zambia" },
-        { id: 8, name: "Malawi" },
-        { id: 9, name: "Botswana" },
-        { id: 10, name: "Other" },
+        { id: 1, name: "0 - 1.5k" },
+        { id: 2, name: "1.5 - 2.5" },
+        { id: 3, name: "2.5k - 5k" },
+        { id: 4, name: "5k - 10k" },
+        { id: 6, name: "10k - 25k" },
+        { id: 7, name: "25k - 45k" },
+        { id: 8, name: "45k - 65k" },
+        { id: 9, name: "65k - 100k" },
+        { id: 10, name: "80k - 100k" },
+        { id: 11, name: "100k +++" },
     ];
 
 
@@ -165,33 +179,90 @@ const HorizontalPicker: React.FC<HorizontalPickerProps> = ({
 />
 
 
+              <HorizontalPicker
+            title="Product Category"
+            items={productCategories}
+            selectedItem={selectedProdCategry}
+            onSelect={setSelectedProdctCategory}
+            />
+
+      <HorizontalPicker
+            title="Vehicle Type"
+            items={[{ id: 1, name: "small vehicle" },{ id: 2, name: "cargo vehicle" },{ id: 3, name: "heavy Equip" }]}
+            selectedItem={selectedVehiType}
+            onSelect={setSelectedVehiType}
+            />
+
 
 
             
-              <ThemedText>For sell or looking for it</ThemedText>
+              <ThemedText style={{color:'#1E90FF'}}>For sell or looking for it</ThemedText>
+
+    <View style={styles.row}>
+                        <TouchableOpacity
+                            style={[
+                                styles.checkbox,
+                                buyOSelling && styles.checkboxSelected
+                            ]}
+                            onPress={()=>setBuyOselling("buyRequests")}
+                        >
+                            <Ionicons
+                                name={buyOSelling=="buyRequests" ? "checkbox" : "square-outline"}
+                                size={wp(5)}
+                                color={buyOSelling==="buyRequests" ? accent : iconColor}
+                            />
+                            <ThemedText style={{ marginLeft: wp(2) }}>Buy Requests</ThemedText>
+                        </TouchableOpacity>
+
+
+                        <TouchableOpacity
+                            style={[
+                                styles.checkbox,
+                                buyOSelling && styles.checkboxSelected
+                            ]}
+                            onPress={()=>setBuyOselling("sellOffers")}
+                        >
+                            <Ionicons
+                                name={buyOSelling==="sellOffers" ? "checkbox" : "square-outline"}
+                                size={wp(5)}
+                                color={buyOSelling=="sellOffers" ? accent : iconColor}
+                            />
+                            <ThemedText style={{ marginLeft: wp(2) }}>Sell Offers</ThemedText>
+                        </TouchableOpacity>
+                    </View>
+
               
 
               <HorizontalPicker
-  title="Budget"
-  items={Countries}
-  selectedItem={selectedCountry}
-  onSelect={setSelectedCountry}
-/>
+                title="Budget"
+                items={budgest}
+                selectedItem={selectedBudget}
+                onSelect={setSelectedBudget}
+                />
+
+    <HorizontalPicker
+                title="Transcation Type "
+                items={transactionTypes}
+                selectedItem={selectedTransType}
+                onSelect={setSelectedTransType}
+                />
 
 
-
-
-              <ThemedText>Budget</ThemedText>
-
-   
-
-              <ThemedText>Budget</ThemedText>
-                 
-              <ThemedText>Transcation Type</ThemedText>
+                    <HorizontalPicker
+                title="Make"
+                items={selectedVehiType?.name === "small vehicle" ? smallVehicleMake : selectedVehiType?.name === "cargo vehicle" ? cargoTruckMake : heavyEupementMake}
+                selectedItem={slectedMae}
+                onSelect={setSelectedMake}
+                />
                    
-              <ThemedText>Body</ThemedText>
+                 
+                 <HorizontalPicker
+                title="Body "
+                items={selectedVehiType?.name === "small vehicle" ? smallVehicleTypes : selectedVehiType?.name === "cargo vehicle" ? cargoVehiType : heavyEupementType}
+                selectedItem={slectedBodyType}
+                onSelect={setSelectedBodyType}
+                />
                   
-              <ThemedText>Make</ThemedText>
                   
               
 
@@ -221,5 +292,16 @@ const styles = StyleSheet.create({
 
     }, countryButtonSelected: {
         backgroundColor: '#73c8a9'
-    }
+    },  row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: hp(1),
+    },  checkbox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: hp(1),
+    },
+    checkboxSelected: {
+        // Add any selected styles if needed
+    },
 })

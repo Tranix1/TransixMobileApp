@@ -197,7 +197,7 @@ export const litresCapacity = [
         { id: 10, name: "heavyManitou" },
         { id: 11, name: "heavyKubota" },
         { id: 12, name: "heavyOtherM" },
-        { id: 12, name: "(Other) Heavy Equip. Make" },
+        { id: 13, name: "(Other) Heavy Equip. Make" },
     ]
 
 
@@ -277,4 +277,16 @@ export const litresCapacity = [
         { id: 9, name: "Soto" },
         { id: 10, name: "(Other) Spare. Type" },
     ]
+
+   export   const Countries = [
+        { id: 1, name: "Zimbabwe" },
+        { id: 2, name: "South Africa" },
+        { id: 3, name: "Namibia" },
+        { id: 4, name: "Tanzania" },
+        { id: 6, name: "Mozambique" },
+        { id: 7, name: "Zambia" },
+        { id: 8, name: "Malawi" },
+        { id: 9, name: "Botswana" },
+        { id: 10, name: "Other" },
+    ];
 

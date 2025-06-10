@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Image,  StyleSheet, ScrollView,  Modal, ToastAndroid } from "react-native"
 
-import {truckType, cargoArea,tankerTypes,trailerConfigurations,truckSuspensions,litresCapacity,tonneSizes,countryCodes } from "@/data/appConstants";
+import {countryCodes } from "@/data/appConstants";
 
 
 import type { ImagePickerAsset } from 'expo-image-picker';
@@ -24,7 +24,6 @@ import Divider from "@/components/Divider";
 import { cleanNumber } from "@/services/services";
 import Button from "@/components/Button";
 
-import { DropDownItem } from "@/components/DropDown";
 import { TruckFormData } from "@/types/types";
 
 import { AddTruckDetails } from "@/components/AddTruckDetails";
@@ -35,8 +34,6 @@ function AddTrucks() {
   const background = useThemeColor('backgroundLight')
   const backG = useThemeColor('background')
   const coolGray = useThemeColor('coolGray')
-  // const {truckType ,username ,contact , isVerified,isBlackListed ,blackLWarning,blockVerifiedU , verifiedLoad , fromLocation  , toLocation ,expoPushToken ,verifyOngoing ,truckTonnageG} = route.params
-
 
 
   const [formData, setFormData] = useState<TruckFormData>({
@@ -72,9 +69,6 @@ const [getOwnerDetails, setOwnerDetails] = useState<TruckOwner | null>(null);
     await setDocuments("truckOwnerDetails", { ownerName: ownerNameAddDb, ownerPhoneNum: ownerPhonNumAddDb, ownerEmail: ownerEmailAddDb, })
     console.log("Donee Adding")
   };
-
-
-  const [dspFrstPageErr, setDspFrstPageErr] = useState<boolean>(false)
 
 
   // const [images, setImages] = useState([]);
@@ -264,11 +258,7 @@ console.log(uploadingImageUpdate)
                   <TouchableOpacity onPress={() => setOwnerdetails(false)}>
                     <AntDesign name="close" color={icon} size={wp(4)} />
                   </TouchableOpacity>
-                  <View style={{}}>
                     <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >OWNER DETAILS</ThemedText>
-                  </View>
-                  <TouchableOpacity>
-                  </TouchableOpacity>
                 </View>
 
 
