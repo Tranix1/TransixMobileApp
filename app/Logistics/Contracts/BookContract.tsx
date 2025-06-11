@@ -16,12 +16,15 @@ import { useLocalSearchParams } from "expo-router";
 
 function BookLContract({ }) {
 
- const  ContractItemG  = useLocalSearchParams();
- const Contractitem = typeof ContractItemG === 'string' ? JSON.parse(decodeURIComponent(ContractItemG)) : null;
-
 
   const [bbVerifiedLoadD, setbbVerifiedLoadD] = React.useState<Truck[] | []>([])
 
+
+  const { contract } = useLocalSearchParams();
+const Contractitem = JSON.parse(contract as any);
+
+
+console.log("Namw ", Contractitem.companyName)
 
   useEffect(() => {
     try {
@@ -134,8 +137,10 @@ function BookLContract({ }) {
   let renderElements = bbVerifiedLoadD.map((item) => {
 
     async function handleSubmitDetails() {
-      if (auth.currentUser) {
+      console.log("hiiiiiiii")
 
+      try {
+      if (auth.currentUser) {
         const userId = auth.currentUser.uid
         //   const existingBBDoc = await checkExistixtBBDoc(`${userId}contractId ${item.timeStamp}`);
         const existingBBDoc = await checkExistixtBBDoc(`${userId}${Contractitem.contractId}${item.timeStamp}`);
@@ -145,13 +150,10 @@ function BookLContract({ }) {
 
           const theCollection = collection(db, "ContractRequests");
           const docRef = await addDoc(theCollection, {
-
-
             truckInfo: item,
-
             trckContractId: `${userId}contractId ${item.timeStamp}`,
             truckContrSt: true,
-            contractId: Contractitem.contractId ,
+            contractId: Contractitem.contractId   ,
             contractOnwerId: Contractitem.userId,
             contractName: Contractitem.contractName,
             approvedTrck: false,
@@ -165,6 +167,10 @@ function BookLContract({ }) {
           alert("Truck alreadyy Booked")
         }
 
+      }
+        
+      }catch(err){
+        console.error(err)
       }
     }
 

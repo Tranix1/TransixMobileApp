@@ -1,4 +1,4 @@
-import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableNativeFeedback, View, TouchableOpacity, TouchableHighlight, FlatList } from 'react-native'
+import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableNativeFeedback, View, TouchableOpacity, TouchableHighlight, FlatList,Image } from 'react-native'
 import React, { useState } from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import { ThemedText } from '@/components/ThemedText'
@@ -52,10 +52,7 @@ const Index = () => {
     const coolGray = useThemeColor('coolGray')
     const textlight = useThemeColor('textlight')
 
-    const [isVisible, setIsVisible] = useState(true)
-
-    const { user } = useAuth()
-
+    const [isVisible, setIsVisible] = useState(false)
 
 
     useFocusEffect(
@@ -65,6 +62,7 @@ const Index = () => {
     );
 
 
+    const { user } = useAuth()
 
 
 
@@ -209,13 +207,7 @@ const Index = () => {
                                     <ThemedText type='title' color={accent} style={{ flex: 1, textAlign: 'center' }}>
                                         Transix
                                     </ThemedText>
-                                    <View style={{ overflow: 'hidden', borderRadius: wp(10), width: wp(8) }}>
-                                        {/* <TouchableNativeFeedback>
-                                            <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
-                                                <Ionicons name='close' color={icon} size={wp(6)} />
-                                            </View>
-                                        </TouchableNativeFeedback> */}
-                                    </View>
+                                  
                                 </View>
                                 <View style={{ marginVertical: wp(4), gap: 4, marginBottom: wp(2) }}>
                                     <View style={{ borderTopRightRadius: wp(5), borderTopLeftRadius: wp(5), backgroundColor: background, padding: wp(4) }}>
@@ -223,7 +215,11 @@ const Index = () => {
 
                                             <View style={{ gap: wp(4), }}>
                                                 <View style={{ flexDirection: 'row', padding: wp(2), gap: wp(2), alignItems: 'center', }}>
-                                                    <FontAwesome name='user-circle' color={coolGray} size={wp(10)} />
+                                                    {!user?.photoURL &&<FontAwesome name='user-circle' color={coolGray} size={wp(10)} />}
+                                                    { user?.photoURL &&  <Image
+                                                        style={{width: 40,height: 40,borderRadius: 20,backgroundColor: '#ddd',}}
+                                                        source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
+                                                    />}
                                                     <View style={{ flex: 1 }}>
                                                         <ThemedText type='subtitle'>
                                                             {user?.organisation || user?.displayName || 'No name'}

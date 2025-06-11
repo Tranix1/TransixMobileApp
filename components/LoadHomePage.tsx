@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
 
 
-import { ActivityIndicator, RefreshControl, StyleSheet, Text, TouchableNativeFeedback, TouchableOpacity, View, Modal, Linking,FlatList } from 'react-native'
-import { AntDesign, FontAwesome6, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { ActivityIndicator, RefreshControl, StyleSheet, Image, TouchableNativeFeedback, TouchableOpacity, View, Modal, Linking, FlatList } from 'react-native'
+import { AntDesign, FontAwesome6, FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 import LoadComponent from './LoadComponent';
 import { ThemedText } from './ThemedText';
@@ -17,74 +17,69 @@ import { useAuth } from '@/context/AuthContext';
 import { router } from 'expo-router';
 
 interface LoadsComponentProps {
-  Loads: Load[];
-  refreshing: boolean;
-  onRefresh: () => void;
-  loadMoreLoads: () => void;
-  lastVisible: unknown; // Replace with specific type if known
-  loadingMore: boolean;
-  expandId: string;
-  setSelectedLoad: (load: Load | null) => void;
+    Loads: Load[];
+    refreshing: boolean;
+    onRefresh: () => void;
+    loadMoreLoads: () => void;
+    lastVisible: unknown; // Replace with specific type if known
+    loadingMore: boolean;
+    expandId: string;
+    setSelectedLoad: (load: Load | null) => void;
 
-  bottomSheetRef: React.RefObject<any>; // Replace `any` with specific ref type if available
-  setExpandID: (id: string) => void;
-  showSheet: boolean;
-   setBottomMode: React.Dispatch<React.SetStateAction<'Bid' | 'Book' | ''>>;
-  selectedLoad: Load | null;
-  formatCurrency: (value: number | string) => string;
-  toggleCurrencyBid: () => void;
-  setBidRate: (rate: string) => void;
-  bidRate: string;
-  setBidLinks: (links: string) => void;
-  bidLinks: string;
-  setBidTriaxle: (value: string) => void;
-  bidTriaxle: string;
-  deleteMyLoad: (id: string) => void;
+    setExpandID: (id: string) => void;
+    setBottomMode: React.Dispatch<React.SetStateAction<'Bid' | 'Book' | ''>>;
+    selectedLoad: Load | null;
+    setBidRate: (rate: string) => void;
+    bidRate: string;
+    deleteMyLoad: (id: string) => void;
 
-renderBackdrop:any;
-setShowfilter:any
-setShowSheet:any
-bottomMode:any
+    setShowfilter: any
+    setShowSheet: any
+    bottomMode: any
+
+    submitBidsOBookings: any
 }
 
 
 export const LoadsComponent: React.FC<LoadsComponentProps> = ({
-  Loads,
-  refreshing,
-  onRefresh,
-  loadMoreLoads,
-  lastVisible,
-  loadingMore,
-  expandId,
-  setSelectedLoad,
-  bottomSheetRef,
-  setExpandID,
-  showSheet,
-  setBottomMode,
-  selectedLoad,
-  formatCurrency,
-  toggleCurrencyBid,
-  setBidRate,
-  bidRate,
-  setBidLinks,
-  bidLinks,
-  setBidTriaxle,
-  bidTriaxle,
-  deleteMyLoad,
-renderBackdrop ,
-setShowfilter,
-setShowSheet,
-bottomMode
+    Loads,
+    refreshing,
+    onRefresh,
+    loadMoreLoads,
+    lastVisible,
+    loadingMore,
+    expandId,
+    setSelectedLoad,
+    setExpandID,
+    setBottomMode,
+    selectedLoad,
+    setBidRate,
+    bidRate,
+    deleteMyLoad,
+    setShowfilter,
+    setShowSheet,
+    bottomMode,
+    submitBidsOBookings
 }) => {
-  // Component implementation
-  const { user } = useAuth();
-  
-  const accent = useThemeColor('accent')
+    // Component implementation
+    const { user } = useAuth();
+
+    const accent = useThemeColor('accent')
     const coolGray = useThemeColor('coolGray')
     const icon = useThemeColor('icon')
     const background = useThemeColor('background')
     const backgroundLight = useThemeColor('background')
     const textColor = useThemeColor('text')
+
+
+    const bottomSheetRef = useRef<BottomSheet>(null);
+    const renderBackdrop = useCallback(
+        (props: any) => <BottomSheetBackdrop  {...props} opacity={0.05} appearsOnIndex={0} disappearsOnIndex={-1} />,
+        []
+    );
+
+
+
 
     return (
 
@@ -116,8 +111,8 @@ bottomMode
                 </View>
             </View>
 
-         
-         
+
+
             <FlatList
                 keyExtractor={(item) => item.id.toString()}
                 contentContainerStyle={{}}
@@ -193,9 +188,19 @@ bottomMode
 
                     }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: wp(4) }}>
-                            {selectedLoad &&
-                                <ThemedText type="subtitle">{selectedLoad.companyName}</ThemedText>
-                            }
+                            <View style={{ flexDirection: 'row' }}>
+
+                                {selectedLoad?.logo && <FontAwesome name='user-circle' color={coolGray} size={wp(9)} />}
+                                {!selectedLoad?.logo && <Image
+                                    style={{ width: 35, height: 35, borderRadius: 17.5, backgroundColor: '#ddd', }}
+                                    source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
+                                />}
+
+                                {selectedLoad &&
+                                    <ThemedText type="subtitle" style={{marginLeft:20}}>{selectedLoad.companyName}</ThemedText>
+                                }
+                            </View>
+
                             <TouchableOpacity
                                 onPress={() => bottomSheetRef.current?.close()}
                                 style={{ margin: wp(2) }}
@@ -205,6 +210,7 @@ bottomMode
                         </View>
                         {selectedLoad ? (
                             <>
+
                                 {bottomMode === '' &&
                                     <View style={{ padding: wp(2), borderWidth: .5, borderRadius: wp(6), borderColor: backgroundLight }}>
                                         <View style={[styles.detailRow, { backgroundColor: backgroundLight, paddingHorizontal: wp(2), borderRadius: wp(2) }]}>
@@ -266,13 +272,13 @@ bottomMode
                                                     Rate Per Tonne
                                                 </ThemedText>
                                                 <ThemedText type='subtitle' style={[{ color: textColor, fontSize: wp(4.5), lineHeight: wp(5), flex: 2 }]}>
-                                                    {formatCurrency(selectedLoad.ratePerTonne ? selectedLoad.ratePerTonne : selectedLoad.links ? selectedLoad.links : selectedLoad.triaxle)}
+                                                    {formatCurrency(selectedLoad.rate ? selectedLoad.rate : selectedLoad.links ? selectedLoad.links : selectedLoad.triaxle)}
                                                 </ThemedText>
                                             </View>
                                         )}
                                     </View>
                                 }
-                                {selectedLoad.userId !== user?.uid &&
+                                {
                                     <>
                                         {bottomMode === 'Bid' &&
                                             <View style={[{
@@ -283,11 +289,11 @@ bottomMode
                                                         Bid
                                                     </ThemedText>
                                                     {
-                                                        selectedLoad.ratePerTonne && (
+                                                        selectedLoad.rate && (
                                                             <View style={{}}>
-                                                                <TouchableOpacity onPress={toggleCurrencyBid}>
+                                                                <TouchableOpacity  >
                                                                     <ThemedText >
-                                                                        Bid Rate ({true ? "USD" : "RAND"})
+                                                                        Bid Rate
                                                                     </ThemedText>
                                                                 </TouchableOpacity>
 
@@ -299,67 +305,11 @@ bottomMode
                                                                     placeholder="Bid rate"
                                                                 />
 
-                                                                {/* <TouchableOpacity onPress={togglePerTonneBid}>
-                                                        <ThemedText >
-                                                            Per tonne
-                                                        </ThemedText>
-                                                    </TouchableOpacity> */}
+
                                                             </View>
                                                         )
                                                     }
 
-                                                    {(selectedLoad.links || selectedLoad.triaxle) && (
-                                                        <View>
-                                                            {selectedLoad.links && (
-                                                                <View style={{}}>
-                                                                    <TouchableOpacity onPress={toggleCurrencyBid}>
-                                                                        <ThemedText >
-                                                                            Bid Links Rate ({true ? "USD" : "RAND"})
-                                                                        </ThemedText>
-                                                                    </TouchableOpacity>
-
-                                                                    <Input
-                                                                        onChangeText={(text) => setBidLinks(text)}
-                                                                        value={bidLinks}
-                                                                        keyboardType="numeric"
-                                                                        placeholderTextColor={coolGray}
-                                                                        placeholder="Bid Links rate"
-                                                                    />
-
-                                                                    {/* <TouchableOpacity onPress={togglePerTonneBid}>
-                                                            <ThemedText >
-                                                                Per tonne
-                                                            </ThemedText>
-                                                        </TouchableOpacity> */}
-                                                                </View>
-                                                            )}
-
-                                                            {selectedLoad.triaxle && (
-                                                                <View style={{}}>
-                                                                    <TouchableOpacity onPress={toggleCurrencyBid}>
-                                                                        <ThemedText >
-                                                                            Bid triaxle Rate ({true ? "USD" : "RAND"})
-                                                                        </ThemedText>
-                                                                    </TouchableOpacity>
-
-                                                                    <Input
-                                                                        onChangeText={(text) => setBidTriaxle(text)}
-                                                                        value={bidTriaxle}
-                                                                        keyboardType="numeric"
-                                                                        placeholderTextColor={coolGray}
-                                                                        placeholder="Bid triaxle rate"
-                                                                    />
-
-                                                                    {/* <TouchableOpacity
-                                                            onPress={togglePerTonneBid}>
-                                                            <ThemedText>
-                                                                Per tonne
-                                                            </ThemedText>
-                                                        </TouchableOpacity> */}
-                                                                </View>
-                                                            )}
-                                                        </View>
-                                                    )}
                                                 </View>
 
                                                 <View style={{ flexDirection: 'row', gap: wp(2) }}>
@@ -371,7 +321,7 @@ bottomMode
                                                     </TouchableOpacity>
 
                                                     <TouchableOpacity
-                                                        // onPress={() => handleSubmit(item, "biddings" as 'biddings')} { text: '#0f9d58', bg: '#0f9d5824' }
+                                                        onPress={() => submitBidsOBookings("biddings" as 'biddings', selectedLoad as Load)}
                                                         style={[{ backgroundColor: '#0f9d5824', flex: 2, padding: wp(3), borderRadius: wp(4), alignItems: 'center' }]}
                                                     >
                                                         <ThemedText style={{ color: '#0f9d58' }}>Send</ThemedText>
@@ -380,25 +330,24 @@ bottomMode
                                             </View>
                                         }
 
-                                        {bottomMode === '' &&
-                                            <>
-                                                <View>
-                                                    <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => setBottomMode('Book')}>
-                                                        <ThemedText color='white'>
-                                                            Book Load
-                                                        </ThemedText>
-                                                    </TouchableOpacity>
+                                        {<>
+                                            <View>
+                                                <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => submitBidsOBookings("bookings" as 'bookings', selectedLoad as Load)} >
+                                                    <ThemedText color='white'>
+                                                        Book Load
+                                                    </ThemedText>
+                                                </TouchableOpacity>
 
-                                                </View>
-                                                <View>
-                                                    <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => setBottomMode('Bid')}>
-                                                        <ThemedText color='white'>
-                                                            Bid
-                                                        </ThemedText>
-                                                    </TouchableOpacity>
+                                            </View>
+                                            <View>
+                                                <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => setBottomMode('Bid')}>
+                                                    <ThemedText color='white'>
+                                                        Bid
+                                                    </ThemedText>
+                                                </TouchableOpacity>
 
-                                                </View>
-                                            </>
+                                            </View>
+                                        </>
                                         }
                                         <View>
                                             <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push('/Account/Login')}>
@@ -413,7 +362,21 @@ bottomMode
 
                                         </View>
                                     </>
+
+
                                 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
                                 {selectedLoad.userId !== user?.uid ?
@@ -460,7 +423,7 @@ bottomMode
                                             </TouchableOpacity>
                                             <ThemedText style={{ color: coolGray }}>Share</ThemedText>
                                         </View>
-                                        </BottomSheetScrollView> 
+                                    </BottomSheetScrollView>
                                     :
                                     <BottomSheetScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: wp(4), flexDirection: 'row', gap: wp(5), marginTop: 'auto' }}>
                                         <View style={{ alignItems: 'center' }}>
@@ -511,14 +474,16 @@ bottomMode
 
                                 {/* Add more fields as needed */}
                             </>
-                        ) : (
-                            <ThemedText>No details available.</ThemedText>
-                        )}
+                        )
+
+                            : (
+                                <ThemedText>No details available.</ThemedText>
+                            )}
                     </View>
                 </BottomSheetView >
 
             </BottomSheet >
-        
+
 
 
 
@@ -526,7 +491,7 @@ bottomMode
 
 
     )
-    
+
 }
 
 

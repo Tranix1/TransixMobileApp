@@ -29,7 +29,7 @@ const Index = () => {
             router.push('/Account/Login')
             return
         }
-        console.log(user?.createdAt);
+        console.log(user.photoURL);
 
 
     }, [])
@@ -100,83 +100,7 @@ const Index = () => {
                 } */}
 
 
-                <TouchableNativeFeedback onPress={() => router.push("/BooksAndBids/SlctBidsAndBooks")} >
-                    <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                        <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                        <View>
-                            <ThemedText type='default'>
-                                Bookoings and Biddings
-                            </ThemedText>
-                        </View>
-                    </View>
-                </TouchableNativeFeedback>
-                <TouchableNativeFeedback onPress={() => router.push("/Account/UserUploads/Contracts")}>
-                    <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                        <Ionicons name="reader" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                        <View>
-                            <ThemedText type='default'>
-                                My Contracts
-                            </ThemedText>
-                        </View>
-                    </View>
-                </TouchableNativeFeedback>
-                <TouchableNativeFeedback onPress={
-                    () => router.push({ pathname: '/Account/UserUploads/Trucks.', params: { dspPersonalTrucks: "true" } })} >
-                    <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                        <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                        <View>
-                            <ThemedText type='default'>
-                                Manage My Trucks
-                            </ThemedText>
-                        </View>
-                    </View>
-                </TouchableNativeFeedback>
-                <TouchableNativeFeedback onPress={() => router.push('/Account/UserUploads/Loads')}>
-                    <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                        <FontAwesome6 name="boxes-stacked" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                        <View>
-                            <ThemedText type='default'>
-                                Manage My Loads
-                            </ThemedText>
-                        </View>
-                    </View>
-                </TouchableNativeFeedback>
-                <TouchableNativeFeedback>
-                    <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                        <MaterialIcons name="work-history" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-
-                        <View>
-                            <ThemedText type='default'>
-                                My Payments History
-                            </ThemedText>
-                        </View>
-                    </View>
-                </TouchableNativeFeedback>
-                <View style={{ borderBottomRightRadius: wp(5), borderBottomLeftRadius: wp(5), overflow: 'hidden' }}>
-
-                    <TouchableNativeFeedback>
-                        <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                            <FontAwesome6 name="shop" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                            <View>
-                                <ThemedText type='default'>
-                                    Manage My Shop
-                                </ThemedText>
-                            </View>
-                        </View>
-                    </TouchableNativeFeedback>
-                </View>
-
-                <TouchableNativeFeedback onPress={() => router.push('/Account/Settings')}>
-                    <View style={{ paddingHorizontal: wp(4), flexDirection: 'row', gap: wp(3), paddingVertical: wp(4) }}>
-                        <Ionicons name="settings-outline" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-
-                        <View>
-                            <ThemedText type='default'>
-                                Settings
-                            </ThemedText>
-                        </View>
-                    </View>
-                </TouchableNativeFeedback>
+               
 
             </ScrollView>
         </ScreenWrapper>

@@ -1,22 +1,14 @@
-import { ActivityIndicator, RefreshControl, StyleSheet, Text, TouchableNativeFeedback, TouchableOpacity, View, Modal, Linking, ScrollView, ToastAndroid } from 'react-native'
+import {  View, ToastAndroid } from 'react-native'
 import React, { useEffect, useState, useRef, useCallback } from 'react'
-import { deleteDocument, fetchDocuments } from '@/db/operations';
+import { addDocument, checkDocumentExists, deleteDocument, fetchDocuments, runFirestoreTransaction, setDocuments } from '@/db/operations';
 import { Load } from '@/types/types';
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
-import { ThemedText } from '@/components/ThemedText';
-import { hp, wp } from '@/constants/common';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { FlatList } from 'react-native';
-import { AntDesign, FontAwesome6, Ionicons, MaterialIcons } from '@expo/vector-icons';
-import LoadComponent from '@/components/LoadComponent';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Input from '@/components/Input';
+import BottomSheet, { BottomSheetBackdrop,  } from '@gorhom/bottom-sheet';
 import { useAuth } from '@/context/AuthContext';
-import Button from '@/components/Button';
-import { formatCurrency, formatDate } from '@/services/services';
 import { LoadsComponent } from '@/components/LoadHomePage';
-import { useLocalSearchParams } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
+import { auth } from '@/app/components/config/fireBase';
+import { where,serverTimestamp } from 'firebase/firestore';
 
 const Index = () => {
 
@@ -35,19 +27,17 @@ const Index = () => {
     const bottomSheetRef = useRef<BottomSheet>(null);
     const [expandId, setExpandID] = useState('');
     const [bidRate, setBidRate] = useState('');
+    const [currencyBid, setCurrencyBid] = useState('');
+    const [modelBid, setModelBid] = useState('');
+
+
     const [bidLinks, setBidLinks] = useState('');
     const [bidTriaxle, setBidTriaxle] = useState('');
     const [bottomMode, setBottomMode] = useState<'Bid' | 'Book' | ''>('');
 
-    const accent = useThemeColor('accent')
-    const coolGray = useThemeColor('coolGray')
-    const icon = useThemeColor('icon')
-    const background = useThemeColor('background')
-    const backgroundLight = useThemeColor('background')
-    const textColor = useThemeColor('text')
+    
     const LoadTructs = async () => {
         const maLoads = await fetchDocuments("Loads");
-        console.log(maLoads);
 
         if (maLoads.data.length) {
             setLoads(maLoads.data as Load[])
@@ -81,20 +71,148 @@ const Index = () => {
         setLoadingMore(false);
     };
 
-    const renderBackdrop = useCallback(
-        (props: any) => <BottomSheetBackdrop  {...props} opacity={0.05} appearsOnIndex={0} disappearsOnIndex={-1} />,
-        []
-    );
 
 
-    function toggleCurrencyBid() {
-        // setCurrencyBid((prev) => !prev);
+
+ const submitBidsOBookings = async (
+    dbName : string
+    , item : Load
+    
+    ) => {
+
+        console.log(dbName)
+
+
+
+
+
+
+        const userId = auth.currentUser?.uid
+        try {
+
+          
+
+
+            
+
+           let theRate= dbName ==="" ? bidRate : item.rate  
+            let docId = `${userId}${item.typeofLoad}${theRate}${item.userId}`
+           let theCurrency= dbName ==="" ? currencyBid : item.currency
+           let theModel = dbName === ""?modelBid : item.model 
+
+
+          let alreadyBokedLoad 
+            if(dbName === "bookings" )alreadyBokedLoad  = await checkDocumentExists("bookings" , [where('docId', '==',docId ) ] );
+            
+            //   let submitexpoPushToken = item.expoPushToken ? item.expoPushToken : null
+
+
+
+          if(  !alreadyBokedLoad ){
+
+        if(item.isVerified){
+
+        router.push({pathname :`/Account/UserUploads/Loads`, params: { 
+
+        loadItem: JSON.stringify(item),
+        contact :  user?.phoneNumber ,
+        ownerName:user?.organisation ,
+        bookerId : userId ,
+        Accept : null ,
+        msgReceiverId : userId ,
+        docId : docId,
+        rate :  theRate ,
+        currency : theCurrency ,
+        model :  theModel ,
+        deletionTime :Date.now() + 4 * 24 * 60 * 60 * 1000 ,
+        dbName : dbName ,
+        // expoPushToken : submitexpoPushToken,
+        // sendPushNotification : sendPushNotification ,
+
+
+      }
+    
+    } )
+              return 
+            }else{
+    
+
+        let message  =`${item.typeofLoad} ${dbName === "bookings" ? "Booked" : "Bidded"} Rate ${item.rate} `
+        let tittle = `From ${item.fromLocation} to ${item.toLocation} `
+        // if(item.expoPushToken){
+
+        // //   await sendPushNotification(item.expoPushToken, message , tittle,dbName );
+        // }
+
+            console.log("Submit data")
+        
+        const docRef = await addDocument(dbName, {
+       docId : docId,
+       loadItem: item,  
+        contact :  user?.phoneNumber ,
+        ownerName:user?.organisation ,
+        bookerId : userId ,
+        Accept : null ,
+        msgReceiverId : userId ,
+        rate :  theRate ,
+        currency : theCurrency ,
+        model :  theModel ,
+        perTonneB :  theModel ,
+        deletionTime :Date.now() + 5 * 24 * 60 * 60 * 1000 ,
+      }
+      );
+            console.log("Donee submitting")
+      
+            }
+     
+        // alert(`${!bidDisplay[item.id] ? "booking": "bidding"} was successfull`)    
+        }else {
+          alert(`Already ${ dbName ==="bookings" ? "booked": "bidded"} this Item!`)    
+
+        }
+        
+          const existingBBDoc = await checkDocumentExists("newIterms" , [where('receriverId', '==', userId)] );
+        // const existingChat = await checkExistingChat(addChatId);
+        let newBiddedDoc = 0
+        let newBOOKEDDoc = 0
+
+        dbName === "bookings" ? newBOOKEDDoc = 1  : newBiddedDoc = 1
+      // Chat doesn't exist, add it to 'ppleInTouch'
+      if(!existingBBDoc){
+        setDocuments("bidBookingStats" ,{
+        bookingdocs : newBOOKEDDoc ,
+        biddingdocs : newBiddedDoc ,
+        timestamp : serverTimestamp() ,
+        receriverId : item.userId ,
+        }  )
+    
     }
+    else{
 
-    function togglePerTonneBid() {
-        // setPerTonneBid((prev) => !prev);
+   await runFirestoreTransaction(`bidBookingStats/${userId}`, (data) => {
+    const currentBiddingDocs = data?.biddingdocs || 0;
+    const currentBookingsDocs = data?.bookingdocs || 0;
+
+    return {
+        biddingdocs: dbName !== "bookings" ? currentBiddingDocs + 1 : currentBiddingDocs,
+        bookingdocs: dbName === "bookings" ? currentBookingsDocs + 1 : currentBookingsDocs,
+    };
+});
+
+
     }
+      
+    //   setSpinnerItem(null)      
 
+    } catch (err) {
+    //   setBookingError(err.toString());
+    //   setSpinnerItem(null)      
+    }
+  };  
+
+
+
+ 
     const deleteMyLoad = async (loadID: string) => {
 
         try {
@@ -125,25 +243,16 @@ const Index = () => {
             loadingMore={loadingMore}
             expandId={expandId}
             setSelectedLoad={setSelectedLoad}
-            bottomSheetRef={bottomSheetRef}
             setExpandID={setExpandID}
-            showSheet={showSheet}
             setBottomMode={setBottomMode}
             selectedLoad={selectedLoad}
-            formatCurrency={formatCurrency}
-            toggleCurrencyBid={toggleCurrencyBid}
             setBidRate={setBidRate}
             bidRate={bidRate}
-            setBidLinks={setBidLinks}
-            bidLinks={bidLinks}
-            setBidTriaxle={setBidTriaxle}
-            bidTriaxle={bidTriaxle}
             deleteMyLoad={deleteMyLoad}
-            renderBackdrop={renderBackdrop} 
             setShowfilter={setShowfilter}
             setShowSheet={setShowSheet}
             bottomMode={bottomMode}
-            
+            submitBidsOBookings={submitBidsOBookings}  
             />
             </View>
 
@@ -155,19 +264,4 @@ const Index = () => {
 
 export default React.memo(Index)
 
-const styles = StyleSheet.create({
-    container: {
-        padding: wp(2)
-    }, countryButton: {
-        padding: wp(2),
-        paddingHorizontal: wp(4),
-        borderRadius: wp(4)
 
-    }, countryButtonSelected: {
-        backgroundColor: '#73c8a9'
-    }, detailRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: wp(1),
-    },
-})

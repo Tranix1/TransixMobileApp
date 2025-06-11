@@ -171,7 +171,7 @@ function LoadsContracts({ }) {
                 router.push({
                   pathname: '/Logistics/Contracts/ViewContractDetails',
                   params: {
-                    ContractItemG: encodeURIComponent(JSON.stringify(item)), // key is "itemG"
+                    ContractItemG: encodeURIComponent(JSON.stringify(item)) , // key is "itemG"
                   },
                 })
               }

@@ -84,7 +84,7 @@ contractName ,
 contractId,
 
 }) => {
-  console.log("ayya", contractId)
+  
   console.log(contractName)
     const { user } = useAuth();
      const background = useThemeColor('backgroundLight')
@@ -250,7 +250,7 @@ contractId,
             </>
           )}
           data={ trucks }
-          renderItem={({ item }) => <TruckItemComponent truck={contractId ? item.truckInfo: item } truckContract={contractId ? item: null } />}
+          renderItem={({ item }) => <TruckItemComponent truck={contractId!=="undefined" && contractId  ? item.truckInfo : item } truckContract={contractId ? item: null } />}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[accent]} />
           }

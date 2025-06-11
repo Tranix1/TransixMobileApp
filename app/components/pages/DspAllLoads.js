@@ -187,7 +187,7 @@ useEffect(() => {
     const [ bookingError , setBookingError] =React.useState("")
     const checkExistiDoc = async (docId) => {
     const chatsRef = collection(db, 'bookings'); // Reference to the 'ppleInTouch' collection
-    const chatQuery = query(chatsRef, where('docId', '==',docId )); // Query for matching chat ID
+    const chatQuery = query(chatsRef, where('docId', '==',docId ) ); // Query for matching chat ID
 
       const querySnapshot = await getDocs(chatQuery);  
      // Check if any documents exist with the chat ID
@@ -196,7 +196,7 @@ useEffect(() => {
 
     const checkExistixtBBDoc = async (receriverId) => {
     const chatsRef = collection(db, 'newIterms'); // Reference to the 'ppleInTouch' collection
-    const chatQuery = query(chatsRef, where('receriverId', '==', receriverId)); // Query for matching chat ID
+    const chatQuery = query(chatsRef, where('receriverId', '==', receriverId) ); // Query for matching chat ID
 
       const querySnapshot = await getDocs(chatQuery);  
      // Check if any documents exist with the chat ID

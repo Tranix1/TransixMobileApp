@@ -12,7 +12,7 @@ const item =
     ? JSON.parse(decodeURIComponent(ContractItemG))
     : null;
 
-    console.log(item)
+    console.log( "contraxt Item", item)
 
     const [dspRturnnLoads, setDspReturnLoads] = React.useState(false);
     const [dspContractD, setDspContractD] = React.useState(false);
@@ -149,12 +149,13 @@ const item =
                             <Text>iv) {item.formData.otherRequirements.forth} </Text>
                         </View>
 
-                        <TouchableOpacity
-                            style={styles.bookNowButton}
-                            onPress={() => router.push("/Logistics/Contracts/BookContract")}
-                        >
-                            <Text style={styles.bookNowText}> Book now due {item.formDataScnd.bookingClosingD} </Text>
-                        </TouchableOpacity>
+                           <TouchableOpacity
+                        style={styles.bookNowButton}
+                        // onPress={() => router.push("/Logistics/Contracts/BookContract")}
+                        onPress={()=>router.push({ pathname: '/Logistics/Contracts/BookContract',   params: { contract: JSON.stringify(item) },   })}
+                    >
+                        <Text style={styles.bookNowText}> Book now due {item.formDataScnd.bookingClosingD} </Text>
+                    </TouchableOpacity>
 
                         <View style={styles.scrollViewBottomPadding} />
                     </ScrollView>
@@ -237,7 +238,12 @@ const item =
                 <View style={styles.bottomButtonContainer}>
                     <TouchableOpacity
                         style={styles.bookNowButton}
-                        onPress={() => router.push("/Logistics/Contracts/BookContract")}
+                        // onPress={() => router.push("/Logistics/Contracts/BookContract")}
+                        onPress={()=>router.push({ 
+                            pathname: '/Logistics/Contracts/BookContract', 
+                              params: { contract: JSON.stringify(item) },
+
+                             })}
                     >
                         <Text style={styles.bookNowText}> Book now due {item.formDataScnd.bookingClosingD} </Text>
                     </TouchableOpacity>

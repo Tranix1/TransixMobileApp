@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from "react";
+import  { useCallback, useRef } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { StyleSheet, TouchableNativeFeedback, View, LogBox } from "react-native";

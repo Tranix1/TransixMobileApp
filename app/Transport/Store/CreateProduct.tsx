@@ -32,6 +32,7 @@ import type { ImagePickerAsset } from 'expo-image-picker';
 import { productCategories  , smallVehicleMake , smallVehicleTypes , heavyEupementMake, heavyEupementType , cargoTruckMake,cargoVehiType , serviceProivderType,transactionTypes,containerType , containerMake,trailerType,trailerMake,sparesType, Countries } from "@/data/appConstants";
 
 import { truckSuspensions, trailerConfigurations as truckConfigurations } from "@/data/appConstants";
+import { HorizontalTickComponent } from "@/components/SlctHorizonzalTick";
 
 
 
@@ -45,8 +46,6 @@ const CreateProduct = () => {
     const accent = useThemeColor('accent');
     const coolGray = useThemeColor('coolGray');
     const textColor = useThemeColor('text');
-
-
 
 
     // States
@@ -275,6 +274,20 @@ const CreateProduct = () => {
 
 
 
+    const transmissionData =[
+        {topic:"(Auto)" , value :"(Auto)" },
+        {topic:"Manual" , value :"Manual" },
+        {topic:"semi_Auto" , value :"semi_Auto" },
+        {topic:"other" , value :"other" },
+    ]
+    const fuelTypeData =[
+
+        {topic:"Petrol" , value :"Petrol" },
+        {topic:"Diesel" , value :"Diesel" },
+        {topic:"Hybrid" , value :"Hybrid" },
+        {topic:"other" , value :"other" },
+    ]
+
     // Render category-specific fields
     const renderCategoryFields = () => {
         switch (selectedCategory?.name) {
@@ -459,67 +472,10 @@ const CreateProduct = () => {
                         <ThemedText type="defaultSemiBold">Transmission</ThemedText>
 
 
+                < HorizontalTickComponent  data={transmissionData} condition={vehicleTransimission} onSelect={setVehicleTransission} />
+                                
 
-                        <View style={styles.row}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.checkbox,
-                                    vehicleTransimission === "(Auto)" && styles.checkboxSelected
-                                ]}
-                                onPress={() => setVehicleTransission("(Auto)")}
-                            >
-                                <Ionicons
-                                    name={vehicleTransimission === "(Auto)" ? "checkbox" : "square-outline"}
-                                    size={wp(5)}
-                                    color={vehicleTransimission === "(Auto)" ? accent : iconColor}
-                                />
-                                <ThemedText style={{ marginLeft: wp(2) }}>(Auto)</ThemedText>
-                            </TouchableOpacity>
-
-
-                            <TouchableOpacity
-                                style={[
-                                    styles.checkbox,
-                                    vehicleTransimission === "Manual" && styles.checkboxSelected
-                                ]}
-                                onPress={() => setVehicleTransission("Manual")}
-                            >
-                                <Ionicons
-                                    name={vehicleTransimission === "Manual" ? "checkbox" : "square-outline"}
-                                    size={wp(5)}
-                                    color={vehicleTransimission === "Manual" ? accent : iconColor}
-                                />
-                                <ThemedText style={{ marginLeft: wp(2) }}>Manual</ThemedText>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[
-                                    styles.checkbox,
-                                    vehicleTransimission === "semi_Auto" && styles.checkboxSelected
-                                ]}
-                                onPress={() => setVehicleTransission("semi_Auto")}
-                            >
-                                <Ionicons
-                                    name={vehicleTransimission === "semi_Auto" ? "checkbox" : "square-outline"}
-                                    size={wp(5)}
-                                    color={vehicleTransimission === "semi_Auto" ? accent : iconColor}
-                                />
-                                <ThemedText style={{ marginLeft: wp(2), fontSize: 15 }}  >semi_Auto</ThemedText>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[
-                                    styles.checkbox,
-                                    vehicleTransimission === "other" && styles.checkboxSelected
-                                ]}
-                                onPress={() => setVehicleTransission("other")}
-                            >
-                                <Ionicons
-                                    name={vehicleTransimission === "other" ? "checkbox" : "square-outline"}
-                                    size={wp(5)}
-                                    color={vehicleTransimission === "other" ? accent : iconColor}
-                                />
-                                <ThemedText style={{ marginLeft: wp(2) }}>other</ThemedText>
-                            </TouchableOpacity>
-                        </View>
+                   
 
 
 
@@ -538,75 +494,8 @@ const CreateProduct = () => {
 
 
                         <ThemedText type="defaultSemiBold">Fuel Type</ThemedText>
-                        <View style={styles.row}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.checkbox,
-                                    vehcileFuel === "Petrol" && styles.checkboxSelected
-                                ]}
-                                onPress={() => setVehicleFuel("Petrol")}
-                            >
-                                <Ionicons
-                                    name={vehcileFuel === "Petrol" ? "checkbox" : "square-outline"}
-                                    size={wp(5)}
-                                    color={vehcileFuel === "Petrol" ? accent : iconColor}
-                                />
-                                <ThemedText style={{ marginLeft: wp(2) }}>Petrol</ThemedText>
-                            </TouchableOpacity>
-
-
-                            <TouchableOpacity
-                                style={[
-                                    styles.checkbox,
-                                    vehcileFuel === "Diesel" && styles.checkboxSelected
-                                ]}
-                                onPress={() => setVehicleFuel("Diesel")}
-                            >
-                                <Ionicons
-                                    name={vehcileFuel === "Diesel" ? "checkbox" : "square-outline"}
-                                    size={wp(5)}
-                                    color={vehcileFuel === "Diesel" ? accent : iconColor}
-                                />
-                                <ThemedText style={{ marginLeft: wp(2) }}>Diesel</ThemedText>
-                            </TouchableOpacity>
-
-
-                            <TouchableOpacity
-                                style={[
-                                    styles.checkbox,
-                                    vehcileFuel === "Hybrid" && styles.checkboxSelected
-                                ]}
-                                onPress={() => setVehicleFuel("Hybrid")}
-                            >
-                                <Ionicons
-                                    name={vehcileFuel === "Hybrid" ? "checkbox" : "square-outline"}
-                                    size={wp(5)}
-                                    color={vehcileFuel === "Hybrid" ? accent : iconColor}
-                                />
-                                <ThemedText style={{ marginLeft: wp(2) }}>Hybrid</ThemedText>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[
-                                    styles.checkbox,
-                                    vehcileFuel === "other" && styles.checkboxSelected
-                                ]}
-                                onPress={() => setVehicleFuel("other")}
-                            >
-                                <Ionicons
-                                    name={vehcileFuel === "other" ? "checkbox" : "square-outline"}
-                                    size={wp(5)}
-                                    color={vehcileFuel === "other" ? accent : iconColor}
-                                />
-                                <ThemedText style={{ marginLeft: wp(2) }}>other</ThemedText>
-                            </TouchableOpacity>
-                        </View>
-
-
-
-
-
-
+                < HorizontalTickComponent  data={fuelTypeData} condition={vehcileFuel} onSelect={setVehicleFuel} />
+                       
                         {vehcileFuel === "other" && <Input
                             placeholder="e.g. 50000"
                             keyboardType="numeric"
@@ -984,24 +873,6 @@ const [storeDetails, setStoreDetails] = useState(null);
         <ScreenWrapper fh={false}>
             <Heading page="Create Product" />
 
-  <View style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
-            <View>
-              <ThemedText type="defaultSemiBold">
-                {user?.organisation || 'Set Owner Name!'}
-              </ThemedText>
-              <ThemedText type="tiny">
-                {user?.email || 'No Organisation Name!'}
-              </ThemedText>
-            </View>
-            <TouchableOpacity onPress={() => setStoredetails(true)}>
-              <FontAwesome6 name="user-gear" size={18} color={icon} />
-            </TouchableOpacity>
-          </View>
-
-
-
-
-
 
 
    <Modal visible={storedetails} statusBarTranslucent animationType="slide">
@@ -1080,6 +951,22 @@ const [storeDetails, setStoreDetails] = useState(null);
         
 
             <ScrollView contentContainerStyle={styles.container}>
+
+{!storeDetails &&  <View style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
+            <View>
+              <ThemedText type="defaultSemiBold">
+                {user?.organisation || 'Set Owner Name!'}
+              </ThemedText>
+              <ThemedText type="tiny">
+                {user?.email || 'No Organisation Name!'}
+              </ThemedText>
+            </View>
+            <TouchableOpacity onPress={() => setStoredetails(true)}>
+              <FontAwesome6 name="user-gear" size={18} color={icon} />
+            </TouchableOpacity>
+          </View>}
+
+
                 {/* Product Images */}
                 <View style={styles.imageSection}>
                     <ThemedText type="defaultSemiBold">Product Images (Max 5)</ThemedText>
@@ -1126,39 +1013,7 @@ const [storeDetails, setStoreDetails] = useState(null);
                
            <ThemedText >Are you selling or looking?</ThemedText>
 
-    <View style={styles.row}>
-                        <TouchableOpacity
-                            style={[
-                                styles.checkbox,
-                                buyOSelling && styles.checkboxSelected
-                            ]}
-                            onPress={()=>setBuyOselling("sellOffers")}
-                        >
-                            <Ionicons
-                                name={buyOSelling=="sellOffers" ? "checkbox" : "square-outline"}
-                                size={wp(5)}
-                                color={buyOSelling==="sellOffers" ? accent : iconColor}
-                            />
-                            <ThemedText style={{ marginLeft: wp(2) }}>Selling</ThemedText>
-                        </TouchableOpacity>
-
-
-                        <TouchableOpacity
-                            style={[
-                                styles.checkbox,
-                                buyOSelling && styles.checkboxSelected
-                            ]}
-                            onPress={()=>setBuyOselling("buyRequests")}
-                        >
-                            <Ionicons
-                                name={buyOSelling==="buyRequests" ? "checkbox" : "square-outline"}
-                                size={wp(5)}
-                                color={buyOSelling=="buyRequests" ? accent : iconColor}
-                            />
-                            <ThemedText style={{ marginLeft: wp(2) }}>Looking</ThemedText>
-                        </TouchableOpacity>
-                    </View>
-
+     < HorizontalTickComponent  data={[ {topic:"Selling" , value :"sellOffers" } , {topic:"Looking" , value :"buyRequests" }   ]} condition={vehicleTransimission} onSelect={setVehicleTransission} />
 
 
 
@@ -1268,10 +1123,10 @@ const [storeDetails, setStoreDetails] = useState(null);
                         >
                             <Ionicons
                                 name={priceNegotiable ? "checkbox" : "square-outline"}
-                                size={wp(5)}
+                                size={wp(4)}
                                 color={priceNegotiable ? accent : iconColor}
                             />
-                            <ThemedText style={{ marginLeft: wp(2) }}>Price Negotiable</ThemedText>
+                            <ThemedText style={{ marginLeft: wp(1) }}>Price Negotiable</ThemedText>
                         </TouchableOpacity>
 
 
@@ -1284,10 +1139,10 @@ const [storeDetails, setStoreDetails] = useState(null);
                         >
                             <Ionicons
                                 name={deliveryAvailable ? "checkbox" : "square-outline"}
-                                size={wp(5)}
+                                size={wp(4)}
                                 color={deliveryAvailable ? accent : iconColor}
                             />
-                            <ThemedText style={{ marginLeft: wp(2) }}>Delivery Available</ThemedText>
+                            <ThemedText style={{ marginLeft: wp(1) }}>Delivery Available</ThemedText>
                         </TouchableOpacity>
                     </View>
 

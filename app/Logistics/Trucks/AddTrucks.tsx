@@ -27,15 +27,18 @@ import Button from "@/components/Button";
 import { TruckFormData } from "@/types/types";
 
 import { AddTruckDetails } from "@/components/AddTruckDetails";
+import { HorizontalTickComponent } from "@/components/SlctHorizonzalTick";
 
 function AddTrucks() {
 
+    // Theme colors
   const icon = useThemeColor('icon')
-  const background = useThemeColor('backgroundLight')
-  const backG = useThemeColor('background')
-  const coolGray = useThemeColor('coolGray')
-
-
+    const background = useThemeColor('background');
+    const backgroundLight = useThemeColor('backgroundLight');
+    const iconColor = useThemeColor('icon');
+    const accent = useThemeColor('accent');
+    const coolGray = useThemeColor('coolGray');
+    const textColor = useThemeColor('text');
   const [formData, setFormData] = useState<TruckFormData>({
     additionalInfo: "",
     driverPhone: "",
@@ -65,6 +68,7 @@ const [getOwnerDetails, setOwnerDetails] = useState<TruckOwner | null>(null);
   const [ownerPhonNumAddDb, setOwnerPhoneNum] = useState('');
 
   const handleUpdateDriverDetails = async () => {
+    setOwnerdetailsDsp(false) 
     console.log("start addd")
     await setDocuments("truckOwnerDetails", { ownerName: ownerNameAddDb, ownerPhoneNum: ownerPhonNumAddDb, ownerEmail: ownerEmailAddDb, })
     console.log("Donee Adding")
@@ -87,8 +91,11 @@ const [selectedTankerType, setSelectedTankerType] = useState<{ id: number, name:
   const [countryCode, setCountryCode] = useState<{ id: number, name: string }>({ id: 0, name: '+263' })
   const [selectedTrailerConfig, setSelectedTrailerConfig] = useState<{ id: number, name: string } | null>(null)
   const [selectedTruckSuspension, setSelectedTruckSuspension] = useState<{ id: number, name: string } | null>(null)
-  const [ownerdetails, setOwnerdetails] = useState(false)
 
+  const [ownerdetailsDsp, setOwnerdetailsDsp] = useState(true)
+
+    const [truckOwnerOBroker , setTuckOwnerOBroker]=React.useState("")
+    if(truckOwnerOBroker==="Owner" &&ownerdetailsDsp ) setOwnerdetailsDsp(true)
   
   const [spinnerItem, setSpinnerItem] = useState(false);
   const [uploadingImageUpdate, setUploadImageUpdate] = useState("")
@@ -219,6 +226,8 @@ console.log(uploadingImageUpdate)
     };
 
 
+
+
   return (
     <ScreenWrapper>
 
@@ -227,35 +236,31 @@ console.log(uploadingImageUpdate)
 
       <View style={{ paddingHorizontal: wp(4) }} >
 
-                {!uploadingImageUpdate && <View style={{height:25 , backgroundColor:"red",width:180, margin :10, justifyContent:"center",alignItems:"center"   , position:"absolute",top:0,zIndex:100, alignSelf:"center" }} >
+                {/* {!uploadingImageUpdate && <View style={{height:25 , backgroundColor:"red",width:180, margin :10, justifyContent:"center",alignItems:"center"   , position:"absolute",top:0,zIndex:100, alignSelf:"center" }} >
             <ThemedText > {uploadingImageUpdate} pana </ThemedText>
-          </View>}
+          </View>} */}
 
         <ScrollView>
 
-          <View style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
-            <View>
-              <ThemedText type="defaultSemiBold">
-                {user?.organisation || 'Set Owner Name!'}
-              </ThemedText>
-              <ThemedText type="tiny">
-                {user?.email || 'No Organisation Name!'}
-              </ThemedText>
-            </View>
-            <TouchableOpacity onPress={() => setOwnerdetails(true)}>
-              <FontAwesome6 name="user-gear" size={18} color={icon} />
-            </TouchableOpacity>
-          </View>
 
 
-          <Modal visible={ownerdetails} statusBarTranslucent animationType="slide">
+
+              <ThemedText>Are You the truck owner or Broker ?</ThemedText>
+              <HorizontalTickComponent 
+                data={[ {topic:"Owner" , value :"Owner" } , {topic:"Broker" , value :"Broker" }   ]}
+                condition={truckOwnerOBroker} 
+                 onSelect ={setTuckOwnerOBroker}
+              />
+
+
+          <Modal visible={truckOwnerOBroker==="Owner" && ownerdetailsDsp} statusBarTranslucent animationType="slide">
             <ScreenWrapper>
 
             <View style={{ margin: wp(4), marginTop: hp(6) }}>
 
               <View style={{ gap: wp(2) }} >
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
-                  <TouchableOpacity onPress={() => setOwnerdetails(false)}>
+                  <TouchableOpacity onPress={() => setOwnerdetailsDsp(false)}>
                     <AntDesign name="close" color={icon} size={wp(4)} />
                   </TouchableOpacity>
                     <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >OWNER DETAILS</ThemedText>
@@ -343,6 +348,10 @@ console.log(uploadingImageUpdate)
                   onChangeText={(text) => setOwnerEmailAddDb(text)}
                 />
 
+               <ThemedText>Upload: Company Doc Validating Truck Ownership or Lease </ThemedText>     
+               <ThemedText type="tiny">Like a certificate of incoperation with same name on books </ThemedText>            
+
+                              
                 <Button onPress={handleUpdateDriverDetails} title="Save" />
 
               </View>
@@ -597,5 +606,5 @@ const styles = StyleSheet.create({
   },
   selectedTextStyle: {
     fontSize: 16,
-  },
+  }
 });

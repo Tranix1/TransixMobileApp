@@ -157,7 +157,7 @@ export interface Product {
 
 export type LoadFormData = {
     typeofLoad: string
-    ratePerTonne: string
+    rate: string
     fromLocation: string
     toLocation: string
     paymentTerms: string
@@ -178,6 +178,7 @@ export type Load = {
     destination: string,
     userId: string;
     companyName: string;
+    logo : string ;
     contact: string;
     deletionTime: number;
     timeStamp?: {
@@ -185,6 +186,7 @@ export type Load = {
         seconds: number;
     };
     currency: string
+    model : string 
     activeLoading: boolean
     location: string
     roundTrip: boolean

@@ -23,6 +23,7 @@ import { useAuth } from "@/context/AuthContext";
 import { TruckTypeProps } from "@/types/types";
 
 import { AddTruckDetails } from "@/components/AddTruckDetails";
+import CheckOutMakePayments from "@/components/CheckOutPayment";
 
 const NewContract = () => {
     const backgroundLight = useThemeColor('backgroundLight');
@@ -300,8 +301,9 @@ const NewContract = () => {
     const [paymentUpdate, setPaymentUpdate] = React.useState<string>("");
 
     const justConsole = () => {
-
+        console.log("staty")
         handleMakePayment(3, "yaya", setPaymentUpdate, "loadsContracts", contractData);
+        console.log("Donee")
     };
 
 
@@ -319,6 +321,30 @@ const NewContract = () => {
                 </View>
             }
             />
+
+
+
+
+
+
+   {dspCheckOutP &&
+          <CheckOutMakePayments jsxProp={<View>
+            <ThemedText> its $10 to add contract </ThemedText>
+          </View>} confirmButon={justConsole} cancelBTN={() => setDspCheckout(false)}
+          />}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: wp(6), alignItems: 'center', marginBottom: wp(2) }}>
                 {['Load Details', 'Return\nLoad', 'Contract Details', 'Truck Req',].map((stepLabel, index) => (

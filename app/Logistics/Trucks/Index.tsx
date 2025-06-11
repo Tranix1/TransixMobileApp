@@ -65,7 +65,7 @@ console.log( userId ,organisationName,contractName,contractId  )
         if (operationCountries.length > 0) filters.push(where("locations", "array-contains-any", operationCountries));
 
         // Fetch data from Firestore with the initially applied filters
-        const maTrucks = await fetchDocuments(  contractId?"trucksContracts":"Trucks", 10, undefined, filters);
+        const maTrucks = await fetchDocuments(  contractId?"ContractRequests":"Trucks", 10, undefined, filters);
 
         let trucksToSet: Truck[] = [];
 

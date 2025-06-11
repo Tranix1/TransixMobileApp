@@ -26,8 +26,7 @@ const AddLoadDB = () => {
     const [typeofLoad, setTypeofLoad] = useState("");
     const [fromLocation, setFromLocation] = useState("");
     const [toLocation, setToLocation] = useState("");
-    const [distance, setDistance] = useState("");
-    const [ratePerTonne, setRatePerTonne] = useState("");
+    const [rate, setRatePerTonne] = useState("");
     const [paymentTerms, setPaymentTerms] = useState("");
     const [requirements, setRequirements] = useState("");
     const [additionalInfo, setAdditionalInfo] = useState("");
@@ -41,7 +40,8 @@ const AddLoadDB = () => {
     const [dspFuelAvai, setDspFuelAvai] = useState(false);
     const [dspReturnLoad, setDspReturnLoad] = useState(false);
 
-    const [selectedRateType, setSelectedRateType] = React.useState({ id: 1, name: "Solid" })
+    const [selectedCurrency, setSelectedCurrency] = React.useState({ id: 1, name: "USD" })
+    const [selectedModelType, setSelectedModelType] = React.useState({ id: 1, name: "Solid" })
 
     // Truck Form Data
     const [formDataTruck, setFormDataTruck] = useState<TruckFormData>({
@@ -71,13 +71,14 @@ const AddLoadDB = () => {
 
     const { user,alertBox } = useAuth();
     const handleSubmit = async () => {
+
              const MissingDriverDetails= [
-          !typeofLoad && "",
-          !fromLocation && "",
-          !toLocation && "",
-          !ratePerTonne && "",
-          !paymentTerms && "",
-        ]
+          !typeofLoad && "Enter Load to be transported",
+          !fromLocation && "Enter source Location",
+          !toLocation && "Enter destination location",
+          !rate && "Enter Load Rate ",
+          !paymentTerms && "Enter Payment Terms",
+        ].filter(Boolean);
 
    if (MissingDriverDetails.length > 0) {
             // setContractDErr(true);
@@ -97,15 +98,17 @@ const AddLoadDB = () => {
             return;
         }
         const loadData = {
-            distance: distance,
             userId: user?.uid,
             companyName: user?.organisation,
             contact: user?.phoneNumber || '',
+            logo : user.photoURL ,
             created_at: Date.now().toString(),
             isVerified: false,
             typeofLoad,
             destination: toLocation,
-            ratePerTonne,
+            rate,
+            currency: selectedCurrency.name ,
+            model : selectedModelType.name ,
             paymentTerms,
             requirements,
             additionalInfo,
@@ -114,7 +117,6 @@ const AddLoadDB = () => {
             returnLoad,
             returnRate,
             returnTerms,
-            currency: "USD",
             activeLoading: false,
             location: fromLocation,
             roundTrip: false,
@@ -225,15 +227,7 @@ const AddLoadDB = () => {
                                 value={toLocation}
                                 onChangeText={setToLocation}
                             />
-                            <ThemedText>
-                                Estimated Distance <ThemedText color="red">*</ThemedText>
-                            </ThemedText>
-                            <Input
-                                placeholder="0km"
-                                value={distance}
-                                onChangeText={setDistance}
-                                keyboardType="numeric"
-                            />
+                          
                             <ThemedText>
                                 Rate <ThemedText color="red">*</ThemedText>
                             </ThemedText>
@@ -241,7 +235,7 @@ const AddLoadDB = () => {
 
 
                             <View style={styles.row}>
-                                <View style={{ width: wp(21), marginRight: wp(2) }}>
+                                <View style={{ width: wp(27.5), marginRight: wp(2) }}>
                                     <ThemedText type="defaultSemiBold">Currency</ThemedText>
                                     <DropDownItem
                                         allData={[
@@ -249,8 +243,8 @@ const AddLoadDB = () => {
                                             { id: 2, name: "RSA" },
                                             { id: 3, name: "ZWG" }
                                         ]}
-                                        selectedItem={selectedRateType}
-                                        setSelectedItem={setSelectedRateType}
+                                        selectedItem={selectedCurrency}
+                                        setSelectedItem={setSelectedCurrency}
                                         placeholder=""
                                     />
                                 </View>
@@ -258,7 +252,7 @@ const AddLoadDB = () => {
                                     <ThemedText type="defaultSemiBold" style={{ textAlign: "center" }}>Rate</ThemedText>
 
                                     <Input
-                                        value={ratePerTonne}
+                                        value={rate}
                                         keyboardType="numeric"
                                         onChangeText={setRatePerTonne}
                                     />
@@ -271,8 +265,8 @@ const AddLoadDB = () => {
                                             { id: 2, name: "/ Tonne" },
                                             { id: 3, name: "/ KM" }
                                         ]}
-                                        selectedItem={selectedRateType}
-                                        setSelectedItem={setSelectedRateType}
+                                        selectedItem={selectedModelType}
+                                        setSelectedItem={setSelectedModelType}
                                         placeholder=""
                                     />
                                 </View>
@@ -382,7 +376,7 @@ const AddLoadDB = () => {
                         <Divider />
                         <View style={styles.viewMainDsp}>
                             <Button onPress={() => setStep(1)} title="Back" />
-                            <Button onPress={handleSubmit} title="Submit" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
+                            <Button onPress={() => setStep(3)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
                         </View>
                     </ScrollView>
                 )}
@@ -407,6 +401,13 @@ const AddLoadDB = () => {
                         operationCountries={operationCountries}
                         setOperationCountries={setOperationCountries}
                     />
+
+                        <Divider />
+                        <View style={styles.viewMainDsp}>
+                            <Button onPress={() => setStep(2)} title="Back" />
+                            <Button onPress={handleSubmit} title="Submit" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
+                            </View>
+
                 </ScrollView>)}
             </View>
         </ScreenWrapper>
