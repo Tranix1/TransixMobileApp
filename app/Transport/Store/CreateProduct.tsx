@@ -77,13 +77,10 @@ const CreateProduct = () => {
     const [selectedSparePartName, setSelectedSparePartName] = React.useState("")
 
     const [priceNegotiable, setPriceNegotiable] = React.useState(false)
-    function togglePriceNegotiable() {
-        setPriceNegotiable(prev => !prev)
-    }
+    const togglePriceNegotiable= ()=>setPriceNegotiable(prev => !prev) 
+
     const [deliveryAvailable, setDeliveryAvailable] = React.useState(false)
-    function toggleDeliveryAvailable() {
-        setDeliveryAvailable(prev => !prev)
-    }
+    const toggleDeliveryAvailable= ()=> setDeliveryAvailable(prev => !prev)
 
     const [vehicleTransimission, setVehicleTransission] = React.useState("")
     const [vehcileFuel, setVehicleFuel] = React.useState("")
@@ -94,6 +91,7 @@ const CreateProduct = () => {
 
     // Form data
     const [formData, setFormData] = useState<Partial<Product>>({
+        productModel : "",
         productLocation: "",
         description: "",
         price: null,
@@ -407,14 +405,7 @@ const CreateProduct = () => {
                         </View>}
 
 
-                        <ThemedText type="defaultSemiBold">Model</ThemedText>
-                        <Input
-                            placeholder="e.g. Camry"
-                            onChangeText={(text) => handleNestedChange("details", "vehicle", {
-                                ...formData.details?.vehicle,
-                                model: text
-                            })}
-                        />
+                    
 
                         {(selectedTruckType?.name === "semi Truck" || selectedTruckType?.name === "Truck Horse") && <View>
                             <ThemedText type="defaultSemiBold">Horse Power</ThemedText>
@@ -714,7 +705,7 @@ const CreateProduct = () => {
                     <>
 
 
-                        <ThemedText type="defaultSemiBold">Spare Part category</ThemedText>
+                        <ThemedText type="defaultSemiBold">Spare Part Vehicle category</ThemedText>
                         <DropDownItem
                             allData={[
                                 { id: 1, name: "small vehicle" },
@@ -735,28 +726,7 @@ const CreateProduct = () => {
                         />
 
 
-                        {vehicleType?.name === "cargoTrucks" && <View>
-                            <ThemedText> Truck Type</ThemedText>
-                            <DropDownItem
-                                allData={[{ id: 1, name: "semi Truck" }, { id: 2, name: "rigid" }]}
-                                selectedItem={selectedType}
-                                setSelectedItem={setSelectedType}
-                                placeholder="Select vehicle type"
-                            />
-                        </View>}
-
-
-
-                          {selectedTruckType?.name !=="semi Truck" && selectedTruckType?.name !=="semi Truck" &&  <View>
-                        <ThemedText type="defaultSemiBold">  {vehicleType?.name !== "cargoTrucks" ? "Vehicle Type" : "Cargo Area"}  </ThemedText>
-                        <DropDownItem
-                            allData={vehicleType?.name === "small vehicle" ? smallVehicleTypes : vehicleType?.name === "cargo vehicle" ? cargoVehiType : heavyEupementType}
-                            selectedItem={selectedType}
-                            setSelectedItem={setSelectedType}
-                            placeholder="Select vehicle type"
-                        />
-                          </View> } 
-
+                    
 
 
                         {["(Other) Small Veh. Type", "(Other) Cargo Veh. Type", "(Other) Heavy Equip. Type"].includes(selectedType?.name) && (
@@ -788,49 +758,7 @@ const CreateProduct = () => {
                                 })}
                             />
                         )}
-
-
-
-
-
-
-                        <ThemedText type="defaultSemiBold">  {vehicleType?.name !== "cargoTrucks" ? "Vehicle Type" : "Cargo Area"}  </ThemedText>
-                        <DropDownItem
-                            allData={vehicleType?.name === "smallVehicle" ? smallVehicleTypes : vehicleType?.name === "cargoTrucks" ? cargoVehiType : heavyEupementType}
-                            selectedItem={selectedType}
-                            setSelectedItem={setSelectedType}
-                            placeholder="Select vehicle type"
-                        />
-
-                        {["(Other) Small Veh. Type", "(Other) Cargo Veh. Type", "(Other) Heavy Equip. Type"].includes(selectedType?.name) && (
-                            <Input
-                                placeholder="Specify vehicle type"
-                                onChangeText={(text) => handleNestedChange("details", "vehicle", {
-                                    ...formData.details?.vehicle,
-                                    type: text
-                                })}
-                            />
-                        )}
-
-
-
-                        <ThemedText type="defaultSemiBold">Make</ThemedText>
-                        <DropDownItem
-                            allData={vehicleType?.name === "smallVehicle" ? smallVehicleMake : vehicleType?.name === "cargoTrucks" ? cargoTruckMake : heavyEupementMake}
-                            selectedItem={selectedMake}
-                            setSelectedItem={setSelectedMake}
-                            placeholder="Select vehicle Make"
-                        />
-
-                        {["(Other) Small Veh. Make", "(Other) Cargo Veh. Make", "(Other) Heavy Equip. Make"].includes(selectedMake?.name) && (
-                            <Input
-                                placeholder="Specify vehicle type"
-                                onChangeText={(text) => handleNestedChange("details", "vehicle", {
-                                    ...formData.details?.vehicle,
-                                    type: text
-                                })}
-                            />
-                        )}
+                  
 
                     </>
                 )
@@ -1171,6 +1099,15 @@ const [storeDetails, setStoreDetails] = useState(null);
                      <View style={[styles.section, { backgroundColor: backgroundLight }]} >
                     <Divider />
 
+
+                        <ThemedText type="defaultSemiBold">Product  Name/Model  <ThemedText style={{fontStyle:"italic"}} >e.g corrola </ThemedText> </ThemedText>
+                           <Input
+                                placeholder="corrola"
+                                value={formData.productLocation}
+                                onChangeText={(text) => handleChange("productLocation", text)}
+                            />
+
+                        
                       <ThemedText type="defaultSemiBold">Product Location</ThemedText>
 
                              <Input

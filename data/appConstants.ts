@@ -266,16 +266,17 @@ export const litresCapacity = [
 
    export const sparesType = [
 
-        { id: 1, name: "Soto" },
-        { id: 2, name: "Soto" },
-        { id: 3, name: "Soto" },
-        { id: 4, name: "Soto" },
-        { id: 5, name: "Soto" },
-        { id: 6, name: "Soto" },
-        { id: 7, name: "Soto" },
-        { id: 8, name: "Soto" },
-        { id: 9, name: "Soto" },
-        { id: 10, name: "(Other) Spare. Type" },
+        { id: 1, name: "Engine Parts	Engine block, pistons, gaskets, etc." },
+        { id: 2, name: "Suspension & Steering	Shocks, arms, tie rods" },
+        { id: 3, name: "Brakes	Pads, discs, drums" },
+        { id: 4, name: "Electrical	Battery, alternator, starter" },
+        { id: 5, name: "Cooling System	Radiator, fan, thermostat" },
+        { id: 6, name: "Transmission	Clutch, gearbox, mounts" },
+        { id: 7, name: "Body Parts	Bumper, mirrors, lights" },
+        { id: 8, name: "Filters	Oil, air, fuel filters" },
+        { id: 9, name: "Tyres & Wheels	Rims, tyres, tubes" },
+        { id: 10, name: "Unterior	Seats, dashboard, controls" },
+        { id: 11, name: "Accessories	Mats, covers, bulbs " },
     ]
 
    export   const Countries = [

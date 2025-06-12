@@ -13,7 +13,7 @@ import { Entypo, Ionicons } from '@expo/vector-icons'
 
 import { hp, wp } from '@/constants/common'
 
-import {  productCategories  , smallVehicleMake , smallVehicleTypes , heavyEupementMake, heavyEupementType , cargoTruckMake,cargoVehiType , serviceProivderType,transactionTypes,containerType , containerMake,trailerType,trailerMake,sparesType  } from "@/data/appConstants";
+import {  productCategories  , smallVehicleMake , smallVehicleTypes , heavyEupementMake, heavyEupementType , cargoTruckMake,cargoVehiType , serviceProivderType,transactionTypes,containerType , containerMake,trailerType,trailerMake,sparesType, cargoArea  } from "@/data/appConstants";
 
 import ConfigAdnSuspension from "./ConfigAndSuspension";
 
@@ -39,7 +39,7 @@ export const SpecifyProductDetails: React.FC<SpecifyProductDetailsProps> = ({
 const [buyOSelling , setBuyOselling]=React.useState("")
 
   const [selectedCountry , setSelectedCountry]=React.useState<{ id: number; name: string } | null> (null)
-  const [selectedProdCategry , setSelectedProdctCategory]=React.useState<{ id: number; name: string } | null> (null)
+  const [selectedProdCategry , setSelectedProdctCategory]=React.useState<{ id: number; name: string } | any> (null)
   const [selectedVehiType ,setSelectedVehiType]=React.useState<{ id: number; name: string } | null> (null)
 
 
@@ -169,14 +169,26 @@ const HorizontalPicker: React.FC<HorizontalPickerProps> = ({
                 </TouchableOpacity>
               </View>
 
+
+
+
+
+
+
+
+
+
+
+
+
               <View style={{ gap: wp(4) }}>
 
-              <HorizontalPicker
+              {/* <HorizontalPicker
   title="Country"
   items={Countries}
   selectedItem={selectedCountry}
   onSelect={setSelectedCountry}
-/>
+/> */}
 
 
               <HorizontalPicker
@@ -186,12 +198,12 @@ const HorizontalPicker: React.FC<HorizontalPickerProps> = ({
             onSelect={setSelectedProdctCategory}
             />
 
-      <HorizontalPicker
+     { selectedProdCategry?.name =="Vehicle" && <HorizontalPicker
             title="Vehicle Type"
             items={[{ id: 1, name: "small vehicle" },{ id: 2, name: "cargo vehicle" },{ id: 3, name: "heavy Equip" }]}
             selectedItem={selectedVehiType}
             onSelect={setSelectedVehiType}
-            />
+            />}
 
 
 
@@ -248,6 +260,14 @@ const HorizontalPicker: React.FC<HorizontalPickerProps> = ({
                 />
 
 
+{ selectedProdCategry?.name=== "Vehicle"&& selectedVehiType && <View> 
+   <HorizontalPicker
+                title="Body "
+                items={selectedVehiType?.name === "small vehicle" ? smallVehicleTypes : selectedVehiType?.name === "cargo vehicle" ? cargoVehiType : heavyEupementType}
+                selectedItem={slectedBodyType}
+                onSelect={setSelectedBodyType}
+                />
+
                     <HorizontalPicker
                 title="Make"
                 items={selectedVehiType?.name === "small vehicle" ? smallVehicleMake : selectedVehiType?.name === "cargo vehicle" ? cargoTruckMake : heavyEupementMake}
@@ -255,13 +275,24 @@ const HorizontalPicker: React.FC<HorizontalPickerProps> = ({
                 onSelect={setSelectedMake}
                 />
                    
-                 
-                 <HorizontalPicker
+  </View>}
+               
+{ ["Trailers","Container"].includes(selectedProdCategry?.name) && <View>
+
+     <HorizontalPicker
                 title="Body "
-                items={selectedVehiType?.name === "small vehicle" ? smallVehicleTypes : selectedVehiType?.name === "cargo vehicle" ? cargoVehiType : heavyEupementType}
+                items={selectedProdCategry?.name==="Trailers"?trailerType : containerType }
                 selectedItem={slectedBodyType}
                 onSelect={setSelectedBodyType}
                 />
+
+                    <HorizontalPicker
+                title="Make"
+                items={selectedProdCategry?.name==="Trailers"?trailerMake : containerMake }
+                selectedItem={slectedMae}
+                onSelect={setSelectedMake}
+                />
+   </View>}
                   
                   
               
@@ -272,8 +303,15 @@ const HorizontalPicker: React.FC<HorizontalPickerProps> = ({
                   colors={{ bg: accent + '1c', text: accent }}
                 />
               </View>
+
+
+
+
+
             </View>
           </View>
+
+
         </BlurView>
       </Modal>
     </SafeAreaView>

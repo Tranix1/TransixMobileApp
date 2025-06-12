@@ -95,7 +95,7 @@ const StorePage = () => {
     const handleContact = (method: 'whatsapp' | 'call' | 'message') => {
         if (!selectedProduct?.seller.contact) return
 
-        const message = `${selectedProduct.seller.name}\n${selectedProduct.title}\n${selectedProduct.description}\nPrice: ${formatCurrency(selectedProduct.price, 0, selectedProduct.currency)}`
+        const message = `${selectedProduct.seller.name}\n${selectedProduct.productModel}\n${selectedProduct.description}\nPrice: ${formatCurrency(selectedProduct.price, 0, selectedProduct.currency)}`
 
         switch (method) {
             case 'whatsapp':
@@ -112,6 +112,7 @@ const StorePage = () => {
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
+
             <View style={[styles.container, { backgroundColor: background }]}>
                 <View style={[styles.header, { backgroundColor: background }]}>
                     <View>
@@ -126,7 +127,13 @@ const StorePage = () => {
                         </TouchableNativeFeedback>
                     </View>
                 </View>
-
+                
+                <View style={{flexDirection:"row",justifyContent:"space-evenly"}}>
+                    <ThemedText>Showroom</ThemedText>
+                    <ThemedText>Trailers</ThemedText>
+                    <ThemedText>Spares </ThemedText>
+                    <ThemedText>Service Provider</ThemedText>
+                </View>
 
 
 
@@ -215,7 +222,7 @@ const StorePage = () => {
                         <View style={styles.sheetContainer}>
                             <View style={styles.sheetHeader}>
                                 {selectedProduct && (
-                                    <ThemedText type="subtitle">{selectedProduct.title}</ThemedText>
+                                    <ThemedText type="subtitle">{selectedProduct.productModel}</ThemedText>
                                 )}
                                 <TouchableOpacity
                                     onPress={() => bottomSheetRef.current?.close()}

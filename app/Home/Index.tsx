@@ -1,13 +1,10 @@
-import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableNativeFeedback, View, TouchableOpacity, TouchableHighlight, FlatList,Image } from 'react-native'
+import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet,  TouchableNativeFeedback, View, TouchableOpacity, TouchableHighlight,Image } from 'react-native'
 import React, { useState } from 'react'
-import ScreenWrapper from '@/components/ScreenWrapper'
 import { ThemedText } from '@/components/ThemedText'
 import { hp, wp } from '@/constants/common'
-import { AntDesign, Entypo, EvilIcons, FontAwesome, FontAwesome6, Fontisto, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons'
-import { useColorScheme } from '@/hooks/useColorScheme.web'
+import { AntDesign,  EvilIcons, FontAwesome, FontAwesome6, Fontisto, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import Button from '@/components/Button'
-import Input from '@/components/Input'
 import { router, useFocusEffect } from "expo-router";
 import { BlurView } from 'expo-blur'
 import { useAuth } from '@/context/AuthContext'
@@ -97,25 +94,25 @@ const Index = () => {
             id: 4,
             topic: "Tracking",
             description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle : "Get Verfied"
+            btnTitle : "View Trackig"
         },
                 {
             id: 6,
             topic: "Fuel",
             description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle : "Get Verfied"
+            btnTitle : "Get Fuel"
         },
         {
             id: 5,
             topic: "Warehouse",
             description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle : "Get Verfied"
+            btnTitle : "Check Wrehouses  "
         },
         {
-            id: 6,
+            id: 7,
             topic: "Truck Stop",
             description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle : "Get Verfied"
+            btnTitle : "Visit Truck Stop"
         },
     ];
 
@@ -505,7 +502,7 @@ const Index = () => {
                         description={item.description}
                         mainColor="#fb9274"
                         icon="#333"
-                        buttonTitle="Be insuered"
+                        buttonTitle={item.btnTitle}
                         btnBackground="#fb927424"
                         isAvaialble={true}
                         btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")}
@@ -516,7 +513,7 @@ const Index = () => {
                         description={item.description}
                         mainColor="#bada5f"
                         icon="#333"
-                        buttonTitle="Get Verified"
+                        buttonTitle={item.btnTitle}
                         btnBackground="#bada5f24"
                         isAvaialble={false}
                         btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")}
@@ -527,7 +524,7 @@ const Index = () => {
                         description={item.description}
                         mainColor="#bada5f"
                         icon="#333"
-                        buttonTitle="Visit Warehouse"
+                        buttonTitle={item.btnTitle}
                         btnBackground="#bada5f24"
                         isAvaialble={false}
                         btnPressValue={() => router.push("/Account/Verification/ApplyVerification")}
@@ -538,7 +535,7 @@ const Index = () => {
                         description={item.description}
                         mainColor="#bada5f"
                         icon="#333"
-                        buttonTitle="Visit Truck stop"
+                        buttonTitle={item.btnTitle}
                         btnBackground="#bada5f24"
                         isAvaialble={false}
                         btnPressValue={() => router.push("/Account/Verification/ApplyVerification")}

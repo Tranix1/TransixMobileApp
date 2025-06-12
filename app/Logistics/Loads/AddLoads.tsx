@@ -29,6 +29,7 @@ const AddLoadDB = () => {
     const [rate, setRatePerTonne] = useState("");
     const [paymentTerms, setPaymentTerms] = useState("");
     const [requirements, setRequirements] = useState("");
+    const [loadingDate, setLoadingDate] = useState("");
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [alertMsg, setAlertMsg] = useState("");
     const [fuelAvai, setFuelAvai] = useState("");
@@ -41,7 +42,11 @@ const AddLoadDB = () => {
     const [dspReturnLoad, setDspReturnLoad] = useState(false);
 
     const [selectedCurrency, setSelectedCurrency] = React.useState({ id: 1, name: "USD" })
+    const [selectedReturnCurrency, setSelectedRetrunCurrency] = React.useState({ id: selectedCurrency.id, name: selectedCurrency.name })
+
     const [selectedModelType, setSelectedModelType] = React.useState({ id: 1, name: "Solid" })
+
+    const [selectedReturnModelType, setSelectedReturnModelType] = React.useState({ id:selectedModelType.id , name: selectedModelType.name })
 
     // Truck Form Data
     const [formDataTruck, setFormDataTruck] = useState<TruckFormData>({
@@ -68,6 +73,47 @@ const AddLoadDB = () => {
     const [selectedTrailerConfig, setSelectedTrailerConfig] = useState<{ id: number, name: string } | null>(null)
     const [selectedTruckSuspension, setSelectedTruckSuspension] = useState<{ id: number, name: string } | null>(null)
 
+    type SelectedOption = { id: number; name: string } | null ;
+      interface TruckNeededType {
+        cargoArea: TruckTypeProps | null;
+        truckType: SelectedOption;
+        tankerType: SelectedOption;
+        capacity: SelectedOption;
+        operationCountries: string[];
+        trailerConfig: SelectedOption;
+        suspension: SelectedOption;
+    }
+    const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>([]);
+
+   function pushTruck() {
+        const newTruck: TruckNeededType = {
+            cargoArea: selectedCargoArea,
+            truckType: selectedTruckType,
+            tankerType: selectedTankerType,
+            capacity: selectedTruckCapacity,
+            operationCountries: operationCountries,
+            trailerConfig: selectedTrailerConfig,
+            suspension: selectedTruckSuspension,
+        };
+
+        setTrucksNeeded(prev => [...prev, newTruck]);
+
+        // Reset all selections to defaults
+        setSelectedCargoArea(null);
+        setSelectedTruckType(null);
+        setSelectedTankerType(null);
+        setSelectedTruckCapacity(null);
+        setOperationCountries([]);
+        setSelectedTrailerConfig(null);
+        setSelectedTruckSuspension(null);
+    }
+    function removeTruck(indexToRemove: number) {
+        setTrucksNeeded(prev => prev.filter((_, index) => index !== indexToRemove));
+    }
+
+
+
+
 
     const { user,alertBox } = useAuth();
     const handleSubmit = async () => {
@@ -85,8 +131,6 @@ const AddLoadDB = () => {
             alertBox("Missing Load Details", MissingDriverDetails.join("\n"), [], "error");
             return;
         }
-
-      
 
 
         if (!user) {
@@ -106,20 +150,22 @@ const AddLoadDB = () => {
             isVerified: false,
             typeofLoad,
             destination: toLocation,
+            location: fromLocation,
             rate,
             currency: selectedCurrency.name ,
             model : selectedModelType.name ,
             paymentTerms,
+            loadingDate ,
             requirements,
             additionalInfo,
             alertMsg: alertMsg,
             fuelAvai: fuelAvai,
             returnLoad,
             returnRate,
+            returnModel :selectedReturnModelType.name ,
+            returnCurrency : selectedReturnCurrency.name ,
             returnTerms,
-            activeLoading: false,
-            location: fromLocation,
-            roundTrip: false,
+            trucksRequired : trucksNeeded,
             deletionTime: Date.now() + 2 * 24 * 60 * 60 * 1000,
         };
 
@@ -255,6 +301,7 @@ const AddLoadDB = () => {
                                         value={rate}
                                         keyboardType="numeric"
                                         onChangeText={setRatePerTonne}
+                                    style={{height :45.5}}
                                     />
                                 </View>
                                 <View style={{ width: wp(28), marginLeft: wp(2) }}>
@@ -296,6 +343,15 @@ const AddLoadDB = () => {
                                 Additional Info
                             </ThemedText>
                             <Divider />
+
+                          <ThemedText>
+                                 Loading date <ThemedText color="red">*</ThemedText>
+                            </ThemedText>
+                            <Input
+                                value={loadingDate}
+                                onChangeText={setLoadingDate}
+                            />
+
                             <ThemedText>
                                 Requirements<ThemedText color="red">*</ThemedText>
                             </ThemedText>
@@ -311,6 +367,7 @@ const AddLoadDB = () => {
                                 value={additionalInfo}
                                 onChangeText={setAdditionalInfo}
                             />
+                            
                             {dspAlertMsg && (
                                 <>
                                     <ThemedText>
@@ -326,7 +383,7 @@ const AddLoadDB = () => {
                             {dspFuelAvai && (
                                 <>
                                     <ThemedText>
-                                        Fuel Availability<ThemedText color="red">*</ThemedText>
+                                        Fuel & Tolls Infomation<ThemedText color="red">*</ThemedText>
                                     </ThemedText>
                                     <Input
                                         value={fuelAvai}
@@ -334,7 +391,7 @@ const AddLoadDB = () => {
                                     />
                                 </>
                             )}
-                            <Button onPress={toggleDspFuelAvai} title={dspFuelAvai ? "Hide Fuel Info" : "Add Fuel Info"} />
+                            <Button onPress={toggleDspFuelAvai} title={dspFuelAvai ? "Hide Fuel & Tolls Info" : "Add Fuel & Tolls Info"} />
                         </View>
                         <Divider />
                         <View style={styles.viewMainDsp}>
@@ -358,13 +415,55 @@ const AddLoadDB = () => {
                                 onChangeText={setReturnLoad}
                             />
                             <ThemedText>
-                                Return Rate<ThemedText color="red">*</ThemedText>
+                                 Rate<ThemedText color="red">*</ThemedText>
                             </ThemedText>
-                            <Input
+                          
+
+       <View style={styles.row}>
+                                <View style={{ width: wp(27.5), marginRight: wp(2) }}>
+                                    <ThemedText type="defaultSemiBold">Currency</ThemedText>
+                                    <DropDownItem
+                                        allData={[
+                                            { id: 1, name: "USD" },
+                                            { id: 2, name: "RSA" },
+                                            { id: 3, name: "ZWG" }
+                                        ]}
+                                        selectedItem={selectedReturnCurrency}
+                                        setSelectedItem={setSelectedRetrunCurrency}
+                                        placeholder=""
+                                    />
+                                </View>
+                                <View style={{ flex: 1, }}>
+                                    <ThemedText type="defaultSemiBold" style={{ textAlign: "center" }}>Return Rate</ThemedText>
+
+                                        <Input
                                 value={returnRate}
                                 keyboardType="numeric"
                                 onChangeText={setReturnRate}
+                                style={{height :45}}
                             />
+                                </View>
+                                <View style={{ width: wp(28), marginLeft: wp(2) }}>
+                                    <ThemedText type="defaultSemiBold">Model</ThemedText>
+                                    <DropDownItem
+                                        allData={[
+                                            { id: 1, name: "Solid" },
+                                            { id: 2, name: "/ Tonne" },
+                                            { id: 3, name: "/ KM" }
+                                        ]}
+                                        selectedItem={selectedReturnModelType}
+                                        setSelectedItem={setSelectedReturnModelType}
+                                        placeholder=""
+                                    />
+                                </View>
+                            </View>
+
+
+
+
+
+
+
                             <ThemedText>
                                 Return Terms<ThemedText color="red">*</ThemedText>
                             </ThemedText>
@@ -381,6 +480,44 @@ const AddLoadDB = () => {
                     </ScrollView>
                 )}
                 {step === 3 && (<ScrollView>
+
+     {trucksNeeded.map((truck, index) => (
+                                <View
+                                    key={index}
+                                    style={{
+                                        position: 'relative',
+                                        marginBottom: 10,
+                                        padding: 10,
+                                        borderWidth: 1,
+                                        borderColor: '#ccc',
+                                        borderRadius: 8,
+                                        backgroundColor: '#f9f9f9'
+                                    }}
+                                >
+                                    {/* X Button */}
+                                    <TouchableOpacity
+                                        onPress={() => removeTruck(index)}
+                                        style={{
+                                            position: 'absolute',
+                                            top: 5,
+                                            right: 5,
+                                            padding: 5,
+                                            zIndex: 1
+                                        }}
+                                    >
+                                        <ThemedText style={{ color: 'red', fontWeight: 'bold' }}>X</ThemedText>
+                                    </TouchableOpacity>
+
+                                    {/* Truck Info */}
+                                    <ThemedText style={{ color: "black" }}>
+                                        Truck {index + 1}: {truck.truckType?.name}
+                                    </ThemedText>
+                                </View>
+                            ))}
+
+
+
+
                     <AddTruckDetails
                         selectedTruckType={selectedTruckType}
                         setSelectedTruckType={setSelectedTruckType}
@@ -401,6 +538,24 @@ const AddLoadDB = () => {
                         operationCountries={operationCountries}
                         setOperationCountries={setOperationCountries}
                     />
+
+
+                          <TouchableOpacity
+                                onPress={pushTruck}
+                                style={{
+                                    borderWidth: 1,
+                                    borderColor: 'gray',
+                                    borderRadius: 6,
+                                    paddingVertical: 6,
+                                    paddingHorizontal: 29,
+                                    alignSelf: 'flex-start', // makes the button only as wide as needed
+                                    marginVertical: 10,
+                                }}
+                            >
+                                <ThemedText style={{ color: 'gray', fontSize: 14 }}>
+                                    Select {trucksNeeded.length <= 0 ? "Truck" : "another"}
+                                </ThemedText>
+                            </TouchableOpacity>
 
                         <Divider />
                         <View style={styles.viewMainDsp}>

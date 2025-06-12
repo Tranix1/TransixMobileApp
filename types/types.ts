@@ -54,12 +54,13 @@ export type Truck = {
 
 export interface Product {
     // Core product information
+    productModel: string ;
     id?: string; // Adding optional ID for Firebase documents
     productLocation: string;
     description: string;
     deliveryCost : string  ;
     swapPreferences : string ;
-    price: number |null ;
+    price: any ;
     currency: string;
     model:string
     category: string;
@@ -170,6 +171,16 @@ export type LoadFormData = {
     returnRate: string
     returnLoad: string
     returnTerms: string
+    loadingDate :string
+}
+type TruckNeededType = {
+   cargoArea: TruckTypeProps | null;
+        truckType: { id: number; name: string } | null ;
+        tankerType: { id: number; name: string } | null ;
+        capacity: { id: number; name: string } | null ;
+        operationCountries: string[];
+        trailerConfig: { id: number; name: string } | null ;
+        suspension: { id: number; name: string } | null ;
 }
 export type Load = {
     id: string,
@@ -191,6 +202,7 @@ export type Load = {
     location: string
     roundTrip: boolean
     isVerified: boolean
+    trucksRequired : TruckNeededType[]
 
 } & LoadFormData;
 

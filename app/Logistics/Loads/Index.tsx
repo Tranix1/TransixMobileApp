@@ -10,6 +10,9 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { auth } from '@/app/components/config/fireBase';
 import { where,serverTimestamp } from 'firebase/firestore';
 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+
 const Index = () => {
 
     const { user } = useAuth();
@@ -231,7 +234,8 @@ const Index = () => {
 
 
     return (
-        <View style={{flex:1}}>
+                <GestureHandlerRootView style={{ flex: 1,}}>
+
             <View style={{flex:1}}>
 
             <LoadsComponent
@@ -255,8 +259,9 @@ const Index = () => {
             submitBidsOBookings={submitBidsOBookings}  
             />
             </View>
+                </GestureHandlerRootView>
 
-</View>
+
 
     )
 }

@@ -92,8 +92,8 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
 
            <View style={{ flexDirection: 'row' }}>
 
-                                {item?.logo && <FontAwesome name='user-circle' color={coolGray} size={wp(9)} />}
-                                {!item?.logo && <Image
+                                {!item?.logo && <FontAwesome name='user-circle' color={coolGray} size={wp(9)} />}
+                                {item?.logo && <Image
                                     style={{ width: 35, height: 35, borderRadius: 17.5, backgroundColor: '#ddd', }}
                                     source={{ uri: item?.logo || 'https://via.placeholder.com/100' }}
                                 />}
@@ -129,6 +129,8 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
               <ThemedText type='tiny' style={{}}>Return Load</ThemedText>
             </View>
           )}
+            
+
           {item.roundTrip && (
             <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
               <ThemedText type='tiny' style={{}}>Round Trip</ThemedText>
@@ -143,6 +145,8 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
 
 
         </View>
+
+
       </View>
       <View style={[styles.detailRow, { backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
@@ -172,7 +176,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
             Rate {item.model}
           </ThemedText>
           <ThemedText type='subtitle' style={[{ color: textColor, fontSize: wp(4.5), lineHeight: wp(5), flex: 2 }]}>
-            {formatCurrency(item.rate)}
+           {item.currency} {formatCurrency(item.rate)}
           </ThemedText>
         </View>
 
@@ -190,10 +194,32 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
             </ThemedText>
           </View>
         }
+             {item.loadingDate &&
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+            <ThemedText type='default' style={{ flex: 2 }}>
+              Laoding
+            </ThemedText>
+            <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+              {item.loadingDate }
+            </ThemedText>
+          </View>
+        }
+
+         {item.alertMsg && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+            <ThemedText type='default' style={{ flex: 2 }}>
+              Alert 
+            </ThemedText>
+            <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+              {item.alertMsg}
+            </ThemedText>
+          </View>
+        )}
+        
         {item.fuelAvai && (
           <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
             <ThemedText type='default' style={{ flex: 2 }}>
-              Fuel Terms
+              Fuel & Tolls
             </ThemedText>
             <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
               {item.fuelAvai}
@@ -282,6 +308,24 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
 
               </View>
             )}
+
+            <Divider style={{ marginTop: wp(2) }} />
+
+            <View style={{ marginTop: wp(2), gap: wp(2) }}>
+                  <ThemedText type='tiny' style={{ marginBottom: wp(1) }}>Trucks Required</ThemedText>
+                  
+                  {item.trucksRequired.map((neededTruck)=>(
+                    <View style={{flexDirection:"row",justifyContent:'space-evenly'}}> 
+                      <ThemedText>{neededTruck.capacity?.name} </ThemedText>
+                      <ThemedText>{neededTruck.cargoArea?.name} </ThemedText>
+                      <ThemedText>{neededTruck.suspension?.name} </ThemedText>
+                      <ThemedText>{neededTruck.trailerConfig?.name} </ThemedText>
+                    </View>
+                  ) )  }
+            </View>
+
+
+
           </View>
         )}
 
