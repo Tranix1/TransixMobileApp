@@ -1,4 +1,4 @@
-import { ActivityIndicator, RefreshControl, StyleSheet, Text, TouchableNativeFeedback, TouchableOpacity, View, Linking, ToastAndroid } from 'react-native'
+import { ActivityIndicator, RefreshControl, StyleSheet, Text, TouchableNativeFeedback, TouchableOpacity, View, Linking, ToastAndroid, ScrollView } from 'react-native'
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { deleteDocument, fetchDocuments } from '@/db/operations'
 import { Product } from '@/types/types'
@@ -17,6 +17,7 @@ import { router } from 'expo-router'
 import { formatCurrency } from '@/services/services'
 import { color } from 'react-native-elements/dist/helpers'
 import { SpecifyProductDetails } from '@/components/SpecifyProductInStore'
+import { Countries } from '@/data/appConstants'
 
 const StorePage = () => {
     const { user } = useAuth()
@@ -129,14 +130,31 @@ const StorePage = () => {
                 </View>
                 
                 <View style={{flexDirection:"row",justifyContent:"space-evenly"}}>
+                    <TouchableOpacity>
+
                     <ThemedText>Showroom</ThemedText>
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+
                     <ThemedText>Trailers</ThemedText>
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+
                     <ThemedText>Spares </ThemedText>
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+
                     <ThemedText>Service Provider</ThemedText>
+                    </TouchableOpacity>
                 </View>
-
-
-
+                
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                   {Countries.map((item)=>(
+                    <TouchableOpacity key={item.id} >
+                        <ThemedText>{item.name} </ThemedText>
+                    </TouchableOpacity>
+                   )) }
+                </ScrollView>
 
 
         <SpecifyProductDetails

@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback } from "react-native";
+import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback,Modal } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import Divider from "@/components/Divider";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons,AntDesign } from "@expo/vector-icons";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 import { router } from "expo-router";
@@ -17,9 +17,12 @@ import { hp, wp } from "@/constants/common";
 import { AddTruckDetails } from "@/components/AddTruckDetails";
 import { TruckFormData } from "@/types/types";
 import { TruckTypeProps } from "@/types/types";
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 
 const AddLoadDB = () => {
+    const icon = useThemeColor('icon')
+
     const [step, setStep] = useState(0);
 
     // Form state variables
@@ -84,6 +87,8 @@ const AddLoadDB = () => {
         suspension: SelectedOption;
     }
     const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>([]);
+
+    const [dspAfterSubmitMoadal , setAfterSubmitModal]=React.useState(true)
 
    function pushTruck() {
         const newTruck: TruckNeededType = {
@@ -176,7 +181,9 @@ const AddLoadDB = () => {
 
             console.log("Submitting load data:", loadData);
             alert("Load submitted successfully!");
-            router.back()
+            setAfterSubmitModal(true)
+
+
         } catch (error) {
             console.error("Error submitting load:", error);
             alert("Failed to submit load. Please try again.");
@@ -243,6 +250,52 @@ const AddLoadDB = () => {
                     </View>
                 ))}
             </View>
+
+
+
+
+           <Modal visible={dspAfterSubmitMoadal} statusBarTranslucent animationType="slide">
+            <ScreenWrapper>
+
+            <View style={{ margin: wp(4), marginTop: hp(6) }}>
+
+              <View style={{ gap: wp(2) }} >
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
+                  <TouchableOpacity onPress={() => setAfterSubmitModal(false)}>
+                    <AntDesign name="close" color={icon} size={wp(4)} />
+                  </TouchableOpacity>
+                    <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >STORE DETAILS</ThemedText>
+                </View>
+
+                      {trucksNeeded.map((item)=>(
+                        <View style={{flexDirection:"row"}} >
+                            <ThemedText>{item.truckType?.name} </ThemedText>
+                            <ThemedText>{item.cargoArea?.name}</ThemedText>
+                            <ThemedText>{item.capacity?.name} </ThemedText>
+                            
+                            <TouchableOpacity>
+                                <ThemedText>View Trucks</ThemedText>
+                            </TouchableOpacity>
+                             </View>
+                      )) }          
+
+                     <View style={{flexDirection:"row"}}>
+                        <TouchableOpacity style={{backgroundColor:"red"}} >
+                            <ThemedText>Go Back</ThemedText>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={{backgroundColor:"gree"}} >
+                            <ThemedText>Add Another One</ThemedText>
+                        </TouchableOpacity>
+                        </View>   
+              </View>
+            </View>
+            </ScreenWrapper>
+
+          </Modal>     
+
+
+
 
             <View style={{ flex: 1 }}>
                 {step === 0 && (
