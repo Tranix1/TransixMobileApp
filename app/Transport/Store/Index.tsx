@@ -128,6 +128,14 @@ const StorePage = () => {
                         </TouchableNativeFeedback>
                     </View>
                 </View>
+
+                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                   {Countries.map((item)=>(
+                    <TouchableOpacity key={item.id} >
+                        <ThemedText>{item.name} </ThemedText>
+                    </TouchableOpacity>
+                   )) }
+                </ScrollView>
                 
                 <View style={{flexDirection:"row",justifyContent:"space-evenly"}}>
                     <TouchableOpacity>
@@ -148,13 +156,7 @@ const StorePage = () => {
                     </TouchableOpacity>
                 </View>
                 
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                   {Countries.map((item)=>(
-                    <TouchableOpacity key={item.id} >
-                        <ThemedText>{item.name} </ThemedText>
-                    </TouchableOpacity>
-                   )) }
-                </ScrollView>
+              
 
 
         <SpecifyProductDetails

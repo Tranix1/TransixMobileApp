@@ -87,6 +87,7 @@ const AddLoadDB = () => {
         suspension: SelectedOption;
     }
     const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>([]);
+    console.log("trucks needed , uyooo", trucksNeeded)
 
     const [dspAfterSubmitMoadal , setAfterSubmitModal]=React.useState(true)
 
@@ -122,6 +123,7 @@ const AddLoadDB = () => {
 
     const { user,alertBox } = useAuth();
     const handleSubmit = async () => {
+            setAfterSubmitModal(true)
 
              const MissingDriverDetails= [
           !typeofLoad && "Enter Load to be transported",
@@ -179,7 +181,6 @@ const AddLoadDB = () => {
             // If it is, refactor addDocument to be a plain async function.
             await addDocument("Loads", loadData);
 
-            console.log("Submitting load data:", loadData);
             alert("Load submitted successfully!");
             setAfterSubmitModal(true)
 
@@ -189,6 +190,8 @@ const AddLoadDB = () => {
             alert("Failed to submit load. Please try again.");
         }
     };
+
+
 
     return (
         <ScreenWrapper fh={false}>
@@ -264,7 +267,7 @@ const AddLoadDB = () => {
                   <TouchableOpacity onPress={() => setAfterSubmitModal(false)}>
                     <AntDesign name="close" color={icon} size={wp(4)} />
                   </TouchableOpacity>
-                    <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >STORE DETAILS</ThemedText>
+                    <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >Next Step</ThemedText>
                 </View>
 
                       {trucksNeeded.map((item)=>(
@@ -274,7 +277,7 @@ const AddLoadDB = () => {
                             <ThemedText>{item.capacity?.name} </ThemedText>
                             
                             <TouchableOpacity>
-                                <ThemedText>View Trucks</ThemedText>
+                                <ThemedText style={{color:"yellow"}}>View Trucks</ThemedText>
                             </TouchableOpacity>
                              </View>
                       )) }          
@@ -284,7 +287,7 @@ const AddLoadDB = () => {
                             <ThemedText>Go Back</ThemedText>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={{backgroundColor:"gree"}} >
+                        <TouchableOpacity style={{backgroundColor:"green"}} >
                             <ThemedText>Add Another One</ThemedText>
                         </TouchableOpacity>
                         </View>   

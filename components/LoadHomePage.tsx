@@ -33,6 +33,9 @@ interface LoadsComponentProps {
     bidRate: string;
     deleteMyLoad: (id: string) => void;
 
+    
+    userId ?: any;
+    organisationName ?: string
     setShowfilter: any
     setShowSheet: any
     bottomMode: any
@@ -59,7 +62,9 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     setShowfilter,
     setShowSheet,
     bottomMode,
-    submitBidsOBookings
+    submitBidsOBookings,
+    userId,
+    organisationName
 }) => {
     // Component implementation
     const { user } = useAuth();
@@ -87,17 +92,20 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
             <View style={{
                 backgroundColor: background,
                 paddingHorizontal: wp(2),
-                paddingVertical: wp(1),
+                paddingVertical: userId ? wp(5) : wp(1),
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
                 marginBottom: wp(1),
             }} >
                 <View>
-                    <ThemedText type="title">
+                    {!userId &&<ThemedText type="title">
                         Loads
-                    </ThemedText>
-                    <ThemedText type="tiny">Find a Truck for your Load Today</ThemedText>
+                    </ThemedText>}
+                   {userId && <ThemedText >
+                        {organisationName}
+                    </ThemedText>}
+                    {!userId &&<ThemedText type="tiny">Find a Truck for your Load Today</ThemedText>}
                 </View>
                 <View style={{ flexDirection: 'row', gap: wp(2) }}>
 
@@ -190,8 +198,8 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: wp(4) }}>
                             <View style={{ flexDirection: 'row' }}>
 
-                                {selectedLoad?.logo && <FontAwesome name='user-circle' color={coolGray} size={wp(9)} />}
-                                {!selectedLoad?.logo && <Image
+                                {!selectedLoad?.logo && <FontAwesome name='user-circle' color={coolGray} size={wp(9)} />}
+                                {selectedLoad?.logo && <Image
                                     style={{ width: 35, height: 35, borderRadius: 17.5, backgroundColor: '#ddd', }}
                                     source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
                                 />}

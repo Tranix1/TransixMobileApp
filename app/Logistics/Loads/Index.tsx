@@ -257,6 +257,8 @@ const Index = () => {
             setShowSheet={setShowSheet}
             bottomMode={bottomMode}
             submitBidsOBookings={submitBidsOBookings}  
+            organisationName={"Username"}
+            userId ={userId}
             />
             </View>
                 </GestureHandlerRootView>

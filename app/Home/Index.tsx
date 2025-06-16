@@ -75,7 +75,7 @@ const Index = () => {
             id: 1,
         topic: "Long-Term Contracts",
             description: 'Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.',
-            btnTitle : "Get Verfied"
+            btnTitle : "Get Verfied   "
         },
 
         {
@@ -88,19 +88,19 @@ const Index = () => {
             id: 3,
             topic: "GIT (Goods in transit Insuarance)",
             description: 'Ensures financial protection for trucks and cargo, keeping your business secure.',
-            btnTitle : "Get Verfied"
+            btnTitle : "Get GIT    "
         },
         {
             id: 4,
             topic: "Tracking",
             description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle : "View Trackig"
+            btnTitle : "View Trackig   "
         },
                 {
             id: 6,
             topic: "Fuel",
             description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle : "Get Fuel"
+            btnTitle : "Get Fuel   "
         },
         {
             id: 5,
@@ -112,7 +112,7 @@ const Index = () => {
             id: 7,
             topic: "Truck Stop",
             description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle : "Visit Truck Stop"
+            btnTitle : "Visit Truck Stop   "
         },
     ];
 
@@ -531,6 +531,16 @@ const Index = () => {
                     />}
 
                     {item.id === 6 && <HomeItemView
+                        topic={item.topic}
+                        description={item.description}
+                        mainColor="#bada5f"
+                        icon="#333"
+                        buttonTitle={item.btnTitle}
+                        btnBackground="#bada5f24"
+                        isAvaialble={false}
+                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")}
+                    />}
+                          {item.id === 7 && <HomeItemView
                         topic={item.topic}
                         description={item.description}
                         mainColor="#bada5f"

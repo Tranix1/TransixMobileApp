@@ -142,7 +142,7 @@ contractId,
           )}
           {userId&& (
             <View>
-              {userId===user?.uid ? <ThemedText> Manage Trucks </ThemedText> :
+              {(userId===user?.uid ||contractId) ? <ThemedText> Manage Trucks </ThemedText> :
               <ThemedText>{organisationName} Trucks </ThemedText>}
             </View>
           )}
