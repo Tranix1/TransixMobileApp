@@ -123,7 +123,6 @@ const AddLoadDB = () => {
 
     const { user,alertBox } = useAuth();
     const handleSubmit = async () => {
-            setAfterSubmitModal(true)
 
              const MissingDriverDetails= [
           !typeofLoad && "Enter Load to be transported",
