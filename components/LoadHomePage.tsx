@@ -264,26 +264,8 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                             </View>
                                         </View>
 
-                                        {selectedLoad.distance && (
-                                            <View style={[styles.detailRow, { backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }]}>
-                                                <ThemedText type='default' style={{ flex: 2 }}>
-                                                    Estimated Distance
-                                                </ThemedText>
-                                                <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-                                                    {selectedLoad.distance} km
-                                                </ThemedText>
-                                            </View>
-                                        )}
-                                        {selectedLoad.distance && (
-                                            <View style={[styles.detailRow, { backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }]}>
-                                                <ThemedText type='default' style={{ flex: 2 }}>
-                                                    Rate Per Tonne
-                                                </ThemedText>
-                                                <ThemedText type='subtitle' style={[{ color: textColor, fontSize: wp(4.5), lineHeight: wp(5), flex: 2 }]}>
-                                                    {formatCurrency(selectedLoad.rate ? selectedLoad.rate : selectedLoad.links ? selectedLoad.links : selectedLoad.triaxle)}
-                                                </ThemedText>
-                                            </View>
-                                        )}
+                                            <ThemedText style={{alignSelf:'center',margin : 8}}> Rate {selectedLoad.rate} </ThemedText>
+                                    
                                     </View>
                                 }
                                 {

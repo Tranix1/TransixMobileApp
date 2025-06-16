@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback,Modal } from "react-native";
+import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import Divider from "@/components/Divider";
-import { Ionicons,AntDesign } from "@expo/vector-icons";
+import { Ionicons, AntDesign } from "@expo/vector-icons";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 import { router } from "expo-router";
@@ -29,7 +29,8 @@ const AddLoadDB = () => {
     const [typeofLoad, setTypeofLoad] = useState("");
     const [fromLocation, setFromLocation] = useState("");
     const [toLocation, setToLocation] = useState("");
-    const [rate, setRatePerTonne] = useState("");
+    const [rate, setRate] = useState("");
+    const [rateexplantion, setRateExplanation] = useState("");
     const [paymentTerms, setPaymentTerms] = useState("");
     const [requirements, setRequirements] = useState("");
     const [loadingDate, setLoadingDate] = useState("");
@@ -49,7 +50,7 @@ const AddLoadDB = () => {
 
     const [selectedModelType, setSelectedModelType] = React.useState({ id: 1, name: "Solid" })
 
-    const [selectedReturnModelType, setSelectedReturnModelType] = React.useState({ id:selectedModelType.id , name: selectedModelType.name })
+    const [selectedReturnModelType, setSelectedReturnModelType] = React.useState({ id: selectedModelType.id, name: selectedModelType.name })
 
     // Truck Form Data
     const [formDataTruck, setFormDataTruck] = useState<TruckFormData>({
@@ -76,8 +77,8 @@ const AddLoadDB = () => {
     const [selectedTrailerConfig, setSelectedTrailerConfig] = useState<{ id: number, name: string } | null>(null)
     const [selectedTruckSuspension, setSelectedTruckSuspension] = useState<{ id: number, name: string } | null>(null)
 
-    type SelectedOption = { id: number; name: string } | null ;
-      interface TruckNeededType {
+    type SelectedOption = { id: number; name: string } | null;
+    interface TruckNeededType {
         cargoArea: TruckTypeProps | null;
         truckType: SelectedOption;
         tankerType: SelectedOption;
@@ -89,9 +90,9 @@ const AddLoadDB = () => {
     const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>([]);
     console.log("trucks needed , uyooo", trucksNeeded)
 
-    const [dspAfterSubmitMoadal , setAfterSubmitModal]=React.useState(true)
+    const [dspAfterSubmitMoadal, setAfterSubmitModal] = React.useState(false)
 
-   function pushTruck() {
+    function pushTruck() {
         const newTruck: TruckNeededType = {
             cargoArea: selectedCargoArea,
             truckType: selectedTruckType,
@@ -121,18 +122,18 @@ const AddLoadDB = () => {
 
 
 
-    const { user,alertBox } = useAuth();
+    const { user, alertBox } = useAuth();
     const handleSubmit = async () => {
 
-             const MissingDriverDetails= [
-          !typeofLoad && "Enter Load to be transported",
-          !fromLocation && "Enter source Location",
-          !toLocation && "Enter destination location",
-          !rate && "Enter Load Rate ",
-          !paymentTerms && "Enter Payment Terms",
+        const MissingDriverDetails = [
+            !typeofLoad && "Enter Load to be transported",
+            !fromLocation && "Enter source Location",
+            !toLocation && "Enter destination location",
+            !rate && "Enter Load Rate ",
+            !paymentTerms && "Enter Payment Terms",
         ].filter(Boolean);
 
-   if (MissingDriverDetails.length > 0) {
+        if (MissingDriverDetails.length > 0) {
             // setContractDErr(true);
             alertBox("Missing Load Details", MissingDriverDetails.join("\n"), [], "error");
             return;
@@ -151,27 +152,28 @@ const AddLoadDB = () => {
             userId: user?.uid,
             companyName: user?.organisation,
             contact: user?.phoneNumber || '',
-            logo : user.photoURL ,
+            logo: user.photoURL,
             created_at: Date.now().toString(),
             isVerified: false,
             typeofLoad,
             destination: toLocation,
             location: fromLocation,
             rate,
-            currency: selectedCurrency.name ,
-            model : selectedModelType.name ,
+            rateexplantion,
+            currency: selectedCurrency.name,
+            model: selectedModelType.name,
             paymentTerms,
-            loadingDate ,
+            loadingDate,
             requirements,
             additionalInfo,
             alertMsg: alertMsg,
             fuelAvai: fuelAvai,
             returnLoad,
             returnRate,
-            returnModel :selectedReturnModelType.name ,
-            returnCurrency : selectedReturnCurrency.name ,
+            returnModel: selectedReturnModelType.name,
+            returnCurrency: selectedReturnCurrency.name,
             returnTerms,
-            trucksRequired : trucksNeeded,
+            trucksRequired: trucksNeeded,
             deletionTime: Date.now() + 2 * 24 * 60 * 60 * 1000,
         };
 
@@ -256,45 +258,45 @@ const AddLoadDB = () => {
 
 
 
-           <Modal visible={dspAfterSubmitMoadal} statusBarTranslucent animationType="slide">
-            <ScreenWrapper>
+            <Modal visible={dspAfterSubmitMoadal} statusBarTranslucent animationType="slide">
+                <ScreenWrapper>
 
-            <View style={{ margin: wp(4), marginTop: hp(6) }}>
+                    <View style={{ margin: wp(4), marginTop: hp(6) }}>
 
-              <View style={{ gap: wp(2) }} >
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
-                  <TouchableOpacity onPress={() => setAfterSubmitModal(false)}>
-                    <AntDesign name="close" color={icon} size={wp(4)} />
-                  </TouchableOpacity>
-                    <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >Next Step</ThemedText>
-                </View>
+                        <View style={{ gap: wp(2) }} >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
+                                <TouchableOpacity onPress={() => setAfterSubmitModal(false)}>
+                                    <AntDesign name="close" color={icon} size={wp(4)} />
+                                </TouchableOpacity>
+                                <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >Next Step</ThemedText>
+                            </View>
 
-                      {trucksNeeded.map((item)=>(
-                        <View style={{flexDirection:"row"}} >
-                            <ThemedText>{item.truckType?.name} </ThemedText>
-                            <ThemedText>{item.cargoArea?.name}</ThemedText>
-                            <ThemedText>{item.capacity?.name} </ThemedText>
-                            
-                            <TouchableOpacity>
-                                <ThemedText style={{color:"yellow"}}>View Trucks</ThemedText>
-                            </TouchableOpacity>
-                             </View>
-                      )) }          
+                            {trucksNeeded.map((item) => (
+                                <View style={{ flexDirection: "row" }} >
+                                    <ThemedText>{item.truckType?.name} </ThemedText>
+                                    <ThemedText>{item.cargoArea?.name}</ThemedText>
+                                    <ThemedText>{item.capacity?.name} </ThemedText>
 
-                     <View style={{flexDirection:"row"}}>
-                        <TouchableOpacity style={{backgroundColor:"red"}} >
-                            <ThemedText>Go Back</ThemedText>
-                        </TouchableOpacity>
+                                    <TouchableOpacity>
+                                        <ThemedText style={{ color: "yellow" }}>View Trucks</ThemedText>
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
 
-                        <TouchableOpacity style={{backgroundColor:"green"}} >
-                            <ThemedText>Add Another One</ThemedText>
-                        </TouchableOpacity>
-                        </View>   
-              </View>
-            </View>
-            </ScreenWrapper>
+                            <View style={{ flexDirection: "row" }}>
+                                <TouchableOpacity style={{ backgroundColor: "red" }} >
+                                    <ThemedText>Go Back</ThemedText>
+                                </TouchableOpacity>
 
-          </Modal>     
+                                <TouchableOpacity style={{ backgroundColor: "green" }} >
+                                    <ThemedText>Add Another One</ThemedText>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </ScreenWrapper>
+
+            </Modal>
 
 
 
@@ -328,7 +330,7 @@ const AddLoadDB = () => {
                                 value={toLocation}
                                 onChangeText={setToLocation}
                             />
-                          
+
                             <ThemedText>
                                 Rate <ThemedText color="red">*</ThemedText>
                             </ThemedText>
@@ -355,8 +357,8 @@ const AddLoadDB = () => {
                                     <Input
                                         value={rate}
                                         keyboardType="numeric"
-                                        onChangeText={setRatePerTonne}
-                                    style={{height :45.5}}
+                                        onChangeText={setRate}
+                                        style={{ height: 45.5 }}
                                     />
                                 </View>
                                 <View style={{ width: wp(28), marginLeft: wp(2) }}>
@@ -373,7 +375,16 @@ const AddLoadDB = () => {
                                     />
                                 </View>
                             </View>
+                            <ThemedText>
+                                Explain rate<ThemedText style={{fontStyle:"italic"}}> like link and triaxle rate</ThemedText>
+                            </ThemedText>
 
+                            <Input
+                                placeholder="explain rate if neccesary"
+                                value={rateexplantion}
+                                onChangeText={setRateExplanation}
+                                style={{ height: 45.5 }}
+                            />
 
 
 
@@ -399,8 +410,8 @@ const AddLoadDB = () => {
                             </ThemedText>
                             <Divider />
 
-                          <ThemedText>
-                                 Loading date <ThemedText color="red">*</ThemedText>
+                            <ThemedText>
+                                Loading date <ThemedText color="red">*</ThemedText>
                             </ThemedText>
                             <Input
                                 value={loadingDate}
@@ -422,7 +433,7 @@ const AddLoadDB = () => {
                                 value={additionalInfo}
                                 onChangeText={setAdditionalInfo}
                             />
-                            
+
                             {dspAlertMsg && (
                                 <>
                                     <ThemedText>
@@ -470,11 +481,11 @@ const AddLoadDB = () => {
                                 onChangeText={setReturnLoad}
                             />
                             <ThemedText>
-                                 Rate<ThemedText color="red">*</ThemedText>
+                                Rate<ThemedText color="red">*</ThemedText>
                             </ThemedText>
-                          
 
-       <View style={styles.row}>
+
+                            <View style={styles.row}>
                                 <View style={{ width: wp(27.5), marginRight: wp(2) }}>
                                     <ThemedText type="defaultSemiBold">Currency</ThemedText>
                                     <DropDownItem
@@ -491,12 +502,12 @@ const AddLoadDB = () => {
                                 <View style={{ flex: 1, }}>
                                     <ThemedText type="defaultSemiBold" style={{ textAlign: "center" }}>Return Rate</ThemedText>
 
-                                        <Input
-                                value={returnRate}
-                                keyboardType="numeric"
-                                onChangeText={setReturnRate}
-                                style={{height :45}}
-                            />
+                                    <Input
+                                        value={returnRate}
+                                        keyboardType="numeric"
+                                        onChangeText={setReturnRate}
+                                        style={{ height: 45 }}
+                                    />
                                 </View>
                                 <View style={{ width: wp(28), marginLeft: wp(2) }}>
                                     <ThemedText type="defaultSemiBold">Model</ThemedText>
@@ -536,39 +547,39 @@ const AddLoadDB = () => {
                 )}
                 {step === 3 && (<ScrollView>
 
-     {trucksNeeded.map((truck, index) => (
-                                <View
-                                    key={index}
-                                    style={{
-                                        position: 'relative',
-                                        marginBottom: 10,
-                                        padding: 10,
-                                        borderWidth: 1,
-                                        borderColor: '#ccc',
-                                        borderRadius: 8,
-                                        backgroundColor: '#f9f9f9'
-                                    }}
-                                >
-                                    {/* X Button */}
-                                    <TouchableOpacity
-                                        onPress={() => removeTruck(index)}
-                                        style={{
-                                            position: 'absolute',
-                                            top: 5,
-                                            right: 5,
-                                            padding: 5,
-                                            zIndex: 1
-                                        }}
-                                    >
-                                        <ThemedText style={{ color: 'red', fontWeight: 'bold' }}>X</ThemedText>
-                                    </TouchableOpacity>
+                    {trucksNeeded.map((truck, index) => (
+                        <View
+                            key={index}
+                            style={{
+                                position: 'relative',
+                                marginBottom: 10,
+                                padding: 10,
+                                borderWidth: 1,
+                                borderColor: '#ccc',
+                                borderRadius: 8,
+                                backgroundColor: '#f9f9f9'
+                            }}
+                        >
+                            {/* X Button */}
+                            <TouchableOpacity
+                                onPress={() => removeTruck(index)}
+                                style={{
+                                    position: 'absolute',
+                                    top: 5,
+                                    right: 5,
+                                    padding: 5,
+                                    zIndex: 1
+                                }}
+                            >
+                                <ThemedText style={{ color: 'red', fontWeight: 'bold' }}>X</ThemedText>
+                            </TouchableOpacity>
 
-                                    {/* Truck Info */}
-                                    <ThemedText style={{ color: "black" }}>
-                                        Truck {index + 1}: {truck.truckType?.name}
-                                    </ThemedText>
-                                </View>
-                            ))}
+                            {/* Truck Info */}
+                            <ThemedText style={{ color: "black" }}>
+                                Truck {index + 1}: {truck.truckType?.name}
+                            </ThemedText>
+                        </View>
+                    ))}
 
 
 
@@ -595,28 +606,28 @@ const AddLoadDB = () => {
                     />
 
 
-                          <TouchableOpacity
-                                onPress={pushTruck}
-                                style={{
-                                    borderWidth: 1,
-                                    borderColor: 'gray',
-                                    borderRadius: 6,
-                                    paddingVertical: 6,
-                                    paddingHorizontal: 29,
-                                    alignSelf: 'flex-start', // makes the button only as wide as needed
-                                    marginVertical: 10,
-                                }}
-                            >
-                                <ThemedText style={{ color: 'gray', fontSize: 14 }}>
-                                    Select {trucksNeeded.length <= 0 ? "Truck" : "another"}
-                                </ThemedText>
-                            </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={pushTruck}
+                        style={{
+                            borderWidth: 1,
+                            borderColor: 'gray',
+                            borderRadius: 6,
+                            paddingVertical: 6,
+                            paddingHorizontal: 29,
+                            alignSelf: 'flex-start', // makes the button only as wide as needed
+                            marginVertical: 10,
+                        }}
+                    >
+                        <ThemedText style={{ color: 'gray', fontSize: 14 }}>
+                            Select {trucksNeeded.length <= 0 ? "Truck" : "another"}
+                        </ThemedText>
+                    </TouchableOpacity>
 
-                        <Divider />
-                        <View style={styles.viewMainDsp}>
-                            <Button onPress={() => setStep(2)} title="Back" />
-                            <Button onPress={handleSubmit} title="Submit" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
-                            </View>
+                    <Divider />
+                    <View style={styles.viewMainDsp}>
+                        <Button onPress={() => setStep(2)} title="Back" />
+                        <Button onPress={handleSubmit} title="Submit" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
+                    </View>
 
                 </ScrollView>)}
             </View>

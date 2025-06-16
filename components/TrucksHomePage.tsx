@@ -123,23 +123,16 @@ contractId,
             marginBottom: wp(1),
           }}
         >
-          {!userId && (
-            <View>
+          { !contractId &&!userId && <View>
               <View style={{}}>
                 <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
                   <ThemedText type="title">Trucks</ThemedText>
-                  <Text style={{ fontSize: 13, marginLeft: 5 }}>
-                    {selectedCountry !== 'All' && selectedCountry !== 'International'
-                      ? `Local ${selectedCountry}`
-                      : selectedCountry === 'International'
-                      ? selectedCountry
-                      : null}
-                  </Text>
+                  
                 </View>
               </View>
-              <ThemedText type="tiny">Find a Truck for your Load Today</ThemedText>
+              {/* <ThemedzText type="tiny">Find a Truck for your Load Today</ThemedText> */}
             </View>
-          )}
+          }
           {userId&& (
             <View>
               {(userId===user?.uid ||contractId) ? <ThemedText> Manage Trucks </ThemedText> :

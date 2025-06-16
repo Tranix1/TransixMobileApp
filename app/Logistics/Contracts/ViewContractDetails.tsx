@@ -236,6 +236,9 @@ const item =
                 )}
 
                 <View style={styles.bottomButtonContainer}>
+                    <TouchableOpacity>
+                        
+                    </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.bookNowButton}
                         // onPress={() => router.push("/Logistics/Contracts/BookContract")}

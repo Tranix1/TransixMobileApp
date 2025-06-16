@@ -41,8 +41,8 @@ const NewContract = () => {
         location: { frst: "", scnd: "", thrd: "", forth: "", fifth: "", sixth: "", seventh: "" },
         trckRequired: { frst: "", scnd: "", third: "", forth: "", fifth: "" },
         otherRequirements: { frst: "", scnd: "", third: "", forth: "" },
-        rate: { frst: "", scnd: "", thrd: "", forth: "", linksFrst: "", linksScnd: "", superLinkFrst: "", superLinkScnd: "" },
-        returnRate: { frst: "", scnd: "", thrd: "", forth: "", linksFrst: "", linksScnd: "", superLinkFrst: "", superLinkScnd: "" },
+        rate: { frst: "", scnd: "", thrd: "", forth: "", },
+        returnRate: { frst: "", scnd: "", thrd: "", forth: "",  },
         returnCommodity: { frst: "", scnd: "", third: "", forth: "" }
     });
 

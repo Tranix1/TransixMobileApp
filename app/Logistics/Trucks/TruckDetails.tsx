@@ -315,14 +315,14 @@ const TruckDetails = () => {
                 <View style={{ gap: wp(4), paddingHorizontal: wp(2), marginBottom: wp(2), paddingVertical: wp(5), backgroundColor: background, borderRadius: wp(4), paddingBottom: wp(4) }}>
 
 
-                  { truckFrContract && <View style={{flexDirection:"row"}}>
-                    <TouchableOpacity>
-                    <ThemedText>Accapt</ThemedText>
+                  { truckFrContract &&   <View style={{flexDirection:"row"}}>
+                    <TouchableOpacity style={{backgroundColor:"green",width:80 , height:30 ,justifyContent:"center",alignItems:"center" }} >
+                        <ThemedText style={{color:"white"}}>Accept</ThemedText>
                     </TouchableOpacity>
-                    <TouchableOpacity>
-                    <ThemedText>Deny</ThemedText>
+                    <TouchableOpacity style={{backgroundColor:"red",width:80 , height:30 , justifyContent:"center",alignItems:"center" }}>
+                        <ThemedText style={{color:"white"}}>Deny</ThemedText>
                     </TouchableOpacity>
-                      </View>   }
+                </View> }
                                       
 
                     <View style={{}}>

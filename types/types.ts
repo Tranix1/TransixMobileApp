@@ -158,7 +158,8 @@ export interface Product {
 
 export type LoadFormData = {
     typeofLoad: string
-    rate: string
+    rate: string ;
+    rateexplantion : string ;
     fromLocation: string
     toLocation: string
     paymentTerms: string
@@ -281,20 +282,12 @@ export type ContractsFormDataType = {
         scnd: string;
         thrd: string;
         forth: string;
-        linksFrst: string;
-        linksScnd: string;
-        superLinkFrst: string;
-        superLinkScnd: string;
     };
     returnRate: {
         frst: string;
         scnd: string;
         thrd: string;
         forth: string;
-        linksFrst: string;
-        linksScnd: string;
-        superLinkFrst: string;
-        superLinkScnd: string;
     };
     returnCommodity: { frst: string; scnd: string; third: string; forth: string; };
 };

@@ -140,20 +140,31 @@ function LoadsContracts({ }) {
 
             <View style={{ marginBottom: 10 }}>
               <Text style={{ fontSize: 16, color: '#333', marginBottom: 2 }}>
-                <Text style={{ fontWeight: 'bold' }}>Commodity:</Text> Maize
+                <Text style={{ fontWeight: 'bold' }}>Commodity 1:</Text> {item.formData.commodity.frst}
+                <Text style={{ fontWeight: 'bold' }}>Commodity 2:</Text> {item.formData.commodity.scnd}
+                <Text style={{ fontWeight: 'bold' }}>Commodity 3:</Text> {item.formData.commodity.third}
+                <Text style={{ fontWeight: 'bold' }}>Commodity 4:</Text> {item.formData.commodity.forth}
+              </Text>
+
+              <Text style={{ fontSize: 16, color: '#333', marginBottom: 2 }}>
+              <Text style={{ fontSize: 16, color: '#333', marginBottom: 2 }}>
+                <Text style={{ fontWeight: 'bold' }}>Rate  1:</Text> {item.formData.rate.frst}
               </Text>
               <Text style={{ fontSize: 16, color: '#333', marginBottom: 2 }}>
-                <Text style={{ fontWeight: 'bold' }}>Solid Rate:</Text> 12,000 per km
+                <Text style={{ fontWeight: 'bold' }}>Rate 2:</Text> {item.formData.rate.scnd}
               </Text>
               <Text style={{ fontSize: 16, color: '#333', marginBottom: 2 }}>
-                <Text style={{ fontWeight: 'bold' }}>Links:</Text> 12,000 per km
+                <Text style={{ fontWeight: 'bold' }}>Rate 3:</Text> {item.formData.rate.thrd}
               </Text>
               <Text style={{ fontSize: 16, color: '#333', marginBottom: 2 }}>
-                <Text style={{ fontWeight: 'bold' }}>Triaxle:</Text> 12,000 per km
+                <Text style={{ fontWeight: 'bold' }}>Rate 4:</Text> {item.formData.rate.forth}
               </Text>
+              </Text>
+
               <Text style={{ fontSize: 16, color: '#333', marginBottom: 2 }}>
-                <Text style={{ fontWeight: 'bold' }}>Superlink:</Text> 12,000 per km
+             <Text>Contract Countries : Zimbabwe , Zambia , South Africs ,</Text>
               </Text>
+
             </View>
 
             <TouchableOpacity

@@ -1,16 +1,11 @@
-import { StyleSheet, TouchableOpacity, View, ActivityIndicator, Linking, TouchableHighlight } from 'react-native'
+import { StyleSheet, TouchableOpacity, View, TouchableHighlight } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { Load } from '@/types/types'
 import { wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { ThemedText } from './ThemedText'
 import { Image } from 'expo-image'
-import { AntDesign, EvilIcons, Feather, FontAwesome, FontAwesome6, Fontisto, Ionicons, MaterialIcons, Octicons } from '@expo/vector-icons'
-import { router } from 'expo-router'
-import { auth, db } from '../app/components/config/fireBase'
-import { serverTimestamp, where, doc, deleteDoc } from 'firebase/firestore'
-import { addDocument, checkDocumentExists, runFirestoreTransaction, setDocuments } from '@/db/operations'
-import Input from './Input'
+import { EvilIcons, FontAwesome,  Ionicons,  Octicons } from '@expo/vector-icons'
 import { formatCurrency } from '@/services/services'
 import Divider from './Divider'
 import FormatedText from './FormatedText'
@@ -170,17 +165,30 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
         </View>
       </View>
 
+            <View style={{backgroundColor: backgroundLight,  padding: wp(2), borderRadius: wp(2) }}>
+
     
-        <View style={[styles.detailRow, { backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }]}>
+        <View style={styles.detailRow}>
           <ThemedText type='default' style={{ flex: 2 }}>
             Rate {item.model}
           </ThemedText>
           <ThemedText type='subtitle' style={[{ color: textColor, fontSize: wp(4.5), lineHeight: wp(5), flex: 2 }]}>
            {item.currency} {formatCurrency(item.rate)}
           </ThemedText>
+          
         </View>
+           {item.rateexplantion && <View style={styles.detailRow }>
+          <ThemedText type='default' style={{ flex: 2 }}>
+            Rate Exlantion
+          </ThemedText>
+          <ThemedText type='subtitle' style={[{ color: textColor, fontSize: wp(4.5), lineHeight: wp(5), flex: 2 }]}>
+           {item.rateexplantion}
+          </ThemedText>
+          
+        </View>}
 
-    
+            </View>
+            
 
       <View style={[{ marginTop: wp(1), backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2), flex: 1, gap: wp(2) }]}>
 
@@ -239,14 +247,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
 
 
 
-        {/* {item.activeLoading && (
-            <View style={styles.detailRow}>
-              <FontAwesome5 name="clock" size={wp(4)} style={styles.icon} color="#FF8C00" />
-              <ThemedText type='default' style={{ color: "#FF8C00" }}>
-                Active Loading....
-              </ThemedText>
-            </View>
-          )} */}
+       
 
         {expand && (
           <View>
