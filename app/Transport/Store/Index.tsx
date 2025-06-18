@@ -21,7 +21,8 @@ import { Countries } from '@/data/appConstants'
 
 const StorePage = () => {
     const { user } = useAuth()
-
+    const tabKeys = ["Showroom", "Trailers", "Spares", "Service Provider"]
+    const [selectedTab, setSelectedTab] = useState(tabKeys[0]);
     const [refreshing, setRefreshing] = useState(false)
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null)
     const [loadingMore, setLoadingMore] = useState(false)
@@ -32,6 +33,10 @@ const StorePage = () => {
     const [expandId, setExpandId] = useState('')
     const [bottomMode, setBottomMode] = useState<'Offer' | 'Inquiry' | ''>('')
     const [offerPrice, setOfferPrice] = useState('')
+    const [selectedCountryId, setSelectedCountryId] = useState<{
+        id: number;
+        name: string;
+    } | null>(Countries[0] ?? null)
 
     const bottomSheetRef = useRef<BottomSheet>(null)
 
@@ -129,40 +134,91 @@ const StorePage = () => {
                     </View>
                 </View>
 
-                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                   {Countries.map((item)=>(
-                    <TouchableOpacity key={item.id} >
-                        <ThemedText>{item.name} </ThemedText>
-                    </TouchableOpacity>
-                   )) }
-                </ScrollView>
-                
-                <View style={{flexDirection:"row",justifyContent:"space-evenly"}}>
-                    <TouchableOpacity>
-
-                    <ThemedText>Showroom</ThemedText>
-                    </TouchableOpacity>
-                    <TouchableOpacity>
-
-                    <ThemedText>Trailers</ThemedText>
-                    </TouchableOpacity>
-                    <TouchableOpacity>
-
-                    <ThemedText>Spares </ThemedText>
-                    </TouchableOpacity>
-                    <TouchableOpacity>
-
-                    <ThemedText>Service Provider</ThemedText>
-                    </TouchableOpacity>
+                <View style={{ marginVertical: wp(2) }}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{
+                            paddingHorizontal: wp(2),
+                            gap: wp(2),
+                        }}
+                    >
+                        {Countries.map((item) => {
+                            const isSelected = item.id === selectedCountryId?.id;
+                            return (
+                                <TouchableOpacity
+                                    key={item.id}
+                                    onPress={() => {
+                                        setSelectedCountryId(item);
+                                        // Optionally filter products here or trigger a filter function
+                                    }}
+                                    style={{
+                                        backgroundColor: isSelected ? accent : backgroundLight,
+                                        borderColor: isSelected ? accent : coolGray,
+                                        borderWidth: 1,
+                                        borderRadius: wp(6),
+                                        paddingVertical: wp(1.5),
+                                        paddingHorizontal: wp(4),
+                                        marginRight: wp(1),
+                                        shadowColor: isSelected ? accent : '#000',
+                                        shadowOpacity: isSelected ? 0.15 : 0.05,
+                                        shadowRadius: 4,
+                                        elevation: isSelected ? 2 : 0,
+                                    }}
+                                    activeOpacity={0.8}
+                                >
+                                    <ThemedText
+                                        type="defaultSemiBold"
+                                        style={{
+                                            color: isSelected ? 'white' : textColor,
+                                            fontSize: wp(3.5),
+                                        }}
+                                    >
+                                        {item.name}
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
                 </View>
-                
-              
+
+                <View style={{ flexDirection: "row", justifyContent: "space-evenly", marginVertical: wp(2) }}>
+                    {tabKeys.map((tab, idx) => {
+                        return (
+                            <TouchableOpacity
+                                key={tab}
+                                onPress={() => setSelectedTab(tab)}
+                                style={{
+                                    paddingVertical: wp(1.5),
+                                    paddingHorizontal: wp(4),
+                                    borderRadius: wp(6),
+                                    backgroundColor: selectedTab === tab ? accent : backgroundLight,
+                                    borderWidth: 1,
+                                    borderColor: selectedTab === tab ? accent : coolGray,
+                                }}
+                                activeOpacity={0.8}
+                            >
+                                <ThemedText
+                                    type="defaultSemiBold"
+                                    style={{
+                                        color: selectedTab === tab ? 'white' : textColor,
+                                        fontSize: wp(3.5),
+                                    }}
+                                >
+                                    {tab}
+                                </ThemedText>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
 
 
-        <SpecifyProductDetails
-        showFilter={showFilter}
-        setShowFilter={setShowFilter}
-        />
+
+
+                <SpecifyProductDetails
+                    showFilter={showFilter}
+                    setShowFilter={setShowFilter}
+                />
 
 
 
@@ -255,60 +311,107 @@ const StorePage = () => {
                             {selectedProduct ? (
                                 <>
                                     {bottomMode === '' && (
-                                        <View style={[styles.productDetails, { backgroundColor: backgroundLight }]}>
-                                            <View style={styles.detailSection}>
-
-
-                                                  <View style={styles.detailRow}>
-                                                    <ThemedText type='default' style={{ color: coolGray }}>
-                                                        Category
+                                        <View style={[styles.productDetails, { backgroundColor: backgroundLight, padding: 0 }]}>
+                                            <View
+                                                style={{
+                                                    borderRadius: wp(1),
+                                                    overflow: 'hidden',
+                                                    borderColor: coolGray,
+                                                }}
+                                            >
+                                                {/* Table Header */}
+                                                <View
+                                                    style={{
+                                                        flexDirection: 'row',
+                                                        backgroundColor: accent,
+                                                        paddingVertical: wp(2),
+                                                        paddingHorizontal: wp(3),
+                                                    }}
+                                                >
+                                                    <ThemedText
+                                                        type="defaultSemiBold"
+                                                        style={{
+                                                            flex: 1,
+                                                            color: 'white',
+                                                            fontSize: wp(3.5),
+                                                        }}
+                                                    >
+                                                        Attribute
                                                     </ThemedText>
-                                                    <ThemedText type='defaultSemiBold'>
-                                                        {selectedProduct.vehicleType}
-                                                    </ThemedText>
-                                                </View>
-                                                  <View style={styles.detailRow}>
-                                                    <ThemedText type='default' style={{ color: coolGray }}>
-                                                        Body Style
-                                                    </ThemedText>
-                                                    <ThemedText type='defaultSemiBold'>
-                                                        {selectedProduct.bodyStyle}
-                                                    </ThemedText>
-                                                </View>
-
-
-                                         
-                                                <View style={styles.detailRow}>
-                                                    <ThemedText type='default' style={{ color: coolGray }}>
-                                                        Condition
-                                                    </ThemedText>
-                                                    <ThemedText type='defaultSemiBold'>
-                                                        {selectedProduct.condition === 'new' ? 'New' : 'Used'}
-                                                    </ThemedText>
-                                                </View>
-                                                <View style={styles.detailRow}>
-                                                    <ThemedText type='default' style={{ color: coolGray }}>
-                                                        Price
-                                                    </ThemedText>
-                                                    <ThemedText type='defaultSemiBold'>
-                                                        {formatCurrency(selectedProduct.price, 0, selectedProduct.currency)}
-                                                    </ThemedText>
-                                                </View>
-                                                <View style={styles.detailRow}>
-                                                    <ThemedText type='default' style={{ color: coolGray }}>
-                                                        Location
-                                                    </ThemedText>
-                                                    <ThemedText type='defaultSemiBold'>
-                                                        {selectedProduct.location.city}
+                                                    <ThemedText
+                                                        type="defaultSemiBold"
+                                                        style={{
+                                                            flex: 1,
+                                                            color: 'white',
+                                                            fontSize: wp(3.5),
+                                                            textAlign: 'right',
+                                                        }}
+                                                    >
+                                                        Value
                                                     </ThemedText>
                                                 </View>
+                                                {/* Table Rows */}
+                                                {[
+                                                    {
+                                                        label: 'Category',
+                                                        value: selectedProduct.vehicleType,
+                                                    },
+                                                    {
+                                                        label: 'Body Style',
+                                                        value: selectedProduct.bodyStyle,
+                                                    },
+                                                    {
+                                                        label: 'Condition',
+                                                        value: selectedProduct.condition === 'new' ? 'New' : 'Used',
+                                                    },
+                                                    {
+                                                        label: 'Price',
+                                                        value: formatCurrency(selectedProduct.price, 0, selectedProduct.currency),
+                                                    },
+                                                    {
+                                                        label: 'Location',
+                                                        value: selectedProduct.location.city,
+                                                    },
+                                                ].map((row, idx, arr) => (
+                                                    <View
+                                                        key={row.label}
+                                                        style={{
+                                                            flexDirection: 'row',
+                                                            backgroundColor: idx % 2 === 0 ? backgroundLight : background,
+                                                            paddingVertical: wp(2),
+                                                            paddingHorizontal: wp(3),
+                                                            borderBottomWidth: idx === arr.length - 1 ? 0 : 0.5,
+                                                            borderColor: coolGray,
+                                                        }}
+                                                    >
+                                                        <ThemedText
+                                                            type="default"
+                                                            style={{
+                                                                flex: 1,
+                                                                fontSize: wp(3.5),
+                                                            }}
+                                                        >
+                                                            {row.label}
+                                                        </ThemedText>
+                                                        <ThemedText
+                                                            type="defaultSemiBold"
+                                                            style={{
+                                                                flex: 1,
+                                                                textAlign: 'right',
+                                                                fontSize: wp(3.5),
+                                                                color: textColor,
+                                                            }}
+                                                        >
+                                                            {row.value}
+                                                        </ThemedText>
+                                                    </View>
+                                                ))}
                                             </View>
-
-                                            <View style={styles.descriptionContainer}>
-                                                <ThemedText type='default' style={{ color: coolGray }}>
+                                            <View style={[styles.descriptionContainer, { marginTop: wp(4) }]}>
+                                                <ThemedText type="defaultSemiBold" style={{ color: accent, marginBottom: wp(1) }}>
                                                     Description
                                                 </ThemedText>
-                                                <ThemedText type='default' style={styles.descriptionText}>
+                                                <ThemedText type="default" style={styles.descriptionText}>
                                                     {selectedProduct.description}
                                                 </ThemedText>
                                             </View>
@@ -514,8 +617,6 @@ const styles = StyleSheet.create({
     },
     productDetails: {
         padding: wp(2),
-        borderWidth: 0.5,
-        borderRadius: wp(6),
     },
     detailSection: {
         marginBottom: wp(3)
@@ -526,7 +627,8 @@ const styles = StyleSheet.create({
         marginBottom: wp(2)
     },
     descriptionContainer: {
-        marginTop: wp(3)
+        marginVertical: wp(1),
+        margin: wp(3)
     },
     descriptionText: {
         marginTop: wp(1),
