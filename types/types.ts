@@ -21,7 +21,7 @@ export type TruckFormData = {
 export type Truck = {
 
     created_at: string,
-    CompanyName : string;
+    CompanyName: string;
     driverLicense: string;
     driverPassport: string;
 
@@ -54,39 +54,39 @@ export type Truck = {
 
 export interface Product {
     // Core product information
-    productModel: string ;
+    productModel: string;
     id?: string; // Adding optional ID for Firebase documents
     productLocation: string;
     description: string;
-    deliveryCost : string  ;
-    swapPreferences : string ;
-    price: any ;
+    deliveryCost: string;
+    swapPreferences: string;
+    price: any;
     currency: string;
-    model:string
+    model: string
     category: string;
 
     condition: 'new' | 'used';
     images: string[];
-    bodyStyle : string ;
-    bodyMake : string ;
-    vehicleType : string ;  
+    bodyStyle: string;
+    bodyMake: string;
+    vehicleType: string;
 
     vehcileFuel: string;
-    vehicleTransimission : string;
+    vehicleTransimission: string;
 
     createdAt: Date;
     updatedAt: Date | null;
 
 
- 
-  truckDetails :{
-            truckConfig: string ;
-            truckSuspension : string;
-            truckType : string ;
-            semiTrailerCapacity : string
-            semiTrailerSuspension  : string ;
-            semiTrailerConfig : string;
-        },
+
+    truckDetails: {
+        truckConfig: string;
+        truckSuspension: string;
+        truckType: string;
+        semiTrailerCapacity: string
+        semiTrailerSuspension: string;
+        semiTrailerConfig: string;
+    },
 
     // User/seller information
     seller: {
@@ -111,18 +111,18 @@ export interface Product {
             engine: string;
             transmission: string;
             fuelType: string;
-            horsePower : string;
-            truckCapacity : string
-            otherTruckConfig : string;
-            otherTruckSuspension : string;
+            horsePower: string;
+            truckCapacity: string
+            otherTruckConfig: string;
+            otherTruckSuspension: string;
         } | null;
 
-    trailers?: {
-        otherType: string ;
-        otherMake : string;
-        otherTrailerConfig : string;
-        otherTrailerSuspension : string;
-    }
+        trailers?: {
+            otherType: string;
+            otherMake: string;
+            otherTrailerConfig: string;
+            otherTrailerSuspension: string;
+        }
     };
 
     // Transaction details
@@ -131,8 +131,8 @@ export interface Product {
         priceNegotiable: boolean;
         deliveryCost?: string;
         swapPreferences?: string;
-        deliveryAvailable : boolean ;
-            
+        deliveryAvailable: boolean;
+
     };
 
     // Marketplace visibility
@@ -149,17 +149,17 @@ export interface Product {
         status: 'active' | 'sold' | 'expired' | 'removed';
     };
 
-     location: {
-            address: string;
-            city: string;
-            coordinates: null;
-        }
+    location: {
+        address: string;
+        city: string;
+        coordinates: null;
+    }
 }
 
 export type LoadFormData = {
     typeofLoad: string
-    rate: string ;
-    rateexplantion : string ;
+    rate: string;
+    rateexplantion: string;
     fromLocation: string
     toLocation: string
     paymentTerms: string
@@ -172,16 +172,16 @@ export type LoadFormData = {
     returnRate: string
     returnLoad: string
     returnTerms: string
-    loadingDate :string
+    loadingDate: string
 }
 type TruckNeededType = {
-   cargoArea: TruckTypeProps | null;
-        truckType: { id: number; name: string } | null ;
-        tankerType: { id: number; name: string } | null ;
-        capacity: { id: number; name: string } | null ;
-        operationCountries: string[];
-        trailerConfig: { id: number; name: string } | null ;
-        suspension: { id: number; name: string } | null ;
+    cargoArea: TruckTypeProps | null;
+    truckType: { id: number; name: string } | null;
+    tankerType: { id: number; name: string } | null;
+    capacity: { id: number; name: string } | null;
+    operationCountries: string[];
+    trailerConfig: { id: number; name: string } | null;
+    suspension: { id: number; name: string } | null;
 }
 export type Load = {
     id: string,
@@ -190,7 +190,7 @@ export type Load = {
     destination: string,
     userId: string;
     companyName: string;
-    logo : string ;
+    logo: string;
     contact: string;
     deletionTime: number;
     timeStamp?: {
@@ -198,12 +198,12 @@ export type Load = {
         seconds: number;
     };
     currency: string
-    model : string 
+    model: string
     activeLoading: boolean
     location: string
     roundTrip: boolean
     isVerified: boolean
-    trucksRequired : TruckNeededType[]
+    trucksRequired: TruckNeededType[]
 
 } & LoadFormData;
 
@@ -238,6 +238,7 @@ export type ContractsFormDataScndType = {
     paymentTerms: string;
     returnPaymentTerms: string;
     contractDuration: string;
+    trucksLeft: string;
     startingDate: string;
     bookingClosingD: string;
     contractRenewal: string;
@@ -302,30 +303,30 @@ export type Contracts = {
     formData: ContractsFormDataType;
     formDataScnd: ContractsFormDataScndType;
     contractId: string;
-    contractName : string
-    userId : string
+    contractName: string
+    userId: string
 }
 
 
 
 export type SpecifyTruckDetailsProps = {
-  dspSpecTruckDet: boolean;
-  setDspSpecTruckDet: React.Dispatch<React.SetStateAction<boolean>>;
-  // Selecting Truck Tonnage
-  truckCapacity: string;
-  setTruckCapacity: React.Dispatch<React.SetStateAction<string>>;
+    dspSpecTruckDet: boolean;
+    setDspSpecTruckDet: React.Dispatch<React.SetStateAction<boolean>>;
+    // Selecting Truck Tonnage
+    truckCapacity: string;
+    setTruckCapacity: React.Dispatch<React.SetStateAction<string>>;
 
-  // Select Truck Details 
-  selectedTruckType: TruckTypeProps | null;
-  setSelectedTruckType: React.Dispatch<React.SetStateAction<TruckTypeProps | null>>;
-  tankerType: string
-  setTankerType: React.Dispatch<React.SetStateAction<string>>
+    // Select Truck Details 
+    selectedTruckType: TruckTypeProps | null;
+    setSelectedTruckType: React.Dispatch<React.SetStateAction<TruckTypeProps | null>>;
+    tankerType: string
+    setTankerType: React.Dispatch<React.SetStateAction<string>>
 
-truckConfig: string ;
-setTruckConfig :React.Dispatch<React.SetStateAction<string>>;
-truckSuspension : string ;
-setTruckSuspension :React.Dispatch<React.SetStateAction<string>> ;
+    truckConfig: string;
+    setTruckConfig: React.Dispatch<React.SetStateAction<string>>;
+    truckSuspension: string;
+    setTruckSuspension: React.Dispatch<React.SetStateAction<string>>;
 
-operationCountries : string[]
-setOperationCountries :React.Dispatch<React.SetStateAction<string[] >> ;
+    operationCountries: string[]
+    setOperationCountries: React.Dispatch<React.SetStateAction<string[]>>;
 } 
