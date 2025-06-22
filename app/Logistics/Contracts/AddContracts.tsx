@@ -215,7 +215,7 @@ console.log(location)
 
   function toggleDspCheckout() {
     // if(formData.commodity.frst )
-    if (!formData.commodity.frst || !formDataScnd.paymentTerms || !formData.location.frst || !formData.location.scnd || !formData.trckRequired || !formData.otherRequirements.frst || !formData.rate.solidFrst) {
+    if (!formData.commodity.frst || !formDataScnd.paymentTerms || !formData.location.frst || !formData.location.scnd || !formData.trckRequired || !formData.otherRequirements.frst || !formData.rate.frst) {
       setLoadDspError(true)
       return
     } else if (!formDataScnd.loadsPerWeek || !formDataScnd.contractDuration || !formDataScnd.startingDate || !formDataScnd.fuelAvai || !formDataScnd.bookingClosingD || (!locaOpLoc && intOpLoc.length === 0)) {
@@ -276,7 +276,7 @@ console.log(location)
             !formData.location.scnd && "Enter destination location",
             !formData.trckRequired && "Enter at least one type of truck required",
             !formData.otherRequirements.frst && "Enter at least one requirement",
-            !formData.rate.solidFrst && "Enter the solid rate",
+            !formData.rate.frst && "Enter the solid rate",
           ].filter(Boolean) as string[]}
           onClose={() => setLoadDspError(false)}
         />
@@ -603,7 +603,7 @@ console.log(location)
             <View style={styles.viewMainDsp}>
               <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }} >Rates</ThemedText>
               <Input
-                value={formData.rate.solidFrst} placeholder="Solid First Rate" onChangeText={(text) => handleTypedText(text, 'rate.solidFrst')} style={{}} />
+                value={formData.rate.frst} placeholder="Solid First Rate" onChangeText={(text) => handleTypedText(text, 'rate.solidFrst')} style={{}} />
               {dspRate && <Input
                 value={formData.rate.scnd} placeholder="Solid Second Rate" onChangeText={(text) => handleTypedText(text, 'rate.solidScnd')} style={{}} />}
 
@@ -611,16 +611,7 @@ console.log(location)
                 value={formData.rate.thrd} placeholder="Triaxle First Rate" onChangeText={(text) => handleTypedText(text, 'rate.triaxleFrst')} style={{}} />
               {dspRate && <Input
                 value={formData.rate.forth} placeholder="Triaxle Second Rate" onChangeText={(text) => handleTypedText(text, 'rate.triaxlesScnd')} style={{}} />}
-              <Input
-                value={formData.rate.linksFrst} placeholder="Links First Rate" onChangeText={(text) => handleTypedText(text, 'rate.linksFrst')} style={{}} />
-              {dspRate && <Input
-                value={formData.rate.linksScnd} placeholder="Links Second Rate" onChangeText={(text) => handleTypedText(text, 'rate.linksScnd')} style={{}} />}
-
-              {<Input
-                value={formData.rate.superLinkFrst} placeholder="Super Link Rate" onChangeText={(text) => handleTypedText(text, 'rate.superLinkFrst')} style={{}} />}
-              {dspRate && <Input
-                value={formData.rate.superLinkScnd} placeholder="Super Link Second Rate" onChangeText={(text) => handleTypedText(text, 'rate.superLinkScnd')} style={{}} />}
-
+          
 
               <ToggleMLBtn icon={dspRate} whatTToggle={toggleDspRate} theTittle={dspRate ? 'Collpase' : "Add More"} />
 
@@ -661,26 +652,18 @@ console.log(location)
             {dspReturnRate && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }} >Add all the rates for return loads</ThemedText>}
             {!dspReturnRate && <ThemedText style={{ color: '#1E90FF', fontWeight: 'bold', fontSize: 15 }} >Add rates for return loads</ThemedText>}
             <Input
-              value={formData.returnRate.solidFrst} placeholder="Return Solid First Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.solidFrst')}
+              value={formData.returnRate.frst} placeholder="Return Solid First Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.solidFrst')}
               style={{}}
             />
             {dspReturnRate && <Input
-              value={formData.returnRate.solidScnd} placeholder="Return Solid Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.solidScnd')} style={{}} />}
+              value={formData.returnRate.scnd} placeholder="Return Solid Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.solidScnd')} style={{}} />}
 
 
             <Input
-              value={formData.returnRate.triaxleFrst} placeholder="Return Triaxle First Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.triaxleFrst')} style={{}} />
+              value={formData.returnRate.thrd} placeholder="Return Triaxle First Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.triaxleFrst')} style={{}} />
             {dspReturnRate && <Input
-              value={formData.returnRate.triaxlesScnd} placeholder="Return Triaxle Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.triaxlesScnd')} style={{}} />}
-            <Input
-              value={formData.returnRate.linksFrst} placeholder="Return Links First Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.linksFrst')} style={{}} />
-            {dspReturnRate && <Input
-              value={formData.returnRate.linksScnd} placeholder="Return Links Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.linkScnd')} style={{}} />}
-            {<Input
-              value={formData.returnRate.superLinkFrst} placeholder="Links Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.superLinkFrst')} style={{}} />}
-
-            {dspReturnRate && <Input
-              value={formData.returnRate.superLinkScnd} placeholder="Links Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.superLinkScnd')} style={{}} />}
+              value={formData.returnRate.forth} placeholder="Return Triaxle Second Rate" onChangeText={(text) => handleTypedText(text, 'returnRate.triaxlesScnd')} style={{}} />}
+          
 
             {!dspReturnRate && <ToggleMLBtn whatTToggle={toggleDspReturnRate} theTittle="Done Return Rate" icon={dspReturnRate} />}
             {dspReturnRate && <ToggleMLBtn whatTToggle={toggleDspReturnRate} theTittle="Done Return Rate" icon={dspReturnRate} />}

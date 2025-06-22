@@ -1,5 +1,9 @@
 import React from 'react';
-import { View,TouchableOpacity , Text,GestureResponderEvent  } from 'react-native';
+import { View,TouchableOpacity , GestureResponderEvent,Modal,  } from 'react-native';
+import ScreenWrapper from './ScreenWrapper';
+import { ThemedText } from './ThemedText';
+import Input from './Input';
+
 
 interface CheckOutMakePaymentsProps {
   jsxProp: JSX.Element;
@@ -8,15 +12,32 @@ interface CheckOutMakePaymentsProps {
 
 }
 
-    const CheckOutMakePayments: React.FC<CheckOutMakePaymentsProps> = ({ jsxProp, confirmButon,cancelBTN }) => {
-  return (
-    
-              <View style={{position:'absolute',left:50 , right:50 ,height:500,top:100 , backgroundColor:"white",zIndex:300}} >
-            <TouchableOpacity>
-          <Text style={{ fontSize: 16, color: '#555' }} >Payment method</Text>
 
-          </TouchableOpacity>
-          <Text style={{fontSize:20 , fontWeight:'bold' ,alignSelf:'center'}}><Text style={{color:'#2457A0'}}>Eco</Text><Text style={{color:'#E22428'}}>Cash</Text> </Text>
+    const CheckOutMakePayments: React.FC<CheckOutMakePaymentsProps> = ({ jsxProp, confirmButon,cancelBTN,}) => {
+      const [paymentMethod , setPaymentMethod]=React.useState("")
+      const [dspPaymentInputs , setDspPaymmentInout]=React.useState(false)
+
+
+
+
+
+
+  return (
+      <Modal>
+
+              <ScreenWrapper  >
+
+             { (!dspPaymentInputs || !paymentMethod) &&   <View>
+
+          <ThemedText style={{ fontSize: 16,  }} >Payment method</ThemedText>
+
+    <TouchableOpacity onPress={()=>setPaymentMethod("International")} >
+      <ThemedText>MasterCard/VISA </ThemedText>
+    </TouchableOpacity>
+
+    <TouchableOpacity onPress={()=>setPaymentMethod("ecocash")}>
+          <ThemedText style={{fontSize:20 , fontWeight:'bold' }}><ThemedText style={{color:'#2457A0'}}>Eco</ThemedText><ThemedText style={{color:'#E22428'}}>Cash</ThemedText> </ThemedText>
+    </TouchableOpacity>
 
              <View>
                 {jsxProp}
@@ -34,7 +55,7 @@ interface CheckOutMakePaymentsProps {
     alignItems: 'center',
     width:110
   }} onPress={cancelBTN} >
-    <Text style={{ color: 'white', fontWeight: '600' }}>Cancel</Text>
+    <ThemedText style={{ color: 'white', fontWeight: '600' }}>Cancel</ThemedText>
   </TouchableOpacity>
 
 <TouchableOpacity style={{
@@ -56,12 +77,41 @@ interface CheckOutMakePaymentsProps {
   // 💡 Elevation for Android
   elevation: 3,
 }}
-onPress={confirmButon}
+onPress={()=>setDspPaymmentInout(true) }
 >
-  <Text style={{ color: 'black', fontWeight: '600' }}>Confirm</Text>
+  <ThemedText style={{ color: 'black', fontWeight: '600' }}>Confirm</ThemedText>
 </TouchableOpacity>
 </View>    
-              </View>
+
+                </View>}
+
+
+{ dspPaymentInputs && paymentMethod &&  <View>
+ {dspPaymentInputs && paymentMethod==="ecocash" && <View>
+    <Input placeholder='Phone Number' />
+  </View>}
+
+ {dspPaymentInputs &&paymentMethod==="International" && <View>
+    <ThemedText>Card Details</ThemedText>
+    <Input placeholder='Name on Card' />
+    <Input placeholder='Card Number'/>
+    <Input placeholder='MM/YY'/>
+    <Input placeholder='CVV' />
+
+  </View>}
+  <TouchableOpacity style={{width:300 , height:40 , backgroundColor:"green" , borderRadius:5 ,alignSelf:"center"}} >
+    <ThemedText style={{alignSelf:"center"}}>Pay and Add Contract</ThemedText>
+  </TouchableOpacity>
+
+  <TouchableOpacity onPress={cancelBTN}>
+    <ThemedText>Back</ThemedText>
+  </TouchableOpacity>
+
+ </View>}
+
+
+              </ScreenWrapper>
+      </Modal>
 
   );
 };
