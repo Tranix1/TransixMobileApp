@@ -10,6 +10,7 @@ const coolGray = '#C4C4C4'
 export const Colors = {
   light: {
     text: '#141414',
+    textPlaceholder: '#14141420',
     textlight: '#343b3f',
     background: '#F9F9F9',
     backgroundLight: '#F0EFEF',
@@ -23,6 +24,7 @@ export const Colors = {
   },
   dark: {
     text: '#ECEDEE',
+    textPlaceholder: '#ECEDEE20',
     textlight: '#9b9c9f',
     background: '#0f0e11',
     backgroundLight: '#222425',

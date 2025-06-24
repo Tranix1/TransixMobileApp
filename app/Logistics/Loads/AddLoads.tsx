@@ -4,7 +4,7 @@ import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import Divider from "@/components/Divider";
-import { Ionicons, AntDesign } from "@expo/vector-icons";
+import { Ionicons, AntDesign, Feather } from "@expo/vector-icons";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 import { router } from "expo-router";
@@ -22,6 +22,9 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 
 const AddLoadDB = () => {
     const icon = useThemeColor('icon')
+    const accent = useThemeColor('accent')
+    const background = useThemeColor('background')
+    const backgroundLight = useThemeColor('backgroundLight')
 
     const [step, setStep] = useState(0);
 
@@ -376,7 +379,7 @@ const AddLoadDB = () => {
                                 </View>
                             </View>
                             <ThemedText>
-                                Explain rate<ThemedText style={{fontStyle:"italic"}}> like link and triaxle rate</ThemedText>
+                                Explain rate<ThemedText style={{ fontStyle: "italic" }}> like link and triaxle rate</ThemedText>
                             </ThemedText>
 
                             <Input
@@ -546,87 +549,91 @@ const AddLoadDB = () => {
                     </ScrollView>
                 )}
                 {step === 3 && (<ScrollView>
-
-                    {trucksNeeded.map((truck, index) => (
-                        <View
-                            key={index}
-                            style={{
-                                position: 'relative',
-                                marginBottom: 10,
-                                padding: 10,
-                                borderWidth: 1,
-                                borderColor: '#ccc',
-                                borderRadius: 8,
-                                backgroundColor: '#f9f9f9'
-                            }}
-                        >
-                            {/* X Button */}
-                            <TouchableOpacity
-                                onPress={() => removeTruck(index)}
+                    <View style={styles.viewMainDsp}>
+                        <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold' }}>
+                            Truck Requirements
+                        </ThemedText>
+                        <Divider />
+                        {trucksNeeded.map((truck, index) => (
+                            <View
+                                key={index}
                                 style={{
-                                    position: 'absolute',
-                                    top: 5,
-                                    right: 5,
-                                    padding: 5,
-                                    zIndex: 1
+                                    position: 'relative',
+                                    marginBottom: 10,
+                                    padding: 14,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    borderRadius: 8,
+                                    backgroundColor: backgroundLight
                                 }}
                             >
-                                <ThemedText style={{ color: 'red', fontWeight: 'bold' }}>X</ThemedText>
-                            </TouchableOpacity>
+                                {/* X Button */}
 
-                            {/* Truck Info */}
-                            <ThemedText style={{ color: "black" }}>
-                                Truck {index + 1}: {truck.truckType?.name}
+
+                                {/* Truck Info */}
+                                <ThemedText >
+                                    Truck {index + 1}: {truck.truckType?.name}
+                                </ThemedText>
+                                <TouchableOpacity
+                                    onPress={() => removeTruck(index)}
+                                    style={{
+                                        padding: 5,
+                                        zIndex: 1
+                                    }}
+                                >
+                                    <Feather name="x" color={'red'} size={wp(4)} />
+                                </TouchableOpacity>
+                            </View>
+                        ))}
+
+
+
+
+                        <AddTruckDetails
+                            selectedTruckType={selectedTruckType}
+                            setSelectedTruckType={setSelectedTruckType}
+                            selectedCargoArea={selectedCargoArea}
+                            setSelectedCargoArea={setSelectedCargoArea}
+                            selectedTankerType={selectedTankerType}
+                            setSelectedTankerType={setSelectedTankerType}
+                            selectedTruckCapacity={selectedTruckCapacity}
+                            setSelectedTruckCapacity={setSelectedTruckCapacity}
+                            selectedTrailerConfig={selectedTrailerConfig}
+                            setSelectedTrailerConfig={setSelectedTrailerConfig}
+                            selectedTruckSuspension={selectedTruckSuspension}
+                            setSelectedTruckSuspension={setSelectedTruckSuspension}
+                            formData={formDataTruck}
+                            setFormData={setFormDataTruck}
+                            showCountries={showCountries}
+                            setShowCountries={setShowCountries}
+                            operationCountries={operationCountries}
+                            setOperationCountries={setOperationCountries}
+                        />
+
+
+                        <TouchableOpacity
+                            onPress={pushTruck}
+                            style={{
+                                borderWidth: 1,
+                                borderColor: 'gray',
+                                borderRadius: 6,
+                                paddingVertical: 6,
+                                paddingHorizontal: 29,
+                                alignSelf: 'flex-start', // makes the button only as wide as needed
+                                marginVertical: 10,
+                            }}
+                        >
+                            <ThemedText style={{ color: 'gray', fontSize: 14 }}>
+                                Select {trucksNeeded.length <= 0 ? "Truck" : "another"}
                             </ThemedText>
+                        </TouchableOpacity>
+
+                        <Divider />
+                        <View style={styles.viewMainDsp}>
+                            <Button onPress={() => setStep(2)} title="Back" />
+                            <Button onPress={handleSubmit} title="Submit" colors={{ text: '#0f9d58', bg: '#0f9d58a3' }} />
                         </View>
-                    ))}
-
-
-
-
-                    <AddTruckDetails
-                        selectedTruckType={selectedTruckType}
-                        setSelectedTruckType={setSelectedTruckType}
-                        selectedCargoArea={selectedCargoArea}
-                        setSelectedCargoArea={setSelectedCargoArea}
-                        selectedTankerType={selectedTankerType}
-                        setSelectedTankerType={setSelectedTankerType}
-                        selectedTruckCapacity={selectedTruckCapacity}
-                        setSelectedTruckCapacity={setSelectedTruckCapacity}
-                        selectedTrailerConfig={selectedTrailerConfig}
-                        setSelectedTrailerConfig={setSelectedTrailerConfig}
-                        selectedTruckSuspension={selectedTruckSuspension}
-                        setSelectedTruckSuspension={setSelectedTruckSuspension}
-                        formData={formDataTruck}
-                        setFormData={setFormDataTruck}
-                        showCountries={showCountries}
-                        setShowCountries={setShowCountries}
-                        operationCountries={operationCountries}
-                        setOperationCountries={setOperationCountries}
-                    />
-
-
-                    <TouchableOpacity
-                        onPress={pushTruck}
-                        style={{
-                            borderWidth: 1,
-                            borderColor: 'gray',
-                            borderRadius: 6,
-                            paddingVertical: 6,
-                            paddingHorizontal: 29,
-                            alignSelf: 'flex-start', // makes the button only as wide as needed
-                            marginVertical: 10,
-                        }}
-                    >
-                        <ThemedText style={{ color: 'gray', fontSize: 14 }}>
-                            Select {trucksNeeded.length <= 0 ? "Truck" : "another"}
-                        </ThemedText>
-                    </TouchableOpacity>
-
-                    <Divider />
-                    <View style={styles.viewMainDsp}>
-                        <Button onPress={() => setStep(2)} title="Back" />
-                        <Button onPress={handleSubmit} title="Submit" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
                     </View>
 
                 </ScrollView>)}

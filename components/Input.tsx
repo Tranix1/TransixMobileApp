@@ -32,6 +32,7 @@ const Input = ({
 
 
     const color = useThemeColor('textlight')
+    const placeholder = useThemeColor('textPlaceholder')
     const icon = useThemeColor('icon')
     const accent = useThemeColor('accent')
     const accentlight = useThemeColor('accentlight')

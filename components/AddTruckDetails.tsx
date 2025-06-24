@@ -9,7 +9,7 @@ import { DropDownItem } from "./DropDown";
 import Input from "./Input";
 
 import { TruckFormData, Countries, TruckTypeProps } from "@/types/types";
-import { FontAwesome,  Ionicons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 
 import { handleChange } from "@/Utilities/utils";
 import { hp, wp } from "@/constants/common";
@@ -133,7 +133,12 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
                 Truck Litres<ThemedText color="red">*</ThemedText>
             </ThemedText>}
 
-            {selectedCargoArea?.name === "Tanker" && <DropDownItem allData={litresCapacity} selectedItem={selectedTruckCapacity} setSelectedItem={setSelectedTruckCapacity} placeholder="Select Litres" />}
+            {selectedCargoArea?.name === "Tanker" &&
+                <DropDownItem
+                    allData={litresCapacity}
+                    selectedItem={selectedTruckCapacity}
+                    setSelectedItem={setSelectedTruckCapacity} placeholder="Select Litres"
+                />}
 
 
 
