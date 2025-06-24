@@ -66,6 +66,7 @@ const NewContract = () => {
     const [formDataScnd, setFormDataScnd] = React.useState<ContractsFormDataScndType>({
         paymentTerms: "",
         returnPaymentTerms: "",
+        trucksLeft : "",
         contractDuration: "",
         startingDate: "",
         bookingClosingD: "",
@@ -267,17 +268,17 @@ const NewContract = () => {
             (!locaOpCount && interOpCount.length === 0) && "Select the country the loads will operate in",
         ].filter(Boolean);
 
-        if (missingLoadDetails.length > 0) {
-            // setLoadDspError(true);
-            alertBox("Missing Load Details", missingLoadDetails.join("\n"), [], "error");
-            return;
-        }
+        // if (missingLoadDetails.length > 0) {
+        //     // setLoadDspError(true);
+        //     alertBox("Missing Load Details", missingLoadDetails.join("\n"), [], "error");
+        //     return;
+        // }
 
-        if (missingContractDetails.length > 0) {
-            // setContractDErr(true);
-            alertBox("Missing Contract Details", missingContractDetails.join("\n"), [], "error");
-            return;
-        }
+        // if (missingContractDetails.length > 0) {
+        //     // setContractDErr(true);
+        //     alertBox("Missing Contract Details", missingContractDetails.join("\n"), [], "error");
+        //     return;
+        // }
 
         setDspCheckout(true);
     }
@@ -330,7 +331,9 @@ const NewContract = () => {
    {dspCheckOutP &&
           <CheckOutMakePayments jsxProp={<View>
             <ThemedText> its $10 to add contract </ThemedText>
-          </View>} confirmButon={justConsole} cancelBTN={() => setDspCheckout(false)}
+          </View>} 
+          confirmButon={justConsole} 
+          cancelBTN={() => setDspCheckout(false) }
           />}
 
 

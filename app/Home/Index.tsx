@@ -8,6 +8,9 @@ import Button from '@/components/Button'
 import { router, useFocusEffect } from "expo-router";
 import { BlurView } from 'expo-blur'
 import { useAuth } from '@/context/AuthContext'
+import * as Updates from 'expo-updates';
+import { auth } from '../components/config/fireBase'
+import ScreenWrapper from '@/components/ScreenWrapper'
 
 const Index = () => {
     function CustomHeader() {
@@ -353,6 +356,27 @@ const Index = () => {
                     </Pressable>
                 </Modal>
             </SafeAreaView>
+
+
+                <Modal visible={isVisible && auth.currentUser?.emailVerified}  animationType='fade'>
+               <ScreenWrapper>
+                    <ThemedText>Verify Your email</ThemedText>
+                    <ThemedText>{auth.currentUser?.email} </ThemedText>
+
+                    <View style={{flexDirection:"row",justifyContent:"space-around"}}>
+                    <TouchableOpacity>
+                        <ThemedText>New code</ThemedText>
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+                        <ThemedText>Sign out</ThemedText>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={()=>Updates.reloadAsync()}>
+                        <ThemedText>Refresh</ThemedText>
+                    </TouchableOpacity>
+                    </View>
+                </ScreenWrapper>                         
+                </Modal>
+
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ marginVertical: wp(4), marginHorizontal: wp(2) }}>
 

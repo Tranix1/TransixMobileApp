@@ -16,7 +16,7 @@
         "foregroundImage": "./assets/images/TRANSIX16X_16_PIXELS.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.yayapana.Transix"
+      "package": "com.yayapana.TransixNewVersion"
     },
     "web": {
       "bundler": "metro",

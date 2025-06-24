@@ -95,7 +95,7 @@ const [selectedTankerType, setSelectedTankerType] = useState<{ id: number, name:
   const [ownerdetailsDsp, setOwnerdetailsDsp] = useState(true)
 
     const [truckOwnerOBroker , setTuckOwnerOBroker]=React.useState("")
-    if(truckOwnerOBroker==="Owner" &&ownerdetailsDsp ) setOwnerdetailsDsp(true)
+    // if(truckOwnerOBroker==="Owner" &&ownerdetailsDsp ) setOwnerdetailsDsp(true)
   
   const [spinnerItem, setSpinnerItem] = useState(false);
   const [uploadingImageUpdate, setUploadImageUpdate] = useState("")
@@ -253,7 +253,7 @@ console.log(uploadingImageUpdate)
               />
 
 
-          <Modal visible={truckOwnerOBroker==="Owner" && ownerdetailsDsp} statusBarTranslucent animationType="slide">
+          {/* <Modal visible={truckOwnerOBroker} statusBarTranslucent animationType="slide">
             <ScreenWrapper>
 
             <View style={{ margin: wp(4), marginTop: hp(6) }}>
@@ -358,7 +358,7 @@ console.log(uploadingImageUpdate)
             </View>
             </ScreenWrapper>
 
-          </Modal>
+          </Modal> */}
 
 
 
