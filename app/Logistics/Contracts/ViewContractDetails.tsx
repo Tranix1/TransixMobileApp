@@ -33,17 +33,12 @@ function ViewContractMoreInfo() {
         <ScreenWrapper>
             <Heading page={`Contracts in ${contract.contractLocation}`} />
 
-            <ScrollView contentContainerStyle={{ padding: wp(4), paddingBottom: wp(10) }}>
+            <ScrollView contentContainerStyle={{ padding: wp(0), paddingBottom: wp(10) }}>
                 {/* Main Contract Card */}
                 <View
                     style={{
                         backgroundColor: background,
-                        borderRadius: wp(4),
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.08,
-                        shadowRadius: 12,
-                        elevation: 4,
+                        borderRadius: wp(0),
                         marginBottom: wp(4),
                         borderWidth: 0,
                     }}
@@ -54,8 +49,7 @@ function ViewContractMoreInfo() {
                             flexDirection: "row",
                             alignItems: "center",
                             padding: wp(4),
-                            borderTopLeftRadius: wp(4),
-                            borderTopRightRadius: wp(4),
+
                             backgroundColor: accent + "10",
                         }}
                     >
@@ -157,7 +151,7 @@ function ViewContractMoreInfo() {
                     </View>
 
                     {/* Content Sections */}
-                    <View style={{ paddingHorizontal: wp(4), paddingBottom: wp(4) }}>
+                    <View style={{ paddingHorizontal: wp(2), paddingBottom: wp(4) }}>
                         {activeTab === "load" && (
                             <>
                                 {/* Commodity Section */}

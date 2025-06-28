@@ -1,38 +1,35 @@
 import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet } from "react-native";
 import { auth, db } from "../../components/config/fireBase";
-
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Ionicons } from "@expo/vector-icons";
-
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { collection, serverTimestamp, addDoc, query, where, onSnapshot, getDocs } from 'firebase/firestore';
-
 import { Truck } from "@/types/types";
-
 import { toggleItemById } from "@/Utilities/utils";
 import { updateDocument } from "@/db/operations";
-
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, router } from "expo-router";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { ThemedText } from "@/components/ThemedText";
+import { wp, hp } from "@/constants/common";
+import Heading from "@/components/Heading";
+import ScreenWrapper from "@/components/ScreenWrapper";
 
 function BookLContract({ }) {
+  const accent = useThemeColor("accent");
+  const coolGray = useThemeColor("coolGray");
+  const icon = useThemeColor("icon");
+  const background = useThemeColor("background");
+  const backgroundColor = useThemeColor("backgroundLight");
 
-
-  const [bbVerifiedLoadD, setbbVerifiedLoadD] = React.useState<Truck[] | []>([])
-
-
+  const [bbVerifiedLoadD, setbbVerifiedLoadD] = React.useState<Truck[] | []>([]);
   const { contract } = useLocalSearchParams();
-const Contractitem = JSON.parse(contract as any);
-
-
-console.log("Namw ", Contractitem.companyName)
+  const Contractitem = JSON.parse(contract as any);
 
   useEffect(() => {
     try {
       if (auth.currentUser) {
-
-        const userId = auth.currentUser.uid
+        const userId = auth.currentUser.uid;
         const dataQuery = query(collection(db, "Trucks"), where("userId", "==", userId));
-
         const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
           const loadedData: Truck[] = [];
           snapshot.docChanges().forEach((change) => {
@@ -41,11 +38,8 @@ console.log("Namw ", Contractitem.companyName)
               loadedData.push(dataWithId);
             }
           });
-
           setbbVerifiedLoadD(loadedData);
         });
-
-        // Clean up function to unsubscribe from the listener when the component unmounts
         return () => unsubscribe();
       }
     } catch (err) {
@@ -53,19 +47,14 @@ console.log("Namw ", Contractitem.companyName)
     }
   }, []);
 
-
   const [truckDetails, setTruckDDsp] = React.useState<{ [key: string]: boolean }>({ ['']: false });
-
   function togglrTruckDe(itemId: string) {
     toggleItemById(itemId, setTruckDDsp)
     setTruckBuzDDsp({ ['']: false })
     setDriverDDsp({ ['']: false })
   }
 
-
-
   const [truckBuzDe, setTruckBuzDDsp] = React.useState<{ [key: string]: boolean }>({ ['']: false });
-
   function togglrTruckBuzDe(itemId: string) {
     toggleItemById(itemId, setTruckBuzDDsp)
     setDriverDDsp({ ['']: false })
@@ -73,17 +62,11 @@ console.log("Namw ", Contractitem.companyName)
   }
 
   const [driverDetails, setDriverDDsp] = React.useState<{ [key: string]: boolean }>({ ['']: false });
-
   function togglrDriverDe(itemId: string) {
-
-
     toggleItemById(itemId, setDriverDDsp)
     setTruckBuzDDsp({ ['']: false })
     setTruckDDsp({ ['']: false })
-
   }
-
-
 
   type BookJob = {
     id: string;
@@ -94,19 +77,15 @@ console.log("Namw ", Contractitem.companyName)
     contractOnwerId: string
     contractName: string
     approvedTrck: boolean
-
   }
 
   const [trucksInContract, setTrucksInContract] = React.useState<BookJob[] | []>([])
   useEffect(() => {
     if (!auth.currentUser) return;
-
     const userId = auth.currentUser.uid;
     const dataQuery = query(collection(db, "ContractRequests"));
-
     const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
       const loadedData: BookJob[] = [];
-
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added" || change.type === "modified") {
           const dataWithId = {
@@ -116,264 +95,287 @@ console.log("Namw ", Contractitem.companyName)
           loadedData.push(dataWithId);
         }
       });
-
       setTrucksInContract(loadedData);
     });
-    // Clean up the subscription on unmount
     return () => unsubscribe();
   }, [setTrucksInContract]);
 
   const checkExistixtBBDoc = async (trckContractId: string) => {
-    console.log("Checking truck is booked")
-    const chatsRef = collection(db, 'ContractRequests'); // Reference to the 'ppleInTouch' collection
-    const chatQuery = query(chatsRef, where('trckContractId', '==', trckContractId), where('alreadyInContract', '==', true)); // Query for matching chat ID
-
+    const chatsRef = collection(db, 'ContractRequests');
+    const chatQuery = query(chatsRef, where('trckContractId', '==', trckContractId), where('alreadyInContract', '==', true));
     const querySnapshot = await getDocs(chatQuery);
-    // Check if any documents exist with the chat ID
-    console.log("Truck Booked")
-    return !querySnapshot.empty; // Returns true if a document exists, false otherwise
+    return !querySnapshot.empty;
   };
 
   let renderElements = bbVerifiedLoadD.map((item) => {
-
     async function handleSubmitDetails() {
-      console.log("hiiiiiiii")
-
       try {
-      if (auth.currentUser) {
-        const userId = auth.currentUser.uid
-        //   const existingBBDoc = await checkExistixtBBDoc(`${userId}contractId ${item.timeStamp}`);
-        const existingBBDoc = await checkExistixtBBDoc(`${userId}${Contractitem.contractId}${item.timeStamp}`);
-        if (!existingBBDoc) {
-
-          console.log('start adding')
-
-          const theCollection = collection(db, "ContractRequests");
-          const docRef = await addDoc(theCollection, {
-            truckInfo: item,
-            trckContractId: `${userId}contractId ${item.timeStamp}`,
-            truckContrSt: true,
-            contractId: Contractitem.contractId   ,
-            contractOnwerId: Contractitem.userId,
-            contractName: Contractitem.contractName,
-            approvedTrck: false,
-            alreadyInContract: true,
-            timeStamp : serverTimestamp()
-          })
-
-          alert('doneee adding')
-
-        } else {
-          alert("Truck alreadyy Booked")
+        if (auth.currentUser) {
+          const userId = auth.currentUser.uid
+          const existingBBDoc = await checkExistixtBBDoc(`${userId}${Contractitem.contractId}${item.timeStamp}`);
+          if (!existingBBDoc) {
+            const theCollection = collection(db, "ContractRequests");
+            await addDoc(theCollection, {
+              truckInfo: item,
+              trckContractId: `${userId}contractId ${item.timeStamp}`,
+              truckContrSt: true,
+              contractId: Contractitem.contractId,
+              contractOnwerId: Contractitem.userId,
+              contractName: Contractitem.contractName,
+              approvedTrck: false,
+              alreadyInContract: true,
+              timeStamp: serverTimestamp()
+            })
+            alert('doneee adding')
+          } else {
+            alert("Truck alreadyy Booked")
+          }
         }
-
-      }
-        
-      }catch(err){
+      } catch (err) {
         console.error(err)
       }
     }
 
     return (
       <View
-        // onPress={handleSubmitDetails}
-        style={{ marginBottom: 70, padding: 10, borderWidth: 2, borderColor: 'red' }} key={item.id} >
-
-        {<Image source={{ uri: item.imageUrl }} style={{ height: 250, borderRadius: 10 }} />}
-
+        style={{
+          marginBottom: wp(6),
+          padding: wp(4),
+          backgroundColor: background,
+          borderRadius: wp(4),
+          borderWidth: 1,
+          borderColor: coolGray + "40",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          elevation: 3,
+        }}
+        key={item.id}
+      >
+        {item.imageUrl && (
+          <Image source={{ uri: item.imageUrl }} style={{ height: 180, borderRadius: wp(2), marginBottom: wp(2), width: "100%" }} />
+        )}
 
         {trucksInContract.map((scndItem) => {
-
           function removeFrmContract() {
-            console.log("removing truc from contract")
-
-            updateDocument("ContractRequests", scndItem.id,
-              {
-                alreadyInContract: false,
-                reasonForLeaving: "hahahah",
-                contractId: Contractitem.contractId ,
-                truckInfo: {
-                  timestamp: serverTimestamp()
-                }
-              })
+            updateDocument("ContractRequests", scndItem.id, {
+              alreadyInContract: false,
+              reasonForLeaving: "hahahah",
+              contractId: Contractitem.contractId,
+              truckInfo: {
+                timestamp: serverTimestamp()
+              }
+            })
           }
           return (
             <View key={scndItem.id}>
-
-
-
-
-
-
               {(Number(item.timeStamp) === Number(scndItem.truckInfo.timeStamp)) && (
-                <View>
-                  <Text>Truck Is Booked</Text>
-
-                  <View style={{ flexDirection: "row" }}>
-                    <TouchableOpacity onPress={removeFrmContract} style={{ width: 200, backgroundColor: "red" }} >
-                      <Text>Remove from exisiting conrtract</Text>
-                    </TouchableOpacity>
-                  </View>
+                <View style={{ marginBottom: wp(2) }}>
+                  <ThemedText type="defaultSemiBold" style={{ color: accent }}>Truck Is Booked</ThemedText>
+                  <TouchableOpacity onPress={removeFrmContract} style={{
+                    backgroundColor: "#e53935",
+                    borderRadius: wp(2),
+                    paddingVertical: wp(2),
+                    marginTop: wp(1),
+                    alignItems: "center"
+                  }}>
+                    <ThemedText style={{ color: "#fff" }}>Remove from existing contract</ThemedText>
+                  </TouchableOpacity>
                 </View>
               )}
-
-
             </View>
           )
-        }
+        })}
 
-
-        )}
-
-        <TouchableOpacity onPress={handleSubmitDetails} style={{ width: 200, backgroundColor: "blue" }} >
-          <Text style={{ color: "white" }}>Select to contract</Text>
+        <TouchableOpacity onPress={handleSubmitDetails} style={{
+          backgroundColor: accent,
+          borderRadius: wp(2),
+          paddingVertical: wp(2),
+          alignItems: "center",
+          marginBottom: wp(2)
+        }}>
+          <ThemedText style={{ color: "#fff", fontWeight: "bold" }}>Select to contract</ThemedText>
         </TouchableOpacity>
 
-        <Text>{item.CompanyName} </Text>
+        <ThemedText type="subtitle" style={{ color: accent, fontWeight: "bold", fontSize: wp(4.5), marginBottom: wp(1) }}>
+          {item.CompanyName}
+        </ThemedText>
 
         <TouchableOpacity
-          onPress={() => togglrTruckDe(item.id)} style={styles.buttonSelectStyle} >
-          <Text style={{ color: 'white' }} >Truck Details </Text>
+          onPress={() => togglrTruckDe(item.id)}
+          style={styles.buttonSelectStyle}
+        >
+          <ThemedText style={{ color: 'white' }}>Truck Details</ThemedText>
         </TouchableOpacity>
-        {truckDetails[item.id] && <View>
-
-          <View style={{ flexDirection: 'row' }} >
-            <Text style={{ width: 60 }} >Trailer Type</Text>
-            <Text>:  {item.cargoArea}</Text>
+        {truckDetails[item.id] && (
+          <View style={{ marginTop: wp(2) }}>
+            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
+              <ThemedText style={{ width: 100, color: icon }}>Trailer Type</ThemedText>
+              <ThemedText>: {item.cargoArea}</ThemedText>
+            </View>
+            <ScrollView horizontal style={{ marginVertical: wp(2) }}>
+              {item.truckBookImage && (
+                <View style={{ marginRight: wp(2) }}>
+                  <ThemedText style={{ textAlign: 'center' }}>Truck Image</ThemedText>
+                  <Image source={{ uri: item.truckBookImage }} style={{ height: 120, borderRadius: wp(2), width: 180 }} />
+                </View>
+              )}
+              {item.trailerBookF && (
+                <View style={{ marginRight: wp(2) }}>
+                  <ThemedText style={{ textAlign: 'center' }}>Trailer Book</ThemedText>
+                  <Image source={{ uri: item.trailerBookF }} style={{ height: 120, borderRadius: wp(2), width: 180 }} />
+                </View>
+              )}
+              {item.trailerBookSc && (
+                <View style={{ marginRight: wp(2) }}>
+                  <ThemedText style={{ textAlign: 'center' }}>Second Trailer Book</ThemedText>
+                  <Image source={{ uri: item.trailerBookSc }} style={{ height: 120, borderRadius: wp(2), width: 180 }} />
+                </View>
+              )}
+            </ScrollView>
           </View>
+        )}
 
-          <ScrollView horizontal style={{ margin: 10 }} >
-            {item.truckBookImage && <View>
-              <Text style={{ textAlign: 'center' }} >Truck Image</Text>
-              <Image source={{ uri: item.truckBookImage }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />
-            </View>}
-
-            {item.trailerBookF && <View>
-              <Text style={{ textAlign: 'center' }}>Trailer Book</Text>
-              <Image source={{ uri: item.trailerBookF }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />
-            </View>}
-
-            {item.trailerBookSc && <View>
-              <Text style={{ textAlign: 'center' }} >Second Trailer Book</Text>
-              <Image source={{ uri: item.trailerBookSc }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />
-            </View>}
-
-          </ScrollView>
-
-        </View>}
-
-        <TouchableOpacity onPress={() => togglrDriverDe(item.id)} style={styles.buttonStyle} >
-          <Text>Driver Details</Text>
+        <TouchableOpacity onPress={() => togglrDriverDe(item.id)} style={styles.buttonStyle}>
+          <ThemedText>Driver Details</ThemedText>
         </TouchableOpacity>
-        {driverDetails[item.id] && <View>
-
-
-
-          <View style={{ flexDirection: 'row' }} >
-            <Text style={{ width: 60 }} >Driver Phone</Text>
-            <Text>:  {item.driverPhone}</Text>
+        {driverDetails[item.id] && (
+          <View style={{ marginTop: wp(2) }}>
+            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
+              <ThemedText style={{ width: 100, color: icon }}>Driver Phone</ThemedText>
+              <ThemedText>: {item.driverPhone}</ThemedText>
+            </View>
+            <ScrollView horizontal>
+              {item.driverLicense && (
+                <View style={{ marginRight: wp(2) }}>
+                  <ThemedText style={{ textAlign: 'center' }}>Driver License</ThemedText>
+                  <Image source={{ uri: item.driverLicense }} style={{ height: 120, borderRadius: wp(2), width: 180 }} />
+                </View>
+              )}
+              {item.driverPassport && (
+                <View style={{ marginRight: wp(2) }}>
+                  <ThemedText style={{ textAlign: 'center' }}>Driver Passport</ThemedText>
+                  <Image source={{ uri: item.driverPassport }} style={{ height: 120, borderRadius: wp(2), width: 180 }} />
+                </View>
+              )}
+            </ScrollView>
           </View>
+        )}
 
-          <ScrollView horizontal>
-            {item.driverPassport && <View>
-              <Text style={{ textAlign: 'center' }} >Second Trailer Book</Text>
-
-              {item.driverLicense && <Image source={{ uri: item.driverLicense }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />}
-            </View>}
-            {item.driverPassport && <View>
-
-              <Text style={{ textAlign: 'center' }} >Second Trailer Book</Text>
-              {<Image source={{ uri: item.driverPassport }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />}
-            </View>}
-          </ScrollView>
-
-
-        </View>}
-
-        <TouchableOpacity onPress={() => togglrTruckBuzDe(item.id)} style={styles.buttonSelectStyle} >
-          <Text style={{ color: 'white', fontSize: 17 }} >business Details</Text>
+        <TouchableOpacity onPress={() => togglrTruckBuzDe(item.id)} style={styles.buttonSelectStyle}>
+          <ThemedText style={{ color: 'white', fontSize: 17 }}>Business Details</ThemedText>
         </TouchableOpacity>
-        {truckBuzDe[item.id] && <View>
-
-          <View style={{ flexDirection: 'row' }} >
-            <Text style={{ width: 60 }} >Owner Phone Number</Text>
-            <Text>:  {item.ownerPhoneNum}</Text>
+        {truckBuzDe[item.id] && (
+          <View style={{ marginTop: wp(2) }}>
+            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
+              <ThemedText style={{ width: 120, color: icon }}>Owner Phone Number</ThemedText>
+              <ThemedText>: {item.ownerPhoneNum}</ThemedText>
+            </View>
+            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
+              <ThemedText style={{ width: 120, color: icon }}>Owner Email</ThemedText>
+              <ThemedText>: {item.onwerEmail}</ThemedText>
+            </View>
           </View>
-          <View style={{ flexDirection: 'row' }} >
-            <Text style={{ width: 60 }} >Owner Email</Text>
-            <Text>:  {item.onwerEmail}</Text>
-          </View>
-
-        </View>}
-
+        )}
       </View>
     )
   })
 
   return (
-    <View>
-      <View style={{ flexDirection: 'row', height: 74, paddingLeft: 6, paddingRight: 15, backgroundColor: '#6a0c0c', paddingTop: 15, alignItems: 'center' }} >
+    <ScreenWrapper>
+      <Heading page={`Book Contract: ${Contractitem.contractName}`} />
 
-        <TouchableOpacity style={{ marginRight: 12 }}  >
-          <Ionicons name="arrow-back" size={28} color="white" style={{ marginLeft: 10 }} />
-        </TouchableOpacity>
+      {/* Contract Card */}
+      <View style={{
+        borderWidth: 1.5,
+        borderColor: accent,
+        margin: wp(4),
+        padding: wp(2),
+        borderRadius: wp(4),
+        backgroundColor: background,
+        shadowColor: accent,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 2,
+        marginBottom: wp(2)
+      }}>
 
-        <Text style={{ fontSize: 20, color: 'white' }} >Pick the truck for the job </Text>
+        <View style={{
+          backgroundColor: accent + "20",
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: wp(2),
+          marginBottom: wp(2),
+          paddingVertical: wp(2)
+        }}>
+          <ThemedText style={{ color: accent, textAlign: 'center', fontSize: wp(4.5), fontWeight: "bold" }}>
+            {Contractitem.companyName || ""}
+            {'  '}
+            <MaterialIcons name="verified" size={wp(4)} color="green" />
+          </ThemedText>
+        </View>
+        <ThemedText style={{ marginBottom: wp(1), color: icon }}>
+          {Contractitem.contractDuration || "9 months contract"}
+        </ThemedText>
+        <View style={{ marginBottom: wp(0), borderWidth: 1, borderColor: coolGray + "30", borderRadius: wp(2), overflow: 'hidden', padding: wp(2), backgroundColor: backgroundColor }}>
+          {/* Vertical Info List */}
+          <View style={{ flexDirection: 'column', gap: wp(1) }}>
+            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
+              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Name</ThemedText>
+              <ThemedText style={{ color: icon }}>{Contractitem.commodity || "Tobacco"}</ThemedText>
+            </View>
+            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
+              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Country</ThemedText>
+              <ThemedText style={{ color: icon }}>{Contractitem.country || "IN Zimbabwe"}</ThemedText>
+            </View>
+            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
+              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate (Above 100KM)</ThemedText>
+              <ThemedText style={{ color: icon }}>{Contractitem.rateAbove100 || "--"}</ThemedText>
+            </View>
+            <View style={{ flexDirection: 'row' }}>
+              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate (Below 100KM)</ThemedText>
+              <ThemedText style={{ color: icon }}>{Contractitem.rateBelow100 || "--"}</ThemedText>
+            </View>
+          </View>
+        </View>
       </View>
 
-      <TouchableOpacity style={{ position: 'absolute', top: 440, right: 10, width: 77, height: 35, backgroundColor: 'white', zIndex: 200, borderRadius: 8, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' }} >
-
-        <Text style={{ fontSize: 17 }} >Add</Text>
-        <MaterialIcons name="verified" size={30} color="green" />
+      {/* Add Button */}
+      <TouchableOpacity style={{
+        position: 'absolute',
+        bottom: hp(6),
+        right: wp(4),
+        height: wp(10),
+        paddingHorizontal: wp(4),
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        zIndex: 200,
+        borderRadius: wp(900),
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: wp(2),
+        alignItems: 'center',
+        shadowColor: accent,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 4,
+        elevation: 2,
+      }}>
+        <ThemedText type="defaultSemiBold" style={{ fontSize: wp(5), paddingTop: 3, color: 'green' }}>Add</ThemedText>
+        <Feather name="plus" size={wp(7)} color="green" />
       </TouchableOpacity>
 
-
-      <View style={{ borderWidth: 2, borderColor: "rgb(129,201,149)", margin: 16, padding: 5 }} >
-
-        <View style={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'white', zIndex: 66 }} >
-          <MaterialIcons name="verified" size={26} color="green" />
-        </View>
-
-
-        <View style={{ backgroundColor: '#228B22', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }} >
-
-          <Text style={{ color: 'white', textAlign: 'center', fontSize: 18, alignSelf: 'center' }} >NB Investments</Text>
-        </View>
-        <Text>9months contract</Text>
-
-        <View style={{ flexDirection: 'row' }} >
-          <Text style={{ width: 99 }} >Nmae</Text>
-          <Text  >:  Tobbacoo </Text>
-        </View>
-
-
-        <View style={{ flexDirection: 'row' }} >
-          <Text style={{ width: 60 }} >Country</Text>
-          <Text>IN Zimbabwe </Text>
-        </View>
-
-
-        <Text>:  Rate : 3.50/KM for distance above 100KM </Text>
-        <Text>Rate : 4.50/KM for distance below 100KM</Text>
-
-
-
-
-
-      </View>
-
-      <ScrollView>
-
+      {/* Truck List */}
+      <ScrollView contentContainerStyle={{ paddingBottom: wp(10) }}>
         {renderElements}
-        <View style={{ height: 500 }} >
-
-        </View>
+        <View style={{ height: wp(10) }} />
       </ScrollView>
-    </View>
+    </ScreenWrapper>
   )
 }
 export default React.memo(BookLContract)
-
 
 const styles = StyleSheet.create({
   buttonStyle: {

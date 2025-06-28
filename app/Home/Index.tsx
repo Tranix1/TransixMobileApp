@@ -1,8 +1,8 @@
-import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet,  TouchableNativeFeedback, View, TouchableOpacity, TouchableHighlight,Image } from 'react-native'
+import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, TouchableNativeFeedback, View, TouchableOpacity, TouchableHighlight, Image } from 'react-native'
 import React, { useState } from 'react'
 import { ThemedText } from '@/components/ThemedText'
 import { hp, wp } from '@/constants/common'
-import { AntDesign,  EvilIcons, FontAwesome, FontAwesome6, Fontisto, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons'
+import { AntDesign, EvilIcons, FontAwesome, FontAwesome6, Fontisto, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import Button from '@/components/Button'
 import { router, useFocusEffect } from "expo-router";
@@ -32,7 +32,7 @@ const Index = () => {
                     <ThemedText type="tiny">The future of Transport & Logistics</ThemedText>
                 </View>
                 <View style={{ flexDirection: 'row', gap: wp(2) }}>
-                  
+
                     <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                         <TouchableNativeFeedback onPress={() => { setIsVisible(true) }}>
                             <View style={{ padding: wp(2) }}>
@@ -70,52 +70,52 @@ const Index = () => {
         topic: string;
         description: string;
         id: number
-        btnTitle : string
+        btnTitle: string
     }
 
     const theData: DataItem[] = [
         {
             id: 1,
-        topic: "Long-Term Contracts",
+            topic: "Long-Term Contracts",
             description: 'Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.',
-            btnTitle : "Get Verfied   "
+            btnTitle: "Get Verfied   "
         },
 
         {
             id: 2,
             topic: "First Level Verification",
-            description: 'We encourage all legit business to be verified\nIncrease business trust and credibility by verifying your company.' ,
-            btnTitle : "Get Verfied    "
+            description: 'We encourage all legit business to be verified\nIncrease business trust and credibility by verifying your company.',
+            btnTitle: "Get Verfied    "
         },
         {
             id: 3,
             topic: "GIT (Goods in transit Insuarance)",
             description: 'Ensures financial protection for trucks and cargo, keeping your business secure.',
-            btnTitle : "Get GIT    "
+            btnTitle: "Get GIT    "
         },
         {
             id: 4,
             topic: "Tracking",
             description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle : "View Trackig   "
+            btnTitle: "View Trackig   "
         },
-                {
+        {
             id: 6,
             topic: "Fuel",
             description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle : "Get Fuel   "
+            btnTitle: "Get Fuel   "
         },
         {
             id: 5,
             topic: "Warehouse",
             description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle : "Check Wrehouses  "
+            btnTitle: "Check Wrehouses  "
         },
         {
             id: 7,
             topic: "Truck Stop",
             description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle : "Visit Truck Stop   "
+            btnTitle: "Visit Truck Stop   "
         },
     ];
 
@@ -207,7 +207,7 @@ const Index = () => {
                                     <ThemedText type='title' color={accent} style={{ flex: 1, textAlign: 'center' }}>
                                         Transix
                                     </ThemedText>
-                                  
+
                                 </View>
                                 <View style={{ marginVertical: wp(4), gap: 4, marginBottom: wp(2) }}>
                                     <View style={{ borderTopRightRadius: wp(5), borderTopLeftRadius: wp(5), backgroundColor: background, padding: wp(4) }}>
@@ -215,9 +215,9 @@ const Index = () => {
 
                                             <View style={{ gap: wp(4), }}>
                                                 <View style={{ flexDirection: 'row', padding: wp(2), gap: wp(2), alignItems: 'center', }}>
-                                                    {!user?.photoURL &&<FontAwesome name='user-circle' color={coolGray} size={wp(10)} />}
-                                                    { user?.photoURL &&  <Image
-                                                        style={{width: 40,height: 40,borderRadius: 20,backgroundColor: '#ddd',}}
+                                                    {!user?.photoURL && <FontAwesome name='user-circle' color={coolGray} size={wp(10)} />}
+                                                    {user?.photoURL && <Image
+                                                        style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#ddd', }}
                                                         source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
                                                     />}
                                                     <View style={{ flex: 1 }}>
@@ -293,7 +293,7 @@ const Index = () => {
                                         </View>
                                     </TouchableNativeFeedback>
                                     <TouchableNativeFeedback onPress={
-                                        () => router.push({ pathname: '/Logistics/Trucks/Index', params: { userId: user?.uid} })} >
+                                        () => router.push({ pathname: '/Logistics/Trucks/Index', params: { userId: user?.uid } })} >
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -303,7 +303,7 @@ const Index = () => {
                                             </View>
                                         </View>
                                     </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={() => router.push({ pathname: '/Logistics/Loads/Index', params: { userId: user?.uid} })}>
+                                    <TouchableNativeFeedback onPress={() => router.push({ pathname: '/Logistics/Loads/Index', params: { userId: user?.uid } })}>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="boxes-stacked" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -358,24 +358,117 @@ const Index = () => {
             </SafeAreaView>
 
 
-                <Modal visible={isVisible && auth.currentUser?.emailVerified}  animationType='fade'>
-               <ScreenWrapper>
-                    <ThemedText>Verify Your email</ThemedText>
-                    <ThemedText>{auth.currentUser?.email} </ThemedText>
+            <Modal statusBarTranslucent visible={isVisible && auth.currentUser?.emailVerified} animationType='fade' transparent>
+                <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', flex: 1, padding: wp(4), alignItems: 'center' }}>
+                    <View
+                        style={{
+                            justifyContent: "center",
+                            alignItems: "center",
+                            padding: wp(6),
+                            backgroundColor: background,
+                            borderRadius: wp(6),
+                            margin: wp(4),
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.15,
+                            shadowRadius: 8,
+                            elevation: 10,
+                        }}
+                    >
+                        <TouchableOpacity
+                            onPress={() => setIsVisible(false)}
+                            style={{
+                                position: "absolute",
+                                top: wp(2),
+                                right: wp(2),
+                                padding: wp(2),
+                                borderRadius: wp(10),
+                                backgroundColor: backgroundColor,
+                            }}
+                        >
+                            <Ionicons name="close" size={wp(4)} color={icon} />
+                        </TouchableOpacity>
+                        <ThemedText
+                            type="title"
+                            style={{
+                                marginBottom: wp(2),
+                                textAlign: "center",
+                                color: accent,
+                                fontWeight: "bold",
+                                fontSize: wp(5),
+                            }}
+                        >
+                            Verify Your Email
+                        </ThemedText>
+                        <ThemedText
+                            type="default"
+                            style={{
+                                marginBottom: wp(4),
+                                textAlign: "center",
+                                color: icon,
+                                fontSize: wp(3.8),
+                            }}
+                        >
+                            {auth.currentUser?.email}
+                        </ThemedText>
 
-                    <View style={{flexDirection:"row",justifyContent:"space-around"}}>
-                    <TouchableOpacity>
-                        <ThemedText>New code</ThemedText>
-                    </TouchableOpacity>
-                    <TouchableOpacity>
-                        <ThemedText>Sign out</ThemedText>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={()=>Updates.reloadAsync()}>
-                        <ThemedText>Refresh</ThemedText>
-                    </TouchableOpacity>
+                        <ThemedText
+                            type="tiny"
+                            style={{
+                                marginBottom: wp(6),
+                                textAlign: "center",
+                                color: coolGray,
+                            }}
+                        >
+                            Please check your inbox and click the verification link. Once verified, tap Refresh.
+                        </ThemedText>
+
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                                width: "100%",
+                                gap: wp(3),
+                            }}
+                        >
+                            <TouchableOpacity
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: "#e0e7ef",
+                                    paddingVertical: wp(2),
+                                    borderRadius: wp(3),
+                                    alignItems: "center",
+                                }}
+                            >
+                                <ThemedText style={{ color: accent, fontWeight: "bold" }}>New code</ThemedText>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: "#f8d7da",
+                                    paddingVertical: wp(2),
+                                    borderRadius: wp(3),
+                                    alignItems: "center",
+                                }}
+                            >
+                                <ThemedText style={{ color: "#e50914", fontWeight: "bold" }}>Sign out</ThemedText>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => Updates.reloadAsync()}
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: "#d1f7e9",
+                                    paddingVertical: wp(2),
+                                    borderRadius: wp(3),
+                                    alignItems: "center",
+                                }}
+                            >
+                                <ThemedText style={{ color: "#0f9d58", fontWeight: "bold" }}>Refresh</ThemedText>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </ScreenWrapper>                         
-                </Modal>
+                </BlurView>
+            </Modal>
 
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ marginVertical: wp(4), marginHorizontal: wp(2) }}>
@@ -564,7 +657,7 @@ const Index = () => {
                         isAvaialble={false}
                         btnPressValue={() => router.push("/Account/Verification/ApplyVerification")}
                     />}
-                          {item.id === 7 && <HomeItemView
+                    {item.id === 7 && <HomeItemView
                         topic={item.topic}
                         description={item.description}
                         mainColor="#bada5f"

@@ -21,6 +21,7 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
 
     const [expand, setExpand] = useState(false)
     const [loadingImage, setLoadingImage] = useState(true)
+    const [selectedImage, setSelectedImage] = useState(product.images && product.images.length > 0 ? product.images[0] : '');
 
     useEffect(() => {
         if (expandID === product.id) {
@@ -73,7 +74,7 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
                 </ThemedText>
             </View>
 
-             <View style={styles.detailRow}>
+            <View style={styles.detailRow}>
                 <ThemedText type='default' style={{ flex: 1 }}>Engine:</ThemedText>
                 <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
                     {product.details.vehicle?.engine}
@@ -87,7 +88,7 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
                 </ThemedText>
             </View>
 
-           <View style={styles.detailRow}>
+            <View style={styles.detailRow}>
                 <ThemedText type='default' style={{ flex: 1 }}>Fuel:</ThemedText>
                 <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
                     {product.vehcileFuel}
@@ -102,100 +103,100 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
             </View>
 
 
-        {product.vehicleType==="cargo vehicle"  &&  <View>
+            {product.vehicleType === "cargo vehicle" && <View>
 
-            <View style={styles.detailRow}>
-                <ThemedText type='default' style={{ flex: 1 }}>Type:</ThemedText>
-                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
-                    {product.truckDetails?.truckType}
-                </ThemedText>
+                <View style={styles.detailRow}>
+                    <ThemedText type='default' style={{ flex: 1 }}>Type:</ThemedText>
+                    <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                        {product.truckDetails?.truckType}
+                    </ThemedText>
 
-            </View>
-
-
-            {product.truckDetails?.truckType ==="rigid"&& <View>
-
-               <View style={styles.detailRow}>
-                <ThemedText type='default' style={{ flex: 1 }}>Cargo Area:</ThemedText>
-                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
-                    {product.bodyStyle}
-                </ThemedText>
-            </View>
-
-            <View style={styles.detailRow}>
-                <ThemedText type='default' style={{ flex: 1 }}>Capacity:</ThemedText>
-                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
-                    {product.details.vehicle?.truckCapacity}
-                </ThemedText>
-            </View>
-                </View>}  
+                </View>
 
 
-           { product.truckDetails?.truckType !=="rigid"&&<View style={styles.detailRow}>
-                <ThemedText type='default' style={{ flex: 1 }}>Horse Power:</ThemedText>
-                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
-                    {product.details.vehicle?.horsePower}
-                </ThemedText>
+                {product.truckDetails?.truckType === "rigid" && <View>
+
+                    <View style={styles.detailRow}>
+                        <ThemedText type='default' style={{ flex: 1 }}>Cargo Area:</ThemedText>
+                        <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                            {product.bodyStyle}
+                        </ThemedText>
+                    </View>
+
+                    <View style={styles.detailRow}>
+                        <ThemedText type='default' style={{ flex: 1 }}>Capacity:</ThemedText>
+                        <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                            {product.details.vehicle?.truckCapacity}
+                        </ThemedText>
+                    </View>
+                </View>}
+
+
+                {product.truckDetails?.truckType !== "rigid" && <View style={styles.detailRow}>
+                    <ThemedText type='default' style={{ flex: 1 }}>Horse Power:</ThemedText>
+                    <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                        {product.details.vehicle?.horsePower}
+                    </ThemedText>
+                </View>}
+
+
+                <View style={styles.detailRow}>
+                    <ThemedText type='default' style={{ flex: 1 }}>Suspension:</ThemedText>
+                    <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                        {product.truckDetails.truckSuspension}
+                    </ThemedText>
+                </View>
+
+                <View style={styles.detailRow}>
+                    <ThemedText type='default' style={{ flex: 1 }}>Config:</ThemedText>
+                    <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                        {product.truckDetails.truckConfig}
+                    </ThemedText>
+                </View>
+
+
             </View>}
 
 
-            <View style={styles.detailRow}>
-                <ThemedText type='default' style={{ flex: 1 }}>Suspension:</ThemedText>
-                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
-                    {product.truckDetails.truckSuspension}
-                </ThemedText>
-            </View>
+            {product.truckDetails?.truckType === "semi Truck" && <View>
 
-            <View style={styles.detailRow}>
-                <ThemedText type='default' style={{ flex: 1 }}>Config:</ThemedText>
-                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
-                    {product.truckDetails.truckConfig}
-                </ThemedText>
-            </View>
-
-
-            </View>}
-
-
-           { product.truckDetails?.truckType ==="semi Truck"&&<View>
-
-                <ThemedText>Trailer Details</ThemedText> 
-                   <View style={styles.detailRow}>
-                <ThemedText type='default' style={{ flex: 1 }}>Cargo Area:</ThemedText>
-                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
-                    {product.bodyStyle}
-                </ThemedText>
-            </View>
-                  <View style={styles.detailRow}>
-                <ThemedText type='default' style={{ flex: 1 }}>Capacity:</ThemedText>
-                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
-                    {product.details.vehicle?.truckCapacity}
-                </ThemedText>
-            </View>
+                <ThemedText>Trailer Details</ThemedText>
                 <View style={styles.detailRow}>
-                <ThemedText type='default' style={{ flex: 1 }}>Suspension:</ThemedText>
-                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
-                    {product.truckDetails.truckSuspension}
-                </ThemedText>
-            </View>
+                    <ThemedText type='default' style={{ flex: 1 }}>Cargo Area:</ThemedText>
+                    <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                        {product.bodyStyle}
+                    </ThemedText>
+                </View>
                 <View style={styles.detailRow}>
-                <ThemedText type='default' style={{ flex: 1 }}>Config:</ThemedText>
-                <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
-                    {product.truckDetails.truckConfig}
-                </ThemedText>
-            </View>
-               
+                    <ThemedText type='default' style={{ flex: 1 }}>Capacity:</ThemedText>
+                    <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                        {product.details.vehicle?.truckCapacity}
+                    </ThemedText>
+                </View>
+                <View style={styles.detailRow}>
+                    <ThemedText type='default' style={{ flex: 1 }}>Suspension:</ThemedText>
+                    <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                        {product.truckDetails.truckSuspension}
+                    </ThemedText>
+                </View>
+                <View style={styles.detailRow}>
+                    <ThemedText type='default' style={{ flex: 1 }}>Config:</ThemedText>
+                    <ThemedText type='defaultSemiBold' style={{ flex: 1 }}>
+                        {product.truckDetails.truckConfig}
+                    </ThemedText>
+                </View>
+
             </View>}
 
         </View>
     )
 
-  
+
 
     return (
         <View
             style={[styles.container, { backgroundColor: background }]}
-            // activeOpacity={0.8}
+        // activeOpacity={0.8}
         >
             {/* Header with seller info and options */}
             <View style={styles.header}>
@@ -216,22 +217,48 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
                     <Ionicons name='ellipsis-vertical' size={wp(4)} color={icon} />
                 </TouchableHighlight>
             </View>
-
             {/* Product Image */}
             <View style={styles.imageContainer}>
                 {loadingImage && (
                     <ActivityIndicator size="large" color={accent} style={styles.loadingIndicator} />
                 )}
                 <Image
-                    source={{ uri: product.images[0] }}
+                    source={{ uri: selectedImage }}
                     style={styles.productImage}
                     onLoadEnd={() => setLoadingImage(false)}
                     contentFit="cover"
                     transition={300}
                 />
             </View>
-
-            {/* Product Title and Price */}
+            {/* Thumbnails Row */}
+            {product.images && product.images.length > 1 && (
+                <View style={{ flexDirection: 'row', justifyContent: 'center', marginVertical: wp(2), gap: wp(2) }}>
+                    {product.images.map((img, idx) => (
+                        <TouchableOpacity
+                            key={img}
+                            onPress={() => {
+                                setLoadingImage(true);
+                                setSelectedImage(img);
+                            }}
+                            style={{
+                                borderWidth: selectedImage === img ? 2 : 1,
+                                borderColor: selectedImage === img ? accent : '#ccc',
+                                borderRadius: wp(2),
+                                overflow: 'hidden',
+                                width: wp(12),
+                                height: wp(12),
+                            }}
+                        >
+                            <Image
+                                source={{ uri: img }}
+                                style={{ width: '100%', height: '100%' }}
+                                contentFit="cover"
+                            />
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            )}
+            {/* Product Title and Price */}}
             <View style={styles.titleRow}>
                 <ThemedText type='subtitle' style={styles.productTitle}>
                     {product.title}
@@ -248,27 +275,27 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
                         {product.condition === 'new' ? 'New' : 'Used'}
                     </ThemedText>
                 </View>
-               { product.category!=="Vehicle" && <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+                {product.category !== "Vehicle" && <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
                     <ThemedText type='tiny'>
                         {product.category}
                     </ThemedText>
                 </View>}
-                 {product.category==="Vehicle" &&  <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+                {product.category === "Vehicle" && <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
                     <ThemedText type='tiny'>
                         {product.vehicleType}
                     </ThemedText>
                 </View>}
-                  <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+                <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
                     <ThemedText type='tiny'>
                         {product.bodyStyle}
                     </ThemedText>
                 </View>
-                  <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+                <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
                     <ThemedText type='tiny' >
                         {product.bodyMake}
                     </ThemedText>
                 </View>
-               
+
             </View>
 
             {/* Location */}
@@ -283,7 +310,7 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
             <View style={styles.detailRow}>
                 <FontAwesome5 name="exchange-alt" size={wp(4)} style={styles.icon} color={icon} />
                 <ThemedText type='default'>
-                    {product.transaction.type }
+                    {product.transaction.type}
                 </ThemedText>
                 {product.transaction.swapPreferences && (
                     <ThemedText type='default' style={{ marginLeft: wp(2) }}>
@@ -365,7 +392,7 @@ const styles = StyleSheet.create({
     container: {
         margin: wp(2),
         borderRadius: wp(4),
-        padding: wp(4),
+        padding: wp(1),
         shadowColor: '#3535353b',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -376,7 +403,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: wp(3)
+        marginBottom: wp(3),
+        paddingHorizontal: wp(2),
+        paddingTop: wp(2),
+
+
     },
     sellerInfo: {
         flexDirection: 'row',
@@ -393,7 +424,7 @@ const styles = StyleSheet.create({
         borderRadius: wp(90)
     },
     imageContainer: {
-        height: wp(50),
+        height: wp(85),
         borderRadius: wp(3),
         overflow: 'hidden',
         marginBottom: wp(3),
