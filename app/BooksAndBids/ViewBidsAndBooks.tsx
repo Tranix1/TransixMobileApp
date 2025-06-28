@@ -15,51 +15,20 @@ import {
   startAfter,
 } from "firebase/firestore";
 import { auth, db } from "../components/config/fireBase";
-
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome6 from "react-native-vector-icons/FontAwesome6";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams } from "expo-router";
+import Heading from "@/components/Heading";
+import ScreenWrapper from "@/components/ScreenWrapper";
 
-interface BookingsandBiddingsProps {}
+const accent = "#6a0c0c";
+const background = "#fff";
+const cardBg = "#f8f8f8";
+const coolGray = "#e5e7eb";
 
-interface Item {
-  id: string;
-  ownerName: string;
-  itemName: string;
-  fromLocation: string;
-  toLocation: string;
-  rate?: number;
-  linksRate?: number;
-  triaxleRate?: number;
-  pertonne?: boolean;
-  currency?: string;
-  perTonneB?: boolean;
-  currencyB?: string;
-  Accept: boolean | null;
-  contact: string;
-  bookerId: string;
-  ownerId: string;
-  isVerified: boolean;
-  userId: string;
-  loadId?: string;
-  CompanyName: string;
-  horseReg?: string;
-  trailerType?: string;
-  trailerReg?: string;
-  scndTrailerReg?: string;
-  driverName?: string;
-  driverLicense?: string;
-  driverPassport?: string;
-  driverPhone?: string;
-  deletionTime: number;
-  [key: string]: any;
-}
-
-function BookingsandBiddings({}: BookingsandBiddingsProps) {
-
-  const { dbName ,dspRoute } = useLocalSearchParams();
-
+function BookingsandBiddings({ }) {
+  const { dbName, dspRoute } = useLocalSearchParams();
 
   const [newItermBooked, setNewBkedIterm] = useState(0);
   const [newItermBidded, setNewBiddedIterm] = useState(0);
@@ -258,16 +227,51 @@ function BookingsandBiddings({}: BookingsandBiddingsProps) {
     console.log(`Navigating to: ${path}`);
   };
 
+  // --- Card Component ---
+  const Card = ({ children, isVerified }: { children: React.ReactNode, isVerified?: boolean }) => (
+    <View style={{
+      backgroundColor: cardBg,
+      marginBottom: 18,
+      borderRadius: 16,
+      padding: 16,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: coolGray,
+      position: "relative",
+      width: 360,
+      alignSelf: "center"
+    }}>
+      {isVerified && (
+        <View style={{
+          position: "absolute",
+          top: 10,
+          right: 10,
+          backgroundColor: "#fff",
+          borderRadius: 16,
+          padding: 2,
+          zIndex: 10,
+          borderWidth: 1,
+          borderColor: "#d1fae5"
+        }}>
+          <MaterialIcons name="verified" size={24} color="green" />
+        </View>
+      )}
+      {children}
+    </View>
+  );
+
+  // --- Redesigned List Items ---
   const whnBookBiddAload = getAllIterms.map((item) => {
     const userId = auth.currentUser?.uid;
-    if (!userId || item.bookerId !== userId) {
-      return null;
-    }
-    const message = ` ${item.ownerName} \n Is this Load still available    ${item.itemName} from    ${item.fromLocation} to ${item.toLocation} \nRate    ${
-      item.linksrate || item.triaxleRate
-        ? (item.triaxlerate ? `triaxle ${item.triaxleRate} ` : "") + (item.linksrate ? `links for ${item.linksrate}` : "")
-        : `${item.ratepertonne}`
-    } ${item.pertonne ? "per tonne" : ""}
+    if (!userId || item.bookerId !== userId) return null;
+    const message = ` ${item.ownerName} \n Is this Load still available    ${item.itemName} from    ${item.fromLocation} to ${item.toLocation} \nRate    ${item.linksrate || item.triaxleRate
+      ? (item.triaxlerate ? `triaxle ${item.triaxleRate} ` : "") + (item.linksrate ? `links for ${item.linksrate}` : "")
+      : `${item.ratepertonne}`
+      } ${item.pertonne ? "per tonne" : ""}
 from https://transix.net/selectedUserLoads/${item.userId}/${item.id} `;
     let contactMe = (
       <View style={{ paddingLeft: 30 }}>
@@ -322,87 +326,62 @@ from https://transix.net/selectedUserLoads/${item.userId}/${item.id} `;
     );
 
     return (
-      <View style={{ backgroundColor: "#DDDDDD", marginBottom: 15, width: 350, padding: 7 }} key={item.id}>
-        {item.isVerified && (
-          <View style={{ position: "absolute", top: 0, right: 0, backgroundColor: "white", zIndex: 66 }}>
-            <MaterialIcons name="verified" size={26} color="green" />
-          </View>
-        )}
-
-        <Text style={{ color: "#5a0c0c",  textAlign: "center", fontSize: 17 }}>
-          {item.ownerName}{" "}
+      <Card key={item.id} isVerified={item.isVerified}>
+        <Text style={{ color: accent, textAlign: "center", fontSize: 18, fontWeight: "bold", marginBottom: 6 }}>
+          {item.ownerName}
         </Text>
-
-        <View style={{ flexDirection: "row" }}>
-          <Text style={{ width: 59 }}>{dbName === "bookings" ? "Booked" : "Bidded"}</Text>
-          <Text>: {item.itemName} </Text>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>{dbName === "bookings" ? "Booked" : "Bidded"}</Text>
+          <Text style={styles.infoValue}>{item.itemName}</Text>
         </View>
-
         {item.rate && (
-          <View style={{ flexDirection: "row" }}>
-            <Text style={{ width: 99 }}>Rate</Text>
-            <Text>: {item.currency ? "USD" : "RAND"} {item.rate} {item.pertonne ? "Per tonne" : null} </Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Rate</Text>
+            <Text style={styles.infoValue}>{item.currency ? "USD" : "RAND"} {item.rate} {item.pertonne ? "Per tonne" : null}</Text>
           </View>
         )}
-
         {item.linksRate && (
-          <View style={{ flexDirection: "row" }}>
-            <Text style={{ width: 99 }}>Links</Text>
-            <Text>: {item.currency ? "USD" : "RAND"} {item.linksRate} {item.pertonne ? "Per tonne" : null} </Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Links</Text>
+            <Text style={styles.infoValue}>{item.currency ? "USD" : "RAND"} {item.linksRate} {item.pertonne ? "Per tonne" : null}</Text>
           </View>
         )}
-
         {item.triaxleRate && (
-          <View style={{ flexDirection: "row" }}>
-            <Text style={{ width: 99 }}>Triaxle</Text>
-            <Text>: {item.currency ? "USD" : "RAND"} {item.triaxleRate} {item.pertonne ? "Per tonne" : null} </Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Triaxle</Text>
+            <Text style={styles.infoValue}>{item.currency ? "USD" : "RAND"} {item.triaxleRate} {item.pertonne ? "Per tonne" : null}</Text>
           </View>
         )}
-
-        <View style={{ flexDirection: "row" }}>
-          <Text style={{ width: 60 }}>Route</Text>
-          <Text>: from {item.fromLocation} to {item.toLocation} </Text>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Route</Text>
+          <Text style={styles.infoValue}>from {item.fromLocation} to {item.toLocation}</Text>
         </View>
-
-        <View style={{ flexDirection: "row" }}>
-          <Text style={{ width: 60 }}>Decision</Text>
-          <Text>: {item.Accept === null ? "Pending" : item.Accept === true ? "Accepted" : item.Accept === false ? "Denied" : "Unknown"}</Text>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Decision</Text>
+          <Text style={styles.infoValue}>{item.Accept === null ? "Pending" : item.Accept === true ? "Accepted" : item.Accept === false ? "Denied" : "Unknown"}</Text>
         </View>
-
         {contactDisplay[item.id] && contactMe}
         {item.Accept && (
           <TouchableOpacity
             onPress={() => toggleContact(item.id)}
-            style={{
-              width: 150,
-              height: 30,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "#228B22",
-              borderRadius: 8,
-              alignSelf: "center",
-              margin: 5,
-            }}
+            style={styles.actionButton}
           >
-            <Text style={{ color: "white" }}> Get In Touch Now</Text>
+            <Text style={{ color: "white", fontWeight: "bold" }}>Get In Touch Now</Text>
           </TouchableOpacity>
         )}
-
         <TouchableOpacity
           onPress={() => loadTaken(null, item.id)}
-          style={{ backgroundColor: "red", width: 100, alignItems: "center", borderRadius: 50, position: "absolute", right: 7, bottom: 7 }}
+          style={styles.denyButton}
         >
-          <Text style={{ color: "white" }}> Not intrested </Text>
+          <Text style={{ color: "white" }}>Not interested</Text>
         </TouchableOpacity>
-      </View>
+      </Card>
     );
   });
 
   const whenMyLoadBookBidd = getAllIterms.map((item) => {
     const userId = auth.currentUser?.uid;
-    if (!userId || item.ownerId !== userId) {
-      return null;
-    }
+    if (!userId || item.ownerId !== userId) return null;
 
     let theRateD: string | undefined;
 
@@ -503,166 +482,220 @@ From: https://transix.net/selectedUserLoads/${item.userId}/${item.id} `;
     dbName === "bookings" ? (dbToBechanged = "bookings") : (dbToBechanged = "biddings");
 
     return (
-      <View style={{ backgroundColor: "#DDDDDD", marginBottom: 15, width: 350, padding: 7 }} key={item.id}>
-        {item.isVerified && (
-          <View style={{ position: "absolute", top: 0, right: 0, backgroundColor: "white", zIndex: 66 }}>
-            <MaterialIcons name="verified" size={26} color="green" />
-          </View>
-        )}
-
-        <Text style={{ color: "#6a0c0c",  textAlign: "center", fontSize: 17 }}>{item.bookerName} </Text>
-
-        <View style={{ flexDirection: "row", marginBottom: 6 }}>
-          <Text style={{ width: 85, fontStyle: "italic", fontSize: 16 }}>Commodity</Text>
-          <Text style={{ fontSize: 17 }}>
-            : {item.itemName} was {dbName === "bookings" ? "Booked" : "Bidded"}{" "}
-          </Text>
+      <Card key={item.id} isVerified={item.isVerified}>
+        <Text style={{ color: accent, textAlign: "center", fontSize: 18, fontWeight: "bold", marginBottom: 6 }}>
+          {item.bookerName}
+        </Text>
+        <View style={styles.infoRow}>
+          <Text style={[styles.infoLabel, { fontStyle: "italic" }]}>Commodity</Text>
+          <Text style={styles.infoValue}>: {item.itemName} was {dbName === "bookings" ? "Booked" : "Bidded"}</Text>
         </View>
-
         {item.rate && (
-          <View style={{ flexDirection: "row" }}>
-            <Text style={{ width: 100 }}>Rate</Text>
-            <Text>: {item.currencyB ? "USD" : "RAND"} {item.rate} {item.perTonneB ? "Per tonne" : null} </Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Rate</Text>
+            <Text style={styles.infoValue}>{item.currencyB ? "USD" : "RAND"} {item.rate} {item.perTonneB ? "Per tonne" : null}</Text>
           </View>
         )}
-
         {item.linksRate && (
-          <View style={{ flexDirection: "row" }}>
-            <Text style={{ width: 100 }}>Links</Text>
-            <Text>: {item.currency ? "USD" : "RAND"} {item.linksRate} {item.pertonne ? "Per tonne" : null} </Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Links</Text>
+            <Text style={styles.infoValue}>{item.currency ? "USD" : "RAND"} {item.linksRate} {item.pertonne ? "Per tonne" : null}</Text>
           </View>
         )}
-
         {item.triaxleRate && (
-          <View style={{ flexDirection: "row" }}>
-            <Text style={{ width: 100 }}>Triaxle</Text>
-            <Text>: {item.currency ? "USD" : "RAND"} {item.triaxleRate} {item.pertonne ? "Per tonne" : null} </Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Triaxle</Text>
+            <Text style={styles.infoValue}>{item.currency ? "USD" : "RAND"} {item.triaxleRate} {item.pertonne ? "Per tonne" : null}</Text>
           </View>
         )}
-
-        <View style={{ flexDirection: "row" }}>
-          <Text style={{ width: 75 }}>Route</Text>
-          <Text>: from {item.fromLocation} to {item.toLocation} </Text>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Route</Text>
+          <Text style={styles.infoValue}>from {item.fromLocation} to {item.toLocation}</Text>
         </View>
-
-        <View style={{ flexDirection: "row", margin: 4 }}>
+        <View style={[styles.infoRow, { marginTop: 8, marginBottom: 8 }]}>
           <TouchableOpacity
             onPress={() => toggleAcceptOrDeny(dbToBechanged, item.id, "Accept", item.contact, messageSend)}
-            style={styles.bttonIsTrue}
+            style={styles.acceptButton}
           >
-            <Text style={{ color: "white" }}>Accept </Text>
+            <Text style={{ color: "white", fontWeight: "bold" }}>Accept</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => toggleAcceptOrDeny(dbToBechanged, item.id, "Deny")} style={styles.buttonIsFalse}>
-            <Text>Deny </Text>
+          <TouchableOpacity
+            onPress={() => toggleAcceptOrDeny(dbToBechanged, item.id, "Deny")}
+            style={styles.buttonIsFalse}
+          >
+            <Text style={{ color: accent, fontWeight: "bold" }}>Deny</Text>
           </TouchableOpacity>
         </View>
-
-        <View style={{ flexDirection: "row", marginBottom: 25, height: 30, alignSelf: "center", marginTop: 6 }}>
-          <TouchableOpacity
-            // nPress={()=>navigation.navigate('selectedUserTrucks', { userId : item.bookerId , loadIsVerified: item.isVerified , CompanyName : item.bookerName })}
-            style={{ width: 150, height: 30, alignItems: "center", justifyContent: "center", backgroundColor: "#6a0c0c", alignSelf: "center", margin: 5 }}
-          >
-            <Text style={{ fontSize: 17, color: "white" }}>Bookers trucks</Text>
+        <View style={[styles.infoRow, { marginBottom: 10 }]}>
+          <TouchableOpacity style={styles.secondaryButton}>
+            <Text style={{ fontSize: 16, color: "white" }}>Bookers trucks</Text>
           </TouchableOpacity>
-
           <TouchableOpacity
             onPress={() => toggleContact(item.id)}
-            style={{ width: 150, height: 30, alignItems: "center", justifyContent: "center", backgroundColor: "#228B22", alignSelf: "center", margin: 5 }}
+            style={styles.actionButton}
           >
-            <Text style={{ color: "white" }}> Get In Touch</Text>
+            <Text style={{ color: "white", fontWeight: "bold" }}>Get In Touch</Text>
           </TouchableOpacity>
         </View>
-
         {contactDisplay[item.id] && contactMe}
-
         <TouchableOpacity
           onPress={() => loadTaken(item.loadId, item.id)}
-          style={{ backgroundColor: "red", width: 100, alignItems: "center", borderRadius: 50, position: "absolute", right: 7, bottom: 7 }}
+          style={styles.denyButton}
         >
-          <Text style={{ color: "white" }}> Load Taken </Text>
+          <Text style={{ color: "white" }}>Load Taken</Text>
         </TouchableOpacity>
-      </View>
+      </Card>
     );
   });
 
+  // --- Main Render ---
+  return (
+    <ScreenWrapper >
+      {/* Header */}
 
-  return(
-    <View style={{paddingTop:80 , alignItems:'center'}}>     
+      <Heading page={dspRoute ? dspRoute : " Bookings and Biddings"} />
 
-       <View style={{position:'absolute' , top : 0 , left: 0 , right : 0 , flexDirection : 'row' , height : 74  ,  paddingLeft : 6 , paddingRight: 15  ,backgroundColor : '#6a0c0c' ,paddingTop : 15 , alignItems : 'center' , }} >
-         <TouchableOpacity style={{marginRight: 10}}  >
-            {/* <Ionicons name="arrow-back" size={28} color="white"style={{ marginLeft: 10 }}  /> */}
-            <Ionicons name="arrow-back" size={28} color="white"style={{ marginLeft: 10 }}  />
-        </TouchableOpacity> 
-        
-        <Text style={{fontSize: 20 , color : 'white'}} > {dspRoute? dspRoute : "Bookings and Biddings"} </Text>
-         </View>
+      <View style={{ paddingTop: 90, flex: 1 }}>
+        {dspRoute === "itermsYouBidded" && (
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            {whnBookBiddAload}
+            {getAllIterms.length > 15 && dspLoadMoreBtn && (
+              <TouchableOpacity onPress={() => loadedData(true)} style={styles.loadMoreBtn}>
+                <Text style={{ color: 'white', fontSize: 18, textAlign: 'center', fontWeight: "bold" }}>Load More</Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+        )}
 
+        {dspRoute === "yourBiddedItems" && (
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            {whenMyLoadBookBidd}
+            {getAllIterms.length > 15 && dspLoadMoreBtn && (
+              <TouchableOpacity onPress={() => loadedData(true)} style={styles.loadMoreBtn}>
+                <Text style={{ color: 'white', fontSize: 18, textAlign: 'center', fontWeight: "bold" }}>Load More</Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+        )}
 
- 
-  
-            {dspRoute=== "itermsYouBidded" && <ScrollView>
-              {whnBookBiddAload}
-          {getAllIterms.length>15 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> loadedData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >
-        <Text style={{color :'white', fontSize :21 , textAlign :'center'}} >Load More......</Text>
-      </TouchableOpacity>}
-        <View style={{height : 200}} ></View>
-            </ScrollView> }
+        {dspRoute === "itemsYouBooked" && (
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            {whnBookBiddAload}
+            {getAllIterms.length > 15 && dspLoadMoreBtn && (
+              <TouchableOpacity onPress={() => loadedData(true)} style={styles.loadMoreBtn}>
+                <Text style={{ color: 'white', fontSize: 18, textAlign: 'center', fontWeight: "bold" }}>Load More</Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+        )}
 
-            
-            {dspRoute=== "yourBiddedItems" && <ScrollView> 
-              {whenMyLoadBookBidd}
-                 {getAllIterms.length>15 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> loadedData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >
-        <Text style={{color :'white', fontSize :21 , textAlign :'center'}} >Load More......</Text>
-      </TouchableOpacity>}
-        <View style={{height : 200}} ></View>
-              </ScrollView>}
-              
-            {dspRoute=== "itemsYouBooked" && <ScrollView>
-              {whnBookBiddAload}
-                 {getAllIterms.length>15 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> loadedData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >
-        <Text style={{color :'white', fontSize :21 , textAlign :'center'}} >Load More......</Text>
-      </TouchableOpacity>}
-        <View style={{height : 200}} ></View>
-            </ScrollView> }
-            
-            {dspRoute===  "yourBookedItems" && <ScrollView> 
-              {whenMyLoadBookBidd}
-                 {getAllIterms.length>15 && dspLoadMoreBtn&& <TouchableOpacity onPress={()=> loadedData(true) } style={{ height :45 , backgroundColor :'#228B22', margin :25 , justifyContent:'center',borderRadius:25}} >
-        <Text style={{color :'white', fontSize :21 , textAlign :'center'}} >Load More......</Text>
-      </TouchableOpacity>}
-        <View style={{height : 200}} ></View>
-              </ScrollView>}
-
-    </View>
-  )
+        {dspRoute === "yourBookedItems" && (
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            {whenMyLoadBookBidd}
+            {getAllIterms.length > 15 && dspLoadMoreBtn && (
+              <TouchableOpacity onPress={() => loadedData(true)} style={styles.loadMoreBtn}>
+                <Text style={{ color: 'white', fontSize: 18, textAlign: 'center', fontWeight: "bold" }}>Load More</Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+        )}
+      </View>
+    </ScreenWrapper>
+  );
 }
-export default React.memo(BookingsandBiddings)
+
+export default React.memo(BookingsandBiddings);
 
 const styles = StyleSheet.create({
- slctView : {
-  height : 45 ,
-  width : 200 ,
-  borderColor : "#6a0c0c" ,
-  borderWidth : 1 ,
-  justifyContent : 'center',
-  alignItems : 'center' ,
-  marginBottom : 10
- } ,  buttonIsFalse : {
-     borderWidth : 1 ,
-     borderColor : '#6a0c0c' ,
-     paddingLeft :4 , 
-     paddingRight:4 ,
-    //  marginLeft : 6
-   } , 
-    bttonIsTrue:{
-    backgroundColor : 'green' ,
-     paddingLeft :4 ,
-     paddingRight:4 ,
-     color :'white' 
-
-    }
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+    gap: 6,
+  },
+  infoLabel: {
+    width: 90,
+    color: "#444",
+    fontWeight: "bold",
+    fontSize: 15,
+  },
+  infoValue: {
+    color: "#222",
+    fontSize: 15,
+    flexShrink: 1,
+  },
+  actionButton: {
+    backgroundColor: "#228B22",
+    borderRadius: 8,
+    alignSelf: "center",
+    marginTop: 8,
+    marginBottom: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    minWidth: 140,
+    alignItems: "center",
+  },
+  acceptButton: {
+    backgroundColor: "#228B22",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    marginRight: 10,
+    alignItems: "center",
+    minWidth: 90,
+  },
+  buttonIsFalse: {
+    borderWidth: 1,
+    borderColor: accent,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    alignItems: "center",
+    minWidth: 90,
+    marginLeft: 10,
+    backgroundColor: "#fff",
+  },
+  secondaryButton: {
+    backgroundColor: accent,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    alignItems: "center",
+    minWidth: 120,
+    marginRight: 10,
+  },
+  denyButton: {
+    backgroundColor: "#e53935",
+    borderRadius: 25,
+    alignSelf: "flex-end",
+    marginTop: 10,
+    paddingVertical: 7,
+    paddingHorizontal: 22,
+    alignItems: "center",
+    minWidth: 110,
+  },
+  loadMoreBtn: {
+    height: 45,
+    backgroundColor: accent,
+    margin: 25,
+    justifyContent: 'center',
+    borderRadius: 25,
+    alignItems: "center",
+    shadowColor: accent,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  slctView: {
+    height: 45,
+    width: 200,
+    borderColor: "#6a0c0c",
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10
+  },
 });
 
 

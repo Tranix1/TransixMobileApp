@@ -1,6 +1,6 @@
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import React from 'react'
-import { Countries, Truck,Contracts } from '@/types/types'
+import { Countries, Truck, Contracts } from '@/types/types'
 import { wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { ThemedText } from './ThemedText'
@@ -8,9 +8,9 @@ import { Image } from 'expo-image'
 import { FontAwesome5, FontAwesome6, Fontisto, Octicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { collection, serverTimestamp, addDoc, query, where, onSnapshot, getDocs } from 'firebase/firestore';
-import { auth,db } from '@/app/components/config/fireBase'
+import { auth, db } from '@/app/components/config/fireBase'
 
-const TruckItemComponent = ({ truck = {} as Truck , truckContract = {} as Contracts  } ) => {
+const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contracts }) => {
     const backgroundLight = useThemeColor('backgroundLight')
     const background = useThemeColor('background')
     const coolGray = useThemeColor('coolGray')
@@ -21,75 +21,107 @@ const TruckItemComponent = ({ truck = {} as Truck , truckContract = {} as Contra
     const placeholder = require('@/assets/images/failedimage.jpg')
 
 
-      const checkExistixtBBDoc = async (trckContractId: string) => {
-    console.log("Checking truck is booked")
-    const chatsRef = collection(db, 'OngoingContracts'); // Reference to the 'ppleInTouch' collection
-    const chatQuery = query(chatsRef, where('trckContractId', '==', trckContractId), where('alreadyInContract', '==', true)); // Query for matching chat ID
+    const checkExistixtBBDoc = async (trckContractId: string) => {
+        console.log("Checking truck is booked")
+        const chatsRef = collection(db, 'OngoingContracts'); // Reference to the 'ppleInTouch' collection
+        const chatQuery = query(chatsRef, where('trckContractId', '==', trckContractId), where('alreadyInContract', '==', true)); // Query for matching chat ID
 
-    const querySnapshot = await getDocs(chatQuery);
-    // Check if any documents exist with the chat ID
-    console.log("Truck Booked")
-    return !querySnapshot.empty; // Returns true if a document exists, false otherwise
-  };
+        const querySnapshot = await getDocs(chatQuery);
+        // Check if any documents exist with the chat ID
+        console.log("Truck Booked")
+        return !querySnapshot.empty; // Returns true if a document exists, false otherwise
+    };
 
-  //
-
-
-    async function accentODenyTruck(){
-
-              if (auth.currentUser) {
-
-        const userId = auth.currentUser.uid
-        //   const existingBBDoc = await checkExistixtBBDoc(`${userId}contractId ${item.timeStamp}`);
-        const existingBBDoc = await checkExistixtBBDoc(`${userId}contractId asdsadas`);
-        if (!existingBBDoc) {
-
-          console.log('start adding')
-
-          const theCollection = collection(db, "OngoingContracts");
-          const docRef = await addDoc(theCollection, {
+    //
 
 
-            truckInfo: truck,
-            truckAccpetedContracts : true ,
+    async function accentODenyTruck() {
 
-            trckContractId: `${userId}contractId asdsad`,
-            truckContrSt: true,
-            contractId: truckContract.contractId,
-            contractName: truckContract.contractName,
-            approvedTrck: false,
-            alreadyInContract: true,
-            timeStamp : serverTimestamp()
-          })
+        if (auth.currentUser) {
 
-          alert('doneee adding')
+            const userId = auth.currentUser.uid
+            //   const existingBBDoc = await checkExistixtBBDoc(`${userId}contractId ${item.timeStamp}`);
+            const existingBBDoc = await checkExistixtBBDoc(`${userId}contractId asdsadas`);
+            if (!existingBBDoc) {
 
-        } else {
-          alert("Truck alreadyy Booked")
+                console.log('start adding')
+
+                const theCollection = collection(db, "OngoingContracts");
+                const docRef = await addDoc(theCollection, {
+
+
+                    truckInfo: truck,
+                    truckAccpetedContracts: true,
+
+                    trckContractId: `${userId}contractId asdsad`,
+                    truckContrSt: true,
+                    contractId: truckContract.contractId,
+                    contractName: truckContract.contractName,
+                    approvedTrck: false,
+                    alreadyInContract: true,
+                    timeStamp: serverTimestamp()
+                })
+
+                alert('doneee adding')
+
+            } else {
+                alert("Truck alreadyy Booked")
+            }
+
         }
-
-      }
     }
 
 
 
 
     return (
-        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id,dspDetails:"true" , truckFrContract:'true'  } })} style={[styles.container, { backgroundColor: background, borderColor: backgroundLight }]}>
+        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id, dspDetails: "true", truckFrContract: 'true' } })} style={[styles.container, { backgroundColor: background, borderColor: backgroundLight }]}>
             <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truck.imageUrl }} style={styles.image} />
             <View style={styles.detailsContainer}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                     <ThemedText type='subtitle' numberOfLines={1} style={[styles.title, { color: textColor, flex: 1 }]}>{truck.CompanyName || 'Unknown Company'}</ThemedText>
 
                 </View>
-                <View style={{flexDirection:"row"}}>
-                    <TouchableOpacity style={{backgroundColor:"green",width:80 , height:30 ,justifyContent:"center",alignItems:"center" }} onPress={accentODenyTruck}>
-                        <ThemedText style={{color:"white"}}>Accept</ThemedText>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={{backgroundColor:"red",width:80 , height:30 , justifyContent:"center",alignItems:"center" }}>
-                        <ThemedText style={{color:"white"}}>Deny</ThemedText>
-                    </TouchableOpacity>
-                </View>
+                {/* ADD THE CONDITION HERE!!!!! */}
+                {false &&
+                    <View style={{ flexDirection: "row", gap: wp(2), marginVertical: wp(2) }}>
+                        <TouchableOpacity
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                borderColor: accent,
+                                paddingHorizontal: wp(4),
+                                height: wp(9),
+                                borderRadius: wp(30),
+                                borderWidth: 1,
+                                flex: 1,
+                                justifyContent: 'center',
+                            }}
+                            onPress={accentODenyTruck}
+                            activeOpacity={0.8}
+                        >
+                            <FontAwesome5 name="check-circle" size={wp(4)} color={accent} style={{ marginRight: wp(2) }} />
+                            <ThemedText style={{ color: accent, fontWeight: 'bold', fontSize: wp(4) }}>Accept</ThemedText>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: '#e74c3c',
+                                paddingHorizontal: wp(4),
+                                height: wp(9),
+                                borderRadius: wp(30),
+                                flex: 1,
+                                justifyContent: 'center',
+                            }}
+                            activeOpacity={0.8}
+                        >
+                            <FontAwesome5 name="times-circle" size={wp(4)} color="#fff" style={{ marginRight: wp(2) }} />
+                            <ThemedText style={{ color: "#fff", fontWeight: 'bold', fontSize: wp(4) }}>Deny</ThemedText>
+                        </TouchableOpacity>
+                    </View>
+                }
+
                 <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
 
                     <Fontisto name="truck" size={wp(4)} style={{ width: wp(6) }} color={icon} />
@@ -100,7 +132,7 @@ const TruckItemComponent = ({ truck = {} as Truck , truckContract = {} as Contra
                 <View style={{ gap: wp(3), paddingHorizontal: wp(2), marginTop: wp(1) }}>
 
 
-                      
+
                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
                         <FontAwesome5 name="truck-loading" size={wp(3.6)} style={{ width: wp(6) }} color={icon} />
                         <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
@@ -119,7 +151,7 @@ const TruckItemComponent = ({ truck = {} as Truck , truckContract = {} as Contra
                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
                         <FontAwesome5 name="weight" size={wp(3.6)} style={{ width: wp(6) }} color={icon} />
                         <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
-                            {truck.truckCapacity|| 'N/A'}
+                            {truck.truckCapacity || 'N/A'}
                         </ThemedText>
                     </View>
                 </View>

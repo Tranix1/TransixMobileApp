@@ -1,5 +1,5 @@
 // https://www.youtube.com/watch?v=QdU6WxHXSxE&list=PLi97PD1Y9JAVb1y4PX9tFTN9Gb0TSEJGB&index=8
-import {StyleSheet,  View, } from 'react-native'
+import { StyleSheet, View, } from 'react-native'
 import React, { useEffect, useId, useState } from 'react'
 import { hp, wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
@@ -12,11 +12,11 @@ import { useAuth } from '@/context/AuthContext'
 import { useLocalSearchParams } from 'expo-router'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import { FinalReturnComponent } from '@/components/TrucksHomePage'
- const Index = () => {
+const Index = () => {
 
 
-  const { userId ,organisationName,contractName,contractId  } = useLocalSearchParams();
-console.log( userId ,organisationName,contractName,contractId  )
+    const { userId, organisationName, contractName, contractId } = useLocalSearchParams();
+    console.log(userId, organisationName, contractName, contractId)
     // const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
 
     const [trucks, setTrucks] = useState<Truck[]>([])
@@ -47,7 +47,7 @@ console.log( userId ,organisationName,contractName,contractId  )
 
 
 
-  
+
 
 
     const LoadTructs = async () => {
@@ -65,7 +65,7 @@ console.log( userId ,organisationName,contractName,contractId  )
         if (operationCountries.length > 0) filters.push(where("locations", "array-contains-any", operationCountries));
 
         // Fetch data from Firestore with the initially applied filters
-        const maTrucks = await fetchDocuments(  contractId?"ContractRequests":"Trucks", 10, undefined, filters);
+        const maTrucks = await fetchDocuments(contractId ? "ContractRequests" : "Trucks", 10, undefined, filters);
 
         let trucksToSet: Truck[] = [];
 
@@ -90,7 +90,7 @@ console.log( userId ,organisationName,contractName,contractId  )
 
     useEffect(() => {
         LoadTructs();
-    }, [truckCapacity, truckConfig, truckSuspension, operationCountries,selectedCargoArea,userId])
+    }, [truckCapacity, truckConfig, truckSuspension, operationCountries, selectedCargoArea, userId])
 
     const onRefresh = async () => {
         try {
@@ -105,7 +105,7 @@ console.log( userId ,organisationName,contractName,contractId  )
 
     const [showfilter, setShowfilter] = useState(false)
 
-  
+
 
     const loadMoreTrucks = async () => {
         if (loadingMore || !lastVisible) return;
@@ -154,12 +154,12 @@ console.log( userId ,organisationName,contractName,contractId  )
         setTruckSuspension("")
         setSelectedCargoArea(null)
     }
-    
-    return (
-        <View style={{flex:1}}>
 
-           { !userId &&  <View style={{flex:1}}>
-              <FinalReturnComponent
+    return (
+        <View style={{ flex: 1 }}>
+
+            {!userId && <View style={{ flex: 1 }}>
+                <FinalReturnComponent
                     // ... pass all props
                     showfilter={showfilter}
                     setShowfilter={setShowfilter}
@@ -183,11 +183,11 @@ console.log( userId ,organisationName,contractName,contractId  )
                     loadingMore={loadingMore}
                     clearFilter={clearFilter}
                     selectedCountry={selectedCountry}
-                   
+
                 />
             </View>}
-              {(contractId || userId) && <ScreenWrapper >
-              <FinalReturnComponent
+            {(contractId || userId) && <ScreenWrapper >
+                <FinalReturnComponent
                     // ... pass all props
                     showfilter={showfilter}
                     setShowfilter={setShowfilter}
@@ -204,8 +204,8 @@ console.log( userId ,organisationName,contractName,contractId  )
                     truckSuspension={truckSuspension}
                     setTruckSuspension={setTruckSuspension}
                     userId={`${userId}`}
-                    organisationName ={`${organisationName}`}
-                    trucks={ contractId ? trucks : trucks}
+                    organisationName={`${organisationName}`}
+                    trucks={contractId ? trucks : trucks}
                     refreshing={refreshing}
                     onRefresh={onRefresh}
                     loadMoreTrucks={loadMoreTrucks}
@@ -213,9 +213,9 @@ console.log( userId ,organisationName,contractName,contractId  )
                     loadingMore={loadingMore}
                     clearFilter={clearFilter}
                     selectedCountry={selectedCountry}
-                    contractName ={`${contractName}`}
-                    contractId = {`${contractId}`}
-                                      
+                    contractName={`${contractName}`}
+                    contractId={`${contractId}`}
+
                 />
             </ScreenWrapper>}
         </View>

@@ -145,6 +145,7 @@ const AddLoadDB = () => {
 
         if (!user) {
             alert("Please Login first");
+            router.push('/Account/Login')
             return;
         }
         if (!user.organisation) {
@@ -264,14 +265,18 @@ const AddLoadDB = () => {
             <Modal visible={dspAfterSubmitMoadal} statusBarTranslucent animationType="slide">
                 <ScreenWrapper>
 
-                    <View style={{ margin: wp(4), marginTop: hp(6) }}>
+                    <View style={{ margin: wp(4), }}>
 
                         <View style={{ gap: wp(2) }} >
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
-                                <TouchableOpacity onPress={() => setAfterSubmitModal(false)}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: wp(4) }}>
+                                <TouchableOpacity style={{
+                                    position: 'absolute',
+                                    left: wp(4),
+                                    padding: wp(2),
+                                }} onPress={() => setAfterSubmitModal(false)}>
                                     <AntDesign name="close" color={icon} size={wp(4)} />
                                 </TouchableOpacity>
-                                <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >Next Step</ThemedText>
+                                <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold', textAlign: 'center' }} >Next Step</ThemedText>
                             </View>
 
                             {trucksNeeded.map((item) => (
@@ -285,14 +290,42 @@ const AddLoadDB = () => {
                                     </TouchableOpacity>
                                 </View>
                             ))}
+                            <ThemedText style={{ textAlign: 'center' }}>
+                                Load submitted successfully! Your load has been added and is now pending review. You can view the trucks you selected below or add another load if needed.
+                            </ThemedText>
 
-                            <View style={{ flexDirection: "row" }}>
-                                <TouchableOpacity style={{ backgroundColor: "red" }} >
-                                    <ThemedText>Go Back</ThemedText>
+                            <View style={{ flexDirection: "row", gap: wp(3), marginTop: wp(4) }}>
+                                <TouchableOpacity
+                                    style={{
+                                        flex: 1,
+                                        backgroundColor: "#fff",
+                                        borderWidth: 1,
+                                        borderColor: "#0f9d58",
+
+                                        borderRadius: 6,
+                                        paddingVertical: wp(2),
+                                        alignItems: "center",
+                                    }}
+                                    onPress={() => router.back()}
+
+                                >
+                                    <ThemedText style={{ color: "#0f9d58", fontWeight: "bold" }}>Go Back</ThemedText>
                                 </TouchableOpacity>
 
-                                <TouchableOpacity style={{ backgroundColor: "green" }} >
-                                    <ThemedText>Add Another One</ThemedText>
+                                <TouchableOpacity
+                                    style={{
+                                        flex: 1,
+                                        backgroundColor: "#0f9d58",
+                                        borderRadius: 6,
+                                        paddingVertical: wp(2),
+                                        alignItems: "center",
+                                    }}
+                                    onPress={() => {
+                                        setAfterSubmitModal(false);
+                                        setStep(3);
+                                    }}
+                                >
+                                    <ThemedText style={{ color: "#fff", fontWeight: "bold" }}>Add Another</ThemedText>
                                 </TouchableOpacity>
                             </View>
                         </View>

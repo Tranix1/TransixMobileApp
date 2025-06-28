@@ -1,97 +1,118 @@
 import React from "react";
-import { View, TouchableOpacity, StyleSheet, } from "react-native";
-import { onSnapshot, query, collection, where, } from "firebase/firestore"
+import { View, TouchableOpacity, StyleSheet } from "react-native";
+import { onSnapshot, query, collection, where } from "firebase/firestore";
 import { auth, db } from "../components/config/fireBase";
-
 import { ThemedText } from "@/components/ThemedText";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import Heading from "@/components/Heading";
 
 function SlctBookingsandBiddings({ }) {
-
   const [newItermBooked, setNewBkedIterm] = React.useState(0);
   const [newItermBidded, setNewBiddedIterm] = React.useState(0);
-
-  // const [ valueOfUpdates , setVlueOfUpdates] = React.useState(null);
 
   React.useEffect(() => {
     try {
       if (auth.currentUser) {
         const userId = auth.currentUser.uid;
         const loadsQuery = query(collection(db, "newIterms"), where("receriverId", "==", userId));
-
         const unsubscribe = onSnapshot(loadsQuery, (querySnapshot) => {
           querySnapshot.forEach((doc) => {
             const data = doc.data();
-            const newBokedIterms = data.bookingdocs || 0;   // Assuming isVerified is a boolean field
-            const newBiiedIterms = data.biddingdocs || 0;   // Assuming isVerified is a boolean field
-
-            setNewBkedIterm(newBokedIterms);
-            setNewBiddedIterm(newBiiedIterms)
+            setNewBkedIterm(data.bookingdocs || 0);
+            setNewBiddedIterm(data.biddingdocs || 0);
           });
         });
-
-        return () => unsubscribe(); // Cleanup the listener when the component unmounts
+        return () => unsubscribe();
       }
-
     } catch (error) {
       console.error(error);
     }
   }, []);
 
+  // Modern Card Button
+  const ModernCard = ({ label, count, color, onPress }: { label: string, count?: number, color: string, onPress: () => void }) => (
+    <TouchableOpacity onPress={onPress} style={[styles.card, { borderColor: color }]}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", }}>
+        <Ionicons name="cube-outline" size={22} color={color} style={{ marginRight: 8 }} />
+        <ThemedText style={[styles.cardLabel, { color }]}>{label}</ThemedText>
+        {typeof count === "number" && (
+          <ThemedText style={[styles.badge, { backgroundColor: color }]}>{count}</ThemedText>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <ScreenWrapper>
 
-
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-        <View style={{ marginRight: 7 }} >
-
-          <TouchableOpacity
-            onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "bookings", dspRoute: "yourBookedItems" } })}
-            style={styles.slctView}>
-            <ThemedText>Your booked Items</ThemedText>
-            {<ThemedText style={{ backgroundColor: '#6a0c0c', color: 'white', paddingLeft: 5, paddingRight: 5, marginRight: 6, borderRadius: 10, justifyContent: 'center' }} >{newItermBooked} </ThemedText>}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "bookings", dspRoute: "itemsYouBooked" } })}
-            style={styles.slctView}>
-            <ThemedText>Items you booked</ThemedText>
-          </TouchableOpacity>
-        </View>
-
-        <View>
-
-          {<TouchableOpacity
-            onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "biddings", dspRoute: "yourBiddedItems" } })}
-            style={styles.slctView}>
-
-            <ThemedText>Your Bidded Items</ThemedText>
-            {<ThemedText style={{ backgroundColor: 'rgb(129,201,149)', color: 'white', paddingLeft: 5, paddingRight: 5, marginRight: 6, borderRadius: 10, justifyContent: 'center' }} > {newItermBidded} </ThemedText>}
-          </TouchableOpacity>}
-
-          {<TouchableOpacity
-            onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "biddings", dspRoute: "itermsYouBidded" } })}
-            style={styles.slctView}>
-            <ThemedText>Items you Bidded</ThemedText>
-          </TouchableOpacity>}
-        </View>
+      <Heading page="Bookings and Biddings" />
+      <View style={styles.container}>
+        <ModernCard
+          label="Your Booked Items"
+          count={newItermBooked}
+          color="#6a0c0c"
+          onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "bookings", dspRoute: "Your Booked Items" } })}
+        />
+        <ModernCard
+          label="Items You Booked"
+          color="#6a0c0c"
+          onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "bookings", dspRoute: "Items You Booked" } })}
+        />
+        <ModernCard
+          label="Your Bidded Items"
+          count={newItermBidded}
+          color="#4eb37a"
+          onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "biddings", dspRoute: "Your Bidded Items" } })}
+        />
+        <ModernCard
+          label="Items You Bidded"
+          color="#4eb37a"
+          onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "biddings", dspRoute: "Iterms You Bidded" } })}
+        />
       </View>
-
     </ScreenWrapper>
-  )
+  );
 }
-export default React.memo(SlctBookingsandBiddings)
+export default React.memo(SlctBookingsandBiddings);
 
 const styles = StyleSheet.create({
-  slctView: {
-    height: 45,
-    width: 175,
-    borderColor: "#6a0c0c",
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10
-  }
+  container: {
+    justifyContent: "center",
+    marginTop: 40,
+    gap: 18,
+    paddingHorizontal: 16,
+  },
+  column: {
+    gap: 18,
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    borderWidth: 2,
+    paddingVertical: 22,
+    paddingHorizontal: 18,
+    marginBottom: 4,
+    alignItems: "center",
+    shadowColor: "#6a0c0c",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardLabel: {
+    fontSize: 17,
+    fontWeight: "bold",
+    letterSpacing: 0.2,
+  },
+  badge: {
+    marginLeft: 10,
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 15,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
 });

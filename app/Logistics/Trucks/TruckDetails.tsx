@@ -14,6 +14,7 @@ import { Truck, User } from "@/types/types";
 import { deleteDocument, readById } from "@/db/operations";
 import { Image } from 'expo-image'
 import { useAuth } from "@/context/AuthContext";
+import Divider from "@/components/Divider";
 
 const TruckDetails = () => {
 
@@ -24,7 +25,7 @@ const TruckDetails = () => {
     const background = useThemeColor("background");
     const coolGray = useThemeColor("coolGray");
     const backgroundLight = useThemeColor("backgroundLight");
-    const { truckid,dspDetails,truckFrContract } = useLocalSearchParams();
+    const { truckid, dspDetails, truckFrContract } = useLocalSearchParams();
 
     const [truckData, setTruckData] = useState<Truck>({} as Truck)
     const [modalVisible, setModalVisible] = useState(false);
@@ -310,20 +311,64 @@ const TruckDetails = () => {
                         </View>
                     </View>
                 </View>
-                
-
-                <View style={{ gap: wp(4), paddingHorizontal: wp(2), marginBottom: wp(2), paddingVertical: wp(5), backgroundColor: background, borderRadius: wp(4), paddingBottom: wp(4) }}>
 
 
-                  { truckFrContract &&   <View style={{flexDirection:"row"}}>
-                    <TouchableOpacity style={{backgroundColor:"green",width:80 , height:30 ,justifyContent:"center",alignItems:"center" }} >
-                        <ThemedText style={{color:"white"}}>Accept</ThemedText>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={{backgroundColor:"red",width:80 , height:30 , justifyContent:"center",alignItems:"center" }}>
-                        <ThemedText style={{color:"white"}}>Deny</ThemedText>
-                    </TouchableOpacity>
-                </View> }
-                                      
+                <View
+                    style={{
+                        gap: wp(4),
+                        paddingHorizontal: wp(2),
+                        marginBottom: wp(2),
+                        paddingVertical: wp(5),
+                        backgroundColor: background,
+                        borderRadius: wp(4),
+                        paddingBottom: wp(4),
+                    }}
+                >
+                    {truckFrContract && (
+                        <View style={{ flexDirection: "row", justifyContent: "center", gap: wp(3), marginVertical: wp(2) }}>
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: "#22c55e",
+                                    width: 110,
+                                    height: 44,
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    borderRadius: 24,
+                                    shadowColor: "#22c55e",
+                                    shadowOffset: { width: 0, height: 2 },
+                                    shadowOpacity: 0.2,
+                                    shadowRadius: 4,
+                                    elevation: 3,
+                                }}
+                                activeOpacity={0.85}
+                            >
+                                <ThemedText style={{ color: "#fff", fontWeight: "600", fontSize: 16, letterSpacing: 0.5 }}>
+                                    Accept
+                                </ThemedText>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: "#ef4444",
+                                    width: 110,
+                                    height: 44,
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    borderRadius: 24,
+                                    shadowColor: "#ef4444",
+                                    shadowOffset: { width: 0, height: 2 },
+                                    shadowOpacity: 0.2,
+                                    shadowRadius: 4,
+                                    elevation: 3,
+                                }}
+                                activeOpacity={0.85}
+                            >
+                                <ThemedText style={{ color: "#fff", fontWeight: "600", fontSize: 16, letterSpacing: 0.5 }}>
+                                    Deny
+                                </ThemedText>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
 
                     <View style={{}}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -487,71 +532,96 @@ const TruckDetails = () => {
 
 
 
-      { dspDetails &&<View>
-    <ThemedText>Truck Details</ThemedText>
+                    {dspDetails && <View>
+                        <ThemedText type="tiny" style={{}}>Truck Details</ThemedText>
+                        <Divider />
+                        <ScrollView pagingEnabled horizontal style={{ margin: 10 }} >
+                            {truckData.truckBookImage &&
+                                <View style={{ gap: 10 }}>
+                                    <ThemedText type="subtitle" style={{}} >Truck Book Image</ThemedText>
+                                    <Image source={{ uri: truckData.truckBookImage }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />
+                                </View>}
 
-                      <ScrollView horizontal style={{ margin: 10 }} >
-            {truckData.truckBookImage && <View>
-              <ThemedText style={{ textAlign: 'center' }} >Truck Book Image</ThemedText>
-              <Image source={{ uri: truckData.truckBookImage }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />
-            </View>}
+                            {truckData.trailerBookF && <View style={{ gap: 10 }}>
+                                <ThemedText type="subtitle" style={{}}>Trailer Book</ThemedText>
+                                <Image source={{ uri: truckData.trailerBookF }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />
+                            </View>}
 
-            {truckData.trailerBookF && <View>
-              <ThemedText style={{ textAlign: 'center' }}>Trailer Book</ThemedText>
-              <Image source={{ uri: truckData.trailerBookF }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />
-            </View>}
+                            {truckData.trailerBookSc && <View>
+                                <ThemedText >Second Trailer Book</ThemedText>
+                                <Image source={{ uri: truckData.trailerBookSc }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />
+                            </View>}
 
-            {truckData.trailerBookSc && <View>
-              <ThemedText >Second Trailer Book</ThemedText>
-              <Image source={{ uri: truckData.trailerBookSc }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />
-            </View>}
-
-          </ScrollView>
-
-        
-
-      
-                <ThemedText>Driver Details</ThemedText>
-          <View style={{ flexDirection: 'row' }} >
-            <ThemedText style={{ width: 60 }} >Driver Phone</ThemedText>
-            <ThemedText>:  {truckData.driverPhone}</ThemedText>
-          </View>
-
-          <ScrollView horizontal>
-            {truckData.driverPassport && <View>
-              <ThemedText style={{ textAlign: 'center' }} >Second Trailer Book</ThemedText>
-
-              {truckData.driverLicense && <Image source={{ uri: truckData.driverLicense }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />}
-            </View>}
-            {truckData.driverPassport && <View>
-
-              <ThemedText style={{ textAlign: 'center' }} >Second Trailer Book</ThemedText>
-              {<Image source={{ uri: truckData.driverPassport }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />}
-            </View>}
-          </ScrollView>
+                        </ScrollView>
 
 
-        
 
-   
-         <View>
-            <ThemedText>Truck Owner Details </ThemedText>    
-          <View style={{ flexDirection: 'row' }} >
-            <ThemedText style={{ width: 100 }} >Owner Phone Number</ThemedText>
-            <ThemedText>:  {truckData.ownerPhoneNum}</ThemedText>
-          </View>
-          <View style={{ flexDirection: 'row' }} >
-            <ThemedText style={{ width: 100 }} >Owner Email</ThemedText>
-            <ThemedText>:  {truckData.onwerEmail}</ThemedText>
-          </View>
 
-        </View>
+                        <ThemedText>Driver Details</ThemedText>
+                        <View style={{ flexDirection: 'row' }} >
+                            <ThemedText style={{ width: 60 }} >Driver Phone</ThemedText>
+                            <ThemedText>:  {truckData.driverPhone}</ThemedText>
+                        </View>
 
-        </View>  }           
+                        <ScrollView horizontal>
+                            {truckData.driverPassport && <View>
+                                <ThemedText style={{ textAlign: 'center' }} >Second Trailer Book</ThemedText>
 
-                    <TouchableOpacity style={{height:45 , backgroundColor:"green",width:240,borderRadius:21,justifyContent:"center",alignItems:"center",alignSelf:"center"}} 
-                    onPress={()=>router.push( {pathname :"/Logistics/Trucks/Index" ,params:{ userId: truckData.userId, organisationName:truckData.CompanyName }}  ) } >
-                        <ThemedText style={{color:"white"}} >View Trucks {truckData.CompanyName} </ThemedText>
+                                {truckData.driverLicense && <Image source={{ uri: truckData.driverLicense }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />}
+                            </View>}
+                            {truckData.driverPassport && <View>
+
+                                <ThemedText style={{ textAlign: 'center' }} >Second Trailer Book</ThemedText>
+                                {<Image source={{ uri: truckData.driverPassport }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />}
+                            </View>}
+                        </ScrollView>
+
+
+
+
+
+                        <View>
+                            <ThemedText>Truck Owner Details </ThemedText>
+                            <View style={{ flexDirection: 'row' }} >
+                                <ThemedText style={{ width: 100 }} >Owner Phone Number</ThemedText>
+                                <ThemedText>:  {truckData.ownerPhoneNum}</ThemedText>
+                            </View>
+                            <View style={{ flexDirection: 'row' }} >
+                                <ThemedText style={{ width: 100 }} >Owner Email</ThemedText>
+                                <ThemedText>:  {truckData.onwerEmail}</ThemedText>
+                            </View>
+
+                        </View>
+
+                    </View>}
+
+                    <TouchableOpacity
+                        style={{
+                            height: 45,
+                            backgroundColor: accent,
+                            width: 240,
+                            borderRadius: 21,
+                            justifyContent: "center",
+                            alignItems: "center",
+                            alignSelf: "center",
+                            marginTop: wp(4),
+                            marginBottom: wp(4),
+                            shadowColor: accent,
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.12,
+                            shadowRadius: 4,
+                            elevation: 2,
+                        }}
+                        onPress={() =>
+                            router.push({
+                                pathname: "/Logistics/Trucks/Index",
+                                params: { userId: truckData.userId, organisationName: truckData.CompanyName },
+                            })
+                        }
+                    >
+                        <ThemedText style={{ color: "white", fontWeight: "bold" }}>
+                            View Trucks {truckData.CompanyName}
+                        </ThemedText>
                     </TouchableOpacity>
 
                 </View>
