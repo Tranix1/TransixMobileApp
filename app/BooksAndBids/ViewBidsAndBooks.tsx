@@ -225,7 +225,7 @@ function BookingsandBiddings({ }) {
     <ScreenWrapper >
       {/* Header */}
 
-      <Heading page={dspRoute ? dspRoute : " Bookings and Biddings"} />
+      <Heading page={dspRoute ? dspRoute.toString() : " Bookings and Biddings"} />
 
       <View style={{ paddingTop: 90, flex: 1 }}>
         {dspRoute === "Iterms You Bidded" && (
