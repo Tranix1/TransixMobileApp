@@ -426,7 +426,7 @@ function HomeScreen({ navigation, route, }) {
       const user = auth.currentUser;
 
       if (user && user.email) {
-        await sendEmailVerification(user);
+        await sendEmailVerification(user) ;
         alert("New code sent");
         setemailVerifiedN(false)
       } else {

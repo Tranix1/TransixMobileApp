@@ -10,7 +10,7 @@ import { BlurView } from 'expo-blur'
 import { useAuth } from '@/context/AuthContext'
 import * as Updates from 'expo-updates';
 import { auth } from '../components/config/fireBase'
-import ScreenWrapper from '@/components/ScreenWrapper'
+import { signOut, sendEmailVerification } from 'firebase/auth'
 
 const Index = () => {
     function CustomHeader() {
@@ -438,6 +438,16 @@ const Index = () => {
                                     paddingVertical: wp(2),
                                     borderRadius: wp(3),
                                     alignItems: "center",
+                                }}
+                                onPress={async () => {
+                                    try {
+                                        await sendEmailVerification(auth.currentUser as any);
+                                        alert("Verification email sent successfully.");
+                                        setIsVisible(false);
+                                    } catch (error) {
+                                        console.log("Error sending verification email:", error);
+                                        alert("Failed to send verification email. Try again.");
+                                    }
                                 }}
                             >
                                 <ThemedText style={{ color: accent, fontWeight: "bold" }}>New code</ThemedText>
