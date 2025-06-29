@@ -358,7 +358,7 @@ const Index = () => {
             </SafeAreaView>
 
 
-            <Modal statusBarTranslucent visible={isVisible && auth.currentUser?.emailVerified} animationType='fade' transparent>
+            <Modal statusBarTranslucent visible={isVisible && !auth.currentUser?.emailVerified} animationType='fade' transparent>
                 <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', flex: 1, padding: wp(4), alignItems: 'center' }}>
                     <View
                         style={{

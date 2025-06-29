@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, Text, StyleSheet, ScrollView, Linking } from "react-native";
+import { View, TouchableOpacity,  StyleSheet, ScrollView, Linking, } from "react-native";
+import { ThemedText } from "@/components/ThemedText";
 import {
   onSnapshot,
   query,
@@ -29,6 +30,7 @@ const coolGray = "#e5e7eb";
 
 function BookingsandBiddings({ }) {
   const { dbName, dspRoute } = useLocalSearchParams();
+  console.log(dspRoute)
 
   const [newItermBooked, setNewBkedIterm] = useState(0);
   const [newItermBidded, setNewBiddedIterm] = useState(0);
@@ -216,337 +218,7 @@ function BookingsandBiddings({ }) {
     }
   };
 
-  const toggleContact = (itemId: string) => {
-    setContactDisplay((prevState) => ({
-      ...prevState,
-      [itemId]: !prevState[itemId],
-    }));
-  };
 
-  const navigate = (path: string) => {
-    console.log(`Navigating to: ${path}`);
-  };
-
-  // --- Card Component ---
-  const Card = ({ children, isVerified }: { children: React.ReactNode, isVerified?: boolean }) => (
-    <View style={{
-      backgroundColor: cardBg,
-      marginBottom: 18,
-      borderRadius: 16,
-      padding: 16,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.06,
-      shadowRadius: 8,
-      elevation: 2,
-      borderWidth: 1,
-      borderColor: coolGray,
-      position: "relative",
-      width: 360,
-      alignSelf: "center"
-    }}>
-      {isVerified && (
-        <View style={{
-          position: "absolute",
-          top: 10,
-          right: 10,
-          backgroundColor: "#fff",
-          borderRadius: 16,
-          padding: 2,
-          zIndex: 10,
-          borderWidth: 1,
-          borderColor: "#d1fae5"
-        }}>
-          <MaterialIcons name="verified" size={24} color="green" />
-        </View>
-      )}
-      {children}
-    </View>
-  );
-
-  // --- Redesigned List Items ---
-  const whnBookBiddAload = getAllIterms.map((item) => {
-    const userId = auth.currentUser?.uid;
-    if (!userId || item.bookerId !== userId) return null;
-    const message = ` ${item.ownerName} \n Is this Load still available    ${item.itemName} from    ${item.fromLocation} to ${item.toLocation} \nRate    ${item.linksrate || item.triaxleRate
-      ? (item.triaxlerate ? `triaxle ${item.triaxleRate} ` : "") + (item.linksrate ? `links for ${item.linksrate}` : "")
-      : `${item.ratepertonne}`
-      } ${item.pertonne ? "per tonne" : ""}
-from https://transix.net/selectedUserLoads/${item.userId}/${item.id} `;
-    let contactMe = (
-      <View style={{ paddingLeft: 30 }}>
-        <TouchableOpacity
-          onPress={() => navigate(`/message/${item.userId}/${item.CompanyName} `)}
-          style={{
-            height: 30,
-            flexDirection: "row",
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: "#008080",
-            justifyContent: "center",
-            marginBottom: 5,
-            marginTop: 6,
-          }}
-        >
-          <Text style={{ color: "#008080" }}>Message now</Text>
-          <MaterialIcons name="chat" size={24} color="#008080" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => Linking.openURL(`tel:${item.contact}`)}
-          style={{
-            height: 30,
-            flexDirection: "row",
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: "#40E0D0",
-            justifyContent: "center",
-            marginBottom: 4,
-          }}
-        >
-          <Text style={{ color: "#40E0D0" }}>Phone call</Text>
-          <MaterialIcons name="call" size={24} color="#0074D9" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => Linking.openURL(`whatsapp://send?phone=${item.contact}&text=${encodeURIComponent(message)}`)}
-          style={{
-            height: 30,
-            flexDirection: "row",
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: "#25D366",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ color: "#25D366" }}>WhatsApp </Text>
-          <FontAwesome6 name="whatsapp" size={24} color="#25D366" />
-        </TouchableOpacity>
-      </View>
-    );
-
-    return (
-      <Card key={item.id} isVerified={item.isVerified}>
-        <Text style={{ color: accent, textAlign: "center", fontSize: 18, fontWeight: "bold", marginBottom: 6 }}>
-          {item.ownerName}
-        </Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>{dbName === "bookings" ? "Booked" : "Bidded"}</Text>
-          <Text style={styles.infoValue}>{item.itemName}</Text>
-        </View>
-        {item.rate && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Rate</Text>
-            <Text style={styles.infoValue}>{item.currency ? "USD" : "RAND"} {item.rate} {item.pertonne ? "Per tonne" : null}</Text>
-          </View>
-        )}
-        {item.linksRate && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Links</Text>
-            <Text style={styles.infoValue}>{item.currency ? "USD" : "RAND"} {item.linksRate} {item.pertonne ? "Per tonne" : null}</Text>
-          </View>
-        )}
-        {item.triaxleRate && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Triaxle</Text>
-            <Text style={styles.infoValue}>{item.currency ? "USD" : "RAND"} {item.triaxleRate} {item.pertonne ? "Per tonne" : null}</Text>
-          </View>
-        )}
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Route</Text>
-          <Text style={styles.infoValue}>from {item.fromLocation} to {item.toLocation}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Decision</Text>
-          <Text style={styles.infoValue}>{item.Accept === null ? "Pending" : item.Accept === true ? "Accepted" : item.Accept === false ? "Denied" : "Unknown"}</Text>
-        </View>
-        {contactDisplay[item.id] && contactMe}
-        {item.Accept && (
-          <TouchableOpacity
-            onPress={() => toggleContact(item.id)}
-            style={styles.actionButton}
-          >
-            <Text style={{ color: "white", fontWeight: "bold" }}>Get In Touch Now</Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity
-          onPress={() => loadTaken(null, item.id)}
-          style={styles.denyButton}
-        >
-          <Text style={{ color: "white" }}>Not interested</Text>
-        </TouchableOpacity>
-      </Card>
-    );
-  });
-
-  const whenMyLoadBookBidd = getAllIterms.map((item) => {
-    const userId = auth.currentUser?.uid;
-    if (!userId || item.ownerId !== userId) return null;
-
-    let theRateD: string | undefined;
-
-    if (item.rate) {
-      theRateD = `Rate ${item.rate} ${item.perTonneB ? "per tonne" : ""}`;
-    } else if (item.triaxleRate && item.linksRate) {
-      theRateD = `Links ${item.linksRate} Triaxle ${item.triaxleRate} ${item.perTonneB ? "per tonne" : ""}`;
-    } else if (item.triaxleRate) {
-      theRateD = `Triaxle ${item.triaxleRate} ${item.perTonneB ? "per tonne" : ""}`;
-    } else if (item.linksRate) {
-      theRateD = `Links ${item.linksRate} ${item.perTonneB ? "per tonne" : ""}`;
-    }
-
-    const message = `${item.ownerName}
-Is this Load still available
-${item.itemName} from ${item.fromLocation} to ${item.toLocation}
-${theRateD}
-
-From: https://transix.net/selectedUserLoads/${item.userId}/${item.id}`;
-
-    const messageV = `${item.ownerName}
-Is this Load still available
-Commodity ${item.itemName}
-from ${item.fromLocation} to ${item.toLocation}
-${theRateD}
-
-Truck Details
-- Horse Registration: ${item.horseReg}
-- Trailer Type: ${item.trailerType}
-- Trailer Registration: ${item.trailerReg}
-- Second Trailer Registration: ${item.scndTrailerReg}
-
-Driver Details
-- Driver Name: ${item.driverName}
-- Driver License: ${item.driverLicense}
-- Driver Passport: ${item.driverPassport}
-- Driver Phone: ${item.driverPhone}
-
-From: https://transix.net/selectedUserLoads/${item.userId}/${item.id} `;
-
-    let messageSend = item.isVerified ? messageV : message;
-
-    let contactMe = (
-      <View style={{ paddingLeft: 30, marginBottom: 30 }}>
-        <TouchableOpacity
-          onPress={() => navigate(`/message/${item.userId}/${item.CompanyName} `)}
-          style={{
-            height: 30,
-            flexDirection: "row",
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: "#008080",
-            justifyContent: "center",
-            marginBottom: 5,
-            marginTop: 6,
-          }}
-        >
-          <Text style={{ color: "#008080" }}>Message now</Text>
-          <MaterialIcons name="chat" size={24} color="#008080" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => Linking.openURL(`whatsapp://send?phone=${item.contact}&text=${encodeURIComponent(messageSend)}`)}
-          style={{
-            height: 30,
-            flexDirection: "row",
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: "#25D366",
-            justifyContent: "center",
-            marginBottom: 6,
-          }}
-        >
-          <Text style={{ color: "#25D366" }}>WhatsApp </Text>
-          <FontAwesome6 name="whatsapp" size={24} color="#25D366" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => Linking.openURL(`tel:${item.contact}`)}
-          style={{
-            height: 30,
-            flexDirection: "row",
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: "#0074D9",
-            justifyContent: "center",
-            marginBottom: 4,
-          }}
-        >
-          <Text style={{ color: "#0074D9" }}>Phone call</Text>
-          <MaterialIcons name="call" size={24} color="#0074D9" />
-        </TouchableOpacity>
-      </View>
-    );
-
-
-    let dbToBechanged = ""
-    dbName === "bookings" ? (dbToBechanged = "bookings") : (dbToBechanged = "biddings");
-
-    return (
-      <Card key={item.id} isVerified={item.isVerified}>
-        <Text style={{ color: accent, textAlign: "center", fontSize: 18, fontWeight: "bold", marginBottom: 6 }}>
-          {item.bookerName}
-        </Text>
-        <View style={styles.infoRow}>
-          <Text style={[styles.infoLabel, { fontStyle: "italic" }]}>Commodity</Text>
-          <Text style={styles.infoValue}>: {item.itemName} was {dbName === "bookings" ? "Booked" : "Bidded"}</Text>
-        </View>
-        {item.rate && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Rate</Text>
-            <Text style={styles.infoValue}>{item.currencyB ? "USD" : "RAND"} {item.rate} {item.perTonneB ? "Per tonne" : null}</Text>
-          </View>
-        )}
-        {item.linksRate && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Links</Text>
-            <Text style={styles.infoValue}>{item.currency ? "USD" : "RAND"} {item.linksRate} {item.pertonne ? "Per tonne" : null}</Text>
-          </View>
-        )}
-        {item.triaxleRate && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Triaxle</Text>
-            <Text style={styles.infoValue}>{item.currency ? "USD" : "RAND"} {item.triaxleRate} {item.pertonne ? "Per tonne" : null}</Text>
-          </View>
-        )}
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Route</Text>
-          <Text style={styles.infoValue}>from {item.fromLocation} to {item.toLocation}</Text>
-        </View>
-        <View style={[styles.infoRow, { marginTop: 8, marginBottom: 8 }]}>
-          <TouchableOpacity
-            onPress={() => toggleAcceptOrDeny(dbToBechanged, item.id, "Accept", item.contact, messageSend)}
-            style={styles.acceptButton}
-          >
-            <Text style={{ color: "white", fontWeight: "bold" }}>Accept</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => toggleAcceptOrDeny(dbToBechanged, item.id, "Deny")}
-            style={styles.buttonIsFalse}
-          >
-            <Text style={{ color: accent, fontWeight: "bold" }}>Deny</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={[styles.infoRow, { marginBottom: 10 }]}>
-          <TouchableOpacity style={styles.secondaryButton}>
-            <Text style={{ fontSize: 16, color: "white" }}>Bookers trucks</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => toggleContact(item.id)}
-            style={styles.actionButton}
-          >
-            <Text style={{ color: "white", fontWeight: "bold" }}>Get In Touch</Text>
-          </TouchableOpacity>
-        </View>
-        {contactDisplay[item.id] && contactMe}
-        <TouchableOpacity
-          onPress={() => loadTaken(item.loadId, item.id)}
-          style={styles.denyButton}
-        >
-          <Text style={{ color: "white" }}>Load Taken</Text>
-        </TouchableOpacity>
-      </Card>
-    );
-  });
 
   // --- Main Render ---
   return (
@@ -556,45 +228,232 @@ From: https://transix.net/selectedUserLoads/${item.userId}/${item.id} `;
       <Heading page={dspRoute ? dspRoute.toString() : " Bookings and Biddings"} />
 
       <View style={{ paddingTop: 90, flex: 1 }}>
-        {dspRoute === "itermsYouBidded" && (
+        {dspRoute === "Iterms You Bidded" && (
           <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-            {whnBookBiddAload}
+            {
+            <View style={{  marginBottom: 15, width : 350 , padding :7}}>
+
+             <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white',zIndex : 66}} >
+            <MaterialIcons name="verified" size={26} color="green" />
+            </View>
+
+            
+        <ThemedText style={{color:'#5a0c0c' , fontSize:15,textAlign :'center' }} >Chibuku logistics </ThemedText>
+
+         <View style={{flexDirection :'row'}} >
+        <ThemedText style={{width :59}} >{dbName === "bookings" ?  "Booked" : "Bidded"}</ThemedText>
+        <ThemedText>:  weed </ThemedText>
+      </View>
+
+        <View style={{flexDirection :'row'}} >
+        <ThemedText style={{width :99}} >Rate</ThemedText>
+        <ThemedText>:  usd 300 per Tonne </ThemedText>
+      </View> 
+      
+
+
+  <View style={{flexDirection :'row'}} >
+        <ThemedText style={{width :60}} >Route</ThemedText>
+        <ThemedText>:  from  Harare  to  Kadoma </ThemedText>
+      </View>
+          
+      <View style={{flexDirection :'row'}} >
+        <ThemedText style={{width :60}} >Decision</ThemedText>
+        <ThemedText>:  "Pending" /"Accepted" / "Denied" </ThemedText>
+      </View>
+
+        {  <TouchableOpacity  style={{ width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
+          <ThemedText style={{ color:'white'}} > Get In Touch Now</ThemedText>
+        </TouchableOpacity>}
+
+          <TouchableOpacity  style={{backgroundColor :'red' , width : 100 , alignItems :'center' , borderRadius :50 , position :'absolute', right :7 , bottom :7}}>
+            <ThemedText style={{color:'white'}} > Not intrested </ThemedText>
+          </TouchableOpacity>
+      </View>
+            }
+          
+          </ScrollView>
+        )}
+
+        {dspRoute === "Your Booked Items" && (
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+                 
+    <View style={{  marginBottom: 15, width : 350 , padding :7}} >
+
+
+            { <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white',zIndex : 66}} >
+            <MaterialIcons name="verified" size={26} color="green" />
+            </View>}
+
+            <ThemedText style={{color:'#6a0c0c' , fontSize:15,textAlign :'center' }}  > CHIHOKO lOGISTICS </ThemedText>
+
+
+ <View style={{flexDirection :'row',marginBottom:6}} >
+        <ThemedText style={{width :85 ,fontStyle:'italic',fontSize:16}} >Commodity</ThemedText>
+        <ThemedText style={{fontSize:17}} >: weed was {dbName === "bookings" ?  "Booked" : "Bidded"} </ThemedText>
+      </View>
+
+        {<View style={{flexDirection :'row'}} >
+        <ThemedText style={{width :100}} >Rate</ThemedText>
+        <ThemedText>:  USD 899 PER TONNE </ThemedText>
+      </View>}
+
+      
+
+
+  <View style={{flexDirection :'row'}} >
+        <ThemedText style={{width :75}} >Route</ThemedText>
+        <ThemedText>:  from  Lopansi  to  CHihoro </ThemedText>
+      </View>
+
+                 <View style={{flexDirection:'row' , margin :4}} >      
+           <TouchableOpacity style={styles.bttonIsTrue} >
+            <ThemedText style={{color:'white'}} >Accept </ThemedText>
+          </TouchableOpacity>
+          
+           <TouchableOpacity  style={styles.buttonIsFalse}>
+            <ThemedText  >Deny </ThemedText>
+          </TouchableOpacity>
+            </View>
+
+      <View style={{flexDirection:'row', marginBottom : 25 , height : 30 , alignSelf:'center' , marginTop : 6,  }} >
+          <TouchableOpacity style={{    width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#6a0c0c' ,  alignSelf:'center', margin:5  }} >
+          <ThemedText style={{fontSize:17,color:'white' }} >Bookers trucks</ThemedText>
+
+          </TouchableOpacity>
+
+        <TouchableOpacity   style={{    width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  alignSelf:'center', margin:5 }} >
+          <ThemedText style={{color:'white'}} > Get In Touch</ThemedText>
+        </TouchableOpacity>
+        </View>
+
+
+          <TouchableOpacity  style={{backgroundColor :'red' , width : 100 , alignItems :'center' , borderRadius :50 , position :'absolute', right :7 , bottom :7}}>
+            <ThemedText style={{color:'white'}} > Load Taken </ThemedText>
+          </TouchableOpacity>
+      </View>  
+
+
+
+          </ScrollView>
+        )}
+
+        {dspRoute === "Items You Booked" && (
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+              {
+            <View style={{  marginBottom: 15, width : 350 , padding :7}}>
+
+             <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white',zIndex : 66}} >
+            <MaterialIcons name="verified" size={26} color="green" />
+            </View>
+
+            
+        <ThemedText style={{color:'#5a0c0c' , fontSize:15,textAlign :'center' }} >Chibuku logistics </ThemedText>
+
+         <View style={{flexDirection :'row'}} >
+        <ThemedText style={{width :59}} >{dbName === "bookings" ?  "Booked" : "Bidded"}</ThemedText>
+        <ThemedText>:  weed </ThemedText>
+      </View>
+
+        <View style={{flexDirection :'row'}} >
+        <ThemedText style={{width :99}} >Rate</ThemedText>
+        <ThemedText>:  usd 300 per Tonne </ThemedText>
+      </View> 
+      
+
+
+  <View style={{flexDirection :'row'}} >
+        <ThemedText style={{width :60}} >Route</ThemedText>
+        <ThemedText>:  from  Harare  to  Kadoma </ThemedText>
+      </View>
+          
+      <View style={{flexDirection :'row'}} >
+        <ThemedText style={{width :60}} >Decision</ThemedText>
+        <ThemedText>:  "Pending" /"Accepted" / "Denied" </ThemedText>
+      </View>
+
+        {  <TouchableOpacity  style={{ width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  borderRadius: 8, alignSelf:'center', margin:5 }} >
+          <ThemedText style={{ color:'white'}} > Get In Touch Now</ThemedText>
+        </TouchableOpacity>}
+
+          <TouchableOpacity  style={{backgroundColor :'red' , width : 100 , alignItems :'center' , borderRadius :50 , position :'absolute', right :7 , bottom :7}}>
+            <ThemedText style={{color:'white'}} > Not intrested </ThemedText>
+          </TouchableOpacity>
+      </View>
+            }
             {getAllIterms.length > 15 && dspLoadMoreBtn && (
               <TouchableOpacity onPress={() => loadedData(true)} style={styles.loadMoreBtn}>
-                <Text style={{ color: 'white', fontSize: 18, textAlign: 'center', fontWeight: "bold" }}>Load More</Text>
+                <ThemedText style={{ color: 'white', fontSize: 18, textAlign: 'center', fontWeight: "bold" }}>Load More</ThemedText>
               </TouchableOpacity>
             )}
           </ScrollView>
         )}
 
-        {dspRoute === "yourBiddedItems" && (
+        {dspRoute === "Your Bidded Items" && (
           <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-            {whenMyLoadBookBidd}
-            {getAllIterms.length > 15 && dspLoadMoreBtn && (
-              <TouchableOpacity onPress={() => loadedData(true)} style={styles.loadMoreBtn}>
-                <Text style={{ color: 'white', fontSize: 18, textAlign: 'center', fontWeight: "bold" }}>Load More</Text>
-              </TouchableOpacity>
-            )}
-          </ScrollView>
-        )}
+            {
 
-        {dspRoute === "itemsYouBooked" && (
-          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-            {whnBookBiddAload}
-            {getAllIterms.length > 15 && dspLoadMoreBtn && (
-              <TouchableOpacity onPress={() => loadedData(true)} style={styles.loadMoreBtn}>
-                <Text style={{ color: 'white', fontSize: 18, textAlign: 'center', fontWeight: "bold" }}>Load More</Text>
-              </TouchableOpacity>
-            )}
-          </ScrollView>
-        )}
+    <View style={{  marginBottom: 15, width : 350 , padding :7}} >
 
-        {dspRoute === "yourBookedItems" && (
-          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-            {whenMyLoadBookBidd}
+
+            { <View style={{position : 'absolute' , top : 0 , right : 0 , backgroundColor : 'white',zIndex : 66}} >
+            <MaterialIcons name="verified" size={26} color="green" />
+            </View>}
+
+            <ThemedText style={{color:'#6a0c0c' , fontSize:15,textAlign :'center' }}  > CHIHOKO lOGISTICS </ThemedText>
+
+
+ <View style={{flexDirection :'row',marginBottom:6}} >
+        <ThemedText style={{width :85 ,fontStyle:'italic',fontSize:16}} >Commodity</ThemedText>
+        <ThemedText style={{fontSize:17}} >: weed was {dbName === "bookings" ?  "Booked" : "Bidded"} </ThemedText>
+      </View>
+
+        {<View style={{flexDirection :'row'}} >
+        <ThemedText style={{width :100}} >Rate</ThemedText>
+        <ThemedText>:  USD 899 PER TONNE </ThemedText>
+      </View>}
+
+      
+
+
+  <View style={{flexDirection :'row'}} >
+        <ThemedText style={{width :75}} >Route</ThemedText>
+        <ThemedText>:  from  Lopansi  to  CHihoro </ThemedText>
+      </View>
+
+                 <View style={{flexDirection:'row' , margin :4}} >      
+           <TouchableOpacity style={styles.bttonIsTrue} >
+            <ThemedText style={{color:'white'}} >Accept </ThemedText>
+          </TouchableOpacity>
+          
+           <TouchableOpacity  style={styles.buttonIsFalse}>
+            <ThemedText  >Deny </ThemedText>
+          </TouchableOpacity>
+            </View>
+
+      <View style={{flexDirection:'row', marginBottom : 25 , height : 30 , alignSelf:'center' , marginTop : 6,  }} >
+          <TouchableOpacity style={{    width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#6a0c0c' ,  alignSelf:'center', margin:5  }} >
+          <ThemedText style={{fontSize:17,color:'white' }} >Bookers trucks</ThemedText>
+
+          </TouchableOpacity>
+
+        <TouchableOpacity   style={{    width : 150 , height : 30 , alignItems :"center" , justifyContent :'center', backgroundColor:'#228B22' ,  alignSelf:'center', margin:5 }} >
+          <ThemedText style={{color:'white'}} > Get In Touch</ThemedText>
+        </TouchableOpacity>
+        </View>
+
+
+          <TouchableOpacity  style={{backgroundColor :'red' , width : 100 , alignItems :'center' , borderRadius :50 , position :'absolute', right :7 , bottom :7}}>
+            <ThemedText style={{color:'white'}} > Load Taken </ThemedText>
+          </TouchableOpacity>
+      </View>  
+
+
+
+            }
             {getAllIterms.length > 15 && dspLoadMoreBtn && (
               <TouchableOpacity onPress={() => loadedData(true)} style={styles.loadMoreBtn}>
-                <Text style={{ color: 'white', fontSize: 18, textAlign: 'center', fontWeight: "bold" }}>Load More</Text>
+                <ThemedText style={{ color: 'white', fontSize: 18, textAlign: 'center', fontWeight: "bold" }}>Load More</ThemedText>
               </TouchableOpacity>
             )}
           </ScrollView>
@@ -645,16 +504,20 @@ const styles = StyleSheet.create({
     minWidth: 90,
   },
   buttonIsFalse: {
-    borderWidth: 1,
-    borderColor: accent,
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 18,
-    alignItems: "center",
-    minWidth: 90,
-    marginLeft: 10,
-    backgroundColor: "#fff",
-  },
+        borderWidth : 1 ,
+     borderColor : '#6a0c0c' ,
+     paddingLeft :4 , 
+     paddingRight:4 ,
+     backgroundColor:"red"
+    //  marginLeft : 6`
+    },
+        bttonIsTrue:{
+    backgroundColor : 'green' ,
+     paddingLeft :4 ,
+     paddingRight:4 ,
+     color :'white' 
+
+    },
   secondaryButton: {
     backgroundColor: accent,
     borderRadius: 8,
