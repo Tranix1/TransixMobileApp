@@ -15,6 +15,7 @@ import { deleteDocument, readById } from "@/db/operations";
 import { Image } from 'expo-image'
 import { useAuth } from "@/context/AuthContext";
 import Divider from "@/components/Divider";
+import { formatNumber } from "@/services/services";
 
 const TruckDetails = () => {
 
@@ -535,61 +536,61 @@ const TruckDetails = () => {
                     {dspDetails && <View>
                         <ThemedText type="tiny" style={{}}>Truck Details</ThemedText>
                         <Divider />
-                        <ScrollView pagingEnabled horizontal style={{ margin: 10 }} >
+                        <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
                             {truckData.truckBookImage &&
                                 <View style={{ gap: 10 }}>
                                     <ThemedText type="subtitle" style={{}} >Truck Book Image</ThemedText>
                                     <Image source={{ uri: truckData.truckBookImage }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />
                                 </View>}
 
-                            {truckData.trailerBookF && <View style={{ gap: 10 }}>
-                                <ThemedText type="subtitle" style={{}}>Trailer Book</ThemedText>
-                                <Image source={{ uri: truckData.trailerBookF }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />
-                            </View>}
+                            {truckData.trailerBookF &&
+                                <View style={{ gap: 10 }}>
+                                    <ThemedText type="subtitle" style={{}}>Trailer Book</ThemedText>
+                                    <Image source={{ uri: truckData.trailerBookF }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />
+                                </View>}
 
-                            {truckData.trailerBookSc && <View>
-                                <ThemedText >Second Trailer Book</ThemedText>
-                                <Image source={{ uri: truckData.trailerBookSc }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />
-                            </View>}
+                            {truckData.trailerBookSc &&
+                                <View style={{ gap: 10 }}>
+                                    <ThemedText type="subtitle" style={{}}>Second Trailer Book</ThemedText>
+                                    <Image source={{ uri: truckData.trailerBookSc }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />
+                                </View>}
 
                         </ScrollView>
 
 
 
 
-                        <ThemedText>Driver Details</ThemedText>
-                        <View style={{ flexDirection: 'row' }} >
-                            <ThemedText style={{ width: 60 }} >Driver Phone</ThemedText>
-                            <ThemedText>:  {truckData.driverPhone}</ThemedText>
-                        </View>
+                        <ThemedText type="tiny" style={{ marginTop: hp(5) }}>Driver Details</ThemedText>
+                        <Divider />
+                        <ThemedText type="tiny" style={{ marginTop: hp(1) }}>Driver Phone</ThemedText>
+                        <ThemedText type="subtitle">{formatNumber(parseFloat(truckData.driverPhone))}</ThemedText>
+                        <Divider />
 
-                        <ScrollView horizontal>
-                            {truckData.driverPassport && <View>
-                                <ThemedText style={{ textAlign: 'center' }} >Second Trailer Book</ThemedText>
 
-                                {truckData.driverLicense && <Image source={{ uri: truckData.driverLicense }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />}
-                            </View>}
-                            {truckData.driverPassport && <View>
+                        <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
+                            {truckData.driverPassport &&
+                                <View style={{ gap: 10 }}>
+                                    <ThemedText type="subtitle" style={{}}>Second Trailer Book</ThemedText>
 
-                                <ThemedText style={{ textAlign: 'center' }} >Second Trailer Book</ThemedText>
-                                {<Image source={{ uri: truckData.driverPassport }} style={{ height: 250, borderRadius: 10, width: 300, marginLeft: 5 }} />}
-                            </View>}
+                                    {truckData.driverLicense && <Image source={{ uri: truckData.driverLicense }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />}
+                                </View>}
+                            {truckData.driverPassport &&
+                                <View style={{ gap: 10 }}>
+                                    <ThemedText type="subtitle" style={{}}>Second Trailer Book</ThemedText>
+                                    {<Image source={{ uri: truckData.driverPassport }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />}
+                                </View>}
                         </ScrollView>
 
-
+                        <Divider />
 
 
 
                         <View>
-                            <ThemedText>Truck Owner Details </ThemedText>
-                            <View style={{ flexDirection: 'row' }} >
-                                <ThemedText style={{ width: 100 }} >Owner Phone Number</ThemedText>
-                                <ThemedText>:  {truckData.ownerPhoneNum}</ThemedText>
-                            </View>
-                            <View style={{ flexDirection: 'row' }} >
-                                <ThemedText style={{ width: 100 }} >Owner Email</ThemedText>
-                                <ThemedText>:  {truckData.onwerEmail}</ThemedText>
-                            </View>
+                            <ThemedText style={{ textAlign: 'center', marginVertical: wp(4) }}>Truck Owner Details </ThemedText>
+                            <ThemedText type="tiny" >Owner Phone Number</ThemedText>
+                            <ThemedText style={{ marginBottom: wp(2) }} type="subtitle">{truckData.ownerPhoneNum}</ThemedText>
+                            <ThemedText type="tiny" >Owner Email</ThemedText>
+                            <ThemedText type="subtitle">{truckData.onwerEmail}</ThemedText>
 
                         </View>
 
@@ -619,8 +620,11 @@ const TruckDetails = () => {
                             })
                         }
                     >
-                        <ThemedText style={{ color: "white", fontWeight: "bold" }}>
-                            View Trucks {truckData.CompanyName}
+                        <ThemedText style={{ color: "white" }}>
+                            View Trucks from{'  '}
+                            <ThemedText style={{ textDecorationLine: 'underline', color: 'white' }}>
+                                {truckData.CompanyName}
+                            </ThemedText>
                         </ThemedText>
                     </TouchableOpacity>
 
