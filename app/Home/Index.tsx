@@ -593,7 +593,7 @@ const Index = () => {
                                 Create contract and start transporting loads today!
                             </ThemedText>
 
-                            <TouchableOpacity style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
+                            <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
                                 <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
                                 <ThemedText color='#fff'>
                                     Book Contracts

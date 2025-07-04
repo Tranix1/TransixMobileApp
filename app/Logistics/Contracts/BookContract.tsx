@@ -107,6 +107,8 @@ function BookLContract({ }) {
     return !querySnapshot.empty;
   };
 
+
+  //bro wtf is this code, it looks like a mess
   let renderElements = bbVerifiedLoadD.map((item) => {
     async function handleSubmitDetails() {
       try {
@@ -138,25 +140,18 @@ function BookLContract({ }) {
 
     return (
       <View
-        style={{
-          marginBottom: wp(6),
-          padding: wp(4),
-          backgroundColor: background,
-          borderRadius: wp(4),
-          borderWidth: 1,
-          borderColor: coolGray + "40",
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 12,
-          elevation: 3,
-        }}
+        style={styles.cardContainer}
         key={item.id}
       >
+        {/* Main Image */}
         {item.imageUrl && (
-          <Image source={{ uri: item.imageUrl }} style={{ height: 180, borderRadius: wp(2), marginBottom: wp(2), width: "100%" }} />
+          <Image
+            source={{ uri: item.imageUrl }}
+            style={styles.mainImage}
+          />
         )}
 
+        {/* Contract Status */}
         {trucksInContract.map((scndItem) => {
           function removeFrmContract() {
             updateDocument("ContractRequests", scndItem.id, {
@@ -171,16 +166,17 @@ function BookLContract({ }) {
           return (
             <View key={scndItem.id}>
               {(Number(item.timeStamp) === Number(scndItem.truckInfo.timeStamp)) && (
-                <View style={{ marginBottom: wp(2) }}>
-                  <ThemedText type="defaultSemiBold" style={{ color: accent }}>Truck Is Booked</ThemedText>
-                  <TouchableOpacity onPress={removeFrmContract} style={{
-                    backgroundColor: "#e53935",
-                    borderRadius: wp(2),
-                    paddingVertical: wp(2),
-                    marginTop: wp(1),
-                    alignItems: "center"
-                  }}>
-                    <ThemedText style={{ color: "#fff" }}>Remove from existing contract</ThemedText>
+                <View style={styles.contractStatusContainer}>
+                  <ThemedText type="defaultSemiBold" style={[styles.contractStatusText, { color: accent }]}>
+                    Truck Is Booked
+                  </ThemedText>
+                  <TouchableOpacity
+                    onPress={removeFrmContract}
+                    style={styles.removeContractButton}
+                  >
+                    <ThemedText style={styles.buttonTextWhite}>
+                      Remove from existing contract
+                    </ThemedText>
                   </TouchableOpacity>
                 </View>
               )}
@@ -188,97 +184,144 @@ function BookLContract({ }) {
           )
         })}
 
-        <TouchableOpacity onPress={handleSubmitDetails} style={{
-          backgroundColor: accent,
-          borderRadius: wp(2),
-          paddingVertical: wp(2),
-          alignItems: "center",
-          marginBottom: wp(2)
-        }}>
-          <ThemedText style={{ color: "#fff", fontWeight: "bold" }}>Select to contract</ThemedText>
+        {/* Select Button */}
+        <TouchableOpacity
+          onPress={handleSubmitDetails}
+          style={[styles.primaryButton, { backgroundColor: accent }]}
+        >
+          <ThemedText style={styles.buttonTextWhiteBold}>
+            Select to contract
+          </ThemedText>
         </TouchableOpacity>
 
-        <ThemedText type="subtitle" style={{ color: accent, fontWeight: "bold", fontSize: wp(4.5), marginBottom: wp(1) }}>
+        {/* Company Name */}
+        <ThemedText type="subtitle" style={[styles.companyName, { color: accent }]}>
           {item.CompanyName}
         </ThemedText>
 
-        <TouchableOpacity
-          onPress={() => togglrTruckDe(item.id)}
-          style={styles.buttonSelectStyle}
-        >
-          <ThemedText style={{ color: 'white' }}>Truck Details</ThemedText>
-        </TouchableOpacity>
-        {truckDetails[item.id] && (
-          <View style={{ marginTop: wp(2) }}>
-            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
-              <ThemedText style={{ width: 100, color: icon }}>Trailer Type</ThemedText>
-              <ThemedText>: {item.cargoArea}</ThemedText>
-            </View>
-            <ScrollView horizontal style={{ marginVertical: wp(2) }}>
-              {item.truckBookImage && (
-                <View style={{ marginRight: wp(2) }}>
-                  <ThemedText style={{ textAlign: 'center' }}>Truck Image</ThemedText>
-                  <Image source={{ uri: item.truckBookImage }} style={{ height: 120, borderRadius: wp(2), width: 180 }} />
-                </View>
-              )}
-              {item.trailerBookF && (
-                <View style={{ marginRight: wp(2) }}>
-                  <ThemedText style={{ textAlign: 'center' }}>Trailer Book</ThemedText>
-                  <Image source={{ uri: item.trailerBookF }} style={{ height: 120, borderRadius: wp(2), width: 180 }} />
-                </View>
-              )}
-              {item.trailerBookSc && (
-                <View style={{ marginRight: wp(2) }}>
-                  <ThemedText style={{ textAlign: 'center' }}>Second Trailer Book</ThemedText>
-                  <Image source={{ uri: item.trailerBookSc }} style={{ height: 120, borderRadius: wp(2), width: 180 }} />
-                </View>
-              )}
-            </ScrollView>
-          </View>
-        )}
+        {/* Truck Details Section */}
+        <View style={styles.detailsSection}>
+          <TouchableOpacity
+            onPress={() => togglrTruckDe(item.id)}
+            style={[styles.secondaryButton, { backgroundColor: accent }]}
+          >
+            <ThemedText style={styles.buttonTextWhite}>Truck Details</ThemedText>
+          </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => togglrDriverDe(item.id)} style={styles.buttonStyle}>
-          <ThemedText>Driver Details</ThemedText>
-        </TouchableOpacity>
-        {driverDetails[item.id] && (
-          <View style={{ marginTop: wp(2) }}>
-            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
-              <ThemedText style={{ width: 100, color: icon }}>Driver Phone</ThemedText>
-              <ThemedText>: {item.driverPhone}</ThemedText>
-            </View>
-            <ScrollView horizontal>
-              {item.driverLicense && (
-                <View style={{ marginRight: wp(2) }}>
-                  <ThemedText style={{ textAlign: 'center' }}>Driver License</ThemedText>
-                  <Image source={{ uri: item.driverLicense }} style={{ height: 120, borderRadius: wp(2), width: 180 }} />
-                </View>
-              )}
-              {item.driverPassport && (
-                <View style={{ marginRight: wp(2) }}>
-                  <ThemedText style={{ textAlign: 'center' }}>Driver Passport</ThemedText>
-                  <Image source={{ uri: item.driverPassport }} style={{ height: 120, borderRadius: wp(2), width: 180 }} />
-                </View>
-              )}
-            </ScrollView>
-          </View>
-        )}
+          {truckDetails[item.id] && (
+            <View style={styles.detailsContent}>
+              <View style={styles.detailRow}>
+                <ThemedText style={[styles.detailLabel, { color: icon }]}>Trailer Type</ThemedText>
+                <ThemedText style={styles.detailValue}>: {item.cargoArea}</ThemedText>
+              </View>
 
-        <TouchableOpacity onPress={() => togglrTruckBuzDe(item.id)} style={styles.buttonSelectStyle}>
-          <ThemedText style={{ color: 'white', fontSize: 17 }}>Business Details</ThemedText>
-        </TouchableOpacity>
-        {truckBuzDe[item.id] && (
-          <View style={{ marginTop: wp(2) }}>
-            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
-              <ThemedText style={{ width: 120, color: icon }}>Owner Phone Number</ThemedText>
-              <ThemedText>: {item.ownerPhoneNum}</ThemedText>
+              <ScrollView
+                horizontal
+                style={styles.horizontalScroll}
+                showsHorizontalScrollIndicator={false}
+              >
+                {item.truckBookImage && (
+                  <View style={styles.imageContainer}>
+                    <ThemedText style={styles.imageLabel}>Truck Image</ThemedText>
+                    <Image
+                      source={{ uri: item.truckBookImage }}
+                      style={styles.detailImage}
+                    />
+                  </View>
+                )}
+                {item.trailerBookF && (
+                  <View style={styles.imageContainer}>
+                    <ThemedText style={styles.imageLabel}>Trailer Book</ThemedText>
+                    <Image
+                      source={{ uri: item.trailerBookF }}
+                      style={styles.detailImage}
+                    />
+                  </View>
+                )}
+                {item.trailerBookSc && (
+                  <View style={styles.imageContainer}>
+                    <ThemedText style={styles.imageLabel}>Second Trailer Book</ThemedText>
+                    <Image
+                      source={{ uri: item.trailerBookSc }}
+                      style={styles.detailImage}
+                    />
+                  </View>
+                )}
+              </ScrollView>
             </View>
-            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
-              <ThemedText style={{ width: 120, color: icon }}>Owner Email</ThemedText>
-              <ThemedText>: {item.onwerEmail}</ThemedText>
+          )}
+        </View>
+
+        {/* Driver Details Section */}
+        <View style={styles.detailsSection}>
+          <TouchableOpacity
+            onPress={() => togglrDriverDe(item.id)}
+            style={[styles.outlineButton, { borderColor: accent }]}
+          >
+            <ThemedText style={[styles.buttonTextDark, { color: accent }]}>Driver Details</ThemedText>
+          </TouchableOpacity>
+
+          {driverDetails[item.id] && (
+            <View style={styles.detailsContent}>
+              <View style={styles.detailRow}>
+                <ThemedText style={[styles.detailLabel, { color: icon }]}>Driver Phone</ThemedText>
+                <ThemedText style={styles.detailValue}>: {item.driverPhone}</ThemedText>
+              </View>
+
+              <ScrollView
+                horizontal
+                style={styles.horizontalScroll}
+                showsHorizontalScrollIndicator={false}
+              >
+                {item.driverLicense && (
+                  <View style={styles.imageContainer}>
+                    <ThemedText style={styles.imageLabel}>Driver License</ThemedText>
+                    <Image
+                      source={{ uri: item.driverLicense }}
+                      style={styles.detailImage}
+                    />
+                  </View>
+                )}
+                {item.driverPassport && (
+                  <View style={styles.imageContainer}>
+                    <ThemedText style={styles.imageLabel}>Driver Passport</ThemedText>
+                    <Image
+                      source={{ uri: item.driverPassport }}
+                      style={styles.detailImage}
+                    />
+                  </View>
+                )}
+              </ScrollView>
             </View>
-          </View>
-        )}
+          )}
+        </View>
+
+        {/* Business Details Section */}
+        <View style={styles.detailsSection}>
+          <TouchableOpacity
+            onPress={() => togglrTruckBuzDe(item.id)}
+            style={[styles.secondaryButton, { backgroundColor: accent }]}
+          >
+            <ThemedText style={styles.buttonTextWhite}>Business Details</ThemedText>
+          </TouchableOpacity>
+
+          {truckBuzDe[item.id] && (
+            <View style={styles.detailsContent}>
+              <View style={styles.detailRow}>
+                <ThemedText style={[styles.detailLabel, { color: icon }]}>Owner Phone Number</ThemedText>
+                <ThemedText style={styles.detailValue}>: {item.ownerPhoneNum}</ThemedText>
+              </View>
+              <View style={styles.detailRow}>
+                <ThemedText style={[styles.detailLabel, { color: icon }]}>Owner Email</ThemedText>
+                <ThemedText style={styles.detailValue}>: {item.onwerEmail}</ThemedText>
+              </View>
+            </View>
+          )}
+        </View>
       </View>
+
+
+
     )
   })
 
@@ -346,11 +389,10 @@ function BookLContract({ }) {
       {/* Add Button */}
       <TouchableOpacity style={{
         position: 'absolute',
-        bottom: hp(6),
+        bottom: hp(4),
         right: wp(4),
-        height: wp(10),
-        paddingHorizontal: wp(4),
-        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        padding: wp(2),
+        backgroundColor: accent,
         zIndex: 200,
         borderRadius: wp(900),
         flexDirection: 'row',
@@ -363,8 +405,7 @@ function BookLContract({ }) {
         shadowRadius: 4,
         elevation: 2,
       }}>
-        <ThemedText type="defaultSemiBold" style={{ fontSize: wp(5), paddingTop: 3, color: 'green' }}>Add</ThemedText>
-        <Feather name="plus" size={wp(7)} color="green" />
+        <Feather name="plus" size={wp(7)} color="#fff" />
       </TouchableOpacity>
 
       {/* Truck List */}
@@ -397,5 +438,109 @@ const styles = StyleSheet.create({
     marginTop: 10,
     borderRadius: 10
 
+  },
+  cardContainer: {
+    marginBottom: wp(6),
+    padding: wp(4),
+    borderRadius: wp(4),
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  mainImage: {
+    height: 180,
+    borderRadius: wp(2),
+    marginBottom: wp(2),
+    width: "100%",
+  },
+  contractStatusContainer: {
+    marginBottom: wp(2),
+  },
+  contractStatusText: {
+    fontSize: wp(4),
+  },
+  removeContractButton: {
+    backgroundColor: "#e53935",
+    borderRadius: wp(2),
+    paddingVertical: wp(2),
+    marginTop: wp(1),
+    alignItems: "center"
+  },
+  primaryButton: {
+    borderRadius: wp(2),
+    paddingVertical: wp(2),
+    alignItems: "center",
+    marginBottom: wp(2)
+  },
+  secondaryButton: {
+    borderRadius: wp(2),
+    paddingVertical: wp(2),
+    alignItems: "center",
+    marginBottom: wp(1)
+  },
+  outlineButton: {
+    borderWidth: 1,
+    borderRadius: wp(2),
+    paddingVertical: wp(2),
+    alignItems: "center",
+    marginBottom: wp(1),
+    backgroundColor: 'transparent'
+  },
+  companyName: {
+    fontWeight: "bold",
+    fontSize: wp(4.5),
+    marginBottom: wp(1)
+  },
+  detailsSection: {
+    marginTop: wp(2),
+  },
+  detailsContent: {
+    marginTop: wp(2),
+  },
+  detailRow: {
+    flexDirection: 'row',
+    marginBottom: wp(1),
+    alignItems: 'center'
+  },
+  detailLabel: {
+    width: wp(25),
+    fontWeight: '600'
+  },
+  detailValue: {
+    flex: 1,
+    color: '#333'
+  },
+  horizontalScroll: {
+    marginVertical: wp(2),
+  },
+  imageContainer: {
+    marginRight: wp(2),
+    alignItems: 'center'
+  },
+  imageLabel: {
+    textAlign: 'center',
+    marginBottom: wp(1),
+    fontSize: wp(3.5)
+  },
+  detailImage: {
+    height: 120,
+    borderRadius: wp(2),
+    width: 180,
+    resizeMode: 'cover'
+  },
+  buttonTextWhite: {
+    color: '#fff',
+    fontSize: wp(4)
+  },
+  buttonTextWhiteBold: {
+    color: '#fff',
+    fontWeight: "bold",
+    fontSize: wp(4)
+  },
+  buttonTextDark: {
+    fontSize: wp(4)
   }
 });
