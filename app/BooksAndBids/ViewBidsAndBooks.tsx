@@ -253,7 +253,7 @@ function BookingsandBiddings({ }) {
         )}
 
         {getAllIterms.length > 15 && dspLoadMoreBtn && (
-          <TouchableOpacity onPress={() => loadedData(true)} style={styles.loadMoreBtn}>
+          <TouchableOpacity onPress={() => loadMoreData(true)} style={styles.loadMoreBtn}>
             <ThemedText style={{ color: 'white', fontSize: 18, textAlign: 'center', fontWeight: "bold" }}>Load More</ThemedText>
           </TouchableOpacity>
         )}

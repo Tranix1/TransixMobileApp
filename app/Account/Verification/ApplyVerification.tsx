@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { View, TouchableOpacity,  StyleSheet,  TextInput, ActivityIndicator, Animated, } from "react-native";
+import { View, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator, Animated, } from "react-native";
 import * as DocumentPicker from 'expo-document-picker';
-import {  db, auth  } from "../../components/config/fireBase";
-import { collection,  addDoc,  } from 'firebase/firestore';
+import { db, auth } from "../../components/config/fireBase";
+import { collection, addDoc, } from 'firebase/firestore';
 import CountryPicker, { Country } from 'react-native-country-picker-modal';
 
 const { Paynow } = require("paynow");
@@ -12,6 +12,9 @@ import { ThemedText } from "@/components/ThemedText";
 import { router } from "expo-router";
 // import ecocashLogo from "../../../assets/images/ECOCASH-logo(1).jpg" // Removed as this path is incorrect.  Handled with require below.
 import { useThemeColor } from '@/hooks/useThemeColor'
+import Input from "@/components/Input";
+import Heading from "@/components/Heading";
+import { wp } from "@/constants/common";
 
 interface FormData {
     buzLoc: string;
@@ -21,7 +24,7 @@ interface FormData {
 }
 
 interface DocumentAsset {
-    name:string
+    name: string
     uri: string;
     size: number;
     // Add any other properties here
@@ -29,7 +32,7 @@ interface DocumentAsset {
 
 const ApplyVerification = () => {
 
-        const background = useThemeColor("background");
+    const background = useThemeColor("background");
     const [formData, setFormData] = useState<FormData>({
         buzLoc: "",
         phoneNumFrst: "",
@@ -48,39 +51,39 @@ const ApplyVerification = () => {
     const [spinnerItem, setSpinnerItem] = useState<boolean>(false);
     const [selectedDocuments, setSelectedDocumentS] = useState<DocumentAsset[]>([]);
 
-   const pickDocument = async () => {
-  try {
-    const result = await DocumentPicker.getDocumentAsync({
-  type: ['application/pdf', 'image/*'], // allow only PDFs and images
-  copyToCacheDirectory: true, // optional: ensures the file is accessible in your app's cache
-});
+    const pickDocument = async () => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: ['application/pdf', 'image/*'], // allow only PDFs and images
+                copyToCacheDirectory: true, // optional: ensures the file is accessible in your app's cache
+            });
 
-    if (result.canceled) return;
+            if (result.canceled) return;
 
-    const assets = result.assets;
-    if (!assets || assets.length === 0) {
-      alert('No assets found in the picker result');
-      return;
-    }
+            const assets = result.assets;
+            if (!assets || assets.length === 0) {
+                alert('No assets found in the picker result');
+                return;
+            }
 
-    const firstAsset = assets[assets.length - 1];
+            const firstAsset = assets[assets.length - 1];
 
-    if (!firstAsset.uri) {
-      alert('Selected document URI is undefined');
-      return;
-    }
+            if (!firstAsset.uri) {
+                alert('Selected document URI is undefined');
+                return;
+            }
 
-    if (firstAsset.size !== undefined && firstAsset.size > 0.5 * 1024 * 1024) {
-      alert('The selected document must not be more than 0.5MB.');
-      return;
-    }
+            if (firstAsset.size !== undefined && firstAsset.size > 0.5 * 1024 * 1024) {
+                alert('The selected document must not be more than 0.5MB.');
+                return;
+            }
 
-    setSelectedDocumentS((prevDocs) => [...prevDocs, firstAsset] as DocumentAsset[]);
-  } catch (error) {
-    console.error('Error picking document:', error);
-    alert('An error occurred while picking the document.');
-  }
-};
+            setSelectedDocumentS((prevDocs) => [...prevDocs, firstAsset] as DocumentAsset[]);
+        } catch (error) {
+            console.error('Error picking document:', error);
+            alert('An error occurred while picking the document.');
+        }
+    };
 
 
     const [countryCode, setCountryCode] = useState<string | null>(null);
@@ -240,12 +243,12 @@ const ApplyVerification = () => {
         }
     }
 
-    const [dspInfo , setDspInfo]=React.useState(true)
+    const [dspInfo, setDspInfo] = React.useState(true)
     return (
-            <ScreenWrapper >
+        <ScreenWrapper >
 
-
-           {dspInfo && <View  style={{position:"absolute", top:0 , left:0 , right:0 , bottom:0 , zIndex:10 , backgroundColor:background}} >
+            <Heading page="Apply Verification" />
+            {dspInfo && <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: background }} >
                 <ThemedText>Get verified now</ThemedText>
                 <ThemedText>The below are the reuiremnts make sure u have them availble in pdf format</ThemedText>
 
@@ -265,48 +268,51 @@ const ApplyVerification = () => {
 
                 <ThemedText>Oney for subscribing the subscription or u can clain first free 3 months</ThemedText>
 
-                <View style={{flexDirection:"row"}} >
-                    <TouchableOpacity style={{backgroundColor:"red"}} onPress={()=>router.back()} >
-                     <ThemedText>Not Yet</ThemedText>   
+                <View style={{ flexDirection: "row" }} >
+                    <TouchableOpacity style={{ backgroundColor: "red" }} onPress={() => router.back()} >
+                        <ThemedText>Not Yet</ThemedText>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={{backgroundColor:"green"}} onPress={()=>setDspInfo(false)} >
+                    <TouchableOpacity style={{ backgroundColor: "green" }} onPress={() => setDspInfo(false)} >
                         <ThemedText>Undrstood</ThemedText>
                     </TouchableOpacity>
                 </View>
 
             </View>}
 
-            {enterCompDw && <ThemedText style={{ position: "absolute", top: 0, left: 5, color: 'green', marginTop: 8 }} >PAGE 1/4</ThemedText>}
-            {directorDetails && <ThemedText style={{ position: "absolute", top: 3, left: 5, color: 'green' }} >PAGE 2/4</ThemedText>}
-            {addressWithProof && <ThemedText style={{ position: "absolute", top: 3, left: 5, color: 'green' }} >PAGE 3/4</ThemedText>}
-            {paymentPage && <ThemedText style={{ position: "absolute", top: 3, left: 5, color: 'green' }} >PAGE 4/4</ThemedText>}
+            <View style={{ padding: wp(2), paddingHorizontal: wp(4), backgroundColor: background, borderRadius: wp(20), shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 8, alignSelf: 'center' }} >
 
-            {enterCompDw && <View style={{ marginTop: 20 }}>
+                {enterCompDw && <ThemedText style={{ color: 'green', textAlign: 'center' }} >PAGE 1/4</ThemedText>}
+                {directorDetails && <ThemedText style={{ color: 'green', textAlign: 'center' }} >PAGE 2/4</ThemedText>}
+                {addressWithProof && <ThemedText style={{ color: 'green', textAlign: 'center' }} >PAGE 3/4</ThemedText>}
+                {paymentPage && <ThemedText style={{ color: 'green', textAlign: 'center' }} >PAGE 4/4</ThemedText>}
+            </View>
+
+            {enterCompDw && <View style={{ margin: 20 }}>
 
                 {selectedDocuments[0] && <ThemedText style={{ color: 'green', fontWeight: 'bold', textAlign: "center", fontSize: 12 }} >certifacete of incoperation</ThemedText>}
-                {selectedDocuments[0] && <ThemedText style={{ borderWidth: 1, borderColor: "#6a0c0c",  padding: 5, textAlign: 'center', marginBottom: 15 }} >{selectedDocuments[0].name}</ThemedText>}
- 
-                {!selectedDocuments[0] && <TouchableOpacity onPress={pickDocument} style={{  backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignSelf: 'center', marginBottom: 15, width: 200 }} >
-                    <ThemedText style={{ backgroundColor: 'white', textAlign: 'center', color:"black"  }}>Cerificate of incoperation</ThemedText>
+                {selectedDocuments[0] && <ThemedText style={{ borderWidth: 1, borderColor: "#6a0c0c", padding: 5, textAlign: 'center', marginBottom: 15 }} >{selectedDocuments[0].name}</ThemedText>}
+
+                {!selectedDocuments[0] && <TouchableOpacity onPress={pickDocument} style={{ backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignSelf: 'center', marginBottom: 15, width: 200 }} >
+                    <ThemedText style={{ backgroundColor: 'white', textAlign: 'center', color: "black" }}>Cerificate of incoperation</ThemedText>
                 </TouchableOpacity>}
 
                 {selectedDocuments[1] && <ThemedText style={{ color: 'green', fontWeight: 'bold', textAlign: "center", fontSize: 12 }} >Board Resolution</ThemedText>}
-                {selectedDocuments[1] && <ThemedText style={{ borderWidth: 1, borderColor: "#6a0c0c",  padding: 5, textAlign: 'center', marginBottom: 15 }}>{selectedDocuments[1].name}</ThemedText>}
+                {selectedDocuments[1] && <ThemedText style={{ borderWidth: 1, borderColor: "#6a0c0c", padding: 5, textAlign: 'center', marginBottom: 15 }}>{selectedDocuments[1].name}</ThemedText>}
                 {selectedDocuments[0] && !selectedDocuments[1] && <ThemedText  >CR14, Memorandum of Association, Register of Directors </ThemedText>}
                 {selectedDocuments[0] && !selectedDocuments[1] && <TouchableOpacity onPress={pickDocument} style={{ backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignSelf: 'center', marginBottom: 15, width: 200 }} >
-                    <ThemedText style={{ textAlign: 'center', backgroundColor: 'white', color:"black"  }} >Board Resolution</ThemedText>
+                    <ThemedText style={{ textAlign: 'center', backgroundColor: 'white', color: "black" }} >Board Resolution</ThemedText>
                 </TouchableOpacity>}
 
                 {selectedDocuments[2] && <ThemedText style={{ color: 'green', fontWeight: 'bold', textAlign: "center", fontSize: 12 }} >Tax clearance</ThemedText>}
-                {selectedDocuments[2] && <ThemedText style={{ borderWidth: 1, borderColor: "#6a0c0c",  padding: 5, textAlign: 'center', marginBottom: 15 }}>{selectedDocuments[2].name}</ThemedText>}
-                {selectedDocuments[1] && !selectedDocuments[2] && <TouchableOpacity onPress={pickDocument} style={{  backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignSelf: 'center', marginBottom: 15, width: 200 }} >
-                    <ThemedText style={{ backgroundColor: 'white', color:"black" }} >Tax clearance</ThemedText>
+                {selectedDocuments[2] && <ThemedText style={{ borderWidth: 1, borderColor: "#6a0c0c", padding: 5, textAlign: 'center', marginBottom: 15 }}>{selectedDocuments[2].name}</ThemedText>}
+                {selectedDocuments[1] && !selectedDocuments[2] && <TouchableOpacity onPress={pickDocument} style={{ backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignSelf: 'center', marginBottom: 15, width: 200 }} >
+                    <ThemedText style={{ backgroundColor: 'white', color: "black" }} >Tax clearance</ThemedText>
                 </TouchableOpacity>}
 
 
 
-                {selectedDocuments[2] && <TextInput
+                {selectedDocuments[2] && <Input
                     value={formData.buzLoc}
                     placeholderTextColor="#6a0c0c"
                     placeholder="company adress"
@@ -337,28 +343,28 @@ const ApplyVerification = () => {
             </View>}
 
 
-            {directorDetails && <View style={{ marginTop: 20 }}>
-                <View style={{ padding: 10 ,alignSelf:'center' }}>
+            {directorDetails && <View style={{ margin: 20 }}>
+                <View style={{ padding: 10, alignSelf: 'center' }}>
                     <ThemedText style={{ fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 5 }}>
                         Director or Owner Details.
                     </ThemedText>
-                    {!selectedDocuments[3] &&<ThemedText style={{ fontSize: 14, color: '#555', lineHeight: 20 }}>
+                    {!selectedDocuments[3] && <ThemedText style={{ fontSize: 14, color: '#555', lineHeight: 20 }}>
                         The ID of a director or owner must match the details in the company documents.
                     </ThemedText>}
                 </View>
                 {selectedDocuments[3] && <ThemedText style={{ color: 'green', fontWeight: 'bold', textAlign: "center", fontSize: 12 }} >ID owner or director</ThemedText>}
-                {selectedDocuments[3] && <ThemedText style={{ borderWidth: 1, borderColor: "#6a0c0c",  padding: 5, textAlign: 'center', marginBottom: 20 }}>{selectedDocuments[2].name}</ThemedText>}
+                {selectedDocuments[3] && <ThemedText style={{ borderWidth: 1, borderColor: "#6a0c0c", padding: 5, textAlign: 'center', marginBottom: 20 }}>{selectedDocuments[2].name}</ThemedText>}
                 {!selectedDocuments[3] && <TouchableOpacity onPress={pickDocument} style={{ backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignSelf: 'center', marginBottom: 15, width: 200 }} >
-                    <ThemedText style={{ backgroundColor: 'white', textAlign: 'center', color:"black"  }} >National Id</ThemedText>
+                    <ThemedText style={{ backgroundColor: 'white', textAlign: 'center', color: "black" }} >National Id</ThemedText>
                 </TouchableOpacity>}
 
                 {selectedDocuments[3] && <View style={{ alignSelf: 'center' }} >
 
-                  
 
-                    {countryCode && <ThemedText style={{ textAlign: 'center', color: 'green', fontWeight: 'bold',  }} >Country Code : {countryCode}</ThemedText>}
+
+                    {countryCode && <ThemedText style={{ textAlign: 'center', color: 'green', fontWeight: 'bold', }} >Country Code : {countryCode}</ThemedText>}
                     {formData.phoneNumFrst && !countryCode && <ThemedText>Click select country to choose country code</ThemedText>}
-                    <TextInput
+                    <Input
                         value={formData.phoneNumFrst}
                         placeholderTextColor="#6a0c0c"
                         placeholder="phone number"
@@ -366,7 +372,7 @@ const ApplyVerification = () => {
                         keyboardType="numeric"
                     />
 
-                    <TextInput
+                    <Input
                         value={formData.contactEmail}
                         placeholderTextColor="#6a0c0c"
                         placeholder="email"
@@ -398,17 +404,17 @@ const ApplyVerification = () => {
 
             {spinnerItem && <ActivityIndicator size={36} />}
 
-            {addressWithProof && <View style={{ marginTop: 20 }}>
+            {addressWithProof && <View style={{ margin: 20 }}>
                 <ThemedText style={{ fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 5 }} >Address and proof for the business or director</ThemedText>
 
                 {selectedDocuments[4] && <ThemedText style={{ color: 'green', fontWeight: 'bold', textAlign: "center", fontSize: 12 }} >proof of res</ThemedText>}
                 {selectedDocuments[4] && <ThemedText style={{ borderWidth: 1, borderColor: "#6a0c0c", padding: 5, textAlign: 'center', marginBottom: 20 }}>{selectedDocuments[4].name}</ThemedText>}
 
                 {!selectedDocuments[4] && <TouchableOpacity onPress={pickDocument} style={{ backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignSelf: 'center', marginBottom: 15, width: 200 }} >
-                    <ThemedText style={{ backgroundColor: 'white', textAlign: 'center',  color:"black" }} >Proof</ThemedText>
+                    <ThemedText style={{ backgroundColor: 'white', textAlign: 'center', color: "black" }} >Proof</ThemedText>
                 </TouchableOpacity>}
 
-                <TextInput
+                <Input
                     value={formData.addressWithProof}
                     placeholderTextColor="#6a0c0c"
                     placeholder="Full adress "
@@ -437,7 +443,7 @@ const ApplyVerification = () => {
 
             </View>}
 
-            {paymentPage && <View style={{ marginTop: 20 }}>
+            {paymentPage && <View style={{ margin: 20 }}>
                 <View style={{ padding: 15 }}>
                     <ThemedText style={{ fontSize: 20, fontWeight: '600', marginBottom: 10 }}>
                         Proceed to Payment
@@ -452,7 +458,7 @@ const ApplyVerification = () => {
 
                 {/* <TouchableOpacity onPress={startAnimation}> */}
                 {/* <Animated.View style={{ transform: [{ translateY: animatedValue }] }}> */}
-                <TextInput
+                <Input
                     placeholderTextColor="#6a0c0c"
                     placeholder="phone number"
                     onChangeText={(text) => setEcocashPhneNum(text)}
@@ -521,90 +527,90 @@ const ApplyVerification = () => {
                 </View>
             </View>}
 
-          {/* {!spinnerItem ? <TouchableOpacity  onPress={handleSubmit} style={{backgroundColor : '#6a0c0c' , width : 80 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',alignSelf:'center' }}>
+            {/* {!spinnerItem ? <TouchableOpacity  onPress={handleSubmit} style={{backgroundColor : '#6a0c0c' , width : 80 , height : 30 , borderRadius: 5 , alignItems : 'center' , justifyContent : 'center',alignSelf:'center' }}>
     <Text style={{color : 'white'}}>submit</Text>
   </TouchableOpacity>
 : <Text style={{alignSelf:"center",fontStyle:'italic'}}>Information being submited. Please wait</Text>  
 } */}
-            </ScreenWrapper>
-)  
+        </ScreenWrapper>
+    )
 }
 export default React.memo(ApplyVerification)
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: '#f4f4f4',
-  },
-  heading: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginTop: 35,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  column: {
-    marginHorizontal: 10,
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  subHeading: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
-  },
-  item: {
-    fontSize: 16,
-    marginVertical: 5,
-    color: '#666',
-    textAlign: 'center',
-  },
-  selected: {
-    backgroundColor: '#007bff',
-    color: '#fff',
-  },
-  selectedItem: {
-    backgroundColor: '#28a745',
-  }, makePayment: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-   
-  input: {
-    height: 40,
-    width: 200,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginTop: 10,
-    paddingHorizontal: 10,
-    borderTopWidth:0 ,
-    alignSelf:'center'
-  },
-   checkoutButton: {
-    borderWidth:2 ,
-    borderColor:'#ff5c5c', 
-    marginTop: 15,
-    height: 40,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width:220
-  },
-  checkoutButtonText: {
-    color: '#ff5c5c',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
+    container: {
+        flex: 1,
+        alignItems: 'center',
+        backgroundColor: '#f4f4f4',
+    },
+    heading: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        marginTop: 35,
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: 8,
+    },
+    column: {
+        marginHorizontal: 10,
+        backgroundColor: '#fff',
+        padding: 20,
+        borderRadius: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    subHeading: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        color: '#333',
+    },
+    item: {
+        fontSize: 16,
+        marginVertical: 5,
+        color: '#666',
+        textAlign: 'center',
+    },
+    selected: {
+        backgroundColor: '#007bff',
+        color: '#fff',
+    },
+    selectedItem: {
+        backgroundColor: '#28a745',
+    }, makePayment: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+
+    input: {
+        height: 40,
+        width: 200,
+        borderColor: 'gray',
+        borderWidth: 1,
+        marginTop: 10,
+        paddingHorizontal: 10,
+        borderTopWidth: 0,
+        alignSelf: 'center'
+    },
+    checkoutButton: {
+        borderWidth: 2,
+        borderColor: '#ff5c5c',
+        marginTop: 15,
+        height: 40,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 220
+    },
+    checkoutButtonText: {
+        color: '#ff5c5c',
+        fontWeight: 'bold',
+        fontSize: 18,
+    },
 });

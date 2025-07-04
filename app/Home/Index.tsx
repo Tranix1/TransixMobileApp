@@ -1,4 +1,4 @@
-import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, TouchableNativeFeedback, View, TouchableOpacity, TouchableHighlight, Image } from 'react-native'
+import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, TouchableNativeFeedback, View, TouchableOpacity, TouchableHighlight, Image, useColorScheme } from 'react-native'
 import React, { useState } from 'react'
 import { ThemedText } from '@/components/ThemedText'
 import { hp, wp } from '@/constants/common'
@@ -134,7 +134,7 @@ const Index = () => {
         isAvaialble: boolean;
 
     }
-
+    const colorScheme = useColorScheme();
     const HomeItemView: React.FC<HomeItemProps> = ({
         topic,
         description,
@@ -145,7 +145,13 @@ const Index = () => {
         isAvaialble,
         btnPressValue
     }) => (
-        <View style={[styles.homefeature, { borderColor: mainColor, }]}>
+        <View style={[styles.homefeature, { borderColor: mainColor, backgroundColor: background, overflow: 'hidden', }]}>
+
+            {!isAvaialble &&
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, height: '125%', alignItems: 'center', justifyContent: 'center', backgroundColor: colorScheme === 'light' ? '#f3f3f3e8' : '#1e1e1ee8' }} >
+                    <ThemedText type='defaultSemiBold' style={{ color: coolGray }} > Coming Soon</ThemedText>
+                    <Ionicons name='time-outline' size={wp(6)} color={coolGray} />
+                </View>}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }}>
                 <View style={{ backgroundColor: mainColor, borderRadius: wp(2), padding: wp(1.5) }}>
                     <Octicons name='verified' color={'#fff'} size={wp(4)} />
@@ -157,11 +163,7 @@ const Index = () => {
 
             <View>
 
-                {!isAvaialble && <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: -60, zIndex: 10, alignItems: 'center', backgroundColor: background === "#0f0e11" ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)", }} >
 
-                    <ThemedText style={{ color: "red", marginTop: 30 }} > Coming Soon</ThemedText>
-
-                </View>}
 
                 <ThemedText
                     type='default'
