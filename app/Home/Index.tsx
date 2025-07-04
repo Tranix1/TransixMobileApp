@@ -196,14 +196,21 @@ const Index = () => {
                                 shadowColor: '#0c0c0c69', borderRadius: wp(6), marginTop: hp(15)
                             }}>
 
+                                <TouchableOpacity
+                                    onPress={() => setIsVisible(false)}
+                                    style={{
+                                        position: "absolute",
+                                        top: wp(2),
+                                        right: wp(2),
+                                        padding: wp(2),
+                                        borderRadius: wp(10),
+                                        backgroundColor: background,
+                                    }}
+                                >
+                                    <Ionicons name="close" size={wp(4)} color={icon} />
+                                </TouchableOpacity>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-                                        <TouchableNativeFeedback onPress={() => setIsVisible(false)}>
-                                            <View style={{ padding: wp(2), justifyContent: 'center' }}>
-                                                <Ionicons name='close' color={icon} size={wp(4)} />
-                                            </View>
-                                        </TouchableNativeFeedback>
-                                    </View>
+
                                     <ThemedText type='title' color={accent} style={{ flex: 1, textAlign: 'center' }}>
                                         Transix
                                     </ThemedText>
@@ -441,6 +448,8 @@ const Index = () => {
                                 }}
                                 onPress={async () => {
                                     try {
+                                        console.log("Sending verification email...");
+
                                         await sendEmailVerification(auth.currentUser as any);
                                         alert("Verification email sent successfully.");
                                         setIsVisible(false);
