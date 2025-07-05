@@ -348,7 +348,7 @@ const ApplyVerification = () => {
                 {selectedDocuments[2] && <ThemedText style={{ color: 'green', fontWeight: 'bold', textAlign: "center", fontSize: 12 }} >Tax clearance</ThemedText>}
                 {selectedDocuments[2] && <ThemedText style={{ borderWidth: 1, borderColor: "#6a0c0c", padding: 5, textAlign: 'center', marginBottom: 15 }}>{selectedDocuments[2].name}</ThemedText>}
                 {selectedDocuments[1] && !selectedDocuments[2] && <TouchableOpacity onPress={pickDocument} style={{ backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignSelf: 'center', marginBottom: 15, width: 200 }} >
-                    <ThemedText style={{ backgroundColor: 'white', color: "black" }} >Tax clearance</ThemedText>
+                    <ThemedText style={{ backgroundColor: 'white', color: "black",textAlign:"center" }} >Tax clearance</ThemedText>
                 </TouchableOpacity>}
 
 

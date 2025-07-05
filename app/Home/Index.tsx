@@ -1,4 +1,4 @@
-import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, TouchableNativeFeedback, View, TouchableOpacity, TouchableHighlight, Image, useColorScheme } from 'react-native'
+import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, TouchableNativeFeedback, View, TouchableOpacity, TouchableHighlight, Image, useColorScheme,ToastAndroid } from 'react-native'
 import React, { useState } from 'react'
 import { ThemedText } from '@/components/ThemedText'
 import { hp, wp } from '@/constants/common'
@@ -367,6 +367,84 @@ const Index = () => {
             </SafeAreaView>
 
 
+   <Modal statusBarTranslucent visible={isVisible && !auth.currentUser} animationType='fade' transparent>
+                <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', flex: 1, padding: wp(4), alignItems: 'center' }}>
+                    <View
+                        style={{
+                            justifyContent: "center",
+                            alignItems: "center",
+                            padding: wp(6),
+                            backgroundColor: background,
+                            borderRadius: wp(6),
+                            margin: wp(4),
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.15,
+                            shadowRadius: 8,
+                            elevation: 10,
+                        }}
+                    >
+                        <TouchableOpacity
+                            onPress={() => setIsVisible(false)}
+                            style={{
+                                position: "absolute",
+                                top: wp(2),
+                                right: wp(2),
+                                padding: wp(2),
+                                borderRadius: wp(10),
+                                backgroundColor: backgroundColor,
+                            }}
+                        >
+                            <Ionicons name="close" size={wp(4)} color={icon} />
+                        </TouchableOpacity>
+                        <ThemedText
+                            type="title"
+                            style={{
+                                marginBottom: wp(2),
+                                textAlign: "center",
+                                color: accent,
+                                fontWeight: "bold",
+                                fontSize: wp(5),
+                            }}
+                        >
+                            Get Authenticated
+                        </ThemedText>
+                       
+
+                        <ThemedText
+                            type="tiny"
+                            style={{
+                                marginBottom: wp(6),
+                                textAlign: "center",
+                                color: coolGray,
+                            }}
+                        >
+                             Create an account or sign in to add items, book loads, bid on loads, and access more features.
+                        </ThemedText>
+
+                           
+                            <TouchableOpacity
+                                onPress={() => Updates.reloadAsync()}
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: "#d1f7e9",
+                                    paddingVertical: wp(2),
+                                    borderRadius: wp(3),
+                                    alignItems: "center",
+                                }}
+                            >
+                                <ThemedText style={{ color: "#0f9d58", fontWeight: "bold" }}>Create Acc</ThemedText>
+                            </TouchableOpacity>
+                    </View>
+                </BlurView>
+            </Modal>
+
+
+
+
+
+
+
             <Modal statusBarTranslucent visible={isVisible && !auth.currentUser?.emailVerified} animationType='fade' transparent>
                 <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', flex: 1, padding: wp(4), alignItems: 'center' }}>
                     <View
@@ -454,6 +532,7 @@ const Index = () => {
 
                                         await sendEmailVerification(auth.currentUser as any);
                                         alert("Verification email sent successfully.");
+        ToastAndroid.show('Truck Added successfully', ToastAndroid.SHORT)
                                         setIsVisible(false);
                                     } catch (error) {
                                         console.log("Error sending verification email:", error);
@@ -490,6 +569,37 @@ const Index = () => {
                     </View>
                 </BlurView>
             </Modal>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ marginVertical: wp(4), marginHorizontal: wp(2) }}>

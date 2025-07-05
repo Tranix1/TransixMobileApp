@@ -374,7 +374,7 @@ console.log(uploadingImageUpdate)
           <View style={{ gap: wp(2) }}>
 
             <ThemedText>
-              Truck Name<ThemedText color="red">*</ThemedText>
+              Truck  Name<ThemedText color="red">*</ThemedText>
             </ThemedText>
             <Input
               value={formData.truckName}

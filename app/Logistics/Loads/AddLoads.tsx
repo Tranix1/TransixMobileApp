@@ -18,7 +18,7 @@ import { AddTruckDetails } from "@/components/AddTruckDetails";
 import { TruckFormData } from "@/types/types";
 import { TruckTypeProps } from "@/types/types";
 import { useThemeColor } from '@/hooks/useThemeColor';
-
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 const AddLoadDB = () => {
     const icon = useThemeColor('icon')
@@ -279,21 +279,30 @@ const AddLoadDB = () => {
                                 <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold', textAlign: 'center' }} >Next Step</ThemedText>
                             </View>
 
-                            {trucksNeeded.map((item) => (
-                                <View style={{ flexDirection: "row" }} >
+                          
+                            <ThemedText style={{ textAlign: 'center' }}>
+                                Load submitted successfully! Your load has been added and is now pending review. You can view the trucks you selected below or add another load if needed.
+                            </ThemedText>
+
+
+  {trucksNeeded.map((item) => (
+                                <View style={{                                     position: 'relative',
+                                    marginBottom: 10,
+                                    padding: 14,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    borderRadius: 8,
+                                    backgroundColor: backgroundLight }} >
                                     <ThemedText>{item.truckType?.name} </ThemedText>
                                     <ThemedText>{item.cargoArea?.name}</ThemedText>
                                     <ThemedText>{item.capacity?.name} </ThemedText>
 
                                     <TouchableOpacity>
-                                        <ThemedText style={{ color: "yellow" }}>View Trucks</ThemedText>
+                                        <MaterialIcons name="forward" size={24} color={icon} />
                                     </TouchableOpacity>
                                 </View>
                             ))}
-                            <ThemedText style={{ textAlign: 'center' }}>
-                                Load submitted successfully! Your load has been added and is now pending review. You can view the trucks you selected below or add another load if needed.
-                            </ThemedText>
-
                             <View style={{ flexDirection: "row", gap: wp(3), marginTop: wp(4) }}>
                                 <TouchableOpacity
                                     style={{
