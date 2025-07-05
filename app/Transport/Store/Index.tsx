@@ -156,9 +156,14 @@ const StorePage = () => {
                                         backgroundColor: isSelected ? accent : backgroundLight,
                                         borderColor: isSelected ? accent : coolGray,
                                         borderWidth: 1,
-                                        borderRadius: wp(6),
-                                        paddingVertical: wp(1.5),
-                                        paddingHorizontal: wp(4),
+
+
+                                     paddingVertical: wp(0.1),
+                                    marginLeft:wp(2),
+                                    borderRadius:wp(2),
+                                    paddingHorizontal: wp(3),
+
+                                       
                                         marginRight: wp(1),
                                         shadowColor: isSelected ? accent : '#000',
                                         shadowOpacity: isSelected ? 0.15 : 0.05,
@@ -181,17 +186,27 @@ const StorePage = () => {
                         })}
                     </ScrollView>
                 </View>
-
-                <View style={{ flexDirection: "row", justifyContent: "space-evenly", marginVertical: wp(2) }}>
+                
+ 
+                <View style={{  marginVertical: wp(2) }}>
+                       <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{
+                            paddingHorizontal: wp(2),
+                            gap: wp(2),
+                        }}
+                    >
                     {tabKeys.map((tab, idx) => {
                         return (
                             <TouchableOpacity
                                 key={tab}
                                 onPress={() => setSelectedTab(tab)}
                                 style={{
-                                    paddingVertical: wp(1.5),
-                                    paddingHorizontal: wp(4),
-                                    borderRadius: wp(6),
+                                    paddingVertical: wp(0.1),
+                                    marginLeft:wp(2),
+                                    borderRadius:wp(2),
+                                    paddingHorizontal: wp(3),
                                     backgroundColor: selectedTab === tab ? accent : backgroundLight,
                                     borderWidth: 1,
                                     borderColor: selectedTab === tab ? accent : coolGray,
@@ -210,6 +225,7 @@ const StorePage = () => {
                             </TouchableOpacity>
                         );
                     })}
+                    </ScrollView>
                 </View>
 
 

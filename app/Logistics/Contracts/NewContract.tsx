@@ -329,11 +329,95 @@ const NewContract = () => {
 
 
    {dspCheckOutP &&
-          <CheckOutMakePayments jsxProp={<View>
-            <ThemedText> its $10 to add contract </ThemedText>
-            <ThemedText> its $20 to add contract </ThemedText>
-            <ThemedText> its $10 to add contract </ThemedText>
-          </View>} 
+          <CheckOutMakePayments jsxProp={<View
+  style={{
+    backgroundColor: '#333',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 20,
+  }}
+>
+  <ThemedText
+    style={{
+      color: 'white',
+      fontSize: 16,
+      marginBottom: 10,
+      fontWeight: 'bold',
+    }}
+  >
+    Platform Fees
+  </ThemedText>
+
+  <View
+    style={{
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 8,
+    }}
+  >
+    <ThemedText style={{ color: 'white', fontSize: 14 }}>
+      Add Contract
+    </ThemedText>
+    <ThemedText
+      style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
+    >
+      $5
+    </ThemedText>
+  </View>
+
+  <View
+    style={{
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 8,
+    }}
+  >
+    <ThemedText style={{ color: 'white', fontSize: 14 }}>
+      Add Load
+    </ThemedText>
+    <ThemedText
+      style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
+    >
+      $2
+    </ThemedText>
+  </View>
+
+  <View
+    style={{
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 10,
+    }}
+  >
+    <ThemedText style={{ color: 'white', fontSize: 14 }}>
+      Add Truck
+    </ThemedText>
+    <ThemedText
+      style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
+    >
+      $8
+    </ThemedText>
+  </View>
+
+  <View
+    style={{
+      borderTopWidth: 1,
+      borderTopColor: '#555',
+      paddingTop: 10,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    }}
+  >
+    <ThemedText style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
+      Total
+    </ThemedText>
+    <ThemedText
+      style={{ color: '#4CAF50', fontSize: 16, fontWeight: 'bold' }}
+    >
+      $15
+    </ThemedText>
+  </View>
+</View>  } 
           confirmButon={justConsole} 
           cancelBTN={() => setDspCheckout(false) }
           />}

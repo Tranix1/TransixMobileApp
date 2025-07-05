@@ -286,7 +286,7 @@ const Index = () => {
                                             <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
                                                 <ThemedText type='default'>
-                                                    Bookoings and Biddings
+                                                    Bookings and Biddings
                                                 </ThemedText>
                                             </View>
                                         </View>
@@ -596,7 +596,7 @@ const Index = () => {
                             <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
                                 <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
                                 <ThemedText color='#fff'>
-                                    Book Contracts
+                                    Booked Contracts
                                 </ThemedText>
                             </TouchableOpacity>
                         </View>

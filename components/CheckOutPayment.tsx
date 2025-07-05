@@ -9,6 +9,7 @@ import Entypo from '@expo/vector-icons/Entypo';
 import {  Ionicons } from '@expo/vector-icons'
 import { hp, wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
+import Divider from "@/components/Divider";
 
 interface CheckOutMakePaymentsProps {
   jsxProp: JSX.Element;
@@ -50,7 +51,7 @@ interface CheckOutMakePaymentsProps {
   >
     Payment Method
   </ThemedText>
-     <TouchableOpacity onPress={()=>{cancelBTN}} >
+     <TouchableOpacity onPress={cancelBTN} >
                   <Ionicons name="close" size={wp(7)} color={icon} />
                 </TouchableOpacity>
         </View>
@@ -107,97 +108,7 @@ interface CheckOutMakePaymentsProps {
 
   {/* Extra Pricing Items */}
 
-<View
-  style={{
-    backgroundColor: '#333',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-  }}
->
-  <ThemedText
-    style={{
-      color: 'white',
-      fontSize: 16,
-      marginBottom: 10,
-      fontWeight: 'bold',
-    }}
-  >
-    Platform Fees
-  </ThemedText>
-
-  <View
-    style={{
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 8,
-    }}
-  >
-    <ThemedText style={{ color: 'white', fontSize: 14 }}>
-      Add Contract
-    </ThemedText>
-    <ThemedText
-      style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
-    >
-      $5
-    </ThemedText>
-  </View>
-
-  <View
-    style={{
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 8,
-    }}
-  >
-    <ThemedText style={{ color: 'white', fontSize: 14 }}>
-      Add Load
-    </ThemedText>
-    <ThemedText
-      style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
-    >
-      $2
-    </ThemedText>
-  </View>
-
-  <View
-    style={{
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 10,
-    }}
-  >
-    <ThemedText style={{ color: 'white', fontSize: 14 }}>
-      Add Truck
-    </ThemedText>
-    <ThemedText
-      style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
-    >
-      $8
-    </ThemedText>
-  </View>
-
-  <View
-    style={{
-      borderTopWidth: 1,
-      borderTopColor: '#555',
-      paddingTop: 10,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-    }}
-  >
-    <ThemedText style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
-      Total
-    </ThemedText>
-    <ThemedText
-      style={{ color: '#4CAF50', fontSize: 16, fontWeight: 'bold' }}
-    >
-      $15
-    </ThemedText>
-  </View>
-</View>
-
-
+    {jsxProp}
 
   {/* Secure Note */}
   <View
@@ -221,7 +132,7 @@ interface CheckOutMakePaymentsProps {
 
   
 
-<TouchableOpacity style={[styles.confirmBTN , {backgroundColor:"#00897B"}]}
+<TouchableOpacity style={[styles.confirmBTN , {backgroundColor:"#424242"}]}
 onPress={()=>setDspPaymmentInout(true) }
 >
   <ThemedText style={styles.confrirmText}>Confirm</ThemedText>
@@ -270,8 +181,9 @@ onPress={()=>setDspPaymmentInout(true) }
 
   </View>}
 
+                        <Divider />
 <TouchableOpacity
-  style={[styles.confirmBTN , {backgroundColor:"black"}]}
+  style={[styles.confirmBTN , {backgroundColor:"#424242"}]}
 >
   <ThemedText
     style={styles.confrirmText}
@@ -297,9 +209,8 @@ export default CheckOutMakePayments;
 
 const styles = StyleSheet.create({
   confirmBTN :{
-  width: 320,
+    width: 320,
     height: 50,
-    // backgroundColor: "#28a745", // a nicer green shade
     borderRadius: 8,
     alignSelf: "center",
     justifyContent: "center",
