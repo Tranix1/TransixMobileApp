@@ -331,20 +331,12 @@ const NewContract = () => {
    {dspCheckOutP &&
           <CheckOutMakePayments jsxProp={<View>
             <ThemedText> its $10 to add contract </ThemedText>
+            <ThemedText> its $20 to add contract </ThemedText>
+            <ThemedText> its $10 to add contract </ThemedText>
           </View>} 
           confirmButon={justConsole} 
           cancelBTN={() => setDspCheckout(false) }
           />}
-
-
-
-
-
-
-
-
-
-
 
 
 

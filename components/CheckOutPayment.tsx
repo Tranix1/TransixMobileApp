@@ -1,9 +1,14 @@
 import React from 'react';
-import { View,TouchableOpacity , GestureResponderEvent,Modal,  } from 'react-native';
+import { View,TouchableOpacity , GestureResponderEvent,Modal,StyleSheet  } from 'react-native';
 import ScreenWrapper from './ScreenWrapper';
 import { ThemedText } from './ThemedText';
 import Input from './Input';
-
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Entypo from '@expo/vector-icons/Entypo';
+import {  Ionicons } from '@expo/vector-icons'
+import { hp, wp } from '@/constants/common'
+import { useThemeColor } from '@/hooks/useThemeColor'
 
 interface CheckOutMakePaymentsProps {
   jsxProp: JSX.Element;
@@ -14,6 +19,9 @@ interface CheckOutMakePaymentsProps {
 
 
     const CheckOutMakePayments: React.FC<CheckOutMakePaymentsProps> = ({ jsxProp, confirmButon,cancelBTN,}) => {
+
+            const icon = useThemeColor('icon') // <-- ADD THIS LINE
+
       const [paymentMethod , setPaymentMethod]=React.useState("")
       const [dspPaymentInputs , setDspPaymmentInout]=React.useState(false)
 
@@ -29,83 +37,250 @@ interface CheckOutMakePaymentsProps {
 
              { (!dspPaymentInputs || !paymentMethod) &&   <View>
 
-          <ThemedText style={{ fontSize: 16,  }} >Payment method</ThemedText>
+      <View style={{ marginVertical: 20, paddingHorizontal: 15 }}>
+        <View style={{flexDirection:"row",justifyContent:"space-between",marginBottom: 15,alignItems:"center"}}>
 
-    <TouchableOpacity onPress={()=>setPaymentMethod("International")} >
-      <ThemedText>MasterCard/VISA </ThemedText>
-    </TouchableOpacity>
+  <ThemedText
+    style={{
+      fontSize: 20,
+      fontWeight: 'bold',
+      
+      color: 'white',
+    }}
+  >
+    Payment Method
+  </ThemedText>
+     <TouchableOpacity onPress={()=>{cancelBTN}} >
+                  <Ionicons name="close" size={wp(7)} color={icon} />
+                </TouchableOpacity>
+        </View>
 
-    <TouchableOpacity onPress={()=>setPaymentMethod("ecocash")}>
-          <ThemedText style={{fontSize:20 , fontWeight:'bold' }}><ThemedText style={{color:'#2457A0'}}>Eco</ThemedText><ThemedText style={{color:'#E22428'}}>Cash</ThemedText> </ThemedText>
-    </TouchableOpacity>
+        
 
-             <View>
-                {jsxProp}
+  <TouchableOpacity
+    onPress={() => setPaymentMethod("International")}
+    style={{
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      backgroundColor: paymentMethod === "International" ? '#444' : '#222',
+      paddingVertical: 15,
+      paddingHorizontal: 10,
+      borderRadius: 10,
+      marginBottom: 10,
+    }}
+  >
+    <ThemedText style={{ fontSize: 16, color: 'white' }}>
+      Debit or Credit Card
+    </ThemedText>
 
-                </View>   
-
-
-                <View style={{ flexDirection: "row", justifyContent:"space-evenly" , gap: 10 ,marginTop:10}}>
-  <TouchableOpacity style={{
-    // flex: 1,
-    height: 40,
-    backgroundColor: 'black',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width:110
-  }} onPress={cancelBTN} >
-    <ThemedText style={{ color: 'white', fontWeight: '600' }}>Cancel</ThemedText>
+    {paymentMethod === "International" ? (
+      <FontAwesome6 name="dot-circle" size={24} color="white" />
+    ) : (
+      <FontAwesome name="circle-thin" size={24} color="white" />
+    )}
   </TouchableOpacity>
 
-<TouchableOpacity style={{
-  height: 40,
-  backgroundColor: 'white',
-  borderRadius: 12,
-  justifyContent: 'center',
-  alignItems: 'center',
-  borderWidth: 1,
-  borderColor: '#D3D3D3',
-  width: 110,
+  <TouchableOpacity
+    onPress={() => setPaymentMethod("ecocash")}
+    style={{
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      backgroundColor: paymentMethod === "ecocash" ? '#444' : '#222',
+      paddingVertical: 15,
+      paddingHorizontal: 10,
+      borderRadius: 10,
+      marginBottom: 20,
+    }}
+  >
+    <ThemedText style={{ fontSize: 16, color: 'white' }}>
+      EcoCash
+    </ThemedText>
 
-  // 💡 Shadow for iOS
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 6,
+    {paymentMethod === "ecocash" ? (
+      <FontAwesome6 name="dot-circle" size={24} color="white" />
+    ) : (
+      <FontAwesome name="circle-thin" size={24} color="white" />
+    )}
+  </TouchableOpacity>
 
-  // 💡 Elevation for Android
-  elevation: 3,
-}}
+  {/* Extra Pricing Items */}
+
+<View
+  style={{
+    backgroundColor: '#333',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 20,
+  }}
+>
+  <ThemedText
+    style={{
+      color: 'white',
+      fontSize: 16,
+      marginBottom: 10,
+      fontWeight: 'bold',
+    }}
+  >
+    Platform Fees
+  </ThemedText>
+
+  <View
+    style={{
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 8,
+    }}
+  >
+    <ThemedText style={{ color: 'white', fontSize: 14 }}>
+      Add Contract
+    </ThemedText>
+    <ThemedText
+      style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
+    >
+      $5
+    </ThemedText>
+  </View>
+
+  <View
+    style={{
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 8,
+    }}
+  >
+    <ThemedText style={{ color: 'white', fontSize: 14 }}>
+      Add Load
+    </ThemedText>
+    <ThemedText
+      style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
+    >
+      $2
+    </ThemedText>
+  </View>
+
+  <View
+    style={{
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 10,
+    }}
+  >
+    <ThemedText style={{ color: 'white', fontSize: 14 }}>
+      Add Truck
+    </ThemedText>
+    <ThemedText
+      style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
+    >
+      $8
+    </ThemedText>
+  </View>
+
+  <View
+    style={{
+      borderTopWidth: 1,
+      borderTopColor: '#555',
+      paddingTop: 10,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    }}
+  >
+    <ThemedText style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
+      Total
+    </ThemedText>
+    <ThemedText
+      style={{ color: '#4CAF50', fontSize: 16, fontWeight: 'bold' }}
+    >
+      $15
+    </ThemedText>
+  </View>
+</View>
+
+
+
+  {/* Secure Note */}
+  <View
+    style={{
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 10,
+    }}
+  >
+    <Entypo name="lock" size={20} color="white" style={{ marginRight: 8 }} />
+    <ThemedText style={{ color: 'white', fontSize: 14 }}>
+      Your payments are made securely
+    </ThemedText>
+  </View>
+</View>
+
+
+
+
+
+  
+
+<TouchableOpacity style={[styles.confirmBTN , {backgroundColor:"#00897B"}]}
 onPress={()=>setDspPaymmentInout(true) }
 >
-  <ThemedText style={{ color: 'black', fontWeight: '600' }}>Confirm</ThemedText>
+  <ThemedText style={styles.confrirmText}>Confirm</ThemedText>
 </TouchableOpacity>
-</View>    
 
                 </View>}
 
 
 { dspPaymentInputs && paymentMethod &&  <View>
  {dspPaymentInputs && paymentMethod==="ecocash" && <View>
+
+
+ <View style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                margin: wp(4)
+              }}>
+    <ThemedText>Phone Number</ThemedText>
+                <TouchableOpacity onPress={()=>{setPaymentMethod(""); setDspPaymmentInout(false)}} >
+                  <Ionicons name="close" size={wp(5)} color={icon} />
+                </TouchableOpacity>
+              </View>
+
+
+
     <Input placeholder='Phone Number' />
   </View>}
 
  {dspPaymentInputs &&paymentMethod==="International" && <View>
-    <ThemedText>Card Details</ThemedText>
+     <View style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                margin: wp(4)
+              }}>
+    <ThemedText>Card Details </ThemedText>
+                <TouchableOpacity onPress={()=>{setPaymentMethod(""); setDspPaymmentInout(false)}} >
+                  <Ionicons name="close" size={wp(5)} color={icon} />
+                </TouchableOpacity>
+              </View>
     <Input placeholder='Name on Card' />
     <Input placeholder='Card Number'/>
     <Input placeholder='MM/YY'/>
     <Input placeholder='CVV' />
 
   </View>}
-  <TouchableOpacity style={{width:300 , height:40 , backgroundColor:"green" , borderRadius:5 ,alignSelf:"center"}} >
-    <ThemedText style={{alignSelf:"center"}}>Pay and Add Contract</ThemedText>
-  </TouchableOpacity>
 
-  <TouchableOpacity onPress={cancelBTN}>
-    <ThemedText>Back</ThemedText>
-  </TouchableOpacity>
+<TouchableOpacity
+  style={[styles.confirmBTN , {backgroundColor:"black"}]}
+>
+  <ThemedText
+    style={styles.confrirmText}
+  >
+    Pay and Add Contract
+  </ThemedText>
+</TouchableOpacity>
+
+ 
 
  </View>}
 
@@ -118,3 +293,28 @@ onPress={()=>setDspPaymmentInout(true) }
 
 export default CheckOutMakePayments;
 
+
+
+const styles = StyleSheet.create({
+  confirmBTN :{
+  width: 320,
+    height: 50,
+    // backgroundColor: "#28a745", // a nicer green shade
+    borderRadius: 8,
+    alignSelf: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3.84,
+    elevation: 5, // for Android shadow
+    marginVertical: 10, // spacing from other components
+  },
+  confrirmText :{
+      color: "white",
+      fontSize: 16,
+      fontWeight: "bold",
+      textAlign: "center",
+
+  }
+})

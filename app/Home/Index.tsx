@@ -148,7 +148,7 @@ const Index = () => {
         <View style={[styles.homefeature, { borderColor: mainColor, backgroundColor: background, overflow: 'hidden', }]}>
 
             {!isAvaialble &&
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, height: '125%', alignItems: 'center', justifyContent: 'center', backgroundColor: colorScheme === 'light' ? '#f3f3f3e8' : '#1e1e1ee8' }} >
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, height: '125%', alignItems: 'center', justifyContent: 'center', backgroundColor: colorScheme === 'light' ? '#f3f3f3e8' : "rgba(0, 0, 0, 0.6)" }} >
                     <ThemedText type='defaultSemiBold' style={{ color: coolGray }} > Coming Soon</ThemedText>
                     <Ionicons name='time-outline' size={wp(6)} color={coolGray} />
                 </View>}

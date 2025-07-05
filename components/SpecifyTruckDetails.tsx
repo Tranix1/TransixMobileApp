@@ -10,7 +10,7 @@ import { BlurView } from 'expo-blur'
 import Button from "./Button";
 
 import { useThemeColor } from '@/hooks/useThemeColor'
-import { Entypo, Ionicons } from '@expo/vector-icons'
+import {  Ionicons } from '@expo/vector-icons'
 
 import { hp, wp } from '@/constants/common'
 
