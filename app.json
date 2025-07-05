@@ -4,7 +4,7 @@
     "slug": "Transix",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/TRANSIX16X_16_PIXELS.png",
+    "icon": "./assets/images/TrnaixxNewBG.jpg",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/TRANSIX16X_16_PIXELS.png",
+        "foregroundImage": "./assets/images/TrnaixxNewBG.jpg",
         "backgroundColor": "#ffffff"
       },
       "package": "com.yayapana.TransixNewVersion"
@@ -28,7 +28,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/TRANSIX16X_16_PIXELS.png",
+          "image": "./assets/images/TransixxLogoN.jpg",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"

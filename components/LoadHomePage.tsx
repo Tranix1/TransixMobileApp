@@ -178,16 +178,16 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
             />
             {/* Gorhom BottomSheet for details */}
             <BottomSheet
-                ref={bottomSheetRef}
-                index={-1}
-                enableContentPanningGesture={false}
-                enablePanDownToClose
-                onClose={() => { setShowSheet(false); setBottomMode('') }}
-                backdropComponent={renderBackdrop}
-                backgroundStyle={{ backgroundColor: background }}
-                containerStyle={{ paddingBottom: wp(14) }}
-                handleStyle={{ borderTopEndRadius: wp(5), borderTopStartRadius: wp(5) }}
-            >
+    ref={bottomSheetRef}
+    index={-1}
+    enableContentPanningGesture={true}
+    enablePanDownToClose
+    onClose={() => { setShowSheet(false); setBottomMode('') }}
+    backdropComponent={renderBackdrop}
+    backgroundStyle={{ backgroundColor: background }}
+    containerStyle={{ paddingBottom: wp(14) }}
+    handleStyle={{ borderTopEndRadius: wp(5), borderTopStartRadius: wp(5) }}
+>
                 <BottomSheetView>
 
                     <View style={{
@@ -198,10 +198,12 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: wp(4) }}>
                             <View style={{ flexDirection: 'row' }}>
 
-                                {!selectedLoad?.logo && <FontAwesome name='user-circle' color={coolGray} size={wp(9)} />}
+                             
+
+                                  {!selectedLoad?.logo && <FontAwesome name='user-circle' color={coolGray} size={wp(9)} />}
                                 {selectedLoad?.logo && <Image
                                     style={{ width: 35, height: 35, borderRadius: 17.5, backgroundColor: '#ddd', }}
-                                    source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
+                                    source={{ uri: selectedLoad?.logo || 'https://via.placeholder.com/100' }}
                                 />}
 
                                 {selectedLoad &&
@@ -264,7 +266,8 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                             </View>
                                         </View>
 
-                                            <ThemedText style={{alignSelf:'center',margin : 8}}> Rate {selectedLoad.rate} </ThemedText>
+                                            <ThemedText style={{alignSelf:'center',margin : 8,color:accent,fontWeight:"bold"}}>
+                                                 Rate : {selectedLoad.currency} {selectedLoad.rate}  </ThemedText>
                                     
                                     </View>
                                 }
@@ -370,96 +373,101 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
 
 
                                 {selectedLoad.userId !== user?.uid ?
-                                    <BottomSheetScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: wp(4), flexDirection: 'row', gap: wp(5), marginTop: 'auto' }}>
-                                        <View style={{ alignItems: 'center' }}>
-                                            <TouchableOpacity style={[{ backgroundColor: coolGray, height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}>
-                                                <Ionicons name="chatbubble-ellipses" size={wp(6)} color={'white'} />
-                                            </TouchableOpacity>
-                                            <ThemedText color={coolGray} style={{}}>Message</ThemedText>
-                                        </View>
-                                        <View style={{ alignItems: 'center' }}>
+                                        <View style={styles.contactOptions}>
+                                        <View style={styles.contactOption}>
                                             <TouchableOpacity
-                                                onPress={() => Linking.openURL(`whatsapp://send?phone=${selectedLoad.contact}&text=${encodeURIComponent('message')}`)}
-                                                style={[{ backgroundColor: '#25D366', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                                style={[styles.contactButton, { backgroundColor: coolGray }]}
                                             >
-                                                <FontAwesome6 name="whatsapp" size={wp(6)} color="#fff" />
+                                                <Ionicons name="chatbubble-ellipses" size={wp(5)} color={'white'} />
                                             </TouchableOpacity>
-                                            <ThemedText style={{ color: coolGray }}>WhatsApp</ThemedText>
+                                            <ThemedText type='tiny'>Message</ThemedText>
                                         </View>
-                                        <View style={{ alignItems: 'center' }}>
+                                        <View style={styles.contactOption}>
                                             <TouchableOpacity
-                                                onPress={() => Linking.openURL(`tel:${selectedLoad.contact}`)}
-                                                style={[{ backgroundColor: '#0074D9', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                                style={[styles.contactButton, { backgroundColor: '#25D366' }]}
                                             >
-                                                <MaterialIcons name="call" size={wp(6)} color="#fff" />
+                                                <FontAwesome6 name="whatsapp" size={wp(5)} color="#fff" />
                                             </TouchableOpacity>
-                                            <ThemedText style={{ color: coolGray }}>Phone Call</ThemedText>
+                                            <ThemedText type='tiny'>WhatsApp</ThemedText>
                                         </View>
-                                        <View style={{ alignItems: 'center' }}>
+                                        <View style={styles.contactOption}>
                                             <TouchableOpacity
-                                                onPress={() => Linking.openURL(`tel:${selectedLoad.contact}`)}
-                                                style={[{ backgroundColor: '#4285f45a', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                                style={[styles.contactButton, { backgroundColor: '#0074D9' }]}
+                                            >
+                                                <MaterialIcons name="call" size={wp(5)} color="#fff" />
+                                            </TouchableOpacity>
+                                            <ThemedText type='tiny'>Call</ThemedText>
+                                        </View>
+                                        <View style={styles.contactOption}>
+                                            <TouchableOpacity
+                                                style={[styles.contactButton, { backgroundColor: '#4285f45a' }]}
                                             >
                                                 <Ionicons name="copy" size={wp(5)} color="#4285f4" />
                                             </TouchableOpacity>
-                                            <ThemedText style={{ color: coolGray }}>Copy Link</ThemedText>
+                                            <ThemedText type='tiny'>Copy Link</ThemedText>
                                         </View>
-                                        <View style={{ alignItems: 'center' }}>
+                                        <View style={styles.contactOption}>
                                             <TouchableOpacity
-                                                onPress={() => Linking.openURL(`tel:${selectedLoad.contact}`)}
-                                                style={[{ backgroundColor: '#7373735a', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                                style={[styles.contactButton, { backgroundColor: '#7373735a' }]}
                                             >
                                                 <Ionicons name="arrow-redo" size={wp(5)} color="#737373" />
                                             </TouchableOpacity>
-                                            <ThemedText style={{ color: coolGray }}>Share</ThemedText>
+                                            <ThemedText type='tiny'>Share</ThemedText>
                                         </View>
-                                    </BottomSheetScrollView>
+                                    </View>
                                     :
-                                    <BottomSheetScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: wp(4), flexDirection: 'row', gap: wp(5), marginTop: 'auto' }}>
-                                        <View style={{ alignItems: 'center' }}>
-                                            <TouchableOpacity style={[{ backgroundColor: coolGray, height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}>
+
+
+
+                                    
+
+  <View style={styles.contactOptions}>
+                                        <View style={styles.contactOption}>
+                                            <TouchableOpacity
+                                                style={[styles.contactButton, { backgroundColor: coolGray }]}
+                                            >
                                                 <FontAwesome6 name="edit" size={wp(5)} color={'white'} />
                                             </TouchableOpacity>
-                                            <ThemedText color={coolGray} style={{}}>Edit Load</ThemedText>
+                                            <ThemedText type='tiny'>Edit</ThemedText>
                                         </View>
-                                        <View style={{ alignItems: 'center' }}>
+                                       
+                                        <View style={styles.contactOption}>
                                             <TouchableOpacity
-                                                onPress={() => deleteMyLoad(selectedLoad.id)}
-                                                style={[{ backgroundColor: '#ff0000', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                                style={[styles.contactButton, { backgroundColor: 'red' }]}
                                             >
                                                 <FontAwesome6 name="trash" size={wp(5)} color="#fff" />
                                             </TouchableOpacity>
-                                            <ThemedText style={{ color: coolGray }}>Delete Load</ThemedText>
+                                            <ThemedText type='tiny'>Call</ThemedText>
                                         </View>
-                                        <View style={{ alignItems: 'center' }}>
+                                         <View style={styles.contactOption}>
                                             <TouchableOpacity
-                                                onPress={() => Linking.openURL(`whatsapp://send?phone=${selectedLoad.contact}&text=${encodeURIComponent('message')}`)}
-                                                style={[{ backgroundColor: '#25D366', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                                style={[styles.contactButton, { backgroundColor: '#25D366' }]}
                                             >
-                                                <FontAwesome6 name="whatsapp" size={wp(6)} color="#fff" />
+                                                <FontAwesome6 name="whatsapp" size={wp(5)} color="#fff" />
                                             </TouchableOpacity>
-                                            <ThemedText style={{ color: coolGray }}>WhatsApp</ThemedText>
+                                            <ThemedText type='tiny'>WhatsApp</ThemedText>
                                         </View>
-                                        <View style={{ alignItems: 'center' }}>
+                                        <View style={styles.contactOption}>
                                             <TouchableOpacity
-                                                onPress={() => Linking.openURL(`tel:${selectedLoad.contact}`)}
-                                                style={[{ backgroundColor: '#4285f45a', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                                style={[styles.contactButton, { backgroundColor: '#4285f45a' }]}
                                             >
                                                 <Ionicons name="copy" size={wp(5)} color="#4285f4" />
                                             </TouchableOpacity>
-                                            <ThemedText style={{ color: coolGray }}>Copy Link</ThemedText>
+                                            <ThemedText type='tiny'>Copy Link</ThemedText>
                                         </View>
-                                        <View style={{ alignItems: 'center' }}>
+                                        <View style={styles.contactOption}>
                                             <TouchableOpacity
-                                                onPress={() => Linking.openURL(`tel:${selectedLoad.contact}`)}
-                                                style={[{ backgroundColor: '#7373735a', height: wp(12), borderRadius: wp(90), alignItems: 'center', justifyContent: 'center', width: wp(12) }]}
+                                                style={[styles.contactButton, { backgroundColor: '#7373735a' }]}
                                             >
                                                 <Ionicons name="arrow-redo" size={wp(5)} color="#737373" />
                                             </TouchableOpacity>
-                                            <ThemedText style={{ color: coolGray }}>Share</ThemedText>
+                                            <ThemedText type='tiny'>Share</ThemedText>
                                         </View>
+                                    </View>
 
-                                    </BottomSheetScrollView>
+
+
+
                                 }
 
                                 {/* Add more fields as needed */}
@@ -500,6 +508,30 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: wp(1),
+    },
+      contactOptions: {
+        paddingVertical: wp(4),
+        flexDirection: 'row',
+        gap: wp(5),
+        marginTop: 'auto',
+        justifyContent: 'space-around'
+    },
+    contactOption: {
+        alignItems: 'center'
+    },
+    contactButton: {
+        height: wp(12),
+        width: wp(12),
+        borderRadius: wp(90),
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: wp(1)
+    },
+    ownerActions: {
+        paddingVertical: wp(4),
+        flexDirection: 'row',
+        gap: wp(5),
+        marginTop: 'auto'
     },
 })
 

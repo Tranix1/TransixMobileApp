@@ -147,7 +147,6 @@ const Index = () => {
         // //   await sendPushNotification(item.expoPushToken, message , tittle,dbName );
         // }
 
-            console.log("Submit data")
         
         const docRef = await addDocument(dbName, {
        docId : docId,
