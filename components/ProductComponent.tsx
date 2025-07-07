@@ -43,7 +43,7 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
     const handleContact = (method: 'whatsapp' | 'call' | 'message') => {
         if (!product.seller.contact) return
 
-        const message = `${product.seller.name}\n${product.title}\n${product.description}\nPrice: ${formatCurrency(product.price, 0, product.currency)}`
+        const message = `${product.seller.name}\n${product.model}\n${product.description}\nPrice: ${formatCurrency(product.price, 0, product.currency)}`
 
         switch (method) {
             case 'whatsapp':
@@ -258,10 +258,10 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
                     ))}
                 </View>
             )}
-            {/* Product Title and Price */}}
+            {/* Product Title and Price */}
             <View style={styles.titleRow}>
                 <ThemedText type='subtitle' style={styles.productTitle}>
-                    {product.title}
+                    {product.productModel}
                 </ThemedText>
                 <ThemedText type='subtitle' style={{ color: accent }}>
                     {formatCurrency(product.price, 0, product.currency)}

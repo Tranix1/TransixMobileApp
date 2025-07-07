@@ -110,7 +110,6 @@ const CreateProduct = () => {
 
 
 
-    console.log(formData.details?.vehicle?.otherType)
 
     const { user } = useAuth();
 
@@ -263,7 +262,6 @@ const CreateProduct = () => {
             ToastAndroid.show("Product created successfully!", ToastAndroid.SHORT);
             router.back();
         } catch (error) {
-            console.error("Error creating product:", error);
             ToastAndroid.show("Failed to create product", ToastAndroid.SHORT);
         } finally {
             setIsSubmitting(false);
@@ -1096,8 +1094,8 @@ const [storeDetails, setStoreDetails] = useState(null);
                         <ThemedText type="defaultSemiBold">Product  Name/Model  <ThemedText style={{fontStyle:"italic"}} >e.g corrola </ThemedText> </ThemedText>
                            <Input
                                 placeholder="corrola"
-                                value={formData.productLocation}
-                                onChangeText={(text) => handleChange("productLocation", text)}
+                                value={formData.productModel}
+                                onChangeText={(text) => handleChange("productModel", text)}
                             />
 
                         

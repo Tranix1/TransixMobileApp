@@ -126,7 +126,7 @@ contractId,
           { !contractId &&!userId && <View>
               <View style={{}}>
                 <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                  <ThemedText type="title">Trucks</ThemedText>
+                  <ThemedText type="title" >Trucks</ThemedText>
                   
                 </View>
               </View>
@@ -134,9 +134,9 @@ contractId,
             </View>
           }
           {userId&& (
-            <View>
-              {(userId===user?.uid ||contractId) ? <ThemedText> Manage Trucks </ThemedText> :
-              <ThemedText>{organisationName} Trucks </ThemedText>}
+            <View style={{paddingRight:5}}>
+              {(userId===user?.uid ||contractId) ? <ThemedText type="subtitle" > Manage Trucks </ThemedText> :
+              <ThemedText type="subtitle" >{organisationName} Trucks </ThemedText>}
             </View>
           )}
           <View style={{ flexDirection: 'row', gap: wp(2) }}>
@@ -250,8 +250,11 @@ contractId,
           ListEmptyComponent={
             <View style={{ minHeight: hp(80), justifyContent: 'center' }}>
               <ThemedText type="defaultSemiBold" style={{ textAlign: 'center' }}>
-                No Trucks to Display!
+                Loading Trucks…
               </ThemedText>
+               <ThemedText type='tiny' style={{ textAlign: 'center', marginTop: wp(2) }}>
+                        pull to refresh
+                    </ThemedText>
             </View>
           }
           onEndReached={loadMoreTrucks}

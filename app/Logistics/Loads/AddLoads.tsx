@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal } from "react-native";
+import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal,ToastAndroid } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
@@ -19,6 +19,7 @@ import { TruckFormData } from "@/types/types";
 import { TruckTypeProps } from "@/types/types";
 import { useThemeColor } from '@/hooks/useThemeColor';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
 
 const AddLoadDB = () => {
     const icon = useThemeColor('icon')
@@ -186,7 +187,7 @@ const AddLoadDB = () => {
             // If it is, refactor addDocument to be a plain async function.
             await addDocument("Loads", loadData);
 
-            alert("Load submitted successfully!");
+        ToastAndroid.show('Load Added successfully', ToastAndroid.SHORT)
             setAfterSubmitModal(true)
 
 
@@ -298,7 +299,14 @@ const AddLoadDB = () => {
                                     <ThemedText>{item.cargoArea?.name}</ThemedText>
                                     <ThemedText>{item.capacity?.name} </ThemedText>
 
-                                    <TouchableOpacity>
+                                    <TouchableOpacity onPress={() =>
+                            router.push({
+                                pathname: "/Logistics/Trucks/Index",
+                                params: { userId: "Hallllle" ,  organisationName: "Yayay ayay"  , truckType: item.truckType?.name ,
+                                cargoArea :item.cargoArea?.name , capacity :item.capacity?.name 
+                            },
+                            })} >
+
                                         <MaterialIcons name="forward" size={24} color={icon} />
                                     </TouchableOpacity>
                                 </View>

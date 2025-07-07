@@ -34,7 +34,7 @@ const Index = () => {
                 <View style={{ flexDirection: 'row', gap: wp(2) }}>
 
                     <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-                        <TouchableNativeFeedback onPress={() => { setIsVisible(true) }}>
+                        <TouchableNativeFeedback onPress={()=>checkAuth(setDspMenu(true)) }>
                             <View style={{ padding: wp(2) }}>
                                 <Ionicons name='reorder-three' size={wp(6)} color={icon} />
                             </View>
@@ -63,6 +63,23 @@ const Index = () => {
 
 
     const { user } = useAuth()
+
+
+    const [dspCreateAcc , setDspCreateAcc]= useState(false)
+    const [dspVerifyAcc , setDspVerifyAcc]=useState(false)
+    const [dspMenu , setDspMenu]= useState(false)
+
+    function checkAuth (theAction:any ){
+        if(!auth.currentUser ){
+            setDspCreateAcc(true)
+        }if(auth.currentUser && !auth.currentUser.emailVerified){
+           setDspVerifyAcc(true) 
+        }else if (auth.currentUser && auth.currentUser.emailVerified){
+            
+            theAction
+        }
+    }
+
 
 
 
@@ -190,7 +207,7 @@ const Index = () => {
         <View style={{ flex: 1 }}>
             <CustomHeader />
             <SafeAreaView>
-                <Modal onRequestClose={() => setIsVisible(false)} statusBarTranslucent visible={isVisible} transparent animationType='fade'>
+                <Modal onRequestClose={() => setDspMenu(false)} statusBarTranslucent visible={dspMenu} transparent animationType='fade'>
                     <Pressable onPressIn={() => { }} style={{ flex: 1, }}>
                         <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-start', flex: 1, padding: wp(4), }}>
                             <View style={{
@@ -199,7 +216,7 @@ const Index = () => {
                             }}>
 
                                 <TouchableOpacity
-                                    onPress={() => setIsVisible(false)}
+                                    onPress={() => setDspMenu(false)}
                                     style={{
                                         position: "absolute",
                                         top: wp(2),
@@ -241,7 +258,8 @@ const Index = () => {
                                                     {
                                                         !user?.organisation &&
                                                         <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
-                                                            <TouchableNativeFeedback onPress={() => router.push('/Account/Edit')}>
+                                                            <TouchableNativeFeedback 
+                                                            onPress={() => {router.push('/Account/Edit'); setDspMenu(false) }  }>
                                                                 <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
                                                                     <Ionicons name='alert-circle-outline' color={icon} size={wp(6)} />
                                                                 </View>
@@ -249,7 +267,7 @@ const Index = () => {
                                                         </View>
                                                     }
                                                 </View>
-                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: backgroundColor, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push('/Account/Index')}>
+                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: backgroundColor, padding: wp(3), borderRadius: wp(4) }} onPress={() => {router.push('/Account/Index'); setDspMenu(false) }  }>
                                                     <MaterialIcons name="manage-accounts" size={wp(5)} color={accent} style={{ marginLeft: wp(1) }} />
                                                     <ThemedText>
                                                         Manage Account
@@ -270,7 +288,7 @@ const Index = () => {
 
                                                     </View>
                                                 </View>
-                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: backgroundColor, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push('/Account/Login')}>
+                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: backgroundColor, padding: wp(3), borderRadius: wp(4) }} onPress={() => {router.push('/Account/Login'); setDspMenu(false)  }  }>
                                                     <AntDesign name='login' size={wp(3)} color={accent} style={{ marginLeft: wp(1) }} />
                                                     <ThemedText>
                                                         Login Now
@@ -281,7 +299,7 @@ const Index = () => {
                                             </View>
                                         }
                                     </View>
-                                    <TouchableNativeFeedback onPress={() => router.push("/BooksAndBids/SlctBidsAndBooks")} >
+                                    <TouchableNativeFeedback onPress={() => {router.push("/BooksAndBids/SlctBidsAndBooks"); setDspMenu(false) }  } >
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -291,7 +309,7 @@ const Index = () => {
                                             </View>
                                         </View>
                                     </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={() => router.push("/UserUploads/Contracts")}>
+                                    <TouchableNativeFeedback onPress={() => {router.push("/UserUploads/Contracts"); setDspMenu(false) } }>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <Ionicons name="reader" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -302,7 +320,7 @@ const Index = () => {
                                         </View>
                                     </TouchableNativeFeedback>
                                     <TouchableNativeFeedback onPress={
-                                        () => router.push({ pathname: '/Logistics/Trucks/Index', params: { userId: user?.uid } })} >
+                                        () => {router.push({ pathname: '/Logistics/Trucks/Index', params: { userId: user?.uid } }); setDspMenu(false)  } } >
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -312,7 +330,8 @@ const Index = () => {
                                             </View>
                                         </View>
                                     </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={() => router.push({ pathname: '/Logistics/Loads/Index', params: { userId: user?.uid } })}>
+                                    <TouchableNativeFeedback
+                                     onPress={() => {router.push({ pathname: '/Logistics/Loads/Index', params: { userId: user?.uid } }); setDspMenu(false)  }  }>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="boxes-stacked" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -348,7 +367,7 @@ const Index = () => {
                                     </View>
 
                                 </View>
-                                <TouchableNativeFeedback onPress={() => router.push('/Account/Settings')}>
+                                <TouchableNativeFeedback onPress={() => {router.push('/Account/Settings'); setDspMenu(false)  } }>
                                     <View style={{ paddingHorizontal: wp(4), flexDirection: 'row', gap: wp(3), paddingVertical: wp(4) }}>
                                         <Ionicons name="settings-outline" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
 
@@ -367,7 +386,7 @@ const Index = () => {
             </SafeAreaView>
 
 
-   <Modal statusBarTranslucent visible={isVisible && !auth.currentUser} animationType='fade' transparent>
+   <Modal statusBarTranslucent visible={dspCreateAcc } animationType='fade' transparent>
                 <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', flex: 1, padding: wp(4), alignItems: 'center' }}>
                     <View
                         style={{
@@ -385,7 +404,7 @@ const Index = () => {
                         }}
                     >
                         <TouchableOpacity
-                            onPress={() => setIsVisible(false)}
+                            onPress={() => setDspCreateAcc(false) }
                             style={{
                                 position: "absolute",
                                 top: wp(2),
@@ -424,11 +443,11 @@ const Index = () => {
 
                            
                             <TouchableOpacity
-                                onPress={() => Updates.reloadAsync()}
+                                onPress={()=>{router.push("/Account/Login"); setDspCreateAcc(false)  }  }
                                 style={{
-                                    flex: 1,
                                     backgroundColor: "#d1f7e9",
-                                    paddingVertical: wp(2),
+                                    width:wp(70),
+                                    // paddingVertical: wp(2),
                                     borderRadius: wp(3),
                                     alignItems: "center",
                                 }}
@@ -445,7 +464,7 @@ const Index = () => {
 
 
 
-            <Modal statusBarTranslucent visible={isVisible && !auth.currentUser?.emailVerified} animationType='fade' transparent>
+            <Modal statusBarTranslucent visible={dspVerifyAcc } animationType='fade' transparent>
                 <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', flex: 1, padding: wp(4), alignItems: 'center' }}>
                     <View
                         style={{
@@ -463,7 +482,7 @@ const Index = () => {
                         }}
                     >
                         <TouchableOpacity
-                            onPress={() => setIsVisible(false)}
+                            onPress={() => setDspVerifyAcc(false) }
                             style={{
                                 position: "absolute",
                                 top: wp(2),
@@ -531,9 +550,8 @@ const Index = () => {
                                         console.log("Sending verification email...");
 
                                         await sendEmailVerification(auth.currentUser as any);
-                                        alert("Verification email sent successfully.");
-        ToastAndroid.show('Truck Added successfully', ToastAndroid.SHORT)
-                                        setIsVisible(false);
+                                        ToastAndroid.show('Truck Added successfully', ToastAndroid.SHORT)
+                                        setDspVerifyAcc(false) 
                                     } catch (error) {
                                         console.log("Error sending verification email:", error);
                                         alert("Failed to send verification email. Try again.");
@@ -550,6 +568,8 @@ const Index = () => {
                                     borderRadius: wp(3),
                                     alignItems: "center",
                                 }}
+                                onPress={async ()=> {await signOut(auth) ; ToastAndroid.show('Signed out successfully.', ToastAndroid.SHORT);
+                                        setDspVerifyAcc(false)  } }
                             >
                                 <ThemedText style={{ color: "#e50914", fontWeight: "bold" }}>Sign out</ThemedText>
                             </TouchableOpacity>
@@ -634,7 +654,9 @@ const Index = () => {
                     </View>
                     <View style={[{ flexDirection: 'row', gap: wp(2), justifyContent: 'space-between' }]}>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() => router.push('/Logistics/Contracts/NewContract')} underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
+                            <TouchableHighlight onPress={()=> checkAuth( router.push('/Logistics/Contracts/NewContract')) }
+                                                               
+                                underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
                                 <Ionicons name="reader" size={wp(5)} color="#e50914" />
                             </TouchableHighlight>
                             <ThemedText type='tiny' style={{ textAlign: 'center' }}>
@@ -642,7 +664,7 @@ const Index = () => {
                             </ThemedText>
                         </View>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() => router.push('/Logistics/Trucks/AddTrucks')} underlayColor={'#0f9d585a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#0f9d5824' }}>
+                            <TouchableHighlight onPress={() =>checkAuth(router.push('/Logistics/Trucks/AddTrucks'))} underlayColor={'#0f9d585a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#0f9d5824' }}>
                                 <Fontisto name="truck" size={wp(5)} color="#0f9d58" />
                             </TouchableHighlight>
                             <ThemedText type='tiny' style={{ textAlign: 'center' }}>
@@ -650,7 +672,7 @@ const Index = () => {
                             </ThemedText>
                         </View>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() => router.push('/Logistics/Loads/AddLoads')} underlayColor={'#4285f45a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#4285f424' }}>
+                            <TouchableHighlight onPress={() =>checkAuth(router.push('/Logistics/Loads/AddLoads')) } underlayColor={'#4285f45a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#4285f424' }}>
                                 <FontAwesome6 name="box" size={wp(5)} color="#4285f4" />
                             </TouchableHighlight>
                             <ThemedText type='tiny' style={{ textAlign: 'center' }}>

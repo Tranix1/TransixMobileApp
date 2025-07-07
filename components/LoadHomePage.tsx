@@ -83,9 +83,6 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
         []
     );
 
-
-
-
     return (
 
         <View style={[styles.container, { backgroundColor: background, flex: 1 }]}>
@@ -102,7 +99,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                     {!userId &&<ThemedText type="title">
                         Loads
                     </ThemedText>}
-                   {userId && <ThemedText >
+                   {userId && <ThemedText type='subtitle' >
                         {organisationName}
                     </ThemedText>}
                     {!userId &&<ThemedText type="tiny">Find a Truck for your Load Today</ThemedText>}
@@ -118,8 +115,6 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                     </View>
                 </View>
             </View>
-
-
 
             <FlatList
                 keyExtractor={(item) => item.id.toString()}
@@ -148,7 +143,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                 ListEmptyComponent={<View style={{ minHeight: hp(80), justifyContent: 'center' }}>
 
                     <ThemedText type='defaultSemiBold' style={{ textAlign: 'center' }}>
-                        No Loads to Display!
+                        Loading Loads…
                     </ThemedText>
                     <ThemedText type='tiny' style={{ textAlign: 'center', marginTop: wp(2) }}>
                         pull to refresh
