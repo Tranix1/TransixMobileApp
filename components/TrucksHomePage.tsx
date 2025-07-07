@@ -48,7 +48,6 @@ selectedCargoArea: TruckTypeProps | null; // Adjust 'any' to actual image type i
   lastVisible: any; // Define a more specific type for lastVisible if it's a Firestore document snapshot
   loadingMore: boolean;
   clearFilter: () => void;
-  selectedCountry: string;
 
   contractName ?: string 
   contractId  ?: string
@@ -79,7 +78,6 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
   lastVisible,
   loadingMore,
   clearFilter,
-  selectedCountry,
 contractName ,
 contractId,
 
@@ -133,7 +131,7 @@ contractId,
               {/* <ThemedzText type="tiny">Find a Truck for your Load Today</ThemedText> */}
             </View>
           }
-          {userId&& (
+          { (userId|| contractId ) && (
             <View style={{paddingRight:5}}>
               {(userId===user?.uid ||contractId) ? <ThemedText type="subtitle" > Manage Trucks </ThemedText> :
               <ThemedText type="subtitle" >{organisationName} Trucks </ThemedText>}

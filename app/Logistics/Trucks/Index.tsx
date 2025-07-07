@@ -15,21 +15,19 @@ import { FinalReturnComponent } from '@/components/TrucksHomePage'
 const Index = () => {
 
 
-    const { userId, organisationName, contractName, contractId } = useLocalSearchParams();
-    console.log(userId, organisationName, contractName, contractId)
+    const { userId, organisationName, contractName, contractId,capacityG,  } = useLocalSearchParams();
+
+    console.log(capacityG)
+
+
     // const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
 
     const [trucks, setTrucks] = useState<Truck[]>([])
 
-    const [selectedCountry, setSelectedCountry] = useState('All')
-
-    const [locationTruckS, setLocationTruckS] = useState<string>(""); // Track local or international selection
-
     const [tankerType, setTankerType] = React.useState<string>("")
 
 
-    const [dspTruckCpacity, setDspTruckCapacity] = React.useState<string>("")
-    const [truckCapacity, setTruckCapacity] = useState("")
+    const [truckCapacity, setTruckCapacity] = useState( capacityG? `${capacityG}` :  "")
 
 
     const [truckConfig, setTruckConfig] = React.useState("")
@@ -44,9 +42,6 @@ const Index = () => {
 
 
     const [operationCountries, setOperationCountries] = useState<string[]>([]);
-
-
-
 
 
 
@@ -116,7 +111,6 @@ const Index = () => {
 
         // Apply the same filters as in LoadTructs
         if (userId) filters.push(where("userId", "==", userId));
-
         if (truckCapacity) filters.push(where("truckCapacity", "==", truckCapacity));
         if (truckConfig) filters.push(where("truckConfig", "==", truckConfig));
         if (truckSuspension) filters.push(where("truckSuspensions", "==", truckSuspension));
@@ -158,7 +152,7 @@ const Index = () => {
     return (
         <View style={{ flex: 1 }}>
 
-            {!userId && <View style={{ flex: 1 }}>
+            {(!contractId || !userId||!capacityG ) && <View style={{ flex: 1 }}>
                 <FinalReturnComponent
                     // ... pass all props
                     showfilter={showfilter}
@@ -182,11 +176,10 @@ const Index = () => {
                     lastVisible={lastVisible}
                     loadingMore={loadingMore}
                     clearFilter={clearFilter}
-                    selectedCountry={selectedCountry}
 
                 />
             </View>}
-            {(contractId || userId) && <ScreenWrapper >
+            {(contractId || userId||capacityG ) && <ScreenWrapper >
                 <FinalReturnComponent
                     // ... pass all props
                     showfilter={showfilter}
@@ -212,7 +205,6 @@ const Index = () => {
                     lastVisible={lastVisible}
                     loadingMore={loadingMore}
                     clearFilter={clearFilter}
-                    selectedCountry={selectedCountry}
                     contractName={`${contractName}`}
                     contractId={`${contractId}`}
 

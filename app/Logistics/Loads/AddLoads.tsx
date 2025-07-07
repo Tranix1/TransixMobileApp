@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal,ToastAndroid } from "react-native";
+import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal, ToastAndroid } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
@@ -92,7 +92,6 @@ const AddLoadDB = () => {
         suspension: SelectedOption;
     }
     const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>([]);
-    console.log("trucks needed , uyooo", trucksNeeded)
 
     const [dspAfterSubmitMoadal, setAfterSubmitModal] = React.useState(false)
 
@@ -137,12 +136,15 @@ const AddLoadDB = () => {
             !paymentTerms && "Enter Payment Terms",
         ].filter(Boolean);
 
-        if (MissingDriverDetails.length > 0) {
-            // setContractDErr(true);
-            alertBox("Missing Load Details", MissingDriverDetails.join("\n"), [], "error");
-            return;
-        }
+        // if (MissingDriverDetails.length > 0) {
+        //     // setContractDErr(true);
+        //     alertBox("Missing Load Details", MissingDriverDetails.join("\n"), [], "error");
+        //     return;
+        // }
 
+
+        setAfterSubmitModal(true)
+        return
 
         if (!user) {
             alert("Please Login first");
@@ -187,7 +189,7 @@ const AddLoadDB = () => {
             // If it is, refactor addDocument to be a plain async function.
             await addDocument("Loads", loadData);
 
-        ToastAndroid.show('Load Added successfully', ToastAndroid.SHORT)
+            ToastAndroid.show('Load Added successfully', ToastAndroid.SHORT)
             setAfterSubmitModal(true)
 
 
@@ -280,32 +282,40 @@ const AddLoadDB = () => {
                                 <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold', textAlign: 'center' }} >Next Step</ThemedText>
                             </View>
 
-                          
+
                             <ThemedText style={{ textAlign: 'center' }}>
                                 Load submitted successfully! Your load has been added and is now pending review. You can view the trucks you selected below or add another load if needed.
                             </ThemedText>
 
 
-  {trucksNeeded.map((item) => (
-                                <View style={{                                     position: 'relative',
+                            {trucksNeeded.map((item) => (
+                                <View style={{
+                                    position: 'relative',
                                     marginBottom: 10,
                                     padding: 14,
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
                                     borderRadius: 8,
-                                    backgroundColor: backgroundLight }} >
+                                    backgroundColor: backgroundLight
+                                }} >
                                     <ThemedText>{item.truckType?.name} </ThemedText>
                                     <ThemedText>{item.cargoArea?.name}</ThemedText>
                                     <ThemedText>{item.capacity?.name} </ThemedText>
 
                                     <TouchableOpacity onPress={() =>
-                            router.push({
-                                pathname: "/Logistics/Trucks/Index",
-                                params: { userId: "Hallllle" ,  organisationName: "Yayay ayay"  , truckType: item.truckType?.name ,
-                                cargoArea :item.cargoArea?.name , capacity :item.capacity?.name 
-                            },
-                            })} >
+                                        router.push({
+                                            pathname: "/Logistics/Trucks/Index",
+                                            params: {
+                                                organisationName: "Available Trucks",
+                                                truckTypeG: item.truckType?.name,
+                                                cargoAreaG: item.cargoArea?.name,
+                                                capacityG: item.capacity?.name,
+                                                truckConfigG: item.trailerConfig?.name,
+                                                truckSuspension: item.suspension?.name,
+                                                operationCountriesG: item.operationCountries,
+                                            },
+                                        })} >
 
                                         <MaterialIcons name="forward" size={24} color={icon} />
                                     </TouchableOpacity>
