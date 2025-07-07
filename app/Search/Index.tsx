@@ -10,7 +10,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { ThemedText } from "@/components/ThemedText";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { router } from "expo-router";
-import { wp } from "@/constants/common";
+import { wp, hp } from "@/constants/common";
 import Input from "@/components/Input";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
@@ -198,17 +198,17 @@ Experience the future of transportation and logistics!`;
   const backgroundLight = useThemeColor('backgroundLight')
   const textColor = useThemeColor('text')
 
-  const [industry , setIndusrty]=React.useState("")
+  const [industry, setIndusrty] = React.useState("")
   const tabKeys = ["Showroom", "Trailers", "Spares", "Service Provider"]
   const [selectedTab, setSelectedTab] = useState(tabKeys[0]);
-    const [selectedCountryId, setSelectedCountryId] = useState<{
-        id: number;
-        name: string;
-    } | null>(Countries[0] ?? null)
+  const [selectedCountryId, setSelectedCountryId] = useState<{
+    id: number;
+    name: string;
+  } | null>(Countries[0] ?? null)
   return (
     <ScreenWrapper>
 
-     
+
       <View style={{ margin: wp(4), marginTop: wp(3), flexDirection: 'row', gap: 2, alignItems: 'center' }}>
         <TouchableHighlight
           underlayColor={'#7f7f7f1c'}
@@ -227,179 +227,188 @@ Experience the future of transportation and logistics!`;
 
 
 
-<View>
+      <View style={{marginBottom:30}}>
 
 
 
 
 
- <View style={{ marginVertical: wp(2) }}>
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{
-                            paddingHorizontal: wp(2),
-                            gap: wp(2),
-                        }}
-                    >
-                        {Countries.map((item) => {
-                            const isSelected = item.id === selectedCountryId?.id;
-                            return (
-                                <TouchableOpacity
-                                    key={item.id}
-                                    onPress={() => {
-                                        setSelectedCountryId(item);
-                                        // Optionally filter products here or trigger a filter function
-                                    }}
-                                    style={{
-                                        backgroundColor: isSelected ? accent : backgroundLight,
-                                        borderColor: isSelected ? accent : coolGray,
-                                        borderWidth: 1,
-                                    marginLeft:wp(2),
-                                    borderRadius:wp(2),
-                                    paddingHorizontal: wp(3),
-
-                                       
-                                        marginRight: wp(1),
-                                        shadowColor: isSelected ? accent : '#000',
-                                        shadowOpacity: isSelected ? 0.15 : 0.05,
-                                        shadowRadius: 4,
-                                        elevation: isSelected ? 2 : 0,
-                                    }}
-                                    activeOpacity={0.8}
-                                >
-                                    <ThemedText
-                                        type="defaultSemiBold"
-                                        style={{
-                                            color: isSelected ? 'white' : textColor,
-                                            fontSize: wp(2.5),
-                                        }}
-                                    >
-                                        {item.name}
-                                    </ThemedText>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </ScrollView>
-                </View>
-                
-
-
-
-
-
-
-
-
-
-
-
-
-    <View style={{flexDirection:"row",margin :6}}>
-   <TouchableOpacity
-                // key={tab}
-                onPress={() => setIndusrty("transport&Lgistcs") }
-                style={{
-                       paddingVertical: wp(0.1),
-                  marginLeft: wp(2),
-                  borderRadius: wp(2),
-                  paddingHorizontal: wp(3),
-                  backgroundColor: industry === "transport&Lgistcs" ? accent : backgroundLight,
-                  borderWidth: 1,
-                  borderColor: industry === "transport&Lgistcs" ? accent : coolGray,
-                  flex :1,
-                  justifyContent:"center",
-                  alignItems:"center"
-                }}
-                activeOpacity={0.8}
-              >
-                <ThemedText
-                  type="defaultSemiBold"
-                  style={{
-                    color: industry === "transport&Lgistcs" ? 'white' : textColor,
-                    fontSize: wp(3.5),
+        <View style={{ marginVertical: wp(2) }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: wp(2),
+              gap: wp(2),
+            }}
+          >
+            {Countries.map((item) => {
+              const isSelected = item.id === selectedCountryId?.id;
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  onPress={() => {
+                    setSelectedCountryId(item);
+                    // Optionally filter products here or trigger a filter function
                   }}
-                >
-                  Loads & Trucks
-                </ThemedText>
-              </TouchableOpacity>
-
-               <TouchableOpacity
-                // key={tab}
-                // onPress={() => setSelectedTab(tab)}))
-                onPress={() => setIndusrty("Store") }
-                style={{
-                  paddingVertical: wp(0.1),
-                  marginLeft: wp(2),
-                  borderRadius: wp(2),
-                  paddingHorizontal: wp(3),
-                  backgroundColor: industry === "Store" ? accent : backgroundLight,
-                  borderWidth: 1,
-                  borderColor: industry === "Store" ? accent : coolGray,
-                  flex :1,
-                  justifyContent:"center",
-                  alignItems:"center"
-                }}
-                activeOpacity={0.8}
-              >
-                <ThemedText
-                  type="defaultSemiBold"
+// "#DC143C"
                   style={{
-                    color: industry === "Store" ? 'white' : textColor,
-                    fontSize: wp(3.5),
+                    backgroundColor: isSelected ? accent : backgroundLight,
+                    borderColor: isSelected ? accent : coolGray,
+                    borderWidth: 1,
+                    marginLeft: wp(2),
+                    borderRadius: wp(2),
+                    paddingHorizontal: wp(3),
+
+
+                    marginRight: wp(1),
+                    shadowColor: isSelected ? accent : '#000',
+                    shadowOpacity: isSelected ? 0.15 : 0.05,
+                    shadowRadius: 4,
+                    elevation: isSelected ? 2 : 0,
+                    height: 20,
+                    justifyContent: "center",
+                    alignItems: "center"
                   }}
+                  activeOpacity={0.8}
                 >
-                  Store
-                </ThemedText>
-              </TouchableOpacity>
+                  <ThemedText
+                    type="defaultSemiBold"
+                    style={{
+                      color: isSelected ? 'white' : textColor,
+                      fontSize: wp(2.5),
+                    }}
+                  >
+                    {item.name}
+                  </ThemedText>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
 
-    </View>
 
 
 
 
 
-      <View style={{ marginVertical: wp(2) }}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: wp(2),
-            gap: wp(2),
-          }}
-        >
-          {tabKeys.map((tab, idx) => {
-            return (
-              <TouchableOpacity
-                key={tab}
-                onPress={() => setSelectedTab(tab)}
-                style={{
-                  paddingVertical: wp(0.1),
-                  marginLeft: wp(2),
-                  borderRadius: wp(2),
-                  paddingHorizontal: wp(3),
-                  backgroundColor: selectedTab === tab ? accent : backgroundLight,
-                  borderWidth: 1,
-                  borderColor: selectedTab === tab ? accent : coolGray,
-                }}
-                activeOpacity={0.8}
-              >
-                <ThemedText
-                  type="defaultSemiBold"
+
+
+
+
+
+
+
+        <View style={{ flexDirection: "row", margin: 6 }}>
+          <TouchableOpacity
+            // key={tab}
+            onPress={() => setIndusrty("transport&Lgistcs")}
+            style={{
+              paddingVertical: wp(0.1),
+              marginLeft: wp(2),
+              borderRadius: wp(2),
+              paddingHorizontal: wp(3),
+              backgroundColor: industry === "transport&Lgistcs" ? accent : backgroundLight,
+              borderWidth: 1,
+              borderColor: industry === "transport&Lgistcs" ? accent : coolGray,
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              height:25
+            }}
+            activeOpacity={0.8}
+          >
+            <ThemedText
+              type="defaultSemiBold"
+              style={{
+                color: industry === "transport&Lgistcs" ? 'white' : textColor,
+                fontSize: wp(3.5),
+              }}
+            >
+              Loads & Trucks
+            </ThemedText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            // key={tab}
+            // onPress={() => setSelectedTab(tab)}))
+            onPress={() => setIndusrty("Store")}
+            style={{
+              paddingVertical: wp(0.1),
+              marginLeft: wp(2),
+              borderRadius: wp(2),
+              paddingHorizontal: wp(3),
+              backgroundColor: industry === "Store" ? accent : backgroundLight,
+              borderWidth: 1,
+              borderColor: industry === "Store" ? accent : coolGray,
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center"
+            }}
+            activeOpacity={0.8}
+          >
+            <ThemedText
+              type="defaultSemiBold"
+              style={{
+                color: industry === "Store" ? 'white' : textColor,
+                fontSize: wp(3.5),
+              }}
+            >
+              Store
+            </ThemedText>
+          </TouchableOpacity>
+
+        </View>
+
+
+
+
+
+        <View style={{ marginVertical: wp(2) }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: wp(2),
+              gap: wp(2),
+            }}
+          >
+            {tabKeys.map((tab, idx) => {
+              return (
+                <TouchableOpacity
+                  key={tab}
+                  onPress={() => setSelectedTab(tab)}
                   style={{
-                    color: selectedTab === tab ? 'white' : textColor,
-                    fontSize: wp(3.5),
+                    paddingVertical: wp(0.1),
+                    marginLeft: wp(2),
+                    borderRadius: wp(2),
+                    paddingHorizontal: wp(3),
+                    backgroundColor: selectedTab === tab ? accent : backgroundLight,
+                    borderWidth: 1,
+                    borderColor: selectedTab === tab ? accent : coolGray,
+
+                    height: 20,
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
+                  activeOpacity={0.8}
                 >
-                  {tab}
-                </ThemedText>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+                  <ThemedText
+                    type="defaultSemiBold"
+                    style={{
+                      color: selectedTab === tab ? 'white' : textColor,
+                      fontSize: wp(2.5),
+                    }}
+                  >
+                    {tab}
+                  </ThemedText>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
       </View>
-
-</View>
 
 
 
