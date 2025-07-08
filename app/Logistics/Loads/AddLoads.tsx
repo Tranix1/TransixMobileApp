@@ -78,6 +78,7 @@ const AddLoadDB = () => {
     const [selectedTruckCapacity, setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>(null)
     const [showCountries, setShowCountries] = useState(false);
     const [operationCountries, setOperationCountries] = useState<string[]>([]);
+
     const [selectedTrailerConfig, setSelectedTrailerConfig] = useState<{ id: number, name: string } | null>(null)
     const [selectedTruckSuspension, setSelectedTruckSuspension] = useState<{ id: number, name: string } | null>(null)
 
@@ -120,7 +121,6 @@ const AddLoadDB = () => {
     function removeTruck(indexToRemove: number) {
         setTrucksNeeded(prev => prev.filter((_, index) => index !== indexToRemove));
     }
-
 
 
 
@@ -288,7 +288,7 @@ const AddLoadDB = () => {
                             </ThemedText>
 
 
-                            {trucksNeeded.map((item) => (
+                            {trucksNeeded.map((item,index) => (
                                 <View style={{
                                     position: 'relative',
                                     marginBottom: 10,
@@ -298,24 +298,24 @@ const AddLoadDB = () => {
                                     justifyContent: 'space-between',
                                     borderRadius: 8,
                                     backgroundColor: backgroundLight
-                                }} >
+                                }} key={index} >
                                     <ThemedText>{item.truckType?.name} </ThemedText>
                                     <ThemedText>{item.cargoArea?.name}</ThemedText>
                                     <ThemedText>{item.capacity?.name} </ThemedText>
 
                                     <TouchableOpacity onPress={() =>
-                                        router.push({
+                                      {  router.push({
                                             pathname: "/Logistics/Trucks/Index",
                                             params: {
                                                 organisationName: "Available Trucks",
                                                 truckTypeG: item.truckType?.name,
-                                                cargoAreaG: item.cargoArea?.name,
+                                                cargoAreaG: JSON.stringify( item.cargoArea) ,
                                                 capacityG: item.capacity?.name,
-                                                truckConfigG: item.trailerConfig?.name,
-                                                truckSuspension: item.suspension?.name,
-                                                operationCountriesG: item.operationCountries,
+                                                operationCountriesG: JSON.stringify( item.operationCountries),
+
                                             },
-                                        })} >
+                                        });
+                                        setAfterSubmitModal(false) } } >
 
                                         <MaterialIcons name="forward" size={24} color={icon} />
                                     </TouchableOpacity>
@@ -628,13 +628,16 @@ const AddLoadDB = () => {
                                     backgroundColor: backgroundLight
                                 }}
                             >
-                                {/* X Button */}
-
+     
 
                                 {/* Truck Info */}
                                 <ThemedText >
-                                    Truck {index + 1}: {truck.truckType?.name}
+                                    Truck {index + 1}:    {truck.truckType?.name} 
                                 </ThemedText>
+                                <ThemedText></ThemedText>
+                                <ThemedText>{truck.cargoArea?.name}  </ThemedText>
+                                <ThemedText>{truck.capacity?.name} </ThemedText>
+
                                 <TouchableOpacity
                                     onPress={() => removeTruck(index)}
                                     style={{

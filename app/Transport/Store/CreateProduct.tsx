@@ -119,9 +119,6 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
     getDocById('storeDetails', setStoreDetails);
   }, []);
 
-console.log(storeDetails?.storeName ,"storeDetails")
-
-
 
     // Form data
     const [formData, setFormData] = useState<Partial<Product>>({
@@ -139,10 +136,6 @@ console.log(storeDetails?.storeName ,"storeDetails")
         },
 
     });
-
-
-
-
 
 
     const { user } = useAuth();
@@ -171,6 +164,7 @@ console.log(storeDetails?.storeName ,"storeDetails")
     // Handle form submission
     const handleSubmit = async () => {
 
+        setIsSubmitting(true);
 
         let imageUrls = [];
         for (const asset of images) {
@@ -189,7 +183,6 @@ console.log(storeDetails?.storeName ,"storeDetails")
 
         }
 
-        setIsSubmitting(true);
         try {
             // Upload images
             const uploadedImages = await Promise.all(
@@ -274,7 +267,7 @@ console.log(storeDetails?.storeName ,"storeDetails")
 
                 seller: {
                     id: user?.uid || "",
-                    name: storeDetails?.storeName|| "Anonymous",
+                    name: storeDetails?.storeName||user?.organisation || "Anonymous",
                     contact: storeDetails?.storePhoneNum || "",
                     isVerified: false
                 },
@@ -882,11 +875,6 @@ console.log(storeDetails?.storeName ,"storeDetails")
 
           </Modal>
 
-
-
-
-        
-
             <ScrollView contentContainerStyle={styles.container}>
 
 {/* {!storeDetails &&  <TouchableOpacity onPress={() => setStoredetails(true)}  style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}> */}
@@ -1142,8 +1130,8 @@ console.log(storeDetails?.storeName ,"storeDetails")
                     <Button
                         title={isSubmitting ? "Creating..." : "Create Product"}
                         onPress={handleSubmit}
-                        loading={isSubmitting}
                         disabled={isSubmitting}
+                        loading={isSubmitting}
                     />
                     {uploadProgress && (
                         <ThemedText type="tiny" style={{ textAlign: 'center', marginTop: wp(2) }}>

@@ -14,15 +14,15 @@ import { FinalReturnComponent } from '@/components/TrucksHomePage'
 const Index = () => {
 
 
-    const { userId, organisationName, contractName, contractId,capacityG,  } = useLocalSearchParams();
+    const { userId, organisationName, contractName, contractId,capacityG,cargoAreaG,truckTypeG,operationCountriesG  } = useLocalSearchParams();
 
-
+        console.log(cargoAreaG)
 
     // const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
 
     const [trucks, setTrucks] = useState<Truck[]>([])
 
-    const [tankerType, setTankerType] = React.useState<string>("")
+    const [tankerType, setTankerType] = React.useState<string>( "")
 
 
     const [truckCapacity, setTruckCapacity] = useState( capacityG? `${capacityG}` :  "")
@@ -31,16 +31,23 @@ const Index = () => {
     const [truckConfig, setTruckConfig] = React.useState("")
     const [truckSuspension, setTruckSuspension] = React.useState("")
 
-    const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(null)
 
+    const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(() => {
+  if (!cargoAreaG) return null;
+  const value = Array.isArray(cargoAreaG) ? cargoAreaG[0] : cargoAreaG;
+  return JSON.parse(value);
+});
 
     const [refreshing, setRefreshing] = useState(false)
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
 
 
-    const [operationCountries, setOperationCountries] = useState<string[]>([]);
-
+    const [operationCountries, setOperationCountries] = useState<string[]>(() => {
+    if (!operationCountriesG) return [];
+    if (Array.isArray(operationCountriesG)) return JSON.parse(operationCountriesG[0]);
+    return JSON.parse(operationCountriesG);
+    });
 
 
     const LoadTructs = async () => {

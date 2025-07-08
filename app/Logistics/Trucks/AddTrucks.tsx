@@ -236,9 +236,9 @@ console.log(uploadingImageUpdate)
 
       <View style={{ paddingHorizontal: wp(4) }} >
 
-                {/* {!uploadingImageUpdate && <View style={{height:25 , backgroundColor:"red",width:180, margin :10, justifyContent:"center",alignItems:"center"   , position:"absolute",top:0,zIndex:100, alignSelf:"center" }} >
-            <ThemedText > {uploadingImageUpdate} pana </ThemedText>
-          </View>} */}
+                 {uploadingImageUpdate && <View style={{  flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: "center", borderRadius: wp(4), alignItems: 'center' , }} >
+            <ThemedText style={{  textAlign: 'center' }} > {uploadingImageUpdate} </ThemedText>
+          </View>} 
 
         <ScrollView>
 
@@ -260,7 +260,7 @@ console.log(uploadingImageUpdate)
 
               <View style={{ gap: wp(2) }} >
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
-                  <TouchableOpacity onPress={() => setOwnerdetailsDsp(false)}>
+                  <TouchableOpacity onPress={() => {setOwnerdetailsDsp(true); setTuckOwnerOBroker("") } }>
                     <AntDesign name="close" color={icon} size={wp(4)} />
                   </TouchableOpacity>
                     <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >OWNER DETAILS</ThemedText>
@@ -348,11 +348,13 @@ console.log(uploadingImageUpdate)
                   onChangeText={(text) => setOwnerEmailAddDb(text)}
                 />
 
-               <ThemedText>Upload: Company Doc Validating Truck Ownership or Lease </ThemedText>     
+               <ThemedText style={{fontSize:13.6}}>Upload: Company Doc Validating Truck Ownership or Lease </ThemedText>     
                <ThemedText type="tiny">Like a certificate of incoperation with same name on books </ThemedText>            
-
+      { <TouchableOpacity  style={{ backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignSelf: 'center', marginBottom: 15, width: 250 }} >
+                    <ThemedText style={{ backgroundColor: 'white', textAlign: 'center', color: "black" }}>Truck Ownership</ThemedText>
+                </TouchableOpacity>}
                               
-                <Button onPress={handleUpdateDriverDetails} title="Save" />
+                <Button onPress={handleUpdateDriverDetails} title="Save" style={{height:40}} />
 
               </View>
             </View>
@@ -536,29 +538,30 @@ console.log(uploadingImageUpdate)
               }
 
             {selectedTruckType?.name !=="Rigid" &&<View>
-              <ThemedText>
+
+            { selectedTruckType?.name ==="Triaxle" &&  <ThemedText>
                 Trailer Book Image
-              </ThemedText>
+              </ThemedText>}
 
 
               {images[4] ?
                 <Image source={{ uri: images[4]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
                 :
-                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3]) ? selectManyImages(setImages,false) : ToastAndroid.show('Please add horse reg image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+             selectedTruckType?.name === "Triaxle" &&   <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3]) ? selectManyImages(setImages,false) : ToastAndroid.show('Please add horse reg image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                   <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                   <ThemedText color={icon + "4c"}>Trailer Book Image<ThemedText color="red">*</ThemedText></ThemedText>
                 </TouchableOpacity>
               }
 
-              <ThemedText>
+             {selectedTruckType?.name ===  "super Link"  && <ThemedText>
                 Trailer 2 Book Image (If Available)
-              </ThemedText>
+              </ThemedText>}
 
 
               {images[5] ?
                 <Image source={{ uri: images[5]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
                 :
-                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3] && images[4]) ? selectManyImages(setImages,false) : ToastAndroid.show('Please add trailer 1 book image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                selectedTruckType?.name ===  "super Link"  && <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3] && images[4]) ? selectManyImages(setImages,false) : ToastAndroid.show('Please add trailer 1 book image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                   <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                   <ThemedText color={icon + "4c"}>Trailer 2 Book Image (optional)<ThemedText color="red">*</ThemedText></ThemedText>
                 </TouchableOpacity>

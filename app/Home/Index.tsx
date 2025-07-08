@@ -81,8 +81,6 @@ const Index = () => {
     }
 
 
-
-
     interface DataItem {
         topic: string;
         description: string;
@@ -136,9 +134,6 @@ const Index = () => {
         },
     ];
 
-
-
-
     interface HomeItemProps {
         topic: string;
         description: string;
@@ -167,7 +162,7 @@ const Index = () => {
             {!isAvaialble &&
                 <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, height: '125%', alignItems: 'center', justifyContent: 'center', backgroundColor: colorScheme === 'light' ? 'rgba(255, 255, 255, 0.6)' : "rgba(0, 0, 0, 0.6)" }} >
                     <ThemedText type='defaultSemiBold'  > Coming Soon</ThemedText>
-                    <Ionicons name='time-outline' size={wp(6)}  />
+                    <Ionicons name='time-outline' size={wp(6)} color={colorScheme === 'light'? "black" : "white" }  />
                 </View>}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }}>
                 <View style={{ backgroundColor: mainColor, borderRadius: wp(2), padding: wp(1.5) }}>
@@ -179,9 +174,6 @@ const Index = () => {
             </View>
 
             <View>
-
-
-
                 <ThemedText
                     type='default'
                     numberOfLines={0}
@@ -199,8 +191,6 @@ const Index = () => {
             />
         </View>
     );
-
-
 
     return (
 
@@ -590,45 +580,9 @@ const Index = () => {
                 </BlurView>
             </Modal>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ marginVertical: wp(4), marginHorizontal: wp(2) }}>
 
-                {/* <View style={{ marginBottom: wp(4) }}>
-                        <Button title='Go To Store' />
-                    </View> */}
-
-                <View style={{ margin: wp(4), marginTop: 0 }}>
+             <View style={{ margin: wp(4), marginTop: 0 }}>
                     <TouchableOpacity onPress={() => router.push("/Search/Index")}
                         style={{ backgroundColor: backgroundColor, borderRadius: wp(8), padding: wp(3), flexDirection: 'row', gap: wp(2), borderWidth: .4, borderColor: icon }}>
                         <EvilIcons name='search' size={wp(6)} color={icon} />
@@ -638,10 +592,7 @@ const Index = () => {
                     </TouchableOpacity>
                 </View>
 
-                {/* <TouchableOpacity onPress={() => router.push("/Logistics/AddHome")} >
-                    <ThemedText>Add Logistics</ThemedText>
-                </TouchableOpacity> */}
-
+              
 
                 <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>

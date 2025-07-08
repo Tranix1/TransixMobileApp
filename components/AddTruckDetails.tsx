@@ -144,16 +144,6 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
 
           
 
-            <ThemedText>
-                Maximum Load Capacity<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-            <Input
-                value={formData.maxloadCapacity}
-                keyboardType="number-pad"
-                placeholder="0.0t"
-                onChangeText={(text) => handleChange<TruckFormData>(text, 'maxloadCapacity', setFormData)}
-            />
-
 
             <ThemedText>
                 Operation Countries<ThemedText color="red">*</ThemedText>

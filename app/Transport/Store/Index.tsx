@@ -71,8 +71,6 @@ const StorePage = () => {
     const [slectedBodyType, setSelectedBodyType] = React.useState<{ id: number; name: string } | null>(null)
     const [slectedMake, setSelectedMake] = React.useState<{ id: number; name: string } | null>(null)
 
-console.log(selectedCountry)
-
 
     const loadProducts = async () => {
 
@@ -306,17 +304,7 @@ console.log(selectedCountry)
                     setSelectedMake={setSelectedMake}
 
 
-
-
-
                 />
-
-
-
-
-
-
-
 
                 <FlatList
                     keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
