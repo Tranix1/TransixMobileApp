@@ -2,9 +2,8 @@
 import { StyleSheet, View, } from 'react-native'
 import React, { useEffect, useId, useState } from 'react'
 import { hp, wp } from '@/constants/common'
-import { useThemeColor } from '@/hooks/useThemeColor'
 import { fetchDocuments } from '@/db/operations'
-import { Contracts, Truck } from '@/types/types'
+import {  Truck } from '@/types/types'
 import { DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore'
 
 import { TruckTypeProps } from '@/types/types'

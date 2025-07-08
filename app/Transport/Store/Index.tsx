@@ -2,7 +2,7 @@ import { ActivityIndicator, RefreshControl, StyleSheet, Text, TouchableNativeFee
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { deleteDocument, fetchDocuments } from '@/db/operations'
 import { Product } from '@/types/types'
-import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore'
+import { DocumentData, QueryDocumentSnapshot,where } from 'firebase/firestore'
 import { ThemedText } from '@/components/ThemedText'
 import { hp, wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
@@ -18,11 +18,24 @@ import { formatCurrency } from '@/services/services'
 import { color } from 'react-native-elements/dist/helpers'
 import { SpecifyProductDetails } from '@/components/SpecifyProductInStore'
 import { Countries } from '@/data/appConstants'
+import { useLocalSearchParams } from 'expo-router'
 
 const StorePage = () => {
     const { user } = useAuth()
-    const tabKeys = ["Showroom", "Trailers", "Spares", "Service Provider"]
-    const [selectedTab, setSelectedTab] = useState(tabKeys[0]);
+
+    const { userId,   } = useLocalSearchParams();
+
+    const productCategorys = [
+            { id: 0, name: "Showroom" },
+        { id: 1, name: "Trailers" },
+        { id: 2, name: "Container" },
+        { id: 3, name: "Spares" },
+        { id: 4, name: "Service Provider" },
+    ]
+
+    // const [selectedProductCatgory, setSelectedCategory] = useState(productCategorys[0]);
+
+    // console.log(selectedProductCatgory , "categ")
     const [refreshing, setRefreshing] = useState(false)
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null)
     const [loadingMore, setLoadingMore] = useState(false)
@@ -33,7 +46,7 @@ const StorePage = () => {
     const [expandId, setExpandId] = useState('')
     const [bottomMode, setBottomMode] = useState<'Offer' | 'Inquiry' | ''>('')
     const [offerPrice, setOfferPrice] = useState('')
-    const [selectedCountryId, setSelectedCountryId] = useState<{
+    const [selectedCountry, setSelectedCountry] = useState<{
         id: number;
         name: string;
     } | null>(Countries[0] ?? null)
@@ -47,8 +60,45 @@ const StorePage = () => {
     const backgroundLight = useThemeColor('backgroundLight')
     const textColor = useThemeColor('text')
 
+
+
+    const [buyOSelling, setBuyOselling] = React.useState("")
+    const [selectedProdCategry, setSelectedProdctCategory] = React.useState<{ id: number; name: string } | any>(productCategorys[0])
+
+    const [selectedVehiType, setSelectedVehiType] = React.useState<{ id: number; name: string } | null>(null)
+    const [selectedBudget, setSelectedBudget] = React.useState<{ id: number; name: string } | null>(null)
+    const [selectedTransType, setSelectedTransType] = React.useState<{ id: number; name: string } | null>(null)
+    const [slectedBodyType, setSelectedBodyType] = React.useState<{ id: number; name: string } | null>(null)
+    const [slectedMake, setSelectedMake] = React.useState<{ id: number; name: string } | null>(null)
+
+
+
+
     const loadProducts = async () => {
-        const result = await fetchDocuments("products")
+
+        let filters: any[] = [];
+
+
+        if (userId) filters.push(where("userId", "==", userId));
+
+        // if (selectedCountry) filters.push(where("userId", "==", selectedCountry?.name));
+        if (selectedProdCategry) filters.push(where("category", "==", selectedProdCategry?.name));
+
+        if (buyOSelling) filters.push(where("transaction.LookingOSelling", "==", buyOSelling));
+
+        // Small Vehicle , cargo or heavy euip
+        if (selectedVehiType) filters.push(where("vehicleType", "==", selectedVehiType.name));
+
+        if (selectedBudget) filters.push(where("priceRange", "==", selectedBudget.name));
+
+        if (selectedTransType) filters.push(where("vehicleTransimission", "==", selectedTransType.name));
+
+        if (slectedBodyType) filters.push(where("bodyStyle", "==", slectedBodyType.name));
+
+        if (slectedMake) filters.push(where("bodyMake", "==", slectedMake.name));
+        
+        const result = await fetchDocuments("products", 10, undefined, filters);
+
         if (result.data?.length) {
             setProducts(result.data as Product[])
             setLastVisible(result.lastVisible)
@@ -144,12 +194,12 @@ const StorePage = () => {
                         }}
                     >
                         {Countries.map((item) => {
-                            const isSelected = item.id === selectedCountryId?.id;
+                            const isSelected = item.id === selectedCountry?.id;
                             return (
                                 <TouchableOpacity
                                     key={item.id}
                                     onPress={() => {
-                                        setSelectedCountryId(item);
+                                        setSelectedCountry(item);
                                         // Optionally filter products here or trigger a filter function
                                     }}
                                     style={{
@@ -158,12 +208,12 @@ const StorePage = () => {
                                         borderWidth: 1,
 
 
-                                     paddingVertical: wp(0.1),
-                                    marginLeft:wp(2),
-                                    borderRadius:wp(2),
-                                    paddingHorizontal: wp(3),
+                                        paddingVertical: wp(0.1),
+                                        marginLeft: wp(2),
+                                        borderRadius: wp(2),
+                                        paddingHorizontal: wp(3),
 
-                                       
+
                                         marginRight: wp(1),
                                         shadowColor: isSelected ? accent : '#000',
                                         shadowOpacity: isSelected ? 0.15 : 0.05,
@@ -186,10 +236,10 @@ const StorePage = () => {
                         })}
                     </ScrollView>
                 </View>
-                
- 
-                <View style={{  marginVertical: wp(2) }}>
-                       <ScrollView
+
+
+                <View style={{ marginVertical: wp(2) }}>
+                    <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={{
@@ -197,34 +247,34 @@ const StorePage = () => {
                             gap: wp(2),
                         }}
                     >
-                    {tabKeys.map((tab, idx) => {
-                        return (
-                            <TouchableOpacity
-                                key={tab}
-                                onPress={() => setSelectedTab(tab)}
-                                style={{
-                                    paddingVertical: wp(0.1),
-                                    marginLeft:wp(2),
-                                    borderRadius:wp(2),
-                                    paddingHorizontal: wp(3),
-                                    backgroundColor: selectedTab === tab ? accent : backgroundLight,
-                                    borderWidth: 1,
-                                    borderColor: selectedTab === tab ? accent : coolGray,
-                                }}
-                                activeOpacity={0.8}
-                            >
-                                <ThemedText
-                                    type="defaultSemiBold"
+                        {productCategorys.map((tab, idx) => {
+                            return (
+                                <TouchableOpacity
+                                    key={tab.id}
+                                    onPress={() => setSelectedProdctCategory(tab)}
                                     style={{
-                                        color: selectedTab === tab ? 'white' : textColor,
-                                        fontSize: wp(3.5),
+                                        paddingVertical: wp(0.1),
+                                        marginLeft: wp(2),
+                                        borderRadius: wp(2),
+                                        paddingHorizontal: wp(3),
+                                        backgroundColor: selectedProdCategry.id === tab.id ? accent : backgroundLight,
+                                        borderWidth: 1,
+                                        borderColor: selectedProdCategry.id === tab.id ? accent : coolGray,
                                     }}
+                                    activeOpacity={0.8}
                                 >
-                                    {tab}
-                                </ThemedText>
-                            </TouchableOpacity>
-                        );
-                    })}
+                                    <ThemedText
+                                        type="defaultSemiBold"
+                                        style={{
+                                            color: selectedProdCategry.id === tab.id ? 'white' : textColor,
+                                            fontSize: wp(3.5),
+                                        }}
+                                    >
+                                        {tab.name}
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            );
+                        })}
                     </ScrollView>
                 </View>
 
@@ -234,6 +284,25 @@ const StorePage = () => {
                 <SpecifyProductDetails
                     showFilter={showFilter}
                     setShowFilter={setShowFilter}
+                    buyOSelling={buyOSelling}
+                    setBuyOselling={setBuyOselling}
+                    selectedProdCategry={selectedProdCategry}
+                    setSelectedProdctCategory={setSelectedProdctCategory}
+                    selectedVehiType={selectedVehiType}
+                    setSelectedVehiType={setSelectedVehiType}
+                    selectedBudget={selectedBudget}
+                    setSelectedBudget={setSelectedBudget}
+                    selectedTransType={selectedTransType}
+                    setSelectedTransType={setSelectedTransType}
+                    slectedBodyType={slectedBodyType}
+                    setSelectedBodyType={setSelectedBodyType}
+                    slectedMake={slectedMake}
+                    setSelectedMake={setSelectedMake}
+
+
+
+
+
                 />
 
 
@@ -272,7 +341,7 @@ const StorePage = () => {
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
                             <ThemedText type='defaultSemiBold' style={styles.emptyText}>
-                                No Products to Display!
+                                Products Loading!
                             </ThemedText>
                             <ThemedText type='tiny' style={styles.emptySubtext}>
                                 pull to refresh
@@ -386,7 +455,7 @@ const StorePage = () => {
                                                     },
                                                     {
                                                         label: 'Location',
-                                                        value: selectedProduct.location.city,
+                                                        value: selectedProduct.location.productLocation,
                                                     },
                                                 ].map((row, idx, arr) => (
                                                     <View

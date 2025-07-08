@@ -62,7 +62,7 @@ const CreateProduct = () => {
     const [uploadProgress, setUploadProgress] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showErrors, setShowErrors] = useState(false);
-    const [buyOSelling , setBuyOselling]=React.useState("")
+    
 
     const [selectedCategory, setSelectedCategory] = useState<any>(null);
     const [selectedType, setSelectedType] = useState<any>(null);
@@ -85,8 +85,38 @@ const CreateProduct = () => {
     const [vehicleTransimission, setVehicleTransission] = React.useState("")
     const [vehcileFuel, setVehicleFuel] = React.useState("")
 
+    const [LookingOSelling , setBuyOSelling]=React.useState("")
 
 
+
+  const [storedetails, setStoredetails] = useState(false)
+
+  const [selectedStoreCountry, setSelectedStoreCountry] = useState<{ id: number; name: string } | null>(null);
+
+  const [storeNamedDb, setStoreName] = useState('');
+  const [storeLocationAddDb, SetStoreLocationAddDb] = useState('');
+  const [ownerEmailAddDb, setStoreEmailAddDb] = useState('');
+  const [storePhonNumAddDb, setOwnerPhoneNum] = useState('');
+
+  const handleUpdateStoreDetails = async () => {
+    console.log("start addd")
+    await setDocuments("storeDetails", { storeName: storeNamedDb, storePhoneNum: storePhonNumAddDb, storeEmail: ownerEmailAddDb,  exactLocation : storeLocationAddDb,storeCountry : selectedStoreCountry?.name })
+    console.log("Donee Adding")
+  };
+
+
+  interface storeDetals {
+    storeName : string;
+    storePhoneNum : string ;
+    storeEmail : string;
+    exactLocation : string;
+    storeCountry : string;
+    storeCity : string
+  }
+const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
+  React.useEffect(() => {
+    getDocById('storeDetails', setStoreDetails);
+  }, []);
 
 
     // Form data
@@ -203,6 +233,7 @@ const CreateProduct = () => {
                 ...formData,
                 
                 transaction: {
+                    LookingOSelling : LookingOSelling ,
                     type: selectedTransaction?.name,
                     priceRange : priceRange ,
                     priceNegotiable: priceNegotiable,
@@ -210,10 +241,12 @@ const CreateProduct = () => {
                     deliveryCost: formData.deliveryCost,
                     swapPreferences: formData.swapPreferences
                 },
-              
+         
                 location: {
-                    address: "",
-                    city: "",
+                    storeCountry: storeDetails?.storeCountry ,
+                    exactLocation : storeDetails?.exactLocation ,
+                    storeCity: storeDetails?.storeCity ,
+                    productLocation : formData.productLocation  ,
                     coordinates: null
                 },
                 truckDetails: {
@@ -237,8 +270,8 @@ const CreateProduct = () => {
 
                 seller: {
                     id: user?.uid || "",
-                    name: user?.organisation || "Anonymous",
-                    contact: user?.phoneNumber || "",
+                    name: storeDetails?.storeName || "Anonymous",
+                    contact: storeDetails?.storePhoneNum || "",
                     isVerified: false
                 },
                 visibility: {
@@ -763,31 +796,6 @@ const CreateProduct = () => {
 
 
 
-  const [storedetails, setStoredetails] = useState(false)
-
-  const [selectedStoreCountry, setSelectedStoreCountry] = useState<{ id: number; name: string } | null>(null);
-
-  const [storeNamedDb, setStoreName] = useState('');
-  const [storeLocationAddDb, SetStoreLocationAddDb] = useState('');
-  const [ownerEmailAddDb, setStoreEmailAddDb] = useState('');
-  const [storePhonNumAddDb, setOwnerPhoneNum] = useState('');
-
-  const handleUpdateStoreDetails = async () => {
-    console.log("start addd")
-    await setDocuments("storeDetails", { storeNamedDb: storeNamedDb, storePhoneNum: storePhonNumAddDb, ownerEmail: ownerEmailAddDb,  exactLocation : storeLocationAddDb,storeCountry : selectedStoreCountry?.name })
-    console.log("Donee Adding")
-  };
-
-
-const [storeDetails, setStoreDetails] = useState(null);
-  React.useEffect(() => {
-    getDocById('storeDetails', setStoreDetails);
-  }, []);
-
-
-
-
-
     return (
         <ScreenWrapper fh={false}>
             <Heading page="Create Product" />
@@ -871,7 +879,7 @@ const [storeDetails, setStoreDetails] = useState(null);
 
             <ScrollView contentContainerStyle={styles.container}>
 
-{!storeDetails &&  <View style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
+{!storeDetails &&  <TouchableOpacity onPress={() => setStoredetails(true)}  style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
             <View>
               <ThemedText type="defaultSemiBold">
                 {user?.organisation || 'Set Owner Name!'}
@@ -880,10 +888,8 @@ const [storeDetails, setStoreDetails] = useState(null);
                 {user?.email || 'No Organisation Name!'}
               </ThemedText>
             </View>
-            <TouchableOpacity onPress={() => setStoredetails(true)}>
               <FontAwesome6 name="user-gear" size={18} color={icon} />
-            </TouchableOpacity>
-          </View>}
+          </TouchableOpacity>}
 
 
                 {/* Product Images */}
@@ -932,7 +938,7 @@ const [storeDetails, setStoreDetails] = useState(null);
                
            <ThemedText >Are you selling or looking?</ThemedText>
 
-     < HorizontalTickComponent  data={[ {topic:"Selling" , value :"sellOffers" } , {topic:"Looking" , value :"buyRequests" }   ]} condition={vehicleTransimission} onSelect={setVehicleTransission} />
+     < HorizontalTickComponent  data={[ {topic:"Selling" , value :"sellOffers" } , {topic:"Looking" , value :"buyRequests" }   ]} condition={LookingOSelling} onSelect={setBuyOSelling} />
 
 
 

@@ -302,7 +302,7 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
             <View style={styles.detailRow}>
                 <Feather name="map-pin" size={wp(4)} style={styles.icon} color={icon} />
                 <ThemedText type='default'>
-                    {product.location.city}
+                    {product.location.productLocation}
                 </ThemedText>
             </View>
 

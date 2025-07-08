@@ -109,11 +109,11 @@ export const litresCapacity = [
   // Store Data 
      // Product categories
    export  const productCategories = [
-        { id: 1, name: "Vehicle" },
-        { id: 2, name: "Trailers" },
-        { id: 3, name: "Container" },
-        { id: 4, name: "Spares" },
-        { id: 5, name: "Service Provider" },
+        { id: 0, name: "Vehicle" },
+        { id: 1, name: "Trailers" },
+        { id: 2, name: "Container" },
+        { id: 3, name: "Spares" },
+        { id: 4, name: "Service Provider" },
     ];
 
     // Vehicle types

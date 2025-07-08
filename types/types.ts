@@ -150,9 +150,11 @@ export interface Product {
     };
 
     location: {
-        address: string;
-        city: string;
-        coordinates: null;
+        storeCountry: string
+        exactLocation: string
+        storeCity: string
+        productLocation: string
+        coordinates: null
     }
 }
 
