@@ -143,8 +143,6 @@ const AddLoadDB = () => {
         // }
 
 
-        setAfterSubmitModal(true)
-        return
 
         if (!user) {
             alert("Please Login first");
@@ -368,7 +366,7 @@ const AddLoadDB = () => {
                 {step === 0 && (
                     <ScrollView>
                         <View style={styles.viewMainDsp}>
-                            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold' }}>
+                            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold',color:"#1E90FF" }}>
                                 Load Details
                             </ThemedText>
                             <Divider />
@@ -468,7 +466,7 @@ const AddLoadDB = () => {
                 {step === 1 && (
                     <ScrollView>
                         <View style={styles.viewMainDsp}>
-                            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold' }}>
+                            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold',color:"#1E90FF" }}>
                                 Additional Info
                             </ThemedText>
                             <Divider />
@@ -532,7 +530,7 @@ const AddLoadDB = () => {
                 {step === 2 && (
                     <ScrollView>
                         <View style={styles.viewMainDsp}>
-                            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold' }}>
+                            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold' ,color:"#1E90FF"}}>
                                 Return Load
                             </ThemedText>
                             <Divider />
@@ -610,7 +608,7 @@ const AddLoadDB = () => {
                 )}
                 {step === 3 && (<ScrollView>
                     <View style={styles.viewMainDsp}>
-                        <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold' }}>
+                        <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold',color:"#1E90FF" }}>
                             Truck Requirements
                         </ThemedText>
                         <Divider />

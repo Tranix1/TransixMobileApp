@@ -421,7 +421,7 @@ console.log(uploadingImageUpdate)
 
 
             <View style={{ marginVertical: wp(4) }}>
-              <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >DRIVER DETAILS</ThemedText>
+              <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold',color:"#1E90FF" }} >DRIVER DETAILS</ThemedText>
             </View>
 
         
@@ -518,7 +518,7 @@ console.log(uploadingImageUpdate)
             <Divider />
 
             <View style={{ marginVertical: wp(4) }}>
-              <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >TRUCK DETAILS</ThemedText>
+              <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold',color:"#1E90FF" }} >TRUCK DETAILS</ThemedText>
             </View>
 
             <View style={{ gap: wp(2) }}>

@@ -931,7 +931,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
 
                 {/* Basic Information */}
                 <View style={[styles.section, { backgroundColor: backgroundLight, }]}>
-                    <ThemedText type="subtitle">Basic Information</ThemedText>
+                    <ThemedText type="subtitle" style={{color:"#1E90FF"}}>Basic Information</ThemedText>
                     <Divider />
 
                
@@ -969,7 +969,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                 {/* Category Specific Details */}
                 {selectedCategory && (
                     <View style={[styles.section, { backgroundColor: backgroundLight }]}>
-                        <ThemedText type="subtitle">{selectedCategory.name} Details</ThemedText>
+                        <ThemedText type="subtitle" color="#1E90FF">{selectedCategory.name} Details</ThemedText>
                         <Divider />
                         {renderCategoryFields()}
                     </View>
@@ -977,7 +977,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
 
                 {/* Transaction Details */}
                 <View style={[styles.section, { backgroundColor: backgroundLight }]}>
-                    <ThemedText type="subtitle">Transaction Details</ThemedText>
+                    <ThemedText type="subtitle" color="#1E90FF" >Transaction Details</ThemedText>
 
 
                     <ThemedText type="defaultSemiBold">Transaction Type</ThemedText>
@@ -1095,6 +1095,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                      <View style={[styles.section, { backgroundColor: backgroundLight }]} >
                     <Divider />
 
+                    <ThemedText type="subtitle" color="#1E90FF" >Product Details</ThemedText>
 
                         <ThemedText type="defaultSemiBold">Product  Name/Model  <ThemedText style={{fontStyle:"italic"}} >e.g corrola </ThemedText> </ThemedText>
                            <Input

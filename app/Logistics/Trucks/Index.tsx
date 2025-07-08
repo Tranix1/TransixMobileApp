@@ -16,8 +16,6 @@ const Index = () => {
 
     const { userId, organisationName, contractName, contractId,capacityG,cargoAreaG,truckTypeG,operationCountriesG  } = useLocalSearchParams();
 
-        console.log(cargoAreaG)
-
     // const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
 
     const [trucks, setTrucks] = useState<Truck[]>([])
@@ -57,8 +55,6 @@ const Index = () => {
 
         if (userId) filters.push(where("userId", "==", userId));
         if (truckCapacity) filters.push(where("truckCapacity", "==", truckCapacity));
-        if (truckConfig) filters.push(where("truckConfig", "==", truckConfig));
-        if (truckSuspension) filters.push(where("truckSuspensions", "==", truckSuspension));
         if (selectedCargoArea) filters.push(where("cargoArea", "==", selectedCargoArea?.name));
         if (tankerType && selectedCargoArea) filters.push(where("tankerType", "==", tankerType))
         // Conditionally add the country filter
