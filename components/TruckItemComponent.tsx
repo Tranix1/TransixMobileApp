@@ -125,7 +125,7 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
                 <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
 
                     <Fontisto name="truck" size={wp(4)} style={{ width: wp(6) }} color={icon} />
-                    <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
+                    <ThemedText numberOfLines={1} type='tiny' style={[{  fontSize: 15 }]}>
                         {truck.truckType || 'N/A'}
                     </ThemedText>
                 </View>
@@ -135,7 +135,7 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
 
                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
                         <FontAwesome5 name="truck-loading" size={wp(3.6)} style={{ width: wp(6) }} color={icon} />
-                        <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
+                        <ThemedText numberOfLines={1} type='tiny' style={[{  fontSize: 15 }]}>
                             {truck.cargoArea || 'N/A'}
                         </ThemedText>
                     </View>
@@ -143,14 +143,14 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
                         {/* Else if international trucks diasplay were permits are availeble */}
                         <FontAwesome6 name="map-location-dot" size={wp(4)} style={{ width: wp(6) }} color={icon} />
-                        <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
+                        <ThemedText numberOfLines={1} type='tiny' style={[{  fontSize: 15 }]}>
                             {truck.locations?.map(item => item + ', ') || 'N/A'}
                         </ThemedText>
                     </View>
 
                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
                         <FontAwesome5 name="weight" size={wp(3.6)} style={{ width: wp(6) }} color={icon} />
-                        <ThemedText numberOfLines={1} type='tiny' style={[{ color: coolGray, fontSize: 15 }]}>
+                        <ThemedText numberOfLines={1} type='tiny' style={[{  fontSize: 15 }]}>
                             {truck.truckCapacity || 'N/A'}
                         </ThemedText>
                     </View>

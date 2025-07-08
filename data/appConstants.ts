@@ -2,7 +2,6 @@
   export const truckType =[
       { id: 0, name: "Rigid" },
     { id: 1, name: "Semi Truck" },
-    { id: 2, name: "super Link" },
   ]
   export const cargoArea = [
   { id: 0, name: 'Flat deck', description: 'Ideal for transporting oversized or heavy loads.', image: require('@/assets/images/Trucks/images (2).jpeg') },
@@ -93,8 +92,8 @@ export const litresCapacity = [
     { id: 4, name: '12-15 T'},
     { id: 5, name: '16-20 T'},
     { id: 6, name: '20 - 30T'},
-    { id: 6, name: '30T'},
-    { id: 6, name: '34T++'},
+    { id: 6, name: 'Triaxle 30T'},
+    { id: 6, name: 'super Link 34T'},
     ];
 
 

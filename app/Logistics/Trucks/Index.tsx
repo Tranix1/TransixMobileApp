@@ -16,7 +16,6 @@ const Index = () => {
 
     const { userId, organisationName, contractName, contractId,capacityG,  } = useLocalSearchParams();
 
-    console.log(capacityG)
 
 
     // const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)

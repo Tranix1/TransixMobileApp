@@ -248,7 +248,7 @@ contractId,
           ListEmptyComponent={
             <View style={{ minHeight: hp(80), justifyContent: 'center' }}>
               <ThemedText type="defaultSemiBold" style={{ textAlign: 'center' }}>
-                Loading Trucks…
+                Loading Trucks… 
               </ThemedText>
                <ThemedText type='tiny' style={{ textAlign: 'center', marginTop: wp(2) }}>
                         pull to refresh

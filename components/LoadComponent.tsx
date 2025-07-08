@@ -110,7 +110,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
           {/* <Feather name="package" size={wp(4)} style={styles.icon} color={icon} /> */}
           <View style={{ marginBottom: wp(1) }}>
-            <ThemedText type='tiny' color={coolGray}>
+            <ThemedText type='tiny' style={{ fontSize:13,fontStyle:'italic' }}>
               Load
             </ThemedText>
             <ThemedText type='subtitle'>
@@ -147,7 +147,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
 
           <View style={{ gap: wp(1), flex: 2, }}>
-            <ThemedText type='default' style={{ color: coolGray }}>
+            <ThemedText type='default' style={{ fontSize:13,fontStyle:'italic' }}>
               From
             </ThemedText>
             <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
@@ -155,7 +155,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
             </ThemedText>
           </View>
           <View style={{ gap: wp(1), flex: 2, }}>
-            <ThemedText type='default' style={{ color: coolGray }}>
+            <ThemedText type='default' style={{  fontSize:13,fontStyle:'italic'  }}>
               To
             </ThemedText>
             <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>

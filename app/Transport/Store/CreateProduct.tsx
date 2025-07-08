@@ -53,9 +53,9 @@ const CreateProduct = () => {
 
     const [images, setImages] = useState<ImagePickerAsset[]>([]);
 
-    if (images.length > 5) {
+    if (images.length > 4) {
         setImages([]);
-        alert('You can only select up to 5 images.');
+        alert('You can only select up to 4 images.');
         return; // Exit if more than 4 images
     }
 
@@ -95,13 +95,14 @@ const CreateProduct = () => {
 
   const [storeNamedDb, setStoreName] = useState('');
   const [storeLocationAddDb, SetStoreLocationAddDb] = useState('');
-  const [ownerEmailAddDb, setStoreEmailAddDb] = useState('');
-  const [storePhonNumAddDb, setOwnerPhoneNum] = useState('');
+  const [storeCityDB , setStoreCityDB]=React.useState("")
+  const [storePhonNumAddDb, setStorePhoneNum] = useState('');
 
   const handleUpdateStoreDetails = async () => {
     console.log("start addd")
-    await setDocuments("storeDetails", { storeName: storeNamedDb, storePhoneNum: storePhonNumAddDb, storeEmail: ownerEmailAddDb,  exactLocation : storeLocationAddDb,storeCountry : selectedStoreCountry?.name })
-    console.log("Donee Adding")
+    await setDocuments("storeDetails", { storeName: storeNamedDb, storePhoneNum: storePhonNumAddDb,  exactLocation : storeLocationAddDb,storeCountry : selectedStoreCountry?.name ,storeCity :storeCityDB})
+    setStoredetails(false)
+     ToastAndroid.show("Store Details created successfully!", ToastAndroid.SHORT);
   };
 
 
@@ -117,6 +118,9 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
   React.useEffect(() => {
     getDocById('storeDetails', setStoreDetails);
   }, []);
+
+console.log(storeDetails?.storeName ,"storeDetails")
+
 
 
     // Form data
@@ -246,7 +250,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                     storeCountry: storeDetails?.storeCountry ,
                     exactLocation : storeDetails?.exactLocation ,
                     storeCity: storeDetails?.storeCity ,
-                    productLocation : formData.productLocation  ,
+                    productLocation : `${storeDetails?.storeCountry} ${formData.productLocation} `  ,
                     coordinates: null
                 },
                 truckDetails: {
@@ -270,7 +274,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
 
                 seller: {
                     id: user?.uid || "",
-                    name: storeDetails?.storeName || "Anonymous",
+                    name: storeDetails?.storeName|| "Anonymous",
                     contact: storeDetails?.storePhoneNum || "",
                     isVerified: false
                 },
@@ -296,6 +300,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
             router.back();
         } catch (error) {
             ToastAndroid.show("Failed to create product", ToastAndroid.SHORT);
+            console.error(error)
         } finally {
             setIsSubmitting(false);
         }
@@ -464,7 +469,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
 
                                 <ThemedText type="defaultSemiBold">Engine</ThemedText>
                         <Input
-                            placeholder="e.g. Camry"
+                            placeholder="Model and condition"
                             onChangeText={(text) => handleNestedChange("details", "vehicle", {
                                 ...formData.details?.vehicle,
                                 engine: text
@@ -839,6 +844,14 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                         placeholder="Store Country"
                     />
         
+             <ThemedText>
+                  City
+                </ThemedText>
+                <Input
+                  placeholder="Store City"
+                  value={storeCityDB}
+                  onChangeText={(text) => setStoreCityDB(text)}
+                />
                 <ThemedText>
                   Exacact Location
                 </ThemedText>
@@ -855,16 +868,13 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                   Store Phone Number
                 </ThemedText>
         
-                <ThemedText>
-                  Store Email
-                </ThemedText>
                 <Input
-                  placeholder="Owner Email"
-                  value={ownerEmailAddDb}
-                  onChangeText={(text) => setStoreEmailAddDb(text)}
+                  placeholder="Store Phone Numberr"
+                  value={storePhonNumAddDb}
+                  onChangeText={(text) => setStorePhoneNum(text)}
                 />
 
-                <Button onPress={handleUpdateStoreDetails} title="Save" />
+                            <Button onPress={handleUpdateStoreDetails} title="Save" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{height:44}} />
 
               </View>
             </View>
@@ -879,7 +889,8 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
 
             <ScrollView contentContainerStyle={styles.container}>
 
-{!storeDetails &&  <TouchableOpacity onPress={() => setStoredetails(true)}  style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
+{/* {!storeDetails &&  <TouchableOpacity onPress={() => setStoredetails(true)}  style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}> */}
+{  <TouchableOpacity onPress={() => setStoredetails(true)}  style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
             <View>
               <ThemedText type="defaultSemiBold">
                 {user?.organisation || 'Set Owner Name!'}

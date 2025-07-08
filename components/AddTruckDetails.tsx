@@ -142,46 +142,7 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
 
 
 
-
-            <ThemedText>
-                Trailer Configuration<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-            <DropDownItem allData={trailerConfigurations} selectedItem={selectedTrailerConfig} setSelectedItem={setSelectedTrailerConfig} placeholder="Select Truck Configuration" />
-
-
-            {
-                selectedTrailerConfig?.name === 'Other' &&
-                <>
-                    <ThemedText>
-                        Other Trailer Configuration<ThemedText color="red">*</ThemedText>
-                    </ThemedText>
-                    <Input
-                        value={formData.otherTruckConfig}
-                        placeholder="Trailer Config"
-                        onChangeText={(text) => handleChange<TruckFormData>(text, 'otherTruckConfig', setFormData)}
-                    />
-                </>
-            }
-
-
-            <ThemedText>
-                Truck Suspension<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-            <DropDownItem allData={truckSuspensions} selectedItem={selectedTruckSuspension} setSelectedItem={setSelectedTruckSuspension} placeholder="Select Truck Suspension" />
-
-            {
-                selectedTruckSuspension?.name === 'Other' &&
-                <>
-                    <ThemedText>
-                        Other Truck Suspension<ThemedText color="red">*</ThemedText>
-                    </ThemedText>
-                    <Input
-                        value={formData.otherTruckSuspension}
-                        placeholder="Trailer Suspension"
-                        onChangeText={(text) => handleChange<TruckFormData>(text, 'otherTruckSuspension', setFormData)}
-                    />
-                </>
-            }
+          
 
             <ThemedText>
                 Maximum Load Capacity<ThemedText color="red">*</ThemedText>

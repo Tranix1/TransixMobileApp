@@ -71,18 +71,17 @@ const StorePage = () => {
     const [slectedBodyType, setSelectedBodyType] = React.useState<{ id: number; name: string } | null>(null)
     const [slectedMake, setSelectedMake] = React.useState<{ id: number; name: string } | null>(null)
 
-
+console.log(selectedCountry)
 
 
     const loadProducts = async () => {
 
         let filters: any[] = [];
 
+        // if (userId) filters.push(where("userId", "==", userId));
 
-        if (userId) filters.push(where("userId", "==", userId));
-
-        // if (selectedCountry) filters.push(where("userId", "==", selectedCountry?.name));
-        if (selectedProdCategry) filters.push(where("category", "==", selectedProdCategry?.name));
+        if (selectedCountry) filters.push(where("location.storeCountry", "==", selectedCountry?.name));
+        // if (selectedProdCategry) filters.push(where("category", "==", selectedProdCategry?.name));
 
         if (buyOSelling) filters.push(where("transaction.LookingOSelling", "==", buyOSelling));
 
@@ -99,7 +98,7 @@ const StorePage = () => {
         
         const result = await fetchDocuments("products", 10, undefined, filters);
 
-        if (result.data?.length) {
+        if (result.data) {
             setProducts(result.data as Product[])
             setLastVisible(result.lastVisible)
         }
@@ -107,7 +106,7 @@ const StorePage = () => {
 
     useEffect(() => {
         loadProducts()
-    }, [])
+    }, [selectedCountry])
 
     const onRefresh = async () => {
         try {
@@ -120,11 +119,18 @@ const StorePage = () => {
     }
 
     const loadMoreProducts = async () => {
+
+        let filters: any[] = [];
+
+        // if (userId) filters.push(where("userId", "==", userId));
+
+        if (selectedCountry) filters.push(where("location.storeCountry", "==", selectedCountry?.name));
         if (loadingMore || !lastVisible) return
         setLoadingMore(true)
-        const result = await fetchDocuments('products', 10, lastVisible)
+        const result = await fetchDocuments('products', 10, lastVisible, filters);
         if (result) {
-            setProducts([...products, ...result.data as Product[]])
+            setProducts(prevProducts => [...prevProducts, ...result.data as Product[]])
+
             setLastVisible(result.lastVisible)
         }
         setLoadingMore(false)
@@ -341,7 +347,7 @@ const StorePage = () => {
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
                             <ThemedText type='defaultSemiBold' style={styles.emptyText}>
-                                Products Loading!
+                                Products Loading… 
                             </ThemedText>
                             <ThemedText type='tiny' style={styles.emptySubtext}>
                                 pull to refresh
@@ -371,7 +377,7 @@ const StorePage = () => {
                 <BottomSheet
                     ref={bottomSheetRef}
                     index={-1}
-                    enableContentPanningGesture={false}
+                    enableContentPanningGesture={true}
                     enablePanDownToClose
                     onClose={() => { setShowSheet(false); setBottomMode('') }}
                     backdropComponent={renderBackdrop}
