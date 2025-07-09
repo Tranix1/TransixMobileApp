@@ -91,6 +91,7 @@ const Index = () => {
     const onRefresh = async () => {
         try {
             setRefreshing(true);
+            clearFilter()
             await LoadTructs();
             setRefreshing(false);
 
@@ -102,13 +103,13 @@ const Index = () => {
     const [showfilter, setShowfilter] = useState(false)
 
 
-
+    
     const loadMoreTrucks = async () => {
         if (loadingMore || !lastVisible) return;
+        let filters: any[] = [];
 
         setLoadingMore(true);
 
-        let filters: any[] = [];
 
         // Apply the same filters as in LoadTructs
         if (userId) filters.push(where("userId", "==", userId));
@@ -166,10 +167,6 @@ const Index = () => {
                     setTankerType={setTankerType}
                     operationCountries={operationCountries}
                     setOperationCountries={setOperationCountries}
-                    truckConfig={truckConfig}
-                    setTruckConfig={setTruckConfig}
-                    truckSuspension={truckSuspension}
-                    setTruckSuspension={setTruckSuspension}
                     trucks={trucks}
                     refreshing={refreshing}
                     onRefresh={onRefresh}
@@ -193,10 +190,6 @@ const Index = () => {
                     setTankerType={setTankerType}
                     operationCountries={operationCountries}
                     setOperationCountries={setOperationCountries}
-                    truckConfig={truckConfig}
-                    setTruckConfig={setTruckConfig}
-                    truckSuspension={truckSuspension}
-                    setTruckSuspension={setTruckSuspension}
                     userId={`${userId}`}
                     organisationName={`${organisationName}`}
                     trucks={contractId ? trucks : trucks}

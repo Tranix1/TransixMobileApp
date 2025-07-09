@@ -34,10 +34,7 @@ const Index = () => {
     const [modelBid, setModelBid] = useState('');
 
 
-    const [bidLinks, setBidLinks] = useState('');
-    const [bidTriaxle, setBidTriaxle] = useState('');
     const [bottomMode, setBottomMode] = useState<'Bid' | 'Book' | ''>('');
-
     
     const LoadTructs = async () => {
         const maLoads = await fetchDocuments("Loads");
@@ -83,21 +80,8 @@ const Index = () => {
     
     ) => {
 
-        console.log(dbName)
-
-
-
-
-
-
         const userId = auth.currentUser?.uid
         try {
-
-          
-
-
-            
-
            let theRate= dbName ==="" ? bidRate : item.rate  
             let docId = `${userId}${item.typeofLoad}${theRate}${item.userId}`
            let theCurrency= dbName ==="" ? currencyBid : item.currency

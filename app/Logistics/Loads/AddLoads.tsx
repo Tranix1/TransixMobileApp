@@ -79,8 +79,6 @@ const AddLoadDB = () => {
     const [showCountries, setShowCountries] = useState(false);
     const [operationCountries, setOperationCountries] = useState<string[]>([]);
 
-    const [selectedTrailerConfig, setSelectedTrailerConfig] = useState<{ id: number, name: string } | null>(null)
-    const [selectedTruckSuspension, setSelectedTruckSuspension] = useState<{ id: number, name: string } | null>(null)
 
     type SelectedOption = { id: number; name: string } | null;
     interface TruckNeededType {
@@ -89,8 +87,6 @@ const AddLoadDB = () => {
         tankerType: SelectedOption;
         capacity: SelectedOption;
         operationCountries: string[];
-        trailerConfig: SelectedOption;
-        suspension: SelectedOption;
     }
     const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>([]);
 
@@ -103,8 +99,6 @@ const AddLoadDB = () => {
             tankerType: selectedTankerType,
             capacity: selectedTruckCapacity,
             operationCountries: operationCountries,
-            trailerConfig: selectedTrailerConfig,
-            suspension: selectedTruckSuspension,
         };
 
         setTrucksNeeded(prev => [...prev, newTruck]);
@@ -115,8 +109,6 @@ const AddLoadDB = () => {
         setSelectedTankerType(null);
         setSelectedTruckCapacity(null);
         setOperationCountries([]);
-        setSelectedTrailerConfig(null);
-        setSelectedTruckSuspension(null);
     }
     function removeTruck(indexToRemove: number) {
         setTrucksNeeded(prev => prev.filter((_, index) => index !== indexToRemove));
@@ -136,11 +128,11 @@ const AddLoadDB = () => {
             !paymentTerms && "Enter Payment Terms",
         ].filter(Boolean);
 
-        // if (MissingDriverDetails.length > 0) {
-        //     // setContractDErr(true);
-        //     alertBox("Missing Load Details", MissingDriverDetails.join("\n"), [], "error");
-        //     return;
-        // }
+        if (MissingDriverDetails.length > 0) {
+            // setContractDErr(true);
+            alertBox("Missing Load Details", MissingDriverDetails.join("\n"), [], "error");
+            return;
+        }
 
 
 
@@ -358,9 +350,6 @@ const AddLoadDB = () => {
                 </ScreenWrapper>
 
             </Modal>
-
-
-
 
             <View style={{ flex: 1 }}>
                 {step === 0 && (
@@ -660,10 +649,6 @@ const AddLoadDB = () => {
                             setSelectedTankerType={setSelectedTankerType}
                             selectedTruckCapacity={selectedTruckCapacity}
                             setSelectedTruckCapacity={setSelectedTruckCapacity}
-                            selectedTrailerConfig={selectedTrailerConfig}
-                            setSelectedTrailerConfig={setSelectedTrailerConfig}
-                            selectedTruckSuspension={selectedTruckSuspension}
-                            setSelectedTruckSuspension={setSelectedTruckSuspension}
                             formData={formDataTruck}
                             setFormData={setFormDataTruck}
                             showCountries={showCountries}

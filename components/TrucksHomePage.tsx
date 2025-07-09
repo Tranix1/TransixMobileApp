@@ -33,10 +33,6 @@ selectedCargoArea: TruckTypeProps | null; // Adjust 'any' to actual image type i
   setTankerType: React.Dispatch<React.SetStateAction<string>>;
   operationCountries: string[];
   setOperationCountries: React.Dispatch<React.SetStateAction<string[] >> 
-  truckConfig: string ;
-  setTruckConfig: React.Dispatch<React.SetStateAction<string>>;
-  truckSuspension: string ;
-  setTruckSuspension: React.Dispatch<React.SetStateAction<string>> ;
   userId ?: string;
   organisationName ?: string
 
@@ -65,10 +61,6 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
   setTankerType,
   operationCountries,
   setOperationCountries,
-  truckConfig,
-  setTruckConfig,
-  truckSuspension,
-  setTruckSuspension,
   userId,
   organisationName,
   trucks,
@@ -103,10 +95,6 @@ contractId,
         setTankerType={setTankerType}
         operationCountries={operationCountries}
         setOperationCountries={setOperationCountries}
-        truckConfig={truckConfig}
-        setTruckConfig={setTruckConfig}
-        truckSuspension={truckSuspension}
-        setTruckSuspension={setTruckSuspension}
       />
 
       <View style={[styles.container, { backgroundColor: bg }]}>
@@ -154,8 +142,6 @@ contractId,
             <>
               <View style={{ marginHorizontal: wp(1), marginBottom: wp(1) }}>
                 {(selectedCargoArea ||
-                  truckSuspension ||
-                  truckConfig ||
                   operationCountries.length > 0 ||
                   truckCapacity) && (
                   <TouchableOpacity
@@ -204,16 +190,7 @@ contractId,
                             <ThemedText style={{ color: 'white' }}>{truckCapacity}</ThemedText>
                           </View>
                         )}
-                        {truckConfig && (
-                          <View style={[styles.countryButton, { backgroundColor: '#73c8a9' }]}>
-                            <ThemedText style={{ color: 'white' }}>{truckConfig}</ThemedText>
-                          </View>
-                        )}
-                        {truckSuspension && (
-                          <View style={[styles.countryButton, { backgroundColor: '#73c8a9' }]}>
-                            <ThemedText style={{ color: 'white' }}>{truckSuspension}</ThemedText>
-                          </View>
-                        )}
+                      
                       </ScrollView>
                       <ThemedText style={{ textAlign: 'center' }}>
                         {operationCountries?.map((item) => item + ', ') || 'N/A'}

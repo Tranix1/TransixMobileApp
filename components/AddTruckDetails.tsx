@@ -29,11 +29,6 @@ interface SlctTruckCapacityProps {
     selectedTruckCapacity: { id: number, name: string } | null;
     setSelectedTruckCapacity: React.Dispatch<React.SetStateAction<{ id: number, name: string } | null>>;
 
-    selectedTrailerConfig: { id: number, name: string } | null;
-    setSelectedTrailerConfig: React.Dispatch<React.SetStateAction<{ id: number, name: string } | null>>;
-
-    selectedTruckSuspension: { id: number, name: string } | null;
-    setSelectedTruckSuspension: React.Dispatch<React.SetStateAction<{ id: number, name: string } | null>>;
     // selectedTruckType: TruckTypeProps | null;
 
     formData: TruckFormData;
@@ -54,10 +49,6 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
     setSelectedTankerType,
     selectedTruckCapacity,
     setSelectedTruckCapacity,
-    selectedTrailerConfig,
-    setSelectedTrailerConfig,
-    selectedTruckSuspension,
-    setSelectedTruckSuspension,
     formData,
     setFormData,
     showCountries,

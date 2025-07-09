@@ -30,10 +30,6 @@ type SpecifyTruckDetailsProps = {
   tankerType: string
   setTankerType: React.Dispatch<React.SetStateAction<string>>
 
-truckConfig: string ;
-setTruckConfig :React.Dispatch<React.SetStateAction<string>>;
-truckSuspension : string ;
-setTruckSuspension :React.Dispatch<React.SetStateAction<string>> ;
 
 operationCountries : string[]
 setOperationCountries :React.Dispatch<React.SetStateAction<string[] >> ;
@@ -43,10 +39,6 @@ export const SpecifyTruckDetails: React.FC<SpecifyTruckDetailsProps> = ({
 
 operationCountries,
 setOperationCountries ,
- truckConfig ,
- setTruckConfig ,
-truckSuspension ,
-setTruckSuspension ,
 }) => {
 
   const bg = useThemeColor('background')
@@ -102,7 +94,6 @@ setTruckSuspension ,
                 />
 
 
-                <ConfigAdnSuspension  truckConfig={truckConfig} setTruckConfig={setTruckConfig} truckSuspension={truckSuspension} setTruckSuspension={setTruckSuspension} />
 
                 <SlctTruckCapacity
                   truckTonnage={truckCapacity}

@@ -15,7 +15,7 @@ import Heading from '@/components/Heading';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { hp, wp } from "@/constants/common";
 import Divider from "@/components/Divider";
-import { EvilIcons, FontAwesome, Ionicons } from "@expo/vector-icons";
+import { EvilIcons, FontAwesome, Ionicons,Feather } from "@expo/vector-icons";
 import Button from "@/components/Button";
 import { useAuth } from "@/context/AuthContext";
 
@@ -1271,39 +1271,41 @@ const NewContract = () => {
                                 Truck Required
                             </ThemedText>
 
-                            {trucksNeeded.map((truck, index) => (
-                                <View
-                                    key={index}
+                             {trucksNeeded.map((truck, index) => (
+                            <View
+                                key={index}
+                                style={{
+                                    position: 'relative',
+                                    marginBottom: 10,
+                                    padding: 14,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    borderRadius: 8,
+                                    backgroundColor: backgroundLight
+                                }}
+                            >
+     
+
+                                {/* Truck Info */}
+                                <ThemedText >
+                                    Truck {index + 1}:    {truck.truckType?.name} 
+                                </ThemedText>
+                                <ThemedText></ThemedText>
+                                <ThemedText>{truck.cargoArea?.name}  </ThemedText>
+                                <ThemedText>{truck.capacity?.name} </ThemedText>
+
+                                <TouchableOpacity
+                                    onPress={() => removeTruck(index)}
                                     style={{
-                                        position: 'relative',
-                                        marginBottom: 10,
-                                        padding: 10,
-                                        borderWidth: 1,
-                                        borderColor: '#ccc',
-                                        borderRadius: 8,
-                                        backgroundColor: '#f9f9f9'
+                                        padding: 5,
+                                        zIndex: 1
                                     }}
                                 >
-                                    {/* X Button */}
-                                    <TouchableOpacity
-                                        onPress={() => removeTruck(index)}
-                                        style={{
-                                            position: 'absolute',
-                                            top: 5,
-                                            right: 5,
-                                            padding: 5,
-                                            zIndex: 1
-                                        }}
-                                    >
-                                        <ThemedText style={{ color: 'red', fontWeight: 'bold' }}>X</ThemedText>
-                                    </TouchableOpacity>
-
-                                    {/* Truck Info */}
-                                    <ThemedText style={{ color: "black" }}>
-                                        Truck {index + 1}: {truck.truckType?.name}
-                                    </ThemedText>
-                                </View>
-                            ))}
+                                    <Feather name="x" color={'red'} size={wp(4)} />
+                                </TouchableOpacity>
+                            </View>
+                        ))}
 
                             <AddTruckDetails
                                 selectedTruckType={selectedTruckType}
@@ -1314,10 +1316,6 @@ const NewContract = () => {
                                 setSelectedTankerType={setSelectedTankerType}
                                 selectedTruckCapacity={selectedTruckCapacity}
                                 setSelectedTruckCapacity={setSelectedTruckCapacity}
-                                selectedTrailerConfig={selectedTrailerConfig}
-                                setSelectedTrailerConfig={setSelectedTrailerConfig}
-                                selectedTruckSuspension={selectedTruckSuspension}
-                                setSelectedTruckSuspension={setSelectedTruckSuspension}
                                 formData={formDataTruck}
                                 setFormData={setFormDataTruck}
                                 showCountries={showCountriesTruck}

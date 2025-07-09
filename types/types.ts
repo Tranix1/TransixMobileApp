@@ -211,13 +211,14 @@ export type Load = {
 
 export const Countries = ['Zimbabwe',
     'South Africa',
+    'DRC',
+    'Mozambique',
     'Namibia',
     'Tanzania',
-    'Mozambique',
     'Zambia',
     'Botswana',
     'Malawi',
-    'Other'
+    'Angola',
 ]
 export type User = {
     uid: string,

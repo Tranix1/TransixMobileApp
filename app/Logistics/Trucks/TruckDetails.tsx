@@ -534,8 +534,7 @@ const TruckDetails = () => {
 
 
                     {dspDetails && <View>
-                        <ThemedText type="tiny" style={{}}>Truck Details</ThemedText>
-                        <Divider />
+                        <ThemedText style={{ textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Truck Details</ThemedText>
                         <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
                             {truckData.truckBookImage &&
                                 <View style={{ gap: 10 }}>
@@ -551,7 +550,7 @@ const TruckDetails = () => {
 
                             {truckData.trailerBookSc &&
                                 <View style={{ gap: 10 }}>
-                                    <ThemedText type="subtitle" style={{}}>Second Trailer Book</ThemedText>
+                                    <ThemedText type="subtitle" style={{}}>Trailer Book</ThemedText>
                                     <Image source={{ uri: truckData.trailerBookSc }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />
                                 </View>}
 
@@ -560,7 +559,7 @@ const TruckDetails = () => {
 
 
 
-                        <ThemedText type="tiny" style={{ marginTop: hp(5) }}>Driver Details</ThemedText>
+                        <ThemedText style={{  textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Driver Details</ThemedText>
                         <Divider />
                         <ThemedText type="tiny" style={{ marginTop: hp(1) }}>Driver Phone</ThemedText>
                         <ThemedText type="subtitle">{formatNumber(parseFloat(truckData.driverPhone))}</ThemedText>
@@ -570,13 +569,18 @@ const TruckDetails = () => {
                         <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
                             {truckData.driverPassport &&
                                 <View style={{ gap: 10 }}>
-                                    <ThemedText type="subtitle" style={{}}>Second Trailer Book</ThemedText>
+                                    <ThemedText type="subtitle" style={{}}>Drivers License</ThemedText>
 
                                     {truckData.driverLicense && <Image source={{ uri: truckData.driverLicense }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />}
                                 </View>}
                             {truckData.driverPassport &&
                                 <View style={{ gap: 10 }}>
-                                    <ThemedText type="subtitle" style={{}}>Second Trailer Book</ThemedText>
+                                    <ThemedText type="subtitle" style={{}}>Drivers Passport</ThemedText>
+                                    {<Image source={{ uri: truckData.driverPassport }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />}
+                                </View>}
+                                     {truckData.driverPassport &&
+                                <View style={{ gap: 10 }}>
+                                    <ThemedText type="subtitle" style={{}}>International Driver Permit</ThemedText>
                                     {<Image source={{ uri: truckData.driverPassport }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />}
                                 </View>}
                         </ScrollView>
@@ -586,7 +590,8 @@ const TruckDetails = () => {
 
 
                         <View>
-                            <ThemedText style={{ textAlign: 'center', marginVertical: wp(4) }}>Truck Owner Details </ThemedText>
+                            
+                            <ThemedText style={{ textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Truck Owner Details </ThemedText>
                             <ThemedText type="tiny" >Owner Phone Number</ThemedText>
                             <ThemedText style={{ marginBottom: wp(2) }} type="subtitle">{truckData.ownerPhoneNum}</ThemedText>
                             <ThemedText type="tiny" >Owner Email</ThemedText>
