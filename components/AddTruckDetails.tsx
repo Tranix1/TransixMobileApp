@@ -17,6 +17,7 @@ import { hp, wp } from "@/constants/common";
 import Divider from "./Divider";
 import { useThemeColor } from '@/hooks/useThemeColor'
 
+import type { ImagePickerAsset } from 'expo-image-picker';
 
 interface SlctTruckCapacityProps {
     selectedTruckType: { id: number, name: string } | null;
@@ -38,6 +39,10 @@ interface SlctTruckCapacityProps {
     setShowCountries: React.Dispatch<React.SetStateAction<boolean>>;
     operationCountries: string[];
     setOperationCountries: React.Dispatch<React.SetStateAction<string[]>>;
+
+    setImages?: React.Dispatch<React.SetStateAction<ImagePickerAsset[]>>;
+    images?: ImagePickerAsset[];
+
 }
 
 export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
@@ -55,7 +60,8 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
     setShowCountries,
     operationCountries,
     setOperationCountries,
-
+    setImages,
+    images,
     // selectedTruckType
 
 }) => {
@@ -68,7 +74,7 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
                 Truck Type<ThemedText color="red">*</ThemedText>
             </ThemedText>
 
-            <DropDownItem allData={truckType} selectedItem={selectedTruckType} setSelectedItem={setSelectedTruckType} placeholder="Select Truck Type" />
+            <DropDownItem allData={truckType} selectedItem={selectedTruckType} setSelectedItem={images && images.length > 0 ? (setImages?.(prev => prev.slice(0, 2)), setSelectedTruckType) : setSelectedTruckType} placeholder="Select Truck Type" />
 
 
             <ThemedText>
@@ -133,8 +139,9 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
 
 
 
-          
-
+            <ThemedText style={{ marginBottom: wp(4) }}>
+                {operationCountries?.join(', ') || '--'}
+            </ThemedText>
 
             <ThemedText>
                 Operation Countries<ThemedText color="red">*</ThemedText>
@@ -150,11 +157,13 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
                 paddingHorizontal: 16,
                 marginBottom: 16,
             }}>
-                <TouchableOpacity onPress={() => setShowCountries(!showCountries)} style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}>
+                <TouchableOpacity onPress={() => { images && images.length > 0 ? (setImages?.(prev => prev.slice(0, 2)), setShowCountries(!showCountries)) : setShowCountries(!showCountries); }}
+
+                    style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                    }}>
                     <ThemedText style={{ minHeight: hp(5), textAlignVertical: 'center' }}>
                         Select Countrie(s)
                     </ThemedText>

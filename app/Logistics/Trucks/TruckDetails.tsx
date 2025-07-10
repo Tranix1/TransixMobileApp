@@ -451,26 +451,6 @@ const TruckDetails = () => {
 
                     </View>}
 
-                    <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
-                        <View style={{ flex: 1 }}>
-                            <ThemedText type="tiny" style={{}}>
-                                Suspension
-                            </ThemedText>
-                            <ThemedText type="subtitle" style={{}}>
-                                {truckData.truckSuspensions === "Other" ? truckData.truckSuspensions : truckData.otherTruckSuspension}
-                            </ThemedText>
-                        </View>
-                        <ThemedText>|</ThemedText>
-                        <View style={{ flex: 1 }}>
-                            <ThemedText type="tiny" style={{}}>
-                                Configuration:
-                            </ThemedText>
-                            <ThemedText type="subtitle" style={{}}>
-                                {truckData.truckConfig !== "Other" ? truckData.truckConfig : truckData.otherTruckConfig}
-                            </ThemedText>
-                        </View>
-
-                    </View>
 
 
                     <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
@@ -530,9 +510,6 @@ const TruckDetails = () => {
                         </View>
                     }
 
-
-
-
                     {dspDetails && <View>
                         <ThemedText style={{ textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Truck Details</ThemedText>
                         <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
@@ -555,9 +532,6 @@ const TruckDetails = () => {
                                 </View>}
 
                         </ScrollView>
-
-
-
 
                         <ThemedText style={{  textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Driver Details</ThemedText>
                         <Divider />
@@ -586,8 +560,6 @@ const TruckDetails = () => {
                         </ScrollView>
 
                         <Divider />
-
-
 
                         <View>
                             

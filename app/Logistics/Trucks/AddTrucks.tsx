@@ -44,9 +44,7 @@ function AddTrucks() {
     driverPhone: "",
     maxloadCapacity: "",
     truckName: "",
-    otherTruckSuspension: "",
     otherCargoArea: "",
-    otherTruckConfig: "",
     otherTankerType: ""
   });
 
@@ -456,6 +454,8 @@ console.log(images.length)
               setShowCountries={setShowCountries}
               operationCountries={operationCountries}
               setOperationCountries={setOperationCountries}
+              setImages={setImages}
+              images={images}
             />
 
 

@@ -61,8 +61,6 @@ const CreateProduct = () => {
 
     const [uploadProgress, setUploadProgress] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showErrors, setShowErrors] = useState(false);
-    
 
     const [selectedCategory, setSelectedCategory] = useState<any>(null);
     const [selectedType, setSelectedType] = useState<any>(null);
@@ -74,7 +72,6 @@ const CreateProduct = () => {
     const [selectedTruckType, setSelectedTruckType] = useState<{ id: number; name: string } | null>(null);
     const [selectedMake, setSelectedMake] = useState<any>(null);
     const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
-    const [selectedSparePartName, setSelectedSparePartName] = React.useState("")
 
     const [priceNegotiable, setPriceNegotiable] = React.useState(false)
     const togglePriceNegotiable= ()=>setPriceNegotiable(prev => !prev) 
@@ -261,9 +258,8 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                 bodyMake: selectedMake.name,
                 category: selectedCategory.name,
 
-                vehicleType: vehicleType?.name      ,
+                vehicleType: vehicleType?.name ||null     ,
 
-                selectedSparePartName: selectedSparePartName,
 
                 seller: {
                     id: user?.uid || "",
@@ -611,13 +607,13 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                         )}
 
 
-                        <ThemedText type="defaultSemiBold">Trailer Type</ThemedText>
+                        <ThemedText type="defaultSemiBold">Trailer Make</ThemedText>
 
                         <DropDownItem
                             allData={trailerMake}
                             selectedItem={selectedMake}
                             setSelectedItem={setSelectedMake}
-                            placeholder="Select vehicle type"
+                            placeholder="Select Trailer Make"
                         />
 
 
@@ -682,7 +678,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                             allData={containerType}
                             selectedItem={selectedType}
                             setSelectedItem={setSelectedType}
-                            placeholder="Select vehicle type"
+                            placeholder="Select Container type"
                         />
                         {["(Other) Container. Type"].includes(selectedMake?.name) && (
                             <Input
@@ -696,12 +692,12 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                         <DropDownItem
                             allData={containerMake}
                             selectedItem={selectedMake}
-                            setSelectedItem={setSelectedType}
+                            setSelectedItem={setSelectedMake}
                             placeholder="Select vehicle type"
                         />
                         {["(Other) Container. Make"].includes(selectedMake?.name) && (
                             <Input
-                                placeholder="Specify vehicle type"
+                                placeholder="Specify Container Make"
                                 onChangeText={(text) => handleNestedChange("details", "vehicle", {
                                     ...formData.details?.vehicle,
                                     type: text
@@ -749,8 +745,8 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                         <ThemedText type="defaultSemiBold">Spare Part Type</ThemedText>
                         <DropDownItem
                             allData={sparesType}
-                            selectedItem={selectedSparePartName}
-                            setSelectedItem={setSelectedSparePartName}
+                            selectedItem={selectedType}
+                            setSelectedItem={setSelectedType}
                             placeholder="Select vehicle type"
                         />
 

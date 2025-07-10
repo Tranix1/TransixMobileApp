@@ -13,9 +13,7 @@ export type TruckFormData = {
     driverPhone: string;
     maxloadCapacity: string;
     truckName: string;
-    otherTruckSuspension: string;
     otherCargoArea: string;
-    otherTruckConfig: string;
     otherTankerType: string;
 }
 export type Truck = {
