@@ -202,7 +202,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                 />}
 
                                 {selectedLoad &&
-                                    <ThemedText type="subtitle" style={{marginLeft:20}}>{selectedLoad.companyName}</ThemedText>
+                                    <ThemedText type="subtitle" style={{marginLeft:20,color:accent}}>{selectedLoad.companyName}</ThemedText>
                                 }
                             </View>
 
@@ -320,7 +320,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
 
                                         {<>
                                             <View>
-                                                <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => submitBidsOBookings("bookings" as 'bookings', selectedLoad as Load)} >
+                                                <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: accent, padding: wp(3), borderRadius: wp(4) }} onPress={() => submitBidsOBookings("bookings" as 'bookings', selectedLoad as Load)} >
                                                     <ThemedText color='white'>
                                                         Book Load
                                                     </ThemedText>
@@ -330,7 +330,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                             <View>
                                                 <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => setBottomMode('Bid')}>
                                                     <ThemedText color='white'>
-                                                        Bid
+                                                        Bid Load
                                                     </ThemedText>
                                                 </TouchableOpacity>
 
@@ -338,9 +338,9 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                         </>
                                         }
                                         <View>
-                                            <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push({pathname:"/Logistics/Loads/Index",params:{userId : selectedLoad.userId}  } )}>
+                                            <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: accent, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push({pathname:"/Logistics/Loads/Index",params:{userId : selectedLoad.userId}  } )}>
                                                 <ThemedText color='white'>
-                                                    View Loads By {' '}
+                                                    Loads By {' '}
                                                     <ThemedText style={{ textDecorationLine: 'underline', color: 'white' }}>
                                                         {selectedLoad.companyName}
                                                     </ThemedText>

@@ -188,14 +188,14 @@ const TruckDetails = () => {
             <Heading page={truckData.name || "Truck Details"}
                 rightComponent={
                     <View style={{ flexDirection: 'row', gap: wp(2), marginRight: wp(2) }}>
-                        {user?.uid === truckData.userId &&
-                            <View style={{ overflow: 'hidden', borderRadius: wp(2.4) }}>
+                        {!refreshing && user?.uid === truckData.userId &&
+                           ( <View style={{ overflow: 'hidden', borderRadius: wp(2.4) }}>
                                 <TouchableNativeFeedback onPress={() => setModalVisible(true)}>
                                     <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: wp(2), padding: wp(1.5) }}>
                                         <Ionicons name='reorder-three-outline' size={wp(6)} color={icon} />
                                     </View>
                                 </TouchableNativeFeedback>
-                            </View>
+                            </View>)
                         }
                     </View>} />
             <ScrollView
@@ -550,7 +550,7 @@ const TruckDetails = () => {
 
                             {truckData.trailerBookSc &&
                                 <View style={{ gap: 10 }}>
-                                    <ThemedText type="subtitle" style={{}}>Trailer Book</ThemedText>
+                                    <ThemedText type="subtitle" style={{}}>Trailer Book Second</ThemedText>
                                     <Image source={{ uri: truckData.trailerBookSc }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />
                                 </View>}
 
@@ -567,7 +567,7 @@ const TruckDetails = () => {
 
 
                         <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
-                            {truckData.driverPassport &&
+                            {truckData.driverLicense &&
                                 <View style={{ gap: 10 }}>
                                     <ThemedText type="subtitle" style={{}}>Drivers License</ThemedText>
 
@@ -578,10 +578,10 @@ const TruckDetails = () => {
                                     <ThemedText type="subtitle" style={{}}>Drivers Passport</ThemedText>
                                     {<Image source={{ uri: truckData.driverPassport }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />}
                                 </View>}
-                                     {truckData.driverPassport &&
+                                     {truckData.driverIntPermit &&
                                 <View style={{ gap: 10 }}>
                                     <ThemedText type="subtitle" style={{}}>International Driver Permit</ThemedText>
-                                    {<Image source={{ uri: truckData.driverPassport }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />}
+                                    {<Image source={{ uri: truckData.driverIntPermit }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />}
                                 </View>}
                         </ScrollView>
 

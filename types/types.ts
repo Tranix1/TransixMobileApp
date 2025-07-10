@@ -24,6 +24,7 @@ export type Truck = {
     CompanyName: string;
     driverLicense: string;
     driverPassport: string;
+    driverIntPermit : string;
 
     id: string;
     imageUrl: string;

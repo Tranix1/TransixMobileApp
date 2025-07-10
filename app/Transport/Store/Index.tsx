@@ -2,7 +2,7 @@ import { ActivityIndicator, RefreshControl, StyleSheet, Text, TouchableNativeFee
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { deleteDocument, fetchDocuments } from '@/db/operations'
 import { Product } from '@/types/types'
-import { DocumentData, QueryDocumentSnapshot,where } from 'firebase/firestore'
+import { DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore'
 import { ThemedText } from '@/components/ThemedText'
 import { hp, wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
@@ -23,10 +23,10 @@ import { useLocalSearchParams } from 'expo-router'
 const StorePage = () => {
     const { user } = useAuth()
 
-    const { userId,   } = useLocalSearchParams();
+    const { userId, } = useLocalSearchParams();
 
     const productCategorys = [
-            { id: 0, name: "Showroom" },
+        { id: 0, name: "Showroom" },
         { id: 1, name: "Trailers" },
         { id: 2, name: "Container" },
         { id: 3, name: "Spares" },
@@ -93,7 +93,7 @@ const StorePage = () => {
         if (slectedBodyType) filters.push(where("bodyStyle", "==", slectedBodyType.name));
 
         if (slectedMake) filters.push(where("bodyMake", "==", slectedMake.name));
-        
+
         const result = await fetchDocuments("products", 10, undefined, filters);
 
         if (result.data) {
@@ -335,7 +335,7 @@ const StorePage = () => {
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
                             <ThemedText type='defaultSemiBold' style={styles.emptyText}>
-                                Products Loading… 
+                                Products Loading…
                             </ThemedText>
                             <ThemedText type='tiny' style={styles.emptySubtext}>
                                 pull to refresh
@@ -497,55 +497,77 @@ const StorePage = () => {
                                         </View>
                                     )}
 
-                                    {bottomMode === 'Offer' && (
-                                        <View style={[styles.offerContainer, { backgroundColor: accent }]}>
-                                            <ThemedText type='subtitle' color={coolGray} style={styles.offerTitle}>
+
+                                    {bottomMode === 'Offer' && (<View style={[{
+                                        borderColor: accent, borderWidth: .5, padding: wp(2), borderRadius: wp(6),
+                                    }]}>
+                                        <View style={{ gap: wp(2) }}>
+                                            <ThemedText type='subtitle' color={coolGray} style={{ textAlign: 'center' }}>
                                                 Make an Offer
                                             </ThemedText>
-                                            <Input
-                                                onChangeText={setOfferPrice}
-                                                value={offerPrice}
-                                                keyboardType="numeric"
-                                                placeholderTextColor={coolGray}
-                                                placeholder={`Offer price in ${selectedProduct.currency}`}
-                                                style={styles.offerInput}
-                                            />
-                                            <View style={styles.offerActions}>
-                                                <TouchableOpacity
-                                                    onPress={() => setBottomMode('')}
-                                                    style={[styles.actionButton, { backgroundColor: coolGray }]}
-                                                >
-                                                    <ThemedText style={{ color: 'white' }}>Cancel</ThemedText>
-                                                </TouchableOpacity>
-                                                <TouchableOpacity
-                                                    style={[styles.actionButton, { backgroundColor: accent }]}
-                                                >
-                                                    <ThemedText style={{ color: 'white' }}>Submit Offer</ThemedText>
-                                                </TouchableOpacity>
-                                            </View>
+                                               
+
+                                                <Input
+                                                    onChangeText={setOfferPrice}
+                                                    value={offerPrice}
+                                                    keyboardType="numeric"
+                                                    placeholderTextColor={coolGray}
+                                                    placeholder={`Offer price in ${selectedProduct.currency}`}
+                                                />
+
+
+
                                         </View>
-                                    )}
+
+                                        <View style={{ flexDirection: 'row', gap: wp(2) }}>
+                                            <TouchableOpacity
+                                                onPress={() => setBottomMode('')}
+                                                style={[{ backgroundColor: coolGray, flex: 2, padding: wp(3), borderRadius: wp(4), alignItems: 'center' }]}
+                                            >
+                                                <ThemedText style={{ color: 'white' }}>Cancel</ThemedText>
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity
+                                                style={[{ backgroundColor: '#0f9d5824', flex: 2, padding: wp(3), borderRadius: wp(4), alignItems: 'center' }]}
+                                            >
+                                                <ThemedText style={{ color: '#0f9d58' }}>Send</ThemedText>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>)}
+
+
+
+
+
+
 
                                     {selectedProduct.seller.id !== user?.uid && (
-                                        <>
-                                            {bottomMode === '' && (
-                                                <>
-                                                    <TouchableOpacity
-                                                        style={[styles.primaryAction, { backgroundColor: accent }]}
-                                                        onPress={() => setBottomMode('Offer')}
-                                                    >
-                                                        <ThemedText color='white'>Make an Offer</ThemedText>
-                                                    </TouchableOpacity>
-                                                    <TouchableOpacity
-                                                        style={[styles.primaryAction, { backgroundColor: coolGray }]}
-                                                        onPress={() => setBottomMode('Inquiry')}
-                                                    >
-                                                        <ThemedText color='white'>Send Inquiry</ThemedText>
-                                                    </TouchableOpacity>
-                                                </>
-                                            )}
-                                        </>
-                                    )}
+                                    <>
+                                        {bottomMode === '' && (
+                                            <>
+                                                <TouchableOpacity
+                                                    style={[styles.primaryAction, { backgroundColor: accent }]}
+                                                    onPress={() => setBottomMode('Offer')}
+                                                >
+                                                    <ThemedText color='white'>Make an Offer</ThemedText>
+                                                </TouchableOpacity>
+
+                                                <TouchableOpacity
+                                                    style={[styles.primaryAction, { backgroundColor: coolGray }]}
+                                                    onPress={() => setBottomMode('Inquiry')}
+                                                >
+                                                    <ThemedText color='white'>Send Inquiry</ThemedText>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    style={[styles.primaryAction, { backgroundColor: accent }]}
+                                                    onPress={() => setBottomMode('Offer')}
+                                                >
+                                                    <ThemedText color='white'>View <ThemedText style={{ textDecorationLine: "underline" }} >{selectedProduct.seller.name}</ThemedText> Store </ThemedText>
+                                                </TouchableOpacity>
+                                            </>
+                                        )}
+                                    </>
+                                      )}
 
                                     <View style={styles.contactOptions}>
                                         <View style={styles.contactOption}>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, ToastAndroid } from "react-native"
 
-import { countryCodes } from "@/data/appConstants";
+import { countryCodes, truckType } from "@/data/appConstants";
 
 
 import type { ImagePickerAsset } from 'expo-image-picker';
@@ -135,37 +135,40 @@ console.log(images.length)
       return;
     }
 
+//  if (images.length < 5 && spinnerItem && selectedCargoArea?.name !== "Rigid") {
+//       alert("Add All reuired images")
+//       setSpinnerItem(false)
+//       return
+//     } else if (images.length > 6 && spinnerItem && selectedCargoArea?.name !== "Rigid") {
+//       alert("You added too many images click restart addig images")
+//       setSpinnerItem(false)
+//       return
+//     } else if ((images.length === 5 || images.length === 6) && selectedCargoArea?.name !== "Rigid") {
 
-    let truckImage, truckBookImage, trailerBookF, trailerBookSc, driverLicense, driverPassport;
+//       truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, " truck Image");
+//       driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
+//       driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "driver passport");
+
+//       truckBookImage = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "truck Book");
+//       trailerBookF = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "trailer Book");
+//       trailerBookSc = images.length === 5 ? await uploadImage(images[5], "Trucks", setUploadImageUpdate, "trailer Book sec") : null;
+
+
+//     } else if (images.length === 4 && spinnerItem && selectedCargoArea?.name === "Rigid") {
+
+//       truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "truck Image");
+//       driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
+//       driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "driver passport");
+
+//       truckBookImage = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "truck Book");
+//     }
+
+
+
+
+    let truckImage, truckBookImage, trailerBookF, trailerBookSc, driverLicense, driverPassport , driverIntPermit;
     setSpinnerItem(true)
 
-    if (images.length < 5 && spinnerItem && selectedCargoArea?.name !== "Rigid") {
-      alert("Add All reuired images")
-      setSpinnerItem(false)
-      return
-    } else if (images.length > 6 && spinnerItem && selectedCargoArea?.name !== "Rigid") {
-      alert("You added too many images click restart addig images")
-      setSpinnerItem(false)
-      return
-    } else if ((images.length === 5 || images.length === 6) && selectedCargoArea?.name !== "Rigid") {
-
-      truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, " truck Image");
-      driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
-      driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "driver passport");
-
-      truckBookImage = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "truck Book");
-      trailerBookF = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "trailer Book");
-      trailerBookSc = images.length === 5 ? await uploadImage(images[5], "Trucks", setUploadImageUpdate, "trailer Book sec") : null;
-
-
-    } else if (images.length === 4 && spinnerItem && selectedCargoArea?.name === "Rigid") {
-
-      truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "truck Image");
-      driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
-      driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "driver passport");
-
-      truckBookImage = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "truck Book");
-    }
 
 
 
@@ -175,48 +178,50 @@ console.log(images.length)
 
 
 
-    if( selectedTruckType?.name === "Rigid" && operationCountries.length > 1 ){
-      // 4 images
 
-      // Truck Image 
-      // Driver License
-      // Driver pasport
-      // Driver international permit 
-      // Truck Bokk Image
-    }else if( selectedTruckType?.name === "Rigid" && operationCountries.length === 1 ){
-      // 3 images
 
-         // Truck Image 
-      // Driver License
-      // Truck Bokk Image
-    }else if ( selectedTruckType?.name === "Triaxle" && operationCountries.length > 1 ){
-      // Truck Image
-      // Driver License
-      // Driver Pasport 
-      // Driver International Permit
-      // Truck Book IMAGE
-      // 1 Trailer Image
-    }else if ( selectedTruckType?.name === "Triaxle" && operationCountries.length === 1 ){
-      // Truck Image
-      // Driver License
-      // Truck Book IMAGE
-      // 1 Trailer Image
-    } else if( selectedTruckType?.name === "Super Link" && operationCountries.length > 1 ) {
-          // Truck Image
-      // Driver License
-      // Driver Pasport 
-      // Driver International Permit
-      // Truck Book IMAGE
-      // 1 Trailer Image
-      // 2 Trailer Image
-    }else if( selectedTruckType?.name === "Super Link" && operationCountries.length === 1 ){
-      // Truck Image
-      // Driver License
-      // Truck Book IMAGE
-      // 1 Trailer Image
-      // 2 Trailer Image
-    }
+    if (selectedTruckType?.name === "Rigid" && operationCountries.length > 1) {
+  truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
+  driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
+  driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Driver Passport");
+  driverIntPermit = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "Driver International Permit");
+  truckBookImage = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Truck Book Image");
 
+} else if (selectedTruckType?.name === "Rigid" && operationCountries.length === 1) {
+  truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
+  driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
+  truckBookImage = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Truck Book Image");
+
+} else if (selectedTruckType?.name === "Triaxle" && operationCountries.length > 1) {
+  truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
+  driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
+  driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Driver Passport");
+  driverIntPermit = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "Driver International Permit");
+  truckBookImage = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Truck Book Image");
+  trailerBookF = await uploadImage(images[5], "Trucks", setUploadImageUpdate, "Trailer Book First");
+
+} else if (selectedTruckType?.name === "Triaxle" && operationCountries.length === 1) {
+  truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
+  driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
+  truckBookImage = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Truck Book Image");
+  trailerBookF = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "Trailer Book First");
+
+} else if (selectedTruckType?.name === "Super Link" && operationCountries.length > 1) {
+  truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
+  driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
+  driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Driver Passport");
+  driverIntPermit = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "Driver International Permit");
+  truckBookImage = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Truck Book Image");
+  trailerBookF = await uploadImage(images[5], "Trucks", setUploadImageUpdate, "Trailer Book First");
+  trailerBookSc = await uploadImage(images[6], "Trucks", setUploadImageUpdate, "Trailer Book Second");
+
+} else if (selectedTruckType?.name === "Super Link" && operationCountries.length === 1) {
+  truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
+  driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
+  truckBookImage = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Truck Book Image");
+  trailerBookF = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "Trailer Book First");
+  trailerBookSc = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Trailer Book Second");
+}
 
 
 
@@ -251,11 +256,12 @@ console.log(images.length)
         CompanyName: user.organisation,
         contact: user?.phoneNumber || '',
         imageUrl: truckImage,
-        truckBookImage: truckBookImage,
-        trailerBookF: trailerBookF,
-        trailerBookSc: trailerBookSc,
-        driverLicense: driverLicense,
-        driverPassport: driverPassport,
+        truckBookImage: truckBookImage ||null,
+        trailerBookF: trailerBookF||null ,
+        trailerBookSc: trailerBookSc || null,
+        driverLicense: driverLicense || null,
+        driverIntPermit : driverIntPermit || null ,
+        driverPassport: driverPassport ||null,
 
         ownerName: getOwnerDetails?.ownerName,
         onwerEmail: getOwnerDetails?.ownerEmail,
@@ -427,7 +433,7 @@ console.log(images.length)
           <View style={{ gap: wp(2) }}>
 
             <ThemedText>
-              Truck  Name<ThemedText color="red">*</ThemedText>
+              Truck Nickname<ThemedText color="red">*</ThemedText>
             </ThemedText>
             <Input
               value={formData.truckName}
@@ -543,24 +549,26 @@ console.log(images.length)
             {images[1] ?
               <Image source={{ uri: images[1]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
               :
-              <TouchableOpacity onPress={() => (images[0] ) ? selectManyImages(setImages, true) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+              <TouchableOpacity onPress={() => 
+              {operationCountries.length >0 ? (images[0] ) ? selectManyImages(setImages, true) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT): alert ("Select operating Countires.") }
+}              
+              style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                 <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                 <ThemedText color={icon + "4c"}>Add Drivers License<ThemedText color="red">*</ThemedText></ThemedText>
               </TouchableOpacity>
             }
 
-           {operationCountries.length > 1 && <View> 
-
+           {operationCountries.length > 1 && <> 
 
                <ThemedText>
               Drivers Passport Image<ThemedText color="red">*</ThemedText>
             </ThemedText>
 
 
-            {images[1] ?
-              <Image source={{ uri: images[1]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
+            {images[2] ?
+              <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
               :
-              <TouchableOpacity onPress={() => (images[0] && !images[1]) ? selectManyImages(setImages, true) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+              <TouchableOpacity onPress={() => ( images[1]) ? selectManyImages(setImages, true) : ToastAndroid.show('Please add yaya image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                 <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                 <ThemedText color={icon + "4c"}>Add Drivers Passport<ThemedText color="red">*</ThemedText></ThemedText>
               </TouchableOpacity>
@@ -573,13 +581,13 @@ console.log(images.length)
             {images[3] ?
               <Image source={{ uri: images[3]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
               :
-              <TouchableOpacity onPress={() => (images[0] && images[1] && images[2]) ? selectManyImages(setImages, true) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+              <TouchableOpacity onPress={() => ( images[2]) ? selectManyImages(setImages, true) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                 <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                 <ThemedText color={icon + "4c"}>Add International Driver Permit<ThemedText color="red">*</ThemedText></ThemedText>
               </TouchableOpacity>
             }
 
-            </View>}
+            </>}
 
 
             <Divider />
@@ -595,44 +603,90 @@ console.log(images.length)
               </ThemedText>
 
 
-              {images[3] ?
-                <Image source={{ uri: images[3]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
-                :
-                <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3]) ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver id image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+              {images[4] && operationCountries.length > 1 &&<Image source={{ uri: images[4]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
+                
+   {  images[2] && operationCountries.length === 1 &&<Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
+
+
+               { ( ( !images[2] && operationCountries.length === 1 ) || (operationCountries.length > 1 && !images[4]) ) &&  <TouchableOpacity 
+
+
+
+    onPress={() =>  {
+     operationCountries.length === 1  ? images[1]? selectManyImages(setImages, false): ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
+    : operationCountries.length > 1 ?  images[3] ?  selectManyImages(setImages, false): ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
+      : alert("yaya");
+                  
+                  } }
+                
+                style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                   <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                   <ThemedText color={icon + "4c"}>Horse Reg Book Image<ThemedText color="red">*</ThemedText></ThemedText>
-                </TouchableOpacity>
-              }
+                </TouchableOpacity>}
+              
 
               {selectedTruckType?.name !== "Rigid" && <View>
 
-                {selectedTruckType?.name === "Triaxle" && <ThemedText>
+                 <ThemedText>
                   Trailer Book Image
-                </ThemedText>}
+                </ThemedText>
 
 
-                {images[4] ?
-                  <Image source={{ uri: images[4]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
-                  :
-                  selectedTruckType?.name === "Triaxle" && <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3] && images[4]) ? selectManyImages(setImages, false) : ToastAndroid.show('Please add horse reg image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
-                    <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
+     {images[5] && operationCountries.length > 1 &&<Image source={{ uri: images[5]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
+                
+   {images[3] && operationCountries.length === 1 &&<Image source={{ uri: images[3]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
+
+
+               { ( ( !images[3] && operationCountries.length === 1 ) || (operationCountries.length > 1 && !images[5]) ) &&  <TouchableOpacity 
+
+
+
+    onPress={() =>  {
+     operationCountries.length === 1  ? images[2]? selectManyImages(setImages, false): ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
+    : operationCountries.length > 1 ?  images[4] ?  selectManyImages(setImages, false): ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
+      : alert("yaya");
+                  
+                  } }
+                
+                style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                  <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                     <ThemedText color={icon + "4c"}>Trailer Book Image<ThemedText color="red">*</ThemedText></ThemedText>
-                  </TouchableOpacity>
-                }
+                </TouchableOpacity>}
+
 
                 {selectedTruckType?.name === "Super Link" && <ThemedText>
                   Trailer 2 Book Image (If Available)
                 </ThemedText>}
 
 
-                {images[5] ?
-                  <Image source={{ uri: images[5]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
-                  :
-                  selectedTruckType?.name === "Super Link" && <TouchableOpacity onPress={() => (images[0] && images[1] && images[2] && images[3] && images[4] && images[5]) ? selectManyImages(setImages, false) : ToastAndroid.show('Please add trailer 1 book image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
-                    <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
-                    <ThemedText color={icon + "4c"}>Trailer 2 Book Image (optional)<ThemedText color="red">*</ThemedText></ThemedText>
-                  </TouchableOpacity>
-                }
+                 {images[6] && operationCountries.length > 1 &&<Image source={{ uri: images[6]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
+                
+   {images[4] && operationCountries.length === 1 &&<Image source={{ uri: images[4]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
+
+
+               { ( ( !images[4] && operationCountries.length === 1 ) || (operationCountries.length > 1 && !images[6]) ) &&  <TouchableOpacity 
+
+
+
+    onPress={() =>  {
+     operationCountries.length === 1  ? images[3]? selectManyImages(setImages, false): ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
+    : operationCountries.length > 1 ?  images[5] ?  selectManyImages(setImages, false): ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
+      : alert("yaya");
+                  
+                  } }
+                
+                style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                  <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
+                    <ThemedText color={icon + "4c"}>Trailer Book Image<ThemedText color="red">*</ThemedText></ThemedText>
+                </TouchableOpacity>}
+
+
+
+
+
+
+
+
               </View>}
 
             </View>
