@@ -103,7 +103,7 @@ export const SpecifyProductDetails: React.FC<SpecifyProductDetailsProps> = ({
               style={[
                 styles.countryButton,
                 { backgroundColor: background },
-                selectedItem?.id === item.id && styles.countryButtonSelected,
+                selectedItem?.id === item.id && {backgroundColor:accent} ,
               ]}
             >
               <ThemedText
@@ -304,9 +304,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(4),
     borderRadius: wp(4)
 
-  }, countryButtonSelected: {
-    backgroundColor: '#73c8a9'
-  }, row: {
+  },  row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: hp(1),

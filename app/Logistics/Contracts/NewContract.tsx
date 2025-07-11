@@ -183,9 +183,7 @@ const NewContract = () => {
         driverPhone: "",
         maxloadCapacity: "",
         truckName: "",
-        otherTruckSuspension: "",
         otherCargoArea: "",
-        otherTruckConfig: "",
         otherTankerType: ""
     });
 

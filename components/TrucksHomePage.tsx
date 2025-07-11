@@ -186,7 +186,7 @@ contractId,
                         contentContainerStyle={{ gap: wp(2) }}
                       >
                         {truckCapacity && (
-                          <View style={[styles.countryButton, { backgroundColor: '#73c8a9' }]}>
+                          <View style={[styles.countryButton, { backgroundColor: accent }]}>
                             <ThemedText style={{ color: 'white' }}>{truckCapacity}</ThemedText>
                           </View>
                         )}

@@ -29,8 +29,6 @@ interface CheckOutMakePaymentsProps {
 
 
 
-
-
   return (
       <Modal>
 

@@ -1,12 +1,19 @@
-import React from "react";
-import { View, ScrollView, TouchableOpacity } from "react-native";
+
+import React , { ReactElement, useEffect, useState } from "react";
+import { View, ScrollView, TouchableOpacity ,TouchableNativeFeedback,Pressable,Modal ,ToastAndroid } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, router } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
-import { useThemeColor } from "@/hooks/useThemeColor";
 import { hp, wp } from "@/constants/common";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
+import { useAuth } from "@/context/AuthContext";
+
+import { BlurView } from 'expo-blur';
+import { deleteDocument, readById } from "@/db/operations";
+
+import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 
 function ViewContractMoreInfo() {
     const { ContractItemG } = useLocalSearchParams();
@@ -19,6 +26,28 @@ function ViewContractMoreInfo() {
     const icon = useThemeColor("icon");
     const background = useThemeColor("background");
     const backgroundColor = useThemeColor("backgroundLight");
+    const backgroundLight = useThemeColor("backgroundLight");
+
+    const { user } = useAuth();
+
+    const [modalVisible, setModalVisible] = React.useState(false);
+
+
+  const [showAlert, setshowAlert] = React.useState<ReactElement | null>(null);
+    function alertBox(title: string, message: string, buttons?: Alertbutton[], type?: "default" | "error" | "success" | "laoding" | "destructive" | undefined) {
+        setshowAlert(
+            <AlertComponent
+                visible
+                title={title}
+                message={message}
+                buttons={buttons}
+                type={type}
+                onBackPress={() => setshowAlert(null)}
+            />
+        )
+
+    }
+
 
     if (!contract) {
         return (
@@ -31,7 +60,84 @@ function ViewContractMoreInfo() {
 
     return (
         <ScreenWrapper>
-            <Heading page={`Contracts in ${contract.contractLocation}`} />
+
+
+
+     <Modal transparent statusBarTranslucent visible={modalVisible} animationType="fade">
+                <Pressable onPress={() => setModalVisible(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                    <BlurView intensity={100} style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center' }}>
+
+                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                            <View style={{ backgroundColor: backgroundLight, borderRadius: wp(4), padding: wp(4), width: wp(80), gap: wp(3) }}>
+                                <View style={{ alignItems: 'flex-end' }}>
+                                    <TouchableOpacity onPress={() => setModalVisible(false)}>
+                                        <Ionicons name="close-circle" size={wp(6)} color={icon} />
+                                    </TouchableOpacity>
+                                </View>
+                                <ThemedText type="title" style={{ textAlign: 'center', marginBottom: wp(4) }}>
+                                    Manage Truck
+                                </ThemedText>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setModalVisible(false);
+                                        router.push('/Logistics/Trucks/AddTrucks');
+                                    }}
+                                    style={{ backgroundColor: accent, alignItems: 'center', padding: wp(2), borderRadius: wp(4) }}
+                                >
+                                    <ThemedText color="#fff" type="subtitle">Edit Truck</ThemedText>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setModalVisible(false);
+                                        alertBox(
+                                            "Delete Truck",
+                                            "Are you sure you want to delete this truck?",
+                                            [
+                                                {
+                                                    title: "Delete",
+                                                    onPress: async () => {
+                                                        try {
+                                                            // Add delete logic here
+                                                            deleteDocument('loadsContracts', contract.id)
+                                                            router.back()
+                                                            ToastAndroid.show("Success Contract` deleted successfully", ToastAndroid.SHORT);
+
+                                                        } catch (error) {
+                                                            alertBox("Error", "Failed to delete truck", [], "error");
+                                                            console.error(error)
+                                                        }
+                                                    },
+                                                },
+                                            ],
+                                            "destructive"
+                                        );
+                                    }}
+                                    style={{ backgroundColor: '#FF5252', alignItems: 'center', padding: wp(2), borderRadius: wp(4) }}
+                                >
+                                    <ThemedText color="#fff" type="subtitle">Delete Truck</ThemedText>
+                                </TouchableOpacity>
+
+                            </View>
+                        </View>
+                    </BlurView>
+                </Pressable>
+            </Modal>
+
+            {showAlert}
+
+
+            <Heading page={`Contracts in ${contract.contractLocation}`}    rightComponent={
+                    <View style={{ flexDirection: 'row', gap: wp(2), marginRight: wp(2) }}>
+                        { user?.uid === contract.userId &&
+                           ( <View style={{ overflow: 'hidden', borderRadius: wp(2.4) }}>
+                                <TouchableNativeFeedback onPress={() => setModalVisible(true)}>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: wp(2), padding: wp(1.5) }}>
+                                        <Ionicons name='reorder-three-outline' size={wp(6)} color={icon} />
+                                    </View>
+                                </TouchableNativeFeedback>
+                            </View>)
+                        }
+                    </View>} />
 
             <ScrollView contentContainerStyle={{ padding: wp(0), paddingBottom: wp(10) }}>
                 {/* Main Contract Card */}

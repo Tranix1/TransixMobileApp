@@ -210,16 +210,3 @@ const Index = () => {
 
 export default Index
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        margin: wp(2)
-    }, countryButton: {
-        padding: wp(1),
-        paddingHorizontal: wp(3),
-        borderRadius: wp(4)
-
-    }, countryButtonSelected: {
-        backgroundColor: '#73c8a9'
-    }
-})

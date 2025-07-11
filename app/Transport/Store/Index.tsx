@@ -26,7 +26,7 @@ const StorePage = () => {
     const { userId, } = useLocalSearchParams();
 
     const productCategorys = [
-        { id: 0, name: "Showroom" },
+        { id: 0, name: "Vehicle" },
         { id: 1, name: "Trailers" },
         { id: 2, name: "Container" },
         { id: 3, name: "Spares" },
@@ -41,6 +41,7 @@ const StorePage = () => {
     const [loadingMore, setLoadingMore] = useState(false)
     const [products, setProducts] = useState<Product[]>([])
     const [showFilter, setShowFilter] = useState(false)
+
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
     const [showSheet, setShowSheet] = useState(false)
     const [expandId, setExpandId] = useState('')
@@ -50,6 +51,7 @@ const StorePage = () => {
         id: number;
         name: string;
     } | null>(Countries[0] ?? null)
+
 
     const bottomSheetRef = useRef<BottomSheet>(null)
 
@@ -72,14 +74,29 @@ const StorePage = () => {
     const [slectedMake, setSelectedMake] = React.useState<{ id: number; name: string } | null>(null)
 
 
+   function clearFilter() {
+        // Resetting states to their initial values or null
+        setSelectedProduct(null);
+        setBuyOselling("");
+        setSelectedProdctCategory(productCategorys[0]); // Reset to initial default
+        setSelectedVehiType(null);
+        setSelectedBudget(null);
+        setSelectedTransType(null);
+        setSelectedBodyType(null);
+        setSelectedMake(null);
+        setSelectedCountry(Countries[0]); // Reset to initial default
+    }
+
+
+
     const loadProducts = async () => {
 
         let filters: any[] = [];
 
-        // if (userId) filters.push(where("userId", "==", userId));
+        if (userId) filters.push(where("userId", "==", userId));
 
         if (selectedCountry) filters.push(where("location.storeCountry", "==", selectedCountry?.name));
-        // if (selectedProdCategry) filters.push(where("category", "==", selectedProdCategry?.name));
+        if (selectedProdCategry) filters.push(where("category", "==", selectedProdCategry?.name));
 
         if (buyOSelling) filters.push(where("transaction.LookingOSelling", "==", buyOSelling));
 
@@ -104,11 +121,12 @@ const StorePage = () => {
 
     useEffect(() => {
         loadProducts()
-    }, [selectedCountry])
+    }, [userId , selectedCountry,selectedProdCategry , buyOSelling,selectedVehiType,selectedBudget,selectedTransType,slectedBodyType,slectedMake])
 
     const onRefresh = async () => {
-        try {
-            setRefreshing(true)
+        try 
+        {clearFilter()
+        setRefreshing(true)
             await loadProducts()
             setRefreshing(false)
         } catch (error) {
@@ -120,9 +138,24 @@ const StorePage = () => {
 
         let filters: any[] = [];
 
-        // if (userId) filters.push(where("userId", "==", userId));
+      if (userId) filters.push(where("userId", "==", userId));
 
         if (selectedCountry) filters.push(where("location.storeCountry", "==", selectedCountry?.name));
+        if (selectedProdCategry) filters.push(where("category", "==", selectedProdCategry?.name));
+
+        if (buyOSelling) filters.push(where("transaction.LookingOSelling", "==", buyOSelling));
+
+        // Small Vehicle , cargo or heavy euip
+        if (selectedVehiType) filters.push(where("vehicleType", "==", selectedVehiType.name));
+
+        if (selectedBudget) filters.push(where("priceRange", "==", selectedBudget.name));
+
+        if (selectedTransType) filters.push(where("vehicleTransimission", "==", selectedTransType.name));
+
+        if (slectedBodyType) filters.push(where("bodyStyle", "==", slectedBodyType.name));
+
+        if (slectedMake) filters.push(where("bodyMake", "==", slectedMake.name));
+
         if (loadingMore || !lastVisible) return
         setLoadingMore(true)
         const result = await fetchDocuments('products', 10, lastVisible, filters);
@@ -302,8 +335,6 @@ const StorePage = () => {
                     setSelectedBodyType={setSelectedBodyType}
                     slectedMake={slectedMake}
                     setSelectedMake={setSelectedMake}
-
-
                 />
 
                 <FlatList

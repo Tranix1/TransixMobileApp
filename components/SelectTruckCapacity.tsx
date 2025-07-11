@@ -19,6 +19,7 @@ export const SlctTruckCapacity: FC<SlctTruckCapacityProps> = ({
 }) => {
     const background = useThemeColor('backgroundLight');
     const coolGray = useThemeColor('coolGray');
+    const accent = useThemeColor('accent')
 
     const litresCapacity = [
         '300L',
@@ -60,7 +61,7 @@ export const SlctTruckCapacity: FC<SlctTruckCapacityProps> = ({
             style={[
             styles.countryButton,
             { backgroundColor: background },
-            truckTonnage === item && styles.countryButtonSelected,
+            truckTonnage === item && {backgroundColor: accent} ,
             ]}
         >
             <ThemedText style={{ color: truckTonnage === item ? 'white' : coolGray }}>
@@ -82,7 +83,5 @@ const styles = StyleSheet.create({
         paddingHorizontal: wp(4),
         borderRadius: wp(4)
 
-    }, countryButtonSelected: {
-        backgroundColor: '#73c8a9'
-    }
+    }, 
 })

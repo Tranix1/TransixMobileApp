@@ -299,7 +299,7 @@ const Index = () => {
                                             </View>
                                         </View>
                                     </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={() => {router.push("/UserUploads/Contracts"); setDspMenu(false) } }>
+                                    <TouchableNativeFeedback onPress={() => {router.push("/Logistics/Contracts/ViewMiniContracts"); setDspMenu(false) } }>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <Ionicons name="reader" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -678,7 +678,7 @@ const Index = () => {
 
                             <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
                                 <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
-                                <ThemedText color='#fff'>
+                                <ThemedText color='#fff' >
                                     Booked Contracts
                                 </ThemedText>
                             </TouchableOpacity>

@@ -14,6 +14,8 @@ import Heading from "@/components/Heading";
 function LoadsContracts() {
   const [contractLoc, setContraLoc] = React.useState(null)
   const [getContracts, setGetContracts] = React.useState<Contracts[]>([])
+
+
   const [refreshing, setRefreshing] = useState(false)
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -80,10 +82,15 @@ function LoadsContracts() {
         </ThemedText>
       </View>
 
-      <ThemedText type='default' style={{ marginBottom: wp(2), color: icon }}>
+<View style={{flexDirection:"row" , justifyContent:"space-between",marginBottom: wp(2),}}>
+
+      <ThemedText type='default' style={{  color: icon }}>
         Trucks Left: {item.formDataScnd?.trucksLeft || '10'}
       </ThemedText>
-
+<TouchableOpacity onPress={()=>router.push( {pathname :"/Logistics/Trucks/Index", params :{ userId: null , organisationName:"UUsername",contractName :"ContractName",contractId:"contractId"  }} )} style={{ paddingHorizontal: wp(4), paddingVertical: wp(1), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }} >
+  <ThemedText color='#fff'>3 Booked View</ThemedText>
+</TouchableOpacity>
+</View>
       <View
         style={{
           marginBottom: wp(3),
@@ -117,12 +124,13 @@ function LoadsContracts() {
           </ThemedText>
         </View>
         {/* Table Rows */}
-        {(['frst', 'scnd', 'third', 'forth'] as Array<'frst' | 'scnd' | 'third' | 'forth'>).map((key, idx) => {
-          const commodity = item.formData.commodity?.[key];
-          const rate =
-            key === 'third'
-              ? item.formData.rate.thrd
-              : item.formData.rate[key];
+        
+      {(['frst', 'scnd', 'thrd', 'forth'] as Array<'frst' | 'scnd' | 'thrd' | 'forth'>).map((key, idx) => {
+  const commodityKey = key === 'thrd' ? 'third' : key; // commodity uses 'third'
+
+  const commodity = item.formData.commodity?.[commodityKey];
+  const rate = item.formData.rate[key];
+
           if (!commodity && !rate) return null;
           return (
             <View

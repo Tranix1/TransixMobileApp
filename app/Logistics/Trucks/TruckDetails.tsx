@@ -1,4 +1,5 @@
-import { View, ScrollView, RefreshControl, TouchableOpacity, Modal, TouchableNativeFeedback, Linking, Pressable, } from "react-native";
+import { View, ScrollView, RefreshControl, TouchableOpacity, Modal, TouchableNativeFeedback, Linking, Pressable,ToastAndroid } from "react-native";
+
 import { router, useLocalSearchParams } from "expo-router";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { ThemedText } from "@/components/ThemedText";
@@ -163,7 +164,7 @@ const TruckDetails = () => {
                                                         try {
                                                             // Add delete logic here
                                                             deleteDocument('Trucks', truckData.id)
-                                                            alertBox("Success", "Truck deleted successfully", [], "success");
+                                                            ToastAndroid.show("Success Truck deleted successfully", ToastAndroid.SHORT);
                                                         } catch (error) {
                                                             alertBox("Error", "Failed to delete truck", [], "error");
                                                         }
