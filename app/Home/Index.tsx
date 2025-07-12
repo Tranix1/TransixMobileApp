@@ -31,7 +31,7 @@ const Index = () => {
                     <ThemedText type="title">Transix</ThemedText>
                     <ThemedText type="tiny">The future of Transport & Logistics</ThemedText>
                 </View>
-                <View style={{ flexDirection: 'row', gap: wp(2) }}>
+               { user && <View style={{ flexDirection: 'row', gap: wp(2) }}>
 
                     <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                         <TouchableNativeFeedback onPress={()=>checkAuth(setDspMenu(true)) }>
@@ -40,7 +40,7 @@ const Index = () => {
                             </View>
                         </TouchableNativeFeedback>
                     </View>
-                </View>
+                </View>}
             </View>
 
         );
@@ -377,6 +377,7 @@ const Index = () => {
 
 
    <Modal statusBarTranslucent visible={dspCreateAcc } animationType='fade' transparent>
+                    <Pressable onPressIn={() => setDspCreateAcc(false)  } style={{ flex: 1, }}>
                 <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', flex: 1, padding: wp(4), alignItems: 'center' }}>
                     <View
                         style={{
@@ -446,6 +447,8 @@ const Index = () => {
                             </TouchableOpacity>
                     </View>
                 </BlurView>
+
+                    </Pressable>
             </Modal>
 
 

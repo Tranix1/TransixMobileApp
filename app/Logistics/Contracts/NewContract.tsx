@@ -329,7 +329,7 @@ const NewContract = () => {
    {dspCheckOutP &&
           <CheckOutMakePayments jsxProp={<View
   style={{
-    backgroundColor: '#333',
+    backgroundColor: backgroundLight,
     borderRadius: 10,
     padding: 15,
     marginBottom: 20,
@@ -337,7 +337,6 @@ const NewContract = () => {
 >
   <ThemedText
     style={{
-      color: 'white',
       fontSize: 16,
       marginBottom: 10,
       fontWeight: 'bold',
@@ -353,7 +352,7 @@ const NewContract = () => {
       marginBottom: 8,
     }}
   >
-    <ThemedText style={{ color: 'white', fontSize: 14 }}>
+    <ThemedText style={{  fontSize: 14 }}>
       Add Contract
     </ThemedText>
     <ThemedText
@@ -370,7 +369,7 @@ const NewContract = () => {
       marginBottom: 8,
     }}
   >
-    <ThemedText style={{ color: 'white', fontSize: 14 }}>
+    <ThemedText style={{  fontSize: 14 }}>
       Add Load
     </ThemedText>
     <ThemedText
@@ -387,11 +386,11 @@ const NewContract = () => {
       marginBottom: 10,
     }}
   >
-    <ThemedText style={{ color: 'white', fontSize: 14 }}>
+    <ThemedText style={{  fontSize: 14 }}>
       Add Truck
     </ThemedText>
     <ThemedText
-      style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
+      style={{ color: '#4CAF50',  fontSize: 14, fontWeight: 'bold' }}
     >
       $8
     </ThemedText>
@@ -406,7 +405,7 @@ const NewContract = () => {
       justifyContent: 'space-between',
     }}
   >
-    <ThemedText style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
+    <ThemedText style={{  fontSize: 16, fontWeight: 'bold' }}>
       Total
     </ThemedText>
     <ThemedText
@@ -424,7 +423,7 @@ const NewContract = () => {
 
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: wp(6), alignItems: 'center', marginBottom: wp(2) }}>
-                {['Load Details', 'Return\nLoad', 'Contract Details', 'Truck Req',].map((stepLabel, index) => (
+                {['Load Details', 'Return\nLoad', 'contract\nDetails', 'Truck Req',].map((stepLabel, index) => (
                     <View key={index} style={{ alignItems: 'center', flexDirection: 'row', flex: index > 0 ? 1 : 0, }}>
                         {index > 0 && (
                             <View
@@ -444,7 +443,7 @@ const NewContract = () => {
                                     width: wp(8),
                                     height: wp(8),
                                     borderRadius: wp(4),
-                                    backgroundColor: step >= index ? '#0f9d5843' : '#ccc',
+                                    backgroundColor: step >= index ? accent : '#ccc',
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                     marginBottom: wp(1),
@@ -1346,7 +1345,7 @@ const NewContract = () => {
 
                         <Divider />
                         <View style={styles.viewMainDsp}>
-                            <Button onPress={toggleDspCheckout} title="Submit" />
+                            <Button onPress={toggleDspCheckout} title="Submit" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{borderWidth:1 , borderColor:accent}} />
                         </View>
                     </ScrollView>
                 }

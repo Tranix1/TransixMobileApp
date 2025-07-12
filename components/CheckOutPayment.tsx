@@ -23,6 +23,9 @@ interface CheckOutMakePaymentsProps {
 
             const icon = useThemeColor('icon') // <-- ADD THIS LINE
 
+    const backgroundLight = useThemeColor('backgroundLight')
+    const background = useThemeColor('background')
+
       const [paymentMethod , setPaymentMethod]=React.useState("")
       const [dspPaymentInputs , setDspPaymmentInout]=React.useState(false)
 
@@ -44,7 +47,6 @@ interface CheckOutMakePaymentsProps {
       fontSize: 20,
       fontWeight: 'bold',
       
-      color: 'white',
     }}
   >
     Payment Method
@@ -62,21 +64,23 @@ interface CheckOutMakePaymentsProps {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      backgroundColor: paymentMethod === "International" ? '#444' : '#222',
+      backgroundColor: paymentMethod === "International" ? background : backgroundLight ,
       paddingVertical: 15,
       paddingHorizontal: 10,
       borderRadius: 10,
       marginBottom: 10,
+      borderWidth:1,
+      borderColor :paymentMethod === "International" ? icon : backgroundLight,
     }}
   >
-    <ThemedText style={{ fontSize: 16, color: 'white' }}>
+    <ThemedText style={{ fontSize: 16,  }}>
       Debit or Credit Card
     </ThemedText>
 
     {paymentMethod === "International" ? (
-      <FontAwesome6 name="dot-circle" size={24} color="white" />
+      <FontAwesome6 name="dot-circle" size={24} color={icon} />
     ) : (
-      <FontAwesome name="circle-thin" size={24} color="white" />
+      <FontAwesome name="circle-thin" size={24} color={icon} />
     )}
   </TouchableOpacity>
 
@@ -86,21 +90,23 @@ interface CheckOutMakePaymentsProps {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      backgroundColor: paymentMethod === "ecocash" ? '#444' : '#222',
+      backgroundColor: paymentMethod === "ecocash" ? background : backgroundLight,
       paddingVertical: 15,
       paddingHorizontal: 10,
       borderRadius: 10,
       marginBottom: 20,
+      borderWidth:1,
+      borderColor :paymentMethod === "ecocash" ? icon : backgroundLight,
     }}
   >
-    <ThemedText style={{ fontSize: 16, color: 'white' }}>
+    <ThemedText style={{ fontSize: 16,  }}>
       EcoCash
     </ThemedText>
 
     {paymentMethod === "ecocash" ? (
-      <FontAwesome6 name="dot-circle" size={24} color="white" />
+      <FontAwesome6 name="dot-circle" size={24} color={icon} />
     ) : (
-      <FontAwesome name="circle-thin" size={24} color="white" />
+      <FontAwesome name="circle-thin" size={24} color={icon} />
     )}
   </TouchableOpacity>
 
@@ -117,8 +123,8 @@ interface CheckOutMakePaymentsProps {
       marginTop: 10,
     }}
   >
-    <Entypo name="lock" size={20} color="white" style={{ marginRight: 8 }} />
-    <ThemedText style={{ color: 'white', fontSize: 14 }}>
+    <Entypo name="lock" size={20}  style={{ marginRight: 8 }} />
+    <ThemedText style={{  fontSize: 14 }}>
       Your payments are made securely
     </ThemedText>
   </View>

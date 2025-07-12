@@ -62,9 +62,7 @@ const AddLoadDB = () => {
         driverPhone: "",
         maxloadCapacity: "",
         truckName: "",
-        otherTruckSuspension: "",
         otherCargoArea: "",
-        otherTruckConfig: "",
         otherTankerType: ""
     });
 
@@ -224,7 +222,7 @@ const AddLoadDB = () => {
                                     width: wp(8),
                                     height: wp(8),
                                     borderRadius: wp(4),
-                                    backgroundColor: step >= index ? '#0f9d5843' : '#ccc',
+                                    backgroundColor: step >= index ? accent : '#ccc',
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                     marginBottom: wp(1),
@@ -678,7 +676,7 @@ const AddLoadDB = () => {
                         <Divider />
                         <View style={styles.viewMainDsp}>
                             <Button onPress={() => setStep(2)} title="Back" />
-                            <Button onPress={handleSubmit} title="Submit" colors={{ text: '#0f9d58', bg: '#0f9d58a3' }} />
+                            <Button onPress={handleSubmit} title="Submit" colors={{  text: '#0f9d58', bg: '#0f9d5824'  }} style={{borderWidth:1 , borderColor:accent}} />
                         </View>
                     </View>
 

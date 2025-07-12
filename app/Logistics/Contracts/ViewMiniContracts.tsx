@@ -11,7 +11,16 @@ import { hp, wp } from "@/constants/common";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 
+import { Countries } from '@/data/appConstants'
+
 function LoadsContracts() {
+
+
+ const [selectedCountry, setSelectedCountry] = useState<{
+        id: number;
+        name: string;
+    } | null>(Countries[0] ?? null)
+
   const [contractLoc, setContraLoc] = React.useState(null)
   const [getContracts, setGetContracts] = React.useState<Contracts[]>([])
 
@@ -25,6 +34,8 @@ function LoadsContracts() {
   const icon = useThemeColor('icon')
   const background = useThemeColor('background')
   const backgroundColor = useThemeColor('backgroundLight')
+  const backgroundLight = useThemeColor('backgroundLight')
+   const textColor = useThemeColor('text')
 
   const LoadTructs = async () => {
     const maTrucks = await fetchDocuments("loadsContracts", 10, lastVisible);
@@ -205,6 +216,65 @@ function LoadsContracts() {
   return (
     <ScreenWrapper>
       <Heading page='Contracts' />
+
+
+
+  <View style={{ marginVertical: wp(2) }}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{
+                            paddingHorizontal: wp(2),
+                            gap: wp(2),
+                        }}
+                    >
+                        {Countries.map((item) => {
+                            const isSelected = item.id === selectedCountry?.id;
+                            return (
+                                <TouchableOpacity
+                                    key={item.id}
+                                    onPress={() => {
+                                        setSelectedCountry(item);
+                                        // Optionally filter products here or trigger a filter function
+                                    }}
+                                    style={{
+                                        backgroundColor: isSelected ? accent : backgroundLight,
+                                        borderColor: isSelected ? accent : coolGray,
+                                        borderWidth: 1,
+
+
+                                        paddingVertical: wp(0.1),
+                                        marginLeft: wp(2),
+                                        borderRadius: wp(2),
+                                        paddingHorizontal: wp(3),
+
+
+                                        marginRight: wp(1),
+                                        shadowColor: isSelected ? accent : '#000',
+                                        shadowOpacity: isSelected ? 0.15 : 0.05,
+                                        shadowRadius: 4,
+                                        elevation: isSelected ? 2 : 0,
+                                    }}
+                                    activeOpacity={0.8}
+                                >
+                                    <ThemedText
+                                        type="defaultSemiBold"
+                                        style={{
+                                            color: isSelected ? 'white' : textColor,
+                                            fontSize: wp(3.5),
+                                        }}
+                                    >
+                                        {item.name}
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
+                </View>
+
+
+
+
       <FlatList
         keyExtractor={(item) => item.id.toString()}
         data={getContracts}
