@@ -1261,8 +1261,6 @@ const NewContract = () => {
                 {step === 3 &&
                     <ScrollView>
 
-                        <View></View>
-
                         <View style={{ padding: 4, gap: wp(5), marginTop: wp(4) }}>
                             <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold' }}>
                                 Truck Required
@@ -1338,8 +1336,6 @@ const NewContract = () => {
                                     Select {trucksNeeded.length <= 0 ? "Truck" : "another"}
                                 </ThemedText>
                             </TouchableOpacity>
-
-
 
                         </View>
 

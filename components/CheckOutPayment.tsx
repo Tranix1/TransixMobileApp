@@ -188,6 +188,7 @@ onPress={()=>setDspPaymmentInout(true) }
                         <Divider />
 <TouchableOpacity
   style={[styles.confirmBTN , {backgroundColor:"#424242"}]}
+  onPress={confirmButon}
 >
   <ThemedText
     style={styles.confrirmText}

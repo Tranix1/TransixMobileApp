@@ -16,10 +16,11 @@ import { Countries } from '@/data/appConstants'
 function LoadsContracts() {
 
 
- const [selectedCountry, setSelectedCountry] = useState<{
-        id: number;
-        name: string;
-    } | null>(Countries[0] ?? null)
+ 
+    const [selectedCountry, setSelectedCountry] = useState<{ 
+    id: number;
+    name: string;
+}[]>( [])   
 
   const [contractLoc, setContraLoc] = React.useState(null)
   const [getContracts, setGetContracts] = React.useState<Contracts[]>([])
@@ -213,65 +214,57 @@ function LoadsContracts() {
     </View>
   );
 
+  console.log(selectedCountry)
+
   return (
     <ScreenWrapper>
       <Heading page='Contracts' />
 
 
 
-  <View style={{ marginVertical: wp(2) }}>
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{
+                <View style={{ marginVertical: wp(2) }}>
+
+
+ <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: wp(3) }}      contentContainerStyle={{
                             paddingHorizontal: wp(2),
                             gap: wp(2),
-                        }}
-                    >
-                        {Countries.map((item) => {
-                            const isSelected = item.id === selectedCountry?.id;
-                            return (
-                                <TouchableOpacity
-                                    key={item.id}
-                                    onPress={() => {
-                                        setSelectedCountry(item);
-                                        // Optionally filter products here or trigger a filter function
-                                    }}
-                                    style={{
-                                        backgroundColor: isSelected ? accent : backgroundLight,
-                                        borderColor: isSelected ? accent : coolGray,
-                                        borderWidth: 1,
+                        }}>
 
 
-                                        paddingVertical: wp(0.1),
-                                        marginLeft: wp(2),
-                                        borderRadius: wp(2),
-                                        paddingHorizontal: wp(3),
 
+   {Countries.map(item => {
+    const active = selectedCountry.some(x => x.id === item.id);
 
-                                        marginRight: wp(1),
-                                        shadowColor: isSelected ? accent : '#000',
-                                        shadowOpacity: isSelected ? 0.15 : 0.05,
-                                        shadowRadius: 4,
-                                        elevation: isSelected ? 2 : 0,
-                                    }}
-                                    activeOpacity={0.8}
-                                >
-                                    <ThemedText
-                                        type="defaultSemiBold"
-                                        style={{
-                                            color: isSelected ? 'white' : textColor,
-                                            fontSize: wp(3.5),
-                                        }}
-                                    >
-                                        {item.name}
-                                    </ThemedText>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </ScrollView>
+    return (
+        <TouchableOpacity
+            key={item.id}
+            onPress={() => {active ?setSelectedCountry(selectedCountry.filter(x => x.id !== item.id)) :setSelectedCountry([...selectedCountry, item])}}
+            style={{
+                backgroundColor: active ? accent : backgroundLight,
+                borderColor: accent ? accent : coolGray,
+                borderWidth: 1,
+                paddingVertical: wp(0.1),
+                marginLeft: wp(2),
+                borderRadius: wp(2),
+                paddingHorizontal: wp(3),
+                marginRight: wp(1),
+                shadowColor: active ? accent : '#000',
+                shadowOpacity: active ? 0.15 : 0.05,
+                shadowRadius: 4,
+                elevation: active ? 2 : 0,
+            }}
+        >
+            <ThemedText style={{
+                color: active ? 'white' : textColor,
+                fontSize: wp(3.5),
+            }} type="defaultSemiBold">{item.name}</ThemedText>
+        </TouchableOpacity>
+    );
+})}
+
+ </ScrollView>
+
                 </View>
-
 
 
 

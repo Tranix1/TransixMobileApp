@@ -74,18 +74,3 @@ setOperationCountries
 };
 
 export default CountrySelector;
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        margin: wp(2)
-    },
-     countryButton: {
-        padding: wp(2),
-        paddingHorizontal: wp(4),
-        borderRadius: wp(4)
-
-    }, 
-    countryButtonSelected: {
-        backgroundColor: '#73c8a9'
-    }
-})
