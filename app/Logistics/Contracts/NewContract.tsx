@@ -99,11 +99,6 @@ const NewContract = () => {
 
     const [step, setStep] = useState(0);
 
-
-
-
-
-
     function toggleDspCommodity() {
         setDspCommodity(prev => !prev);
     }
@@ -266,17 +261,17 @@ const NewContract = () => {
             (!locaOpCount && interOpCount.length === 0) && "Select the country the loads will operate in",
         ].filter(Boolean);
 
-        // if (missingLoadDetails.length > 0) {
-        //     // setLoadDspError(true);
-        //     alertBox("Missing Load Details", missingLoadDetails.join("\n"), [], "error");
-        //     return;
-        // }
+        if (missingLoadDetails.length > 0) {
+            // setLoadDspError(true);
+            alertBox("Missing Load Details", missingLoadDetails.join("\n"), [], "error");
+            return;
+        }
 
-        // if (missingContractDetails.length > 0) {
-        //     // setContractDErr(true);
-        //     alertBox("Missing Contract Details", missingContractDetails.join("\n"), [], "error");
-        //     return;
-        // }
+        if (missingContractDetails.length > 0) {
+            // setContractDErr(true);
+            alertBox("Missing Contract Details", missingContractDetails.join("\n"), [], "error");
+            return;
+        }
 
         setDspCheckout(true);
     }

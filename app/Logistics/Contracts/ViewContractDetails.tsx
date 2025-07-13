@@ -306,10 +306,7 @@ function ViewContractMoreInfo() {
                                         Rates
                                     </ThemedText>
 
-                                    {/* Solid Rate */}
-                                    <ThemedText type="default" style={{ color: coolGray, marginBottom: wp(1) }}>
-                                        Solid Rate
-                                    </ThemedText>
+                                   
                                     <View
                                         style={{
                                             backgroundColor: backgroundColor,
@@ -320,69 +317,29 @@ function ViewContractMoreInfo() {
                                             marginBottom: wp(2),
                                         }}
                                     >
-                                        {contract.formData.rate.solidFrst && (
+                                        {contract.formData.rate.frst && (
                                             <ThemedText type="default" style={{ color: icon }}>
-                                                1) {contract.formData.rate.solidFrst}
+                                                1) {contract.formData.rate.frst}
                                             </ThemedText>
                                         )}
-                                        {contract.formData.rate.solidScnd && (
+                                        {contract.formData.rate.scnd && (
                                             <ThemedText type="default" style={{ color: icon, marginTop: wp(1) }}>
-                                                2) {contract.formData.rate.solidScnd}
+                                                2) {contract.formData.rate.scnd}
+                                            </ThemedText>
+                                        )}
+                                          {contract.formData.rate.thrd && (
+                                            <ThemedText type="default" style={{ color: icon }}>
+                                                1) {contract.formData.rate.thrd}
+                                            </ThemedText>
+                                        )}
+                                        {contract.formData.rate.forth && (
+                                            <ThemedText type="default" style={{ color: icon, marginTop: wp(1) }}>
+                                                2) {contract.formData.rate.forth}
                                             </ThemedText>
                                         )}
                                     </View>
 
-                                    {/* Triaxle Rate */}
-                                    <ThemedText type="default" style={{ color: coolGray, marginBottom: wp(1) }}>
-                                        Triaxle Rate
-                                    </ThemedText>
-                                    <View
-                                        style={{
-                                            backgroundColor: backgroundColor,
-                                            borderRadius: wp(2),
-                                            padding: wp(3),
-                                            borderWidth: 1,
-                                            borderColor: coolGray + "20",
-                                            marginBottom: wp(2),
-                                        }}
-                                    >
-                                        {contract.formData.rate.triaxleFrst && (
-                                            <ThemedText type="default" style={{ color: icon }}>
-                                                1) {contract.formData.rate.triaxleFrst}
-                                            </ThemedText>
-                                        )}
-                                        {contract.formData.rate.triaxlesScnd && (
-                                            <ThemedText type="default" style={{ color: icon, marginTop: wp(1) }}>
-                                                2) {contract.formData.rate.triaxlesScnd}
-                                            </ThemedText>
-                                        )}
-                                    </View>
-
-                                    {/* Link Rate */}
-                                    <ThemedText type="default" style={{ color: coolGray, marginBottom: wp(1) }}>
-                                        Link Rate
-                                    </ThemedText>
-                                    <View
-                                        style={{
-                                            backgroundColor: backgroundColor,
-                                            borderRadius: wp(2),
-                                            padding: wp(3),
-                                            borderWidth: 1,
-                                            borderColor: coolGray + "20",
-                                            marginBottom: wp(2),
-                                        }}
-                                    >
-                                        {contract.formData.rate.linksFrst && (
-                                            <ThemedText type="default" style={{ color: icon }}>
-                                                1) {contract.formData.rate.linksFrst}
-                                            </ThemedText>
-                                        )}
-                                        {contract.formData.rate.linksScnd && (
-                                            <ThemedText type="default" style={{ color: icon, marginTop: wp(1) }}>
-                                                2) {contract.formData.rate.linksScnd}
-                                            </ThemedText>
-                                        )}
-                                    </View>
+                                   
                                 </View>
 
                                 {/* Routes Section */}
@@ -391,7 +348,8 @@ function ViewContractMoreInfo() {
                                         type="defaultSemiBold"
                                         style={{ color: accent, marginBottom: wp(2) }}
                                     >
-                                        Routes
+                                        Routes {"  "}
+{contract.manyRoutesAssign &&<ThemedText style={{ color: accent, marginBottom: wp(2) ,fontStyle:"italic"}}>There are more than 2</ThemedText>}
                                     </ThemedText>
                                     <View
                                         style={{
@@ -403,16 +361,17 @@ function ViewContractMoreInfo() {
                                         }}
                                     >
                                         <ThemedText type="default" style={{ color: icon, marginBottom: wp(1) }}>
-                                            {contract.manyRoutesAssign}
+                                           Truck Movement    :   {contract.manyRoutesAssign}
                                         </ThemedText>
-                                        <ThemedText type="default" style={{ color: icon, marginBottom: wp(1) }}>
-                                            The destination for all Routes is{' '}
+                                       {contract.formData.location.seventh && <ThemedText type="default" style={{ color: icon, marginBottom: wp(1) }}>
+                                            Destination route   :   {' '}
                                             <ThemedText type="defaultSemiBold" style={{ color: accent }}>
                                                 {contract.formData.location.seventh}
                                             </ThemedText>
-                                        </ThemedText>
+                                        </ThemedText>}
+
                                         <ThemedText type="default" style={{ color: icon, marginTop: wp(2) }}>
-                                            {contract.manyRoutesAllocaton}
+                                          Allocation Type       :  {contract.manyRoutesAllocaton}
                                         </ThemedText>
                                         <ThemedText type="default" style={{ color: icon, marginTop: wp(2) }}>
                                             {contract.formDataScnd.manyRoutesOperation}

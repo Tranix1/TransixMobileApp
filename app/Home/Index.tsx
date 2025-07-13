@@ -52,16 +52,7 @@ const Index = () => {
     const coolGray = useThemeColor('coolGray')
     const textlight = useThemeColor('textlight')
 
-    const [isVisible, setIsVisible] = useState(false)
-
-
-    useFocusEffect(
-        React.useCallback(() => {
-            setIsVisible(false);
-        }, [])
-    );
-
-
+ 
     const { user } = useAuth()
 
 
@@ -88,51 +79,51 @@ const Index = () => {
         btnTitle: string
     }
 
-    const theData: DataItem[] = [
-        {
-            id: 1,
-            topic: "Long-Term Contracts",
-            description: 'Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.',
-            btnTitle: "Get Verfied   "
-        },
+const theData: DataItem[] = [
+    {
+        id: 1,
+        topic: "Long-Term Contracts",
+        description: 'Secure long-term contracts with trusted partners to grow your business with stable income, guaranteed loads, and reliable payments.',
+        btnTitle: "Get Verified"
+    },
+    {
+        id: 2,
+        topic: "First Level Verification",
+        description: 'Verify your business today to build trust with customers, access exclusive deals, and boost your company’s reputation easily.',
+        btnTitle: "Get Verified"
+    },
+    {
+        id: 3,
+        topic: "GIT (Goods in Transit Insurance)",
+        description: 'Protect your trucks and cargo while on the road. Get insurance that covers theft, accidents, and damages during transit.',
+        btnTitle: "Get GIT"
+    },
+    {
+        id: 4,
+        topic: "Tracking",
+        description: 'Track your trucks and cargo live on the app. Improve safety, monitor routes, and keep customers updated anytime.',
+        btnTitle: "View Tracking"
+    },
+    {
+        id: 6,
+        topic: "Fuel",
+        description: 'Find nearby fuel service stations with the best prices. Enjoy special discounts and get quick directions to save time and money.',
+        btnTitle: "Get Fuel"
+    },
+    {
+        id: 5,
+        topic: "Warehouse",
+        description: 'Find secure, affordable warehouses near your routes. Store your goods safely with easy directions and discounted rates for members.',
+        btnTitle: "Check Warehouses"
+    },
+    {
+        id: 7,
+        topic: "Truck Stop",
+        description: 'Locate safe and comfortable truck stops on your journey. Rest, refresh, refuel, and access facilities conveniently anytime.',
+        btnTitle: "Visit Truck Stop"
+    },
+];
 
-        {
-            id: 2,
-            topic: "First Level Verification",
-            description: 'We encourage all legit business to be verified\nIncrease business trust and credibility by verifying your company.',
-            btnTitle: "Get Verfied    "
-        },
-        {
-            id: 3,
-            topic: "GIT (Goods in transit Insuarance)",
-            description: 'Ensures financial protection for trucks and cargo, keeping your business secure.',
-            btnTitle: "Get GIT    "
-        },
-        {
-            id: 4,
-            topic: "Tracking",
-            description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle: "View Trackig   "
-        },
-        {
-            id: 6,
-            topic: "Fuel",
-            description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle: "Get Fuel   "
-        },
-        {
-            id: 5,
-            topic: "Warehouse",
-            description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle: "Check Wrehouses  "
-        },
-        {
-            id: 7,
-            topic: "Truck Stop",
-            description: 'Get your tickets now for upcoming transport & logistics events!\nFeaturing : burnouts, car shows, expos, conferences, racing and tournaments!',
-            btnTitle: "Visit Truck Stop   "
-        },
-    ];
 
     interface HomeItemProps {
         topic: string;
