@@ -88,7 +88,6 @@ function AddTrucks() {
   const [operationCountries, setOperationCountries] = useState<string[]>([]);
 
 
-console.log(images.length)
 
   const [countryCode, setCountryCode] = useState<{ id: number, name: string }>({ id: 0, name: '+263' })
 
@@ -133,48 +132,9 @@ console.log(images.length)
       return;
     }
 
-//  if (images.length < 5 && spinnerItem && selectedCargoArea?.name !== "Rigid") {
-//       alert("Add All reuired images")
-//       setSpinnerItem(false)
-//       return
-//     } else if (images.length > 6 && spinnerItem && selectedCargoArea?.name !== "Rigid") {
-//       alert("You added too many images click restart addig images")
-//       setSpinnerItem(false)
-//       return
-//     } else if ((images.length === 5 || images.length === 6) && selectedCargoArea?.name !== "Rigid") {
-
-//       truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, " truck Image");
-//       driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
-//       driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "driver passport");
-
-//       truckBookImage = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "truck Book");
-//       trailerBookF = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "trailer Book");
-//       trailerBookSc = images.length === 5 ? await uploadImage(images[5], "Trucks", setUploadImageUpdate, "trailer Book sec") : null;
-
-
-//     } else if (images.length === 4 && spinnerItem && selectedCargoArea?.name === "Rigid") {
-
-//       truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "truck Image");
-//       driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
-//       driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "driver passport");
-
-//       truckBookImage = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "truck Book");
-//     }
-
-
-
 
     let truckImage, truckBookImage, trailerBookF, trailerBookSc, driverLicense, driverPassport , driverIntPermit;
     setSpinnerItem(true)
-
-
-
-
-
-
-
-
-
 
 
 

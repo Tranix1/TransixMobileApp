@@ -433,23 +433,19 @@ function ViewContractMoreInfo() {
                                             borderColor: coolGray + "20",
                                         }}
                                     >
-                                        {(["frst", "scnd", "third", "forth", "fifth"] as const).map((key, index) => (
-                                            contract.formData.trckRequired[key] && (
-                                                <View
-                                                    key={key}
-                                                    style={{
-                                                        flexDirection: "row",
-                                                        paddingVertical: wp(1),
-                                                        borderTopWidth: index === 0 ? 0 : 1,
-                                                        borderTopColor: coolGray + "20",
-                                                    }}
-                                                >
-                                                    <ThemedText type="default" style={{ color: icon }}>
-                                                        {index + 1}) {contract.formData.trckRequired[key]}
-                                                    </ThemedText>
-                                                </View>
-                                            )
-                                        ))}
+                                    
+
+
+                {contract.trucksRequired.map((neededTruck)=>(
+                                <View style={{flexDirection:"row",justifyContent:'space-evenly'}}> 
+                                <ThemedText>{neededTruck.truckType?.name} </ThemedText>
+                                <ThemedText>{neededTruck.capacity?.name} </ThemedText>
+                                <ThemedText>{neededTruck.cargoArea?.name} </ThemedText>
+
+                                </View>
+                            ) )  }
+
+
                                     </View>
                                 </View>
 

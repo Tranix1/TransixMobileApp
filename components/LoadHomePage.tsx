@@ -160,7 +160,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                 :
                                 (!lastVisible && Loads.length > 0) ?
                                     <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                                        <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>No more Trucks to Load
+                                        <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>No more Loads to Load
                                         </ThemedText>
                                         <Ionicons color={icon} style={{}} name='alert-circle-outline' size={wp(6)} />
 
