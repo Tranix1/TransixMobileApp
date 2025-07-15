@@ -114,6 +114,7 @@ interface CheckOutMakePaymentsProps {
 
     {jsxProp}
 
+
   {/* Secure Note */}
   <View
     style={{
