@@ -28,7 +28,7 @@ import { storage } from "@/db/fireBaseConfig";
 
 import type { ImagePickerAsset } from 'expo-image-picker';
 
-import { productCategories  , smallVehicleMake , smallVehicleTypes , heavyEupementMake, heavyEupementType , cargoTruckMake,cargoVehiType , serviceProivderType,transactionTypes,containerType , containerMake,trailerType,trailerMake,sparesType, Countries } from "@/data/appConstants";
+import { productCategories  , smallVehicleMake , smallVehicleTypes , heavyEupementMake, heavyEupementType , cargoTruckMake,cargoVehiType , serviceProivderType,transactionTypes,containerType , containerMake,trailerType,trailerMake,sparesType, Countries, tonneSizes } from "@/data/appConstants";
 
 import { truckSuspensions, trailerConfigurations as truckConfigurations } from "@/data/appConstants";
 import { HorizontalTickComponent } from "@/components/SlctHorizonzalTick";
@@ -43,9 +43,6 @@ const CreateProduct = () => {
     const backgroundLight = useThemeColor('backgroundLight');
     const iconColor = useThemeColor('icon');
     const accent = useThemeColor('accent');
-    const coolGray = useThemeColor('coolGray');
-    const textColor = useThemeColor('text');
-
 
     // States
     const [vehicleType, setVehicleType] = React.useState<{ id: number; name: string } | null>(null);
@@ -339,6 +336,14 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                                 setSelectedItem={setSelectedTruckType}
                                 placeholder="Select Truck type"
                             />
+                            <ThemedText> Truck Capacity</ThemedText>
+                             <DropDownItem
+                                allData={tonneSizes}
+                                selectedItem={selectedTruckCapacity}
+                                setSelectedItem={setSelectedTruckCapacity}
+                                placeholder="Truck Capacity"
+                            />
+
                         </View>}
 
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, ToastAndroid } from "react-native"
 
-import { countryCodes, truckType } from "@/data/appConstants";
+import { countryCodes,  } from "@/data/appConstants";
 
 
 import type { ImagePickerAsset } from 'expo-image-picker';
@@ -13,7 +13,7 @@ import Input from "@/components/Input";
 import { ErrorOverlay } from "@/components/ErrorOverLay";
 import Heading from "@/components/Heading";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import { Countries, Truck, TruckTypeProps } from "@/types/types";
+import { TruckTypeProps } from "@/types/types";
 import { AntDesign, Entypo, FontAwesome, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { hp, wp } from "@/constants/common";
 import { useThemeColor } from '@/hooks/useThemeColor'
