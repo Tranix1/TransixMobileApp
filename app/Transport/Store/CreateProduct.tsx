@@ -11,7 +11,6 @@ import { Image as ExpoImage } from 'expo-image';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { ThemedText } from '@/components/ThemedText';
 import Input from '@/components/Input';
-import { ErrorOverlay } from '@/components/ErrorOverLay';
 import Heading from '@/components/Heading';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { hp, wp } from "@/constants/common";

@@ -48,6 +48,7 @@ const Index = () => {
     });
 
 
+const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(false)
     const LoadTructs = async () => {
         let filters: any[] = [];
 
@@ -66,6 +67,8 @@ const Index = () => {
         let trucksToSet: Truck[] = [];
 
         if (maTrucks && maTrucks.data) {
+            if(filters.length > 0 && maTrucks.data.length <= 0 )setFilteredPNotAavaialble(true)
+
             // If locationTruckS is true, we need to do the client-side filtering for ALL selected countries
             if (operationCountries.length > 0) {
                 trucksToSet = (maTrucks.data as Truck[]).filter(truck =>
@@ -75,6 +78,7 @@ const Index = () => {
                 // Otherwise, use the data as fetched (which would be filtered only by truck properties)
                 trucksToSet = maTrucks.data as Truck[];
             }
+            
 
             setTrucks(trucksToSet);
             setLastVisible(maTrucks.lastVisible);
@@ -175,6 +179,7 @@ const Index = () => {
                     loadingMore={loadingMore}
                     clearFilter={clearFilter}
 
+filteredPNotAavaialble={filteredPNotAavaialble}
                 />
             </View>}
             {(contractId || userId||capacityG ) && <ScreenWrapper >
@@ -201,7 +206,7 @@ const Index = () => {
                     clearFilter={clearFilter}
                     contractName={`${contractName}`}
                     contractId={`${contractId}`}
-
+filteredPNotAavaialble={filteredPNotAavaialble}
                 />
             </ScreenWrapper>}
         </View>

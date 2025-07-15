@@ -317,10 +317,9 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
                   
                   {item.trucksRequired.map((neededTruck)=>(
                     <View style={{flexDirection:"row",justifyContent:'space-evenly'}}> 
+                      <ThemedText>{neededTruck.truckType?.name} </ThemedText>
                       <ThemedText>{neededTruck.capacity?.name} </ThemedText>
                       <ThemedText>{neededTruck.cargoArea?.name} </ThemedText>
-                      <ThemedText>{neededTruck.suspension?.name} </ThemedText>
-                      <ThemedText>{neededTruck.trailerConfig?.name} </ThemedText>
                     </View>
                   ) )  }
             </View>

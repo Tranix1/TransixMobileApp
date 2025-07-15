@@ -41,6 +41,7 @@ interface LoadsComponentProps {
     bottomMode: any
 
     submitBidsOBookings: any
+    filteredPNotAavaialble : boolean
 }
 
 
@@ -64,7 +65,8 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     bottomMode,
     submitBidsOBookings,
     userId,
-    organisationName
+    organisationName,
+    filteredPNotAavaialble
 }) => {
     // Component implementation
     const { user } = useAuth();
@@ -140,15 +142,23 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                 }
                 onEndReached={loadMoreLoads}
                 onEndReachedThreshold={.5}
-                ListEmptyComponent={<View style={{ minHeight: hp(80), justifyContent: 'center' }}>
-
-                    <ThemedText type='defaultSemiBold' style={{ textAlign: 'center' }}>
-                        Loading Loads…
-                    </ThemedText>
-                    <ThemedText type='tiny' style={{ textAlign: 'center', marginTop: wp(2) }}>
-                        pull to refresh
-                    </ThemedText>
-                </View>}
+                ListEmptyComponent={
+                 <View style={styles.emptyContainer}>
+                           {!filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                                Loads Loading…
+                            </ThemedText>}
+                            
+                           {!filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
+                                Please Wait
+                            </ThemedText>}
+                           {filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                               Specified Load Not Available!
+                            </ThemedText>}
+                           {filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
+                                pull to refresh
+                            </ThemedText>}
+                        </View>
+                }
                 ListFooterComponent={
                     <View style={{ marginBottom: wp(10), marginTop: wp(6) }}>
                         {
@@ -527,6 +537,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: wp(5),
         marginTop: 'auto'
+    },    emptySubtext: {
+        textAlign: 'center',
+        marginTop: wp(2)
+    },  emptyText: {
+        textAlign: 'center'
+    },   emptyContainer: {
+        minHeight: hp(80),
+        justifyContent: 'center'
     },
 })
 

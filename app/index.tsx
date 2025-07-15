@@ -16,19 +16,13 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 
 const Tab = createBottomTabNavigator();
 
-
-
-
 export default function Index() {
   const accent = useThemeColor("accent");
   const icon = useThemeColor("icon");
   const background = useThemeColor("background");
   const backgroundColor = useThemeColor("background");
 
-
-
-  
-
+ 
   return (
     <ScreenWrapper>
 

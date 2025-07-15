@@ -14,6 +14,7 @@ import { BlurView } from 'expo-blur';
 import { deleteDocument, readById } from "@/db/operations";
 
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
+import { truckType } from "@/data/appConstants";
 
 function ViewContractMoreInfo() {
     const { ContractItemG } = useLocalSearchParams();
@@ -433,18 +434,13 @@ function ViewContractMoreInfo() {
                                             borderColor: coolGray + "20",
                                         }}
                                     >
-                                    
-
-
-                {contract.trucksRequired.map((neededTruck)=>(
-                                <View style={{flexDirection:"row",justifyContent:'space-evenly'}}> 
-                                <ThemedText>{neededTruck.truckType?.name} </ThemedText>
-                                <ThemedText>{neededTruck.capacity?.name} </ThemedText>
-                                <ThemedText>{neededTruck.cargoArea?.name} </ThemedText>
-
-                                </View>
-                            ) )  }
-
+                                {contract.truckDetails.map((neededTruck: { truckType: { name: string }, capacity: { name: string }, cargoArea: { name: string } }, index: number) => (
+                                    <View key={index} style={{ flexDirection: "row", justifyContent: 'space-evenly' }}>
+                                        <ThemedText>{neededTruck.truckType?.name}</ThemedText>
+                                        <ThemedText>{neededTruck.capacity?.name}</ThemedText>
+                                        <ThemedText>{neededTruck.cargoArea?.name}</ThemedText>
+                                    </View>
+                                ))}
 
                                     </View>
                                 </View>

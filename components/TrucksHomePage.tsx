@@ -47,6 +47,7 @@ selectedCargoArea: TruckTypeProps | null; // Adjust 'any' to actual image type i
 
   contractName ?: string 
   contractId  ?: string
+filteredPNotAavaialble : boolean;
 
 }
 
@@ -72,6 +73,7 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
   clearFilter,
 contractName ,
 contractId,
+filteredPNotAavaialble
 
 }) => {
   
@@ -223,14 +225,21 @@ contractId,
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[accent]} />
           }
           ListEmptyComponent={
-            <View style={{ minHeight: hp(80), justifyContent: 'center' }}>
-              <ThemedText type="defaultSemiBold" style={{ textAlign: 'center' }}>
-                Loading Trucks… 
-              </ThemedText>
-               <ThemedText type='tiny' style={{ textAlign: 'center', marginTop: wp(2) }}>
-                        pull to refresh
-                    </ThemedText>
-            </View>
+               <View style={styles.emptyContainer}>
+                           {!filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                                Trucks Loading…
+                            </ThemedText>}
+                            
+                           {!filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
+                                Please Wait
+                            </ThemedText>}
+                           {filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                               Specified Truck Not Available!
+                            </ThemedText>}
+                           {filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
+                                pull to refresh
+                            </ThemedText>}
+                        </View>
           }
           onEndReached={loadMoreTrucks}
           onEndReachedThreshold={0.5}
@@ -268,4 +277,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(3),
     borderRadius: wp(5),
   },
+      emptySubtext: {
+        textAlign: 'center',
+        marginTop: wp(2)
+    },  emptyText: {
+        textAlign: 'center'
+    },   emptyContainer: {
+        minHeight: hp(80),
+        justifyContent: 'center'
+    },
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View,TouchableOpacity , GestureResponderEvent,Modal,StyleSheet  } from 'react-native';
+import { View,TouchableOpacity , GestureResponderEvent,Modal,StyleSheet, ToastAndroid  } from 'react-native';
 import ScreenWrapper from './ScreenWrapper';
 import { ThemedText } from './ThemedText';
 import Input from './Input';
@@ -137,7 +137,7 @@ interface CheckOutMakePaymentsProps {
   
 
 <TouchableOpacity style={[styles.confirmBTN , {backgroundColor:"#424242"}]}
-onPress={()=>setDspPaymmentInout(true) }
+onPress={()=> { !paymentMethod ? ToastAndroid.show('Select Payment Method', ToastAndroid.SHORT) :  setDspPaymmentInout(true)} }
 >
   <ThemedText style={styles.confrirmText}>Confirm</ThemedText>
 </TouchableOpacity>

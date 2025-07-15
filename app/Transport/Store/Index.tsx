@@ -87,11 +87,12 @@ const StorePage = () => {
         setSelectedCountry(Countries[0]); // Reset to initial default
     }
 
-
+const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(false)
 
     const loadProducts = async () => {
 
         let filters: any[] = [];
+        
 
         if (userId) filters.push(where("userId", "==", userId));
 
@@ -114,6 +115,8 @@ const StorePage = () => {
         const result = await fetchDocuments("products", 10, undefined, filters);
 
         if (result.data) {
+                if(filters.length > 0 && result.data.length <= 0 ) setFilteredPNotAavaialble(true)
+            
             setProducts(result.data as Product[])
             setLastVisible(result.lastVisible)
         }
@@ -365,13 +368,21 @@ const StorePage = () => {
                     onEndReachedThreshold={0.5}
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
-                            <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                           {!filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
                                 Products Loading…
-                            </ThemedText>
-                            <ThemedText type='tiny' style={styles.emptySubtext}>
+                            </ThemedText>}
+                            
+                           {!filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
+                                Please Wait
+                            </ThemedText>}
+                           {filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                               Specified Product Not Available!
+                            </ThemedText>}
+                           {filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
                                 pull to refresh
-                            </ThemedText>
+                            </ThemedText>}
                         </View>
+
                     }
                     ListFooterComponent={
                         <View style={styles.footer}>

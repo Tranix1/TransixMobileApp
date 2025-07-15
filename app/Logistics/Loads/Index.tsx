@@ -36,10 +36,14 @@ const Index = () => {
 
     const [bottomMode, setBottomMode] = useState<'Bid' | 'Book' | ''>('');
     
+const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(false)
     const LoadTructs = async () => {
+      let filters: any[] = [];
         const maLoads = await fetchDocuments("Loads");
 
         if (maLoads.data.length) {
+
+            if(filters.length > 0 && maLoads.data.length < 0 )setFilteredPNotAavaialble(true)
             setLoads(maLoads.data as Load[])
             setLastVisible(maLoads.lastVisible)
         }
@@ -242,6 +246,7 @@ const Index = () => {
             submitBidsOBookings={submitBidsOBookings}  
             organisationName={"Username"}
             userId ={userId}
+            filteredPNotAavaialble={filteredPNotAavaialble}
             />
             </View>
                 </GestureHandlerRootView>

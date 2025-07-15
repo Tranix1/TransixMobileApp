@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, ScrollView, FlatList, RefreshControl, ActivityIndicator } from "react-native";
+import { View, TouchableOpacity, ScrollView, FlatList, RefreshControl, ActivityIndicator, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { fetchDocuments } from "@/db/operations";
 import { Contracts } from '@/types/types'
@@ -16,11 +16,11 @@ import { Countries } from '@/data/appConstants'
 function LoadsContracts() {
 
 
- 
-    const [selectedCountry, setSelectedCountry] = useState<{ 
+
+  const [selectedCountry, setSelectedCountry] = useState<{
     id: number;
     name: string;
-}[]>( [])   
+  }[]>([])
 
   const [contractLoc, setContraLoc] = React.useState(null)
   const [getContracts, setGetContracts] = React.useState<Contracts[]>([])
@@ -36,11 +36,14 @@ function LoadsContracts() {
   const background = useThemeColor('background')
   const backgroundColor = useThemeColor('backgroundLight')
   const backgroundLight = useThemeColor('backgroundLight')
-   const textColor = useThemeColor('text')
+  const textColor = useThemeColor('text')
 
+  const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
   const LoadTructs = async () => {
+    let filters: any[] = [];
     const maTrucks = await fetchDocuments("loadsContracts", 10, lastVisible);
     if (maTrucks) {
+      if (filters.length > 0 && maTrucks.data.length < 0) setFilteredPNotAavaialble(true)
       setGetContracts(maTrucks.data as Contracts[]);
       setLastVisible(maTrucks.lastVisible)
     }
@@ -94,15 +97,15 @@ function LoadsContracts() {
         </ThemedText>
       </View>
 
-<View style={{flexDirection:"row" , justifyContent:"space-between",marginBottom: wp(2),}}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: wp(2), }}>
 
-      <ThemedText type='default' style={{  color: icon }}>
-        Trucks Left: {item.formDataScnd?.trucksLeft || '10'}
-      </ThemedText>
-<TouchableOpacity onPress={()=>router.push( {pathname :"/Logistics/Trucks/Index", params :{ userId: null , organisationName:"UUsername",contractName :"ContractName",contractId:"contractId"  }} )} style={{ paddingHorizontal: wp(4), paddingVertical: wp(1), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }} >
-  <ThemedText color='#fff'>3 Booked View</ThemedText>
-</TouchableOpacity>
-</View>
+        <ThemedText type='default' style={{ color: icon }}>
+          Trucks Left: {item.formDataScnd?.trucksLeft || '10'}
+        </ThemedText>
+        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/Index", params: { userId: null, organisationName: "UUsername", contractName: "ContractName", contractId: "contractId" } })} style={{ paddingHorizontal: wp(4), paddingVertical: wp(1), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }} >
+          <ThemedText color='#fff'>3 Booked View</ThemedText>
+        </TouchableOpacity>
+      </View>
       <View
         style={{
           marginBottom: wp(3),
@@ -136,12 +139,12 @@ function LoadsContracts() {
           </ThemedText>
         </View>
         {/* Table Rows */}
-        
-      {(['frst', 'scnd', 'thrd', 'forth'] as Array<'frst' | 'scnd' | 'thrd' | 'forth'>).map((key, idx) => {
-  const commodityKey = key === 'thrd' ? 'third' : key; // commodity uses 'third'
 
-  const commodity = item.formData.commodity?.[commodityKey];
-  const rate = item.formData.rate[key];
+        {(['frst', 'scnd', 'thrd', 'forth'] as Array<'frst' | 'scnd' | 'thrd' | 'forth'>).map((key, idx) => {
+          const commodityKey = key === 'thrd' ? 'third' : key; // commodity uses 'third'
+
+          const commodity = item.formData.commodity?.[commodityKey];
+          const rate = item.formData.rate[key];
 
           if (!commodity && !rate) return null;
           return (
@@ -222,49 +225,49 @@ function LoadsContracts() {
 
 
 
-                <View style={{ marginVertical: wp(2) }}>
+      <View style={{ marginVertical: wp(2) }}>
 
 
- <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: wp(3) }}      contentContainerStyle={{
-                            paddingHorizontal: wp(2),
-                            gap: wp(2),
-                        }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: wp(3) }} contentContainerStyle={{
+          paddingHorizontal: wp(2),
+          gap: wp(2),
+        }}>
 
 
 
-   {Countries.map(item => {
-    const active = selectedCountry.some(x => x.id === item.id);
+          {Countries.map(item => {
+            const active = selectedCountry.some(x => x.id === item.id);
 
-    return (
-        <TouchableOpacity
-            key={item.id}
-            onPress={() => {active ?setSelectedCountry(selectedCountry.filter(x => x.id !== item.id)) :setSelectedCountry([...selectedCountry, item])}}
-            style={{
-                backgroundColor: active ? accent : backgroundLight,
-                borderColor: accent ? accent : coolGray,
-                borderWidth: 1,
-                paddingVertical: wp(0.1),
-                marginLeft: wp(2),
-                borderRadius: wp(2),
-                paddingHorizontal: wp(3),
-                marginRight: wp(1),
-                shadowColor: active ? accent : '#000',
-                shadowOpacity: active ? 0.15 : 0.05,
-                shadowRadius: 4,
-                elevation: active ? 2 : 0,
-            }}
-        >
-            <ThemedText style={{
-                color: active ? 'white' : textColor,
-                fontSize: wp(3.5),
-            }} type="defaultSemiBold">{item.name}</ThemedText>
-        </TouchableOpacity>
-    );
-})}
+            return (
+              <TouchableOpacity
+                key={item.id}
+                onPress={() => { active ? setSelectedCountry(selectedCountry.filter(x => x.id !== item.id)) : setSelectedCountry([...selectedCountry, item]) }}
+                style={{
+                  backgroundColor: active ? accent : backgroundLight,
+                  borderColor: accent ? accent : coolGray,
+                  borderWidth: 1,
+                  paddingVertical: wp(0.1),
+                  marginLeft: wp(2),
+                  borderRadius: wp(2),
+                  paddingHorizontal: wp(3),
+                  marginRight: wp(1),
+                  shadowColor: active ? accent : '#000',
+                  shadowOpacity: active ? 0.15 : 0.05,
+                  shadowRadius: 4,
+                  elevation: active ? 2 : 0,
+                }}
+              >
+                <ThemedText style={{
+                  color: active ? 'white' : textColor,
+                  fontSize: wp(3.5),
+                }} type="defaultSemiBold">{item.name}</ThemedText>
+              </TouchableOpacity>
+            );
+          })}
 
- </ScrollView>
+        </ScrollView>
 
-                </View>
+      </View>
 
 
 
@@ -283,13 +286,20 @@ function LoadsContracts() {
         onEndReached={loadMoreLoads}
         onEndReachedThreshold={0.5}
         ListEmptyComponent={
-          <View style={{ minHeight: hp(80), justifyContent: 'center' }}>
-            <ThemedText type='defaultSemiBold' style={{ textAlign: 'center' }}>
-              No Contracts to Display!
-            </ThemedText>
-            <ThemedText type='tiny' style={{ textAlign: 'center', marginTop: wp(2) }}>
+          <View style={styles.emptyContainer}>
+            {!filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+              Contracts Loading…
+            </ThemedText>}
+
+            {!filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
+              Please Wait
+            </ThemedText>}
+            {filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+              Specified Contract Not Available!
+            </ThemedText>}
+            {filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
               pull to refresh
-            </ThemedText>
+            </ThemedText>}
           </View>
         }
         ListFooterComponent={
@@ -315,3 +325,16 @@ function LoadsContracts() {
 }
 
 export default React.memo(LoadsContracts);
+
+const styles = StyleSheet.create({
+
+  emptySubtext: {
+    textAlign: 'center',
+    marginTop: wp(2)
+  }, emptyText: {
+    textAlign: 'center'
+  }, emptyContainer: {
+    minHeight: hp(80),
+    justifyContent: 'center'
+  },
+})
