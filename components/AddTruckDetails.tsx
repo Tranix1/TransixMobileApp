@@ -144,7 +144,7 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
             </ThemedText>
 
             <ThemedText>
-                Operation Countries<ThemedText color="red">*</ThemedText>
+                Permitted countries<ThemedText color="red">*</ThemedText>
             </ThemedText>
 
             <View style={{

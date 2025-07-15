@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { fetchDocuments } from "@/db/operations";
 import { Contracts } from '@/types/types'
 import { router } from "expo-router";
-import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore'
+import { DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore'
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { hp, wp } from "@/constants/common";
@@ -13,9 +13,11 @@ import Heading from "@/components/Heading";
 
 import { Countries } from '@/data/appConstants'
 
+import { useLocalSearchParams } from 'expo-router'
 function LoadsContracts() {
 
 
+    const { userId, organisationName  } = useLocalSearchParams();
 
   const [selectedCountry, setSelectedCountry] = useState<{
     id: number;
@@ -39,19 +41,44 @@ function LoadsContracts() {
   const textColor = useThemeColor('text')
 
   const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
+  
   const LoadTructs = async () => {
     let filters: any[] = [];
+    if (userId) filters.push(where("userId", "==", userId));
+     if (selectedCountry.length > 0) filters.push(where("contractLocation", "array-contains-any", selectedCountry));
     const maTrucks = await fetchDocuments("loadsContracts", 10, lastVisible);
+
+
+        let trucksToSet: Contracts[] = [];
     if (maTrucks) {
+
+
+
+      
       if (filters.length > 0 && maTrucks.data.length < 0) setFilteredPNotAavaialble(true)
-      setGetContracts(maTrucks.data as Contracts[]);
+
+
+            if(filters.length > 0 && maTrucks.data.length <= 0 )setFilteredPNotAavaialble(true)
+
+            // If locationTruckS is true, we need to do the client-side filtering for ALL selected countries
+            if (selectedCountry.length > 0) {
+                trucksToSet = (maTrucks.data as Contracts[]).filter(truck =>
+                    selectedCountry.every(country => truck.contractLocation?.includes(country.name))
+                );
+            } else {
+                // Otherwise, use the data as fetched (which would be filtered only by truck properties)
+                trucksToSet = maTrucks.data as Contracts[];
+            }
+
+
+      setGetContracts(trucksToSet);
       setLastVisible(maTrucks.lastVisible)
     }
   }
 
   useEffect(() => {
     LoadTructs();
-  }, [])
+  }, [selectedCountry])
 
   const onRefresh = async () => {
     try {

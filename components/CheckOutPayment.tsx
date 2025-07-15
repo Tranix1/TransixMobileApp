@@ -130,11 +130,6 @@ interface CheckOutMakePaymentsProps {
     </ThemedText>
   </View>
 </View>
-
-
-
-
-
   
 
 <TouchableOpacity style={[styles.confirmBTN , {backgroundColor:"#424242"}]}
@@ -143,7 +138,7 @@ onPress={()=> { !paymentMethod ? ToastAndroid.show('Select Payment Method', Toas
   <ThemedText style={styles.confrirmText}>Confirm</ThemedText>
 </TouchableOpacity>
 
-                </View>}
+ </View>}
 
 
 { dspPaymentInputs && paymentMethod &&  <View>

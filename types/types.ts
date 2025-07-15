@@ -298,8 +298,6 @@ export type ContractsFormDataType = {
 
 export type Contracts = {
     id: string;
-    interCountries: string;
-    localCountr: string;
     manyRoutesAllocaton: string;
     manyRoutesAssign: string;
     formData: ContractsFormDataType;
@@ -307,6 +305,7 @@ export type Contracts = {
     contractId: string;
     contractName: string
     userId: string
+    contractLocation : string[]
 }
 
 

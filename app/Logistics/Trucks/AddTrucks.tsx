@@ -102,13 +102,15 @@ function AddTrucks() {
   const { user, alertBox } = useAuth();
 
   const handleSubmit = async () => {
+
+    setSpinnerItem(true)
     const missingTruckDetails = [
-      !formData.truckName && "Enter the payment terms",
-      !selectedTruckType && "Enter the payment terms",
-      !selectedCargoArea && "Enter loads per week",
-      selectedCargoArea?.name === "Tanker" && !selectedTankerType && "Enter contract duration",
-      !selectedTruckCapacity && "Enter the starting date",
-      operationCountries.length <= 0 && "Select the country the loads will operate in",
+      !formData.truckName && "Enter Truck Nick Name ",
+      !selectedTruckType && "Select Truck Type",
+      !selectedCargoArea && "Select Truck Cargo Area",
+      selectedCargoArea?.name === "Tanker" && !selectedTankerType && "Select Type of Tannker",
+      !selectedTruckCapacity && "Select Truck Capacity",
+      operationCountries.length <= 0 && "Select the countries where the truck has permits.",
     ].filter(Boolean);
 
     if (missingTruckDetails.length > 0) {
@@ -134,11 +136,10 @@ function AddTrucks() {
 
 
     let truckImage, truckBookImage, trailerBookF, trailerBookSc, driverLicense, driverPassport , driverIntPermit;
-    setSpinnerItem(true)
-
 
 
     if (selectedTruckType?.name === "Rigid" && operationCountries.length > 1) {
+  if (images.length < 5) { alert("Please select all images for Rigid with multiple countries."); return; }
   truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
   driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
   driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Driver Passport");
@@ -146,11 +147,13 @@ function AddTrucks() {
   truckBookImage = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Truck Book Image");
 
 } else if (selectedTruckType?.name === "Rigid" && operationCountries.length === 1) {
+  if (images.length < 3) { alert("Please select all images for Rigid with one country."); return; }
   truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
   driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
   truckBookImage = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Truck Book Image");
 
 } else if (selectedTruckType?.name === "Triaxle" && operationCountries.length > 1) {
+  if (images.length < 6) { alert("Please select all images for Triaxle with multiple countries."); return; }
   truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
   driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
   driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Driver Passport");
@@ -159,12 +162,14 @@ function AddTrucks() {
   trailerBookF = await uploadImage(images[5], "Trucks", setUploadImageUpdate, "Trailer Book First");
 
 } else if (selectedTruckType?.name === "Triaxle" && operationCountries.length === 1) {
+  if (images.length < 4) { alert("Please select all images for Triaxle with one country."); return; }
   truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
   driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
   truckBookImage = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Truck Book Image");
   trailerBookF = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "Trailer Book First");
 
 } else if (selectedTruckType?.name === "Super Link" && operationCountries.length > 1) {
+  if (images.length < 7) { alert("Please select all images for Super Link with multiple countries."); return; }
   truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
   driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
   driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Driver Passport");
@@ -174,6 +179,7 @@ function AddTrucks() {
   trailerBookSc = await uploadImage(images[6], "Trucks", setUploadImageUpdate, "Trailer Book Second");
 
 } else if (selectedTruckType?.name === "Super Link" && operationCountries.length === 1) {
+  if (images.length < 5) { alert("Please select all images for Super Link with one country."); return; }
   truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
   driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
   truckBookImage = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Truck Book Image");
@@ -182,6 +188,7 @@ function AddTrucks() {
 }
 
 
+ setUploadImageUpdate("")
 
 
 
@@ -189,14 +196,13 @@ function AddTrucks() {
 
 
     if (!selectedCargoArea)
-      return alert("Select Truck Type");
+      return alert("SelectsTruck Type");
 
     if (!user) {
 
       return alert("Please Login to your account to add a truck");
     }
 
-    setSpinnerItem(true)
 
     if (!user) {
       alert("Please Login first");
@@ -234,14 +240,22 @@ function AddTrucks() {
       }
 
       addDocument("Trucks", submitData)
+      setImages([]);
+      setFormData({    additionalInfo: "",
+    driverPhone: "",
+    maxloadCapacity: "",
+    truckName: "",
+    otherCargoArea: "",
+    otherTankerType: ""})
 
-      // setImages([]);
-      setSpinnerItem(false)
 
       ToastAndroid.show('Truck Added successfully', ToastAndroid.SHORT)
 
     } catch (err) {
       console.error(err);
+    }finally{
+
+      setSpinnerItem(false)
     }
   };
 
@@ -256,8 +270,10 @@ function AddTrucks() {
 
       <View style={{ paddingHorizontal: wp(4) }} >
 
-        {uploadingImageUpdate && <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: "center", borderRadius: wp(4), alignItems: 'center', }} >
-          <ThemedText style={{ textAlign: 'center' }} > {uploadingImageUpdate} </ThemedText>
+        {uploadingImageUpdate && spinnerItem && <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: "center", borderRadius: wp(4), alignItems: 'center', }} >
+          {uploadingImageUpdate !== `Done Adding` &&<ThemedText style={{ textAlign: 'center' }} > {uploadingImageUpdate} </ThemedText>}
+          {uploadingImageUpdate === `Done Adding` &&<ThemedText style={{ textAlign: 'center' }} > Truck is being added Please wait! </ThemedText>}
+
         </View>}
 
         <ScrollView>
@@ -640,13 +656,6 @@ function AddTrucks() {
                     <ThemedText color={icon + "4c"}>Trailer Book Image<ThemedText color="red">*</ThemedText></ThemedText>
                 </TouchableOpacity>}
 
-
-
-
-
-
-
-
               </View>}
 
             </View>
@@ -654,8 +663,8 @@ function AddTrucks() {
           </View>
           <View style={{ marginVertical: wp(4), marginBottom: hp(8), gap: wp(3) }}>
 
-            <ThemedText type="tiny" style={{ textAlign: 'center' }} color={coolGray}>{spinnerItem && 'The truck is being added Please wait!'} </ThemedText>
-            <Button loading={spinnerItem} title="SUBMIT" onPress={handleSubmit} />
+            <ThemedText type="tiny" style={{ textAlign: 'center' }} color={coolGray}>{spinnerItem && ''} </ThemedText>
+            <Button loading={spinnerItem} disabled={spinnerItem} title={spinnerItem ? "Submiting..." : "Submit"} onPress={handleSubmit} />
           </View>
 
         </ScrollView>

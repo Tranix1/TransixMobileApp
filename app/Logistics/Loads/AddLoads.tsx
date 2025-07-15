@@ -124,6 +124,7 @@ const AddLoadDB = () => {
             !toLocation && "Enter destination location",
             !rate && "Enter Load Rate ",
             !paymentTerms && "Enter Payment Terms",
+            trucksNeeded.length === 0 && "Select at leat 1 truck reqyured",
         ].filter(Boolean);
 
         if (MissingDriverDetails.length > 0) {
@@ -174,7 +175,6 @@ const AddLoadDB = () => {
 
         try {
             // Ensure addDocument is not a React hook or using hooks internally.
-            // If it is, refactor addDocument to be a plain async function.
             await addDocument("Loads", loadData);
 
             ToastAndroid.show('Load Added successfully', ToastAndroid.SHORT)

@@ -140,26 +140,10 @@ const NewContract = () => {
         </TouchableOpacity>
     );
 
-    const [interOpCount, setIntOpLoc] = React.useState<string[]>([]);
-
-    const [locaOpCount, setLocaOpLoc] = React.useState<string>("");
-
-
-
-
-
-    console.log(interOpCount)
-    console.log(locaOpCount)
-
-    function toggleLocalCountry(count: string): void {
-        setIntOpLoc([])
-        setLocaOpLoc(count)
-        setLocation("")
-    }
+    const [contractLocation, setContractLocation] = React.useState<string[]>([]);
 
     function toggleInternationalCountry(country: string): void {
-        setLocaOpLoc("")
-        setIntOpLoc(prev => {
+        setContractLocation(prev => {
             if (prev.includes(country)) {
                 return prev.filter(item => item !== country); // remove if already selected
             } else {
@@ -238,42 +222,47 @@ const NewContract = () => {
 
     const { user, alertBox } = useAuth();
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
     function toggleDspCheckout() {
 
+        setIsSubmitting(true);
 
+        try{
 
         const missingLoadDetails = [
             !formData.commodity.frst && "Enter at least one commodity",
             !formData.location.frst && "Enter the first location",
             !formData.location.scnd && "Enter the second location",
-            !formData.trckRequired && "Enter at least one type of truck required",
             !formData.otherRequirements.frst && "Enter at least one requirement",
             !formData.rate.frst && "Enter the solid rate",
         ].filter(Boolean);
 
-        const missingContractDetails = [
+        if (missingLoadDetails.length > 0) {alertBox("Missing Load Details", missingLoadDetails.join("\n"), [], "error");return;}
+
+           const missingContractDetails = [
             !formDataScnd.paymentTerms && "Enter the payment terms",
             !formDataScnd.loadsPerWeek && "Enter loads per week",
             !formDataScnd.contractDuration && "Enter contract duration",
             !formDataScnd.startingDate && "Enter the starting date",
             !formDataScnd.fuelAvai && "Enter fuel availability details",
             !formDataScnd.bookingClosingD && "Enter the booking closing date",
-            (!locaOpCount && interOpCount.length === 0) && "Select the country the loads will operate in",
+             contractLocation.length === 0 && "Select the country the loads will operate in",
+             
         ].filter(Boolean);
 
-        if (missingLoadDetails.length > 0) {
-            // setLoadDspError(true);
-            alertBox("Missing Load Details", missingLoadDetails.join("\n"), [], "error");
-            return;
-        }
+        if (missingContractDetails.length > 0) {alertBox("Missing Contract Details", missingContractDetails.join("\n"), [], "error");return;}
 
-        if (missingContractDetails.length > 0) {
-            // setContractDErr(true);
-            alertBox("Missing Contract Details", missingContractDetails.join("\n"), [], "error");
-            return;
-        }
-
+        const missingTrucks =[trucksNeeded.length === 0 && 'Choose at least 1 Truck Required']
+            if (missingTrucks.length > 0) {alertBox("Missing Contract Details", missingTrucks.join("\n"), [], "error");return;}
+        
         setDspCheckout(true);
+
+        }catch(error){
+            console.error(error)
+        }finally{
+
+            setIsSubmitting(false);
+        }
     }
 
 
@@ -281,9 +270,7 @@ const NewContract = () => {
     const contractData = {
         companyName: user?.organisation,
         contact: user?.phoneNumber || '',
-        contractLocation: location,
-        interCountries: interOpCount,
-        localCountr: locaOpCount,
+        contractLocation: contractLocation,
         manyRoutesAllocaton: manyRoutesAllocaton,
         manyRoutesAssign: manyRoutesAssign,
         formData: formData,
@@ -293,6 +280,8 @@ const NewContract = () => {
     }
 
     const [paymentUpdate, setPaymentUpdate] = React.useState<string>("");
+
+
 
     const justConsole = () => {
         console.log("staty")
@@ -304,6 +293,11 @@ const NewContract = () => {
 
     return (
         <ScreenWrapper fh={false}>
+
+              {paymentUpdate && <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: "center", borderRadius: wp(4), alignItems: 'center', }} >
+          <ThemedText style={{ textAlign: 'center' }} > {paymentUpdate} </ThemedText>
+        </View>}
+
 
             <Heading page='Add Contracts' rightComponent={
                 <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: wp(3) }}>
@@ -1152,68 +1146,12 @@ const NewContract = () => {
                                     Is the contract International or Local for one country</ThemedText>
 
                                 <Divider />
-                                <View style={{ gap: wp(3), padding: wp(3) }}>
-                                    <TouchableOpacity
-                                        onPress={() => setLocation("Local")}
-                                        style={{
-                                            justifyContent: 'space-between', padding: 3, alignContent: 'center', flexDirection: 'row'
-                                        }}
-                                    >
-                                        <ThemedText>
-                                            Local
-                                        </ThemedText>
-                                        {location === "Local" ?
-                                            <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />
-                                            :
-                                            <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />
-                                        }
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => setLocation("International")}
-                                        style={{
-                                            justifyContent: 'space-between', padding: 3, alignContent: 'center', flexDirection: 'row'
-                                        }}
-                                    >
-                                        <ThemedText>
-                                            International
-                                        </ThemedText>
-                                        {location === "International" ?
-                                            <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />
-                                            :
-                                            <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />
-                                        }
-                                    </TouchableOpacity>
-                                </View>
-                                {location &&
-                                    <View style={[styles.viewSubMainDsp, { backgroundColor: backgroundLight, borderWidth: 0, borderRadius: wp(2), elevation: 0, gap: wp(3) }]}>
-                                        {location === "Local" && (
-                                            <>
-                                                <ThemedText type="defaultSemiBold" style={{ textAlign: 'center' }}>
-                                                    Select Your Local Country
-                                                </ThemedText>
-                                                <Divider />
-                                                {["Zimbabwe", "SouthAfrica", "Namibia", "Tanzania", "Mozambique", "Zambia", "Botswana", "Malawi"].map((country) => (
-                                                    <TouchableOpacity
-                                                        key={country}
-                                                        onPress={() => toggleLocalCountry(country)}
-                                                        style={{
-                                                            justifyContent: 'space-between', padding: 3, alignContent: 'center', flexDirection: 'row'
-                                                        }}
-                                                    >
-                                                        <ThemedText>
-                                                            {country}
-                                                        </ThemedText>
-                                                        {locaOpCount === country ?
-                                                            <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />
-                                                            :
-                                                            <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />
-                                                        }
-                                                    </TouchableOpacity>
-                                                ))}
-                                            </>
-                                        )}
+                               
 
-                                        {location === "International" && (
+                                
+                                    <View style={[styles.viewSubMainDsp, { backgroundColor: backgroundLight, borderWidth: 0, borderRadius: wp(2), elevation: 0, gap: wp(3) }]}>
+                                       
+                                        
                                             <>
                                                 <ThemedText type="defaultSemiBold" style={{ textAlign: 'center' }}>
                                                     Select International Countries
@@ -1231,7 +1169,7 @@ const NewContract = () => {
                                                         <ThemedText>
                                                             {country}
                                                         </ThemedText>
-                                                        {interOpCount.includes(country) ?
+                                                        {contractLocation.includes(country) ?
                                                             <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />
                                                             :
                                                             <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />
@@ -1239,9 +1177,10 @@ const NewContract = () => {
                                                     </TouchableOpacity>
                                                 ))}
                                             </>
-                                        )}
+                                        
                                     </View>
-                                }
+                                
+
 
                             </View>
                             <View style={styles.viewMainDsp}>
@@ -1336,7 +1275,8 @@ const NewContract = () => {
 
                         <Divider />
                         <View style={styles.viewMainDsp}>
-                            <Button onPress={toggleDspCheckout} title="Submit" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{borderWidth:1 , borderColor:accent}} />
+                            <Button onPress={toggleDspCheckout} title={isSubmitting ? "Submiting..." : "Submit Contract"}   loading={isSubmitting} disabled={isSubmitting}
+                            colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{borderWidth:1 , borderColor:accent}} />
                         </View>
                     </ScrollView>
                 }
