@@ -186,7 +186,7 @@ const TruckDetails = () => {
             </Modal>
 
             {showAlert}
-            <Heading page={truckData.name || "Truck Details"}
+            <Heading page={truckData.truckName || "Truck Details"}
                 rightComponent={
                     <View style={{ flexDirection: 'row', gap: wp(2), marginRight: wp(2) }}>
                         {!refreshing && user?.uid === truckData.userId &&

@@ -118,6 +118,53 @@ const AddLoadDB = () => {
     const { user, alertBox } = useAuth();
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+
+
+
+
+ // Function to clear all form fields
+    const clearFormFields = () => {
+        setTypeofLoad("");
+        setFromLocation("");
+        setToLocation("");
+        setRate("");
+        setRateExplanation("");
+        setPaymentTerms("");
+        setRequirements("");
+        setLoadingDate("");
+        setAdditionalInfo("");
+        setAlertMsg("");
+        setFuelAvai("");
+        setReturnLoad("");
+        setReturnRate("");
+        setReturnTerms("");
+        setDspAlertMsg(false);
+        setDspFuelAvai(false);
+        setDspReturnLoad(false);
+        setSelectedCurrency({ id: 1, name: "USD" });
+        setSelectedRetrunCurrency({ id: 1, name: "USD" });
+        setSelectedModelType({ id: 1, name: "Solid" });
+        setSelectedReturnModelType({ id: 1, name: "Solid" });
+        setFormDataTruck({
+            additionalInfo: "",
+            driverPhone: "",
+            maxloadCapacity: "",
+            truckName: "",
+            otherCargoArea: "",
+            otherTankerType: ""
+        });
+        setSelectedCargoArea(null);
+        setSelectedTruckType(null);
+        setSelectedTankerType(null);
+        setSelectedTruckCapacity(null);
+        setShowCountries(false);
+        setOperationCountries([]);
+        setTrucksNeeded([]); // Clear the array of added trucks
+        setStep(0); // Reset the step if you have a multi-step form
+    };
+
+
     const handleSubmit = async () => {
             setIsSubmitting(true)
         const MissingDriverDetails = [
@@ -178,7 +225,7 @@ const AddLoadDB = () => {
         try {
             // Ensure addDocument is not a React hook or using hooks internally.
             await addDocument("Loads", loadData);
-
+            clearFormFields(); // Call this function to clear all fields
             ToastAndroid.show('Load Added successfully', ToastAndroid.SHORT)
             setAfterSubmitModal(true)
 

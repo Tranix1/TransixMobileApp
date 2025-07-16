@@ -222,6 +222,64 @@ const NewContract = () => {
 
     const { user, alertBox } = useAuth();
 
+      // Function to clear all form fields
+    const clearFormFields = () => {
+        setFormData({
+            commodity: { frst: "", scnd: "", third: "", forth: "" },
+            location: { frst: "", scnd: "", thrd: "", forth: "", fifth: "", sixth: "", seventh: "" },
+            trckRequired: { frst: "", scnd: "", third: "", forth: "", fifth: "" },
+            otherRequirements: { frst: "", scnd: "", third: "", forth: "" },
+            rate: { frst: "", scnd: "", thrd: "", forth: "", },
+            returnRate: { frst: "", scnd: "", thrd: "", forth: "", },
+            returnCommodity: { frst: "", scnd: "", third: "", forth: "" }
+        });
+        setFormDataScnd({
+            paymentTerms: "",
+            returnPaymentTerms: "",
+            trucksLeft: "",
+            contractDuration: "",
+            startingDate: "",
+            bookingClosingD: "",
+            contractRenewal: "",
+            manyRoutesOperation: "",
+            loadsPerWeek: "",
+            alertMsg: "",
+            fuelAvai: "",
+            additionalInfo: "",
+        });
+        setManyRoutesOperation("");
+        setLoadsPerWeek("");
+        setLocation("");
+        setDspCommodity(false);
+        setDspLocation(false);
+        setDspReturnCommodity(false);
+        setDspReturnRate(false);
+        setStep(0);
+        setManyRoutesAllocation("");
+        setManyRoutesAssign("");
+        setEnterLocs(false);
+        setContractLocation([]);
+        setDspCheckout(false);
+        setFormDataTruck({
+            additionalInfo: "",
+            driverPhone: "",
+            maxloadCapacity: "",
+            truckName: "",
+            otherCargoArea: "",
+            otherTankerType: ""
+        });
+        setSelectedCargoArea(null);
+        setSelectedTruckType(null);
+        setSelectedTankerType(null);
+        setSelectedTruckCapacity(null);
+        setShowCountriesTruck(false);
+        setOperationCountriesTruck([]);
+        setSelectedTrailerConfig(null);
+        setSelectedTruckSuspension(null);
+        setTrucksNeeded([]);
+    };
+
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     function toggleDspCheckout() {
 

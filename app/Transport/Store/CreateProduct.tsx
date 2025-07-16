@@ -152,6 +152,47 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
         }));
     };
 
+      // Function to clear all form fields
+    const clearFormFields = () => {
+        setVehicleType(null);
+        setImages([]);
+        setUploadProgress("");
+        setSelectedCategory(null);
+        setSelectedType(null);
+        setSrlectedTruckSuspension(null);
+        setSelectedTruckConfig(null);
+        setSlctedSemiTrailerSuspension(null);
+        setSelectedSemiTrailerConfig(null);
+        setSelectedTruckCapacity(null);
+        setSelectedTruckType(null);
+        setSelectedMake(null);
+        setSelectedTransaction(null);
+        setPriceNegotiable(false);
+        setDeliveryAvailable(false);
+        setVehicleTransission("");
+        setVehicleFuel("");
+        setBuyOSelling("");
+        setStoredetails(false);
+        setSelectedStoreCountry(null);
+        setStoreName("");
+        SetStoreLocationAddDb("");
+        setStoreCityDB("");
+        setStorePhoneNum("");
+        setFormData({
+            productModel: "",
+            productLocation: "",
+            description: "",
+            price: null,
+            currency: "USD",
+            model: "USD",
+            condition: "used",
+            deliveryCost: "",
+            swapPreferences: "",
+            details: {
+                vehicle: null,
+            },
+        });
+    };
 
 
     // Handle form submission
@@ -280,9 +321,8 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
 
             // Add product to database
             await addDocument("products", productData);
-
+             clearFormFields(); // Call this function to clear all fields
             ToastAndroid.show("Product created successfully!", ToastAndroid.SHORT);
-            router.back();
         } catch (error) {
             ToastAndroid.show("Failed to create product", ToastAndroid.SHORT);
             console.error(error)

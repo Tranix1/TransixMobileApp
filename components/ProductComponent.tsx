@@ -195,7 +195,7 @@ const ProductComponent = ({ product = {} as Product, expandID = '', expandId = (
 
     return (
         <View
-            style={[styles.container, { backgroundColor: background }]}
+            style={[styles.container, { backgroundColor: background, }]}
         // activeOpacity={0.8}
         >
             {/* Header with seller info and options */}
@@ -391,13 +391,13 @@ export default ProductComponent
 const styles = StyleSheet.create({
     container: {
         margin: wp(2),
-        borderRadius: wp(4),
-        padding: wp(1),
-        shadowColor: '#3535353b',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 5
+        elevation: 7,
+        padding :7,
+         borderRadius:8 ,  shadowColor: '#0f9d58' ,
+        shadowOffset: { width: 1, height: 2 },
+        shadowOpacity: 0.7,
+        shadowRadius: 5,
+         marginBottom : 15
     },
     header: {
         flexDirection: 'row',
