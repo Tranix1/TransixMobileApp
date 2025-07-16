@@ -277,6 +277,7 @@ export const SpecifyProductDetails: React.FC<SpecifyProductDetailsProps> = ({
                   onPress={() => { setShowFilter(false); }}
                   title="Apply Filter"
                   colors={{ bg: accent + '1c', text: accent }}
+                  style={{height:45}}
                 />
               </View>
 

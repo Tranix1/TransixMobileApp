@@ -115,6 +115,7 @@ setOperationCountries ,
                   onPress={() => { setDspSpecTruckDet(false); }}
                   title="Apply Filter"
                   colors={{ bg: accent + '1c', text: accent }}
+                  style={{height:45}}
                 />
               </View>
             </View>

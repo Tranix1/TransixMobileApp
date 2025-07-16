@@ -116,8 +116,10 @@ const AddLoadDB = () => {
 
 
     const { user, alertBox } = useAuth();
-    const handleSubmit = async () => {
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const handleSubmit = async () => {
+            setIsSubmitting(true)
         const MissingDriverDetails = [
             !typeofLoad && "Enter Load to be transported",
             !fromLocation && "Enter source Location",
@@ -184,6 +186,9 @@ const AddLoadDB = () => {
         } catch (error) {
             console.error("Error submitting load:", error);
             alert("Failed to submit load. Please try again.");
+        }finally{
+
+setIsSubmitting(false)
         }
     };
 
@@ -676,7 +681,7 @@ const AddLoadDB = () => {
                         <Divider />
                         <View style={styles.viewMainDsp}>
                             <Button onPress={() => setStep(2)} title="Back" />
-                            <Button onPress={handleSubmit} title="Submit" colors={{  text: '#0f9d58', bg: '#0f9d5824'  }} style={{borderWidth:1 , borderColor:accent}} />
+                            <Button onPress={handleSubmit} title={isSubmitting ? "Submiting..." : "Submit"} disabled={isSubmitting}loading={isSubmitting} colors={{  text: '#0f9d58', bg: '#0f9d5824'  }} style={{borderWidth:1 , borderColor:accent}}     />
                         </View>
                     </View>
 

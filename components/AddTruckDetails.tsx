@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC,useEffect } from "react";
 import { View, TouchableOpacity } from "react-native"
 
 import { ThemedText } from "./ThemedText";
@@ -65,6 +65,13 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
     // selectedTruckType
 
 }) => {
+    useEffect(() => {
+  if (images && images.length > 2) {
+    setImages?.(prev => prev.slice(0, 2));
+
+  }
+}, [images]);
+
 
     const icon = useThemeColor('icon')
     return (
@@ -74,7 +81,14 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
                 Truck Type<ThemedText color="red">*</ThemedText>
             </ThemedText>
 
-            <DropDownItem allData={truckType} selectedItem={selectedTruckType} setSelectedItem={images && images.length > 0 ? (setImages?.(prev => prev.slice(0, 2)), setSelectedTruckType) : setSelectedTruckType} placeholder="Select Truck Type" />
+
+
+<DropDownItem
+  allData={truckType}
+  selectedItem={selectedTruckType}
+  setSelectedItem={setSelectedTruckType}
+  placeholder="Select Truck Type"
+/>
 
 
             <ThemedText>
@@ -157,7 +171,8 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
                 paddingHorizontal: 16,
                 marginBottom: 16,
             }}>
-                <TouchableOpacity onPress={() => { images && images.length > 0 ? (setImages?.(prev => prev.slice(0, 2)), setShowCountries(!showCountries)) : setShowCountries(!showCountries); }}
+                <TouchableOpacity 
+                onPress={() => { images && images.length > 0 ? (setImages?.(prev => prev.slice(0, 2)), setShowCountries(!showCountries)) : setShowCountries(!showCountries); }}
 
                     style={{
                         flexDirection: 'row',

@@ -430,7 +430,7 @@ function AddTrucks() {
               setShowCountries={setShowCountries}
               operationCountries={operationCountries}
               setOperationCountries={setOperationCountries}
-              setImages={setImages}
+               setImages={images.length > 0 ? setImages : undefined}
               images={images}
             />
 

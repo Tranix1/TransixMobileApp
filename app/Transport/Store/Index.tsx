@@ -177,7 +177,7 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
 
     const deleteMyProduct = async (productId: string) => {
         try {
-            const deleting = await deleteDocument('Shop', productId)
+            const deleting = await deleteDocument('products', productId)
             if (deleting) {
                 bottomSheetRef.current?.close()
                 ToastAndroid.show('Product deleted successfully', ToastAndroid.SHORT)

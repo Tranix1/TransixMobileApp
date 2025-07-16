@@ -376,7 +376,6 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
 
 
 
-
                                 {selectedLoad.userId !== user?.uid ?
                                         <View style={styles.contactOptions}>
                                         <View style={styles.contactOption}>
@@ -420,6 +419,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                             <ThemedText type='tiny'>Share</ThemedText>
                                         </View>
                                     </View>
+
                                     :
 
 
@@ -442,7 +442,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                             >
                                                 <FontAwesome6 name="trash" size={wp(5)} color="#fff" />
                                             </TouchableOpacity>
-                                            <ThemedText type='tiny'>Call</ThemedText>
+                                            <ThemedText type='tiny'>Delete</ThemedText>
                                         </View>
                                          <View style={styles.contactOption}>
                                             <TouchableOpacity
