@@ -11,18 +11,15 @@ import { hp, wp } from "@/constants/common";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 
-import { Countries } from '@/data/appConstants'
+import { Countries } from "@/types/types";
 
 import { useLocalSearchParams } from 'expo-router'
 function LoadsContracts() {
 
 
-    const { userId, organisationName  } = useLocalSearchParams();
+  const { userId, organisationName } = useLocalSearchParams();
 
-  const [selectedCountry, setSelectedCountry] = useState<{
-    id: number;
-    name: string;
-  }[]>([])
+  const [selectedCountry, setSelectedCountry] = useState<string[]>([])
 
   const [contractLoc, setContraLoc] = React.useState(null)
   const [getContracts, setGetContracts] = React.useState<Contracts[]>([])
@@ -41,34 +38,34 @@ function LoadsContracts() {
   const textColor = useThemeColor('text')
 
   const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
-  
+
   const LoadTructs = async () => {
     let filters: any[] = [];
     if (userId) filters.push(where("userId", "==", userId));
-     if (selectedCountry.length > 0) filters.push(where("contractLocation", "array-contains-any", selectedCountry));
-    const maTrucks = await fetchDocuments("loadsContracts", 10, lastVisible);
+    if (selectedCountry.length > 0) filters.push(where("contractLocation", "array-contains-any", selectedCountry));
+    const maTrucks = await fetchDocuments("loadsContracts", 10, undefined, filters);
 
 
-        let trucksToSet: Contracts[] = [];
+    let trucksToSet: Contracts[] = [];
     if (maTrucks) {
 
 
 
-      
+
       if (filters.length > 0 && maTrucks.data.length < 0) setFilteredPNotAavaialble(true)
 
 
-            if(filters.length > 0 && maTrucks.data.length <= 0 )setFilteredPNotAavaialble(true)
+      if (filters.length > 0 && maTrucks.data.length <= 0) setFilteredPNotAavaialble(true)
 
-            // If locationTruckS is true, we need to do the client-side filtering for ALL selected countries
-            if (selectedCountry.length > 0) {
-                trucksToSet = (maTrucks.data as Contracts[]).filter(truck =>
-                    selectedCountry.every(country => truck.contractLocation?.includes(country.name))
-                );
-            } else {
-                // Otherwise, use the data as fetched (which would be filtered only by truck properties)
-                trucksToSet = maTrucks.data as Contracts[];
-            }
+      // If locationTruckS is true, we need to do the client-side filtering for ALL selected countries
+      if (selectedCountry.length > 0) {
+        trucksToSet = (maTrucks.data as Contracts[]).filter(truck =>
+          selectedCountry.every(country => truck.contractLocation?.includes(country))
+        );
+      } else {
+        // Otherwise, use the data as fetched (which would be filtered only by truck properties)
+        trucksToSet = maTrucks.data as Contracts[];
+      }
 
 
       setGetContracts(trucksToSet);
@@ -92,9 +89,21 @@ function LoadsContracts() {
 
   const loadMoreLoads = async () => {
     if (loadingMore || !lastVisible) return;
+
+    let filters: any[] = [];
     setLoadingMore(true);
-    const result = await fetchDocuments('loadsContracts', 10, lastVisible);
+    if (selectedCountry.length > 0) filters.push(where("contractLocation", "array-contains-any", selectedCountry));
+
+    const result = await fetchDocuments('loadsContracts', 10, lastVisible, filters);
     if (result) {
+      let newTrucks = result.data as Contracts[];
+
+      // Apply client-side filtering for "must include all selected countries"
+      if (selectedCountry.length > 0) {
+        newTrucks = newTrucks.filter(truck =>
+          selectedCountry.every(country => truck.contractLocation?.includes(country))
+        );
+      }
       setGetContracts([...getContracts, ...result.data as Contracts[]]);
       setLastVisible(result.lastVisible);
     }
@@ -127,10 +136,10 @@ function LoadsContracts() {
       <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: wp(2), }}>
 
         <ThemedText type='default' style={{ color: icon }}>
-          Trucks Left: {item.formDataScnd?.trucksLeft || '10'}
+          Trucks Left: {item.formDataScnd?.trucksRequiredNum || '10'}
         </ThemedText>
-        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/Index", params: { userId: null, organisationName: "UUsername", contractName: "ContractName", contractId: "contractId" } })} style={{ paddingHorizontal: wp(4), paddingVertical: wp(1), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }} >
-          <ThemedText color='#fff'>3 Booked View</ThemedText>
+        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/Index", params: { userId: null, organisationName: "UUsername", contractName: "ContractName", contractId: "contractId" } })} style={{ paddingHorizontal: wp(4), paddingVertical: wp(1), backgroundColor: backgroundLight, borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }} >
+          <ThemedText color='#fff'> 3 Booked View</ThemedText>
         </TouchableOpacity>
       </View>
       <View
@@ -217,6 +226,11 @@ function LoadsContracts() {
         })}
       </View>
 
+{/* {item.contractLocation.length > 0 && <ThemedText>{item.contractLocation?.join (', ')  } </ThemedText>} */}
+<ThemedText type="subtitle" style={{ marginBottom: wp(4) }}>
+  {item.contractLocation?.join(', ') || '--'}
+</ThemedText>
+
       <TouchableOpacity
         style={{
           backgroundColor: '#0f9d5820',
@@ -244,8 +258,6 @@ function LoadsContracts() {
     </View>
   );
 
-  console.log(selectedCountry)
-
   return (
     <ScreenWrapper>
       <Heading page='Contracts' />
@@ -261,14 +273,13 @@ function LoadsContracts() {
         }}>
 
 
-
           {Countries.map(item => {
-            const active = selectedCountry.some(x => x.id === item.id);
+            const active = selectedCountry.some(x => x === item);
 
             return (
               <TouchableOpacity
-                key={item.id}
-                onPress={() => { active ? setSelectedCountry(selectedCountry.filter(x => x.id !== item.id)) : setSelectedCountry([...selectedCountry, item]) }}
+                key={item}
+                onPress={() => active ? setSelectedCountry(selectedCountry.filter(x => x !== item)) : setSelectedCountry([...selectedCountry, item])}
                 style={{
                   backgroundColor: active ? accent : backgroundLight,
                   borderColor: accent ? accent : coolGray,
@@ -287,7 +298,7 @@ function LoadsContracts() {
                 <ThemedText style={{
                   color: active ? 'white' : textColor,
                   fontSize: wp(3.5),
-                }} type="defaultSemiBold">{item.name}</ThemedText>
+                }} type="defaultSemiBold">{item}</ThemedText>
               </TouchableOpacity>
             );
           })}

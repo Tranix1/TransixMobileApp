@@ -41,12 +41,13 @@ const Index = () => {
     const [loadingMore, setLoadingMore] = useState(false);
 
 
-    const [operationCountries, setOperationCountries] = useState<string[]>(() => {
+    const [operationCountries, setOperationCountries] = useState<string[]> (() => {
     if (!operationCountriesG) return [];
     if (Array.isArray(operationCountriesG)) return JSON.parse(operationCountriesG[0]);
     return JSON.parse(operationCountriesG);
     });
 
+    console.log(operationCountries)
 
 const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(false)
     const LoadTructs = async () => {

@@ -15,6 +15,7 @@ import { deleteDocument, readById } from "@/db/operations";
 
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 import { truckType } from "@/data/appConstants";
+import { formatDate } from "@/services/services";
 
 function ViewContractMoreInfo() {
     const { ContractItemG } = useLocalSearchParams();
@@ -344,7 +345,7 @@ function ViewContractMoreInfo() {
                                 </View>
 
                                 {/* Routes Section */}
-                                <View style={{ marginBottom: wp(4) }}>
+                               {contract.manyRoutesAssign &&<View style={{ marginBottom: wp(4) }}>
                                     <ThemedText
                                         type="defaultSemiBold"
                                         style={{ color: accent, marginBottom: wp(2) }}
@@ -378,7 +379,7 @@ function ViewContractMoreInfo() {
                                             {contract.formDataScnd.manyRoutesOperation}
                                         </ThemedText>
                                     </View>
-                                </View>
+                                </View>}
 
                                 {/* Locations Section */}
                                 <View style={{ marginBottom: wp(4) }}>
@@ -397,7 +398,7 @@ function ViewContractMoreInfo() {
                                             borderColor: coolGray + "20",
                                         }}
                                     >
-                                        {(["frst", "scnd", "thrd", "forth", "fifth", "sixth"] as const).map((key, index) => (
+                                        { contract.manyRoutesAssign && (["frst", "scnd", "thrd", "forth", "fifth", "sixth"] as const).map((key, index) => (
                                             contract.formData.location[key] && (
                                                 <View
                                                     key={key}
@@ -408,12 +409,18 @@ function ViewContractMoreInfo() {
                                                         borderTopColor: coolGray + "20",
                                                     }}
                                                 >
-                                                    <ThemedText type="default" style={{ color: icon }}>
+                                                    <ThemedText type="default" style={{ color: icon }} >
                                                         {index + 1}) {contract.formData.location[key]}
                                                     </ThemedText>
                                                 </View>
                                             )
                                         ))}
+                                       { !contract.manyRoutesAssign &&<View    style={{paddingVertical: wp(1),borderTopColor: coolGray + "20",}}>
+
+                                        <ThemedText type="default" style={{ color: icon }} ><ThemedText style={{fontStyle:'italic',fontSize:13 }}>Source          :     </ThemedText>{contract.formData.location.frst} </ThemedText>
+                                        <ThemedText type="default" style={{ color: icon,borderTopWidth:1,borderColor:coolGray+"20" }} ><ThemedText style={{fontStyle:'italic',fontSize:13 }}>Destination   : </ThemedText>  {contract.formData.location.scnd} </ThemedText>
+                                        </View>}
+
                                     </View>
                                 </View>
 

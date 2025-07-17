@@ -99,14 +99,22 @@ const AddLoadDB = () => {
             operationCountries: operationCountries,
         };
 
-        setTrucksNeeded(prev => [...prev, newTruck]);
 
+          if(selectedCargoArea && selectedTruckType && selectedTruckCapacity && operationCountries.length > 0 ){
+
+            setTrucksNeeded(prev => [...prev, newTruck]);   
+       
         // Reset all selections to defaults
         setSelectedCargoArea(null);
         setSelectedTruckType(null);
         setSelectedTankerType(null);
         setSelectedTruckCapacity(null);
         setOperationCountries([]);
+        }else{
+
+           ToastAndroid.show('Select All Truck Details', ToastAndroid.SHORT)
+        }
+
     }
     function removeTruck(indexToRemove: number) {
         setTrucksNeeded(prev => prev.filter((_, index) => index !== indexToRemove));

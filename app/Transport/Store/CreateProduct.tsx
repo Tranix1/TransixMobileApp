@@ -14,7 +14,7 @@ import Input from '@/components/Input';
 import Heading from '@/components/Heading';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { hp, wp } from "@/constants/common";
-import { Ionicons,AntDesign,FontAwesome6 } from "@expo/vector-icons";
+import { Ionicons, AntDesign, FontAwesome6 } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import Divider from "@/components/Divider";
 import Button from "@/components/Button";
@@ -22,13 +22,12 @@ import { uploadImage, addDocument, getDocById, setDocuments } from "@/db/operati
 import { selectManyImages } from "@/Utilities/utils";
 import { Product } from "@/types/types";
 import { DropDownItem } from "@/components/DropDown";
-import { router } from "expo-router";
 import { getDownloadURL, ref, uploadBytes, } from "firebase/storage";
 import { storage } from "@/db/fireBaseConfig";
 
 import type { ImagePickerAsset } from 'expo-image-picker';
 
-import { productCategories  , smallVehicleMake , smallVehicleTypes , heavyEupementMake, heavyEupementType , cargoTruckMake,cargoVehiType , serviceProivderType,transactionTypes,containerType , containerMake,trailerType,trailerMake,sparesType, Countries, tonneSizes } from "@/data/appConstants";
+import { productCategories, smallVehicleMake, smallVehicleTypes, heavyEupementMake, heavyEupementType, cargoTruckMake, cargoVehiType, serviceProivderType, transactionTypes, containerType, containerMake, trailerType, trailerMake, sparesType, Countries, tonneSizes } from "@/data/appConstants";
 
 import { truckSuspensions, trailerConfigurations as truckConfigurations } from "@/data/appConstants";
 import { HorizontalTickComponent } from "@/components/SlctHorizonzalTick";
@@ -38,7 +37,7 @@ import { HorizontalTickComponent } from "@/components/SlctHorizonzalTick";
 
 const CreateProduct = () => {
     // Theme colors
-  const icon = useThemeColor('icon')
+    const icon = useThemeColor('icon')
     const background = useThemeColor('background');
     const backgroundLight = useThemeColor('backgroundLight');
     const iconColor = useThemeColor('icon');
@@ -60,7 +59,7 @@ const CreateProduct = () => {
 
     const [selectedCategory, setSelectedCategory] = useState<any>(null);
     const [selectedType, setSelectedType] = useState<any>(null);
-    const [selectedTruckSuspension, setSrlectedTruckSuspension] = React.useState<{ id: number; name: string } | null> (null)
+    const [selectedTruckSuspension, setSrlectedTruckSuspension] = React.useState<{ id: number; name: string } | null>(null)
     const [selectedTruckConfig, setSelectedTruckConfig] = React.useState<{ id: number; name: string } | null>(null)
     const [selectedSemiTrailerSuspension, setSlctedSemiTrailerSuspension] = React.useState<{ id: number; name: string } | null>(null)
     const [selectedSemiTrailerConfig, setSelectedSemiTrailerConfig] = React.useState<{ id: number; name: string } | null>(null)
@@ -70,68 +69,70 @@ const CreateProduct = () => {
     const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
 
     const [priceNegotiable, setPriceNegotiable] = React.useState(false)
-    const togglePriceNegotiable= ()=>setPriceNegotiable(prev => !prev) 
+    const togglePriceNegotiable = () => setPriceNegotiable(prev => !prev)
 
     const [deliveryAvailable, setDeliveryAvailable] = React.useState(false)
-    const toggleDeliveryAvailable= ()=> setDeliveryAvailable(prev => !prev)
+    const toggleDeliveryAvailable = () => setDeliveryAvailable(prev => !prev)
 
     const [vehicleTransimission, setVehicleTransission] = React.useState("")
     const [vehcileFuel, setVehicleFuel] = React.useState("")
 
-    const [LookingOSelling , setBuyOSelling]=React.useState("")
+    const [LookingOSelling, setBuyOSelling] = React.useState("")
 
 
 
-  const [storedetails, setStoredetails] = useState(false)
+    const [storedetails, setStoredetails] = useState(false)
 
-  const [selectedStoreCountry, setSelectedStoreCountry] = useState<{ id: number; name: string } | null>(null);
+    const [selectedStoreCountry, setSelectedStoreCountry] = useState<{ id: number; name: string } | null>(null);
 
-  const [storeNamedDb, setStoreName] = useState('');
-  const [storeLocationAddDb, SetStoreLocationAddDb] = useState('');
-  const [storeCityDB , setStoreCityDB]=React.useState("")
-  const [storePhonNumAddDb, setStorePhoneNum] = useState('');
+    const [storeNamedDb, setStoreName] = useState('');
+    const [storeLocationAddDb, SetStoreLocationAddDb] = useState('');
+    const [storeCityDB, setStoreCityDB] = React.useState("")
+    const [storePhonNumAddDb, setStorePhoneNum] = useState('');
 
 
-  const [uploadingStoreDetails , setUploadingStoreDetails]=React.useState(false)
-  const handleUpdateStoreDetails = async () => {
-    setUploadingStoreDetails(true)
-      const missingTruckDetails = [
-        !storeNamedDb && "Enter Owner Name ",
-      !storePhonNumAddDb && "Enter Phone Number",
-      !selectedStoreCountry?.name && "Enter Truck Nick Name ",
-      !storeCityDB && "Pick Proof of ownership document or imaage ",
-      !storeLocationAddDb && "Pick Id document or imaage  ",
-    ].filter(Boolean);
+    const [uploadingStoreDetails, setUploadingStoreDetails] = React.useState(false)
+    const handleUpdateStoreDetails = async () => {
 
-    if (missingTruckDetails.length > 0) {
-      alertBox("Missing Ownership Details", missingTruckDetails.join("\n"), [], "error");
-    setUploadingStoreDetails(false)
-      return;
+
+        setUploadingStoreDetails(true)
+        const missingTruckDetails = [
+            !storeNamedDb && "Enter Owner Name ",
+            !storePhonNumAddDb && "Enter Phone Number",
+            !selectedStoreCountry?.name && "Enter Truck Nick Name ",
+            !storeCityDB && "Pick Proof of ownership document or imaage ",
+            !storeLocationAddDb && "Pick Id document or imaage  ",
+        ].filter(Boolean);
+
+        if (missingTruckDetails.length > 0) {
+            alertBox("Missing Ownership Details", missingTruckDetails.join("\n"), [], "error");
+            setUploadingStoreDetails(false)
+            return;
+        }
+        await setDocuments("storeDetails", { storeName: storeNamedDb, storePhoneNum: storePhonNumAddDb, exactLocation: storeLocationAddDb, storeCountry: selectedStoreCountry?.name, storeCity: storeCityDB })
+        setStoredetails(false)
+        setUploadingStoreDetails(false)
+        ToastAndroid.show("Store Details created successfully!", ToastAndroid.SHORT);
+    };
+
+
+    interface storeDetals {
+        storeName: string;
+        storePhoneNum: string;
+        storeEmail: string;
+        exactLocation: string;
+        storeCountry: string;
+        storeCity: string
     }
-    await setDocuments("storeDetails", { storeName: storeNamedDb, storePhoneNum: storePhonNumAddDb,  exactLocation : storeLocationAddDb,storeCountry : selectedStoreCountry?.name ,storeCity :storeCityDB})
-    setStoredetails(false)
-  setUploadingStoreDetails(false)
-     ToastAndroid.show("Store Details created successfully!", ToastAndroid.SHORT);
-  };
-
-
-  interface storeDetals {
-    storeName : string;
-    storePhoneNum : string ;
-    storeEmail : string;
-    exactLocation : string;
-    storeCountry : string;
-    storeCity : string
-  }
-const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
-  React.useEffect(() => {
-    getDocById('storeDetails', setStoreDetails);
-  }, []);
+    const [storeDetails, setStoreDetails] = useState<storeDetals | null>(null);
+    React.useEffect(() => {
+        getDocById('storeDetails', setStoreDetails);
+    }, []);
 
 
     // Form data
     const [formData, setFormData] = useState<Partial<Product>>({
-        productModel : "",
+        productModel: "",
         productLocation: "",
         description: "",
         price: null,
@@ -147,7 +148,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
     });
 
 
-    const { user,alertBox } = useAuth();
+    const { user, alertBox } = useAuth();
 
     // Handle form field changes
     const handleChange = (field: keyof Product, value: any) => {
@@ -168,11 +169,11 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
         }));
     };
 
-      // Function to clear all form fields
+    // Function to clear all form fields
     const clearFormFields = () => {
         setVehicleType(null);
         setImages([]);
-        setUploadProgress("");
+        // setUploadProgress("");
         setSelectedCategory(null);
         setSelectedType(null);
         setSrlectedTruckSuspension(null);
@@ -216,12 +217,47 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
 
         setIsSubmitting(true);
 
-        let imageUrls = [];
-        for (const asset of images) {
+        if(!storeDetails){
+            alert("Set store details to add to store")
+            setIsSubmitting(false);
+            return
+        }
+
+        if(images.length <=0){
+        ToastAndroid.show("Select at least 1 image max 4", ToastAndroid.SHORT);
+        setIsSubmitting(false);
+        return
+        }
+
+
+
+   const missingProductDetails = [
+        !selectedCategory?.name && "Enter Category Name ", // Added ? for safety
+        !LookingOSelling && "Select Buy or Sell Option", // More descriptive message
+        !selectedType?.name && "Select Product Type", // Added ? for safety
+        !selectedMake?.name && "Select Make", // Added ? for safety
+        !selectedTransaction?.name && "Select Transaction Type", // Added ? for safety and descriptive message
+        !formData.price && "Enter Price", // More descriptive message
+        !formData.productModel && "Enter Product Model", // More descriptive message
+        !formData.productLocation && "Enter Product Location", // More descriptive message
+    ].filter(Boolean)
+
+      
+        if (missingProductDetails.length > 0) {
+            alertBox("Missing Product Details", missingProductDetails.join("\n"), [], "error");
+             setIsSubmitting(false);
+            return;
+        }
+
+
+       let imageUrls = [];
+
+        for (const [index, asset] of images.entries()) {
+            setUploadProgress(`Uploading image ${index + 1} of ${images.length}`);
 
             const response = await fetch(asset.uri);
             const blob = await response.blob();
-            const storageRef = ref(storage, `Store/` + new Date().getTime());
+            const storageRef = ref(storage, `Store/${new Date().getTime()}_${index}`);
 
             // Upload the image
             const snapshot = await uploadBytes(storageRef, blob);
@@ -230,93 +266,82 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
             const imageUrl = await getDownloadURL(storageRef);
 
             imageUrls.push(imageUrl);
-
         }
+setUploadProgress("Adding Product")
+
 
         try {
-            // Upload images
-            const uploadedImages = await Promise.all(
-                images.map(async (image) => {
-                    const uri = await uploadImage(
-                        image,
-                        "Store",
-                        setUploadProgress,
-                        `Uploading image ${images.indexOf(image) + 1} of ${images.length}`
-                    );
-                    return uri;
-                })
-            );
 
 
-              let priceRange = null
-                if(formData.price){
+            let priceRange = null
+            if (formData.price) {
 
-        if (formData.price < 1500) {
-            priceRange= "0 - 1.5k"
-        } else if (formData.price >= 1500 && formData.price < 2500)  {
-            priceRange ="1.5 - 2.5";
-        } else if (formData.price >= 2500 && formData.price < 5000)  {
-            priceRange = "2.5k - 5k" ;
-        } else if (formData.price >= 5000 && formData.price < 10000)  {
-            priceRange = "5k - 10k" ;
-        } else if (formData.price >= 10000 && formData.price < 25000)  {
-            priceRange = "10k - 25k" ;
-        } else if (formData.price >= 25000 && formData.price < 45000)  {
-            priceRange = "25k - 45k" ;
-        } else if (formData.price >= 45000 && formData.price < 65000)  {
-            priceRange = "45k - 65k"
-        } else if (formData.price >= 65000 && formData.price < 80000)  {
-            priceRange = "65k - 100k"
-        } else if (formData.price >= 80000 && formData.price < 100000)  {
-            priceRange = "80k - 100k"
-        } else if (formData.price >= 100000 )  {
-            priceRange = "100k +++"
-        }
+                if (formData.price < 1500) {
+                    priceRange = "0 - 1.5k"
+                } else if (formData.price >= 1500 && formData.price < 2500) {
+                    priceRange = "1.5 - 2.5";
+                } else if (formData.price >= 2500 && formData.price < 5000) {
+                    priceRange = "2.5k - 5k";
+                } else if (formData.price >= 5000 && formData.price < 10000) {
+                    priceRange = "5k - 10k";
+                } else if (formData.price >= 10000 && formData.price < 25000) {
+                    priceRange = "10k - 25k";
+                } else if (formData.price >= 25000 && formData.price < 45000) {
+                    priceRange = "25k - 45k";
+                } else if (formData.price >= 45000 && formData.price < 65000) {
+                    priceRange = "45k - 65k"
+                } else if (formData.price >= 65000 && formData.price < 80000) {
+                    priceRange = "65k - 100k"
+                } else if (formData.price >= 80000 && formData.price < 100000) {
+                    priceRange = "80k - 100k"
+                } else if (formData.price >= 100000) {
+                    priceRange = "100k +++"
                 }
+            }
 
             // Prepare product data
             const productData = {
 
                 ...formData,
-                
+
                 transaction: {
-                    LookingOSelling : LookingOSelling ,
+                    LookingOSelling: LookingOSelling,
                     type: selectedTransaction?.name,
-                    priceRange : priceRange ,
+                    priceRange: priceRange,
                     priceNegotiable: priceNegotiable,
                     deliveryAvailable: deliveryAvailable,
                     deliveryCost: formData.deliveryCost,
                     swapPreferences: formData.swapPreferences
                 },
-         
+
                 location: {
-                    storeCountry: storeDetails?.storeCountry ,
-                    exactLocation : storeDetails?.exactLocation ,
-                    storeCity: storeDetails?.storeCity ,
-                    productLocation : `${storeDetails?.storeCountry} ${formData.productLocation} `  ,
+                    storeCountry: storeDetails?.storeCountry,
+                    exactLocation: storeDetails?.exactLocation,
+                    storeCity: storeDetails?.storeCity,
+                    productLocation: `${storeDetails?.storeCountry} ${formData.productLocation} `,
                     coordinates: null
                 },
                 truckDetails: {
-                    truckConfig: selectedTruckConfig?.name||null ,
-                    truckSuspension: selectedTruckSuspension?.name ||null,
-                    truckCapacity : selectedTruckCapacity?.name ||null ,
-                    truckType: selectedTruckType?.name||null,
+                    truckConfig: selectedTruckConfig?.name || null,
+                    truckSuspension: selectedTruckSuspension?.name || null,
+                    truckCapacity: selectedTruckCapacity?.name || null,
+                    truckType: selectedTruckType?.name || null,
                 },
-                
-                vehicleTransimission: vehicleTransimission ,
-                vehcileFuel : vehcileFuel ,
+
+                vehicleTransimission: vehicleTransimission,
+                vehcileFuel: vehcileFuel,
                 images: imageUrls,
 
                 bodyStyle: selectedType.name,
                 bodyMake: selectedMake.name,
                 category: selectedCategory.name,
 
-                vehicleType: vehicleType?.name ||null     ,
+                vehicleType: vehicleType?.name || null,
 
 
                 seller: {
                     id: user?.uid || "",
-                    name: storeDetails?.storeName||user?.organisation || "Anonymous",
+                    name: storeDetails?.storeName || user?.organisation || "Anonymous",
                     contact: storeDetails?.storePhoneNum || "",
                     isVerified: false
                 },
@@ -337,7 +362,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
 
             // Add product to database
             await addDocument("Store", productData);
-             clearFormFields(); // Call this function to clear all fields
+            clearFormFields(); // Call this function to clear all fields
             ToastAndroid.show("Product created successfully!", ToastAndroid.SHORT);
         } catch (error) {
             ToastAndroid.show("Failed to create product", ToastAndroid.SHORT);
@@ -349,18 +374,18 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
 
 
 
-    const transmissionData =[
-        {topic:"(Auto)" , value :"(Auto)" },
-        {topic:"Manual" , value :"Manual" },
-        {topic:"semi_Auto" , value :"semi_Auto" },
-        {topic:"other" , value :"other" },
+    const transmissionData = [
+        { topic: "(Auto)", value: "(Auto)" },
+        { topic: "Manual", value: "Manual" },
+        { topic: "semi_Auto", value: "semi_Auto" },
+        { topic: "other", value: "other" },
     ]
-    const fuelTypeData =[
+    const fuelTypeData = [
 
-        {topic:"Petrol" , value :"Petrol" },
-        {topic:"Diesel" , value :"Diesel" },
-        {topic:"Hybrid" , value :"Hybrid" },
-        {topic:"other" , value :"other" },
+        { topic: "Petrol", value: "Petrol" },
+        { topic: "Diesel", value: "Diesel" },
+        { topic: "Hybrid", value: "Hybrid" },
+        { topic: "other", value: "other" },
     ]
 
     // Render category-specific fields
@@ -393,7 +418,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                                 placeholder="Select Truck type"
                             />
                             <ThemedText> Truck Capacity</ThemedText>
-                             <DropDownItem
+                            <DropDownItem
                                 allData={tonneSizes}
                                 selectedItem={selectedTruckCapacity}
                                 setSelectedItem={setSelectedTruckCapacity}
@@ -490,7 +515,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                         </View>}
 
 
-                    
+
 
                         {(selectedTruckType?.name === "semi Truck" || selectedTruckType?.name === "Truck Horse") && <View>
                             <ThemedText type="defaultSemiBold">Horse Power</ThemedText>
@@ -516,14 +541,14 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                             })}
                         />
 
-                                <ThemedText type="defaultSemiBold">Engine</ThemedText>
+                        <ThemedText type="defaultSemiBold">Engine</ThemedText>
                         <Input
                             placeholder="Model and condition"
                             onChangeText={(text) => handleNestedChange("details", "vehicle", {
                                 ...formData.details?.vehicle,
                                 engine: text
                             })}
-                        />    
+                        />
 
 
 
@@ -548,10 +573,10 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                         <ThemedText type="defaultSemiBold">Transmission</ThemedText>
 
 
-                < HorizontalTickComponent  data={transmissionData} condition={vehicleTransimission} onSelect={setVehicleTransission} />
-                                
+                        < HorizontalTickComponent data={transmissionData} condition={vehicleTransimission} onSelect={setVehicleTransission} />
 
-                   
+
+
 
 
 
@@ -561,7 +586,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                             keyboardType="numeric"
                             onChangeText={(text) => handleNestedChange("details", "vehicle", {
                                 ...formData.details?.vehicle,
-                                transmission: parseInt(text)|| 0
+                                transmission: parseInt(text) || 0
                             })}
                         />}
 
@@ -570,8 +595,8 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
 
 
                         <ThemedText type="defaultSemiBold">Fuel Type</ThemedText>
-                < HorizontalTickComponent  data={fuelTypeData} condition={vehcileFuel} onSelect={setVehicleFuel} />
-                       
+                        < HorizontalTickComponent data={fuelTypeData} condition={vehcileFuel} onSelect={setVehicleFuel} />
+
                         {vehcileFuel === "other" && <Input
                             placeholder="e.g. 50000"
                             keyboardType="numeric"
@@ -585,21 +610,21 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
 
 
 
-                      {selectedTruckType?.name ==="semi Truck" &&  <View>
-                        <ThemedText>Trailer Details</ThemedText>
+                        {selectedTruckType?.name === "semi Truck" && <View>
+                            <ThemedText>Trailer Details</ThemedText>
 
-                           <ThemedText type="defaultSemiBold">Capacity (Tonnage) </ThemedText>
-                           <Input
-                            placeholder="Truck capacity"
-                            onChangeText={(text) => handleNestedChange("details", "vehicle", {
-                                ...formData.details?.vehicle,
-                                truckCapacity: text
-                            })}
-                        />    
+                            <ThemedText type="defaultSemiBold">Capacity (Tonnage) </ThemedText>
+                            <Input
+                                placeholder="Truck capacity"
+                                onChangeText={(text) => handleNestedChange("details", "vehicle", {
+                                    ...formData.details?.vehicle,
+                                    truckCapacity: text
+                                })}
+                            />
 
-                        <TouchableOpacity>
-                        <ThemedText>Same As Truck </ThemedText>
-                        </TouchableOpacity>
+                            <TouchableOpacity>
+                                <ThemedText>Same As Truck </ThemedText>
+                            </TouchableOpacity>
 
                             <ThemedText>Config</ThemedText>
                             <DropDownItem
@@ -639,7 +664,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                             )}
 
 
-                        </View>}         
+                        </View>}
 
 
                     </>
@@ -794,8 +819,8 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                         <DropDownItem
                             allData={[
                                 { id: 1, name: "small vehicle" },
-                                { id: 1, name: "cargo vehicle" },
-                                { id: 1, name: "heavy Equip" }
+                                { id: 2, name: "cargo vehicle" },
+                                { id: 3, name: "heavy Equip" }
                             ]}
                             selectedItem={vehicleType}
                             setSelectedItem={setVehicleType}
@@ -811,7 +836,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                         />
 
 
-                    
+
 
 
                         {["(Other) Small Veh. Type", "(Other) Cargo Veh. Type", "(Other) Heavy Equip. Type"].includes(selectedType?.name) && (
@@ -856,100 +881,104 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
 
 
 
-   <Modal visible={storedetails} statusBarTranslucent animationType="slide">
-            <ScreenWrapper>
-
-            <View style={{ margin: wp(4), marginTop: hp(6) }}>
-
-              <View style={{ gap: wp(2) }} >
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
-                  <TouchableOpacity onPress={() => setStoredetails(false)}>
-                    <AntDesign name="close" color={icon} size={wp(4)} />
-                  </TouchableOpacity>
-                    <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >STORE DETAILS</ThemedText>
-                </View>
-                <ThemedText>
-                  Store Name
-                </ThemedText>
-                <Input
-                  placeholder="Store Name"
-                  value={storeNamedDb}
-                  onChangeText={(text) => setStoreName(text)}
-                />
-
-        
-                <ThemedText>
-                  Store Location
-                </ThemedText>
-
-        
-                <ThemedText>
-                  Country
-                </ThemedText>
-                    <DropDownItem
-                        allData={Countries}
-                        selectedItem={selectedStoreCountry}
-                        setSelectedItem={setSelectedStoreCountry}
-                        placeholder="Store Country"
-                    />
-        
-             <ThemedText>
-                  City
-                </ThemedText>
-                <Input
-                  placeholder="Store City"
-                  value={storeCityDB}
-                  onChangeText={(text) => setStoreCityDB(text)}
-                />
-                <ThemedText>
-                  Exacact Location
-                </ThemedText>
-                <Input
-                  placeholder="Owner's Name"
-                  value={storeLocationAddDb}
-                  onChangeText={(text) => SetStoreLocationAddDb(text)}
-                />
-          
+              { uploadProgress&& <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: "center", borderRadius: wp(4), alignItems: 'center', }} >
+          <ThemedText style={{ textAlign: 'center' }} > {uploadProgress} </ThemedText>
+        </View>}
 
 
+            <Modal visible={storedetails} statusBarTranslucent animationType="slide">
+                <ScreenWrapper>
 
-                <ThemedText>
-                  Store Phone Number
-                </ThemedText>
-        
-                <Input
-                  placeholder="Store Phone Numberr"
-                  value={storePhonNumAddDb}
-                  onChangeText={(text) => setStorePhoneNum(text)}
-                />
+                    <View style={{ margin: wp(4), marginTop: hp(6) }}>
 
-                            <Button onPress={handleUpdateStoreDetails} loading={uploadingStoreDetails} disabled={uploadingStoreDetails} title={uploadingStoreDetails ? "Saving..." : "Save"}  colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{height:44}} />
+                        <View style={{ gap: wp(2) }} >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
+                                <TouchableOpacity onPress={() => setStoredetails(false)}>
+                                    <AntDesign name="close" color={icon} size={wp(4)} />
+                                </TouchableOpacity>
+                                <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >STORE DETAILS</ThemedText>
+                            </View>
+                            <ThemedText>
+                                Store Name
+                            </ThemedText>
+                            <Input
+                                placeholder="Store Name"
+                                value={storeNamedDb}
+                                onChangeText={(text) => setStoreName(text)}
+                            />
 
-              </View>
-            </View>
-            </ScreenWrapper>
 
-          </Modal>
+                            <ThemedText>
+                                Store Location
+                            </ThemedText>
+
+
+                            <ThemedText>
+                                Country
+                            </ThemedText>
+                            <DropDownItem
+                                allData={Countries}
+                                selectedItem={selectedStoreCountry}
+                                setSelectedItem={setSelectedStoreCountry}
+                                placeholder="Store Country"
+                            />
+
+                            <ThemedText>
+                                City
+                            </ThemedText>
+                            <Input
+                                placeholder="Store City"
+                                value={storeCityDB}
+                                onChangeText={(text) => setStoreCityDB(text)}
+                            />
+                            <ThemedText>
+                                Exacact Location
+                            </ThemedText>
+                            <Input
+                                placeholder="Owner's Name"
+                                value={storeLocationAddDb}
+                                onChangeText={(text) => SetStoreLocationAddDb(text)}
+                            />
+
+
+
+
+                            <ThemedText>
+                                Store Phone Number
+                            </ThemedText>
+
+                            <Input
+                                placeholder="Store Phone Numberr"
+                                value={storePhonNumAddDb}
+                                onChangeText={(text) => setStorePhoneNum(text)}
+                            />
+
+                            <Button onPress={handleUpdateStoreDetails} loading={uploadingStoreDetails} disabled={uploadingStoreDetails} title={uploadingStoreDetails ? "Saving..." : "Save"} colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{ height: 44 }} />
+
+                        </View>
+                    </View>
+                </ScreenWrapper>
+
+            </Modal>
 
             <ScrollView contentContainerStyle={styles.container}>
 
-{/* {!storeDetails &&  <TouchableOpacity onPress={() => setStoredetails(true)}  style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}> */}
-{  <TouchableOpacity onPress={() => setStoredetails(true)}  style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
-            <View>
-              <ThemedText type="defaultSemiBold">
-                {user?.organisation || 'Set Owner Name!'}
-              </ThemedText>
-              <ThemedText type="tiny">
-                {user?.email || 'No Organisation Name!'}
-              </ThemedText>
-            </View>
-              <FontAwesome6 name="user-gear" size={18} color={icon} />
-          </TouchableOpacity>}
+                {!storeDetails &&  <TouchableOpacity onPress={() => setStoredetails(true)}  style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
+                    <View>
+                        <ThemedText type="defaultSemiBold">
+                             Set Store Details!
+                        </ThemedText>
+                        <ThemedText type="tiny">
+                            {user?.email || 'No Organisation Name!'}
+                        </ThemedText>
+                    </View>
+                    <FontAwesome6 name="user-gear" size={18} color={icon} />
+                </TouchableOpacity>}
 
 
                 {/* Product Images */}
                 <View style={styles.imageSection}>
-                    <ThemedText type="defaultSemiBold">Product Images (Max 5)</ThemedText>
+                    <ThemedText type="defaultSemiBold">Product Images (Max 4)</ThemedText>
                     <View style={styles.imageContainer}>
                         {images.length > 0 ? (
                             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -980,20 +1009,20 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                         )}
                     </View>
 
-                   {images.length > 0 && <TouchableOpacity onPress={() => selectManyImages(setImages, true, true)}>
-                        <ThemedText>Add {5 - images.length} left </ThemedText>
+                    {images.length > 0 && <TouchableOpacity onPress={() => selectManyImages(setImages, true, true)} style={{backgroundColor:backgroundLight,width:125,justifyContent:"center",alignItems:"center",borderRadius:5}} >
+                        <ThemedText color="white" style={{fontSize:13,fontWeight:"bold"}}>Add Images {4 - images.length} left </ThemedText>
                     </TouchableOpacity>}
                 </View>
 
                 {/* Basic Information */}
                 <View style={[styles.section, { backgroundColor: backgroundLight, }]}>
-                    <ThemedText type="subtitle" style={{color:"#1E90FF"}}>Basic Information</ThemedText>
+                    <ThemedText type="subtitle" style={{ color: "#1E90FF" }}>Basic Information</ThemedText>
                     <Divider />
 
-               
-           <ThemedText >Are you selling or looking?</ThemedText>
 
-     < HorizontalTickComponent  data={[ {topic:"Selling" , value :"sellOffers" } , {topic:"Looking" , value :"buyRequests" }   ]} condition={LookingOSelling} onSelect={setBuyOSelling} />
+                    <ThemedText >Are you selling or looking?</ThemedText>
+
+                    < HorizontalTickComponent data={[{ topic: "Selling", value: "sellOffers" }, { topic: "Looking", value: "buyRequests" }]} condition={LookingOSelling} onSelect={setBuyOSelling} />
 
 
 
@@ -1148,29 +1177,29 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
 
                 </View>
 
-                     <View style={[styles.section, { backgroundColor: backgroundLight }]} >
+                <View style={[styles.section, { backgroundColor: backgroundLight }]} >
                     <Divider />
 
                     <ThemedText type="subtitle" color="#1E90FF" >Product Details</ThemedText>
 
-                        <ThemedText type="defaultSemiBold">Product  Name/Model  <ThemedText style={{fontStyle:"italic"}} >e.g corrola </ThemedText> </ThemedText>
-                           <Input
-                                placeholder="corrola"
-                                value={formData.productModel}
-                                onChangeText={(text) => handleChange("productModel", text)}
-                            />
-
-                        
-                      <ThemedText type="defaultSemiBold">Product Location</ThemedText>
-
-                             <Input
-                                placeholder="Product Location"
-                                value={formData.productLocation}
-                                onChangeText={(text) => handleChange("productLocation", text)}
-                            />
+                    <ThemedText type="defaultSemiBold">Product  Name/Model  <ThemedText style={{ fontStyle: "italic" }} >e.g corrola </ThemedText> </ThemedText>
+                    <Input
+                        placeholder="corrola"
+                        value={formData.productModel}
+                        onChangeText={(text) => handleChange("productModel", text)}
+                    />
 
 
-                      <ThemedText type="defaultSemiBold">Description</ThemedText>
+                    <ThemedText type="defaultSemiBold">Product Location</ThemedText>
+
+                    <Input
+                        placeholder="Product Location"
+                        value={formData.productLocation}
+                        onChangeText={(text) => handleChange("productLocation", text)}
+                    />
+
+
+                    <ThemedText type="defaultSemiBold">Description</ThemedText>
                     <Input
                         placeholder="Detailed description"
                         multiline
@@ -1181,7 +1210,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                     />
                     <Divider />
 
-                        </View>   
+                </View>
                 {/* Submit Button */}
                 <View style={styles.submitButton}>
                     <Button
@@ -1190,11 +1219,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                         disabled={isSubmitting}
                         loading={isSubmitting}
                     />
-                    {uploadProgress && (
-                        <ThemedText type="tiny" style={{ textAlign: 'center', marginTop: wp(2) }}>
-                            {uploadProgress}
-                        </ThemedText>
-                    )}
+                  
                 </View>
             </ScrollView>
 
@@ -1269,7 +1294,7 @@ const styles = StyleSheet.create({
     checkboxSelected: {
         // Add any selected styles if needed
     },
-  
+
     submitButton: {
         marginTop: hp(2),
         marginBottom: hp(4),
@@ -1281,7 +1306,7 @@ const styles = StyleSheet.create({
         padding: wp(4),
         borderBottomWidth: 1,
     },
-  
+
     modalFooter: {
         padding: wp(4),
         borderTopWidth: 1,

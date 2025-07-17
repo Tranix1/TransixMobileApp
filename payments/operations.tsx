@@ -42,7 +42,7 @@ export async function handleMakePayment(
             ToastAndroid.show("✅ Payment Complete!", ToastAndroid.SHORT)
             setPaymentUpdate("Adding Contract")
             await addDocument(dbName, { ...dbData, pollUrl: pollUrl }, )
-            setPaymentUpdate("")
+            setPaymentUpdate("Done Adding Contract")
             clearInterval(pollInterval);
           } else if (status.status === "cancelled" || status.status === "failed") {
              setPaymentUpdate("❌ Payment Failed or Cancelled.");

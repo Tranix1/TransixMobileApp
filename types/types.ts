@@ -249,6 +249,7 @@ export type ContractsFormDataScndType = {
     alertMsg: string;
     fuelAvai: string;
     additionalInfo: string;
+    trucksRequiredNum:string
 }
 
 export type ContractsFormDataType = {

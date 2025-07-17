@@ -4,7 +4,7 @@ import { View, TouchableOpacity, StyleSheet, ScrollView, TouchableNativeFeedback
 
 import { handleMakePayment } from "@/payments/operations";
 
-import { ContractsFormDataScndType, TruckFormData } from "@/types/types";
+import { ContractsFormDataScndType, Countries, TruckFormData } from "@/types/types";
 import { ContractsFormDataType } from "@/types/types";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -28,12 +28,8 @@ import CheckOutMakePayments from "@/components/CheckOutPayment";
 const NewContract = () => {
     const backgroundLight = useThemeColor('backgroundLight');
     const background = useThemeColor('background');
-    const coolGray = useThemeColor('coolGray');
     const iconcolor = useThemeColor('icon');
     const accent = useThemeColor('accent');
-    const text = useThemeColor('text');
-    const textlight = useThemeColor('textlight');
-
 
 
     const [formData, setFormData] = useState<ContractsFormDataType>({
@@ -76,6 +72,7 @@ const NewContract = () => {
         alertMsg: "",
         fuelAvai: "",
         additionalInfo: "",
+       trucksRequiredNum: "" ,
     });
 
     const handleTypedTextScnd = (
@@ -176,8 +173,6 @@ const NewContract = () => {
         tankerType: SelectedOption;
         capacity: SelectedOption;
         operationCountries: string[];
-        trailerConfig: SelectedOption;
-        suspension: SelectedOption;
     }
 
 
@@ -187,12 +182,8 @@ const NewContract = () => {
     const [selectedTruckCapacity, setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>(null)
     const [showCountriesTruck, setShowCountriesTruck] = useState(false);
     const [operationCountriesTruck, setOperationCountriesTruck] = useState<string[]>([]);
-    const [selectedTrailerConfig, setSelectedTrailerConfig] = useState<{ id: number, name: string } | null>(null)
-    const [selectedTruckSuspension, setSelectedTruckSuspension] = useState<{ id: number, name: string } | null>(null)
 
     const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>([]);
-
-
     function pushTruck() {
         const newTruck: TruckNeededType = {
             cargoArea: selectedCargoArea,
@@ -200,20 +191,21 @@ const NewContract = () => {
             tankerType: selectedTankerType,
             capacity: selectedTruckCapacity,
             operationCountries: operationCountriesTruck,
-            trailerConfig: selectedTrailerConfig,
-            suspension: selectedTruckSuspension,
         };
+        if(selectedCargoArea && selectedTruckType && selectedTruckCapacity && operationCountriesTruck.length > 0 ){
 
-        setTrucksNeeded(prev => [...prev, newTruck]);
-
+            setTrucksNeeded(prev => [...prev, newTruck]);   
+       
         // Reset all selections to defaults
         setSelectedCargoArea(null);
         setSelectedTruckType(null);
         setSelectedTankerType(null);
         setSelectedTruckCapacity(null);
         setOperationCountriesTruck([]);
-        setSelectedTrailerConfig(null);
-        setSelectedTruckSuspension(null);
+        }else{
+
+           ToastAndroid.show('Select All Truck Details', ToastAndroid.SHORT)
+        }
     }
     function removeTruck(indexToRemove: number) {
         setTrucksNeeded(prev => prev.filter((_, index) => index !== indexToRemove));
@@ -246,6 +238,7 @@ const NewContract = () => {
             alertMsg: "",
             fuelAvai: "",
             additionalInfo: "",
+            trucksRequiredNum:""
         });
         setManyRoutesOperation("");
         setLoadsPerWeek("");
@@ -274,8 +267,6 @@ const NewContract = () => {
         setSelectedTruckCapacity(null);
         setShowCountriesTruck(false);
         setOperationCountriesTruck([]);
-        setSelectedTrailerConfig(null);
-        setSelectedTruckSuspension(null);
         setTrucksNeeded([]);
     };
 
@@ -345,19 +336,18 @@ const NewContract = () => {
         setIsSubmitting(true);
         setDspCheckout(false);
        await handleMakePayment(3, "yaya", setPaymentUpdate, "loadsContracts", contractData);
-        setIsSubmitting(false);
-      ToastAndroid.show('Contract Added successfully', ToastAndroid.SHORT)
     };
 
+       if(paymentUpdate === "Done Adding Contract"  ){
+           setIsSubmitting(false);
+           clearFormFields()
+           setPaymentUpdate("")
+           ToastAndroid.show('Contract Added successfully', ToastAndroid.SHORT)
+       }
 
 
     return (
         <ScreenWrapper fh={false}>
-
-              {paymentUpdate && <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: "center", borderRadius: wp(4), alignItems: 'center', }} >
-          <ThemedText style={{ textAlign: 'center' }} > {paymentUpdate} </ThemedText>
-        </View>}
-
 
             <Heading page='Add Contracts' rightComponent={
                 <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: wp(3) }}>
@@ -371,6 +361,11 @@ const NewContract = () => {
             />
 
 
+
+
+              {paymentUpdate && <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: "center", borderRadius: wp(4), alignItems: 'center', }} >
+          <ThemedText style={{ textAlign: 'center' }} > {paymentUpdate} </ThemedText>
+        </View>}
 
 
 
@@ -640,15 +635,7 @@ const NewContract = () => {
                                         onChangeText={(text) => handleTypedText(text, 'location.fifth')}
                                         style={{}}
                                     />
-                                    <ThemedText type="defaultSemiBold">
-                                        FifSixthth Location
-                                    </ThemedText>
-                                    <Input
-                                        value={formData.location.sixth}
-                                        placeholder={"Sixth Location"}
-                                        onChangeText={(text) => handleTypedText(text, 'location.sixth')}
-                                        style={{}}
-                                    />
+                                   
 
 
                                 </View>
@@ -1107,7 +1094,7 @@ const NewContract = () => {
 
                         <View style={styles.viewMainDsp}>
                             <ThemedText type="defaultSemiBold" >
-                                Payment Terms
+                              Contract  Payment Terms
                             </ThemedText>
                             <Input
                                 value={formDataScnd.paymentTerms}
@@ -1115,7 +1102,6 @@ const NewContract = () => {
                                 onChangeText={(text) => handleTypedTextScnd(text, 'paymentTerms')}
                                 style={{}}
                             />
-                            <Divider />
                             <ThemedText type="defaultSemiBold">
                                 Fuel And Tolls
                             </ThemedText>
@@ -1218,7 +1204,7 @@ const NewContract = () => {
                                                 </ThemedText>
                                                 <Divider />
 
-                                                {["Zimbabwe", "SouthAfrica", "Namibia", "Tanzania", "Mozambique", "Zambia", "Botswana", "Malawi"].map((country) => (
+                                                { Countries.map((country) => (
                                                     <TouchableOpacity
                                                         key={country}
                                                         onPress={() => toggleInternationalCountry(country)}
@@ -1295,7 +1281,15 @@ const NewContract = () => {
                                 </TouchableOpacity>
                             </View>
                         ))}
-
+                          <ThemedText type="defaultSemiBold">
+                                Number Trucks Required
+                            </ThemedText>
+                            <Input
+                                value={formDataScnd.trucksRequiredNum}
+                                keyboardType="numeric"
+                                placeholder="Number Trucks Required"
+                                onChangeText={(text) => handleTypedTextScnd(text, 'trucksRequiredNum')}
+                            />
                             <AddTruckDetails
                                 selectedTruckType={selectedTruckType}
                                 setSelectedTruckType={setSelectedTruckType}
