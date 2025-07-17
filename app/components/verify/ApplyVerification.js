@@ -188,7 +188,7 @@ async function handleSubmit(pollUrl){
 let certOIncop , memoOAssociation , taxClearance  , NationalId , proofORes  ;
 
 
-  // certOIncop= await uploadImage(selectedDocuments[0]);
+  // certOIncop= await uploadImage(s`electedDocuments[0]);
   // memoOAssociation= await uploadImage(selectedDocuments[1]);
   // taxClearance= await uploadImage(selectedDocuments[2]);
   // NationalId= await uploadImage(selectedDocuments[3]);

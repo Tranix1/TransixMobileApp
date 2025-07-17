@@ -91,10 +91,26 @@ const CreateProduct = () => {
   const [storeCityDB , setStoreCityDB]=React.useState("")
   const [storePhonNumAddDb, setStorePhoneNum] = useState('');
 
+
+  const [uploadingStoreDetails , setUploadingStoreDetails]=React.useState(false)
   const handleUpdateStoreDetails = async () => {
-    console.log("start addd")
+    setUploadingStoreDetails(true)
+      const missingTruckDetails = [
+        !storeNamedDb && "Enter Owner Name ",
+      !storePhonNumAddDb && "Enter Phone Number",
+      !selectedStoreCountry?.name && "Enter Truck Nick Name ",
+      !storeCityDB && "Pick Proof of ownership document or imaage ",
+      !storeLocationAddDb && "Pick Id document or imaage  ",
+    ].filter(Boolean);
+
+    if (missingTruckDetails.length > 0) {
+      alertBox("Missing Ownership Details", missingTruckDetails.join("\n"), [], "error");
+    setUploadingStoreDetails(false)
+      return;
+    }
     await setDocuments("storeDetails", { storeName: storeNamedDb, storePhoneNum: storePhonNumAddDb,  exactLocation : storeLocationAddDb,storeCountry : selectedStoreCountry?.name ,storeCity :storeCityDB})
     setStoredetails(false)
+  setUploadingStoreDetails(false)
      ToastAndroid.show("Store Details created successfully!", ToastAndroid.SHORT);
   };
 
@@ -131,7 +147,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
     });
 
 
-    const { user } = useAuth();
+    const { user,alertBox } = useAuth();
 
     // Handle form field changes
     const handleChange = (field: keyof Product, value: any) => {
@@ -205,7 +221,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
 
             const response = await fetch(asset.uri);
             const blob = await response.blob();
-            const storageRef = ref(storage, `Shop/` + new Date().getTime());
+            const storageRef = ref(storage, `Store/` + new Date().getTime());
 
             // Upload the image
             const snapshot = await uploadBytes(storageRef, blob);
@@ -223,7 +239,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                 images.map(async (image) => {
                     const uri = await uploadImage(
                         image,
-                        "products",
+                        "Store",
                         setUploadProgress,
                         `Uploading image ${images.indexOf(image) + 1} of ${images.length}`
                     );
@@ -320,7 +336,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
             };
 
             // Add product to database
-            await addDocument("products", productData);
+            await addDocument("Store", productData);
              clearFormFields(); // Call this function to clear all fields
             ToastAndroid.show("Product created successfully!", ToastAndroid.SHORT);
         } catch (error) {
@@ -907,7 +923,7 @@ const [storeDetails, setStoreDetails] = useState<storeDetals | null> (null);
                   onChangeText={(text) => setStorePhoneNum(text)}
                 />
 
-                            <Button onPress={handleUpdateStoreDetails} title="Save" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{height:44}} />
+                            <Button onPress={handleUpdateStoreDetails} loading={uploadingStoreDetails} disabled={uploadingStoreDetails} title={uploadingStoreDetails ? "Saving..." : "Save"}  colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{height:44}} />
 
               </View>
             </View>

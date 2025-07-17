@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import { View, TouchableOpacity, StyleSheet, ScrollView, TouchableNativeFeedback } from "react-native";
+import { View, TouchableOpacity, StyleSheet, ScrollView, TouchableNativeFeedback,ToastAndroid } from "react-native";
 
 import { handleMakePayment } from "@/payments/operations";
 
@@ -310,8 +310,8 @@ const NewContract = () => {
 
         if (missingContractDetails.length > 0) {alertBox("Missing Contract Details", missingContractDetails.join("\n"), [], "error");return;}
 
-        const missingTrucks =[trucksNeeded.length === 0 && 'Choose at least 1 Truck Required']
-            if (missingTrucks.length > 0) {alertBox("Missing Contract Details", missingTrucks.join("\n"), [], "error");return;}
+        const missingTrucks =[trucksNeeded.length === 0 && 'Choose at least 1 Truck Required'].filter(Boolean);
+            if (missingTrucks.length > 0) {alertBox("Missing Truck Details", missingTrucks.join("\n"), [], "error");return;}
         
         setDspCheckout(true);
 
@@ -341,10 +341,12 @@ const NewContract = () => {
 
 
 
-    const justConsole = () => {
-        console.log("staty")
-        handleMakePayment(3, "yaya", setPaymentUpdate, "loadsContracts", contractData);
-        console.log("Donee")
+    const justConsole = async () => {
+        setIsSubmitting(true);
+        setDspCheckout(false);
+       await handleMakePayment(3, "yaya", setPaymentUpdate, "loadsContracts", contractData);
+        setIsSubmitting(false);
+      ToastAndroid.show('Contract Added successfully', ToastAndroid.SHORT)
     };
 
 
@@ -1115,11 +1117,11 @@ const NewContract = () => {
                             />
                             <Divider />
                             <ThemedText type="defaultSemiBold">
-                                Fuel
+                                Fuel And Tolls
                             </ThemedText>
                             <Input
                                 value={formDataScnd.fuelAvai}
-                                placeholder="Fuel"
+                                placeholder="Fuel and tolls"
                                 onChangeText={(text) => handleTypedTextScnd(text, 'fuelAvai')}
                                 style={{}}
                             />

@@ -85,6 +85,24 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
         []
     );
 
+        const handleContact = (method: 'whatsapp' | 'call' | 'message') => {
+        if (!selectedLoad?.contact) return
+
+        const message = `${selectedLoad.companyName}\nIs this Load Still available\n${selectedLoad.typeofLoad}\nrOUTE: ${selectedLoad.fromLocation} TO ${selectedLoad.toLocation}1nRate ${selectedLoad.model} : ${selectedLoad.currency} ${formatCurrency(selectedLoad.rate)}`
+
+        switch (method) {
+            case 'whatsapp':
+                Linking.openURL(`whatsapp://send?phone=${selectedLoad.contact}&text=${encodeURIComponent(message)}`)
+                break
+            case 'call':
+                Linking.openURL(`tel:${selectedLoad.contact}`)
+                break
+            case 'message':
+                // Implement your messaging logic
+                break
+        }
+    }
+
     return (
 
         <View style={[styles.container, { backgroundColor: background, flex: 1 }]}>
@@ -380,6 +398,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                         <View style={styles.contactOptions}>
                                         <View style={styles.contactOption}>
                                             <TouchableOpacity
+                                                onPress={() => handleContact('message')}
                                                 style={[styles.contactButton, { backgroundColor: coolGray }]}
                                             >
                                                 <Ionicons name="chatbubble-ellipses" size={wp(5)} color={'white'} />
@@ -389,6 +408,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                         <View style={styles.contactOption}>
                                             <TouchableOpacity
                                                 style={[styles.contactButton, { backgroundColor: '#25D366' }]}
+                                                onPress={() => handleContact('whatsapp')}
                                             >
                                                 <FontAwesome6 name="whatsapp" size={wp(5)} color="#fff" />
                                             </TouchableOpacity>
@@ -397,6 +417,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                         <View style={styles.contactOption}>
                                             <TouchableOpacity
                                                 style={[styles.contactButton, { backgroundColor: '#0074D9' }]}
+                                                onPress={() => handleContact('call')}
                                             >
                                                 <MaterialIcons name="call" size={wp(5)} color="#fff" />
                                             </TouchableOpacity>
@@ -446,6 +467,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                         </View>
                                          <View style={styles.contactOption}>
                                             <TouchableOpacity
+                                                onPress={() => handleContact('whatsapp')}
                                                 style={[styles.contactButton, { backgroundColor: '#25D366' }]}
                                             >
                                                 <FontAwesome6 name="whatsapp" size={wp(5)} color="#fff" />

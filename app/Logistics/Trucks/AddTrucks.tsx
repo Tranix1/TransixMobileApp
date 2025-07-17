@@ -109,12 +109,34 @@ function AddTrucks() {
 
 
 
-
+  const [uploadingOwnerD , setUploadingOwerD]=React.useState(false)
   const handleUpdateTOwnerDetails = async () => {
-    setOwnerdetailsDsp(false)
-    console.log("start addd")
+setUploadingOwerD(true)
+      const missingTruckDetails = [
+        !ownerNameAddDb && "Enter Owner Name ",
+      !ownerPhonNumAddDb && "Enter Phone Number",
+      !ownerEmailAddDb && "Enter Truck Nick Name ",
+      !selectedOwnerDocuments[0] && "Pick Proof of ownership document or imaage ",
+      !selectedOwnerDocuments[1] && "Pick Id document or imaage  ",
+    ].filter(Boolean);
 
-    await setDocuments("truckOwnerDetails", { ownerName: ownerNameAddDb, ownerPhoneNum: ownerPhonNumAddDb, ownerEmail: ownerEmailAddDb, ownershipProof: ownershipProof })
+    if (missingTruckDetails.length > 0) {
+      // setContractDErr(true);
+      alertBox("Missing Ownership Details", missingTruckDetails.join("\n"), [], "error");
+  setUploadingOwerD(false)
+      return;
+    }
+    
+    
+    let proofOfTruckOwnerhip,directorOwnerId ;
+    
+    proofOfTruckOwnerhip = await uploadImage(selectedOwnerDocuments[0], "TruckOwnership", setUploadImageUpdate, "Ownership uploading");
+    directorOwnerId = await uploadImage(selectedOwnerDocuments[1], "TruckOwnership", setUploadImageUpdate, "ID uploading");
+    
+    
+    await setDocuments("truckOwnerDetails", { ownerName: ownerNameAddDb, ownerPhoneNum: ownerPhonNumAddDb, ownerEmail: ownerEmailAddDb, ownershipProof: proofOfTruckOwnerhip , directorOwnerId:directorOwnerId })
+    setOwnerdetailsDsp(false)
+    setUploadingOwerD(false)
     ToastAndroid.show("Store Details created successfully!", ToastAndroid.SHORT);
   };
 
@@ -213,10 +235,7 @@ function AddTrucks() {
 
 
 
-    if (images.length < 4) {
-      ToastAndroid.show('Please Add all the required Images before Submiting', ToastAndroid.SHORT)
-      return;
-    }
+
 
 
     let truckImage, truckBookImage, trailerBookF, trailerBookSc, driverLicense, driverPassport, driverIntPermit;
@@ -373,7 +392,6 @@ function AddTrucks() {
                     </TouchableOpacity>
                     <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >OWNER DETAILS</ThemedText>
                   </View>
-
                   <ThemedText>
                     Owner's Name
                   </ThemedText>
@@ -534,9 +552,7 @@ function AddTrucks() {
 
 {!selectedOwnerDocuments[0] &&<View>
 
-                <ThemedText style={{ fontSize: 13.6 }}>
-  Upload: Company Document Confirming Truck Ownership or Lease
-</ThemedText>
+                  <ThemedText style={{ fontSize: 13.6 }}>Upload: Company Doc Validating Truck Ownership or Lease </ThemedText>
 <ThemedText type="tiny">
   This should show that you (as Owner or Director) or your company owns or leases the truck. Accepted formats: PDF or Image.
 </ThemedText>
@@ -651,7 +667,7 @@ function AddTrucks() {
 
 
 {!selectedOwnerDocuments[1] &&<View>
-<ThemedText style={{ fontSize: 13.6 }}>
+<ThemedText style={{ fontSize: 13.6 ,alignSelf:"center"}}>
   Upload: Owner or Director’s ID
 </ThemedText>
 <ThemedText type="tiny">
@@ -692,8 +708,7 @@ function AddTrucks() {
 
 
 
-
-                  <Button onPress={handleUpdateTOwnerDetails} title="Save" style={{ height: 40 }} />
+                <Button onPress={handleUpdateTOwnerDetails}  loading={uploadingOwnerD} disabled={uploadingOwnerD} title={uploadingOwnerD ? "Saving..." : "Save"}  colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{height:44}} />
 
                 </View>
               </View>

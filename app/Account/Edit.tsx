@@ -51,19 +51,19 @@ const Edit = () => {
     }, [])
 
     const Submit = async () => {
-        const logoImage = await uploadImage(imagelogo[0], "Trucks", setUploadImageUpdate, "Logo");
+        const logoImage =  imagelogo[0]  ? await uploadImage(imagelogo[0] , "Trucks", setUploadImageUpdate, "Logo") :null;
         const data = {
             country: selectedValue.value,
             address: address,
             phoneNumber: phoneNumber,
             organisation: organisation,
-            photoURL: logoImage
+            photoURL: imagelogo[0]  ?logoImage : user?.photoURL 
         }
 
         try {
             const update = await updateAccount(data);
             if (update.success) {
-                router.replace('/Account/Index')
+                router.back()
             }
         } catch (error) {
             console.error("errror", error)
@@ -84,14 +84,21 @@ const Edit = () => {
                     <ThemedText style={styles.label}>Organisation Logo</ThemedText>
 
                     {imagelogo[0] && <Image source={{ uri: imagelogo[0].uri }} style={{ width: wp(40), height: wp(40), margin: 'auto', marginBottom: 9, borderRadius: wp(4) }} />}
-                    {!imagelogo[0] && <TouchableOpacity
+                    {!imagelogo[0] && !user?.photoURL &&  <TouchableOpacity
                         style={[styles.input, { height: hp(14), justifyContent: 'center', alignItems: 'center' }]}
                         onPress={() => selectManyImages(setLogo, true)}
                     >
                         <Ionicons name='image-outline' size={wp(8)} color={icon} />
                         <ThemedText style={styles.label}>Click To Add Logo</ThemedText>
+
                     </TouchableOpacity>}
 
+                        
+                        {user?.photoURL &&!imagelogo[0] && <TouchableOpacity style={{justifyContent:"center",alignItems:"center"}} onPress={() => selectManyImages(setLogo, true)}>
+                       {<Image source={{ uri: user?.photoURL }} style={{ width: wp(50), height: hp(11.5), margin: 'auto', marginBottom: 9, borderRadius: wp(4) }} />}
+                            <ThemedText color={accent} >Edit</ThemedText>
+                        </TouchableOpacity>}
+                        
 
                     <ThemedText style={styles.label}>Organisation Name</ThemedText>
                     <Input
@@ -127,7 +134,6 @@ const Edit = () => {
                             paddingVertical: wp(1)
                         }}
                         onChange={item => {
-                            console.log(item);
                             setSelectedValue(item);
                         }}
 

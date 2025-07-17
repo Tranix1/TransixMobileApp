@@ -1,12 +1,13 @@
 
 const { Paynow } = require("paynow");
 import { addDocument } from "@/db/operations";
+import { ToastAndroid } from "react-native";
 
 
 export async function handleMakePayment(
   ammount: number,
   paymentPurpose: string,
-  onStatusUpdate: (status: string) => void,
+   setPaymentUpdate: (status: string) => void,
   dbName: string,
   dbData: object
 ) {
@@ -25,36 +26,37 @@ export async function handleMakePayment(
   payment.add(paymentPurpose, ammount);
 
   try {
-    onStatusUpdate("🔃 Initiating payment...");
+     setPaymentUpdate("🔃 Initiating payment...");
     let response = await paynow.sendMobile(payment, "0771111111", "ecocash");
 
     if (response.success) {
       let pollUrl = response.pollUrl;
-      onStatusUpdate("✅ Payment initiated! Polling...");
+       setPaymentUpdate("✅ Payment initiated! Polling...");
 
       let pollInterval = setInterval(async () => {
         try {
           let status = await paynow.pollTransaction(pollUrl);
-          console.log(`🔄 Status: ${status.status}`);
+          setPaymentUpdate(`🔄payment Status: ${status.status}`);
 
           if (status.status === "paid") {
-            console.log("✅ Payment Complete!");
-            addDocument(dbName, { ...dbData, pollUrl: pollUrl }, onStatusUpdate)
-
+            ToastAndroid.show("✅ Payment Complete!", ToastAndroid.SHORT)
+            setPaymentUpdate("Adding Contract")
+            await addDocument(dbName, { ...dbData, pollUrl: pollUrl }, )
+            setPaymentUpdate("")
             clearInterval(pollInterval);
           } else if (status.status === "cancelled" || status.status === "failed") {
-            onStatusUpdate("❌ Payment Failed or Cancelled.");
+             setPaymentUpdate("❌ Payment Failed or Cancelled.");
             clearInterval(pollInterval);
           }
         } catch (pollError) {
-          onStatusUpdate("⚠️ Polling Error.");
+           setPaymentUpdate("⚠️ Polling Error.");
           clearInterval(pollInterval);
         }
       }, 10000);
     } else {
-      onStatusUpdate(`❌ Error: ${response.error}`);
+       setPaymentUpdate(`❌ Error: ${response.error}`);
     }
   } catch (error) {
-    onStatusUpdate("⚠️ Payment Error.");
+     setPaymentUpdate("⚠️ Payment Error.");
   }
 }

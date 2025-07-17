@@ -590,6 +590,7 @@ const TruckDetails = () => {
                             shadowOpacity: 0.12,
                             shadowRadius: 4,
                             elevation: 2,
+                            paddingHorizontal:5
                         }}
                         onPress={() =>
                             router.push({

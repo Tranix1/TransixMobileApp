@@ -112,7 +112,7 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
 
         if (slectedMake) filters.push(where("bodyMake", "==", slectedMake.name));
 
-        const result = await fetchDocuments("products", 10, undefined, filters);
+        const result = await fetchDocuments("Store", 10, undefined, filters);
 
         if (result.data) {
                 if(filters.length > 0 && result.data.length <= 0 ) setFilteredPNotAavaialble(true)
@@ -161,7 +161,7 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
 
         if (loadingMore || !lastVisible) return
         setLoadingMore(true)
-        const result = await fetchDocuments('products', 10, lastVisible, filters);
+        const result = await fetchDocuments('Store', 10, lastVisible, filters);
         if (result) {
             setProducts(prevProducts => [...prevProducts, ...result.data as Product[]])
 
@@ -177,7 +177,7 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
 
     const deleteMyProduct = async (productId: string) => {
         try {
-            const deleting = await deleteDocument('products', productId)
+            const deleting = await deleteDocument('Store', productId)
             if (deleting) {
                 bottomSheetRef.current?.close()
                 ToastAndroid.show('Product deleted successfully', ToastAndroid.SHORT)
