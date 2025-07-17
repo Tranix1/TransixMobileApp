@@ -31,16 +31,16 @@ const Index = () => {
                     <ThemedText type="title">Transix</ThemedText>
                     <ThemedText type="tiny">The future of Transport & Logistics</ThemedText>
                 </View>
-               { user && <View style={{ flexDirection: 'row', gap: wp(2) }}>
+               <View style={{ flexDirection: 'row', gap: wp(2) }}>
 
                     <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-                        <TouchableNativeFeedback onPress={()=>checkAuth(setDspMenu(true)) }>
+                        <TouchableNativeFeedback onPress={()=>checkAuth(true) }>
                             <View style={{ padding: wp(2) }}>
                                 <Ionicons name='reorder-three' size={wp(6)} color={icon} />
                             </View>
                         </TouchableNativeFeedback>
                     </View>
-                </View>}
+                </View>
             </View>
 
         );
@@ -60,17 +60,27 @@ const Index = () => {
     const [dspVerifyAcc , setDspVerifyAcc]=useState(false)
     const [dspMenu , setDspMenu]= useState(false)
 
-    function checkAuth (theAction:any ){
-        if(!auth.currentUser ){
-            setDspCreateAcc(true)
-        }if(auth.currentUser && !auth.currentUser.emailVerified){
-           setDspVerifyAcc(true) 
-        }else if (auth.currentUser && auth.currentUser.emailVerified){
-            
-            theAction
-        }
-    }
+    
 
+    function checkAuth(theAction: any) {
+
+    if (auth.currentUser) {
+        if (!auth.currentUser.emailVerified) {
+            setDspVerifyAcc(true);
+        } else {
+            // user exists and email is verified
+if (typeof theAction === 'function') {
+        theAction(); // call the action
+      } else {
+        setDspMenu(true); // if it's not a function, open the menu
+      }
+
+        }
+    } else {
+        // no user logged in
+        setDspCreateAcc(true);
+    }
+}
 
     interface DataItem {
         topic: string;
@@ -82,7 +92,7 @@ const Index = () => {
 const theData: DataItem[] = [
     {
         id: 1,
-        topic: "Long-Term Contracts",
+        topic: "Long-Term Contracts", 
         description: 'Secure long-term contracts with trusted partners to grow your business with stable income, guaranteed loads, and reliable payments.',
         btnTitle: "Get Verified"
     },
@@ -434,7 +444,7 @@ const theData: DataItem[] = [
                                     alignItems: "center",
                                 }}
                             >
-                                <ThemedText style={{ color: "#0f9d58", fontWeight: "bold" }}>Create Acc</ThemedText>
+                                <ThemedText style={{ color: "#0f9d58", fontWeight: "bold" }}>Autheticate</ThemedText>
                             </TouchableOpacity>
                     </View>
                 </BlurView>
@@ -534,7 +544,7 @@ const theData: DataItem[] = [
                                         console.log("Sending verification email...");
 
                                         await sendEmailVerification(auth.currentUser as any);
-                                        ToastAndroid.show('Truck Added successfully', ToastAndroid.SHORT)
+                                        ToastAndroid.show('verification email Link sent!', ToastAndroid.SHORT)
                                         setDspVerifyAcc(false) 
                                     } catch (error) {
                                         console.log("Error sending verification email:", error);
@@ -599,7 +609,7 @@ const theData: DataItem[] = [
                     </View>
                     <View style={[{ flexDirection: 'row', gap: wp(2), justifyContent: 'space-between' }]}>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={()=> checkAuth( router.push('/Logistics/Contracts/NewContract')) }
+                            <TouchableHighlight onPress={()=> checkAuth(()=> router.push('/Logistics/Contracts/NewContract')) }
                                                                
                                 underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
                                 <Ionicons name="reader" size={wp(5)} color="#e50914" />
@@ -609,7 +619,7 @@ const theData: DataItem[] = [
                             </ThemedText>
                         </View>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() =>checkAuth(router.push('/Logistics/Trucks/AddTrucks'))} underlayColor={'#0f9d585a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#0f9d5824' }}>
+                            <TouchableHighlight onPress={() =>checkAuth(()=>router.push('/Logistics/Trucks/AddTrucks'))} underlayColor={'#0f9d585a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#0f9d5824' }}>
                                 <Fontisto name="truck" size={wp(5)} color="#0f9d58" />
                             </TouchableHighlight>
                             <ThemedText type='tiny' style={{ textAlign: 'center' }}>
@@ -617,7 +627,7 @@ const theData: DataItem[] = [
                             </ThemedText>
                         </View>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() =>checkAuth(router.push('/Logistics/Loads/AddLoads')) } underlayColor={'#4285f45a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#4285f424' }}>
+                            <TouchableHighlight onPress={() =>checkAuth(()=>router.push('/Logistics/Loads/AddLoads')) } underlayColor={'#4285f45a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#4285f424' }}>
                                 <FontAwesome6 name="box" size={wp(5)} color="#4285f4" />
                             </TouchableHighlight>
                             <ThemedText type='tiny' style={{ textAlign: 'center' }}>
@@ -625,7 +635,7 @@ const theData: DataItem[] = [
                             </ThemedText>
                         </View>
                         <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() => router.push('/Transport/Store/CreateProduct')} underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
+                            <TouchableHighlight  onPress={() =>checkAuth(()=>router.push('/Transport/Store/CreateProduct')) }   underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
                                 <Fontisto name="dollar" size={wp(5)} color="#F48024" />
                             </TouchableHighlight>
                             <ThemedText type='tiny' style={{ textAlign: 'center' }}>

@@ -13,6 +13,8 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 
+import { getAuth,sendPasswordResetEmail} from 'firebase/auth';
+
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -45,6 +47,27 @@ const Login = () => {
 
     }
 
+    const [resetPasswprd, setResetPassword] = React.useState(false)
+  const auth = getAuth();
+
+const sendPasswordReset = () => {
+  if(email){
+
+  sendPasswordResetEmail(auth, email)
+    .then(() => {
+      // Password reset email sent successfully
+      alert('A password reset link has been sent to your email. Please check your inbox and follow the instructions.');
+
+    })
+    .catch((error) => {
+      // An error occurred
+      setError(`${error.message}`);
+    });
+  }else{
+    alert("Enter Email that need to be reset")
+  }
+};
+
 
     return (
         <ScreenWrapper>
@@ -59,30 +82,60 @@ const Login = () => {
                     </ThemedText>
                 )}
 
-                <ThemedText style={styles.label}>Email</ThemedText>
-                <Input
-                    containerStyles={styles.input}
-                    placeholder="Your email"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType='email-address'
-                />
 
-                <ThemedText style={styles.label}>Password</ThemedText>
-                <Input
-                    containerStyles={styles.input}
-                    placeholder="Enter your password"
-                    value={password}
-                    isPassword
-                    onChangeText={setPassword}
-                />
+                {!resetPasswprd && <View>
 
 
+                    <ThemedText style={styles.label}>Email</ThemedText>
+                    <Input
+                        containerStyles={styles.input}
+                        placeholder="Your email"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType='email-address'
+                    />
+                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                        <ThemedText style={styles.label}>Password</ThemedText>
+
+                        <TouchableOpacity onPress={() => setResetPassword(true)}>
+                            <ThemedText style={styles.label} color='#007AFF' >Forgot Password ?</ThemedText>
+                        </TouchableOpacity>
+
+                    </View>
+                    <Input
+                        containerStyles={styles.input}
+                        placeholder="Enter your password"
+                        value={password}
+                        isPassword
+                        onChangeText={setPassword}
+                    />
+
+                    <TouchableOpacity onPress={() => onsubmit()} style={[styles.signUpButton, { backgroundColor: accent }]} disabled={loading}>
+                        <ThemedText color='#fff' type='subtitle'>{loading ? "Loading..." : "Sign up"}</ThemedText>
+                    </TouchableOpacity>
 
 
-                <TouchableOpacity onPress={() => onsubmit()} style={[styles.signUpButton, { backgroundColor: accent }]} disabled={loading}>
-                    <ThemedText color='#fff' type='subtitle'>{loading ? "Loading..." : "Sign up"}</ThemedText>
-                </TouchableOpacity>
+                </View>}
+
+                {resetPasswprd && <View>
+                    <ThemedText style={{marginBottom:15}}>
+                        Enter a valid email and submit to receive a reset link in your inbox.
+                        
+                    </ThemedText>
+
+                    <ThemedText style={styles.label} color={coolGray}>Email</ThemedText>
+                    <Input
+                        containerStyles={styles.input}
+                        placeholder="Your email"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType='email-address'
+                    />
+
+                    <TouchableOpacity onPress={sendPasswordReset} style={[styles.signUpButton, { backgroundColor: accent }]} disabled={loading}>
+                        <ThemedText color='#fff' type='subtitle'> Reset Password</ThemedText>
+                    </TouchableOpacity>
+                </View>}
 
                 <ThemedText type='tiny' color={coolGray} style={styles.dividerText}>Or Register with</ThemedText>
 
