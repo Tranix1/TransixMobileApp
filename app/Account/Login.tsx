@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet,ActivityIndicator } from 'react-native';
 import Input from '@/components/Input'
 import Button from '@/components/Button'
 import CheckBox from '@react-native-community/checkbox';
@@ -50,17 +50,21 @@ const Login = () => {
     const [resetPasswprd, setResetPassword] = React.useState(false)
   const auth = getAuth();
 
-const sendPasswordReset = () => {
-  if(email){
+const sendPasswordReset = async () => {
 
-  sendPasswordResetEmail(auth, email)
+  if(email){
+    setLoading(true)
+ await sendPasswordResetEmail(auth, email)
     .then(() => {
       // Password reset email sent successfully
+      setLoading(false)
+      setResetPassword(false)
       alert('A password reset link has been sent to your email. Please check your inbox and follow the instructions.');
 
     })
     .catch((error) => {
       // An error occurred
+      setLoading(false)
       setError(`${error.message}`);
     });
   }else{
@@ -74,6 +78,7 @@ const sendPasswordReset = () => {
             <View style={styles.container}>
                 <Image contentFit='contain' source={require('@/assets/trialogo.svg')} style={styles.logo} />
 
+                {loading &&<ActivityIndicator color={accent} />}
                 <ThemedText type='title' style={styles.header}>Login</ThemedText>
 
                 {error && (
@@ -111,7 +116,7 @@ const sendPasswordReset = () => {
                     />
 
                     <TouchableOpacity onPress={() => onsubmit()} style={[styles.signUpButton, { backgroundColor: accent }]} disabled={loading}>
-                        <ThemedText color='#fff' type='subtitle'>{loading ? "Loading..." : "Sign up"}</ThemedText>
+                        <ThemedText color='#fff' type='subtitle'>{loading ? "Loading..." : "Sign up"} </ThemedText>
                     </TouchableOpacity>
 
 
@@ -133,7 +138,7 @@ const sendPasswordReset = () => {
                     />
 
                     <TouchableOpacity onPress={sendPasswordReset} style={[styles.signUpButton, { backgroundColor: accent }]} disabled={loading}>
-                        <ThemedText color='#fff' type='subtitle'> Reset Password</ThemedText>
+                        <ThemedText color='#fff' type='subtitle'> {loading ? "Loading..." : "Reset Password"} </ThemedText>
                     </TouchableOpacity>
                 </View>}
 
@@ -152,12 +157,12 @@ const sendPasswordReset = () => {
                     </TouchableOpacity>
                 </View>
 
+                    <TouchableOpacity onPress={() => router.replace('/Account/SignUp')}>
                 <ThemedText style={styles.footerText}>
                     Do not have an Account?{' '}
-                    <TouchableOpacity onPress={() => router.replace('/Account/SignUp')}>
                         <ThemedText style={styles.loginLink}>Sign in</ThemedText>
-                    </TouchableOpacity>
                 </ThemedText>
+                    </TouchableOpacity>
             </View>
         </ScreenWrapper>
     )

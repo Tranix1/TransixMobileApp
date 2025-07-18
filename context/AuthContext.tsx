@@ -140,9 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
             const user = userCredential.user;
-
               await  sendEmailVerification(user); 
-              
 
             // Update the user's profile with the display name
             await updateProfile(user, { displayName: credentials.displayName });
@@ -164,7 +162,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 displayName: credentials.displayName
             }));
         } catch (error) {
-            console.log('error logging in ', error);
+           ToastAndroid.show(`error logging in , ${error}`, ToastAndroid.LONG)
         }
     };
 

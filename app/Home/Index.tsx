@@ -94,43 +94,43 @@ const theData: DataItem[] = [
         id: 1,
         topic: "Long-Term Contracts", 
         description: 'Secure long-term contracts with trusted partners to grow your business with stable income, guaranteed loads, and reliable payments.',
-        btnTitle: "Get Verified"
+        btnTitle: "Get Verified  "
     },
     {
         id: 2,
         topic: "First Level Verification",
         description: 'Verify your business today to build trust with customers, access exclusive deals, and boost your company’s reputation easily.',
-        btnTitle: "Get Verified"
+        btnTitle: "Get Verified  "
     },
     {
         id: 3,
         topic: "GIT (Goods in Transit Insurance)",
         description: 'Protect your trucks and cargo while on the road. Get insurance that covers theft, accidents, and damages during transit.',
-        btnTitle: "Get GIT"
+        btnTitle: "Get GIT  "
     },
     {
         id: 4,
         topic: "Tracking",
         description: 'Track your trucks and cargo live on the app. Improve safety, monitor routes, and keep customers updated anytime.',
-        btnTitle: "View Tracking"
+        btnTitle: "View Tracking  "
     },
     {
         id: 6,
-        topic: "Fuel",
+        topic: "Fuel   ",
         description: 'Find nearby fuel service stations with the best prices. Enjoy special discounts and get quick directions to save time and money.',
-        btnTitle: "Get Fuel"
+        btnTitle: "Get Fuel "
     },
     {
         id: 5,
-        topic: "Warehouse",
+        topic: "Warehouse   ",
         description: 'Find secure, affordable warehouses near your routes. Store your goods safely with easy directions and discounted rates for members.',
-        btnTitle: "Check Warehouses"
+        btnTitle: "Check Warehouses  "
     },
     {
         id: 7,
-        topic: "Truck Stop",
+        topic: "Truck Stop   ",
         description: 'Locate safe and comfortable truck stops on your journey. Rest, refresh, refuel, and access facilities conveniently anytime.',
-        btnTitle: "Visit Truck Stop"
+        btnTitle: "Visit Truck Stop  "
     },
 ];
 

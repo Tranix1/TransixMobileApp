@@ -87,7 +87,7 @@ export const SpecifyProductDetails: React.FC<SpecifyProductDetailsProps> = ({
   }) => {
     return (
       <>
-        <ThemedText>{title}</ThemedText>
+        <ThemedText color="#1E90FF">{title}</ThemedText>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}

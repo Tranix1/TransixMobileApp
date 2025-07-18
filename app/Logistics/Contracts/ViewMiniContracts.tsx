@@ -10,7 +10,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { hp, wp } from "@/constants/common";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
-
+import Entypo from '@expo/vector-icons/Entypo';
 import { Countries } from "@/types/types";
 
 import { useLocalSearchParams } from 'expo-router'
@@ -227,9 +227,13 @@ function LoadsContracts() {
       </View>
 
 {/* {item.contractLocation.length > 0 && <ThemedText>{item.contractLocation?.join (', ')  } </ThemedText>} */}
-<ThemedText type="subtitle" style={{ marginBottom: wp(4) }}>
+<View style={{flexDirection:'row'}}>
+
+  <Entypo name="location-pin" size={17} color={icon} style={{marginRight:6}} />
+<ThemedText type="subtitle" style={{ marginBottom: wp(4) ,fontSize:16}}>
   {item.contractLocation?.join(', ') || '--'}
 </ThemedText>
+</View>
 
       <TouchableOpacity
         style={{

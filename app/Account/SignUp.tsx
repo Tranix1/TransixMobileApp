@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,ActivityIndicator } from 'react-native';
 import Input from '@/components/Input'
 import Button from '@/components/Button'
 import CheckBox from '@react-native-community/checkbox';
@@ -29,21 +29,25 @@ const Index = () => {
 
     const { signUp } = useAuth();
 
+    const [loading , setLoading]=React.useState(false)
     const onsubmit = () => {
+        setLoading(true)
         if (!fullname || !email || !password) {
             alert('Please fill in all fields');
+        setLoading(false)
             return;
         }
 
         if (!acceptTerms) {
+        setLoading(true)
             alert('You must accept the terms and privacy policy');
+        setLoading(false)
             return;
         }
 
         signUp({ displayName: fullname, email, password, organisation: fullname })
             .then(() => {
-                alert('Verification Email Sent \b Please Verify Your Email To Continue');
-                router.replace('/Account/Login');
+                alert('Verification Email Sent \nPlease Verify Your Email To Continue');
 
             })
             .catch((error) => {
@@ -54,6 +58,8 @@ const Index = () => {
         <ScreenWrapper>
             <ScrollView style={styles.container}>
                 <Image contentFit='contain' source={require('@/assets/trialogo.svg')} style={styles.logo} />
+
+                {loading &&<ActivityIndicator color={accent} />}
 
                 <ThemedText type='title' style={styles.header}>Sign up</ThemedText>
                 <ThemedText style={styles.label}>Organisation</ThemedText>
@@ -85,9 +91,9 @@ const Index = () => {
                 <View style={styles.checkboxContainer}>
                     <TouchableOpacity onPress={() => setAcceptTerms(!acceptTerms)}>
                         {acceptTerms ?
-                            <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color="black" />
+                            <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={icon} />
                             :
-                            <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color="black" />
+                            <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={icon} />
                         }
                     </TouchableOpacity>
                     <ThemedText style={styles.checkboxText}>I accept the terms and privacy policy</ThemedText>
@@ -114,10 +120,13 @@ const Index = () => {
 
                 <ThemedText style={styles.footerText}>
                     Already have an account?
-                    <TouchableOpacity onPress={() => router.replace('/Account/Login')}>
+                    <TouchableOpacity onPress={() => router.replace('/Account/Login')} disabled={loading} >
                         <ThemedText style={styles.loginLink}>Log in</ThemedText>
                     </TouchableOpacity>
                 </ThemedText>
+                <View style={{height:70}}>
+
+                </View>
             </ScrollView>
         </ScreenWrapper>
     )

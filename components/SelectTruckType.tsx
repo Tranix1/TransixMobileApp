@@ -57,7 +57,7 @@ export const SpecifyTruckType:React.FC<SpecifyTruckTypeProps> =({selectedTruckTy
             </ScrollView>}
 
 
-                <ThemedText>Cargo area</ThemedText>
+                <ThemedText color="#1E90FF">Cargo area</ThemedText>
 
                              <ScrollView horizontal contentContainerStyle={{ gap: wp(2) }} style={{}}>
                                { cargoArea.map((item) => (

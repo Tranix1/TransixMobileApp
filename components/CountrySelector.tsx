@@ -38,7 +38,7 @@ setOperationCountries
 
   return (
     <View>
-    <ThemedText>Were can the truck Operat e</ThemedText>
+    <ThemedText color='#1E90FF'>Operating Countries</ThemedText>
   
 
 

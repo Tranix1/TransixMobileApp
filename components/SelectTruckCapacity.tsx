@@ -42,7 +42,7 @@ export const SlctTruckCapacity: FC<SlctTruckCapacityProps> = ({
 
     return (
         <View>
-            <ThemedText>Truck Capacity {selectedTruckType?.name === "Tanker" ? "Litres":"Tonnage" } </ThemedText>
+            <ThemedText color="#1E90FF">Truck Capacity {selectedTruckType?.name === "Tanker" ? "Litres":"Tonnage" } </ThemedText>
        
 
             <ScrollView
