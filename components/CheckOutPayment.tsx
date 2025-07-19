@@ -124,7 +124,7 @@ interface CheckOutMakePaymentsProps {
       marginTop: 10,
     }}
   >
-    <Entypo name="lock" size={20}  style={{ marginRight: 8 }} />
+    <Entypo name="lock" size={20}  style={{ marginRight: 8 }} color={icon}/>
     <ThemedText style={{  fontSize: 14 }}>
       Your payments are made securely
     </ThemedText>
