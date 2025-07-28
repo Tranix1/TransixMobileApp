@@ -187,6 +187,7 @@ const AddLoadDB = () => {
         if (MissingDriverDetails.length > 0) {
             // setContractDErr(true);
             alertBox("Missing Load Details", MissingDriverDetails.join("\n"), [], "error");
+            setIsSubmitting(false)
             return;
         }
 
@@ -194,10 +195,12 @@ const AddLoadDB = () => {
 
         if (!user) {
             alert("Please Login first");
+            setIsSubmitting(false)
             router.push('/Account/Login')
             return;
         }
         if (!user.organisation) {
+            setIsSubmitting(false)
             alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
             return;
         }
@@ -243,7 +246,7 @@ const AddLoadDB = () => {
             alert("Failed to submit load. Please try again.");
         }finally{
 
-setIsSubmitting(false)
+        setIsSubmitting(false)
         }
     };
 

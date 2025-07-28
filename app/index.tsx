@@ -29,8 +29,6 @@ export default function Index() {
       <View style={{ flex: 1, backgroundColor: background }}>
 
         {/* <CustomHeader /> */}
-
-
         <Tab.Navigator
           screenOptions={({ route }) => ({
             tabBarIcon: ({ focused }) => {

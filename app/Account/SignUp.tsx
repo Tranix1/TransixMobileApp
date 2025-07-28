@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import Input from '@/components/Input'
 import Button from '@/components/Button'
 import CheckBox from '@react-native-community/checkbox';
@@ -29,26 +29,25 @@ const Index = () => {
 
     const { signUp } = useAuth();
 
-    const [loading , setLoading]=React.useState(false)
+    const [loading, setLoading] = React.useState(false)
     const onsubmit = () => {
         setLoading(true)
-        if (!fullname || !email || !password) {
+        if (!email || !password) {
             alert('Please fill in all fields');
-        setLoading(false)
+            setLoading(false)
             return;
         }
 
         if (!acceptTerms) {
-        setLoading(true)
+            setLoading(true)
             alert('You must accept the terms and privacy policy');
-        setLoading(false)
+            setLoading(false)
             return;
         }
 
-        signUp({ displayName: fullname, email, password, organisation: fullname })
+        signUp({ displayName: fullname, email, password, })
             .then(() => {
-                alert('Verification Email Sent \nPlease Verify Your Email To Continue');
-
+                setLoading(false)
             })
             .catch((error) => {
                 alert(`Sign up failed: ${error.message}`);
@@ -59,17 +58,10 @@ const Index = () => {
             <ScrollView style={styles.container}>
                 <Image contentFit='contain' source={require('@/assets/trialogo.svg')} style={styles.logo} />
 
-                {loading &&<ActivityIndicator color={accent} />}
+                {loading && <ActivityIndicator color={accent} />}
 
-                <ThemedText type='title' style={styles.header}>Sign up</ThemedText>
-                <ThemedText style={styles.label}>Organisation</ThemedText>
-                <Input
-                    containerStyles={styles.input}
-                    placeholder="Organisation"
-                    value={fullname}
-                    onChangeText={setFullName}
-                />
-
+                <ThemedText type='title' style={styles.header}>Create Account</ThemedText>
+               
                 <ThemedText style={styles.label}>Email</ThemedText>
                 <Input
                     containerStyles={styles.input}
@@ -99,9 +91,11 @@ const Index = () => {
                     <ThemedText style={styles.checkboxText}>I accept the terms and privacy policy</ThemedText>
                 </View>
 
-                <TouchableOpacity onPress={() => onsubmit()} style={[styles.signUpButton, { backgroundColor: accent }]}>
-                    <ThemedText color='#fff' type='subtitle'>Sign up</ThemedText>
+
+                <TouchableOpacity onPress={() => onsubmit()} style={[styles.signUpButton, { backgroundColor: accent }]} disabled={loading}>
+                    <ThemedText color='#fff' type='subtitle'>{loading ? "Loading..." : "Sign up"} </ThemedText>
                 </TouchableOpacity>
+
 
                 <ThemedText type='tiny' color={coolGray} style={styles.dividerText}>Or Register with</ThemedText>
 
@@ -118,13 +112,13 @@ const Index = () => {
                     </TouchableOpacity>
                 </View>
 
-                <ThemedText style={styles.footerText}>
-                    Already have an account?
-                    <TouchableOpacity onPress={() => router.replace('/Account/Login')} disabled={loading} >
+                <TouchableOpacity onPress={() => router.replace('/Account/Login')} disabled={loading} >
+                    <ThemedText style={styles.footerText}>
+                        Already have an account?
                         <ThemedText style={styles.loginLink}>Log in</ThemedText>
-                    </TouchableOpacity>
-                </ThemedText>
-                <View style={{height:70}}>
+                    </ThemedText>
+                </TouchableOpacity>
+                <View style={{ height: 70 }}>
 
                 </View>
             </ScrollView>

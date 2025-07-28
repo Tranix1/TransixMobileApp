@@ -74,10 +74,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const userCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
             const user = userCredential.user;
 
-                if( auth.currentUser && auth.currentUser.emailVerified ){
+                if( auth.currentUser && !auth.currentUser.emailVerified ){
                 const user = userCredential.user;
+                await  sendEmailVerification(user); 
                 alert('Verification Email Sent \b Please Verify Your Email To Continue');
-                    await  sendEmailVerification(user); 
                 }
 
                 
@@ -92,8 +92,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (error: any) {
             const errorCode = error.message.match(/\(([^)]+)\)/)?.[1];
             console.log(error);
-            console.log(errorCode);
-
             let errorMessage = "An unexpected error occurred. Please try again.";
 
             if (errorCode) {
@@ -132,37 +130,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     interface SignUpCredentials {
         email: string;
         password: string;
-        displayName: string;
-        organisation: string;
+        // displayName: string;
+        // organisation: string;
     }
 
     const signUp = async (credentials: SignUpCredentials): Promise<void> => {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
-            const user = userCredential.user;
-              await  sendEmailVerification(user); 
-
-            // Update the user's profile with the display name
-            await updateProfile(user, { displayName: credentials.displayName });
-            const newUser = await setDocuments("personalData", {
-                phoneNumber: null,
-                photoURL: null,
-                displayName: credentials.displayName,
-                organisation: credentials.displayName,
-                uid: user.uid,
-                email: user.email,
-            });
-
-            setUser({ uid: user.uid, email: user.email, displayName: user.displayName, phoneNumber: user.phoneNumber, photoURL: user.photoURL, organisation: user.displayName } as User);
-
+            console.log("")
             setIsSignedIN(true);
-            router.back();
+            const user = userCredential.user;     
             await AsyncStorage.setItem('user', JSON.stringify({
                 ...user,
-                displayName: credentials.displayName
             }));
+                    ToastAndroid.show('Account created successfully!', ToastAndroid.SHORT);
+
+            router.push('/Account/Profile')   
         } catch (error) {
-           ToastAndroid.show(`error logging in , ${error}`, ToastAndroid.LONG)
+           ToastAndroid.show(`${error}`, ToastAndroid.LONG)
         }
     };
 
@@ -170,6 +155,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             await signOut(auth);
             setupUser(null);
+            router.back();
             ToastAndroid.show('logout successful', ToastAndroid.SHORT)
             return true; // Returns true if successful
         } catch (error) {
@@ -216,6 +202,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 await setDocuments("personalData", {
                     ...credentials,
                 });
+                if( auth.currentUser && !auth.currentUser.emailVerified ){
+                    await  sendEmailVerification(auth.currentUser ); 
+                    alert('Verification Email Sent \b Please Verify Your Email To Continue');
+                }
             }
             setupUser({ ...auth, ...credentials });
             return { success: true };

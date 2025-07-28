@@ -116,7 +116,7 @@ const sendPasswordReset = async () => {
                     />
 
                     <TouchableOpacity onPress={() => onsubmit()} style={[styles.signUpButton, { backgroundColor: accent }]} disabled={loading}>
-                        <ThemedText color='#fff' type='subtitle'>{loading ? "Loading..." : "Sign up"} </ThemedText>
+                        <ThemedText color='#fff' type='subtitle'>{loading ? "Loading..." : "Login"} </ThemedText>
                     </TouchableOpacity>
 
 

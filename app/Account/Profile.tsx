@@ -50,22 +50,26 @@ const Edit = () => {
 
     }, [])
 
+    const [loading, setLoading] = React.useState(false)
     const Submit = async () => {
-        const logoImage =  imagelogo[0]  ? await uploadImage(imagelogo[0] , "Trucks", setUploadImageUpdate, "Logo") :null;
+setLoading(true)
+        const logoImage =  imagelogo[0]  ? await uploadImage(imagelogo[0] , "Profiles", setUploadImageUpdate, "Logo") :null;
         const data = {
             country: selectedValue.value,
             address: address,
             phoneNumber: phoneNumber,
             organisation: organisation,
-            photoURL: imagelogo[0]  ?logoImage : user?.photoURL 
+            photoURL: imagelogo[0]  ?logoImage : user?.photoURL ,
+            
         }
 
         try {
             const update = await updateAccount(data);
             if (update.success) {
-                router.back()
+                router.dismissAll()
             }
         } catch (error) {
+    setLoading(false)
             console.error("errror", error)
         }
 
@@ -75,9 +79,9 @@ const Edit = () => {
 
     return (
         <ScreenWrapper>
+                <Heading page='Profile' />
             <View style={styles.container}>
 
-                <Heading page='Edit' />
                 <ScrollView>
 
 
@@ -172,12 +176,8 @@ const Edit = () => {
                     />
 
 
-
-
-
-
-                    <TouchableOpacity onPress={() => Submit()} style={[styles.signUpButton, { backgroundColor: accent }]}>
-                        <ThemedText color='#fff' type='subtitle'>Save</ThemedText>
+                    <TouchableOpacity onPress={() => Submit()} style={[styles.signUpButton, { backgroundColor: accent }]} disabled={loading}>
+                    <ThemedText color='#fff' type='subtitle'>{loading ? "Saving..." : "Save"} </ThemedText>
                     </TouchableOpacity>
 
 
