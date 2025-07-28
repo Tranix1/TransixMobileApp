@@ -40,7 +40,7 @@ const Index = () => {
 
                 <View style={{ flexDirection: 'row', marginRight: wp(2) }}>
                     <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
-                        <TouchableNativeFeedback onPress={() => router.push('/Account/Edit')}>
+                        <TouchableNativeFeedback onPress={() => router.push('/Account/Profile')}>
                             <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
                                 <Ionicons name='settings-outline' color={icon} size={wp(4)} />
                             </View>
@@ -66,7 +66,7 @@ const Index = () => {
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: wp(2) }}>
                         <ThemedText style={styles.cardTitle}>Details</ThemedText>
                         <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
-                            <TouchableNativeFeedback onPress={() => router.push('/Account/Edit')}>
+                            <TouchableNativeFeedback onPress={() => router.push('/Account/Profile')}>
                                 <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
                                     <AntDesign name='edit' color={icon} size={wp(4)} />
                                 </View>
@@ -75,29 +75,13 @@ const Index = () => {
                     </View>
                     <Divider />
                     <View style={styles.cardContent}>
-                        <DetailRow label="Phone Number" value={cleanNumber(user?.phoneNumber || 'N/A')} />
+                        <DetailRow label="Phone Number" value={ user?.phoneNumber || 'N/A'} />
                         <DetailRow label="Country" value={user?.country || 'N/A'} />
                         <DetailRow label="Address" value={user?.address || 'N/A'} />
                         <DetailRow label="Organization" value={user?.organisation || 'N/A'} />
                         <DetailRow label="Created At" value={formatDate(user?.createdAt || "N/A")} />
                     </View>
                 </View>
-
-
-
-
-                {/* {user &&
-                    Object.keys(user)
-                        .filter((key) => !['uid', 'created_At', 'displayName', 'photoURL', 'phoneNumber', 'email', 'emailVerified', 'organization', 'country', 'address'].includes(key))
-                        .map((key) => (
-                            <View key={key} style={styles.card}>
-                                <Text style={styles.cardTitle}>{key.replace(/_/g, ' ').toUpperCase()}</Text>
-                                <View style={styles.cardContent}>
-                                    <Text style={styles.additionalInfo}>{String(user?.[key])}</Text>
-                                </View>
-                            </View>
-                        ))
-                } */}
 
 
                

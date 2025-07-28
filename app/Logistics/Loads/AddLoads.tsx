@@ -209,7 +209,7 @@ const AddLoadDB = () => {
             companyName: user?.organisation,
             contact: user?.phoneNumber || '',
             logo: user.photoURL,
-            created_at: Date.now().toString(),
+            created_at: Date.now().toString() ,
             isVerified: false,
             typeofLoad,
             destination: toLocation,

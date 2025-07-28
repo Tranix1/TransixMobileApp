@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { hp, wp } from '@/constants/common';
 import { ThemedText } from '@/components/ThemedText';
@@ -9,15 +9,20 @@ import Input from '@/components/Input';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import Heading from '@/components/Heading';
 import { Entypo, Ionicons } from '@expo/vector-icons';
-import { Dropdown } from 'react-native-element-dropdown';
+import { Dropdown, SelectCountry } from 'react-native-element-dropdown';
 import { Countries } from '@/types/types';
 import type { ImagePickerAsset } from 'expo-image-picker';
 import { selectManyImages } from '@/Utilities/utils';
 import { uploadImage } from "@/db/operations";
+import Divider from "@/components/Divider";
+import { countryCodes, } from "@/data/appConstants";
+
 
 const Edit = () => {
 
-    const { user, updateAccount } = useAuth();
+  const { operation } = useLocalSearchParams();
+
+    const { user, updateAccount , alertBox } = useAuth();
 
 
     const [imagelogo, setLogo] = useState<ImagePickerAsset[]>([]);
@@ -34,32 +39,56 @@ const Edit = () => {
     const accent = useThemeColor('accent')
     const coolGray = useThemeColor('coolGray')
 
+    const [countryCode, setCountryCode] = useState<{ id: number, name: string }>({ id: 0, name: '+263' })
 
     const countries = Countries.map((item) => ({ value: item, label: item }))
-
     useEffect(() => {
         if (!user)
             router.back()
         else {
             setOrganisation(user?.organisation || '')
-            setPhoneNumber(user?.phoneNumber || '')
+            setPhoneNumber(user?.number || '')
+            setCountryCode(user.countryCode ||{id: 0, name: '+263' } )
             setAddress(user?.address || '')
             setSelectedValue({ value: user.country || '', label: user.country || '' })
         }
 
-
     }, [])
 
     const [loading, setLoading] = React.useState(false)
+
     const Submit = async () => {
+
+    const MissingDriverDetails = [
+            !organisation && "Enter Organisation Name",
+            !selectedValue.value && "Select Country Of Operation",
+            !address && "Enter Physical Adress ",
+            !countryCode.name && "Select Country Code",
+            !phoneNumber && "Enter Phone Number",
+        ].filter(Boolean);
+
+        if (MissingDriverDetails.length > 0 && operation ==="create") {
+            // setContractDErr(true);
+            alertBox("Missing Profile Details", MissingDriverDetails.join("\n"), [], "error");
+            setLoading(false)
+            return;
+        }
+
+
 setLoading(true)
+
         const logoImage =  imagelogo[0]  ? await uploadImage(imagelogo[0] , "Profiles", setUploadImageUpdate, "Logo") :null;
         const data = {
             country: selectedValue.value,
             address: address,
-            phoneNumber: phoneNumber,
+            phoneNumber: `${countryCode.name}${phoneNumber}`,
+            number: phoneNumber ,
+            countryCode : countryCode,
             organisation: organisation,
             photoURL: imagelogo[0]  ?logoImage : user?.photoURL ,
+            uid: user?.uid,
+            email: user?.email,
+            createdAt: user?.createdAt
             
         }
 
@@ -69,23 +98,22 @@ setLoading(true)
                 router.dismissAll()
             }
         } catch (error) {
-    setLoading(false)
+        setLoading(false)
             console.error("errror", error)
         }
 
     }
 
 
+    const headerTitle= operation==="create"? "Create Profile": "Edit Profile"
 
     return (
         <ScreenWrapper>
-                <Heading page='Profile' />
+                <Heading page={headerTitle} />
+
             <View style={styles.container}>
 
                 <ScrollView>
-
-
-                    <ThemedText style={styles.label}>Organisation Logo</ThemedText>
 
                     {imagelogo[0] && <Image source={{ uri: imagelogo[0].uri }} style={{ width: wp(40), height: wp(40), margin: 'auto', marginBottom: 9, borderRadius: wp(4) }} />}
                     {!imagelogo[0] && !user?.photoURL &&  <TouchableOpacity
@@ -97,11 +125,13 @@ setLoading(true)
 
                     </TouchableOpacity>}
 
-                        
-                        {user?.photoURL &&!imagelogo[0] && <TouchableOpacity style={{justifyContent:"center",alignItems:"center"}} onPress={() => selectManyImages(setLogo, true)}>
-                       {<Image source={{ uri: user?.photoURL }} style={{ width: wp(50), height: hp(11.5), margin: 'auto', marginBottom: 9, borderRadius: wp(4) }} />}
-                            <ThemedText color={accent} >Edit</ThemedText>
-                        </TouchableOpacity>}
+                           {user?.photoURL &&!imagelogo[0] &&<TouchableOpacity style={styles.header} onPress={() => selectManyImages(setLogo, true)}>
+                    <Image
+                        style={styles.avatar}
+                        source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
+                    />
+                    <ThemedText type='subtitle' color={accent}>Edit</ThemedText>
+                </TouchableOpacity>}
                         
 
                     <ThemedText style={styles.label}>Organisation Name</ThemedText>
@@ -164,23 +194,81 @@ setLoading(true)
                         placeholder="Your Address"
                         value={address}
                         onChangeText={setAddress}
-                        keyboardType='email-address'
                     />
                     <ThemedText style={styles.label}>Phone Number</ThemedText>
-                    <Input
-                        containerStyles={styles.input}
-                        placeholder="Your Phone Number "
-                        value={phoneNumber}
-                        onChangeText={setPhoneNumber}
-                        keyboardType='number-pad'
-                    />
+                   
+
+
+  <Input
+                    Icon={<>
+                      <Dropdown
+                        style={[{ width: wp(15) }]}
+                        selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
+                        data={countryCodes}
+                        maxHeight={hp(60)}
+                        labelField="name"
+                        valueField="name"
+                        placeholder="+00"
+                        value={countryCode?.name}
+                        itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
+                        activeColor={background}
+
+                        containerStyle={{
+                          borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
+                          width: wp(45),
+                          shadowOffset: {
+                            width: 0,
+                            height: 9,
+                          },
+                          shadowOpacity: 0.50,
+                          shadowRadius: 12.35,
+
+                          elevation: 19,
+                          paddingVertical: wp(1)
+                        }}
+                        onChange={item => {
+                          console.log(item);
+                          setCountryCode(item);
+                        }}
+
+                        renderLeftIcon={() => <></>}
+                        renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
+                        renderItem={((item, selected) =>
+                          <>
+                            <View style={[styles.item, selected && {}]}>
+                              <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
+                              {selected && (
+                                <Ionicons
+                                  color={icon}
+                                  name='checkmark-outline'
+                                  size={wp(5)}
+                                />
+                              )}
+                            </View>
+                            <Divider />
+                          </>
+                        )}
+
+                      />
+                      <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
+                    </>}
+                    value={phoneNumber}
+                    placeholder="700 000 000"
+                    onChangeText={(text) => setPhoneNumber(text)}
+                    keyboardType="numeric"
+                  />
+
+
+
 
 
                     <TouchableOpacity onPress={() => Submit()} style={[styles.signUpButton, { backgroundColor: accent }]} disabled={loading}>
                     <ThemedText color='#fff' type='subtitle'>{loading ? "Saving..." : "Save"} </ThemedText>
                     </TouchableOpacity>
 
+                        <View style={{height:300}}>
 
+                        </View>
                 </ScrollView>
 
             </View>
@@ -200,12 +288,20 @@ const styles = StyleSheet.create({
         height: hp(10),
         alignSelf: 'center',
         marginVertical: hp(8),
+    }, avatar: {
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        backgroundColor: '#ddd',
     },
     header: {
         fontSize: 28,
         fontWeight: '600',
         textAlign: 'left',
         marginBottom: 20,
+        alignSelf:"center",
+        justifyContent:"center",
+        alignItems:"center"
     },
     label: {
         fontSize: 14,

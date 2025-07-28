@@ -457,10 +457,9 @@ setUploadingOwerD(true)
                       />
                       <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
                     </>}
-                    value={cleanNumber(ownerPhonNumAddDb)}
-                    maxLength={11}
+                    value={ownerPhonNumAddDb}
                     placeholder="700 000 000"
-                    onChangeText={(text) => setOwnerPhoneNum(cleanNumber(text))}
+                    onChangeText={(text) => setOwnerPhoneNum(text)}
                     keyboardType="numeric"
                   />
 

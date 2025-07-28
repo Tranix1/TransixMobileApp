@@ -66,8 +66,7 @@ const Index = () => {
 
         if (auth.currentUser) {
             if(!user?.organisation || !user.phoneNumber || !user.country ){
-                  router.push('/Account/Profile')   
-                
+                router.push({pathname: '/Account/Profile',params: { operation: 'create' },});
             }else if (!auth.currentUser.emailVerified) {
                 setDspVerifyAcc(true);
             } else {

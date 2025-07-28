@@ -1,7 +1,7 @@
 import { auth } from "@/app/components/config/fireBase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile,sendEmailVerification } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendEmailVerification } from "firebase/auth";
 import { createContext, ReactElement, useContext, useState } from "react";
 import { ToastAndroid } from "react-native";
 
@@ -74,13 +74,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const userCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
             const user = userCredential.user;
 
-                if( auth.currentUser && !auth.currentUser.emailVerified ){
+            if (auth.currentUser && !auth.currentUser.emailVerified) {
                 const user = userCredential.user;
-                await  sendEmailVerification(user); 
+                await sendEmailVerification(user);
                 alert('Verification Email Sent \b Please Verify Your Email To Continue');
-                }
+            }
 
-                
+
             const aditional = await readById('users', user.uid)
             setUser({ uid: user.uid, email: user.email, displayName: user.displayName, phoneNumber: user.phoneNumber, photoURL: user.photoURL, ...aditional } as User);
             setIsSignedIN(true);
@@ -139,15 +139,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const userCredential = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
             console.log("")
             setIsSignedIN(true);
-            const user = userCredential.user;     
+
+            const user = userCredential.user;
+
+            await updateProfile(user, {});
+            const newUser = await setDocuments("personalData", {
+                uid: user.uid,
+                email: user.email,
+                createdAt: Date.now().toString()
+            });
+
+            setIsSignedIN(true);
             await AsyncStorage.setItem('user', JSON.stringify({
                 ...user,
             }));
-                    ToastAndroid.show('Account created successfully!', ToastAndroid.SHORT);
+            ToastAndroid.show('Account created successfully!', ToastAndroid.SHORT);
 
-            router.push('/Account/Profile')   
+            router.push({pathname: '/Account/Profile',params: { operation: 'create' },});
         } catch (error) {
-           ToastAndroid.show(`${error}`, ToastAndroid.LONG)
+            ToastAndroid.show(`${error}`, ToastAndroid.LONG)
         }
     };
 
@@ -202,8 +212,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 await setDocuments("personalData", {
                     ...credentials,
                 });
-                if( auth.currentUser && !auth.currentUser.emailVerified ){
-                    await  sendEmailVerification(auth.currentUser ); 
+                if (auth.currentUser && !auth.currentUser.emailVerified) {
+                    await sendEmailVerification(auth.currentUser);
                     alert('Verification Email Sent \b Please Verify Your Email To Continue');
                 }
             }
