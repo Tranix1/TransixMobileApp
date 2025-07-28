@@ -67,7 +67,7 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
 }) => {
     useEffect(() => {
   if (images && images.length > 2) {
-    setImages?.(prev => prev.slice(0, 2));
+    // setImages?.(prev => prev.slice(0, 2));
 
   }
 }, [images]);

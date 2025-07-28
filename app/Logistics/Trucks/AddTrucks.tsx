@@ -330,9 +330,9 @@ setUploadingOwerD(true)
         driverIntPermit: driverIntPermit || null,
         driverPassport: driverPassport || null,
 
-        ownerName: getOwnerDetails?.ownerName,
-        onwerEmail: getOwnerDetails?.ownerEmail,
-        ownerPhoneNum: getOwnerDetails?.ownerPhoneNum,
+        ownerName: getOwnerDetails?.ownerName||"",
+        onwerEmail: getOwnerDetails?.ownerEmail || "", 
+        ownerPhoneNum: getOwnerDetails?.ownerPhoneNum ||"" ,
 
         locations: operationCountries,
         truckType: selectedTruckType?.name,
@@ -832,9 +832,9 @@ setUploadingOwerD(true)
                 />
                 <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
               </>}
-              value={cleanNumber(formData.driverPhone)}
+              value={formData.driverPhone}
               placeholder="700 000 000"
-              onChangeText={(text) => handleChange<TruckFormData>(cleanNumber(text), 'driverPhone', setFormData)}
+              onChangeText={(text) => handleChange<TruckFormData>(text, 'driverPhone', setFormData)}
               keyboardType="numeric"
             />
 

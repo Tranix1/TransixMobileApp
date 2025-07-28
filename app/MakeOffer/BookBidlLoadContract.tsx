@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet } from "react-native";
-import { auth, db } from "../../components/config/fireBase";
+import { auth,db } from "../components/config/fireBase";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { collection, serverTimestamp, addDoc, query, where, onSnapshot, getDocs } from 'firebase/firestore';
@@ -13,17 +13,20 @@ import { ThemedText } from "@/components/ThemedText";
 import { wp, hp } from "@/constants/common";
 import Heading from "@/components/Heading";
 import ScreenWrapper from "@/components/ScreenWrapper";
+import { formatCurrency } from '@/services/services'
 
 function BookLContract({ }) {
   const accent = useThemeColor("accent");
   const coolGray = useThemeColor("coolGray");
   const icon = useThemeColor("icon");
+  const textColor = useThemeColor('text')
   const background = useThemeColor("background");
   const backgroundColor = useThemeColor("backgroundLight");
 
   const [bbVerifiedLoadD, setbbVerifiedLoadD] = React.useState<Truck[] | []>([]);
   const { contract } = useLocalSearchParams();
   const Contractitem = JSON.parse(contract as any);
+
   console.log(Contractitem)
 
   useEffect(() => {
@@ -109,8 +112,41 @@ function BookLContract({ }) {
   };
 
 
-  //bro wtf is this code, it looks like a mess
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
   let renderElements = bbVerifiedLoadD.map((item) => {
+
+
+
+
+
+
+
     async function handleSubmitDetails() {
       try {
         if (auth.currentUser) {
@@ -120,11 +156,14 @@ function BookLContract({ }) {
             const theCollection = collection(db, "ContractRequests");
             await addDoc(theCollection, {
               truckInfo: item,
-              trckContractId: `${userId}contractId ${item.timeStamp}`,
+              trckLoadtId: `${userId}${Contractitem.loadId}${item.created_at}`,
               truckContrSt: true,
-              contractId: Contractitem.contractId,
-              contractOnwerId: Contractitem.userId,
+              loadId: Contractitem.loadId,
+              LoadOnwerId: Contractitem.userId,
+              origin : Contractitem.origin ,
+              destination : Contractitem.destination ,
               contractName: Contractitem.contractName,
+
               approvedTrck: false,
               alreadyInContract: true,
               timeStamp: serverTimestamp()
@@ -138,6 +177,11 @@ function BookLContract({ }) {
         console.error(err)
       }
     }
+
+
+
+
+
 
     return (
       <View
@@ -191,7 +235,7 @@ function BookLContract({ }) {
           style={[styles.primaryButton, { backgroundColor: accent }]}
         >
           <ThemedText style={styles.buttonTextWhiteBold}>
-            Select to contract
+            Assign to Load
           </ThemedText>
         </TouchableOpacity>
 
@@ -326,6 +370,43 @@ function BookLContract({ }) {
     )
   })
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return (
     <ScreenWrapper>
       <Heading page={`Book Contract: ${Contractitem.contractName}`} />
@@ -361,28 +442,33 @@ function BookLContract({ }) {
             <MaterialIcons name="verified" size={wp(4)} color="green" />
           </ThemedText>
         </View>
-        <ThemedText style={{ marginBottom: wp(1), color: icon }}>
-          {Contractitem.contractDuration || "9 months contract"}
-        </ThemedText>
+     
+
         <View style={{ marginBottom: wp(0), borderWidth: 1, borderColor: coolGray + "30", borderRadius: wp(2), overflow: 'hidden', padding: wp(2), backgroundColor: backgroundColor }}>
           {/* Vertical Info List */}
           <View style={{ flexDirection: 'column', gap: wp(1) }}>
             <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
-              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Name</ThemedText>
-              <ThemedText style={{ color: icon }}>{Contractitem.commodity || "Tobacco"}</ThemedText>
+              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Product</ThemedText>
+              <ThemedText >{Contractitem.typeofLoad || "Tobacco"}</ThemedText>
             </View>
-            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
-              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Country</ThemedText>
-              <ThemedText style={{ color: icon }}>{Contractitem.country || "IN Zimbabwe"}</ThemedText>
-            </View>
-            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
-              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate (Above 100KM)</ThemedText>
-              <ThemedText style={{ color: icon }}>{Contractitem.rateAbove100 || "--"}</ThemedText>
-            </View>
-            <View style={{ flexDirection: 'row' }}>
-              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate (Below 100KM)</ThemedText>
-              <ThemedText style={{ color: icon }}>{Contractitem.rateBelow100 || "--"}</ThemedText>
-            </View>
+<View style={{ flexDirection: 'row', marginBottom: wp(1) }}> 
+  
+              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate {Contractitem.model} </ThemedText>
+          <ThemedText   >{Contractitem.currency} {formatCurrency(Contractitem.rate)}</ThemedText>
+</View>
+
+<View style={{ flexDirection: 'row', marginBottom: wp(1) }}> 
+  
+              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Origin</ThemedText>
+          <ThemedText   >{Contractitem.location}</ThemedText>
+</View>
+<View style={{ flexDirection: 'row', marginBottom: wp(1) }}> 
+  
+              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Destination</ThemedText>
+          <ThemedText   >{Contractitem.destination}</ThemedText>
+</View>
+            
+             
           </View>
         </View>
       </View>
@@ -405,7 +491,9 @@ function BookLContract({ }) {
         shadowOpacity: 0.12,
         shadowRadius: 4,
         elevation: 2,
-      }}>
+      }}
+      onPress={()=>router.push("/Logistics/Trucks/AddTrucks")}
+      >
         <Feather name="plus" size={wp(7)} color="#fff" />
       </TouchableOpacity>
 

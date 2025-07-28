@@ -230,7 +230,7 @@ const AddLoadDB = () => {
             returnCurrency: selectedReturnCurrency.name,
             returnTerms,
             trucksRequired: trucksNeeded,
-            deletionTime: Date.now() + 2 * 24 * 60 * 60 * 1000,
+            loadId: `Lo${Math.floor(100000000000 + Math.random() * 900000000000).toString()}ad`,
         };
 
         try {

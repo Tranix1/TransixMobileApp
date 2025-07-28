@@ -348,7 +348,13 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
 
                                         {<>
                                             <View>
-                                                <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: accent, padding: wp(3), borderRadius: wp(4) }} onPress={() => submitBidsOBookings("bookings" as 'bookings', selectedLoad as Load)} >
+                                                {/* <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: accent, padding: wp(3), borderRadius: wp(4) }} onPress={() => submitBidsOBookings("bookings" as 'bookings', selectedLoad as Load)} > */}
+                                                <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: accent, padding: wp(3), borderRadius: wp(4) }} 
+                                                   onPress={() => router.push({
+                    pathname: '/MakeOffer/BookBidlLoadContract',
+                        params: { contract: JSON.stringify(selectedLoad) , OperationType : "Book" }
+                    })}>
+                                                    
                                                     <ThemedText color='white'>
                                                         Book Load
                                                     </ThemedText>
