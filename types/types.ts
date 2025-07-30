@@ -20,6 +20,7 @@ export type Truck = {
 
     created_at: string,
     CompanyName: string;
+    contact : string;
     driverLicense: string;
     driverPassport: string;
     driverIntPermit : string;

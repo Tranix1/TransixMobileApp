@@ -165,7 +165,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const Logout = async () => {
         try {
             await signOut(auth);
-            setupUser(null);
             router.back();
             ToastAndroid.show('logout successful', ToastAndroid.SHORT)
             return true; // Returns true if successful
@@ -189,47 +188,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         error?: string;
     }
 
-    const updateAccount = async (credentials: User): Promise<UpdateAccountResponse> => {
-        try {
-            if (!isSignedIn) {
-                // router.push('/user/login')
-                return { success: false };
-            }
+  const updateAccount = async (credentials: User): Promise<UpdateAccountResponse> => {
+  try {
+    const currentUser = auth.currentUser;
 
-            if (auth.currentUser) {
-                    await AsyncStorage.setItem('user', JSON.stringify({
-                
+    if (!isSignedIn || !currentUser) {
+      return { success: false, error: "User not signed in." };
+    }
 
-            }));
-                
-                await updateProfile(auth.currentUser, {
-                    displayName: credentials.organization,
-                    photoURL: credentials.photoURL,
-                }).then(() => {
-                    console.log('Updated User >> ', credentials);
-                }).catch((error) => {
-                    throw new Error(error);
-                });
-            } else {
-                throw new Error("No authenticated user found.");
-            }
-            
-            if (user) {
-                await setDocuments("personalData", {
-                    ...credentials,
-                });
-                if (auth.currentUser && !auth.currentUser.emailVerified) {
-                    await sendEmailVerification(auth.currentUser);
-                    alert('Verification Email Sent \b Please Verify Your Email To Continue');
-                }
-            }
-            setupUser({ ...auth, ...credentials });
-            return { success: true };
-        } catch (error) {
-            console.log("Update Error > ", error);
-            return { error: (error as Error).message, success: false };
-        }
+    // 1. Update Firebase profile
+    await updateProfile(currentUser, {
+      displayName: credentials.organisation || credentials.displayName || "",
+      photoURL: credentials.photoURL || null,
+    });
+
+    // 2. Send verification email
+    if (!currentUser.emailVerified) {
+      await sendEmailVerification(currentUser);
+      alert("📧 Verification Email Sent. Please check your inbox.");
+    }
+
+    // 3. Combine user data
+    const fullUser: User = {
+      ...credentials,
+      displayName:  credentials.organisation,
     };
+
+    // 4. Save to Firestore (or your DB)
+    await setDocuments("personalData", fullUser);
+
+    // 5. Set locally
+    await AsyncStorage.setItem("user", JSON.stringify(fullUser));
+    setUser(fullUser);
+    setIsSignedIN(true);
+
+    return { success: true };
+  } catch (error) {
+    console.log("Update Error >", error);
+    return { error: (error as Error).message, success: false };
+  }
+};
 
     const [showAlert, setshowAlert] = useState<ReactElement | null>(null);
     function alertBox(title: string, message: string, buttons?: Alertbutton[], type?: "default" | "error" | "success" | "laoding" | "destructive" | undefined) {

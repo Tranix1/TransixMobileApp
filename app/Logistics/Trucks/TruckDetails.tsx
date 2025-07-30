@@ -233,10 +233,10 @@ const TruckDetails = () => {
 
                 <View style={{ padding: wp(4), borderRadius: wp(4), backgroundColor: backgroundLight }}>
                     <View style={{ flexDirection: 'row', gap: wp(6), justifyContent: 'center' }}>
-                        {(postOwner?.phoneNumber) &&
+                        {(truckData?.contact) &&
                             <View style={{ alignItems: 'center', gap: wp(1) }}>
                                 <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-                                    <TouchableNativeFeedback onPress={() => (postOwner?.phoneNumber) && Linking.openURL(`tel:${(postOwner?.phoneNumber)}`)}>
+                                    <TouchableNativeFeedback onPress={() => (truckData?.contact) && Linking.openURL(`tel:${(truckData?.contact)}`)}>
                                         <View style={{ width: wp(10), height: wp(10), backgroundColor: background, justifyContent: 'center', alignItems: 'center', borderRadius: wp(10) }}>
                                             <Ionicons name='call-outline' size={wp(5)} color={icon} />
                                         </View>
@@ -247,13 +247,13 @@ const TruckDetails = () => {
                                 </ThemedText>
                             </View>
                         }
-                        {(postOwner?.phoneNumber) &&
+                        {(truckData?.contact) &&
                             <View style={{ alignItems: 'center', gap: wp(1) }}>
                                 <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                                     <TouchableNativeFeedback
                                         onPress={() => {
                                             const message = `Hello ${postOwner?.displayName},\n\nI am interested in your product "${truckData.CompanyName}".\n`;
-                                            (postOwner?.phoneNumber) && Linking.openURL(`sms:${(postOwner?.phoneNumber)}?body=${encodeURIComponent(message)}`);
+                                            (truckData?.contact) && Linking.openURL(`sms:${(truckData?.contact)}?body=${encodeURIComponent(message)}`);
                                         }}
                                     >
                                         <View style={{ width: wp(10), height: wp(10), backgroundColor: background, justifyContent: 'center', alignItems: 'center', borderRadius: wp(10) }}>
@@ -266,13 +266,13 @@ const TruckDetails = () => {
                                 </ThemedText>
                             </View>
                         }
-                        {(postOwner?.phoneNumber) &&
+                        {(truckData?.contact) &&
                             <View style={{ alignItems: 'center', gap: wp(1) }}>
                                 <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                                     <TouchableNativeFeedback
                                         onPress={() => {
                                             const message = `Hello ${postOwner?.displayName},\n\nI am interested in your product "${truckData.CompanyName}".\n`;
-                                            (postOwner?.phoneNumber) && Linking.openURL(`https://wa.me/${(postOwner?.phoneNumber)}?text=${encodeURIComponent(message)}`);
+                                            (truckData?.contact) && Linking.openURL(`https://wa.me/${(truckData?.contact)}?text=${encodeURIComponent(message)}`);
                                         }}
                                     >
                                         <View style={{ width: wp(10), height: wp(10), backgroundColor: background, justifyContent: 'center', alignItems: 'center', borderRadius: wp(10) }}>

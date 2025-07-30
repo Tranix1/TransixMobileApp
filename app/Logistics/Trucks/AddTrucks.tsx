@@ -905,7 +905,7 @@ setUploadingOwerD(true)
               {images[2] && operationCountries.length === 1 && <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
 
 
-              {((!images[2] && operationCountries.length === 1) || (operationCountries.length > 1 && !images[4])) && <TouchableOpacity
+              { <TouchableOpacity
 
 
 
@@ -924,9 +924,9 @@ setUploadingOwerD(true)
 
               {selectedTruckType?.name !== "Rigid" && <View>
 
-                <ThemedText>
+               {((!images[3] && operationCountries.length === 1) || (operationCountries.length > 1 && !images[5])) && <ThemedText>
                   Trailer Book Image
-                </ThemedText>
+                </ThemedText>}
 
 
                 {images[5] && operationCountries.length > 1 && <Image source={{ uri: images[5]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
@@ -961,7 +961,7 @@ setUploadingOwerD(true)
                 {images[4] && operationCountries.length === 1 && <Image source={{ uri: images[4]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
 
 
-                {((!images[4] && operationCountries.length === 1) || (operationCountries.length > 1 && !images[6])) && <TouchableOpacity
+                {selectedTruckType?.name === "Super Link"  && <TouchableOpacity
 
 
 
@@ -991,36 +991,21 @@ setUploadingOwerD(true)
 
             <View style={{ gap: wp(2) }}>
 
-              <ThemedText>
-                GIT Insuarance
-              </ThemedText>
-   {images[2] && operationCountries.length === 1 && <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
-
-
-              {((!images[2] && operationCountries.length === 1) || (operationCountries.length > 1 && !images[4])) && <TouchableOpacity
+              
 
 
 
-                onPress={() => {
-                  operationCountries.length === 1 ? images[1] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
-                    : operationCountries.length > 1 ? images[3] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
-                      : alert("yaya");
+<ScrollView horizontal style={{height:133}}>
 
-                }}
+   <View style={{borderColor: icon + "4c", backgroundColor: background,  borderWidth: 0.9,
+        shadowColor: '#4285f4',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 13,marginRight: 6 ,borderRadius:10,marginBottom:0,padding:5,width:146}} >
 
-                style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
-                <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
-                <ThemedText color={icon + "4c"}>Horse Reg Book Image<ThemedText color="red">*</ThemedText></ThemedText>
-              </TouchableOpacity>}
-
-
-  <ThemedText>
-                GIT Insuarance
-              </ThemedText>
-   {images[2] && operationCountries.length === 1 && <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
-
-
-              {((!images[2] && operationCountries.length === 1) || (operationCountries.length > 1 && !images[4])) && <TouchableOpacity
+    <ThemedText style={{fontSize:14.5,textAlign:"center"}}>GIT Insurance</ThemedText>
+     { <TouchableOpacity
 
 
 
@@ -1031,17 +1016,22 @@ setUploadingOwerD(true)
 
                 }}
 
-                style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
-                <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
-                <ThemedText color={icon + "4c"}>Horse Reg Book Image<ThemedText color="red">*</ThemedText></ThemedText>
+                style={{  height: wp(27), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
+                <ThemedText style={{fontSize:13.5,fontWeight:"bold"}} color={icon + "4c"}>GIT Insuarance<ThemedText color="red">*</ThemedText></ThemedText>
               </TouchableOpacity>}
-                <ThemedText>
-                GIT Insuarance
-              </ThemedText>
-   {images[2] && operationCountries.length === 1 && <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
+  </View>
 
 
-              {((!images[2] && operationCountries.length === 1) || (operationCountries.length > 1 && !images[4])) && <TouchableOpacity
+  <View style={{borderColor: icon + "4c", backgroundColor: background,  borderWidth: 0.9,
+        shadowColor: '#4285f4',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 13, marginLeft:5 , marginRight:19,borderRadius:10,marginBottom:0,padding:5,width:146}} >
+
+    <ThemedText style={{fontSize:14.5,textAlign:"center"}}>Number Plate</ThemedText>
+     { <TouchableOpacity
 
 
 
@@ -1052,10 +1042,40 @@ setUploadingOwerD(true)
 
                 }}
 
-                style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
-                <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
-                <ThemedText color={icon + "4c"}>Horse Reg Book Image<ThemedText color="red">*</ThemedText></ThemedText>
+                style={{  height: wp(27), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
+                <ThemedText style={{fontSize:13.5,fontWeight:"bold"}} color={icon + "4c"}>Number Plate<ThemedText color="red">*</ThemedText></ThemedText>
               </TouchableOpacity>}
+  </View>
+  
+    <View style={{borderColor: icon + "4c", backgroundColor: background,  borderWidth: 0.9,
+        shadowColor: '#4285f4',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 13, marginLeft:5 , marginRight:19,borderRadius:10,marginBottom:0,padding:5,width:146}} >
+
+    <ThemedText style={{fontSize:14.5,textAlign:"center"}}>Third Plate</ThemedText>
+     { <TouchableOpacity
+
+
+
+                onPress={() => {
+                  operationCountries.length === 1 ? images[1] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
+                    : operationCountries.length > 1 ? images[3] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
+                      : alert("yaya");
+
+                }}
+
+                style={{  height: wp(27), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
+                <ThemedText style={{fontSize:13.5,fontWeight:"bold"}} color={icon + "4c"}>Third Plate<ThemedText color="red">*</ThemedText></ThemedText>
+              </TouchableOpacity>}
+  </View>
+</ScrollView>
+
+
+                
 
               </View>
       

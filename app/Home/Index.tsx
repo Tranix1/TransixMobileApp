@@ -656,7 +656,7 @@ const Index = () => {
 
 
 
-                    {item.id === 1 && <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
+                    {item.id === 1 && <View style={[styles.homefeature, { borderColor: '#4285f4', backgroundColor: background, padding: wp(4) }]}>
 
                         <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
                             <View style={{}}>
@@ -673,15 +673,17 @@ const Index = () => {
                             </TouchableOpacity>
                         </View>
                         <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>
-                            Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
+                                Create contract and start transporting loads today!
                         </ThemedText>
 
 
 
-                        <View style={{ marginVertical: wp(15), alignItems: 'center', gap: wp(4) }}>
+                        <View style={{ marginVertical: wp(5), alignItems: 'center', gap: wp(4), }}>
 
-                            <ThemedText>
-                                Create contract and start transporting loads today!
+                            <ThemedText numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8),marginBottom:16 }}
+                            >
+                                {/* Create contract and start transporting loads today! */}
+                            Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
                             </ThemedText>
 
                             <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>

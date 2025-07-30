@@ -122,9 +122,9 @@ filteredPNotAavaialble
             </View>
           }
           { (userId|| contractId ) && (
-            <View style={{paddingRight:5}}>
-              {(userId===user?.uid ||contractId) ? <ThemedText type="subtitle" > Manage Trucks </ThemedText> :
-              <ThemedText type="subtitle" >{organisationName} Trucks </ThemedText>}
+            <View style={{marginLeft:10,}}>
+              {(userId===user?.uid ||contractId !=="undefined" ) ? <ThemedText type="subtitle" > Manage Trucks </ThemedText> :
+              <ThemedText type="subtitle"  >{organisationName} Trucks </ThemedText>}
             </View>
           )}
           <View style={{ flexDirection: 'row', gap: wp(2) }}>
