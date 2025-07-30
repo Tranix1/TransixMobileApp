@@ -974,13 +974,92 @@ setUploadingOwerD(true)
 
                   style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                   <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
-                  <ThemedText color={icon + "4c"}>Trailer Book Image<ThemedText color="red">*</ThemedText></ThemedText>
+                  <ThemedText color={icon + "4c"}>Second Trailer Book Image<ThemedText color="red">*</ThemedText></ThemedText>
                 </TouchableOpacity>}
 
               </View>}
 
             </View>
 
+
+
+ <Divider />
+
+            <View style={{ marginVertical: wp(4) }}>
+              <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold', color: "#1E90FF" }} >ADDITIONAL INFOMATION</ThemedText>
+            </View>
+
+            <View style={{ gap: wp(2) }}>
+
+              <ThemedText>
+                GIT Insuarance
+              </ThemedText>
+   {images[2] && operationCountries.length === 1 && <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
+
+
+              {((!images[2] && operationCountries.length === 1) || (operationCountries.length > 1 && !images[4])) && <TouchableOpacity
+
+
+
+                onPress={() => {
+                  operationCountries.length === 1 ? images[1] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
+                    : operationCountries.length > 1 ? images[3] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
+                      : alert("yaya");
+
+                }}
+
+                style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
+                <ThemedText color={icon + "4c"}>Horse Reg Book Image<ThemedText color="red">*</ThemedText></ThemedText>
+              </TouchableOpacity>}
+
+
+  <ThemedText>
+                GIT Insuarance
+              </ThemedText>
+   {images[2] && operationCountries.length === 1 && <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
+
+
+              {((!images[2] && operationCountries.length === 1) || (operationCountries.length > 1 && !images[4])) && <TouchableOpacity
+
+
+
+                onPress={() => {
+                  operationCountries.length === 1 ? images[1] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
+                    : operationCountries.length > 1 ? images[3] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
+                      : alert("yaya");
+
+                }}
+
+                style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
+                <ThemedText color={icon + "4c"}>Horse Reg Book Image<ThemedText color="red">*</ThemedText></ThemedText>
+              </TouchableOpacity>}
+                <ThemedText>
+                GIT Insuarance
+              </ThemedText>
+   {images[2] && operationCountries.length === 1 && <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
+
+
+              {((!images[2] && operationCountries.length === 1) || (operationCountries.length > 1 && !images[4])) && <TouchableOpacity
+
+
+
+                onPress={() => {
+                  operationCountries.length === 1 ? images[1] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
+                    : operationCountries.length > 1 ? images[3] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
+                      : alert("yaya");
+
+                }}
+
+                style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
+                <ThemedText color={icon + "4c"}>Horse Reg Book Image<ThemedText color="red">*</ThemedText></ThemedText>
+              </TouchableOpacity>}
+
+              </View>
+      
+          
           </View>
           <View style={{ marginVertical: wp(4), marginBottom: hp(8), gap: wp(3) }}>
 

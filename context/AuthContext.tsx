@@ -152,6 +152,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setIsSignedIN(true);
             await AsyncStorage.setItem('user', JSON.stringify({
                 ...user,
+
             }));
             ToastAndroid.show('Account created successfully!', ToastAndroid.SHORT);
 
@@ -196,6 +197,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
 
             if (auth.currentUser) {
+                    await AsyncStorage.setItem('user', JSON.stringify({
+                
+
+            }));
+                
                 await updateProfile(auth.currentUser, {
                     displayName: credentials.organization,
                     photoURL: credentials.photoURL,
@@ -207,7 +213,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             } else {
                 throw new Error("No authenticated user found.");
             }
-
+            
             if (user) {
                 await setDocuments("personalData", {
                     ...credentials,
