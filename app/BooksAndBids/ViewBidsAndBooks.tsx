@@ -29,7 +29,6 @@ import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import { addDocument, checkDocumentExists, deleteDocument, fetchDocuments, runFirestoreTransaction, setDocuments } from '@/db/operations';
 
 import { RequestedCargo } from "@/components/CargoYouRequest";
-import { CargoRequested } from "@/components/YourRequestedICargo";
 import { useThemeColor } from '@/hooks/useThemeColor';
 
 const accent = "#6a0c0c";
@@ -39,7 +38,6 @@ const coolGray = "#e5e7eb";
 
 function BookingsandBiddings({ }) {
   const { dbName, dspRoute } = useLocalSearchParams();
-  console.log(dspRoute)
 
   const icon = useThemeColor('icon')
   const [refreshing, setRefreshing] = useState(false)
@@ -47,11 +45,10 @@ function BookingsandBiddings({ }) {
   const [loadingMore, setLoadingMore] = useState(false);
 
   const [fectedDocuments, setFetchedDocuments] = React.useState<any>([])
-  console.log(fectedDocuments)
   const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
   const LoadTructs = async () => {
     let filters: any[] = [];
-    const maLoads = await fetchDocuments("LoadsBookings");
+    const maLoads = await fetchDocuments("CargoBookings");
 
     if (maLoads.data.length) {
 
@@ -79,7 +76,7 @@ function BookingsandBiddings({ }) {
 
     if (loadingMore || !lastVisible) return;
     setLoadingMore(true);
-    const result = await fetchDocuments('CargoBookings', 10, lastVisible);
+    const result = await fetchDocuments('', 10, lastVisible);
     if (result) {
       setFetchedDocuments([...fectedDocuments, ...result.data as any[]]);
       setLastVisible(result.lastVisible);
@@ -93,7 +90,6 @@ function BookingsandBiddings({ }) {
 
   // --- Main Render ---
 
-  const itemToRnder = dspRoute === "Iterms You Bidded" || dspRoute === "Items You Booked" ? <RequestedCargo /> : <CargoRequested />
   return (
     <ScreenWrapper >
       {/* Header */}
@@ -104,7 +100,11 @@ function BookingsandBiddings({ }) {
         keyExtractor={(item) => item.id.toString()}
         data={fectedDocuments}
 
-        renderItem={() => itemToRnder}
+       
+        renderItem={({ item, index, separators }) =>
+   <RequestedCargo item={item} index={index} separators={separators} dspRoute={`${dspRoute}`} />
+    // : <CargoRequested item={item} index={index} separators={separators} />
+}
         contentContainerStyle={{ padding: wp(4) }}
         refreshControl={
           <RefreshControl

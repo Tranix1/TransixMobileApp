@@ -67,8 +67,6 @@ function AddTrucks() {
   const [selectedOwnerDocuments, setSelectedOwnerDocumentS] = useState<DocumentAsset[]>([]);
 
 
-
-
   const pickDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -104,11 +102,6 @@ function AddTrucks() {
   };
 
 
-
-
-
-
-
   const [uploadingOwnerD , setUploadingOwerD]=React.useState(false)
   const handleUpdateTOwnerDetails = async () => {
 setUploadingOwerD(true)
@@ -124,6 +117,8 @@ setUploadingOwerD(true)
       // setContractDErr(true);
       alertBox("Missing Ownership Details", missingTruckDetails.join("\n"), [], "error");
   setUploadingOwerD(false)
+  setSpinnerItem(false)
+
       return;
     }
     
@@ -136,7 +131,6 @@ setUploadingOwerD(true)
     
     await setDocuments("truckOwnerDetails", { ownerName: ownerNameAddDb, ownerPhoneNum: ownerPhonNumAddDb, ownerEmail: ownerEmailAddDb, ownershipProof: proofOfTruckOwnerhip , directorOwnerId:directorOwnerId })
     setOwnerdetailsDsp(false)
-    setUploadingOwerD(false)
     ToastAndroid.show("Store Details created successfully!", ToastAndroid.SHORT);
   };
 
@@ -155,7 +149,10 @@ setUploadingOwerD(true)
 
   // const [images, setImages] = useState([]);
   const [images, setImages] = useState<ImagePickerAsset[]>([]);
+  const [gitImage , setGitImage]= useState<ImagePickerAsset[]>([]);
 
+  const [truckNumberPlate , setTruckNumberPlate]=useState<ImagePickerAsset[]>([]);
+  const [truckThirdPlate , setTruckThirdPlate]=useState<ImagePickerAsset[]>([]);
 
   const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(null)
   const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string } | null>(null)
@@ -222,6 +219,7 @@ setUploadingOwerD(true)
     if (missingTruckDetails.length > 0) {
       // setContractDErr(true);
       alertBox("Missing Truck Details", missingTruckDetails.join("\n"), [], "error");
+setSpinnerItem(false)
       return;
     }
     const MissingDriverDetails = [
@@ -230,6 +228,7 @@ setUploadingOwerD(true)
     if (missingTruckDetails.length > 0) {
       // setContractDErr(true);
       alertBox("Missing Driver Details", MissingDriverDetails.join("\n"), [], "error");
+setSpinnerItem(false)
       return;
     }
 
@@ -287,15 +286,17 @@ setUploadingOwerD(true)
       driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
       truckBookImage = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Truck Book Image");
       trailerBookF = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "Trailer Book First");
-      trailerBookSc = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Trailer Book Second");
+      trailerBookSc = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Trailer Book Second") ;
     }
+
+    let subTrckGIT , subTrckNumberPlate , subTrckThrdPlate
+
+    if(gitImage)subTrckGIT= await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Trailer Book Second") ;
+      if(truckNumberPlate)subTrckNumberPlate = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Trailer Book Second") ;
+        if(truckThirdPlate)subTrckThrdPlate = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Trailer Book Second") ;
 
 
     setUploadImageUpdate("")
-
-
-
-
 
 
     if (!selectedCargoArea)
@@ -329,6 +330,10 @@ setUploadingOwerD(true)
         driverLicense: driverLicense || null,
         driverIntPermit: driverIntPermit || null,
         driverPassport: driverPassport || null,
+
+        gitImage : subTrckGIT||null ,
+        truckNumberPlate : subTrckNumberPlate||null ,
+        truckThirdPlate : subTrckThrdPlate||null ,
 
         ownerName: getOwnerDetails?.ownerName||"",
         onwerEmail: getOwnerDetails?.ownerEmail || "", 
@@ -905,12 +910,12 @@ setUploadingOwerD(true)
               {images[2] && operationCountries.length === 1 && <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
 
 
-              { <TouchableOpacity
+              { ((!images[2] && operationCountries.length === 1) || (!images[4] && operationCountries.length > 1 )) &&  <TouchableOpacity
 
 
 
                 onPress={() => {
-                  operationCountries.length === 1 ? images[1] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
+                  operationCountries.length <= 1 ? images[1] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
                     : operationCountries.length > 1 ? images[3] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
                       : alert("yaya");
 
@@ -960,8 +965,7 @@ setUploadingOwerD(true)
 
                 {images[4] && operationCountries.length === 1 && <Image source={{ uri: images[4]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
 
-
-                {selectedTruckType?.name === "Super Link"  && <TouchableOpacity
+                {selectedTruckType?.name === "Super Link"  &&((!images[4] && operationCountries.length === 1) || (!images[6] && operationCountries.length > 1)) &&  <TouchableOpacity
 
 
 
@@ -997,32 +1001,6 @@ setUploadingOwerD(true)
 
 <ScrollView horizontal style={{height:133}}>
 
-   <View style={{borderColor: icon + "4c", backgroundColor: background,  borderWidth: 0.9,
-        shadowColor: '#4285f4',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 13,marginRight: 6 ,borderRadius:10,marginBottom:0,padding:5,width:146}} >
-
-    <ThemedText style={{fontSize:14.5,textAlign:"center"}}>GIT Insurance</ThemedText>
-     { <TouchableOpacity
-
-
-
-                onPress={() => {
-                  operationCountries.length === 1 ? images[1] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
-                    : operationCountries.length > 1 ? images[3] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
-                      : alert("yaya");
-
-                }}
-
-                style={{  height: wp(27), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
-                <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
-                <ThemedText style={{fontSize:13.5,fontWeight:"bold"}} color={icon + "4c"}>GIT Insuarance<ThemedText color="red">*</ThemedText></ThemedText>
-              </TouchableOpacity>}
-  </View>
-
-
   <View style={{borderColor: icon + "4c", backgroundColor: background,  borderWidth: 0.9,
         shadowColor: '#4285f4',
         shadowOffset: { width: 0, height: 2 },
@@ -1030,24 +1008,59 @@ setUploadingOwerD(true)
         shadowRadius: 4,
         elevation: 13, marginLeft:5 , marginRight:19,borderRadius:10,marginBottom:0,padding:5,width:146}} >
 
-    <ThemedText style={{fontSize:14.5,textAlign:"center"}}>Number Plate</ThemedText>
-     { <TouchableOpacity
+  {truckNumberPlate[0] && (
+    <Image
+      source={{ uri: truckNumberPlate[0].uri }}
+      style={{
+        width: "100%",
+        height: "100%",
+        borderRadius: 10,
+        resizeMode: "cover"
+      }}
+    />
+  )}
+    {!truckNumberPlate[0] &&  <ThemedText style={{fontSize:14.5,textAlign:"center"}}>Number Plate</ThemedText>}
+     { !truckNumberPlate[0] && <TouchableOpacity
 
 
-
-                onPress={() => {
-                  operationCountries.length === 1 ? images[1] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
-                    : operationCountries.length > 1 ? images[3] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
-                      : alert("yaya");
-
-                }}
+onPress={() => selectManyImages(setTruckNumberPlate, true)}
 
                 style={{  height: wp(27), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                 <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
                 <ThemedText style={{fontSize:13.5,fontWeight:"bold"}} color={icon + "4c"}>Number Plate<ThemedText color="red">*</ThemedText></ThemedText>
               </TouchableOpacity>}
   </View>
-  
+
+     <View style={{borderColor: icon + "4c", backgroundColor: background,  borderWidth: 0.9,
+        shadowColor: '#4285f4',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 13,marginRight: 6 ,borderRadius:10,marginBottom:0,padding:5,width:146}} >
+
+  {gitImage[0] && (
+    <Image
+      source={{ uri: gitImage[0].uri }}
+      style={{
+        width: "100%",
+        height: "100%",
+        borderRadius: 10,
+        resizeMode: "cover"
+      }}
+    />
+  )}
+          
+
+   { !gitImage[0] &&<ThemedText style={{fontSize:14.5,textAlign:"center"}}>GIT Insurance</ThemedText>}
+     {!gitImage[0] && <TouchableOpacity
+               onPress={() => selectManyImages(setGitImage, false)}
+                style={{  height: wp(27), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
+                <ThemedText style={{fontSize:13.5,fontWeight:"bold"}} color={icon + "4c"}>GIT Insuarance<ThemedText color="red">*</ThemedText></ThemedText>
+              </TouchableOpacity>}
+  </View>
+
+
     <View style={{borderColor: icon + "4c", backgroundColor: background,  borderWidth: 0.9,
         shadowColor: '#4285f4',
         shadowOffset: { width: 0, height: 2 },
@@ -1055,18 +1068,21 @@ setUploadingOwerD(true)
         shadowRadius: 4,
         elevation: 13, marginLeft:5 , marginRight:19,borderRadius:10,marginBottom:0,padding:5,width:146}} >
 
-    <ThemedText style={{fontSize:14.5,textAlign:"center"}}>Third Plate</ThemedText>
-     { <TouchableOpacity
+  {truckThirdPlate[0] && (
+    <Image
+      source={{ uri: truckNumberPlate[0].uri }}
+      style={{
+        width: "100%",
+        height: "100%",
+        borderRadius: 10,
+        resizeMode: "cover"
+      }}
+    />
+  )}
+    {!truckThirdPlate[0] && <ThemedText style={{fontSize:14.5,textAlign:"center"}}>Third Plate</ThemedText>}
+     {!truckThirdPlate[0] &&  <TouchableOpacity
 
-
-
-                onPress={() => {
-                  operationCountries.length === 1 ? images[1] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
-                    : operationCountries.length > 1 ? images[3] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
-                      : alert("yaya");
-
-                }}
-
+onPress={() => selectManyImages(setTruckThirdPlate, true)}
                 style={{  height: wp(27), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                 <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
                 <ThemedText style={{fontSize:13.5,fontWeight:"bold"}} color={icon + "4c"}>Third Plate<ThemedText color="red">*</ThemedText></ThemedText>

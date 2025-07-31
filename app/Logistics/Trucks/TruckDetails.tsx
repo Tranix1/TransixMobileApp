@@ -27,7 +27,7 @@ const TruckDetails = () => {
     const background = useThemeColor("background");
     const coolGray = useThemeColor("coolGray");
     const backgroundLight = useThemeColor("backgroundLight");
-    const { truckid, dspDetails, truckFrContract } = useLocalSearchParams();
+    const { truckid, dspDetails,  truckBeingReuested , } = useLocalSearchParams();
 
     const [truckData, setTruckData] = useState<Truck>({} as Truck)
     const [modalVisible, setModalVisible] = useState(false);
@@ -142,6 +142,13 @@ const TruckDetails = () => {
                                 <ThemedText type="title" style={{ textAlign: 'center', marginBottom: wp(4) }}>
                                     Manage Truck
                                 </ThemedText>
+                                  <TouchableOpacity
+                                    style={{ backgroundColor: "#1E90FF", alignItems: 'center', padding: wp(2), borderRadius: wp(4) }}
+                                >
+                                    <ThemedText color="#fff" type="subtitle">Truck Available</ThemedText>
+                                    <ThemedText color="#fff" type="subtitle">Truck Not Available</ThemedText>
+                                </TouchableOpacity>
+
                                 <TouchableOpacity
                                     onPress={() => {
                                         setModalVisible(false);
@@ -326,7 +333,7 @@ const TruckDetails = () => {
                         paddingBottom: wp(4),
                     }}
                 >
-                    {truckFrContract && (
+                    {truckBeingReuested==="true"&& (
                         <View style={{ flexDirection: "row", justifyContent: "center", gap: wp(3), marginVertical: wp(2) }}>
                             <TouchableOpacity
                                 style={{
@@ -511,7 +518,7 @@ const TruckDetails = () => {
                         </View>
                     }
 
-                    {dspDetails && <View>
+                    {dspDetails==="true" && <View>
                         <ThemedText style={{ textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Truck Details</ThemedText>
                         <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
                             {truckData.truckBookImage &&

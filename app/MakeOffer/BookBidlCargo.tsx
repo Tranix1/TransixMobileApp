@@ -105,7 +105,7 @@ function BookLContract({ }) {
   }, [setTrucksInContract]);
 
   const checkExistixtBBDoc = async (trckContractId: string) => {
-    const chatsRef = collection(db, 'LoadsBookings');
+    const chatsRef = collection(db, 'CargoBookings');
     const chatQuery = query(chatsRef, where('requestId', '==', trckContractId), where('alreadyInContract', '==', true));
     const querySnapshot = await getDocs(chatQuery);
     return !querySnapshot.empty;
@@ -142,10 +142,11 @@ function BookLContract({ }) {
           if (!existingBBDoc) {
             const theCollection = collection(db, "CargoBookings");
             await addDoc(theCollection, {
-              truckInfo: item,
+              truckId: item.id,
               created_at: Date.now().toString() ,
               requestId: `${userId}${Contractitem.loadId}${item.timeStamp}`,
               cargoId: Contractitem.loadId,
+              companyName : Contractitem.companyName ,
               onwerId: Contractitem.userId,
               productName: Contractitem.typeofLoad,
               origin: Contractitem.origin,
@@ -153,7 +154,7 @@ function BookLContract({ }) {
               rate: Contractitem.rate,
               currency: Contractitem.currency,
               model: Contractitem.model,
-              ownerDecision: null,
+              ownerDecision:  "Pending",
               status : "Booked" ,
               // contractName: Contractitem.contractName,
 

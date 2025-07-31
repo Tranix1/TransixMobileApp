@@ -1,78 +1,56 @@
-// import {View,Text ,TouchableOpacity }from "react-native"
-
-// export const ErrorOverlay = ({
-//   visible,
-//   title,
-//   errors,
-//   onClose,
-// }: {
-//   visible: boolean;
-//   title: string;
-//   errors: string[];
-//   onClose: () => void;
-// }) => {
-//   if (!visible) return null;
-
-//   return (
-//     <View
-//       style={{
-//         position: 'absolute',
-//         left: 50,
-//         right: 50,
-//         height: 500,
-//         top: 100,
-//         backgroundColor: 'white',
-//         zIndex: 300,
-//         padding: 20,
-//       }}
-//     >
-//       <Text style={{ fontWeight: 'bold', marginBottom: 10 }}>{title}</Text>
-//       {errors.map((err, idx) => (
-//         <Text key={idx} style={{ color: 'red' }}>
-//           {err}
-//         </Text>
-//       ))}
-
-//       <TouchableOpacity
-//         onPress={onClose}
-//         style={{
-//           marginTop: 15,
-//           alignSelf: 'center',
-//           backgroundColor: 'green',
-//           padding: 5,
-//           borderRadius: 5,
-//         }}
-//       >
-//         <Text style={{ color: 'white' }}>Understood</Text>
-//       </TouchableOpacity>
-//     </View>
-//   );
-// }
-import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, StyleSheet, ScrollView, Linking, } from "react-native";
+import React, { useEffect, useState,ReactElement } from "react";
+import { View, TouchableOpacity, StyleSheet, ScrollView, Linking,ToastAndroid } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { Ionicons, Octicons } from "@expo/vector-icons";
 import { wp } from "@/constants/common";
 import Divider from "@/components/Divider";
+import { router } from 'expo-router'
 
-import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
-import { addDocument, checkDocumentExists, deleteDocument, fetchDocuments, runFirestoreTransaction, setDocuments } from '@/db/operations';
-
-
-
+import { useThemeColor } from '@/hooks/useThemeColor'
+import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 export const RequestedCargo = ({
+    item  ,dspRoute
 }: {
+
+    item : any
+    index : any
+separators : any
+dspRoute : string
+
 }) => {
 
+    function actuallyRemoveBooking (){
+
+    }
+
+  const textColor = useThemeColor('text')
 const coolGray = "#e5e7eb";
+
+    const [showAlert, setshowAlert] = useState<ReactElement | null>(null);
+    function alertBox(title: string, message: string, buttons?: Alertbutton[], type?: "default" | "error" | "success" | "laoding" | "destructive" | undefined) {
+        setshowAlert(
+            <AlertComponent
+                visible
+                title={title}
+                message={message}
+                buttons={buttons}
+                type={type}
+                onBackPress={() => setshowAlert(null)}
+            />
+        )
+
+    }
+
+
   return (
    
  <View style={{ borderWidth: 1, borderColor: coolGray, padding: wp(2), borderRadius: wp(4) , marginBottom:5 }}>
-              <View style={{ position: 'absolute', top: wp(2.5), right: wp(2), zIndex: 66 }}>
-                <Octicons name="verified" size={wp(5)} color="green" />
-              </View>
 
-              <ThemedText type="subtitle" style={{ color: '#5a0c0c', textAlign: 'center', marginBottom: wp(2) }}>Chibuku logistics</ThemedText>
+
+            {showAlert}
+            
+
+                  <ThemedText type="subtitle" style={{ color: textColor, textAlign: 'center', marginBottom: wp(2) }}>{item.companyName}</ThemedText>
 
               <Divider />
               <View style={{ backgroundColor: "#f4f4f4", borderRadius: 10, padding: wp(2), marginBottom: wp(2) }}>
@@ -82,36 +60,69 @@ const coolGray = "#e5e7eb";
                 </View>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
                   <ThemedText style={{ width: 100, color: "#6a0c0c", fontWeight: "bold" }}>Commodity</ThemedText>
-                  <ThemedText style={{ color: "#222" }}>Weed</ThemedText>
+                  <ThemedText style={{ color: "#222" }}>{item.productName} </ThemedText>
                 </View>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
-                  <ThemedText style={{ width: 100, color: "#6a0c0c", fontWeight: "bold" }}>Rate</ThemedText>
-                  <ThemedText style={{ color: "#222" }}>USD 300 per Tonne</ThemedText>
+                  <ThemedText style={{ width: 100, color: "#6a0c0c", fontWeight: "bold" }}>Rate {item.model} </ThemedText>
+                  <ThemedText style={{ color: "#222" }}> {item.currency} {item.rate}  </ThemedText>
                 </View>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
                   <ThemedText style={{ width: 100, color: "#6a0c0c", fontWeight: "bold" }}>Route</ThemedText>
-                  <ThemedText style={{ color: "#222" }}>from Harare to Kadoma</ThemedText>
+                  <ThemedText style={{ color: "#222" }}>From {item.origin} To {item.destination} </ThemedText>
                 </View>
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
+
+              { (dspRoute === "Bidded Loads"||dspRoute === "Booked Loads") && <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <ThemedText style={{ width: 100, color: "#6a0c0c", fontWeight: "bold" }}>Decision</ThemedText>
                   <View style={{ padding: wp(2), paddingVertical: wp(1), borderRadius: wp(20), backgroundColor: "#737373" }}>
-                    <ThemedText type="defaultSemiBold" style={{ color: "#fff" }}>Pending</ThemedText>
+                    <ThemedText type="defaultSemiBold" style={{ color: "#fff" }}>{item.ownerDecision} </ThemedText>
                   </View>
-                </View>
+                </View>}
               </View>
 
-
-             <TouchableOpacity style={{ backgroundColor: 'red', paddingVertical: wp(2), borderRadius: wp(4), marginTop: wp(2), alignItems: 'center' }}>
+              {(dspRoute !== "Bidded Loads"&&dspRoute !== "Booked Loads") &&   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: wp(2), gap: wp(2) }}>
+                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: "#6a0c0c", paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }}>
+                  <ThemedText style={{ color: 'white' }}>View Truck</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }}>
                   <ThemedText style={{ color: 'white' }}>View Load</ThemedText>
                 </TouchableOpacity>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: wp(2), gap: wp(2) }}>
-                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }}>
-                  <ThemedText style={{ color: 'white' }}>Check More Loads </ThemedText>
+              </View>}
+
+              {(dspRoute === "Bidded Loads"||dspRoute === "Booked Loads") && <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: wp(2), gap: wp(2) }}>
+
+                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.truckId, dspDetails: "true", truckFrContract: 'true' } })}>
+                  <ThemedText style={{ color: 'white' }}>View Load</ThemedText>
                 </TouchableOpacity>
-                <TouchableOpacity style={{ backgroundColor: '#f25022', alignItems: 'center', paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }}>
-                  <ThemedText style={{ color: 'white' }}>No longer interested</ThemedText>
+                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: "#6a0c0c", paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.truckId, dspDetails: "true", truckBeingReuested: 'true' } })} >
+                  <ThemedText style={{ color: 'white' }}>View Truck</ThemedText>
                 </TouchableOpacity>
-              </View>
+              </View>}
+
+                  <TouchableOpacity onPress={()=> { 
+                    alertBox(
+                                            "Delete Truck",
+                                            "Are you sure you want to delete this truck?",
+                                            [
+                                                {
+                                                    title: "Delete",
+                                                    onPress: async () => {
+                                                        try {
+                                                            // Add delete logic here
+                                                            // deleteDocument('Trucks', truckData.id)
+                                                            ToastAndroid.show("Success Truck deleted successfully", ToastAndroid.SHORT);
+                                                        } catch (error) {
+                                                            alertBox("Error", "Failed to delete truck", [], "error");
+                                                        }
+                                                    },
+                                                },
+                                            ],
+                                            "destructive"
+                                        )}}
+                                        
+                                        style={{ backgroundColor: '#dc3545', paddingVertical: wp(2), borderRadius: wp(4), marginTop: wp(2), alignItems: 'center' }}>
+                {(dspRoute !== "Bidded Loads"&&dspRoute !== "Booked Loads") &&<ThemedText style={{ color: 'white' }}>Load Taken</ThemedText>}
+                {(dspRoute === "Bidded Loads"||dspRoute === "Booked Loads") &&<ThemedText style={{ color: 'white' }}>No longer Intrested</ThemedText>}
+              </TouchableOpacity>
             </View>
   );
 }

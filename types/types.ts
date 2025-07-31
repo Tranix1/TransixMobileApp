@@ -202,7 +202,7 @@ export type Load = {
     currency: string
     model: string
     activeLoading: boolean
-    location: string
+    origin: string
     roundTrip: boolean
     isVerified: boolean
     trucksRequired: TruckNeededType[]

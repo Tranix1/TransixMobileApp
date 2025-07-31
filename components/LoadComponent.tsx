@@ -59,7 +59,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
   const updatedUrl = replaceSpacesWithPercent(url);
   const message = `${item.companyName}
         Is this Load still available
-        ${item.typeofLoad} from ${item.location} to ${item.destination}
+        ${item.typeofLoad} from ${item.origin} to ${item.destination}
         ${item.rate}
 
         From: ${updatedUrl}`;
@@ -151,7 +151,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
               From
             </ThemedText>
             <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
-              {item.location}
+              {item.origin}
             </ThemedText>
           </View>
           <View style={{ gap: wp(1), flex: 2, }}>

@@ -75,7 +75,7 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
 
 
     return (
-        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id, dspDetails: "true", truckFrContract: 'true' } })} style={[styles.container, { backgroundColor: background, borderColor: backgroundLight }]}>
+        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id, dspDetails: "false",  } })} style={[styles.container, { backgroundColor: background, borderColor: backgroundLight }]}>
             <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truck.imageUrl }} style={styles.image} />
             <View style={styles.detailsContainer}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>

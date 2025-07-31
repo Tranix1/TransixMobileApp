@@ -275,7 +275,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                                         From
                                                     </ThemedText>
                                                     <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
-                                                        {selectedLoad.location}
+                                                        {selectedLoad.origin}
                                                     </ThemedText>
                                                 </View>
                                                 <View style={{ gap: wp(1), flex: 2, }}>
