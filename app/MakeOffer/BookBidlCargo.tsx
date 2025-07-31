@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet } from "react-native";
-import { auth,db } from "../components/config/fireBase";
+import { auth, db } from "../components/config/fireBase";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { collection, serverTimestamp, addDoc, query, where, onSnapshot, getDocs } from 'firebase/firestore';
@@ -105,8 +105,8 @@ function BookLContract({ }) {
   }, [setTrucksInContract]);
 
   const checkExistixtBBDoc = async (trckContractId: string) => {
-    const chatsRef = collection(db, 'ContractRequests');
-    const chatQuery = query(chatsRef, where('trckContractId', '==', trckContractId), where('alreadyInContract', '==', true));
+    const chatsRef = collection(db, 'LoadsBookings');
+    const chatQuery = query(chatsRef, where('requestId', '==', trckContractId), where('alreadyInContract', '==', true));
     const querySnapshot = await getDocs(chatQuery);
     return !querySnapshot.empty;
   };
@@ -132,37 +132,30 @@ function BookLContract({ }) {
 
 
 
-
-
-
-
-
-
-  
   let renderElements = bbVerifiedLoadD.map((item) => {
-
-
-
-
-
-
 
     async function handleSubmitDetails() {
       try {
         if (auth.currentUser) {
           const userId = auth.currentUser.uid
-          const existingBBDoc = await checkExistixtBBDoc(`${userId}${Contractitem.contractId}${item.timeStamp}`);
+          const existingBBDoc = await checkExistixtBBDoc(`${userId}${Contractitem.loadId}${item.timeStamp}`);
           if (!existingBBDoc) {
-            const theCollection = collection(db, "ContractRequests");
+            const theCollection = collection(db, "CargoBookings");
             await addDoc(theCollection, {
               truckInfo: item,
-              trckLoadtId: `${userId}${Contractitem.loadId}${item.created_at}`,
-              truckContrSt: true,
-              loadId: Contractitem.loadId,
-              LoadOnwerId: Contractitem.userId,
-              origin : Contractitem.origin ,
-              destination : Contractitem.destination ,
-              contractName: Contractitem.contractName,
+              created_at: Date.now().toString() ,
+              requestId: `${userId}${Contractitem.loadId}${item.timeStamp}`,
+              cargoId: Contractitem.loadId,
+              onwerId: Contractitem.userId,
+              productName: Contractitem.typeofLoad,
+              origin: Contractitem.origin,
+              destination: Contractitem.destination,
+              rate: Contractitem.rate,
+              currency: Contractitem.currency,
+              model: Contractitem.model,
+              ownerDecision: null,
+              status : "Booked" ,
+              // contractName: Contractitem.contractName,
 
               approvedTrck: false,
               alreadyInContract: true,
@@ -442,7 +435,7 @@ function BookLContract({ }) {
             <MaterialIcons name="verified" size={wp(4)} color="green" />
           </ThemedText>
         </View>
-     
+
 
         <View style={{ marginBottom: wp(0), borderWidth: 1, borderColor: coolGray + "30", borderRadius: wp(2), overflow: 'hidden', padding: wp(2), backgroundColor: backgroundColor }}>
           {/* Vertical Info List */}
@@ -451,24 +444,24 @@ function BookLContract({ }) {
               <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Product</ThemedText>
               <ThemedText >{Contractitem.typeofLoad || "Tobacco"}</ThemedText>
             </View>
-<View style={{ flexDirection: 'row', marginBottom: wp(1) }}> 
-  
-              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate {Contractitem.model} </ThemedText>
-          <ThemedText   >{Contractitem.currency} {formatCurrency(Contractitem.rate)}</ThemedText>
-</View>
+            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
 
-<View style={{ flexDirection: 'row', marginBottom: wp(1) }}> 
-  
+              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate {Contractitem.model} </ThemedText>
+              <ThemedText   >{Contractitem.currency} {formatCurrency(Contractitem.rate)}</ThemedText>
+            </View>
+
+            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
+
               <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Origin</ThemedText>
-          <ThemedText   >{Contractitem.location}</ThemedText>
-</View>
-<View style={{ flexDirection: 'row', marginBottom: wp(1) }}> 
-  
+              <ThemedText   >{Contractitem.location}</ThemedText>
+            </View>
+            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
+
               <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Destination</ThemedText>
-          <ThemedText   >{Contractitem.destination}</ThemedText>
-</View>
-            
-             
+              <ThemedText   >{Contractitem.destination}</ThemedText>
+            </View>
+
+
           </View>
         </View>
       </View>
@@ -492,7 +485,7 @@ function BookLContract({ }) {
         shadowRadius: 4,
         elevation: 2,
       }}
-      onPress={()=>router.push("/Logistics/Trucks/AddTrucks")}
+        onPress={() => router.push("/Logistics/Trucks/AddTrucks")}
       >
         <Feather name="plus" size={wp(7)} color="#fff" />
       </TouchableOpacity>

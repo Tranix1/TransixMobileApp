@@ -39,7 +39,7 @@ const Index = () => {
 const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(false)
     const LoadTructs = async () => {
       let filters: any[] = [];
-        const maLoads = await fetchDocuments("Loads");
+        const maLoads = await fetchDocuments("Cargo");
 
         if (maLoads.data.length) {
 
@@ -67,7 +67,7 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
 
         if (loadingMore || !lastVisible) return;
         setLoadingMore(true);
-        const result = await fetchDocuments('Loads', 10, lastVisible);
+        const result = await fetchDocuments('Cargo', 10, lastVisible);
         if (result) {
             setLoads([...Loads, ...result.data as Load[]]);
             setLastVisible(result.lastVisible);
@@ -206,7 +206,7 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
     const deleteMyLoad = async (loadID: string) => {
 
         try {
-            const deleting = await deleteDocument('Loads', loadID)
+            const deleting = await deleteDocument('Cargo', loadID)
 
             if (deleting) {
                 bottomSheetRef.current?.close();

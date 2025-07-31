@@ -19,6 +19,7 @@ import { TruckFormData } from "@/types/types";
 import { TruckTypeProps } from "@/types/types";
 import { useThemeColor } from '@/hooks/useThemeColor';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Timestamp } from "firebase/firestore";
 
 
 const AddLoadDB = () => {
@@ -213,7 +214,7 @@ const AddLoadDB = () => {
             isVerified: false,
             typeofLoad,
             destination: toLocation,
-            location: fromLocation,
+            origin: fromLocation,
             rate,
             rateexplantion,
             currency: selectedCurrency.name,
@@ -235,7 +236,7 @@ const AddLoadDB = () => {
 
         try {
             // Ensure addDocument is not a React hook or using hooks internally.
-            await addDocument("Loads", loadData);
+            await addDocument("Cargo", loadData);
             clearFormFields(); // Call this function to clear all fields
             ToastAndroid.show('Load Added successfully', ToastAndroid.SHORT)
             setAfterSubmitModal(true)

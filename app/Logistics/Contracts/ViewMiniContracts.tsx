@@ -370,6 +370,7 @@ export default React.memo(LoadsContracts);
 
 const styles = StyleSheet.create({
 
+
   emptySubtext: {
     textAlign: 'center',
     marginTop: wp(2)
