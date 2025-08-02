@@ -60,14 +60,14 @@ const Index = () => {
     const [dspVerifyAcc, setDspVerifyAcc] = useState(false)
     const [dspMenu, setDspMenu] = useState(false)
 
-
+    console.log(user?.organisation , user?.phoneNumber ,user?.country,"details")
 
     function checkAuth(theAction: any) {
-
         if (auth.currentUser) {
             if(!user?.organisation || !user.phoneNumber || !user.country ){
                 router.push({pathname: '/Account/Profile',params: { operation: 'create' },});
             }else if (!auth.currentUser.emailVerified) {
+                console.log("hiii")
                 setDspVerifyAcc(true);
             } else {
                 // user exists and email is verified

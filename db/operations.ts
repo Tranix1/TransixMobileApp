@@ -2,6 +2,7 @@ import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, where, o
 import { db, auth } from "../app/components/config/fireBase";
 import { getDownloadURL, ref, uploadBytes, } from "firebase/storage";
 import { storage } from "./fireBaseConfig";
+import { usePushNotifications,sendPushNotification } from "@/Utilities/pushNotification";
 /**
  * Add a document to a Firestore collection.
  * @param collectionName - The name of the Firestore collection.
@@ -15,10 +16,14 @@ export const addDocument = async (
 
 ) => {
     try {
+  const { expoPushToken } = usePushNotifications();
+  let notifactionToken = expoPushToken ? expoPushToken : null
+  
         const docRef = await addDoc(collection(db, collectionName), {
             ...data,
             timeStamp: serverTimestamp(),
             userId: auth.currentUser?.uid,
+           expoPushToken : notifactionToken ,
         });
         return docRef.id;
     } catch (error) {

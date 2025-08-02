@@ -41,8 +41,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }))
             return;
         } else {
-
-            setUser(null)
+            console.log("here")
+            // setUser(null)
             setIsSignedIN(false);
             await AsyncStorage.removeItem('user')
             return;

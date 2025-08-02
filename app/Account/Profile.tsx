@@ -89,7 +89,7 @@ setLoading(true)
             photoURL: imagelogo[0]  ?logoImage : user?.photoURL ,
             uid: user?.uid,
             email: user?.email,
-            createdAt: user?.createdAt
+            // createdAt: user?.createdAt
             
         }
 

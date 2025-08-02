@@ -12,13 +12,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 import { BlurView } from 'expo-blur';
 import { Truck, User } from "@/types/types";
-import { deleteDocument, readById } from "@/db/operations";
+import { deleteDocument, readById ,updateDocument} from "@/db/operations";
 import { Image } from 'expo-image'
 import { useAuth } from "@/context/AuthContext";
 import Divider from "@/components/Divider";
 import { formatNumber } from "@/services/services";
 
+// import { sendPushNotification } from "@/Utilities/pushNotification";
+import { usePushNotifications,sendPushNotification } from "@/Utilities/pushNotification";
+
 const TruckDetails = () => {
+    const { expoPushToken } = usePushNotifications();
 
 
     const icon = useThemeColor("icon");
@@ -27,7 +31,7 @@ const TruckDetails = () => {
     const background = useThemeColor("background");
     const coolGray = useThemeColor("coolGray");
     const backgroundLight = useThemeColor("backgroundLight");
-    const { truckid, dspDetails,  truckBeingReuested , } = useLocalSearchParams();
+    const { truckid,updateReuestDoc , dspDetails,  truckBeingReuested , } = useLocalSearchParams();
 
     const [truckData, setTruckData] = useState<Truck>({} as Truck)
     const [modalVisible, setModalVisible] = useState(false);
@@ -124,6 +128,26 @@ const TruckDetails = () => {
         )
 
     }
+
+   async function accecptTruckRquest(decision : string){
+       // Update Booking State
+       
+    //    await updateDocument("CargoBookings", `${updateReuestDoc}`, {ownerDecision:  decision,})
+    //    await sendPushNotification( `${expoPushToken}` , "Hello", "You have a message", { userId: "123" });
+       await sendPushNotification(
+  `${expoPushToken}` ,
+  "New Load Available",
+  "Tap to view load details",
+  "/BooksAndBids/ViewBidsAndBooks",           // route path
+  { loadId: "abc123" }              // optional extra data
+);
+
+
+       alert("Done Adding")
+        // Update Truck
+
+    }
+
 
     const placeholder = require('@/assets/images/failedimage.jpg')
     return (
@@ -350,6 +374,7 @@ const TruckDetails = () => {
                                     elevation: 3,
                                 }}
                                 activeOpacity={0.85}
+                                onPress={()=>accecptTruckRquest("Approved") }
                             >
                                 <ThemedText style={{ color: "#fff", fontWeight: "600", fontSize: 16, letterSpacing: 0.5 }}>
                                     Accept
@@ -370,6 +395,7 @@ const TruckDetails = () => {
                                     elevation: 3,
                                 }}
                                 activeOpacity={0.85}
+                                onPress={()=>accecptTruckRquest("Declined") }
                             >
                                 <ThemedText style={{ color: "#fff", fontWeight: "600", fontSize: 16, letterSpacing: 0.5 }}>
                                     Deny

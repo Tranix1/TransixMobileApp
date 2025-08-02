@@ -93,7 +93,7 @@ const coolGray = "#e5e7eb";
                 <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.truckId, dspDetails: "true", truckFrContract: 'true' } })}>
                   <ThemedText style={{ color: 'white' }}>View Load</ThemedText>
                 </TouchableOpacity>
-                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: "#6a0c0c", paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.truckId, dspDetails: "true", truckBeingReuested: 'true' } })} >
+                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: "#6a0c0c", paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.truckId, updateReuestDoc:item.id , expoPushToken : item.expoPushToken ,dspDetails: "true", truckBeingReuested: 'true' } })} >
                   <ThemedText style={{ color: 'white' }}>View Truck</ThemedText>
                 </TouchableOpacity>
               </View>}
