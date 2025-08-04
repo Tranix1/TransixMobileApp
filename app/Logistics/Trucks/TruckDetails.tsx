@@ -134,9 +134,8 @@ const TruckDetails = () => {
    async function accecptTruckRquest(decision : string){
        // Update Booking State
 
-       setTruckDenialReason(true)
-       await updateDocument("CargoBookings", `${updateReuestDoc}`, {ownerDecision:  decision,})
-    if(decision==="Approved" ){
+       if(decision==="Approved" ){
+        await updateDocument("CargoBookings", `${updateReuestDoc}`, {ownerDecision:  decision,})
 
     await sendPushNotification( 
   `${expoPushToken}` ,
@@ -144,20 +143,19 @@ const TruckDetails = () => {
     `Truck Accepted`,
    `Truck "${truckData.truckName}" has been accepted for load "${productName}" ( ${origin} to ${destination}) rate ${currency } ${rate} ${model} . Tap to view details.`,
     { pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "bookings", dspRoute: "Booked Loads" } },
-  { loadId: "abc122" }              // optional extra data
 );
 
     }else if(decision==="Denied"){
-
-       await updateDocument("CargoBookings", `${updateReuestDoc}`, {ownerDecision:  decision,denialReason : truckDenialReason})
+        if(!reasonForDenail){  alert("Enter Reason For Denial");return}       
+       await updateDocument("CargoBookings", `${updateReuestDoc}`, {ownerDecision:  decision,denialReason : reasonForDenail})
 await sendPushNotification(
   `${expoPushToken}`,
   `Truck  Denied`,
     `Truck "${truckData.truckName}" was Denied for load "${productName}" ( ${origin} to ${destination}) rate ${currency } ${rate} ${model} . Reason: Details not clear.`,
     { pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "bookings", dspRoute: "Booked Loads" } },
-  { loadId: "123" }
 )
-
+setTruckDenialReason(false)
+setReasonForDenial("")
     }  
        alert("Done Adding")
         // Update Truck
@@ -186,7 +184,7 @@ await sendPushNotification(
                                     style={{ backgroundColor: "#1E90FF", alignItems: 'center', padding: wp(2), borderRadius: wp(4) }}
                                 >
                                     <ThemedText color="#fff" type="subtitle">Truck Available</ThemedText>
-                                    <ThemedText color="#fff" type="subtitle">Truck Not Available</ThemedText>
+                                    {/* <ThemedText color="#fff" type="subtitle">Truck Not Available</ThemedText> */}
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
@@ -210,7 +208,7 @@ await sendPushNotification(
                                                     onPress: async () => {
                                                         try {
                                                             // Add delete logic here
-                                                            deleteDocument('Trucks', truckData.id)
+                                                           await deleteDocument('Trucks', truckData.id)
                                                             ToastAndroid.show("Success Truck deleted successfully", ToastAndroid.SHORT);
                                                         } catch (error) {
                                                             alertBox("Error", "Failed to delete truck", [], "error");
@@ -593,7 +591,7 @@ await sendPushNotification(
                         </View>
                     }
 
-                    {dspDetails==="true" && <View>
+                    {(dspDetails==="true"||user?.uid === truckData.userId ) && <View>
                         <ThemedText style={{ textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Truck Details</ThemedText>
                         <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
                             {truckData.truckBookImage &&

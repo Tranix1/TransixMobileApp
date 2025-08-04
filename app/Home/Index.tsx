@@ -12,6 +12,7 @@ import * as Updates from 'expo-updates';
 import { auth } from '../components/config/fireBase'
 import { signOut, sendEmailVerification } from 'firebase/auth'
 
+import NetInfo from '@react-native-community/netinfo';
 const Index = () => {
     function CustomHeader() {
         const background = useThemeColor("background");
@@ -55,14 +56,24 @@ const Index = () => {
 
     const { user } = useAuth()
 
-
     const [dspCreateAcc, setDspCreateAcc] = useState(false)
     const [dspVerifyAcc, setDspVerifyAcc] = useState(false)
     const [dspMenu, setDspMenu] = useState(false)
 
-    console.log(user?.organisation , user?.phoneNumber ,user?.country,"details")
+ const [isConnectedInternet, setIsConnectedInternet] = useState(true);
 
+  React.useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnectedInternet(state.isConnected as any);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
     function checkAuth(theAction: any) {
+        if (!isConnectedInternet)  {ToastAndroid.show("You are offline. Please check your internet connection.",ToastAndroid.SHORT);return }
+        
         if (auth.currentUser) {
             if(!user?.organisation || !user.phoneNumber || !user.country ){
                 router.push({pathname: '/Account/Profile',params: { operation: 'create' },});
@@ -165,7 +176,7 @@ const Index = () => {
 
             {!isAvaialble &&
                 <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, height: '125%', alignItems: 'center', justifyContent: 'center', backgroundColor: colorScheme === 'light' ? 'rgba(255, 255, 255, 0.6)' : "rgba(0, 0, 0, 0.6)" }} >
-                    <ThemedText type='defaultSemiBold'  > Coming Soon</ThemedText>
+                    <ThemedText type='defaultSemiBold'  > Coming Soon  </ThemedText>
                     <Ionicons name='time-outline' size={wp(6)} color={colorScheme === 'light' ? "black" : "white"} />
                 </View>}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }}>
@@ -652,8 +663,46 @@ const Index = () => {
 
                 </View>
 
+     {/* <View style={[styles.homefeature, { borderColor: '#4285f4', backgroundColor: background, padding: wp(4) }]}>
+
+                        <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
+                            <View style={{}}>
+                                <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} />
+                            </View>
+                            <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
+                                Long-Term Contracts
+                            </ThemedText>
+                            <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ flexDirection: 'row', gap: wp(1) }}>
+                                <ThemedText type='tiny'>
+                                    Open Contracts
+                                </ThemedText>
+                                <Ionicons name='arrow-forward' color={icon} />
+                            </TouchableOpacity>
+                        </View>
+                        <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>Create contract and start transporting loads today!</ThemedText>
+
+                        <View style={{ marginVertical: wp(5), alignItems: 'center', gap: wp(4), }}>
+
+                            <ThemedText numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8),marginBottom:16 }}
+                            >
+                            Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
+                            </ThemedText>
+
+                            <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
+                                <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
+                                <ThemedText color='#fff' >
+                                    Booked Contracts
+                                </ThemedText>
+                            </TouchableOpacity>
+                        </View>
+
+                    </View> */}
+
+                    
 
                 {theData.map((item) => (<View>
+
+  
 
 
 

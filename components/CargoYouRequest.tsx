@@ -8,6 +8,7 @@ import { router } from 'expo-router'
 
 import { useThemeColor } from '@/hooks/useThemeColor'
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
+import { deleteDocument, } from "@/db/operations";
 export const RequestedCargo = ({
     item  ,dspRoute
 }: {
@@ -41,7 +42,6 @@ const coolGray = "#e5e7eb";
 
     }
 
-console.log(item.expoPushToken )
   return (
    
  <View style={{ borderWidth: 1, borderColor: coolGray, padding: wp(2), borderRadius: wp(4) , marginBottom:5 }}>
@@ -76,21 +76,25 @@ console.log(item.expoPushToken )
                   <View style={{ padding: wp(2), paddingVertical: wp(1), borderRadius: wp(20), backgroundColor: "#737373" }}>
                     <ThemedText type="defaultSemiBold" style={{ color: "#fff" }}>{item.ownerDecision} </ThemedText>
                   </View>
-                </View>}
+                </View> }
+                 { (dspRoute === "Bidded Loads"||dspRoute === "Booked Loads") && item.denialReason&&<View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <ThemedText style={{ width: 100, color: "#6a0c0c", fontWeight: "bold" }}>Reason</ThemedText>
+                    <ThemedText  style={{ color: "#222",fontStyle:"italic" }}> {item.denialReason } </ThemedText>
+                </View> }
               </View>
 
               {(dspRoute !== "Bidded Loads"&&dspRoute !== "Booked Loads") &&   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: wp(2), gap: wp(2) }}>
                 <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: "#6a0c0c", paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.truckId, updateReuestDoc:item.id , expoPushToken : item.expoPushToken , productName : item.productName , origin :item.origin ,destination:item.destination , model :item.model ,rate : item.rate,currency:item.currency , dspDetails: "true", truckBeingReuested: 'true' } })} >
                   <ThemedText style={{ color: 'white' }} >View Truck</ThemedText>
                 </TouchableOpacity>
-                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }}>
+                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({pathname:"/Logistics/Loads/Index",params:{itemId: item.loadId, }  } )} >
                   <ThemedText style={{ color: 'white' }}>View Load</ThemedText>
                 </TouchableOpacity>
               </View>}
 
               {(dspRoute === "Bidded Loads"||dspRoute === "Booked Loads") && <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: wp(2), gap: wp(2) }}>
 
-                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({pathname:"/Logistics/Loads/Index",params:{itemId:"yay" }  } )} >
+                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({pathname:"/Logistics/Loads/Index",params:{itemId:item.loadId }  } )} >
                   <ThemedText style={{ color: 'white' }}>View Load</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: "#6a0c0c", paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.truckId } })} >
@@ -100,16 +104,23 @@ console.log(item.expoPushToken )
 
                   <TouchableOpacity onPress={()=> { 
                     alertBox(
-                                            "Delete Truck",
-                                            "Are you sure you want to delete this truck?",
+                                           (dspRoute === "Bidded Loads"||dspRoute === "Booked Loads") ? "Remove Request":"Delete Load",
+                                          (dspRoute === "Bidded Loads"||dspRoute === "Booked Loads") ?   "Are you sure you want to delete this request?":"Are you sure you want to delete the load?",
                                             [
                                                 {
                                                     title: "Delete",
                                                     onPress: async () => {
                                                         try {
                                                             // Add delete logic here
-                                                            // deleteDocument('Trucks', truckData.id)
-                                                            ToastAndroid.show("Success Truck deleted successfully", ToastAndroid.SHORT);
+
+                                                            if(dspRoute === "Bidded Loads"||dspRoute === "Booked Loads") {
+                                                              await deleteDocument('Cargo', item.loadId)
+                                                            await deleteDocument('CargoBookings', item.id)
+                                                           }else if(dspRoute !== "Bidded Loads"&&dspRoute !== "Booked Loads") {
+                                                             await deleteDocument('CargoBookings', item.id)
+
+                                                           }
+                                                            ToastAndroid.show("Success : Request deleted successfully", ToastAndroid.SHORT);
                                                         } catch (error) {
                                                             alertBox("Error", "Failed to delete truck", [], "error");
                                                         }

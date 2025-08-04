@@ -160,11 +160,11 @@ function BookLContract({ }) {
               model: Contractitem.model,
               ownerDecision:  "Pending",
               status : "Booked" ,
-              // contractName: Contractitem.contractName,
-
+              loadId : item.id ,
               approvedTrck: false,
               alreadyInContract: true,
               expoPushToken : expoPushToken || null
+              // contractName: Contractitem.contractName,
               }
             addDocument("CargoBookings",theData)
                   await sendPushNotification( 
