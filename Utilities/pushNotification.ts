@@ -119,7 +119,7 @@ export async function sendPushNotification(
   expoPushToken: string,
   title: string,
   body: string,
-  route: string, // ✅ New argument to specify route
+  route: any, // ✅ New argument to specify route
   extraData: Record<string, any> = {} // Optional data like IDs
 ) {
   console.log("hiiii")
@@ -167,9 +167,9 @@ export function useNotificationRouting() {
       setTimeout(() => {
         if (data?.route) {
           console.log('➡️ Navigating to route:', data.route);
-          // router.push(data.route);
+          router.push(data.route);
           
-          router.replace("/Logistics/Contracts/AddContracts");
+          // router.replace("/Logistics/Contracts/AddContracts");
         } else {
           console.log('❌ No route in notification data');
         }

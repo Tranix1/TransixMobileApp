@@ -16,14 +16,10 @@ export const addDocument = async (
 
 ) => {
     try {
-  const { expoPushToken } = usePushNotifications();
-  let notifactionToken = expoPushToken ? expoPushToken : null
-  
         const docRef = await addDoc(collection(db, collectionName), {
             ...data,
             timeStamp: serverTimestamp(),
             userId: auth.currentUser?.uid,
-           expoPushToken : notifactionToken ,
         });
         return docRef.id;
     } catch (error) {

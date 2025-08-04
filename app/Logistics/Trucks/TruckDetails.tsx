@@ -7,7 +7,7 @@ import Heading from "@/components/Heading";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons, Octicons } from "@expo/vector-icons";
 import { hp, wp } from "@/constants/common";
-import { ReactElement, useEffect, useState } from "react";
+import React, { ReactElement, useEffect, useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 import { BlurView } from 'expo-blur';
@@ -19,10 +19,10 @@ import Divider from "@/components/Divider";
 import { formatNumber } from "@/services/services";
 
 // import { sendPushNotification } from "@/Utilities/pushNotification";
-import { usePushNotifications,sendPushNotification } from "@/Utilities/pushNotification";
+import { sendPushNotification } from "@/Utilities/pushNotification";
+import Input from "@/components/Input";
 
 const TruckDetails = () => {
-    const { expoPushToken } = usePushNotifications();
 
 
     const icon = useThemeColor("icon");
@@ -31,8 +31,7 @@ const TruckDetails = () => {
     const background = useThemeColor("background");
     const coolGray = useThemeColor("coolGray");
     const backgroundLight = useThemeColor("backgroundLight");
-    const { truckid,updateReuestDoc , dspDetails,  truckBeingReuested , } = useLocalSearchParams();
-
+    const { truckid,updateReuestDoc , dspDetails,  truckBeingReuested , productName,origin,destination,model,rate ,currency,expoPushToken} = useLocalSearchParams();
     const [truckData, setTruckData] = useState<Truck>({} as Truck)
     const [modalVisible, setModalVisible] = useState(false);
     const [refreshing, setRefreshing] = useState(false)
@@ -129,20 +128,37 @@ const TruckDetails = () => {
 
     }
 
+    const [reasonForDenail , setReasonForDenial]=React.useState("")
+    const [truckDenialReason , setTruckDenialReason]=React.useState(false)
+
    async function accecptTruckRquest(decision : string){
        // Update Booking State
-       
-    //    await updateDocument("CargoBookings", `${updateReuestDoc}`, {ownerDecision:  decision,})
-    //    await sendPushNotification( `${expoPushToken}` , "Hello", "You have a message", { userId: "123" });
-       await sendPushNotification(
+
+       setTruckDenialReason(true)
+       await updateDocument("CargoBookings", `${updateReuestDoc}`, {ownerDecision:  decision,})
+    if(decision==="Approved" ){
+
+    await sendPushNotification( 
   `${expoPushToken}` ,
-  "New Load Available",
-  "Tap to view load details",
-  "/BooksAndBids/ViewBidsAndBooks",           // route path
-  { loadId: "abc123" }              // optional extra data
+//   "Truck Accepted",
+    `Truck Accepted`,
+   `Truck "${truckData.truckName}" has been accepted for load "${productName}" ( ${origin} to ${destination}) rate ${currency } ${rate} ${model} . Tap to view details.`,
+    { pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "bookings", dspRoute: "Booked Loads" } },
+  { loadId: "abc122" }              // optional extra data
 );
 
+    }else if(decision==="Denied"){
 
+       await updateDocument("CargoBookings", `${updateReuestDoc}`, {ownerDecision:  decision,denialReason : truckDenialReason})
+await sendPushNotification(
+  `${expoPushToken}`,
+  `Truck  Denied`,
+    `Truck "${truckData.truckName}" was Denied for load "${productName}" ( ${origin} to ${destination}) rate ${currency } ${rate} ${model} . Reason: Details not clear.`,
+    { pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "bookings", dspRoute: "Booked Loads" } },
+  { loadId: "123" }
+)
+
+    }  
        alert("Done Adding")
         // Update Truck
 
@@ -215,6 +231,39 @@ const TruckDetails = () => {
                     </BlurView>
                 </Pressable>
             </Modal>
+
+
+
+
+   <Modal transparent statusBarTranslucent visible={truckDenialReason} animationType="fade">
+                <Pressable onPress={() => setTruckDenialReason(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                    <BlurView intensity={100} style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center' }}>
+
+                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                            <View style={{ backgroundColor: backgroundLight, borderRadius: wp(4), padding: wp(4), width: wp(90), gap: wp(3) }}>
+                                <View style={{ alignItems: 'flex-end' }}>
+                                    <TouchableOpacity onPress={() => setTruckDenialReason(false)}>
+                                        <Ionicons name="close-circle" size={wp(6)} color={icon} />
+                                    </TouchableOpacity>
+                                </View>
+                                <ThemedText type="title" style={{ textAlign: 'center', marginBottom: wp(2.5) }}>
+                                        Reason for Denying
+                                </ThemedText>
+
+                                <ThemedText type="tiny">e.g. Missing documents, incorrect truck info, or load mismatch</ThemedText>
+<Input placeholder="Enter reason for denying this truck" value={reasonForDenail} onChangeText={(text)=>setReasonForDenial(text)} />
+<TouchableOpacity style={{borderWidth:1 , borderColor:icon,borderRadius:8 ,backgroundColor:background,height:hp(5), width:wp(56), justifyContent:"center",alignItems:"center" ,alignSelf:"center",marginTop: wp(-3),flexDirection:"row", gap: wp(2)}} onPress={()=>accecptTruckRquest("Denied") }>
+    <ThemedText style={{fontWeight:"bold"}}>Send</ThemedText>
+    <Ionicons name="send-outline"  size={19} color={icon} />
+</TouchableOpacity>
+
+
+                            </View>
+                        </View>
+                    </BlurView>
+                </Pressable>
+            </Modal>
+
 
             {showAlert}
             <Heading page={truckData.truckName || "Truck Details"}
@@ -395,7 +444,7 @@ const TruckDetails = () => {
                                     elevation: 3,
                                 }}
                                 activeOpacity={0.85}
-                                onPress={()=>accecptTruckRquest("Declined") }
+                                onPress={()=>setTruckDenialReason(true)}
                             >
                                 <ThemedText style={{ color: "#fff", fontWeight: "600", fontSize: 16, letterSpacing: 0.5 }}>
                                     Deny

@@ -41,7 +41,7 @@ const coolGray = "#e5e7eb";
 
     }
 
-
+console.log(item.expoPushToken )
   return (
    
  <View style={{ borderWidth: 1, borderColor: coolGray, padding: wp(2), borderRadius: wp(4) , marginBottom:5 }}>
@@ -80,8 +80,8 @@ const coolGray = "#e5e7eb";
               </View>
 
               {(dspRoute !== "Bidded Loads"&&dspRoute !== "Booked Loads") &&   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: wp(2), gap: wp(2) }}>
-                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: "#6a0c0c", paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }}>
-                  <ThemedText style={{ color: 'white' }}>View Truck</ThemedText>
+                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: "#6a0c0c", paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.truckId, updateReuestDoc:item.id , expoPushToken : item.expoPushToken , productName : item.productName , origin :item.origin ,destination:item.destination , model :item.model ,rate : item.rate,currency:item.currency , dspDetails: "true", truckBeingReuested: 'true' } })} >
+                  <ThemedText style={{ color: 'white' }} >View Truck</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }}>
                   <ThemedText style={{ color: 'white' }}>View Load</ThemedText>
@@ -90,10 +90,10 @@ const coolGray = "#e5e7eb";
 
               {(dspRoute === "Bidded Loads"||dspRoute === "Booked Loads") && <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: wp(2), gap: wp(2) }}>
 
-                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.truckId, dspDetails: "true", truckFrContract: 'true' } })}>
+                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: '#228B22', paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({pathname:"/Logistics/Loads/Index",params:{itemId:"yay" }  } )} >
                   <ThemedText style={{ color: 'white' }}>View Load</ThemedText>
                 </TouchableOpacity>
-                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: "#6a0c0c", paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.truckId, updateReuestDoc:item.id , expoPushToken : item.expoPushToken ,dspDetails: "true", truckBeingReuested: 'true' } })} >
+                <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: "#6a0c0c", paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.truckId } })} >
                   <ThemedText style={{ color: 'white' }}>View Truck</ThemedText>
                 </TouchableOpacity>
               </View>}

@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet } from "react-native";
 import { auth, db } from "../components/config/fireBase";
+import { addDocument } from "@/db/operations";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { collection, serverTimestamp, addDoc, query, where, onSnapshot, getDocs } from 'firebase/firestore';
@@ -14,6 +15,7 @@ import { wp, hp } from "@/constants/common";
 import Heading from "@/components/Heading";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { formatCurrency } from '@/services/services'
+import { usePushNotifications,sendPushNotification } from "@/Utilities/pushNotification";
 
 function BookLContract({ }) {
   const accent = useThemeColor("accent");
@@ -23,11 +25,12 @@ function BookLContract({ }) {
   const background = useThemeColor("background");
   const backgroundColor = useThemeColor("backgroundLight");
 
+
+    const { expoPushToken } = usePushNotifications();
+
   const [bbVerifiedLoadD, setbbVerifiedLoadD] = React.useState<Truck[] | []>([]);
   const { contract } = useLocalSearchParams();
   const Contractitem = JSON.parse(contract as any);
-
-  console.log(Contractitem)
 
   useEffect(() => {
     try {
@@ -137,11 +140,12 @@ function BookLContract({ }) {
     async function handleSubmitDetails() {
       try {
         if (auth.currentUser) {
+          
           const userId = auth.currentUser.uid
           const existingBBDoc = await checkExistixtBBDoc(`${userId}${Contractitem.loadId}${item.timeStamp}`);
           if (!existingBBDoc) {
-            const theCollection = collection(db, "CargoBookings");
-            await addDoc(theCollection, {
+             const theData= {
+
               truckId: item.id,
               created_at: Date.now().toString() ,
               requestId: `${userId}${Contractitem.loadId}${item.timeStamp}`,
@@ -160,8 +164,23 @@ function BookLContract({ }) {
 
               approvedTrck: false,
               alreadyInContract: true,
-              timeStamp: serverTimestamp()
-            })
+              expoPushToken : expoPushToken || null
+              }
+            addDocument("CargoBookings",theData)
+                  await sendPushNotification( 
+  `${expoPushToken}` ,
+//   "Truck Accepted",
+      `New Truck Booking Received`,
+   `company "${item.CompanyName}" has requested to carry your load "${Contractitem.typeofLoad}" from ${Contractitem.origin} to ${Contractitem.destination}. Tap to view request.`,
+    { 
+    pathname: '/BooksAndBids/ViewBidsAndBooks', 
+    params: { 
+      dbName: "bookings", 
+      dspRoute: "Booked by Carriers" 
+    } 
+  },
+   { loadId: "abc122" }              // optional extra data
+);
             alert('doneee adding')
           } else {
             alert("Truck alreadyy Booked")
@@ -454,7 +473,7 @@ function BookLContract({ }) {
             <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
 
               <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Origin</ThemedText>
-              <ThemedText   >{Contractitem.location}</ThemedText>
+              <ThemedText   >{Contractitem.origin}</ThemedText>
             </View>
             <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
 

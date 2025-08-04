@@ -30,6 +30,7 @@ import { AddTruckDetails } from "@/components/AddTruckDetails";
 import { HorizontalTickComponent } from "@/components/SlctHorizonzalTick";
 import { DocumentUploader } from "@/components/DocumentUploader";
 
+import { usePushNotifications,} from "@/Utilities/pushNotification";
 import * as DocumentPicker from 'expo-document-picker';
 
 interface DocumentAsset {
@@ -42,6 +43,7 @@ interface DocumentAsset {
 }
 function AddTrucks() {
 
+    const { expoPushToken } = usePushNotifications();
   // Theme colors
   const icon = useThemeColor('icon')
   const background = useThemeColor('background');
@@ -57,7 +59,7 @@ function AddTrucks() {
     truckName: "",
     otherCargoArea: "",
     otherTankerType: ""
-  });
+});
 
 
   const [ownerNameAddDb, SetOwnerNameAddDb] = useState('');
@@ -423,6 +425,7 @@ setSpinnerItem(false)
         tankerType: selectedTankerType ? selectedTankerType?.name : null,
         truckCapacity: selectedTruckCapacity?.name,
         ...formData,
+expoPushToken :expoPushToken||null
       }
 
       addDocument("Trucks", submitData)

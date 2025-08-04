@@ -21,8 +21,9 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Timestamp } from "firebase/firestore";
 
-
+import { usePushNotifications,} from "@/Utilities/pushNotification";
 const AddLoadDB = () => {
+    const { expoPushToken } = usePushNotifications();
     const icon = useThemeColor('icon')
     const accent = useThemeColor('accent')
     const background = useThemeColor('background')
@@ -232,6 +233,7 @@ const AddLoadDB = () => {
             returnTerms,
             trucksRequired: trucksNeeded,
             loadId: `Lo${Math.floor(100000000000 + Math.random() * 900000000000).toString()}ad`,
+            expoPushToken :expoPushToken ||null
         };
 
         try {

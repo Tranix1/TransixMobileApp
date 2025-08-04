@@ -47,7 +47,7 @@ function SlctBookingsandBiddings({ }) {
   return (
     <ScreenWrapper>
 
-      <Heading page="Bookings and Biddings" />
+      <Heading page="My Requests" />
       <View style={styles.container}>
         <ModernCard
           label="Booked by Carriers"

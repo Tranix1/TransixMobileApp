@@ -95,8 +95,9 @@ const Index = () => {
         {
             id: 1,
             topic: "Long-Term Contracts",
-            description: 'Secure long-term contracts with trusted partners to grow your business with stable income, guaranteed loads, and reliable payments.',
-            btnTitle: "Get Verified  "
+            description: 'Secure long-term contracts with trusted partners to ensure consistency, reduce risk, and grow your business steadily.',
+
+            btnTitle: "Open Contracts  "
         },
         {
             id: 2,
@@ -297,7 +298,7 @@ const Index = () => {
                                             <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
                                                 <ThemedText type='default'>
-                                                    Bookings and Biddings
+                                                    My Requests
                                                 </ThemedText>
                                             </View>
                                         </View>
@@ -656,48 +657,21 @@ const Index = () => {
 
 
 
-                    {item.id === 1 && <View style={[styles.homefeature, { borderColor: '#4285f4', backgroundColor: background, padding: wp(4) }]}>
+                                {/* <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" /> */}
+                                {/* <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} /> */}
 
-                        <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
-                            <View style={{}}>
-                                <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} />
-                            </View>
-                            <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
-                                Long-Term Contracts
-                            </ThemedText>
-                            <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ flexDirection: 'row', gap: wp(1) }}>
-                                <ThemedText type='tiny'>
-                                    Open Contracts
-                                </ThemedText>
-                                <Ionicons name='arrow-forward' color={icon} />
-                            </TouchableOpacity>
-                        </View>
-                        <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>
-                                Create contract and start transporting loads today!
-                        </ThemedText>
+                      {item.id === 1 && <HomeItemView
+                        topic={item.topic}
+                        description={item.description}
+                        mainColor="#4285f4"
+                        icon="#333"
+                        buttonTitle={item.btnTitle}
+                        btnBackground="#4285f424"
+                        isAvaialble={true}
+                        btnPressValue={() => router.push('/Logistics/Contracts/ViewMiniContracts')}
+                    />}
 
 
-
-                        <View style={{ marginVertical: wp(5), alignItems: 'center', gap: wp(4), }}>
-
-                            <ThemedText numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8),marginBottom:16 }}
-                            >
-                                {/* Create contract and start transporting loads today! */}
-                            Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
-                            </ThemedText>
-
-                            <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
-                                <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
-                                <ThemedText color='#fff' >
-                                    Booked Contracts
-                                </ThemedText>
-                            </TouchableOpacity>
-                        </View>
-
-
-
-
-                    </View>}
 
                     {/* <View style={{ flexDirection: 'row', gap: wp(2), marginBottom: wp(5), paddingHorizontal: wp(2) }}>
                     <View style={{ borderWidth: .5, borderColor: accent, padding: wp(3), borderRadius: wp(6), flex: 1, alignItems: 'center' }}>

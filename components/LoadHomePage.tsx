@@ -372,7 +372,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                         </>
                                         }
                                         <View>
-                                            <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: accent, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push({pathname:"/Logistics/Loads/Index",params:{userId : selectedLoad.userId}  } )}>
+                                            <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: accent, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push({pathname:"/Logistics/Loads/Index",params:{userId : selectedLoad.userId}  } )} >
                                                 <ThemedText color='white'>
                                                     Loads By {' '}
                                                     <ThemedText style={{ textDecorationLine: 'underline', color: 'white' }}>
