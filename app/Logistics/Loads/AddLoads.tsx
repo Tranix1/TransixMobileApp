@@ -677,7 +677,8 @@ const AddLoadDB = () => {
                                     backgroundColor: backgroundLight
                                 }}
                             >
-     
+                                <ThemedText>GIT Required</ThemedText>
+                                <Input placeholder="GIT Value" /> 
 
                                 {/* Truck Info */}
                                 <ThemedText >

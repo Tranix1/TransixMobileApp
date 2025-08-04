@@ -28,6 +28,7 @@ import { TruckFormData } from "@/types/types";
 
 import { AddTruckDetails } from "@/components/AddTruckDetails";
 import { HorizontalTickComponent } from "@/components/SlctHorizonzalTick";
+import { DocumentUploader } from "@/components/DocumentUploader";
 
 import * as DocumentPicker from 'expo-document-picker';
 
@@ -65,6 +66,7 @@ function AddTrucks() {
   const [ownershipProof, setOwnershipProof] = React.useState("")
 
   const [selectedOwnerDocuments, setSelectedOwnerDocumentS] = useState<DocumentAsset[]>([]);
+  const [selectedBrokerDocuments, setSelectedBrokerDocumentS] = useState<DocumentAsset[]>([]);
 
 
   const pickDocument = async () => {
@@ -93,8 +95,9 @@ function AddTrucks() {
         alert('The selected document must not be more than 0.5MB.');
         return;
       }
+      if( truckOwnerOBroker === "Owner")setSelectedOwnerDocumentS((prevDocs) => [...prevDocs, firstAsset] as DocumentAsset[]);
+      if( truckOwnerOBroker === "Broker")setSelectedBrokerDocumentS((prevDocs) => [...prevDocs, firstAsset] as DocumentAsset[]);
 
-      setSelectedOwnerDocumentS((prevDocs) => [...prevDocs, firstAsset] as DocumentAsset[]);
     } catch (error) {
       console.error('Error picking document:', error);
       alert('An error occurred while picking the document.');
@@ -104,47 +107,104 @@ function AddTrucks() {
 
   const [uploadingOwnerD , setUploadingOwerD]=React.useState(false)
   const handleUpdateTOwnerDetails = async () => {
+
 setUploadingOwerD(true)
       const missingTruckDetails = [
         !ownerNameAddDb && "Enter Owner Name ",
       !ownerPhonNumAddDb && "Enter Phone Number",
       !ownerEmailAddDb && "Enter Truck Nick Name ",
       !selectedOwnerDocuments[0] && "Pick Proof of ownership document or imaage ",
-      !selectedOwnerDocuments[1] && "Pick Id document or imaage  ",
+      !selectedOwnerDocuments[1] && "Pick Id document or imaage",
+      !selectedOwnerDocuments[2] && "Pick Proof Of Residence",
     ].filter(Boolean);
 
     if (missingTruckDetails.length > 0) {
       // setContractDErr(true);
       alertBox("Missing Ownership Details", missingTruckDetails.join("\n"), [], "error");
-  setUploadingOwerD(false)
-  setSpinnerItem(false)
-
+      setUploadingOwerD(false)
+      setSpinnerItem(false)
       return;
     }
     
     
-    let proofOfTruckOwnerhip,directorOwnerId ;
+    let proofOfTruckOwnerhip,directorOwnerId,ownerProofOfRes ;
     
     proofOfTruckOwnerhip = await uploadImage(selectedOwnerDocuments[0], "TruckOwnership", setUploadImageUpdate, "Ownership uploading");
     directorOwnerId = await uploadImage(selectedOwnerDocuments[1], "TruckOwnership", setUploadImageUpdate, "ID uploading");
+    ownerProofOfRes = await uploadImage(selectedOwnerDocuments[1], "TruckOwnership", setUploadImageUpdate, "Proof Of Res uploading");
     
     
-    await setDocuments("truckOwnerDetails", { ownerName: ownerNameAddDb, ownerPhoneNum: ownerPhonNumAddDb, ownerEmail: ownerEmailAddDb, ownershipProof: proofOfTruckOwnerhip , directorOwnerId:directorOwnerId })
+    await setDocuments("truckOwnerDetails", { ownerName: ownerNameAddDb, ownerPhoneNum: ownerPhonNumAddDb, ownerEmail: ownerEmailAddDb, ownershipProof: proofOfTruckOwnerhip , directorOwnerId:directorOwnerId ,ownerProofOfRes:ownerProofOfRes })
     setOwnerdetailsDsp(false)
     ToastAndroid.show("Store Details created successfully!", ToastAndroid.SHORT);
   };
+
+
+  const handleUpdateTckBrokerDetails = async () => {
+    
+setUploadingOwerD(true)
+      const missingTruckDetails = [
+        !ownerNameAddDb && "Enter Owner Name ",
+      !ownerPhonNumAddDb && "Enter Phone Number",
+      !ownerEmailAddDb && "Enter Truck Nick Name ",
+      !selectedBrokerDocuments[0] && "Pick Id document or imaage",
+      !selectedBrokerDocuments[1] && "Pick Proof of Residence",
+     typeOfBroker==="Company Broker" && !selectedBrokerDocuments[2] && "Pick Company Registration Certificate",
+     typeOfBroker ==="Company Broker"&& !selectedBrokerDocuments[3] && "Pick Stamped Letter Head / signed",
+    ].filter(Boolean);
+
+    if (missingTruckDetails.length > 0) {
+      // setContractDErr(true);
+      alertBox("Missing Broker Details", missingTruckDetails.join("\n"), [], "error");
+      setUploadingOwerD(false)
+      setSpinnerItem(false)
+      return;
+    }
+    
+    let brockerId , proofOfResidence , companyRegCertificate ,companyLtterHead ;
+    
+    brockerId = await uploadImage(selectedBrokerDocuments[0], "TruckBroker", setUploadImageUpdate, "National ID");
+    proofOfResidence = await uploadImage(selectedBrokerDocuments[1], "TruckBroker", setUploadImageUpdate, "Proof Of Residence");
+    companyRegCertificate = await uploadImage(selectedBrokerDocuments[2], "TruckBroker", setUploadImageUpdate, "Company Registration Certificate");
+    companyLtterHead = await uploadImage(selectedBrokerDocuments[3], "TruckBroker", setUploadImageUpdate, "Company Letter Head");
+    
+    await setDocuments("truckBrokerDetails", { brokerName: ownerNameAddDb, brokerPhoneNum: ownerPhonNumAddDb, brokerEmail: ownerEmailAddDb, brockerId: brockerId ||null, proofOfResidence:proofOfResidence||null ,companyRegCertificate:companyRegCertificate||null ,companyLtterHead:companyLtterHead||null })
+    setOwnerdetailsDsp(false)
+    ToastAndroid.show("Broker Details submitted successfully!", ToastAndroid.SHORT);
+   }
+
+
 
   interface TruckOwner {
     ownerName: string;
     ownerPhoneNum: string;
     ownerEmail: string;
-    ownershipProof: string;
+    ownerProofOfRes : string;
+    directorOwnerId : string ;
+    ownershipProof : string ;
   }
 
-  // Then use it like this:
+  
   const [getOwnerDetails, setOwnerDetails] = useState<TruckOwner | null>(null);
+  
   useEffect(() => {
     getDocById('truckOwnerDetails', setOwnerDetails);
+  }, []);
+
+    interface TruckBroker {
+    brokerName: string;
+    brokerPhoneNum : string;
+    brokerEmail: string;
+    ownerProofOfRes : string;
+    proofOfResidence: string ;
+    companyRegCertificate: string ;
+    companyLetterHead: string ;
+    brockerId :  string ;
+  }
+
+  const [getBrokerDetails, setBrokerDetails] = useState<TruckBroker | null>(null);
+  useEffect(() => {
+    getDocById('truckBrokerDetails', setBrokerDetails);
   }, []);
 
   // const [images, setImages] = useState([]);
@@ -168,6 +228,9 @@ setUploadingOwerD(true)
   const [ownerdetailsDsp, setOwnerdetailsDsp] = useState(true)
 
   const [truckOwnerOBroker, setTuckOwnerOBroker] = React.useState("")
+
+  const [typeOfBroker , setTypeOfBroker]=React.useState("")
+
   // if(truckOwnerOBroker==="Owner" && !ownerdetailsDsp ) setOwnerdetailsDsp(true)
 
   const [spinnerItem, setSpinnerItem] = useState(false);
@@ -189,7 +252,6 @@ setUploadingOwerD(true)
     SetOwnerNameAddDb('');
     setOwnerEmailAddDb('');
     setOwnerPhoneNum('');
-    setOwnershipProof('');
     setImages([]);
     setSelectedCargoArea(null);
     setSelectedTruckType(null);
@@ -207,6 +269,11 @@ setUploadingOwerD(true)
   const handleSubmit = async () => {
 
     setSpinnerItem(true)
+    if(!getOwnerDetails || !getBrokerDetails){
+      alert("Are you a Truck Owner or Broker\nSelect Broker owner and submit required Details")
+      return
+    }
+
     const missingTruckDetails = [
       !formData.truckName && "Enter Truck Nick Name ",
       !selectedTruckType && "Select Truck Type",
@@ -337,8 +404,19 @@ setSpinnerItem(false)
 
         ownerName: getOwnerDetails?.ownerName||"",
         onwerEmail: getOwnerDetails?.ownerEmail || "", 
-        ownerPhoneNum: getOwnerDetails?.ownerPhoneNum ||"" ,
+        ownerPhoneNum: getOwnerDetails?.ownerPhoneNum || "", 
+        directorOwnerId: getOwnerDetails?.directorOwnerId ||"" ,
+        ownershipProof: getOwnerDetails?.ownershipProof ||"" ,
+        ownerProofOfRes: getOwnerDetails?.ownerProofOfRes ||"" ,
 
+        brokerName : getBrokerDetails?.brokerName  ||"" ,
+        brokerPhoneNum : getBrokerDetails?.brokerPhoneNum ||"" ,
+        brokerEmail : getBrokerDetails?.brokerEmail ||"" ,
+        proofOfResidence : getBrokerDetails?.proofOfResidence||"" ,
+        companyRegCertificate : getBrokerDetails?.companyRegCertificate||"" ,
+        companyLetterHead : getBrokerDetails?.companyLetterHead ||"" ,
+        brockerId  : getBrokerDetails?.brockerId ||"" ,
+    
         locations: operationCountries,
         truckType: selectedTruckType?.name,
         cargoArea: selectedCargoArea.name,
@@ -359,6 +437,16 @@ setSpinnerItem(false)
     }
   };
 
+
+
+
+
+
+
+
+
+
+  
 
 
 
@@ -385,12 +473,13 @@ setSpinnerItem(false)
             onSelect={setTuckOwnerOBroker}
           />
 
-          <Modal visible={ownerdetailsDsp && truckOwnerOBroker === "Owner"} statusBarTranslucent animationType="slide">
+          <Modal visible={ownerdetailsDsp && truckOwnerOBroker === "Owner" } statusBarTranslucent animationType="slide">
             <ScreenWrapper>
 
               <View style={{ margin: wp(4), marginTop: hp(6) }}>
 
                 <View style={{ gap: wp(2) }} >
+                  <ScrollView>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
                     <TouchableOpacity onPress={() => { setOwnerdetailsDsp(true); setTuckOwnerOBroker("") }}>
                       <AntDesign name="close" color={icon} size={wp(4)} />
@@ -478,247 +567,210 @@ setSpinnerItem(false)
                   />
 
 
-{selectedOwnerDocuments.length > 0 && (
-  <View
-    style={{
-      width: wp(45),
-      alignSelf: 'center',
-      backgroundColor: '#f9f9f9',
-      borderRadius: 8,
-      padding: 10,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-      elevation: 2,
-      marginBottom: 10,
-    }}
-  >
-    {selectedOwnerDocuments[0].name.toLowerCase().endsWith('.pdf') ? (
-      <>
-        <View
-          style={{
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: wp(10),
-            backgroundColor: '#e0f2f1',
-            borderRadius: 8,
-          }}
-        >
-          <ThemedText
-            style={{
-              fontSize: 50,
-              color: '#004d40',
-            }}
-          >
-            📄
-          </ThemedText>
-        </View>
-        <ThemedText
-          style={{
-            marginTop: 8,
-            textAlign: 'center',
-            fontSize: 13,
-            color: '#004d40',
-            fontWeight: '600',
-          }}
-        >
-          {selectedOwnerDocuments[0].name}
-        </ThemedText>
-      </>
-    ) : (
-      <>
-        <Image
-          source={{ uri: selectedOwnerDocuments[0].uri }}
-          style={{
-            width: '100%',
-            height: wp(20),
-            borderRadius: 8,
-          }}
-          resizeMode="cover"
-        />
-        <ThemedText
-          style={{
-            marginTop: 8,
-            textAlign: 'center',
-            fontSize: 13,
-            color: '#004d40',
-            fontWeight: '600',
-          }}
-        >
-          {selectedOwnerDocuments[0].name}
-        </ThemedText>
-      </>
-    )}
-  </View>
-)}
+<DocumentUploader
+  documents={selectedOwnerDocuments[0] }
+  title="Upload: Company Doc Validating Truck Ownership or Lease"
+  subtitle="This should show that you (as Owner or Director) or your company owns or leases the truck. Accepted formats: PDF or Image."
+  buttonTiitle ="Upload Ownership/Lease Document"
+  onPickDocument={pickDocument}
+/>
 
 
-{!selectedOwnerDocuments[0] &&<View>
+<DocumentUploader
+  documents={selectedOwnerDocuments[1]}
+  title="Upload: Owner or Director’s ID"
+  subtitle="The ID must match the name on the company document to verify authenticity. Accepted formats: PDF or Image."
+  buttonTiitle ="Upload Owner/Director ID"
+  onPickDocument={pickDocument}
+/>
 
-                  <ThemedText style={{ fontSize: 13.6 }}>Upload: Company Doc Validating Truck Ownership or Lease </ThemedText>
-<ThemedText type="tiny">
-  This should show that you (as Owner or Director) or your company owns or leases the truck. Accepted formats: PDF or Image.
-</ThemedText>
-
-<TouchableOpacity
-  onPress={pickDocument}
-  style={{
-    backgroundColor: '#004d40',
-    height: 45,
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginVertical: 10,
-    width: 280,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  }}
->
-  <ThemedText
-    style={{
-      textAlign: 'center',
-      color: 'white',
-      fontWeight: '600',
-      fontSize: 14,
-    }}
-  >
-    Upload Ownership/Lease Document
-  </ThemedText>
-</TouchableOpacity>
-
-  </View>}
-
-{selectedOwnerDocuments.length > 0 && (
-  <View
-    style={{
-      width: wp(45),
-      alignSelf: 'center',
-      backgroundColor: '#f9f9f9',
-      borderRadius: 8,
-      padding: 10,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-      elevation: 2,
-      marginBottom: 10,
-    }}
-  >
-    {selectedOwnerDocuments[0].name.toLowerCase().endsWith('.pdf') ? (
-      <>
-        <View
-          style={{
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: wp(10),
-            backgroundColor: '#e0f2f1',
-            borderRadius: 8,
-          }}
-        >
-          <ThemedText
-            style={{
-              fontSize: 50,
-              color: '#004d40',
-            }}
-          >
-            📄
-          </ThemedText>
-        </View>
-        <ThemedText
-          style={{
-            marginTop: 8,
-            textAlign: 'center',
-            fontSize: 13,
-            color: '#004d40',
-            fontWeight: '600',
-          }}
-        >
-          {selectedOwnerDocuments[0].name}
-        </ThemedText>
-      </>
-    ) : (
-      <>
-        <Image
-          source={{ uri: selectedOwnerDocuments[0].uri }}
-          style={{
-            width: '100%',
-            height: wp(20),
-            borderRadius: 8,
-          }}
-          resizeMode="cover"
-        />
-        <ThemedText
-          style={{
-            marginTop: 8,
-            textAlign: 'center',
-            fontSize: 13,
-            color: '#004d40',
-            fontWeight: '600',
-          }}
-        >
-          {selectedOwnerDocuments[0].name}
-        </ThemedText>
-      </>
-    )}
-  </View>
-)}
+<DocumentUploader
+  documents={selectedOwnerDocuments[2]}
+  title="Upload: Proof of Residence"
+  subtitle="The ID must match the name on the company document to verify authenticity. Accepted formats: PDF or Image."
+  buttonTiitle ="Proof of Adress"
+  onPickDocument={pickDocument}
+/>
 
 
 
-
-{!selectedOwnerDocuments[1] &&<View>
-<ThemedText style={{ fontSize: 13.6 ,alignSelf:"center"}}>
-  Upload: Owner or Director’s ID
-</ThemedText>
-<ThemedText type="tiny">
-  The ID must match the name on the company document to verify authenticity. Accepted formats: PDF or Image.
-</ThemedText>
-
-
-
-<TouchableOpacity
-  onPress={pickDocument}
-  style={{
-    backgroundColor: '#004d40',
-    height: 45,
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginVertical: 10,
-    width: 280,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  }}
->
-  <ThemedText
-    style={{
-      textAlign: 'center',
-      color: 'white',
-      fontWeight: '600',
-      fontSize: 14,
-    }}
-  >
-    Upload Owner/Director ID
-  </ThemedText>
-</TouchableOpacity>
- </View>}
 
 
 
                 <Button onPress={handleUpdateTOwnerDetails}  loading={uploadingOwnerD} disabled={uploadingOwnerD} title={uploadingOwnerD ? "Saving..." : "Save"}  colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{height:44}} />
+                        <View style={{height:100}} />
+                          </ScrollView>
+                </View>
 
+              </View>
+            </ScreenWrapper>
+
+          </Modal>
+
+
+
+
+
+
+
+
+        <Modal visible={ownerdetailsDsp && truckOwnerOBroker === "Broker"} statusBarTranslucent animationType="slide">
+            <ScreenWrapper>
+
+              <View style={{ margin: wp(4), marginTop: hp(6) }}>
+
+                <View style={{ gap: wp(2) }} >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
+                    <TouchableOpacity onPress={() => { setOwnerdetailsDsp(true); setTuckOwnerOBroker("") }}>
+                      <AntDesign name="close" color={icon} size={wp(4)} />
+                    </TouchableOpacity>
+                    <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >BROCKER DETAILS</ThemedText>
+                  </View>
+
+
+            <ScrollView>     
+
+
+
+  <HorizontalTickComponent
+            data={[{ topic: "Company Broker", value: "Company Broker" } , { topic: "Independent Broker", value: "Independent Broker" } ]}
+            condition={typeOfBroker}
+            onSelect={setTypeOfBroker}
+          />
+
+                  <ThemedText>
+                    Full Name
+                  </ThemedText>
+                  <Input
+                    placeholder="Brokers Name"
+                    value={ownerNameAddDb}
+                    onChangeText={(text) => SetOwnerNameAddDb(text)}
+                  />
+
+                  <ThemedText>
+                     Phone Number
+                  </ThemedText>
+                  <Input
+                    Icon={<>
+                      <Dropdown
+                        style={[{ width: wp(15) }]}
+                        selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
+                        data={countryCodes}
+                        maxHeight={hp(60)}
+                        labelField="name"
+                        valueField="name"
+                        placeholder="+00"
+                        value={countryCode?.name}
+                        itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
+                        activeColor={background}
+
+                        containerStyle={{
+                          borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
+                          width: wp(45),
+                          shadowOffset: {
+                            width: 0,
+                            height: 9,
+                          },
+                          shadowOpacity: 0.50,
+                          shadowRadius: 12.35,
+
+                          elevation: 19,
+                          paddingVertical: wp(1)
+                        }}
+                        onChange={item => {
+                          console.log(item);
+                          setCountryCode(item);
+                        }}
+
+                        renderLeftIcon={() => <></>}
+                        renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
+                        renderItem={((item, selected) =>
+                          <>
+                            <View style={[styles.item, selected && {}]}>
+                              <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
+                              {selected && (
+                                <Ionicons
+                                  color={icon}
+                                  name='checkmark-outline'
+                                  size={wp(5)}
+                                />
+                              )}
+                            </View>
+                            <Divider />
+                          </>
+                        )}
+
+                      />
+                      <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
+                    </>}
+                    value={ownerPhonNumAddDb}
+                    placeholder="700 000 000"
+                    onChangeText={(text) => setOwnerPhoneNum(text)}
+                    keyboardType="numeric"
+                  />
+
+                  <ThemedText>
+                     Email
+                  </ThemedText>
+                  <Input
+                    placeholder="Owner Email"
+                    value={ownerEmailAddDb}
+                    onChangeText={(text) => setOwnerEmailAddDb(text)}
+                  />
+
+
+
+<DocumentUploader
+  documents={selectedBrokerDocuments[0]}
+  title="Upload: National ID or Passport "
+  subtitle="This should show that you (as Owner or Director) or your company owns or leases the truck. Accepted formats: PDF or Image."
+  buttonTiitle ="National ID / Passport"
+  onPickDocument={pickDocument}
+/>
+
+
+<DocumentUploader
+  documents={selectedBrokerDocuments[1]}
+  title="Upload:Address: Proof of Residence  "
+  subtitle="This should show that you (as Owner or Director) or your company owns or leases the truck. Accepted formats: PDF or Image."
+  buttonTiitle ="Proof of Adress"
+  onPickDocument={pickDocument}
+/>
+
+{typeOfBroker==="Company Broker"&& <DocumentUploader
+  documents={selectedBrokerDocuments[2]}
+  title="Upload: Company Registration Certificate "
+  subtitle="(utility bill, lease, bank statement)"
+  buttonTiitle ="Company Registration certificate"
+  onPickDocument={pickDocument}
+/>}
+
+
+{typeOfBroker === "Company Broker" &&<DocumentUploader
+  documents={selectedBrokerDocuments[3]}
+  title="Upload: Authorization Letter from the Company"
+  subtitle="(utility bill, lease, bank statement)"
+  buttonTiitle ="Ltter Head"
+  onPickDocument={pickDocument}
+/>}
+
+                <Button onPress={handleUpdateTckBrokerDetails}  loading={uploadingOwnerD} disabled={uploadingOwnerD} title={uploadingOwnerD ? "Saving..." : "Save"}  colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{height:44}} />
+
+<View style={{height:140}} />
+ </ScrollView>
                 </View>
               </View>
             </ScreenWrapper>
 
           </Modal>
+
+
+
+
+
+
+
+
 
 
 
