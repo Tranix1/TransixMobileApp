@@ -666,7 +666,7 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
                                             <View style={styles.ownerAction}>
                                                 <TouchableOpacity
                                                     style={[styles.ownerButton, { backgroundColor: accent }]}
-                                                    onPress={() => router.push('/Account/Edit')}
+                                                    onPress={() => router.push('/Account/Profile')}
                                                 >
                                                     <FontAwesome6 name="edit" size={wp(5)} color={'white'} />
                                                 </TouchableOpacity>

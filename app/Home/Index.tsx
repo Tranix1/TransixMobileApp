@@ -13,9 +13,11 @@ import { auth } from '../components/config/fireBase'
 import { signOut, sendEmailVerification } from 'firebase/auth'
 
 import NetInfo from '@react-native-community/netinfo';
-const Index = () => {
+// https://expo.dev/accounts/yayapana/settings/billing1`
+// https://expo.dev/accounts/yayapana/projects/Transix/builds/526b6f0e-8b14-4032-8de9-ff11ce6cfe3f
+function Index() {
     function CustomHeader() {
-        const background = useThemeColor("background");
+        const background = useThemeColor("background")
         return (
             <View
                 style={{
@@ -44,7 +46,7 @@ const Index = () => {
                 </View>
             </View>
 
-        );
+        )
     }
     const accent = useThemeColor('accent')
     const icon = useThemeColor('icon')
@@ -60,44 +62,44 @@ const Index = () => {
     const [dspVerifyAcc, setDspVerifyAcc] = useState(false)
     const [dspMenu, setDspMenu] = useState(false)
 
- const [isConnectedInternet, setIsConnectedInternet] = useState(true);
+    const [isConnectedInternet, setIsConnectedInternet] = useState(true)
 
-  React.useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
-      setIsConnectedInternet(state.isConnected as any);
-    });
+    React.useEffect(() => {
+        const unsubscribe = NetInfo.addEventListener(state => {
+            setIsConnectedInternet(state.isConnected as any)
+        })
 
-    return () => {
-      unsubscribe();
-    };
-  }, []);
+        return () => {
+            unsubscribe()
+        }
+    }, [])
     function checkAuth(theAction: any) {
-        if (!isConnectedInternet)  {ToastAndroid.show("You are offline. Please check your internet connection.",ToastAndroid.SHORT);return }
-        
+        if (!isConnectedInternet) { ToastAndroid.show("You are offline. Please check your internet connection.", ToastAndroid.SHORT); return} 
+
         if (auth.currentUser) {
-            if(!user?.organisation || !user.phoneNumber || !user.country ){
-                router.push({pathname: '/Account/Profile',params: { operation: 'create' },});
-            }else if (!auth.currentUser.emailVerified) {
+            if (!user?.organisation || !user.phoneNumber || !user.country) {
+                router.push({ pathname: '/Account/Profile', params: { operation: 'create' }, })
+            } else if (!auth.currentUser.emailVerified) {
                 console.log("hiii")
-                setDspVerifyAcc(true);
+                setDspVerifyAcc(true)
             } else {
                 // user exists and email is verified
                 if (typeof theAction === 'function') {
-                    theAction(); // call the action
+                    theAction() // call the action
                 } else {
-                    setDspMenu(true); // if it's not a function, open the menu
+                    setDspMenu(true) // if it's not a function, open the menu
                 }
 
             }
         } else {
             // no user logged in
-            setDspCreateAcc(true);
+            setDspCreateAcc(true)
         }
     }
 
     interface DataItem {
-        topic: string;
-        description: string;
+        topic: string
+        description: string
         id: number
         btnTitle: string
     }
@@ -146,44 +148,37 @@ const Index = () => {
             description: 'Locate safe and comfortable truck stops on your journey. Rest, refresh, refuel, and access facilities conveniently anytime.',
             btnTitle: "Visit Truck Stop  "
         },
-    ];
+    ]
 
 
     interface HomeItemProps {
-        topic: string;
-        description: string;
-        mainColor: string;
-        icon: string;
-        buttonTitle: string;
-        btnBackground: string;
-        btnPressValue: () => void;
+        topic: string
+        description: string
+        mainColor: string
+        icon: string
+        buttonTitle: string
+        btnBackground: string
+        btnPressValue: () => void
 
-        isAvaialble: boolean;
+        isAvaialble: boolean
 
     }
-    const colorScheme = useColorScheme();
+    const colorScheme = useColorScheme()
     const HomeItemView: React.FC<HomeItemProps> = ({
-        topic,
-        description,
-        mainColor,
-        btnBackground,
-        icon,
-        buttonTitle,
-        isAvaialble,
-        btnPressValue
+        topic, description, mainColor, btnBackground, icon, buttonTitle, isAvaialble, btnPressValue
     }) => (
         <View style={[styles.homefeature, { borderColor: mainColor, backgroundColor: background, overflow: 'hidden', }]}>
 
             {!isAvaialble &&
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, height: '125%', alignItems: 'center', justifyContent: 'center', backgroundColor: colorScheme === 'light' ? 'rgba(255, 255, 255, 0.6)' : "rgba(0, 0, 0, 0.6)" }} >
-                    <ThemedText type='defaultSemiBold'  > Coming Soon  </ThemedText>
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, height: '125%', alignItems: 'center', justifyContent: 'center', backgroundColor: colorScheme === 'light' ? 'rgba(255, 255, 255, 0.6)' : "rgba(0, 0, 0, 0.6)" }}>
+                    <ThemedText type='defaultSemiBold'> Coming Soon  </ThemedText>
                     <Ionicons name='time-outline' size={wp(6)} color={colorScheme === 'light' ? "black" : "white"} />
                 </View>}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }}>
                 <View style={{ backgroundColor: mainColor, borderRadius: wp(2), padding: wp(1.5) }}>
                     <Octicons name='verified' color={'#fff'} size={wp(4)} />
                 </View>
-                <ThemedText type='subtitle' color={mainColor} style={{ fontWeight: 'bold', fontSize: wp(4.5) }} >
+                <ThemedText type='subtitle' color={mainColor} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
                     {topic}
                 </ThemedText>
             </View>
@@ -202,10 +197,9 @@ const Index = () => {
                 onPress={btnPressValue}
                 colors={{ text: mainColor, bg: btnBackground }}
                 title={buttonTitle} // ✅ Dynamic title
-                Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={mainColor} />}
-            />
+                Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={mainColor} />} />
         </View>
-    );
+    )
 
     return (
 
@@ -213,7 +207,7 @@ const Index = () => {
             <CustomHeader />
             <SafeAreaView>
                 <Modal onRequestClose={() => setDspMenu(false)} statusBarTranslucent visible={dspMenu} transparent animationType='fade'>
-                    <Pressable onPressIn={() => { }} style={{ flex: 1, }}>
+                    <Pressable onPressIn={() => { } } style={{ flex: 1, }}>
                         <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-start', flex: 1, padding: wp(4), }}>
                             <View style={{
                                 backgroundColor: backgroundColor, padding: wp(4), elevation: 12,
@@ -249,8 +243,7 @@ const Index = () => {
                                                     {!user?.photoURL && <FontAwesome name='user-circle' color={coolGray} size={wp(10)} />}
                                                     {user?.photoURL && <Image
                                                         style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#ddd', }}
-                                                        source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
-                                                    />}
+                                                        source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }} />}
                                                     <View style={{ flex: 1 }}>
                                                         <ThemedText type='subtitle'>
                                                             {user?.organisation || user?.displayName || 'No name'}
@@ -260,19 +253,17 @@ const Index = () => {
                                                         </ThemedText>
 
                                                     </View>
-                                                    {
-                                                        !user?.organisation &&
+                                                    {!user?.organisation &&
                                                         <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
                                                             <TouchableNativeFeedback
-                                                                onPress={() => { router.push('/Account/Profile'); setDspMenu(false) }}>
+                                                                onPress={() => { router.push('/Account/Profile'); setDspMenu(false) } }>
                                                                 <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
                                                                     <Ionicons name='alert-circle-outline' color={icon} size={wp(6)} />
                                                                 </View>
                                                             </TouchableNativeFeedback>
-                                                        </View>
-                                                    }
+                                                        </View>}
                                                 </View>
-                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: backgroundColor, padding: wp(3), borderRadius: wp(4) }} onPress={() => { router.push('/Account/Index'); setDspMenu(false) }}>
+                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: backgroundColor, padding: wp(3), borderRadius: wp(4) }} onPress={() => { router.push('/Account/Index'); setDspMenu(false) } }>
                                                     <MaterialIcons name="manage-accounts" size={wp(5)} color={accent} style={{ marginLeft: wp(1) }} />
                                                     <ThemedText>
                                                         Manage Account
@@ -293,7 +284,7 @@ const Index = () => {
 
                                                     </View>
                                                 </View>
-                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: backgroundColor, padding: wp(3), borderRadius: wp(4) }} onPress={() => { router.push('/Account/Login'); setDspMenu(false) }}>
+                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: backgroundColor, padding: wp(3), borderRadius: wp(4) }} onPress={() => { router.push('/Account/Login'); setDspMenu(false) } }>
                                                     <AntDesign name='login' size={wp(3)} color={accent} style={{ marginLeft: wp(1) }} />
                                                     <ThemedText>
                                                         Login Now
@@ -301,10 +292,9 @@ const Index = () => {
                                                 </TouchableOpacity>
 
 
-                                            </View>
-                                        }
+                                            </View>}
                                     </View>
-                                    <TouchableNativeFeedback onPress={() => { router.push("/BooksAndBids/SlctBidsAndBooks"); setDspMenu(false) }} >
+                                    <TouchableNativeFeedback onPress={() => { router.push("/BooksAndBids/SlctBidsAndBooks"); setDspMenu(false) } }>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -314,7 +304,7 @@ const Index = () => {
                                             </View>
                                         </View>
                                     </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={() => { router.push("/Logistics/Contracts/ViewMiniContracts"); setDspMenu(false) }}>
+                                    <TouchableNativeFeedback onPress={() => { router.push("/Logistics/Contracts/ViewMiniContracts"); setDspMenu(false) } }>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <Ionicons name="reader" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -324,8 +314,7 @@ const Index = () => {
                                             </View>
                                         </View>
                                     </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={
-                                        () => { router.push({ pathname: '/Logistics/Trucks/Index', params: { userId: user?.uid } }); setDspMenu(false) }} >
+                                    <TouchableNativeFeedback onPress={() => { router.push({ pathname: '/Logistics/Trucks/Index', params: { userId: user?.uid } }); setDspMenu(false) } }>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -336,7 +325,7 @@ const Index = () => {
                                         </View>
                                     </TouchableNativeFeedback>
                                     <TouchableNativeFeedback
-                                        onPress={() => { router.push({ pathname: '/Logistics/Loads/Index', params: { userId: user?.uid } }); setDspMenu(false) }}>
+                                        onPress={() => { router.push({ pathname: '/Logistics/Loads/Index', params: { userId: user?.uid } }); setDspMenu(false) } }>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="boxes-stacked" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -372,7 +361,7 @@ const Index = () => {
                                     </View>
 
                                 </View>
-                                <TouchableNativeFeedback onPress={() => { router.push('/Account/Settings'); setDspMenu(false) }}>
+                                <TouchableNativeFeedback onPress={() => { router.push('/Account/Settings'); setDspMenu(false) } }>
                                     <View style={{ paddingHorizontal: wp(4), flexDirection: 'row', gap: wp(3), paddingVertical: wp(4) }}>
                                         <Ionicons name="settings-outline" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
 
@@ -449,7 +438,7 @@ const Index = () => {
 
 
                             <TouchableOpacity
-                                onPress={() => { router.push("/Account/Login"); setDspCreateAcc(false) }}
+                                onPress={() => { router.push("/Account/Login"); setDspCreateAcc(false) } }
                                 style={{
                                     backgroundColor: "#d1f7e9",
                                     width: wp(70),
@@ -555,16 +544,16 @@ const Index = () => {
                                 }}
                                 onPress={async () => {
                                     try {
-                                        console.log("Sending verification email...");
+                                        console.log("Sending verification email...")
 
-                                        await sendEmailVerification(auth.currentUser as any);
+                                        await sendEmailVerification(auth.currentUser as any)
                                         ToastAndroid.show('verification email Link sent!', ToastAndroid.SHORT)
                                         setDspVerifyAcc(false)
                                     } catch (error) {
-                                        console.log("Error sending verification email:", error);
-                                        alert("Failed to send verification email. Try again.");
+                                        console.log("Error sending verification email:", error)
+                                        alert("Failed to send verification email. Try again.")
                                     }
-                                }}
+                                } }
                             >
                                 <ThemedText style={{ color: accent, fontWeight: "bold" }}>New code</ThemedText>
                             </TouchableOpacity>
@@ -577,9 +566,9 @@ const Index = () => {
                                     alignItems: "center",
                                 }}
                                 onPress={async () => {
-                                    await signOut(auth); ToastAndroid.show('Signed out successfully.', ToastAndroid.SHORT);
+                                    await signOut(auth); ToastAndroid.show('Signed out successfully.', ToastAndroid.SHORT)
                                     setDspVerifyAcc(false)
-                                }}
+                                } }
                             >
                                 <ThemedText style={{ color: "#e50914", fontWeight: "bold" }}>Sign out</ThemedText>
                             </TouchableOpacity>
@@ -663,53 +652,53 @@ const Index = () => {
 
                 </View>
 
-     {/* <View style={[styles.homefeature, { borderColor: '#4285f4', backgroundColor: background, padding: wp(4) }]}>
+                {/* <View style={[styles.homefeature, { borderColor: '#4285f4', backgroundColor: background, padding: wp(4) }]}>
+       
+                               <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
+                                   <View style={{}}>
+                                       <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} />
+                                   </View>
+                                   <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
+                                       Long-Term Contracts
+                                   </ThemedText>
+                                   <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ flexDirection: 'row', gap: wp(1) }}>
+                                       <ThemedText type='tiny'>
+                                           Open Contracts
+                                       </ThemedText>
+                                       <Ionicons name='arrow-forward' color={icon} />
+                                   </TouchableOpacity>
+                               </View>
+                               <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>Create contract and start transporting loads today!</ThemedText>
+       
+                               <View style={{ marginVertical: wp(5), alignItems: 'center', gap: wp(4), }}>
+       
+                                   <ThemedText numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8),marginBottom:16 }}
+                                   >
+                                   Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
+                                   </ThemedText>
+       
+                                   <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
+                                       <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
+                                       <ThemedText color='#fff' >
+                                           Booked Contracts
+                                       </ThemedText>
+                                   </TouchableOpacity>
+                               </View>
+       
+                           </View> */}
 
-                        <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
-                            <View style={{}}>
-                                <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} />
-                            </View>
-                            <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
-                                Long-Term Contracts
-                            </ThemedText>
-                            <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ flexDirection: 'row', gap: wp(1) }}>
-                                <ThemedText type='tiny'>
-                                    Open Contracts
-                                </ThemedText>
-                                <Ionicons name='arrow-forward' color={icon} />
-                            </TouchableOpacity>
-                        </View>
-                        <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>Create contract and start transporting loads today!</ThemedText>
 
-                        <View style={{ marginVertical: wp(5), alignItems: 'center', gap: wp(4), }}>
-
-                            <ThemedText numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8),marginBottom:16 }}
-                            >
-                            Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
-                            </ThemedText>
-
-                            <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
-                                <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
-                                <ThemedText color='#fff' >
-                                    Booked Contracts
-                                </ThemedText>
-                            </TouchableOpacity>
-                        </View>
-
-                    </View> */}
-
-                    
 
                 {theData.map((item) => (<View>
 
-  
 
 
 
-                                {/* <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" /> */}
-                                {/* <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} /> */}
 
-                      {item.id === 1 && <HomeItemView
+                    {/* <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" /> */}
+                    {/* <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} /> */}
+
+                    {item.id === 1 && <HomeItemView
                         topic={item.topic}
                         description={item.description}
                         mainColor="#4285f4"
@@ -717,25 +706,24 @@ const Index = () => {
                         buttonTitle={item.btnTitle}
                         btnBackground="#4285f424"
                         isAvaialble={true}
-                        btnPressValue={() => router.push('/Logistics/Contracts/ViewMiniContracts')}
-                    />}
+                        btnPressValue={() => router.push('/Logistics/Contracts/ViewMiniContracts')} />}
 
 
 
                     {/* <View style={{ flexDirection: 'row', gap: wp(2), marginBottom: wp(5), paddingHorizontal: wp(2) }}>
-                    <View style={{ borderWidth: .5, borderColor: accent, padding: wp(3), borderRadius: wp(6), flex: 1, alignItems: 'center' }}>
-                        <ThemedText color={accent}>
-                            Add Logistics
-                        </ThemedText>
-                    </View>
-                    <View style={{
-                        borderWidth: .5, borderColor: accent, padding: wp(3), borderRadius: wp(6), flex: 1, alignItems: 'center'
-                    }}>
-                        <ThemedText color={accent}>
-                            Add To Store
-                        </ThemedText>
-                    </View>
-                </View> */}
+                <View style={{ borderWidth: .5, borderColor: accent, padding: wp(3), borderRadius: wp(6), flex: 1, alignItems: 'center' }}>
+                    <ThemedText color={accent}>
+                        Add Logistics
+                    </ThemedText>
+                </View>
+                <View style={{
+                    borderWidth: .5, borderColor: accent, padding: wp(3), borderRadius: wp(6), flex: 1, alignItems: 'center'
+                }}>
+                    <ThemedText color={accent}>
+                        Add To Store
+                    </ThemedText>
+                </View>
+            </View> */}
 
 
 
@@ -747,8 +735,7 @@ const Index = () => {
                         buttonTitle={item.btnTitle}
                         btnBackground="#6bacbf24"
                         isAvaialble={true}
-                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")}
-                    />}
+                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")} />}
 
 
                     {item.id === 3 && <HomeItemView
@@ -759,8 +746,7 @@ const Index = () => {
                         buttonTitle={item.btnTitle}
                         btnBackground="#fb927424"
                         isAvaialble={true}
-                        btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")}
-                    />}
+                        btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")} />}
 
                     {item.id === 4 && <HomeItemView
                         topic={item.topic}
@@ -770,8 +756,7 @@ const Index = () => {
                         buttonTitle={item.btnTitle}
                         btnBackground="#bada5f24"
                         isAvaialble={false}
-                        btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")}
-                    />}
+                        btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")} />}
 
                     {item.id === 5 && <HomeItemView
                         topic={item.topic}
@@ -781,8 +766,7 @@ const Index = () => {
                         buttonTitle={item.btnTitle}
                         btnBackground="#bada5f24"
                         isAvaialble={false}
-                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")}
-                    />}
+                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")} />}
 
                     {item.id === 6 && <HomeItemView
                         topic={item.topic}
@@ -792,8 +776,7 @@ const Index = () => {
                         buttonTitle={item.btnTitle}
                         btnBackground="#bada5f24"
                         isAvaialble={false}
-                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")}
-                    />}
+                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")} />}
                     {item.id === 7 && <HomeItemView
                         topic={item.topic}
                         description={item.description}
@@ -802,8 +785,7 @@ const Index = () => {
                         buttonTitle={item.btnTitle}
                         btnBackground="#bada5f24"
                         isAvaialble={false}
-                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")}
-                    />}
+                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")} />}
 
                 </View>))}
 
@@ -819,14 +801,14 @@ export default Index
 const styles = StyleSheet.create({
     homefeature: {
         padding: wp(4),
-        borderRadius: wp(6),
+        // borderRadius: wp(6),
         gap: wp(2),
-        marginBottom: wp(6),
+        marginBottom: wp(4),
         borderWidth: 0.5,
-        shadowColor: '#3535353b',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 13
+         borderRadius:8 ,  shadowColor: "#0f9d58" ,
+        shadowOffset: { width: 1, height: 2 },
+        shadowOpacity: 0.7,
+        shadowRadius: 5,
+        elevation: 6
     }
 })

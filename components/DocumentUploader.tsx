@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Image, TouchableOpacity } from 'react-native';
+import { View, Image, TouchableOpacity,ToastAndroid } from 'react-native';
 import { ThemedText } from './ThemedText'; // your custom text component
 import { hp, wp } from "@/constants/common";
 
@@ -7,9 +7,12 @@ interface DocumentUploaderProps {
   documents: any;
   title: string;
   subtitle: string;
-buttonTiitle : string ;
+  buttonTiitle: string;
   onPickDocument: () => void;
+  disabled ?: boolean;
+  toastMessage ?: string
 }
+
 
 export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
   documents,
@@ -17,6 +20,8 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
   subtitle,
 buttonTiitle,
   onPickDocument,
+disabled,
+toastMessage
 }) => {
     
 
@@ -99,7 +104,14 @@ buttonTiitle,
       <ThemedText type="tiny">{subtitle}</ThemedText>
 
       <TouchableOpacity
-        onPress={onPickDocument}
+        onPress={() => {
+  if (disabled && toastMessage) {
+        ToastAndroid.show(toastMessage , ToastAndroid.SHORT);
+
+  } else {
+    onPickDocument();
+  }
+}}
         style={{
           backgroundColor: '#004d40',
           height: 45,

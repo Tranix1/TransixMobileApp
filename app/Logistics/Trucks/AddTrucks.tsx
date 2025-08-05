@@ -142,6 +142,7 @@ setUploadingOwerD(true)
   };
 
 
+  const [typeOfBroker , setTypeOfBroker]=React.useState("")
   const handleUpdateTckBrokerDetails = async () => {
     
 setUploadingOwerD(true)
@@ -167,10 +168,13 @@ setUploadingOwerD(true)
     
     brockerId = await uploadImage(selectedBrokerDocuments[0], "TruckBroker", setUploadImageUpdate, "National ID");
     proofOfResidence = await uploadImage(selectedBrokerDocuments[1], "TruckBroker", setUploadImageUpdate, "Proof Of Residence");
+    if(typeOfBroker==="Company Broker" ){
+
     companyRegCertificate = await uploadImage(selectedBrokerDocuments[2], "TruckBroker", setUploadImageUpdate, "Company Registration Certificate");
     companyLtterHead = await uploadImage(selectedBrokerDocuments[3], "TruckBroker", setUploadImageUpdate, "Company Letter Head");
     
-    await setDocuments("truckBrokerDetails", { brokerName: ownerNameAddDb, brokerPhoneNum: ownerPhonNumAddDb, brokerEmail: ownerEmailAddDb, brockerId: brockerId ||null, proofOfResidence:proofOfResidence||null ,companyRegCertificate:companyRegCertificate||null ,companyLtterHead:companyLtterHead||null })
+    }
+    await setDocuments("truckBrokerDetails", {typeOfBroker : typeOfBroker , brokerName: ownerNameAddDb, brokerPhoneNum: ownerPhonNumAddDb, brokerEmail: ownerEmailAddDb, brockerId: brockerId ||null, proofOfResidence:proofOfResidence||null ,companyRegCertificate:companyRegCertificate||null ,companyLtterHead:companyLtterHead||null })
     setOwnerdetailsDsp(false)
     ToastAndroid.show("Broker Details submitted successfully!", ToastAndroid.SHORT);
    }
@@ -231,7 +235,6 @@ setUploadingOwerD(true)
 
   const [truckOwnerOBroker, setTuckOwnerOBroker] = React.useState("")
 
-  const [typeOfBroker , setTypeOfBroker]=React.useState("")
 
   // if(truckOwnerOBroker==="Owner" && !ownerdetailsDsp ) setOwnerdetailsDsp(true)
 
@@ -267,12 +270,12 @@ setUploadingOwerD(true)
     setSpinnerItem(false);
   };
 
-
   const handleSubmit = async () => {
 
     setSpinnerItem(true)
-    if(!getOwnerDetails || !getBrokerDetails){
+    if(!getOwnerDetails && !getBrokerDetails){
       alert("Are you a Truck Owner or Broker\nSelect Broker owner and submit required Details")
+      setSpinnerItem(false)
       return
     }
 
@@ -469,13 +472,17 @@ expoPushToken :expoPushToken||null
 
         <ScrollView>
 
+       { !getOwnerDetails && !getBrokerDetails &&<View>
           <ThemedText>Are You the truck owner or Broker ?</ThemedText>
           <HorizontalTickComponent
             data={[{ topic: "Owner", value: "Owner" }, { topic: "Broker", value: "Broker" }]}
             condition={truckOwnerOBroker}
             onSelect={setTuckOwnerOBroker}
           />
+       </View>}
 
+          {(getOwnerDetails || getBrokerDetails) &&<ThemedText style={{textAlign:"center"}}>Adding As Truck {getOwnerDetails? "Owner": "Broker" } </ThemedText>}
+        
           <Modal visible={ownerdetailsDsp && truckOwnerOBroker === "Owner" } statusBarTranslucent animationType="slide">
             <ScreenWrapper>
 
@@ -571,29 +578,33 @@ expoPushToken :expoPushToken||null
 
 
 <DocumentUploader
-  documents={selectedOwnerDocuments[0] }
-  title="Upload: Company Doc Validating Truck Ownership or Lease"
-  subtitle="This should show that you (as Owner or Director) or your company owns or leases the truck. Accepted formats: PDF or Image."
-  buttonTiitle ="Upload Ownership/Lease Document"
+  documents={selectedOwnerDocuments[0]}
+  title="Ownership or Lease Doc"
+  subtitle="Upload company doc showing truck ownership or lease (PDF or Image)"
+  buttonTiitle="Upload Ownership/Lease Document"
   onPickDocument={pickDocument}
 />
 
-
 <DocumentUploader
   documents={selectedOwnerDocuments[1]}
-  title="Upload: Owner or Director’s ID"
-  subtitle="The ID must match the name on the company document to verify authenticity. Accepted formats: PDF or Image."
-  buttonTiitle ="Upload Owner/Director ID"
+  title="Owner/Director ID"
+  subtitle="Upload ID matching company doc name (PDF or Image)"
+  buttonTiitle="Upload Owner/Director ID"
   onPickDocument={pickDocument}
+  disabled={!selectedOwnerDocuments[0]}
+  toastMessage="Upload ownership doc first"
 />
 
 <DocumentUploader
   documents={selectedOwnerDocuments[2]}
-  title="Upload: Proof of Residence"
-  subtitle="The ID must match the name on the company document to verify authenticity. Accepted formats: PDF or Image."
-  buttonTiitle ="Proof of Adress"
+  title="Proof of Residence"
+  subtitle="Upload utility bill, lease, or bank statement (PDF or Image)"
+  buttonTiitle="Proof of Address"
   onPickDocument={pickDocument}
+  disabled={!selectedOwnerDocuments[1]}
+  toastMessage="Upload ID document first"
 />
+
 
 
 
@@ -722,40 +733,48 @@ expoPushToken :expoPushToken||null
                   />
 
 
-
 <DocumentUploader
   documents={selectedBrokerDocuments[0]}
-  title="Upload: National ID or Passport "
-  subtitle="This should show that you (as Owner or Director) or your company owns or leases the truck. Accepted formats: PDF or Image."
-  buttonTiitle ="National ID / Passport"
+  title="National ID / Passport"
+  subtitle="Upload your ID or Passport (PDF or Image)"
+  buttonTiitle="National ID / Passport"
   onPickDocument={pickDocument}
 />
-
 
 <DocumentUploader
   documents={selectedBrokerDocuments[1]}
-  title="Upload:Address: Proof of Residence  "
-  subtitle="This should show that you (as Owner or Director) or your company owns or leases the truck. Accepted formats: PDF or Image."
-  buttonTiitle ="Proof of Adress"
+  title="Proof of Residence"
+  subtitle="Upload utility bill, lease, or bank statement (PDF or Image)"
+  buttonTiitle="Proof of Address"
   onPickDocument={pickDocument}
+  disabled={!selectedBrokerDocuments[0]}
+  toastMessage="Please upload ID first"
 />
 
-{typeOfBroker==="Company Broker"&& <DocumentUploader
-  documents={selectedBrokerDocuments[2]}
-  title="Upload: Company Registration Certificate "
-  subtitle="(utility bill, lease, bank statement)"
-  buttonTiitle ="Company Registration certificate"
-  onPickDocument={pickDocument}
-/>}
+{typeOfBroker === "Company Broker" && (
+  <DocumentUploader
+    documents={selectedBrokerDocuments[2]}
+    title="Company Certificate"
+    subtitle="Upload registration certificate (PDF or Image)"
+    buttonTiitle="Company Registration"
+    onPickDocument={pickDocument}
+    disabled={!selectedBrokerDocuments[1]}
+    toastMessage="Upload address proof first"
+/>
+)}
 
+{typeOfBroker === "Company Broker" && (
+  <DocumentUploader
+    documents={selectedBrokerDocuments[3]}
+    title="Company Letter"
+    subtitle="Upload signed letterhead or authorization (PDF or Image)"
+    buttonTiitle="Letter Head"
+    onPickDocument={pickDocument}
+    disabled={!selectedBrokerDocuments[2]}
+    toastMessage="Upload certificate first"
+/>
+)}
 
-{typeOfBroker === "Company Broker" &&<DocumentUploader
-  documents={selectedBrokerDocuments[3]}
-  title="Upload: Authorization Letter from the Company"
-  subtitle="(utility bill, lease, bank statement)"
-  buttonTiitle ="Ltter Head"
-  onPickDocument={pickDocument}
-/>}
 
                 <Button onPress={handleUpdateTckBrokerDetails}  loading={uploadingOwnerD} disabled={uploadingOwnerD} title={uploadingOwnerD ? "Saving..." : "Save"}  colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{height:44}} />
 
