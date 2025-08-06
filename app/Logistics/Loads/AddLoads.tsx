@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal, ToastAndroid } from "react-native";
+import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal, ToastAndroid,Image } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
@@ -8,7 +8,7 @@ import { Ionicons, AntDesign, Feather } from "@expo/vector-icons";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 import { router } from "expo-router";
-import { addDocument } from "@/db/operations";
+import { addDocument, setDocuments } from "@/db/operations";
 import { useAuth } from "@/context/AuthContext";
 import { DropDownItem } from "@/components/DropDown";
 
@@ -19,9 +19,12 @@ import { TruckFormData } from "@/types/types";
 import { TruckTypeProps } from "@/types/types";
 import { useThemeColor } from '@/hooks/useThemeColor';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Timestamp } from "firebase/firestore";
 
 import { usePushNotifications,} from "@/Utilities/pushNotification";
+
+import { uploadImage } from "@/db/operations";
+import { pickDocument } from "@/Utilities/utils";
+import { DocumentAsset } from "@/types/types";
 const AddLoadDB = () => {
     const { expoPushToken } = usePushNotifications();
     const icon = useThemeColor('icon')
@@ -172,8 +175,13 @@ const AddLoadDB = () => {
         setOperationCountries([]);
         setTrucksNeeded([]); // Clear the array of added trucks
         setStep(0); // Reset the step if you have a multi-step form
+        setUploadImageUpdate("")
     };
 
+    const [proofOfOrder , setProofOfOrder]=useState<DocumentAsset[]>([]);
+        const [proofOfOrderFileType , setProofOfOrderFileType ] =React.useState<('pdf' | 'image')[]>([])
+
+    const [imageUpdate, setUploadImageUpdate] = React.useState("")
 
     const handleSubmit = async () => {
             setIsSubmitting(true)
@@ -183,7 +191,7 @@ const AddLoadDB = () => {
             !toLocation && "Enter destination location",
             !rate && "Enter Load Rate ",
             !paymentTerms && "Enter Payment Terms",
-            trucksNeeded.length === 0 && "Select at leat 1 truck reqyured",
+            trucksNeeded.length === 0 && "Select at leat 1 truck reqiured",
         ].filter(Boolean);
 
         if (MissingDriverDetails.length > 0) {
@@ -206,6 +214,9 @@ const AddLoadDB = () => {
             alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
             return;
         }
+
+let proofOfOerSub
+        if(proofOfOrder.length >0){  proofOfOerSub = await uploadImage(proofOfOrder[0], "TruckBroker", setUploadImageUpdate, "Company Registration Certificate");}
         const loadData = {
             userId: user?.uid,
             companyName: user?.organisation,
@@ -233,7 +244,9 @@ const AddLoadDB = () => {
             returnTerms,
             trucksRequired: trucksNeeded,
             loadId: `Lo${Math.floor(100000000000 + Math.random() * 900000000000).toString()}ad`,
-            expoPushToken :expoPushToken ||null
+            expoPushToken :expoPushToken ||null ,
+            proofOfOrder : proofOfOerSub ,
+            proofOfOrderType :  proofOfOrderFileType[0] ||null ,
         };
 
         try {
@@ -315,8 +328,6 @@ const AddLoadDB = () => {
                     </View>
                 ))}
             </View>
-
-
 
 
             <Modal visible={dspAfterSubmitMoadal} statusBarTranslucent animationType="slide">
@@ -548,8 +559,6 @@ const AddLoadDB = () => {
                                 onChangeText={setAdditionalInfo}
                             />
 
-                            {dspAlertMsg && (
-                                <>
                                     <ThemedText>
                                         Alert Message<ThemedText color="red">*</ThemedText>
                                     </ThemedText>
@@ -557,11 +566,6 @@ const AddLoadDB = () => {
                                         value={alertMsg}
                                         onChangeText={setAlertMsg}
                                     />
-                                </>
-                            )}
-                            <Button onPress={toggleDspAlertMsg} title={dspAlertMsg ? "Hide Alert Message" : "Add Alert Message"} />
-                            {dspFuelAvai && (
-                                <>
                                     <ThemedText>
                                         Fuel & Tolls Infomation<ThemedText color="red">*</ThemedText>
                                     </ThemedText>
@@ -569,12 +573,137 @@ const AddLoadDB = () => {
                                         value={fuelAvai}
                                         onChangeText={setFuelAvai}
                                     />
-                                </>
-                            )}
-                            <Button onPress={toggleDspFuelAvai} title={dspFuelAvai ? "Hide Fuel & Tolls Info" : "Add Fuel & Tolls Info"} />
+
+                           
+
+
+
+
+
+
+
+
+
+{
+  proofOfOrder[0] ? (
+    <View
+      style={{
+        width: wp(45),
+        alignSelf: 'center',
+        backgroundColor: '#f9f9f9',
+        borderRadius: 8,
+        padding: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+        marginBottom: 10,
+      }}
+    >
+      {proofOfOrder[0].name.toLowerCase().endsWith('.pdf') ? (
+        <>
+          <View
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: wp(10),
+              backgroundColor: '#e0f2f1',
+              borderRadius: 8,
+            }}
+          >
+            <ThemedText
+              style={{
+                fontSize: 50,
+                color: '#004d40',
+              }}
+            >
+              📄
+            </ThemedText>
+          </View>
+          <ThemedText
+            style={{
+              marginTop: 8,
+              textAlign: 'center',
+              fontSize: 13,
+              color: '#004d40',
+              fontWeight: '600',
+            }}
+          >
+            {proofOfOrder[0].name}
+          </ThemedText>
+        </>
+      ) : (
+        <>
+          <Image
+            source={{ uri: proofOfOrder[0].uri }}
+            style={{
+              width: '100%',
+              height: wp(20),
+              borderRadius: 8,
+            }}
+            resizeMode="cover"
+          />
+          <ThemedText
+            style={{
+              marginTop: 8,
+              textAlign: 'center',
+              fontSize: 13,
+              color: '#004d40',
+              fontWeight: '600',
+            }}
+          >
+            {proofOfOrder[0].name}
+          </ThemedText>
+        </>
+      )}
+    </View>
+  ) : (
+    <View>
+    
+<ThemedText style={{ fontSize: 13.6, fontWeight: 'bold',textAlign:"center",color:"#1E90FF" , }}>
+  Upload: Proof of Load Request
+</ThemedText>
+<ThemedText type="tiny">
+  Upload an image or PDF proving this load is real and needs a truck.
+</ThemedText>
+
+
+      <TouchableOpacity
+        onPress={() => pickDocument(setProofOfOrder,setProofOfOrderFileType)}
+        style={{
+          backgroundColor: '#004d40',
+          height: 45,
+          justifyContent: 'center',
+          alignSelf: 'center',
+          marginVertical: 10,
+          width: 280,
+          borderRadius: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          elevation: 5,
+        }}
+      >
+        <ThemedText
+          style={{
+            textAlign: 'center',
+            color: 'white',
+            fontWeight: '600',
+            fontSize: 14,
+          }}
+        >
+            Upload Proof of Order
+        </ThemedText>
+      </TouchableOpacity>
+    </View>
+  )
+}
+                               
                         </View>
                         <Divider />
-                        <View style={styles.viewMainDsp}>
+                        <View style={{ paddingVertical: wp(3),gap: wp(2),borderRadius: 8,shadowColor: "#6a0c0c",shadowOffset: { width: 1, height: 2 },shadowOpacity: 0.7,shadowRadius: 5,overflow: "hidden",}}>
                             <Button onPress={() => setStep(0)} title="Back" />
                             <Button onPress={() => setStep(2)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
                         </View>
@@ -757,7 +886,6 @@ export default AddLoadDB;
 
 const styles = StyleSheet.create({
     viewMainDsp: {
-        margin: wp(4),
         paddingVertical: wp(3),
         gap: wp(2),
         borderRadius: 8,

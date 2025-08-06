@@ -333,3 +333,12 @@ export type SpecifyTruckDetailsProps = {
     operationCountries: string[]
     setOperationCountries: React.Dispatch<React.SetStateAction<string[]>>;
 } 
+
+export type DocumentAsset= {
+  name: string
+  uri: string;
+  size: number;
+  mimeType?: string; // sometimes contentType instead
+
+  // Add any other properties here
+}

@@ -3,7 +3,8 @@
 import * as ImagePicker from 'expo-image-picker';
 import type { ImagePickerAsset } from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-
+import * as DocumentPicker from 'expo-document-picker';
+import { DocumentAsset } from '@/types/types';
 // Reusable function to toggle local country
 export function toggleLocalCountry(
   count: string,
@@ -99,6 +100,67 @@ export const selectManyImages = async (
 
   }
 };
+
+
+
+
+export const pickDocument = async (
+  setDocuments: React.Dispatch<React.SetStateAction<DocumentAsset[]>>,
+  setMakeType: React.Dispatch<React.SetStateAction<('pdf' | 'image')[]>>
+) => {
+  try {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['application/pdf', 'image/*'],
+      copyToCacheDirectory: true,
+    });
+
+    if (result.canceled) return;
+
+    const assets = result.assets;
+    if (!assets || assets.length === 0) {
+      alert('No file selected.');
+      return;
+    }
+
+    const selectedFile = assets[0];
+
+    if (!selectedFile.uri) {
+      alert('Selected document URI is undefined.');
+      return;
+    }
+
+    if (selectedFile.size !== undefined && selectedFile.size > 0.5 * 1024 * 1024) {
+      alert('The selected document must not be more than 0.5MB.');
+      return;
+    }
+
+    const mimeType = selectedFile.mimeType || '';
+    let type: 'pdf' | 'image';
+
+    if (mimeType.startsWith('image/')) {
+      type = 'image';
+    } else if (mimeType === 'application/pdf') {
+      type = 'pdf';
+    } else {
+      alert('Unsupported file type selected.');
+      return;
+    }
+
+    // Add to documents and types
+    setDocuments((prevDocs) => [...prevDocs, selectedFile] as DocumentAsset[]);
+    setMakeType((prevTypes) => [...prevTypes, type]);
+
+  } catch (error) {
+    console.error('Error picking document:', error);
+    alert('An error occurred while picking the document.');
+  }
+};
+
+
+
+
+  
+
 
 // Handle Data change in a form in an nput element and set it to the corresponding variable
 // utils/handleChange.ts
