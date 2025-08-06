@@ -28,6 +28,7 @@
     "expo": "~52.0.47",
     "expo-barcode-scanner": "^13.0.1",
     "expo-blur": "~14.0.3",
+    "expo-build-properties": "~0.13.3",
     "expo-constants": "~17.0.8",
     "expo-device": "~7.0.3",
     "expo-document-picker": "~13.0.3",
@@ -56,14 +57,14 @@
     "react-native-element-dropdown": "^2.12.4",
     "react-native-elements": "^3.4.3",
     "react-native-gesture-handler": "~2.20.2",
+    "react-native-image-viewing": "^0.2.2",
     "react-native-qrcode-svg": "^6.3.14",
     "react-native-reanimated": "~3.16.1",
     "react-native-safe-area-context": "4.12.0",
     "react-native-screens": "~4.4.0",
     "react-native-uuid": "^2.0.3",
     "react-native-web": "~0.19.13",
-    "react-native-webview": "13.12.5",
-    "expo-build-properties": "~0.13.3"
+    "react-native-webview": "13.12.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

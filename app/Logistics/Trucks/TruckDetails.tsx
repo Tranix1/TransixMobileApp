@@ -1,4 +1,4 @@
-import { View, ScrollView, RefreshControl, TouchableOpacity, Modal, TouchableNativeFeedback, Linking, Pressable,ToastAndroid } from "react-native";
+import { View, ScrollView, RefreshControl, TouchableOpacity, Modal, TouchableNativeFeedback, Linking, Pressable,ToastAndroid,Dimensions,StyleSheet } from "react-native";
 
 import { router, useLocalSearchParams } from "expo-router";
 import ScreenWrapper from "@/components/ScreenWrapper";
@@ -18,9 +18,17 @@ import { useAuth } from "@/context/AuthContext";
 import Divider from "@/components/Divider";
 import { formatNumber } from "@/services/services";
 
+import { AntDesign } from '@expo/vector-icons'; // or any close icon
+
 // import { sendPushNotification } from "@/Utilities/pushNotification";
 import { sendPushNotification } from "@/Utilities/pushNotification";
 import Input from "@/components/Input";
+
+
+
+import ImageViewing from 'react-native-image-viewing';
+
+const screenWidth = Dimensions.get('window').width;
 
 const TruckDetails = () => {
 
@@ -127,6 +135,84 @@ const TruckDetails = () => {
         )
 
     }
+
+
+
+
+truckData.driverLicense ,truckData.driverPassport ,truckData.driverIntPermit 
+
+
+  const [isVisible, setIsVisible] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [viewerIndex, setViewerIndex] = useState(0);   // internal tracking while viewing
+
+console.log(currentIndex)
+
+//  const images = [
+//   truckData.truckBookImage ? { uri: truckData.truckBookImage } : null,
+//   truckData.trailerBookF ? { uri: truckData.trailerBookF } : null,
+//   truckData.trailerBookSc ? { uri: truckData.trailerBookSc } : null,
+//   truckData.driverLicense ? { uri: truckData.driverLicense } : null,
+//   truckData.driverPassport ? { uri: truckData.driverPassport } : null,
+//   truckData.driverIntPermit ? { uri: truckData.driverIntPermit } : null,
+// ].filter(Boolean) as { uri: string }[];
+
+
+
+
+
+
+
+const truckDetailImages = [];
+const driverDetailImages = [];
+const additionalImages = [];
+
+if (truckData.truckBookImage) {
+  truckDetailImages.push({ label: 'Truck Book Image', uri: truckData.truckBookImage });
+}
+if (truckData.trailerBookF) {
+  truckDetailImages.push({ label: 'Trailer Book', uri: truckData.trailerBookF });
+}
+if (truckData.trailerBookSc) {
+  truckDetailImages.push({ label: 'Trailer Book Second', uri: truckData.trailerBookSc });
+}
+
+if (truckData.driverLicense) {
+  driverDetailImages.push({ label: 'Driver License', uri: truckData.driverLicense });
+}
+if (truckData.driverPassport) {
+  driverDetailImages.push({ label: 'Driver Passport', uri: truckData.driverPassport });
+}
+if (truckData.driverIntPermit) {
+  driverDetailImages.push({ label: 'Driver International Permit', uri: truckData.driverIntPermit });
+}
+
+if (truckData.gitImage) {
+  additionalImages.push({ label: 'GIT Image', uri: truckData.gitImage });
+}
+if (truckData.truckNumberPlate) {
+  additionalImages.push({ label: 'Truck Number Plate', uri: truckData.truckNumberPlate });
+}
+if (truckData.truckThirdPlate) {
+  additionalImages.push({ label: 'Truck Third Plate', uri:  truckData.truckThirdPlate });
+}
+
+const labeledImages = [...truckDetailImages, ...driverDetailImages, ...additionalImages];
+
+
+const driverOffset = truckDetailImages.length;
+const additionalOffset = driverOffset + driverDetailImages.length;
+
+
+
+const images = labeledImages.map(item => ({ uri: item.uri }));
+const labels = labeledImages.map(item => item.label);
+
+
+
+
+
+
 
     const [reasonForDenail , setReasonForDenial]=React.useState("")
     const [truckDenialReason , setTruckDenialReason]=React.useState(false)
@@ -591,9 +677,85 @@ setReasonForDenial("")
                         </View>
                     }
 
-                    {(dspDetails==="true"||user?.uid === truckData.userId ) && <View>
+                    {/* {(dspDetails==="true"||user?.uid === truckData.userId ) && <View> */}
+                    { <View>
                         <ThemedText style={{ textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Truck Details</ThemedText>
-                        <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
+
+
+
+
+
+  
+    
+
+
+
+
+
+
+<ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
+
+{truckDetailImages.map((item, index) => (
+  <TouchableOpacity
+    key={index}
+    onPress={() => {
+      setCurrentIndex(index); // offset 0
+       setViewerIndex(index)
+      setIsVisible(true);
+    }}
+  >
+    <Image source={{ uri: item.uri }} style={{ height: hp(30), borderRadius: 10, width: wp(80), margin: 5 }}  />
+  </TouchableOpacity>
+))}
+
+
+ </ScrollView>
+
+
+  <Image source={{ uri: truckData.trailerBookSc }}  />
+
+
+<ImageViewing
+  images={images}
+  imageIndex={currentIndex}
+  visible={isVisible}
+  onRequestClose={() => setIsVisible(false)}
+  onImageIndexChange={(index) => setViewerIndex (index)} // only update internal tracker
+ 
+  presentationStyle="fullScreen"
+  HeaderComponent={() => (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingTop: 8,
+        paddingHorizontal: 15,
+        position: 'absolute',
+        top: 10,
+        zIndex: 999,
+        backgroundColor: backgroundLight,
+        borderRadius: 5,
+      }}
+    >
+      <TouchableOpacity onPress={() => setIsVisible(false)} style={{marginRight:8 , marginLeft:4}}>
+        <AntDesign name="close" size={15} color="#fff" />
+      </TouchableOpacity>
+      <ThemedText style={{ fontWeight: 'bold', fontSize: 14 }}>
+        {labels[viewerIndex] || 'Document'}
+      </ThemedText>
+    </View>
+  )}
+/>
+
+
+
+
+
+
+
+
+
+                        {/* <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
                             {truckData.truckBookImage &&
                                 <View style={{ gap: 10 }}>
                                     <ThemedText type="subtitle" style={{}} >Truck Book Image</ThemedText>
@@ -612,7 +774,7 @@ setReasonForDenial("")
                                     <Image source={{ uri: truckData.trailerBookSc }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />
                                 </View>}
 
-                        </ScrollView>
+                        </ScrollView> */}
 
                         <ThemedText style={{  textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Driver Details</ThemedText>
                         <Divider />
@@ -620,25 +782,49 @@ setReasonForDenial("")
                         <ThemedText type="subtitle">{formatNumber(parseFloat(truckData.driverPhone))}</ThemedText>
                         <Divider />
 
+<ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
+                        {driverDetailImages.map((item, index) => (
+  <TouchableOpacity
+    key={index}
+    onPress={() => {
+     setCurrentIndex(index + driverOffset); // ✅ dynamic offset
+        setViewerIndex (index + driverOffset)
+      setIsVisible(true);
+    }}
+  >
+    <Image source={{ uri: item.uri }} style={styles.imageStyle} />
+  </TouchableOpacity>
+))}
 
-                        <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
-                            {truckData.driverLicense &&
-                                <View style={{ gap: 10 }}>
-                                    <ThemedText type="subtitle" style={{}}>Drivers License</ThemedText>
+ </ScrollView>
 
-                                    {truckData.driverLicense && <Image source={{ uri: truckData.driverLicense }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />}
-                                </View>}
-                            {truckData.driverPassport &&
-                                <View style={{ gap: 10 }}>
-                                    <ThemedText type="subtitle" style={{}}>Drivers Passport</ThemedText>
-                                    {<Image source={{ uri: truckData.driverPassport }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />}
-                                </View>}
-                                     {truckData.driverIntPermit &&
-                                <View style={{ gap: 10 }}>
-                                    <ThemedText type="subtitle" style={{}}>International Driver Permit</ThemedText>
-                                    {<Image source={{ uri: truckData.driverIntPermit }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />}
-                                </View>}
-                        </ScrollView>
+
+
+
+
+
+
+
+
+              <ThemedText style={{  textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}> Additional Details</ThemedText>
+                        <Divider />
+
+<ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} > 
+                        {additionalImages.map((item, index) => (
+  <TouchableOpacity
+    key={index}
+    onPress={() => {
+            setCurrentIndex(index + additionalOffset); // ✅ dynamic offset
+        setViewerIndex(index + additionalOffset)
+      setIsVisible(true);
+    }}
+  >
+  
+    <Image source={{ uri: item.uri }} style={styles.imageStyle} />
+  </TouchableOpacity>
+))}
+ </ScrollView>
+
 
                         <Divider />
 
@@ -694,4 +880,10 @@ setReasonForDenial("")
 }
 
 export default TruckDetails
+
+const styles = StyleSheet.create({
+imageStyle:{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }
+
+
+});
 
