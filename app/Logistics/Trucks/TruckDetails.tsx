@@ -390,8 +390,6 @@ setReasonForDenial("")
                             placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder}
                         />
 
-
-
                     </View>
                 </View>
 
@@ -565,15 +563,19 @@ setReasonForDenial("")
                     <View style={{ flexDirection: 'row' }}>
                         <View style={{ flex: 1 }}>
                             <ThemedText type="tiny" style={{}}>
-                                Truck Model
+                                Truck Registered By
                             </ThemedText>
                             <ThemedText type="subtitle" style={{}}>
-                                {truckData.truckName || '--'}
+                                {truckData.ownerName && "Truck Owner"  }
+                                {truckData.brokerName && "Truck Broker"  }
+                                
                             </ThemedText>
                         </View>
 
                     </View>
-                    <View style={{ flexDirection: 'row' }}>
+
+
+  <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
                         <View style={{ flex: 1 }}>
                             <ThemedText type="tiny" style={{}}>
                                 Truck Type
@@ -582,24 +584,23 @@ setReasonForDenial("")
                                 {truckData.truckType || '--'}
                             </ThemedText>
                         </View>
-
-                    </View>
-
-
-                    {/* <Divider /> */}
-                    <View style={{ flexDirection: 'row' }}>
+                        <ThemedText type="subtitle"  color="#1E90FF" >|</ThemedText>
                         <View style={{ flex: 1 }}>
                             <ThemedText type="tiny" style={{}}>
-                                Cargo Area
+                                Cargo Area:
                             </ThemedText>
                             <ThemedText type="subtitle" style={{}}>
                                 {truckData.cargoArea !== "Other" ? truckData.cargoArea : truckData.otherCargoArea}
                             </ThemedText>
                         </View>
 
-
-
                     </View>
+
+
+
+
+
+
                     {truckData.cargoArea === "Tanker" && <View style={{}}>
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1 }}>
@@ -629,7 +630,7 @@ setReasonForDenial("")
                                 {truckData.maxloadCapacity || '--'}t
                             </ThemedText>
                         </View>
-                        <ThemedText>|</ThemedText>
+                        <ThemedText type="subtitle" color="#1E90FF" >|</ThemedText>
                         <View style={{ flex: 1 }}>
                             <ThemedText type="tiny" style={{}}>
                                 Capacity:
@@ -640,6 +641,10 @@ setReasonForDenial("")
                         </View>
 
                     </View>
+
+
+
+                    
                     {/* <Divider /> */}
                     <View style={{}}>
                         <View style={{ flexDirection: 'row' }}>
@@ -677,21 +682,8 @@ setReasonForDenial("")
                         </View>
                     }
 
-                    {/* {(dspDetails==="true"||user?.uid === truckData.userId ) && <View> */}
-                    { <View>
+                    {(dspDetails==="true"||user?.uid === truckData.userId ) && <View>
                         <ThemedText style={{ textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Truck Details</ThemedText>
-
-
-
-
-
-  
-    
-
-
-
-
-
 
 <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
 
@@ -715,66 +707,8 @@ setReasonForDenial("")
   <Image source={{ uri: truckData.trailerBookSc }}  />
 
 
-<ImageViewing
-  images={images}
-  imageIndex={currentIndex}
-  visible={isVisible}
-  onRequestClose={() => setIsVisible(false)}
-  onImageIndexChange={(index) => setViewerIndex (index)} // only update internal tracker
- 
-  presentationStyle="fullScreen"
-  HeaderComponent={() => (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingTop: 8,
-        paddingHorizontal: 15,
-        position: 'absolute',
-        top: 10,
-        zIndex: 999,
-        backgroundColor: backgroundLight,
-        borderRadius: 5,
-      }}
-    >
-      <TouchableOpacity onPress={() => setIsVisible(false)} style={{marginRight:8 , marginLeft:4}}>
-        <AntDesign name="close" size={15} color="#fff" />
-      </TouchableOpacity>
-      <ThemedText style={{ fontWeight: 'bold', fontSize: 14 }}>
-        {labels[viewerIndex] || 'Document'}
-      </ThemedText>
-    </View>
-  )}
-/>
 
 
-
-
-
-
-
-
-
-                        {/* <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
-                            {truckData.truckBookImage &&
-                                <View style={{ gap: 10 }}>
-                                    <ThemedText type="subtitle" style={{}} >Truck Book Image</ThemedText>
-                                    <Image source={{ uri: truckData.truckBookImage }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />
-                                </View>}
-
-                            {truckData.trailerBookF &&
-                                <View style={{ gap: 10 }}>
-                                    <ThemedText type="subtitle" style={{}}>Trailer Book</ThemedText>
-                                    <Image source={{ uri: truckData.trailerBookF }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />
-                                </View>}
-
-                            {truckData.trailerBookSc &&
-                                <View style={{ gap: 10 }}>
-                                    <ThemedText type="subtitle" style={{}}>Trailer Book Second</ThemedText>
-                                    <Image source={{ uri: truckData.trailerBookSc }} style={{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }} />
-                                </View>}
-
-                        </ScrollView> */}
 
                         <ThemedText style={{  textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Driver Details</ThemedText>
                         <Divider />
@@ -826,17 +760,43 @@ setReasonForDenial("")
  </ScrollView>
 
 
+
+<ImageViewing
+  images={images}
+  imageIndex={currentIndex}
+  visible={isVisible}
+  onRequestClose={() => setIsVisible(false)}
+  onImageIndexChange={(index) => setViewerIndex (index)} // only update internal tracker
+ 
+  presentationStyle="fullScreen"
+  HeaderComponent={() => (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingTop: 8,
+        paddingHorizontal: 15,
+        position: 'absolute',
+        top: 10,
+        zIndex: 999,
+        backgroundColor: backgroundLight,
+        borderRadius: 5,
+      }}
+    >
+      <TouchableOpacity onPress={() => setIsVisible(false)} style={{marginRight:8 , marginLeft:4}}>
+        <AntDesign name="close" size={15} color="#fff" />
+      </TouchableOpacity>
+      <ThemedText style={{ fontWeight: 'bold', fontSize: 14 }}>
+        {labels[viewerIndex] || 'Document'}
+      </ThemedText>
+    </View>
+  )}
+/>
+
+
                         <Divider />
 
-                        <View>
-                            
-                            <ThemedText style={{ textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Truck Owner Details </ThemedText>
-                            <ThemedText type="tiny" >Owner Phone Number</ThemedText>
-                            <ThemedText style={{ marginBottom: wp(2) }} type="subtitle">{truckData.ownerPhoneNum}</ThemedText>
-                            <ThemedText type="tiny" >Owner Email</ThemedText>
-                            <ThemedText type="subtitle">{truckData.onwerEmail}</ThemedText>
-
-                        </View>
+                      
 
                     </View>}
 

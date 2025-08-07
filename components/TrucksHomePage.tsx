@@ -177,6 +177,7 @@ filteredPNotAavaialble
 
                     <View style={{ flex: 1 }}>
                       {selectedCargoArea?.name && (
+                        
                         <ThemedText type="subtitle" style={{ marginBottom: wp(1) }}>
                           {selectedCargoArea.name}
                         </ThemedText>

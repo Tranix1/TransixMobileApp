@@ -83,52 +83,28 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
 
                 </View>
                 {/* ADD THE CONDITION HERE!!!!! */}
-                {false &&
-                    <View style={{ flexDirection: "row", gap: wp(2), marginVertical: wp(2) }}>
-                        <TouchableOpacity
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                borderColor: accent,
-                                paddingHorizontal: wp(4),
-                                height: wp(9),
-                                borderRadius: wp(30),
-                                borderWidth: 1,
-                                flex: 1,
-                                justifyContent: 'center',
-                            }}
-                            onPress={accentODenyTruck}
-                            activeOpacity={0.8}
-                        >
-                            <FontAwesome5 name="check-circle" size={wp(4)} color={accent} style={{ marginRight: wp(2) }} />
-                            <ThemedText style={{ color: accent, fontWeight: 'bold', fontSize: wp(4) }}>Accept</ThemedText>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                backgroundColor: '#e74c3c',
-                                paddingHorizontal: wp(4),
-                                height: wp(9),
-                                borderRadius: wp(30),
-                                flex: 1,
-                                justifyContent: 'center',
-                            }}
-                            activeOpacity={0.8}
-                        >
-                            <FontAwesome5 name="times-circle" size={wp(4)} color="#fff" style={{ marginRight: wp(2) }} />
-                            <ThemedText style={{ color: "#fff", fontWeight: 'bold', fontSize: wp(4) }}>Deny</ThemedText>
-                        </TouchableOpacity>
-                    </View>
-                }
-
+              
+<View style={{flexDirection:"row" , justifyContent:"space-evenly"}} >
                 <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
 
                     <Fontisto name="truck" size={wp(4)} style={{ width: wp(6) }} color={icon} />
                     <ThemedText numberOfLines={1} type='tiny' style={[{  fontSize: 15 }]}>
                         {truck.truckType || 'N/A'}
                     </ThemedText>
+                    
                 </View>
+                 <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
+
+                    <FontAwesome5 name="user-alt" size={wp(4)} style={{ width: wp(6) }} color={icon} />
+                    <ThemedText numberOfLines={1} type='tiny' style={[{  fontSize: 15 }]}>
+                        {/* {truck.truckType || 'N/A'} */}
+
+                                {truck.ownerName && "Owner"  }
+                                {truck.brokerName && "Broker"  }
+                    </ThemedText>
+                    
+                </View>
+ </View>
                 <View style={{ gap: wp(3), paddingHorizontal: wp(2), marginTop: wp(1) }}>
 
 

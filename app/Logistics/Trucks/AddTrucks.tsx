@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, ToastAndroid } from "react-native"
+import { View, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, ToastAndroid ,ActivityIndicator} from "react-native"
 
 import { countryCodes, } from "@/data/appConstants";
 
@@ -179,12 +179,6 @@ function AddTrucks() {
   }
 
 
-  const [getOwnerDetails, setOwnerDetails] = useState<TruckOwner | null>(null);
-
-  useEffect(() => {
-    getDocById('truckOwnerDetails', setOwnerDetails);
-  }, []);
-
   interface TruckBroker {
     brokerName: string;
     brokerPhoneNum: string;
@@ -196,10 +190,38 @@ function AddTrucks() {
     brockerId: string;
   }
 
-  const [getBrokerDetails, setBrokerDetails] = useState<TruckBroker | null>(null);
-  useEffect(() => {
-    getDocById('truckBrokerDetails', setBrokerDetails);
-  }, []);
+
+
+const [getOwnerDetails, setOwnerDetails] = useState<TruckOwner | null>(null);
+const [getBrokerDetails, setBrokerDetails] = useState<TruckBroker | null>(null);
+const [loading, setLoading] = useState(true);
+const [dataChecked, setDataChecked] = useState(false); // controls UI entry
+
+useEffect(() => {
+  const fetchAll = async () => {
+    const broker = await getDocById('truckBrokerDetails', (data) => {
+      setBrokerDetails(data || null);
+    });
+
+    const owner = await getDocById('truckOwnerDetails', (data) => {
+      setOwnerDetails(data || null);
+    });
+
+    setLoading(false);
+
+    // Add a short delay before rendering UI to prevent flicker
+    setTimeout(() => {
+      setDataChecked(true);
+    }, 300); // 300ms feels natural
+  };
+
+  fetchAll();
+}, []);
+
+
+
+
+
 
   // const [images, setImages] = useState([]);
   const [images, setImages] = useState<ImagePickerAsset[]>([]);
@@ -244,6 +266,9 @@ function AddTrucks() {
     setOwnerEmailAddDb('');
     setOwnerPhoneNum('');
     setImages([]);
+    setGitImage([])
+    setTruckNumberPlate([])
+    setTruckThirdPlate([])
     setSelectedCargoArea(null);
     setSelectedTruckType(null);
     setSelectedTankerType(null);
@@ -349,9 +374,9 @@ function AddTrucks() {
 
     let subTrckGIT, subTrckNumberPlate, subTrckThrdPlate
 
-    if (gitImage) subTrckGIT = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Trailer Book Second");
-    if (truckNumberPlate) subTrckNumberPlate = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Trailer Book Second");
-    if (truckThirdPlate) subTrckThrdPlate = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Trailer Book Second");
+    if (gitImage) subTrckGIT = await uploadImage( gitImage[0], "Trucks", setUploadImageUpdate, "Trailer Book Second");
+    if (truckNumberPlate) subTrckNumberPlate = await uploadImage(truckNumberPlate[4], "Trucks", setUploadImageUpdate, "Trailer Book Second");
+    if (truckThirdPlate) subTrckThrdPlate = await uploadImage(truckThirdPlate[4], "Trucks", setUploadImageUpdate, "Trailer Book Second");
 
 
     setUploadImageUpdate("")
@@ -458,16 +483,35 @@ function AddTrucks() {
 
         <ScrollView>
 
-          {!getOwnerDetails && !getBrokerDetails && <View>
-            <ThemedText>Are You the truck owner or Broker ?</ThemedText>
-            <HorizontalTickComponent
-              data={[{ topic: "Owner", value: "Owner" }, { topic: "Broker", value: "Broker" }]}
-              condition={truckOwnerOBroker}
-              onSelect={setTuckOwnerOBroker}
-            />
-          </View>}
+    {loading && (
+  <ActivityIndicator size="small" color={accent} />
+)}
 
-          {(getOwnerDetails || getBrokerDetails) && <ThemedText style={{ textAlign: "center" }}>Adding As Truck {getOwnerDetails ? "Owner" : "Broker"} </ThemedText>}
+{!loading && dataChecked && !getOwnerDetails && !getBrokerDetails && (
+  <View>
+    <ThemedText>Are you the truck owner or broker?</ThemedText>
+    <HorizontalTickComponent
+      data={[
+        { topic: "Owner", value: "Owner" },
+        { topic: "Broker", value: "Broker" },
+      ]}
+      condition={truckOwnerOBroker}
+      onSelect={setTuckOwnerOBroker}
+    />
+  </View>
+)}
+
+{!loading && dataChecked && (getOwnerDetails || getBrokerDetails) && (
+  <ThemedText style={{ textAlign: "center" }}>
+    Adding as Truck {getOwnerDetails ? "Owner" : "Broker"}
+  </ThemedText>
+)}
+
+
+
+        
+
+
 
           <Modal visible={ownerdetailsDsp && truckOwnerOBroker === "Owner"} statusBarTranslucent animationType="slide">
             <ScreenWrapper>
@@ -550,7 +594,6 @@ function AddTrucks() {
                       value={ownerPhonNumAddDb}
                       placeholder="700 000 000"
                       onChangeText={(text) => setOwnerPhoneNum(text)}
-                      keyboardType="numeric"
                     />
 
                     <ThemedText>
@@ -706,7 +749,6 @@ function AddTrucks() {
                       value={ownerPhonNumAddDb}
                       placeholder="700 000 000"
                       onChangeText={(text) => setOwnerPhoneNum(text)}
-                      keyboardType="numeric"
                     />
 
                     <ThemedText>
@@ -830,7 +872,7 @@ function AddTrucks() {
             <ThemedText>
               Drivers Phone Number<ThemedText color="red">*</ThemedText>
             </ThemedText>
-            <Input
+            <Input 
               Icon={<>
                 <Dropdown
                   style={[{ width: wp(15) }]}
@@ -885,7 +927,6 @@ function AddTrucks() {
               value={formData.driverPhone}
               placeholder="700 000 000"
               onChangeText={(text) => handleChange<TruckFormData>(text, 'driverPhone', setFormData)}
-              keyboardType="numeric"
             />
 
 
@@ -1144,7 +1185,7 @@ function AddTrucks() {
             <ThemedText type="tiny" style={{ textAlign: 'center' }} color={coolGray}>{spinnerItem && ''} </ThemedText>
             <Button loading={spinnerItem} disabled={spinnerItem} title={spinnerItem ? "Submiting..." : "Submit"} onPress={handleSubmit} />
           </View>
-
+                 <View style={{height:10}} />   
         </ScrollView>
       </View>
 

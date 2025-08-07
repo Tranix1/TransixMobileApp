@@ -38,8 +38,10 @@ const cardBg = "#f8f8f8";
 const coolGray = "#e5e7eb";
 
 function BookingsandBiddings({ }) {
-  const { dbName, dspRoute } = useLocalSearchParams();
+  const { dspRoute } = useLocalSearchParams();
 
+    const backgroundLight = useThemeColor('backgroundLight')
+    const textColor = useThemeColor('text')
   const icon = useThemeColor('icon')
   const [refreshing, setRefreshing] = useState(false)
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
@@ -47,20 +49,26 @@ function BookingsandBiddings({ }) {
 
   const [fectedDocuments, setFetchedDocuments] = React.useState<any>([])
   const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
+
+  const [requestType , setRequestType]=React.useState("")
+
   const LoadTructs = async () => {
     let filters: any[] = [];
-    const maLoads = await fetchDocuments("CargoBookings");
 
-    if (maLoads.data.length) {
+        if (requestType) filters.push(where("status", "==", requestType));
 
-      if (filters.length > 0 && maLoads.data.length < 0) setFilteredPNotAavaialble(true)
-      setFetchedDocuments(maLoads.data as any[])
-      setLastVisible(maLoads.lastVisible)
+        const result = await fetchDocuments('loadRequests', 10, lastVisible, filters);
+
+    if (result) {
+
+      if (filters.length > 0 && result.data.length < 0) setFilteredPNotAavaialble(true)
+      setFetchedDocuments(result.data as any[])
+      setLastVisible(result.lastVisible)
     }
   }
   useEffect(() => {
     LoadTructs();
-  }, [])
+  }, [requestType])
 
   const onRefresh = async () => {
     try {
@@ -74,10 +82,12 @@ function BookingsandBiddings({ }) {
   };
 
   const loadMoreLoads = async () => {
+  let filters: any[] = [];
 
+        if (requestType) filters.push(where("status", "==", requestType));
     if (loadingMore || !lastVisible) return;
     setLoadingMore(true);
-    const result = await fetchDocuments('', 10, lastVisible);
+        const result = await fetchDocuments('loadRequests', 10, lastVisible, filters);
     if (result) {
       setFetchedDocuments([...fectedDocuments, ...result.data as any[]]);
       setLastVisible(result.lastVisible);
@@ -87,14 +97,64 @@ function BookingsandBiddings({ }) {
 
 
 
-  // ... (keep all your existing useEffect hooks and functions)
-
-  // --- Main Render ---
-
   return (
     <ScreenWrapper >
       {/* Header */}
       <Heading page={dspRoute ? dspRoute.toString() : " Bookings and Biddings"} />
+
+      <View style={{flexDirection:"row" , marginHorizontal:4, justifyContent:"space-evenly"}}>
+       <TouchableOpacity
+       onPress={()=>setRequestType("Booked")}
+                                    style={{
+                                          paddingVertical: wp(0.5),
+                                        marginLeft: wp(2),
+                                        borderRadius: wp(2),
+                                        paddingHorizontal: wp(10),
+                                        backgroundColor: requestType === "Booked" ? accent : backgroundLight,
+                                        borderWidth: 1,
+                                        borderColor: requestType === "Booked"  ? accent : coolGray,
+                                    }}
+                                    activeOpacity={0.8}
+                                >
+                                    <ThemedText
+                                        type="defaultSemiBold"
+                                        style={{
+                                            color: requestType === "Booked"  ? 'white' : textColor,
+                                            fontSize: wp(3.5),
+                                        }}
+                                    >
+                                        Bookings
+                                    </ThemedText>
+                                </TouchableOpacity>
+
+
+                                     <TouchableOpacity
+                                     onPress={()=>setRequestType("Bidded")}
+                                    style={{
+                                        paddingVertical: wp(0.5),
+                                        marginLeft: wp(2),
+                                        borderRadius: wp(2),
+                                        paddingHorizontal: wp(10),
+                                        backgroundColor: requestType === "Bidded" ? accent : backgroundLight,
+                                        borderWidth: 1,
+                                        borderColor: requestType === "Bidded"  ? accent : coolGray,
+                                    }}
+                                    activeOpacity={0.8}
+                                >
+                                    <ThemedText
+                                        type="defaultSemiBold"
+                                        style={{
+                                            color: requestType === "Bidded"   ? 'white' : textColor,
+                                            fontSize: wp(4),
+                                        }}
+                                    >
+                                        Biddings
+                                    </ThemedText>
+                                </TouchableOpacity>
+
+
+                                
+      </View>
 
 
       <FlatList

@@ -50,27 +50,27 @@ function SlctBookingsandBiddings({ }) {
       <Heading page="My Requests" />
       <View style={styles.container}>
         <ModernCard
-          label="Booked by Carriers"
+          label="Requested by Carriers"
           count={newItermBooked}
           color="#6a0c0c"
-          onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "bookings", dspRoute: "Booked by Carriers" } })}
+          onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: {  dspRoute: "Requested by Carriers" } })}
         />
         <ModernCard
-          label="Booked Loads"
+          label="Requested Loads"
           color="#6a0c0c"
-          onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "bookings", dspRoute: "Booked Loads" } })}
+          onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dspRoute: "Requested Loads" } })}
         />
-        <ModernCard
+        {/* <ModernCard
           label="Bidded by Carriers"
           count={newItermBidded}
           color="#4eb37a"
-          onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "biddings", dspRoute: "Bidded by Carriers" } })}
+          onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: {  dspRoute: "Bidded by Carriers" } })}
         />
         <ModernCard
           label="Bidded Loads"
           color="#4eb37a"
-          onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "biddings", dspRoute: "Bidded Loads" } })}
-        />
+          onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: {  dspRoute: "Bidded Loads" } })}
+        /> */}
       </View>
     </ScreenWrapper>
   );

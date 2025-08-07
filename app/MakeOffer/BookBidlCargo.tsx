@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet,ToastAndroid } from "react-native";
 import { auth, db } from "../components/config/fireBase";
 import { addDocument } from "@/db/operations";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -24,12 +24,9 @@ function BookLContract({ }) {
   const textColor = useThemeColor('text')
   const background = useThemeColor("background");
   const backgroundColor = useThemeColor("backgroundLight");
-
-
-    const { expoPushToken } = usePushNotifications();
-
+  const { expoPushToken } = usePushNotifications();
   const [bbVerifiedLoadD, setbbVerifiedLoadD] = React.useState<Truck[] | []>([]);
-  const { contract } = useLocalSearchParams();
+  const { contract, bidRate } = useLocalSearchParams();
   const Contractitem = JSON.parse(contract as any);
 
   useEffect(() => {
@@ -108,30 +105,11 @@ function BookLContract({ }) {
   }, [setTrucksInContract]);
 
   const checkExistixtBBDoc = async (trckContractId: string) => {
-    const chatsRef = collection(db, 'CargoBookings');
+    const chatsRef = collection(db, "loadRequests");
     const chatQuery = query(chatsRef, where('requestId', '==', trckContractId), where('alreadyInContract', '==', true));
     const querySnapshot = await getDocs(chatQuery);
     return !querySnapshot.empty;
   };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -155,33 +133,35 @@ function BookLContract({ }) {
               productName: Contractitem.typeofLoad,
               origin: Contractitem.origin,
               destination: Contractitem.destination,
-              rate: Contractitem.rate,
+              rate: bidRate ? bidRate : Contractitem.rate,
               currency: Contractitem.currency,
               model: Contractitem.model,
               ownerDecision:  "Pending",
-              status : "Booked" ,
+              status : bidRate ? "Bidded":"Booked" ,
               loadId : item.id ,
               approvedTrck: false,
               alreadyInContract: true,
               expoPushToken : expoPushToken || null
               // contractName: Contractitem.contractName,
               }
-            addDocument("CargoBookings",theData)
+            addDocument( "loadRequests",theData)
                   await sendPushNotification( 
   `${expoPushToken}` ,
 //   "Truck Accepted",
-      `New Truck Booking Received`,
-   `company "${item.CompanyName}" has requested to carry your load "${Contractitem.typeofLoad}" from ${Contractitem.origin} to ${Contractitem.destination}. Tap to view request.`,
+      `New Truck ${bidRate ? "Bidding" : "Booking"} Received`,
+   `company "${item.CompanyName}" has requested to carry your load "${Contractitem.typeofLoad}" from ${Contractitem.origin} to ${Contractitem.destination} ${bidRate &&"at"} rate ${Contractitem.currency } ${bidRate ?bidRate : Contractitem.rate} ${Contractitem.model}. Tap to view request.`,
+
     { 
     pathname: '/BooksAndBids/ViewBidsAndBooks', 
     params: { 
       dbName: "bookings", 
       dspRoute: "Booked by Carriers" 
     } 
-  },
-   { loadId: "abc122" }              // optional extra data
+  }
 );
-            alert('doneee adding')
+
+ToastAndroid.show(`Load ${bidRate ? "BIDDING" : "BOOKING"} completed successfully.`,ToastAndroid.SHORT);
+
           } else {
             alert("Truck alreadyy Booked")
           }
@@ -467,7 +447,7 @@ function BookLContract({ }) {
             <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
 
               <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate {Contractitem.model} </ThemedText>
-              <ThemedText   >{Contractitem.currency} {formatCurrency(Contractitem.rate)}</ThemedText>
+              <ThemedText   >{Contractitem.currency} { formatCurrency( !bidRate ? Contractitem.rate: bidRate )}</ThemedText>
             </View>
 
             <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>

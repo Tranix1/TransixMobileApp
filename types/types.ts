@@ -27,6 +27,7 @@ export type Truck = {
 gitImage : string ;
 truckNumberPlate : string ;
 truckThirdPlate : string ;
+brokerName : string ;
 
     id: string;
     imageUrl: string;

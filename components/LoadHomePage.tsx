@@ -302,17 +302,56 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                             }]}>
                                                 <View style={{ gap: wp(2) }}>
                                                     <ThemedText type='subtitle' color={coolGray} style={{ textAlign: 'center' }}>
-                                                        Bid
+                                                        Bid Rate
                                                     </ThemedText>
                                                     {
                                                         selectedLoad.rate && (
                                                             <View style={{}}>
-                                                                <TouchableOpacity  >
-                                                                    <ThemedText >
-                                                                        Bid Rate
-                                                                    </ThemedText>
-                                                                </TouchableOpacity>
+                                                                   
 
+
+
+<View
+  style={{
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  }}
+>
+  <ThemedText style={{ color: '#616161', fontSize: 16, fontWeight: '500' }} type='tiny'>  
+    from
+  </ThemedText>
+
+  <ThemedText
+    style={{
+      color: '#1976D2', // blue
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginHorizontal: 6,
+    }}
+type='tiny'
+  >
+   {selectedLoad.currency} {selectedLoad.rate} {selectedLoad.model}
+  </ThemedText>
+
+  <ThemedText style={{ color: '#616161', fontSize: 16, fontWeight: '500' }}  type='tiny'>
+    to
+  </ThemedText>
+
+  <ThemedText
+    style={{
+      color: bidRate ? '#2E7D32' : '#9E9E9E', // green or grey
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginLeft: 6,
+    }}
+    type='tiny'
+  >
+    {selectedLoad.currency} {bidRate ? bidRate : "--"} 
+  </ThemedText>
+</View>
+
+                                                                
                                                                 <Input
                                                                     onChangeText={(text) => setBidRate(text)}
                                                                     value={bidRate}
@@ -336,8 +375,12 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                                                         <ThemedText style={{ color: 'white' }}>Cancel</ThemedText>
                                                     </TouchableOpacity>
 
-                                                    <TouchableOpacity
-                                                        onPress={() => submitBidsOBookings("biddings" as 'biddings', selectedLoad as Load)}
+                                                    {/* <TouchableOpacity
+                                                        onPress={() => submitBidsOBookings("biddings" as 'biddings', selectedLoad as Load)} */}
+                                                        <TouchableOpacity  onPress={() => router.push({
+                    pathname: '/MakeOffer/BookBidlCargo',
+                        params: { contract: JSON.stringify(selectedLoad) ,  bidRate :bidRate }
+                    })}
                                                         style={[{ backgroundColor: '#0f9d5824', flex: 2, padding: wp(3), borderRadius: wp(4), alignItems: 'center' }]}
                                                     >
                                                         <ThemedText style={{ color: '#0f9d58' }}>Send</ThemedText>
