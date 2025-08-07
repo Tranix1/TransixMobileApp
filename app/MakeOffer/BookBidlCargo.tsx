@@ -146,7 +146,7 @@ function BookLContract({ }) {
               }
             addDocument( "loadRequests",theData)
                   await sendPushNotification( 
-  `${expoPushToken}` ,
+  `${Contractitem.expoPushToken}` ,
 //   "Truck Accepted",
       `New Truck ${bidRate ? "Bidding" : "Booking"} Received`,
    `company "${item.CompanyName}" has requested to carry your load "${Contractitem.typeofLoad}" from ${Contractitem.origin} to ${Contractitem.destination} ${bidRate &&"at"} rate ${Contractitem.currency } ${bidRate ?bidRate : Contractitem.rate} ${Contractitem.model}. Tap to view request.`,

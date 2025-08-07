@@ -25,6 +25,9 @@ import { usePushNotifications,} from "@/Utilities/pushNotification";
 import { uploadImage } from "@/db/operations";
 import { pickDocument } from "@/Utilities/utils";
 import { DocumentAsset } from "@/types/types";
+
+import { notifyTrucksByFilters } from "@/Utilities/notifyTruckByFilters";
+import { TruckNeededType } from "@/types/types";
 const AddLoadDB = () => {
     const { expoPushToken } = usePushNotifications();
     const icon = useThemeColor('icon')
@@ -50,9 +53,6 @@ const AddLoadDB = () => {
     const [returnRate, setReturnRate] = useState("");
     const [returnTerms, setReturnTerms] = useState("");
 
-    const [dspAlertMsg, setDspAlertMsg] = useState(false);
-    const [dspFuelAvai, setDspFuelAvai] = useState(false);
-    const [dspReturnLoad, setDspReturnLoad] = useState(false);
 
     const [selectedCurrency, setSelectedCurrency] = React.useState({ id: 1, name: "USD" })
     const [selectedReturnCurrency, setSelectedRetrunCurrency] = React.useState({ id: selectedCurrency.id, name: selectedCurrency.name })
@@ -71,9 +71,6 @@ const AddLoadDB = () => {
         otherTankerType: ""
     });
 
-    const toggleDspAlertMsg = () => setDspAlertMsg((prev) => !prev);
-    const toggleDspFuelAvai = () => setDspFuelAvai((prev) => !prev);
-    const toggleDspReturnLoad = () => setDspReturnLoad((prev) => !prev);
 
     const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(null)
     const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string } | null>(null)
@@ -83,17 +80,8 @@ const AddLoadDB = () => {
     const [operationCountries, setOperationCountries] = useState<string[]>([]);
 
 
-    type SelectedOption = { id: number; name: string } | null;
-    interface TruckNeededType {
-        cargoArea: TruckTypeProps | null;
-        truckType: SelectedOption;
-        tankerType: SelectedOption;
-        capacity: SelectedOption;
-        operationCountries: string[];
-    }
     const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>([]);
 
-    const [dspAfterSubmitMoadal, setAfterSubmitModal] = React.useState(false)
 
     function pushTruck() {
         const newTruck: TruckNeededType = {
@@ -152,9 +140,6 @@ const AddLoadDB = () => {
         setReturnLoad("");
         setReturnRate("");
         setReturnTerms("");
-        setDspAlertMsg(false);
-        setDspFuelAvai(false);
-        setDspReturnLoad(false);
         setSelectedCurrency({ id: 1, name: "USD" });
         setSelectedRetrunCurrency({ id: 1, name: "USD" });
         setSelectedModelType({ id: 1, name: "Solid" });
@@ -178,10 +163,16 @@ const AddLoadDB = () => {
         setUploadImageUpdate("")
     };
 
+
     const [proofOfOrder , setProofOfOrder]=useState<DocumentAsset[]>([]);
         const [proofOfOrderFileType , setProofOfOrderFileType ] =React.useState<('pdf' | 'image')[]>([])
 
     const [imageUpdate, setUploadImageUpdate] = React.useState("")
+
+
+
+
+
 
     const handleSubmit = async () => {
             setIsSubmitting(true)
@@ -252,9 +243,21 @@ let proofOfOerSub
         try {
             // Ensure addDocument is not a React hook or using hooks internally.
             await addDocument("Cargo", loadData);
-            clearFormFields(); // Call this function to clear all fields
-            ToastAndroid.show('Load Added successfully', ToastAndroid.SHORT)
-            setAfterSubmitModal(true)
+
+           await notifyTrucksByFilters({
+  trucksNeeded,
+loadItem: {
+    typeofLoad: typeofLoad,
+    origin: fromLocation, // <-- Use the correct state variable
+    destination: toLocation, // <-- Use the correct state variable
+    rate: rate,
+    model: selectedModelType.name,
+    currency: selectedCurrency.name,
+  },
+});
+
+
+ToastAndroid.show('Trucks notified and load added successfully.', ToastAndroid.SHORT);
 
 
         } catch (error) {
@@ -330,101 +333,7 @@ let proofOfOerSub
             </View>
 
 
-            <Modal visible={dspAfterSubmitMoadal} statusBarTranslucent animationType="slide">
-                <ScreenWrapper>
-
-                    <View style={{ margin: wp(4), }}>
-
-                        <View style={{ gap: wp(2) }} >
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: wp(4) }}>
-                                <TouchableOpacity style={{
-                                    position: 'absolute',
-                                    left: wp(4),
-                                    padding: wp(2),
-                                }} onPress={() => setAfterSubmitModal(false)}>
-                                    <AntDesign name="close" color={icon} size={wp(4)} />
-                                </TouchableOpacity>
-                                <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold', textAlign: 'center' }} >Next Step</ThemedText>
-                            </View>
-
-
-                            <ThemedText style={{ textAlign: 'center' }}>
-                                Load submitted successfully! Your load has been added and is now pending review. You can view the trucks you selected below or add another load if needed.
-                            </ThemedText>
-
-
-                            {trucksNeeded.map((item,index) => (
-                                <View style={{
-                                    position: 'relative',
-                                    marginBottom: 10,
-                                    padding: 14,
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    borderRadius: 8,
-                                    backgroundColor: backgroundLight
-                                }} key={index} >
-                                    <ThemedText>{item.truckType?.name} </ThemedText>
-                                    <ThemedText>{item.cargoArea?.name}</ThemedText>
-                                    <ThemedText>{item.capacity?.name} </ThemedText>
-
-                                    <TouchableOpacity onPress={() =>
-                                      {  router.push({
-                                            pathname: "/Logistics/Trucks/Index",
-                                            params: {
-                                                organisationName: "Available Trucks",
-                                                truckTypeG: item.truckType?.name,
-                                                cargoAreaG: JSON.stringify( item.cargoArea) ,
-                                                capacityG: item.capacity?.name,
-                                                operationCountriesG: JSON.stringify( item.operationCountries),
-
-                                            },
-                                        });
-                                        setAfterSubmitModal(false) } } >
-
-                                        <MaterialIcons name="forward" size={24} color={icon} />
-                                    </TouchableOpacity>
-                                </View>
-                            ))}
-                            <View style={{ flexDirection: "row", gap: wp(3), marginTop: wp(4) }}>
-                                <TouchableOpacity
-                                    style={{
-                                        flex: 1,
-                                        backgroundColor: "#fff",
-                                        borderWidth: 1,
-                                        borderColor: "#0f9d58",
-
-                                        borderRadius: 6,
-                                        paddingVertical: wp(2),
-                                        alignItems: "center",
-                                    }}
-                                    onPress={() => router.back()}
-
-                                >
-                                    <ThemedText style={{ color: "#0f9d58", fontWeight: "bold" }}>Go Back</ThemedText>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    style={{
-                                        flex: 1,
-                                        backgroundColor: "#0f9d58",
-                                        borderRadius: 6,
-                                        paddingVertical: wp(2),
-                                        alignItems: "center",
-                                    }}
-                                    onPress={() => {
-                                        setAfterSubmitModal(false);
-                                        setStep(3);
-                                    }}
-                                >
-                                    <ThemedText style={{ color: "#fff", fontWeight: "bold" }}>Add Another</ThemedText>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
-                </ScreenWrapper>
-
-            </Modal>
+         
 
             <View style={{ flex: 1 }}>
                 {step === 0 && (
@@ -481,7 +390,6 @@ let proofOfOerSub
 
                                     <Input
                                         value={rate}
-                                        keyboardType="numeric"
                                         onChangeText={setRate}
                                         style={{ height: 45.5 }}
                                     />
@@ -747,7 +655,6 @@ let proofOfOerSub
 
                                     <Input
                                         value={returnRate}
-                                        keyboardType="numeric"
                                         onChangeText={setReturnRate}
                                         style={{ height: 45 }}
                                     />
@@ -794,6 +701,11 @@ let proofOfOerSub
                             Truck Requirements
                         </ThemedText>
                         <Divider />
+
+                                <ThemedText>GIT Required</ThemedText>
+                                <Input placeholder="GIT Value" /> 
+
+
                         {trucksNeeded.map((truck, index) => (
                             <View
                                 key={index}
@@ -808,8 +720,6 @@ let proofOfOerSub
                                     backgroundColor: backgroundLight
                                 }}
                             >
-                                <ThemedText>GIT Required</ThemedText>
-                                <Input placeholder="GIT Value" /> 
 
                                 {/* Truck Info */}
                                 <ThemedText >
