@@ -26,7 +26,7 @@ import { wp, hp } from "@/constants/common";
 import Divider from "@/components/Divider";
 
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
-import { addDocument, checkDocumentExists, deleteDocument, fetchDocuments, runFirestoreTransaction, setDocuments } from '@/db/operations';
+import {  fetchDocuments,  } from '@/db/operations';
 
 import { RequestedCargo } from "@/components/CargoYouRequest";
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -55,8 +55,8 @@ function BookingsandBiddings({ }) {
   const LoadTructs = async () => {
     let filters: any[] = [];
 
+        dspRoute === "" ? filters.push(where("status", "==", requestType)) : filters.push(where("status", "==", requestType));
         if (requestType) filters.push(where("status", "==", requestType));
-
         const result = await fetchDocuments('loadRequests', 10, lastVisible, filters);
 
     if (result) {

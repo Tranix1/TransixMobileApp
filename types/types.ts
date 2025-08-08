@@ -210,6 +210,8 @@ export type Load = {
     roundTrip: boolean
     isVerified: boolean
     trucksRequired: TruckNeededType[]
+proofOfOrder : string ;
+proofOfOrderType : string
 
 } & LoadFormData;
 

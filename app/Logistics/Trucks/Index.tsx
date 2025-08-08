@@ -47,7 +47,6 @@ const Index = () => {
     return JSON.parse(operationCountriesG);
     });
 
-    console.log(operationCountries)
 
 const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(false)
     const LoadTructs = async () => {

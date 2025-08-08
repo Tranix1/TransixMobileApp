@@ -1,4 +1,4 @@
-import { StyleSheet, TouchableOpacity, View, TouchableHighlight } from 'react-native'
+import { StyleSheet, TouchableOpacity, View, TouchableHighlight , Linking  } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { Load } from '@/types/types'
 import { wp } from '@/constants/common'
@@ -9,6 +9,9 @@ import { EvilIcons, FontAwesome,  Ionicons,  Octicons } from '@expo/vector-icons
 import { formatCurrency } from '@/services/services'
 import Divider from './Divider'
 import FormatedText from './FormatedText'
+import ImageViewing from 'react-native-image-viewing';
+import { AntDesign } from '@expo/vector-icons'; // or any close icon
+import { WebView } from 'react-native-webview';
 
 const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string) => { }, ondetailsPress = () => { } }) => {
   const backgroundLight = useThemeColor('backgroundLight')
@@ -22,23 +25,19 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
 
   
 
-  const checkAndDeleteExpiredItems = () => {
-    const deletionTime = item.deletionTime;
-    const timeRemaining = deletionTime - Date.now();
-    if (timeRemaining <= 0) {
-      // deleteLoad(item.id);
-    } else {
-      setTimeout(() => {
-        // deleteLoad(item.id);
-      }, timeRemaining);
-    }
-  };
+  const [dspProofImage, setDspProofImage] = useState(false);
+    function dspProofOfOrder(proofOfOrderType : string){
+      console.log(proofOfOrderType)
+      if(proofOfOrderType ==="pdf"){
+        Linking.openURL(item.proofOfOrder)
 
-  setTimeout(() => {
-    checkAndDeleteExpiredItems();
-  }, 1000);
+      }else if (proofOfOrderType==="image" ){
+        setDspProofImage(true)
+      }else{
 
-  
+      }
+    }  
+
 
   function replaceSpacesWithPercent(url: string): string {
     return url.replace(/ /g, '%20');
@@ -125,6 +124,11 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
             </View>
           )}
             
+                {item.proofOfOrderType && (
+            <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+              <ThemedText type='tiny' style={{}}>Proof Attached</ThemedText>
+            </View>
+          )}
 
           {item.roundTrip && (
             <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
@@ -310,13 +314,12 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
               </View>
             )}
 
-            <Divider style={{ marginTop: wp(2) }} />
 
             <View style={{ marginTop: wp(2), gap: wp(2) }}>
                   <ThemedText type='tiny' style={{ marginBottom: wp(1) }}>Trucks Required</ThemedText>
                   
-                  {item.trucksRequired.map((neededTruck)=>(
-                    <View style={{flexDirection:"row",justifyContent:'space-evenly'}}> 
+                  {item.trucksRequired.map((neededTruck , index)=>(
+                    <View style={{flexDirection:"row",justifyContent:'space-evenly'}} key={index} > 
                       <ThemedText>{neededTruck.truckType?.name} </ThemedText>
                       <ThemedText>{neededTruck.capacity?.name} </ThemedText>
                       <ThemedText>{neededTruck.cargoArea?.name} </ThemedText>
@@ -324,6 +327,46 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
                   ) )  }
             </View>
 
+<Divider style={{ marginTop: wp(2) }} />
+
+                 {item.proofOfOrder && <TouchableOpacity style={styles.proofButton} onPress={()=>dspProofOfOrder(item.proofOfOrderType) }>
+  <ThemedText type="defaultSemiBold" style={styles.proofButtonText}>
+    Proof of order
+  </ThemedText>
+</TouchableOpacity>}
+
+
+
+
+<ImageViewing
+  images={[{ uri: item.proofOfOrder}]} 
+  imageIndex={0} 
+  visible={dspProofImage}
+  onRequestClose={() => setDspProofImage(false)}
+  presentationStyle="fullScreen"
+  HeaderComponent={() => (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingTop: 8,
+        paddingHorizontal: 15,
+        position: 'absolute',
+        top: 10,
+        zIndex: 999,
+        backgroundColor: backgroundLight,
+        borderRadius: 5,
+      }}
+    >
+      <TouchableOpacity onPress={() => setDspProofImage(false)} style={{ marginRight: 8, marginLeft: 4 }}>
+        <AntDesign name="close" size={15} color="#fff" />
+      </TouchableOpacity>
+      <ThemedText style={{ fontWeight: 'bold', fontSize: 14 }}>
+        Proof of Order
+      </ThemedText>
+    </View>
+  )}
+/>
 
 
           </View>
@@ -472,9 +515,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: 'center',
     borderRadius: wp(2),
-  }
+  },proofButton: {
+  backgroundColor: "#4eb37a", // matches theme
+  paddingVertical: wp(2),
+  paddingHorizontal: wp(4),
+  borderRadius: wp(4),
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexDirection: 'row',
+  gap: wp(1),
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 4
+},
+proofButtonText: {
+  color: '#fff',
+  fontSize: wp(4),
+  textTransform: 'uppercase',
+  letterSpacing: 0.5
+}
+
 });
 
-function toggleItemById(id: string, setBidDisplay: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>): void {
-  throw new Error('Function not implemented.')
-}
