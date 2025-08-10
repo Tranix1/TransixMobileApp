@@ -5,7 +5,6 @@ import { hp, wp } from '@/constants/common'
 import { fetchDocuments } from '@/db/operations'
 import {  Truck } from '@/types/types'
 import { DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore'
-
 import { TruckTypeProps } from '@/types/types'
 import { useAuth } from '@/context/AuthContext'
 import { useLocalSearchParams } from 'expo-router'
@@ -13,23 +12,15 @@ import ScreenWrapper from '@/components/ScreenWrapper'
 import { FinalReturnComponent } from '@/components/TrucksHomePage'
 const Index = () => {
 
-
     const { userId, organisationName, contractName, contractId,capacityG,cargoAreaG,truckTypeG,operationCountriesG  } = useLocalSearchParams();
 
     // const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
 
     const [trucks, setTrucks] = useState<Truck[]>([])
-
     const [tankerType, setTankerType] = React.useState<string>( "")
-
-
     const [truckCapacity, setTruckCapacity] = useState( capacityG? `${capacityG}` :  "")
-
-
     const [truckConfig, setTruckConfig] = React.useState("")
     const [truckSuspension, setTruckSuspension] = React.useState("")
-
-
     const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(() => {
   if (!cargoAreaG) return null;
   const value = Array.isArray(cargoAreaG) ? cargoAreaG[0] : cargoAreaG;
@@ -40,20 +31,17 @@ const Index = () => {
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
 
-
     const [operationCountries, setOperationCountries] = useState<string[]> (() => {
     if (!operationCountriesG) return [];
     if (Array.isArray(operationCountriesG)) return JSON.parse(operationCountriesG[0]);
     return JSON.parse(operationCountriesG);
     });
 
-
 const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(false)
     const LoadTructs = async () => {
         let filters: any[] = [];
 
         // Apply filters for truck properties first
-
         if (userId) filters.push(where("userId", "==", userId));
         if (truckCapacity) filters.push(where("truckCapacity", "==", truckCapacity));
         if (selectedCargoArea) filters.push(where("cargoArea", "==", selectedCargoArea?.name));
@@ -79,14 +67,10 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
                 trucksToSet = maTrucks.data as Truck[];
             }
             
-
             setTrucks(trucksToSet);
             setLastVisible(maTrucks.lastVisible);
         }
     };
-
-
-
 
     useEffect(() => {
         LoadTructs();
@@ -106,14 +90,11 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
 
     const [showfilter, setShowfilter] = useState(false)
 
-
-    
     const loadMoreTrucks = async () => {
         if (loadingMore || !lastVisible) return;
         let filters: any[] = [];
 
         setLoadingMore(true);
-
 
         // Apply the same filters as in LoadTructs
         if (userId) filters.push(where("userId", "==", userId));

@@ -1,9 +1,8 @@
 import {  View, ToastAndroid } from 'react-native'
-import React, { useEffect, useState, useRef, useCallback } from 'react'
-import { addDocument, checkDocumentExists, deleteDocument, fetchDocuments, runFirestoreTransaction, setDocuments } from '@/db/operations';
+import React, { useEffect, useState,} from 'react'
+import { addDocument, checkDocumentExists, fetchDocuments, runFirestoreTransaction, setDocuments } from '@/db/operations';
 import { Load } from '@/types/types';
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
-import BottomSheet, { BottomSheetBackdrop,  } from '@gorhom/bottom-sheet';
 import { useAuth } from '@/context/AuthContext';
 import { LoadsComponent } from '@/components/LoadHomePage';
 import { router, useLocalSearchParams } from 'expo-router'
@@ -27,11 +26,9 @@ const Index = () => {
     const [showfilter, setShowfilter] = useState(false)
     const [selectedLoad, setSelectedLoad] = useState<Load | null>(null);
     const [showSheet, setShowSheet] = useState(false);
-    const bottomSheetRef = useRef<BottomSheet>(null);
     const [expandId, setExpandID] = useState('');
     const [bidRate, setBidRate] = useState('');
     const [currencyBid, setCurrencyBid] = useState('');
-    const [modelBid, setModelBid] = useState('');
 
 
     const [bottomMode, setBottomMode] = useState<'Bid' | 'Book' | ''>('');
@@ -89,7 +86,6 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
            let theRate= dbName ==="" ? bidRate : item.rate  
             let docId = `${userId}${item.typeofLoad}${theRate}${item.userId}`
            let theCurrency= dbName ==="" ? currencyBid : item.currency
-           let theModel = dbName === ""?modelBid : item.model 
 
 
           let alreadyBokedLoad 
@@ -114,7 +110,6 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
         docId : docId,
         rate :  theRate ,
         currency : theCurrency ,
-        model :  theModel ,
         deletionTime :Date.now() + 4 * 24 * 60 * 60 * 1000 ,
         dbName : dbName ,
         // expoPushToken : submitexpoPushToken,
@@ -146,9 +141,6 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
         msgReceiverId : userId ,
         rate :  theRate ,
         currency : theCurrency ,
-        model :  theModel ,
-        perTonneB :  theModel ,
-        deletionTime :Date.now() + 5 * 24 * 60 * 60 * 1000 ,
       }
       );
             console.log("Donee submitting")
@@ -202,24 +194,6 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
 
 
 
- 
-    const deleteMyLoad = async (loadID: string) => {
-
-        try {
-            const deleting = await deleteDocument('Cargo', loadID)
-
-            if (deleting) {
-                bottomSheetRef.current?.close();
-                ToastAndroid.show('Successfully Deleted My Load', ToastAndroid.SHORT)
-                onRefresh()
-            }
-        } catch (error) {
-
-        }
-
-    }
-
-
     return (
                 <GestureHandlerRootView style={{ flex: 1,}}>
 
@@ -239,11 +213,9 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
             selectedLoad={selectedLoad}
             setBidRate={setBidRate}
             bidRate={bidRate}
-            deleteMyLoad={deleteMyLoad}
             setShowfilter={setShowfilter}
             setShowSheet={setShowSheet}
             bottomMode={bottomMode}
-            submitBidsOBookings={submitBidsOBookings}  
             organisationName={"Username"}
             userId ={userId}
             filteredPNotAavaialble={filteredPNotAavaialble}

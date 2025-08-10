@@ -1,12 +1,10 @@
 import React, { useCallback, useRef } from 'react';
-
-
 import { ActivityIndicator, RefreshControl, StyleSheet, Image, TouchableNativeFeedback, TouchableOpacity, View, Modal, Linking, FlatList } from 'react-native'
 import { AntDesign, FontAwesome6, FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 import LoadComponent from './LoadComponent';
 import { ThemedText } from './ThemedText';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop,  BottomSheetView } from '@gorhom/bottom-sheet';
 import { Load } from '@/types/types';
 import { hp, wp } from '@/constants/common';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -31,7 +29,6 @@ interface LoadsComponentProps {
     selectedLoad: Load | null;
     setBidRate: (rate: string) => void;
     bidRate: string;
-    deleteMyLoad: (id: string) => void;
 
     
     userId ?: any;
@@ -40,7 +37,6 @@ interface LoadsComponentProps {
     setShowSheet: any
     bottomMode: any
 
-    submitBidsOBookings: any
     filteredPNotAavaialble : boolean
 }
 
@@ -59,11 +55,9 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     selectedLoad,
     setBidRate,
     bidRate,
-    deleteMyLoad,
     setShowfilter,
     setShowSheet,
     bottomMode,
-    submitBidsOBookings,
     userId,
     organisationName,
     filteredPNotAavaialble
@@ -142,8 +136,6 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                 data={Loads}
                 renderItem={({ item }) => (
                     <LoadComponent item={item} expandID={expandId} expandId={(s) => setExpandID(s)} ondetailsPress={() => {
-                        console.log(item.userId);
-
                         setSelectedLoad(item);
                         setShowSheet(true);
                         setTimeout(() => {
@@ -427,21 +419,7 @@ type='tiny'
 
                                         </View>
                                     </>
-
-
-                                }
-
-
-
-
-
-
-
-
-
-
-
-
+}
 
                                 {selectedLoad.userId !== user?.uid ?
                                         <View style={styles.contactOptions}>
@@ -490,11 +468,7 @@ type='tiny'
                                         </View>
                                     </View>
 
-                                    :
-
-
-
-                                    
+                                    :                            
 
   <View style={styles.contactOptions}>
                                         <View style={styles.contactOption}>
@@ -541,9 +515,6 @@ type='tiny'
                                         </View>
                                     </View>
 
-
-
-
                                 }
 
                                 {/* Add more fields as needed */}
@@ -558,12 +529,7 @@ type='tiny'
 
             </BottomSheet >
 
-
-
-
         </View >
-
-
     )
 
 }

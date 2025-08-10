@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet,ToastAndroid } from "react-native";
 import { auth, db } from "../components/config/fireBase";
-import { addDocument } from "@/db/operations";
+import { addDocument , runFirestoreTransaction , checkDocumentExists,setDocuments } from "@/db/operations";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Feather, Ionicons } from "@expo/vector-icons";
-import { collection, serverTimestamp, addDoc, query, where, onSnapshot, getDocs } from 'firebase/firestore';
+import { Feather,} from "@expo/vector-icons";
+import { collection, serverTimestamp,  query, where, onSnapshot, getDocs } from 'firebase/firestore';
 import { Truck } from "@/types/types";
 import { toggleItemById } from "@/Utilities/utils";
 import { updateDocument } from "@/db/operations";
@@ -160,6 +160,43 @@ function BookLContract({ }) {
   }
 );
 
+
+
+
+
+
+
+   const existingBBDoc = await checkDocumentExists("newIterms" , [where('receriverId', '==', userId)] );
+        // const existingChat = await checkExistingChat(addChatId);
+        let newBiddedDoc = 0
+        let newBOOKEDDoc = 0
+
+        // dbName === "bookings" ? newBOOKEDDoc = 1  : newBiddedDoc = 1
+      // Chat doesn't exist, add it to 'ppleInTouch'
+      if(!existingBBDoc){
+        setDocuments("bidBookingStats" ,{
+        bookingdocs : newBOOKEDDoc ,
+        biddingdocs : newBiddedDoc ,
+        timestamp : serverTimestamp() ,
+        receriverId : item.userId ,
+        }  )
+    
+    }
+    else{
+
+   await runFirestoreTransaction(`bidBookingStats/${userId}`, (data) => {
+    const currentBiddingDocs = data?.biddingdocs || 0;
+    const currentBookingsDocs = data?.bookingdocs || 0;
+
+    return {
+        // biddingdocs: dbName !== "bookings" ? currentBiddingDocs + 1 : currentBiddingDocs,
+        // bookingdocs: dbName === "bookings" ? currentBookingsDocs + 1 : currentBookingsDocs,
+    };
+});
+
+
+    }
+
 ToastAndroid.show(`Load ${bidRate ? "BIDDING" : "BOOKING"} completed successfully.`,ToastAndroid.SHORT);
 
           } else {
@@ -170,8 +207,6 @@ ToastAndroid.show(`Load ${bidRate ? "BIDDING" : "BOOKING"} completed successfull
         console.error(err)
       }
     }
-
-
 
 
 

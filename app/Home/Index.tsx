@@ -12,9 +12,10 @@ import * as Updates from 'expo-updates';
 import { auth } from '../components/config/fireBase'
 import { signOut, sendEmailVerification } from 'firebase/auth'
 
+
+// https://flespi.com/blog/teltonika-device-data-via-api
+
 import NetInfo from '@react-native-community/netinfo';
-// https://expo.dev/accounts/yayapana/settings/billing1`
-// https://expo.dev/accounts/yayapana/projects/Transix/builds/526b6f0e-8b14-4032-8de9-ff11ce6cfe3f
 function Index() {
     function CustomHeader() {
         const background = useThemeColor("background")
@@ -786,12 +787,8 @@ function Index() {
                         btnBackground="#bada5f24"
                         isAvaialble={false}
                         btnPressValue={() => router.push("/Account/Verification/ApplyVerification")} />}
-
                 </View>))}
-
-
             </ScrollView>
-
         </View>
     )
 }
