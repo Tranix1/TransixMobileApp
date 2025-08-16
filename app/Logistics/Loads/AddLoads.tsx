@@ -28,7 +28,37 @@ import { DocumentAsset } from "@/types/types";
 
 import { notifyTrucksByFilters } from "@/Utilities/notifyTruckByFilters";
 import { TruckNeededType } from "@/types/types";
+
+import Constants from 'expo-constants';
+
+
 const AddLoadDB = () => {
+const googleMapsApiKey = Constants.expoConfig?.extra?.Development_Key_Google_Cloud;
+console.log("Google Maps API Key:", googleMapsApiKey);
+
+
+
+const address = "Harare";
+fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=Harare&destination=Beira&key=AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4`)
+  .then(res => res.json())
+  .then(data => {
+    console.log("heyy u good", data);
+
+    // Check if the request was successful and a route was found
+    if (data.status === "OK" && data.routes.length > 0) {
+      const distance = data.routes[0].legs[0].distance.text;
+      const duration = data.routes[0].legs[0].duration.text;
+      
+      console.log(`Distance: ${distance}`);
+      console.log(`Duration: ${duration}`);
+    } else {
+      console.log("No route found or API error.");
+    }
+  })
+  .catch(error => console.error("API call failed:", error));
+
+
+
     const { expoPushToken } = usePushNotifications();
     const icon = useThemeColor('icon')
     const accent = useThemeColor('accent')

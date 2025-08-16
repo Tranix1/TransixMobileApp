@@ -33,6 +33,52 @@ const screenWidth = Dimensions.get('window').width;
 const TruckDetails = () => {
 
 
+
+
+
+
+
+
+
+async function traccarLogin() {
+  const loginResponse = await fetch("https://demo.traccar.org/api/session", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email: "Kelvinyaya8@gmail.com", // your demo email
+      password: "YOUR_PASSWORD"       // your demo password
+    })
+  });
+
+  if (!loginResponse.ok) {
+    console.error("Login failed");
+    return;
+  }
+
+  // The session cookie comes in headers
+  const cookie = loginResponse.headers.get("set-cookie");
+  console.log("Session Cookie:", cookie);
+
+  // Now make an authenticated request
+  const devicesResponse = await fetch("https://demo.traccar.org/api/devices", {
+    method: "GET",
+    headers: {
+      "Cookie": cookie
+    }
+  });
+
+  const devices = await devicesResponse.json();
+  console.log(devices);
+}
+
+
+
+
+
+
+    
     const icon = useThemeColor("icon");
     const accent = useThemeColor("accent");
     const accentlight = useThemeColor("accentlight");

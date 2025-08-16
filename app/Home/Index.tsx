@@ -756,8 +756,8 @@ function Index() {
                         icon="#333"
                         buttonTitle={item.btnTitle}
                         btnBackground="#bada5f24"
-                        isAvaialble={false}
-                        btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")} />}
+                        isAvaialble={true}
+                        btnPressValue={() => router.push("/Map/Index")} />}
 
                     {item.id === 5 && <HomeItemView
                         topic={item.topic}

@@ -233,8 +233,7 @@ useEffect(() => {
   const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(null)
   const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string } | null>(null)
   const [selectedTankerType, setSelectedTankerType] = useState<{ id: number, name: string } | null>(null)
-  const [selectedTruckCapacity, setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>(null)
-
+  const [selectedTruckCapacity, setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>(selectedTruckType?.name==="Super Link" && setSelectedCargoArea?.name!== "Tanker" ? { id:7, name: '34T'} : selectedTruckType?.name === "Triaxle"  && setSelectedCargoArea?.name!== "Tanker"?   { id: 5, name: '30T'} : null)
 
   const [showCountries, setShowCountries] = useState(false);
   const [operationCountries, setOperationCountries] = useState<string[]>([]);

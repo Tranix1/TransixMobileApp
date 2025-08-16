@@ -92,9 +92,8 @@ export const litresCapacity = [
     { id: 3, name: '11-13 T'},
     { id: 4, name: '12-15 T'},
     { id: 5, name: '16-20 T'},
-    { id: 6, name: '20 - 30T'},
-    { id: 6, name: '30T'},
-    { id: 6, name: '34T'},
+    { id: 5, name: '30T'},
+    { id:7, name: '34T'},
     ];
 
 

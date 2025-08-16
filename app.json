@@ -16,7 +16,12 @@
         "foregroundImage": "./assets/images/TrnaixxNewBG.jpg",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.yayapana.TransixNewVersion"
+      "package": "com.yayapana.TransixNewVersion",
+      "config": {
+        "googleMaps": {
+          "apiKey": "process.env.GOOGLE_MAPS_API_KEY"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
@@ -44,8 +49,15 @@
             "buildToolsVersion": "35.0.0"
           },
           "ios": {
-            "deploymentTarget": "15.1" 
+            "deploymentTarget": "15.1"
           }
+        }
+      ],
+      [
+        "expo-maps",
+        {
+          "requestLocationPermission": true,
+          "locationPermission": "Allow $(PRODUCT_NAME) to use your location"
         }
       ]
     ],
@@ -58,7 +70,8 @@
       },
       "eas": {
         "projectId": "ea0fdbd3-e7bb-48b0-b1f5-b0adde88ef7e"
-      }
+      },
+      "googleMapsApiKey": "process.env.GOOGLE_MAPS_API_KEY"
     }
   }
 }
