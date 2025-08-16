@@ -8,7 +8,7 @@ import { Linking } from "react-native";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { auth } from "./components/config/fireBase";
 
-import { useNotificationRouting } from "@/Utilities/pushNotification"; // 👈 Import here
+import { useNotificationRouting } from "@/Utilities/pushNotification"; 
 
 export default function RootLayout() {
     const router = useRouter();
@@ -45,7 +45,7 @@ export default function RootLayout() {
 
     }, [loaded]);
 
-    useNotificationRouting(); // 👈 Add this line here
+    useNotificationRouting(); 
 
 
     return (

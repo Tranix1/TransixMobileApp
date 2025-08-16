@@ -1,3 +1,4 @@
+import 'react-native-get-random-values';
 import React, { useState } from "react";
 import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal, ToastAndroid,Image } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
@@ -30,6 +31,7 @@ import { notifyTrucksByFilters } from "@/Utilities/notifyTruckByFilters";
 import { TruckNeededType } from "@/types/types";
 
 import Constants from 'expo-constants';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 
 
 const AddLoadDB = () => {
@@ -38,24 +40,7 @@ console.log("Google Maps API Key:", googleMapsApiKey);
 
 
 
-const address = "Harare";
-fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=Harare&destination=Beira&key=AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4`)
-  .then(res => res.json())
-  .then(data => {
-    console.log("heyy u good", data);
 
-    // Check if the request was successful and a route was found
-    if (data.status === "OK" && data.routes.length > 0) {
-      const distance = data.routes[0].legs[0].distance.text;
-      const duration = data.routes[0].legs[0].duration.text;
-      
-      console.log(`Distance: ${distance}`);
-      console.log(`Duration: ${duration}`);
-    } else {
-      console.log("No route found or API error.");
-    }
-  })
-  .catch(error => console.error("API call failed:", error));
 
 
 
@@ -112,6 +97,25 @@ fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=Harare&destin
 
     const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>([]);
 
+
+const address = "Harare";
+fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${fromLocation}&destination=${toLocation}&key=AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4`)
+  .then(res => res.json())
+  .then(data => {
+    console.log("heyy u good", data);
+
+    // Check if the request was successful and a route was found
+    if (data.status === "OK" && data.routes.length > 0) {
+      const distance = data.routes[0].legs[0].distance.text;
+      const duration = data.routes[0].legs[0].duration.text;
+      
+      console.log(`Distance: ${distance}`);
+      console.log(`Duration: ${duration}`);
+    } else {
+      console.log("No route found or API error.");
+    }
+  })
+  .catch(error => console.error("API call failed:", error));
 
     function pushTruck() {
         const newTruck: TruckNeededType = {
@@ -380,13 +384,133 @@ ToastAndroid.show('Trucks notified and load added successfully.', ToastAndroid.S
                                 value={typeofLoad}
                                 onChangeText={setTypeofLoad}
                             />
-                            <ThemedText>
+
+
+                            {/* <ThemedText>
                                 From Location<ThemedText color="red">*</ThemedText>
                             </ThemedText>
                             <Input
                                 value={fromLocation}
                                 onChangeText={setFromLocation}
-                            />
+                            /> */}
+
+
+
+
+
+  <View style={{ flex: 1, paddingTop: 50, paddingHorizontal: 20, backgroundColor: background }}>
+      <ThemedText>
+        From Location<ThemedText color="red">*</ThemedText>
+      </ThemedText>
+      <GooglePlacesAutocomplete
+        placeholder='Search'
+        fetchDetails={true}
+        onPress={(data, details = null) => {
+          console.log(data, details);
+          setFromLocation(data.description);
+        }}
+        query={{
+          key: "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4",
+          language: 'en',
+        }}
+        styles={{
+          textInputContainer: {
+            width: '100%',
+          },
+          textInput: {
+            height: 44,
+            borderRadius: 5,
+            paddingVertical: 5,
+            paddingHorizontal: 10,
+            fontSize: 15,
+            borderWidth: 1,
+            borderColor: icon,
+          },
+          listView: {
+            position: 'absolute',
+            top: 45, // Adjust this to control the dropdown's vertical position
+            left: 0,
+            right: 0,
+            backgroundColor: 'white',
+            zIndex: 1000,
+          },
+          row: {
+            padding: 13,
+            backgroundColor: 'white',
+          },
+          separator: {
+            height: 0.5,
+            backgroundColor: backgroundLight,
+          },
+          description: {
+            fontWeight: 'bold',
+          },
+          predefinedPlacesDescription: {
+            color: '#1faadb',
+          },
+        }}
+      />
+    </View>
+
+
+
+
+<View style={{ flex: 1, paddingTop: 50, paddingHorizontal: 20, backgroundColor: background }}>
+      <ThemedText>
+        From Location<ThemedText color="red">*</ThemedText>
+      </ThemedText>
+      <GooglePlacesAutocomplete
+        placeholder='Search'
+        fetchDetails={true}
+        onPress={(data, details = null) => {
+          console.log(data, details);
+          setToLocation(data.description);
+        }}
+        query={{
+          key: "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4",
+          language: 'en',
+        }}
+        styles={{
+          textInputContainer: {
+            width: '100%',
+          },
+          textInput: {
+            height: 44,
+            borderRadius: 5,
+            paddingVertical: 5,
+            paddingHorizontal: 10,
+            fontSize: 15,
+            borderWidth: 1,
+            borderColor: icon,
+          },
+          listView: {
+            position: 'absolute',
+            top: 45, // Adjust this to control the dropdown's vertical position
+            left: 0,
+            right: 0,
+            backgroundColor: 'white',
+            zIndex: 1000,
+          },
+          row: {
+            padding: 13,
+            backgroundColor: 'white',
+          },
+          separator: {
+            height: 0.5,
+            backgroundColor: backgroundLight,
+          },
+          description: {
+            fontWeight: 'bold',
+          },
+          predefinedPlacesDescription: {
+            color: '#1faadb',
+          },
+        }}
+      />
+    </View>
+
+
+
                             <ThemedText>
                                 To Location<ThemedText color="red">*</ThemedText>
                             </ThemedText>
