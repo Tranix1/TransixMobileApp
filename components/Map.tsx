@@ -3,7 +3,12 @@ import { View, StyleSheet } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
 export default function App() {
-  return (
+  fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=Beira&destination=Harare&key=AIzaSyACiyh-wyKUcTXP0w9FU_N00l7L1ahZP8w4`)
+  .then(res => res.json())
+  .then(data => { 
+    alert(`heyy u goo  ${data.routes[0].legs[0].distance.text} and it will take you ${data.routes[0].legs[0].duration.text} to get there`);
+})
+    return (
     <View style={styles.container}>
       <MapView
         style={styles.map}
