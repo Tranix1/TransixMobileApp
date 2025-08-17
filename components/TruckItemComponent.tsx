@@ -35,42 +35,6 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
     //
 
 
-    async function accentODenyTruck() {
-
-        if (auth.currentUser) {
-
-            const userId = auth.currentUser.uid
-            //   const existingBBDoc = await checkExistixtBBDoc(`${userId}contractId ${item.timeStamp}`);
-            const existingBBDoc = await checkExistixtBBDoc(`${userId}contractId asdsadas`);
-            if (!existingBBDoc) {
-
-                console.log('start adding')
-
-                const theCollection = collection(db, "OngoingContracts");
-                const docRef = await addDoc(theCollection, {
-
-
-                    truckInfo: truck,
-                    truckAccpetedContracts: true,
-
-                    trckContractId: `${userId}contractId asdsad`,
-                    truckContrSt: true,
-                    contractId: truckContract.contractId,
-                    contractName: truckContract.contractName,
-                    approvedTrck: false,
-                    alreadyInContract: true,
-                    timeStamp: serverTimestamp()
-                })
-
-                alert('doneee adding')
-
-            } else {
-                alert("Truck alreadyy Booked")
-            }
-
-        }
-    }
-
 
 
 
@@ -93,10 +57,10 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
                     </ThemedText>
                     
                 </View>
-                 <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
+                 <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: 'flex-start', borderRadius: wp(2), alignItems: 'center' }}>
 
-                    <FontAwesome5 name="user-alt" size={wp(4)} style={{ width: wp(6) }} color={icon} />
-                    <ThemedText numberOfLines={1} type='tiny' style={[{  fontSize: 15 }]}>
+                    <FontAwesome5 name="user-alt" size={wp(3.5)} style={{ width: wp(5) }} color={icon} />
+                    <ThemedText numberOfLines={1} type='tiny' style={[{  fontSize: 13 }]}>
                         {/* {truck.truckType || 'N/A'} */}
 
                                 {truck.ownerName && "Owner"  }

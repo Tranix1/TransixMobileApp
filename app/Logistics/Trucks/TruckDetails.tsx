@@ -10,7 +10,7 @@ import { hp, wp } from "@/constants/common";
 import React, { ReactElement, useEffect, useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
-import { BlurView } from 'expo-blur';
+import { BlurView } from 'expo-blur';   
 import { Truck, User } from "@/types/types";
 import { deleteDocument, readById ,updateDocument} from "@/db/operations";
 import { Image } from 'expo-image'
@@ -31,50 +31,6 @@ import ImageViewing from 'react-native-image-viewing';
 const screenWidth = Dimensions.get('window').width;
 
 const TruckDetails = () => {
-
-
-
-
-
-
-
-
-
-async function traccarLogin() {
-  const loginResponse = await fetch("https://demo.traccar.org/api/session", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      email: "Kelvinyaya8@gmail.com", // your demo email
-      password: "YOUR_PASSWORD"       // your demo password
-    })
-  });
-
-  if (!loginResponse.ok) {
-    console.error("Login failed");
-    return;
-  }
-
-  // The session cookie comes in headers
-  const cookie = loginResponse.headers.get("set-cookie");
-  console.log("Session Cookie:", cookie);
-
-  // Now make an authenticated request
-  const devicesResponse = await fetch("https://demo.traccar.org/api/devices", {
-    method: "GET",
-    headers: {
-      "Cookie": cookie
-    }
-  });
-
-  const devices = await devicesResponse.json();
-  console.log(devices);
-}
-
-
-
 
 
 

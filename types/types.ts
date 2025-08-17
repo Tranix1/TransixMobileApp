@@ -348,3 +348,14 @@ export type DocumentAsset= {
 
   // Add any other properties here
 }
+
+export type SelectLocationProp ={
+    
+    description: string;
+    placeId: string;
+    latitude: number;
+    longitude: number;
+    country: string | null;
+    city: string | null;
+
+}
