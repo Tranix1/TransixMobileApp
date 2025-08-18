@@ -23,6 +23,9 @@ export default function Tracking() {
   const [deviceCoords, setDeviceCoords] = useState<LatLng | null>(null);
   const [cookie, setCookie] = useState<string>("");
 
+  console.log(routeCoords, "routeCoords");
+  console.log(deviceCoords, "deviceCoords");
+
   useEffect(() => {
     async function fetchDevice() {
       try {
@@ -32,7 +35,7 @@ export default function Tracking() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             email: "Kelvinyaya8@gmail.com",
-            password: "YOUR_PASSWORD"
+            password: "PPPlllmmm!23"
           })
         });
 

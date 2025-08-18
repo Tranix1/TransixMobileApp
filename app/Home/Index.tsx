@@ -766,8 +766,8 @@ function Index() {
                         icon="#333"
                         buttonTitle={item.btnTitle}
                         btnBackground="#bada5f24"
-                        isAvaialble={false}
-                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")} />}
+                        isAvaialble={true}
+                        btnPressValue={() => router.push("/Map/Tracking")} />}
 
                     {item.id === 6 && <HomeItemView
                         topic={item.topic}

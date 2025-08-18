@@ -36,7 +36,7 @@ import Constants from 'expo-constants';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import {  SelectLocationProp } from '@/types/types';
 import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplete';
-
+import { LocationPicker } from '@/components/LocationPicker';
 const AddLoadDB = () => {
   const googleMapsApiKey = Constants.expoConfig?.extra?.Development_Key_Google_Cloud;
   console.log("Google Maps API Key:", googleMapsApiKey);
@@ -65,6 +65,11 @@ const AddLoadDB = () => {
  
       const [destination, setDestination] = useState<SelectLocationProp|null>(null);
       const [origin , setOrigin] = useState<SelectLocationProp|null>(null);
+
+      const [pickLocation , setPickLocation] = useState<SelectLocationProp|null>(null);
+      const [pickSecLoc , setPickLocationSecLoc] = useState<SelectLocationProp|null>(null);
+
+  const [locationPicKERdSP , setLocationPickerDSP] = useState(false);
 
   const [dspToLocation, setDspToLocation] = useState(false);
   const [rate, setRate] = useState("");
@@ -144,7 +149,7 @@ function getDirections(fromLocation:string , toLocation:string, apiKey:string) {
   )
     .then(res => res.json())
     .then(data => {
-      console.log("Directions API response:", data);
+      console.log("Directions API response:", data.routes[0].overview_polyline.points);
 
       if (data.status === "OK" && data.routes.length > 0) {
         const leg = data.routes[0].legs[0];
@@ -156,10 +161,7 @@ function getDirections(fromLocation:string , toLocation:string, apiKey:string) {
         const endLat = leg.end_location.lat;
         const endLng = leg.end_location.lng;
 
-        console.log(`Distance: ${distance}`);
-        console.log(`Duration: ${duration}`);
-        console.log(`Start Coordinates: Latitude ${startLat}, Longitude ${startLng}`);
-        console.log(`End Coordinates: Latitude ${endLat}, Longitude ${endLng}`);
+       
       } else {
         console.log("No route found or API error.");
       }
@@ -269,19 +271,7 @@ getDirections(from, to, key);
   const [proofOfOrderFileType, setProofOfOrderFileType] = React.useState<('pdf' | 'image')[]>([])
 
   const [imageUpdate, setUploadImageUpdate] = React.useState("")
-
-
-
-  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-    
-    // Dynamic height based on dropdown visibility
-    const modalHeight = isDropdownVisible ? wp(100) : wp(40); 
-
-
-
-
-
-    
+   
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
@@ -493,7 +483,7 @@ getDirections(from, to, key);
  
 
 
-<GooglePlaceAutoCompleteComp  dspRoute={dspFromLocation} setDspRoute={setDspFromLocation} setRoute={setOrigin} />
+<GooglePlaceAutoCompleteComp  dspRoute={dspFromLocation} setDspRoute={setDspFromLocation} setRoute={setOrigin} topic='Load Origin'/>
 
                  <TouchableOpacity
   onPress={() => setDspToLocation(true)}
@@ -520,103 +510,25 @@ getDirections(from, to, key);
 </TouchableOpacity>
 
 
+<GooglePlaceAutoCompleteComp  dspRoute={dspFromLocation} setDspRoute={setDspFromLocation} setRoute={setDestination} topic="Load Destination" />
              
 
 
 
+<TouchableOpacity onPress={() => setLocationPickerDSP(true)} >
+  <ThemedText>Location Picker</ThemedText>
+</TouchableOpacity>
 
+{locationPicKERdSP && (
+  <LocationPicker
+  pickLocation={pickLocation}
+  setPickLocation={setPickLocation}
+  pickSecLoc={pickSecLoc}
+  setPickSecLoc={setPickLocationSecLoc}
+  setShowMap={setLocationPickerDSP}
+  dspShowMap={locationPicKERdSP}
+/> )}
 
- <Modal transparent statusBarTranslucent visible={dspToLocation} animationType="fade">
-            <View  style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
-                <BlurView intensity={100} style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center' }}>
-                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        <View
-                            style={{ backgroundColor: backgroundLight, borderRadius: wp(4), padding: wp(4), width: wp(80), gap: wp(3), height: modalHeight }}
-                        >
-                            <ThemedText style={{ fontSize: 16, fontWeight: 'bold', color: icon, textAlign: 'center' }}>
-                                To Location<ThemedText color="red">*</ThemedText>
-                            </ThemedText>
-                            <GooglePlacesAutocomplete
-                                placeholder='Search'
-                                fetchDetails={true}
-                                onPress={(data, details = null) => {              if (details) {
-                                        const countryComponent = details.address_components.find(component => component.types.includes('country'));
-                                        const cityComponent = details.address_components.find(component => component.types.includes('locality'));
-
-                                        setDestination ({
-                                            description: data.description,
-                                            placeId: data.place_id,
-                                            latitude: details.geometry.location.lat,
-                                            longitude: details.geometry.location.lng,
-                                            country: countryComponent ? countryComponent.long_name : null,
-                                            city: cityComponent ? cityComponent.long_name : null,
-                                        })
-                                        
-                                        // Set the state with the new, structured object
-                                        // setDestination(selectedLocation); 
-                                    }
-                                    // setToLocation(data.description);
-                                    setIsDropdownVisible(false);
-                                    setDspToLocation(false); 
-                                }}
-
-                                
-                                query={{
-                                    key: "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4",
-                                    language: 'en',
-                                }}
-                                
-                                enablePoweredByContainer={false} 
-                                keyboardShouldPersistTaps='always' 
-                                // 💡 NEW: Use textInputProps to manage dropdown visibility state
-                                textInputProps={{
-                                  
-                                    onFocus: () => setIsDropdownVisible(true),
-                                    onBlur: () => setIsDropdownVisible(false),
-                                }}
-                                styles={{
-                                    textInputContainer: {
-                                        width: '100%',
-                                    },
-                                    textInput: {
-                                        height: 44,
-                                        borderRadius: 5,
-                                        paddingVertical: 5,
-                                        paddingHorizontal: 10,
-                                        fontSize: 15,
-                                        borderWidth: 1,
-                                        borderColor: icon,
-                                    },
-                                    listView: {
-                                        position: 'absolute',
-                                        top: 45, 
-                                        left: 0,
-                                        right: 0,
-                                        backgroundColor: 'white',
-                                        zIndex: 1000,
-                                    },
-                                    row: {
-                                        padding: 13,
-                                        backgroundColor: 'white',
-                                    },
-                                    separator: {
-                                        height: 0.5,
-                                        backgroundColor: backgroundLight,
-                                    },
-                                    description: {
-                                        fontWeight: 'bold',
-                                    },
-                                    predefinedPlacesDescription: {
-                                        color: '#1faadb',
-                                    },
-                                }}
-                            />
-                        </View>
-                    </View>
-                </BlurView>
-            </View>
-        
-        </Modal>
 
 
 

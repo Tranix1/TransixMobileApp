@@ -10,12 +10,14 @@ interface GooglePlaceAutoCompleteProps {
     dspRoute: boolean;
     setDspRoute: (val: boolean) => void;
     setRoute :React.Dispatch<React.SetStateAction<SelectLocationProp |null>>;
+    topic : string
 }
 
 export  function GooglePlaceAutoCompleteComp({
     dspRoute: dspToLocation,
     setDspRoute: setDspToLocation,
     setRoute: setDestination,
+    topic ,
 }: GooglePlaceAutoCompleteProps) {
 
  const icon = useThemeColor('icon')
@@ -43,7 +45,7 @@ export  function GooglePlaceAutoCompleteComp({
                             }}
                         >
                             <ThemedText style={{ fontSize: 16, fontWeight: 'bold', color: icon, textAlign: 'center' }}>
-                                To Location<ThemedText color="red">*</ThemedText>
+                                {topic} <ThemedText color="red">*</ThemedText>
                             </ThemedText>
                             <GooglePlacesAutocomplete
                                 placeholder="Search"
