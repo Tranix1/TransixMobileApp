@@ -20,7 +20,7 @@ interface LocationPickerProps {
   dspShowMap: boolean;
 }
 
-const GOOGLE_API_KEY = "YOUR_API_KEY"; // replace with your Google Maps API key
+const GOOGLE_API_KEY = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4"; 
 
 export function LocationPicker({
   pickLocation,

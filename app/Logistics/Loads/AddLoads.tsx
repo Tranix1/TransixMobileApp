@@ -374,15 +374,15 @@ getDirections(from, to, key);
     <ScreenWrapper fh={false}>
        
 
-      <Heading page='Create Load' rightComponent={
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: wp(3) }}>
-          <View>
-            <TouchableNativeFeedback onPress={() => console.log('add to draft')}>
-              <ThemedText style={{ alignSelf: 'flex-start' }}>Add Draft</ThemedText>
-            </TouchableNativeFeedback>
+        <Heading page='Create Load' rightComponent={
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: wp(3) }}>
+            <View>
+              <TouchableNativeFeedback onPress={() => console.log('add to draft')}>
+                <ThemedText style={{ alignSelf: 'flex-start' }}>Add Draft</ThemedText>
+              </TouchableNativeFeedback>
+            </View>
           </View>
-        </View>
-      } />
+        } />
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: wp(6), alignItems: 'center' }}>
         {['Load Details', 'Additional Info', 'Return Load', "Truck Req"].map((stepLabel, index) => (
           <View key={index} style={{ alignItems: 'center', flexDirection: 'row', flex: index > 0 ? 1 : 0 }}>

@@ -148,7 +148,7 @@ export default function Tracking() {
         )}
 
         {/* Device info panel */}
-        <View style={styles.infoBox}>
+        <View >
           <ThemedText>Name: {deviceInfo?.name ?? "Unknown"}</ThemedText>
           <ThemedText>
             Speed: {deviceCoords?.speed ? (deviceCoords.speed * 1.852).toFixed(1) : "0"} km/h
@@ -173,10 +173,5 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  infoBox: {
-    padding: 12,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderColor: "#ddd",
-  },
+ 
 });

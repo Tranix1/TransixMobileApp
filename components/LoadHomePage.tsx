@@ -529,6 +529,7 @@ type='tiny'
 
             </BottomSheet >
 
+        
         </View >
     )
 
@@ -536,53 +537,53 @@ type='tiny'
 
 
 
-const styles = StyleSheet.create({
-    container: {
-        padding: wp(2)
-    }, countryButton: {
-        padding: wp(2),
-        paddingHorizontal: wp(4),
-        borderRadius: wp(4)
+    const styles = StyleSheet.create({
+        container: {
+            padding: wp(2)
+        }, countryButton: {
+            padding: wp(2),
+            paddingHorizontal: wp(4),
+            borderRadius: wp(4)
 
-    }, countryButtonSelected: {
-        backgroundColor: '#73c8a9'
-    }, detailRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: wp(1),
-    },
-      contactOptions: {
-        paddingVertical: wp(4),
-        flexDirection: 'row',
-        gap: wp(5),
-        marginTop: 'auto',
-        justifyContent: 'space-around'
-    },
-    contactOption: {
-        alignItems: 'center'
-    },
-    contactButton: {
-        height: wp(12),
-        width: wp(12),
-        borderRadius: wp(90),
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: wp(1)
-    },
-    ownerActions: {
-        paddingVertical: wp(4),
-        flexDirection: 'row',
-        gap: wp(5),
-        marginTop: 'auto'
-    },    emptySubtext: {
-        textAlign: 'center',
-        marginTop: wp(2)
-    },  emptyText: {
-        textAlign: 'center'
-    },   emptyContainer: {
-        minHeight: hp(80),
-        justifyContent: 'center'
-    },
-})
+        }, countryButtonSelected: {
+            backgroundColor: '#73c8a9'
+        }, detailRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginTop: wp(1),
+        },
+        contactOptions: {
+            paddingVertical: wp(4),
+            flexDirection: 'row',
+            gap: wp(5),
+            marginTop: 'auto',
+            justifyContent: 'space-around'
+        },
+        contactOption: {
+            alignItems: 'center'
+        },
+        contactButton: {
+            height: wp(12),
+            width: wp(12),
+            borderRadius: wp(90),
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: wp(1)
+        },
+        ownerActions: {
+            paddingVertical: wp(4),
+            flexDirection: 'row',
+            gap: wp(5),
+            marginTop: 'auto'
+        },    emptySubtext: {
+            textAlign: 'center',
+            marginTop: wp(2)
+        },  emptyText: {
+            textAlign: 'center'
+        },   emptyContainer: {
+            minHeight: hp(80),
+            justifyContent: 'center'
+        },
+    })
 
 
