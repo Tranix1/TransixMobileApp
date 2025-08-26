@@ -5,6 +5,8 @@ import type { ImagePickerAsset } from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import { DocumentAsset } from '@/types/types';
+import * as Location from 'expo-location';
+
 // Reusable function to toggle local country
 export function toggleLocalCountry(
   count: string,
@@ -189,3 +191,22 @@ export const toggleItemById = (
   }));
 };
 
+
+export const getCurrentLocation = async (
+  setCurrentLocation: React.Dispatch<React.SetStateAction<Location.LocationObject | null>>
+) => {
+  try {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      console.warn('Permission to access location was denied');
+      return null;
+    }
+
+    const location = await Location.getCurrentPositionAsync({});
+         setCurrentLocation(location);
+
+  } catch (error) {
+    console.error('Error getting current location:', error);
+    return null;
+  } 
+}

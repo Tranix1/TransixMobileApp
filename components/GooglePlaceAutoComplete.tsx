@@ -1,16 +1,21 @@
 import React from 'react';
-import { Modal, View } from 'react-native';
+import { Modal, View,TouchableOpacity } from 'react-native';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { BlurView } from 'expo-blur';
 import { ThemedText } from './ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { hp, wp } from "@/constants/common";
 import { SelectLocationProp } from '@/types/types';
+import { getCurrentLocation } from '@/Utilities/utils';
+import * as Location from 'expo-location';
+
+
 interface GooglePlaceAutoCompleteProps {
     dspRoute: boolean;
     setDspRoute: (val: boolean) => void;
     setRoute :React.Dispatch<React.SetStateAction<SelectLocationProp |null>>;
-    topic : string
+    topic : string;
+    setPickLocationOnMap : React.Dispatch<React.SetStateAction<boolean>>;   
 }
 
 export  function GooglePlaceAutoCompleteComp({
@@ -18,6 +23,7 @@ export  function GooglePlaceAutoCompleteComp({
     setDspRoute: setDspToLocation,
     setRoute: setDestination,
     topic ,
+    setPickLocationOnMap 
 }: GooglePlaceAutoCompleteProps) {
 
  const icon = useThemeColor('icon')
@@ -28,6 +34,42 @@ export  function GooglePlaceAutoCompleteComp({
     
     // Dynamic height based on dropdown visibility
     const modalHeight = isDropdownVisible ? wp(100) : wp(40); 
+
+      const [currentLocation, setCurrentLocation] = React.useState<Location.LocationObject | null>(null);
+
+      async function reverseGeocode(lat: number, lng: number) {
+  try {
+    const apiKey = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.status !== "OK") throw new Error("Geocoding failed");
+
+    const result = data.results[0];
+    const countryComponent = result.address_components.find((c: any) =>
+      c.types.includes("country")
+    );
+    const cityComponent = result.address_components.find((c: any) =>
+      c.types.includes("locality")
+    );
+
+
+     return{
+      description: result.formatted_address,
+      placeId: result.place_id,
+      latitude: lat,
+      longitude: lng,
+      country: countryComponent ? countryComponent.long_name : null,
+      city: cityComponent ? cityComponent.long_name : null,
+    }
+    
+  } catch (err) {
+    console.error("Reverse geocoding error:", err);
+    return null;
+  }
+}
+    
 
     return (
         <Modal transparent statusBarTranslucent visible={dspToLocation} animationType="fade">
@@ -118,6 +160,43 @@ export  function GooglePlaceAutoCompleteComp({
                                     },
                                 }}
                             />
+
+ <View style={{flexDirection:"row",justifyContent:"space-evenly",width:wp(80),marginTop:hp(2)}}>
+
+                        <TouchableOpacity onPress={()=>{setPickLocationOnMap(true);   setIsDropdownVisible(false);setDspToLocation(false); } } >
+  <ThemedText>Pick On Map</ThemedText>
+</TouchableOpacity>
+
+
+
+<TouchableOpacity
+  onPress={async () => {
+    try {
+      // 1️⃣ Get current location
+      const loc = await getCurrentLocation(setCurrentLocation); // <-- modify getCurrentLocation to return coords
+
+      // 2️⃣ Run reverse geocode with coords
+      if (currentLocation) {
+        const destination = await reverseGeocode(
+          currentLocation.coords.latitude,
+          currentLocation.coords.longitude
+        );
+        if (destination) {
+          setDestination(destination);
+          setIsDropdownVisible(false);
+          setDspToLocation(false);
+        }
+      }
+    } catch (err) {
+      console.error("Location fetch error:", err);
+    }
+  }}
+>
+  <ThemedText>Current Location</ThemedText>
+</TouchableOpacity>
+
+                        </View>
+
                         </View>
                     </View>
                 </BlurView>

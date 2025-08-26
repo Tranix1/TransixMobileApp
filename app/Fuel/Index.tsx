@@ -85,7 +85,7 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
   return (
     <ScreenWrapper>
 
-           <Heading page='Create Load' rightComponent={
+           <Heading page='Fuel' rightComponent={
                 <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: wp(3) }}>
                   <View>
                     <TouchableNativeFeedback onPress={() => console.log('add to draft')}>
@@ -107,10 +107,11 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
               marginHorizontal: 16,
               borderRadius: 8
             }}
-            onPress={() => router.push({ pathname: "/Tracking/Map", params: { id: 8048 } })}
+
+            onPress={() => router.push({ pathname: "/Map/Index", params: { destinationLati:-17.8252 , destinationLongi:31.0335  } })}
           >
-            <ThemedText>First Device</ThemedText>
-            <ThemedText>Subscirbed</ThemedText>
+            <ThemedText>Chibuku serve station</ThemedText>
+            <ThemedText>Diesel $1.90 per L</ThemedText>
           </TouchableOpacity>
                 )}
                 refreshControl={

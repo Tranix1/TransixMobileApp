@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Modal, TouchableOpacity } from "react-native";
 import MapView, { Marker, MapPressEvent } from "react-native-maps";
+import { ThemedText } from "./ThemedText";
 
 export type SelectLocationProp = {
   description: string;
@@ -12,21 +13,21 @@ export type SelectLocationProp = {
 };
 
 interface LocationPickerProps {
-  pickLocation: SelectLocationProp | null;
-  setPickLocation: React.Dispatch<React.SetStateAction<SelectLocationProp | null>>;
-  pickSecLoc: SelectLocationProp | null;
-  setPickSecLoc: React.Dispatch<React.SetStateAction<SelectLocationProp | null>>;
+  pickOriginLocation: SelectLocationProp | null;
+  setPickOriginLocation: React.Dispatch<React.SetStateAction<SelectLocationProp | null>>;
+  pickDestinationLoc: SelectLocationProp | null;
+  setPickDestinationLoc: React.Dispatch<React.SetStateAction<SelectLocationProp | null>>;
   setShowMap: React.Dispatch<React.SetStateAction<boolean>>;
   dspShowMap: boolean;
 }
 
-const GOOGLE_API_KEY = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4"; 
+const GOOGLE_API_KEY = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
 
 export function LocationPicker({
-  pickLocation,
-  setPickLocation,
-  pickSecLoc,
-  setPickSecLoc,
+  pickOriginLocation: pickLocation,
+  setPickOriginLocation: setPickLocation,
+  pickDestinationLoc: pickSecLoc,
+  setPickDestinationLoc: setPickSecLoc,
   setShowMap,
   dspShowMap,
 }: LocationPickerProps) {
@@ -99,7 +100,7 @@ export function LocationPicker({
           <TouchableOpacity onPress={() => setShowMap(false)}>
             <Text style={{ color: "blue", textAlign: "right" }}>Close Map</Text>
           </TouchableOpacity>
-
+          <ThemedText>Tap 3 times to select</ThemedText>
           <Text style={styles.label}>
             First Location:{" "}
             {pickLocation ? `${pickLocation.description}` : "Not selected"}

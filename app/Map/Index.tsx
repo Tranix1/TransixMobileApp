@@ -1,30 +1,79 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { decodePolyline, LatLng } from "@/Utilities/decodePolyline";
+import { useLocalSearchParams } from 'expo-router'
+import * as Location from 'expo-location';
+import { ThemedText } from "@/components/ThemedText";
+import { darkMapStyle } from "@/Utilities/MapDarkMode";
 
 export default function Map() {
+  const { destinationLati, destinationLongi } = useLocalSearchParams();
+
+  const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
+  const [currentLocErrorMsg, setCurrentLocErrorMsg] = useState<string | null>(null);
+
   const [routeCoords, setRouteCoords] = useState<LatLng[]>([]);
 
-  const beiraCoords = { latitude: -19.8458, longitude: 34.8427 };
-  const harareCoords = { latitude: -17.8252, longitude: 31.0335 };
-
   useEffect(() => {
-    async function fetchRoute() {     
-
-          const points: LatLng[] = decodePolyline("zccxByetsEq_@}EwVbSyPiB}nCefBitE_zCyxBb[krAhcA_j@l_D}v@hiCsbE|cFqg@~]{sAmGuz@wEu}@`w@woC~bCuiC`]_jEhpAie@`yCy`Bt{GsuAbbCskC|rBa}Cd{DsqAzmBuvC`fCsi@djAma@l]knAr_GgfBvoFe`CreEk{G~hJ_vGlfSkeBflE}xAv_BeyBz~Eq_@``CjFzeAq{@`cDujA|}GdSn`Cx|@rzCgbAjlGcpAdsDenC`mH_H~kBcr@hlByt@lwAoeCr_B{r@|k@onAhJoaC|f@cs@`a@i^hnAgVjcBnKfz@hI`aCgk@zl@whAdSyd@hlB__@`p@f^xv@brBnuBp|@jm@hB`w@d[pl@yFplAebBdlAmuBdiBo_@nxAfWfbA|qA~`C`jAxmAbq@zaBfSfxAfQtaAxi@hZnf@~sAiEd{A`b@pcA_Inx@{f@jOq[hm@_h@d~@\\`sBqo@zwA}aD`gHzK|lFwlA`rChDtgCavAlcDqA|mE{i@biDqWptEa_AtcCi{@d_Au[fnAixAfcGwlAv_Eil@nwEyhAvyFs{@~lDoqA|lG}s@zy@sKj_AsNl}ClvBpzCrwCnzGp_AzoBsJlfCvc@`pBleAviBjQfmDsNvrAm^rk@s_@pc@cHb`@y}@}i@iZuMoKrUik@~k@_s@lEscA|y@n@jz@gd@x_@|Ez_@oV_Ayb@bt@mc@pjAxd@zdDmo@zmEsKzjFf~@zuGeEnbBweAzxAg\\llCsl@`{Bq\\ziCm@pqBog@heD`JjjCkx@~aCeyApjB_~BfyAixGp}BkgBnjBitA~bBslA`c@glB|WirBMmwAa@aOfz@}O`}@yc@~RktCzXauEbLkPtQ{rDxqAo|CneAgqDzMiyAbDwn@fm@}}BtTu]kQypANcnD_d@gkC}\\c~@rJ_oAwYqbBae@qoBxDgmDnOeuChWwiE`zAeaBhyAcXv}@}lB`yHkkAz}CyyLzeJigCxrB_g@p_AeqBvqDePnvC\\hr@iQxnA`KtyAnnArsErrArzHnRpp@{LniAga@~r@zGraAze@vqA`D|dB~HdhCmA~iAra@hkAtyArnF~D|yC_m@xiCcFtoBmi@nsD}~@jsAmdApx@of@hbBe_BrwHo\\xeCiy@jzAadBpdA{tAjcCc_DpyB{gDv`AahF~p@wi@lNinCba@ecEj~AwcA~n@emApOcvBrgAk_CjgKupAbmBotBp`Jc[pp@qm@`{Cem@hn@ug@hcBv@nrBhLjx@oMbSb@`v@xNnaA" );
-          setRouteCoords(points); // update state
-     
-    }
-
-    fetchRoute();
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setCurrentLocErrorMsg('Permission to access location was denied');
+        return;
+      }
+      let location = await Location.getCurrentPositionAsync({});
+      setCurrentLocation(location);
+    })();
   }, []);
 
-  
+  const destinationCoords = {
+    latitude: parseFloat(destinationLati as string),
+    longitude: parseFloat(destinationLongi as string)
+  };
+
+  const originCoords = currentLocation?.coords ? {
+    latitude: currentLocation.coords.latitude,
+    longitude: currentLocation.coords.longitude
+  } : null;
+
+  useEffect(() => {
+    async function fetchRoute() {
+      const GOOGLE_MAPS_API_KEY = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
+      const origin = `${originCoords?.latitude},${originCoords?.longitude}`;
+      const destination = `${destinationCoords.latitude},${destinationCoords.longitude}`;
+
+      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${GOOGLE_MAPS_API_KEY}`;
+
+      try {
+        const response = await fetch(url);
+        const json = await response.json();
+
+        if (json.status === "OK") {
+          const polyline = json.routes[0].overview_polyline.points;
+          const points: LatLng[] = decodePolyline(polyline);
+              const distance = json.distance.text;
+        const duration = json.duration.text;
+          setRouteCoords(points);
+        } else {
+          console.error("Directions API error:", json.status);
+          setCurrentLocErrorMsg("Could not find a route.");
+        }
+      } catch (error) {
+        console.error("Failed to fetch route:", error);
+        setCurrentLocErrorMsg("Failed to fetch route.");
+      }
+    }
+    if (originCoords) {
+      fetchRoute();
+    }
+  }, [originCoords]);
 
   const getInitialRegion = () => {
-    const allLatitudes = [beiraCoords.latitude, harareCoords.latitude];
-    const allLongitudes = [beiraCoords.longitude, harareCoords.longitude];
+    if (!originCoords) return null;
+
+    const allLatitudes = [originCoords.latitude, destinationCoords.latitude];
+    const allLongitudes = [originCoords.longitude, destinationCoords.longitude];
     const minLat = Math.min(...allLatitudes);
     const maxLat = Math.max(...allLatitudes);
     const minLng = Math.min(...allLongitudes);
@@ -38,11 +87,29 @@ export default function Map() {
     };
   };
 
+  const initialRegion = getInitialRegion();
+
+  if (!initialRegion) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+        <ThemedText style={styles.loadingText}>Fetching your location...</ThemedText>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} initialRegion={getInitialRegion()} provider="google">
-        <Marker coordinate={beiraCoords} title="Beira" />
-        <Marker coordinate={harareCoords} title="Harare" />
+      <MapView
+        style={styles.map}
+        initialRegion={initialRegion}
+        provider="google"
+          customMapStyle={darkMapStyle} // 👈 add this
+      >
+        {originCoords && (
+          <Marker coordinate={originCoords} title="Your Current Location" pinColor="blue" />
+        )}
+        <Marker coordinate={destinationCoords} title="Destination" />
         {routeCoords.length > 0 && (
           <Polyline coordinates={routeCoords} strokeColor="#007bff" strokeWidth={4} />
         )}
@@ -52,6 +119,18 @@ export default function Map() {
 }
 
 const styles = StyleSheet.create({
-  container: { ...StyleSheet.absoluteFillObject },
-  map: { ...StyleSheet.absoluteFillObject },
+  container: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+  }
 });

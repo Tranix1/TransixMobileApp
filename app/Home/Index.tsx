@@ -132,13 +132,13 @@ function Index() {
             btnTitle: "View Tracking  "
         },
         {
-            id: 6,
+            id: 5,
             topic: "Fuel   ",
             description: 'Find nearby fuel service stations with the best prices. Enjoy special discounts and get quick directions to save time and money.',
             btnTitle: "Get Fuel "
         },
         {
-            id: 5,
+            id: 6,
             topic: "Warehouse   ",
             description: 'Find secure, affordable warehouses near your routes. Store your goods safely with easy directions and discounted rates for members.',
             btnTitle: "Check Warehouses  "
@@ -766,8 +766,8 @@ function Index() {
                         icon="#333"
                         buttonTitle={item.btnTitle}
                         btnBackground="#bada5f24"
-                        isAvaialble={false}
-                        btnPressValue={() => router.push("/Map/Index")} />}
+                        isAvaialble={true}
+                        btnPressValue={() => router.push("/Fuel/Index")} />}
 
                     {item.id === 6 && <HomeItemView
                         topic={item.topic}
@@ -777,7 +777,7 @@ function Index() {
                         buttonTitle={item.btnTitle}
                         btnBackground="#bada5f24"
                         isAvaialble={true}
-                        btnPressValue={()  => router.push("/Map/Tracking")}
+                        btnPressValue={()  => router.push("/Warehouse/Index")}
                          />}
                     {item.id === 7 && <HomeItemView
                         topic={item.topic}
@@ -786,8 +786,8 @@ function Index() {
                         icon="#333"
                         buttonTitle={item.btnTitle}
                         btnBackground="#bada5f24"
-                        isAvaialble={false}
-                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")} />}
+                        isAvaialble={true}
+                        btnPressValue={() => router.push("/TruckStop/Index")} />}
                 </View>))}
             </ScrollView>
         </View>

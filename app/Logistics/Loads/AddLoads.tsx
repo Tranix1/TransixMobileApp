@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
 import React, { useState } from "react";
-import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal, ToastAndroid, Image ,Pressable} from "react-native";
+import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal, ToastAndroid, Image, Pressable } from "react-native";
 import { BlurView } from 'expo-blur';
 
 import { ThemedText } from "@/components/ThemedText";
@@ -34,7 +34,7 @@ import { TruckNeededType } from "@/types/types";
 
 import Constants from 'expo-constants';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import {  SelectLocationProp } from '@/types/types';
+import { SelectLocationProp } from '@/types/types';
 import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplete';
 import { LocationPicker } from '@/components/LocationPicker';
 const AddLoadDB = () => {
@@ -60,16 +60,16 @@ const AddLoadDB = () => {
   const [fromLocation, setFromLocation] = useState("");
   const [dspFromLocation, setDspFromLocation] = useState(false);
   const [toLocation, setToLocation] = useState("");
-  
 
- 
-      const [destination, setDestination] = useState<SelectLocationProp|null>(null);
-      const [origin , setOrigin] = useState<SelectLocationProp|null>(null);
 
-      const [pickLocation , setPickLocation] = useState<SelectLocationProp|null>(null);
-      const [pickSecLoc , setPickLocationSecLoc] = useState<SelectLocationProp|null>(null);
 
-  const [locationPicKERdSP , setLocationPickerDSP] = useState(false);
+  const [destination, setDestination] = useState<SelectLocationProp | null>(null);
+  const [origin, setOrigin] = useState<SelectLocationProp | null>(null);
+
+  const [pickLocation, setPickLocation] = useState<SelectLocationProp | null>(null);
+  const [pickSecLoc, setPickLocationSecLoc] = useState<SelectLocationProp | null>(null);
+
+  const [locationPicKERdSP, setPickLocationOnMap] = useState(false);
 
   const [dspToLocation, setDspToLocation] = useState(false);
   const [rate, setRate] = useState("");
@@ -143,37 +143,37 @@ const AddLoadDB = () => {
 
 
 
-function getDirections(fromLocation:string , toLocation:string, apiKey:string) {
-  fetch(
-    `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLocation}&destination=${toLocation}&key=${apiKey}`
-  )
-    .then(res => res.json())
-    .then(data => {
-      console.log("Directions API response:", data.routes[0].overview_polyline.points);
+  function getDirections(fromLocation: string, toLocation: string, apiKey: string) {
+    fetch(
+      `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLocation}&destination=${toLocation}&key=${apiKey}`
+    )
+      .then(res => res.json())
+      .then(data => {
+        console.log("Directions API response:", data.routes[0].overview_polyline.points);
 
-      if (data.status === "OK" && data.routes.length > 0) {
-        const leg = data.routes[0].legs[0];
-        const distance = leg.distance.text;
-        const duration = leg.duration.text;
+        if (data.status === "OK" && data.routes.length > 0) {
+          const leg = data.routes[0].legs[0];
+          const distance = leg.distance.text;
+          const duration = leg.duration.text;
 
-        const startLat = leg.start_location.lat;
-        const startLng = leg.start_location.lng;
-        const endLat = leg.end_location.lat;
-        const endLng = leg.end_location.lng;
+          const startLat = leg.start_location.lat;
+          const startLng = leg.start_location.lng;
+          const endLat = leg.end_location.lat;
+          const endLng = leg.end_location.lng;
 
-       
-      } else {
-        console.log("No route found or API error.");
-      }
-    })
-    .catch(error => console.error("API call failed:", error));
-}
 
-// Example usage:
-const from = "-19.8458,34.8427"; // Beira
-const to = "-17.8252,31.0335";   // Harare
-const key = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
-getDirections(from, to, key);
+        } else {
+          console.log("No route found or API error.");
+        }
+      })
+      .catch(error => console.error("API call failed:", error));
+  }
+
+  // Example usage:
+  const from = "-19.8458,34.8427"; // Beira
+  const to = "-17.8252,31.0335";   // Harare
+  const key = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
+  getDirections(from, to, key);
 
 
 
@@ -271,7 +271,7 @@ getDirections(from, to, key);
   const [proofOfOrderFileType, setProofOfOrderFileType] = React.useState<('pdf' | 'image')[]>([])
 
   const [imageUpdate, setUploadImageUpdate] = React.useState("")
-   
+
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
@@ -372,17 +372,17 @@ getDirections(from, to, key);
 
   return (
     <ScreenWrapper fh={false}>
-       
 
-        <Heading page='Create Load' rightComponent={
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: wp(3) }}>
-            <View>
-              <TouchableNativeFeedback onPress={() => console.log('add to draft')}>
-                <ThemedText style={{ alignSelf: 'flex-start' }}>Add Draft</ThemedText>
-              </TouchableNativeFeedback>
-            </View>
+
+      <Heading page='Create cLoad' rightComponent={
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: wp(3) }}>
+          <View>
+            <TouchableNativeFeedback onPress={() => console.log('add to draft')}>
+              <ThemedText style={{ alignSelf: 'flex-start' }}>Add Draft</ThemedText>
+            </TouchableNativeFeedback>
           </View>
-        } />
+        </View>
+      } />
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: wp(6), alignItems: 'center' }}>
         {['Load Details', 'Additional Info', 'Return Load', "Truck Req"].map((stepLabel, index) => (
           <View key={index} style={{ alignItems: 'center', flexDirection: 'row', flex: index > 0 ? 1 : 0 }}>
@@ -452,82 +452,78 @@ getDirections(from, to, key);
               />
 
 
-            
-
-
-           <TouchableOpacity
-  onPress={() => setDspFromLocation(true)}
-  style={{
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderWidth: 1,
-    borderColor: icon,       // use your color variable
-    borderRadius: 8,
-    backgroundColor: backgroundLight,  // optional
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: wp(5),
-  }}
->
-  <ThemedText
-    style={{
-      fontSize: 16,
-      color: origin ? icon : '#888', // grey placeholder if no destination
-    }}
-  >
-    {origin ? origin?.description : "Select Origin"}
-  </ThemedText>
-</TouchableOpacity>
-
-
- 
-
-
-<GooglePlaceAutoCompleteComp  dspRoute={dspFromLocation} setDspRoute={setDspFromLocation} setRoute={setOrigin} topic='Load Origin'/>
-
-                 <TouchableOpacity
-  onPress={() => setDspToLocation(true)}
-  style={{
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderWidth: 1,
-    borderColor: icon,       // use your color variable
-    borderRadius: 8,
-    backgroundColor: backgroundLight,  // optional
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: wp(5),
-  }}
->
-  <ThemedText
-    style={{
-      fontSize: 16,
-      color: destination ? icon : '#888', // grey placeholder if no destination
-    }}
-  >
-    {destination ? destination?.description : "Select Destination"}
-  </ThemedText>
-</TouchableOpacity>
-
-
-<GooglePlaceAutoCompleteComp  dspRoute={dspFromLocation} setDspRoute={setDspFromLocation} setRoute={setDestination} topic="Load Destination" />
-             
 
 
 
-<TouchableOpacity onPress={() => setLocationPickerDSP(true)} >
-  <ThemedText>Location Picker</ThemedText>
-</TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setDspFromLocation(true)}
+                style={{
+                  paddingVertical: 12,
+                  paddingHorizontal: 15,
+                  borderWidth: 1,
+                  borderColor: icon,       // use your color variable
+                  borderRadius: 8,
+                  backgroundColor: backgroundLight,  // optional
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginHorizontal: wp(5),
+                }}
+              >
+                <ThemedText
+                  style={{
+                    fontSize: 16,
+                    color: origin ? icon : '#888', // grey placeholder if no destination
+                  }}
+                >
+                  {origin ? origin?.description : "Select Origin"}
+                </ThemedText>
+              </TouchableOpacity>
 
-{locationPicKERdSP && (
-  <LocationPicker
-  pickLocation={pickLocation}
-  setPickLocation={setPickLocation}
-  pickSecLoc={pickSecLoc}
-  setPickSecLoc={setPickLocationSecLoc}
-  setShowMap={setLocationPickerDSP}
-  dspShowMap={locationPicKERdSP}
-/> )}
+
+
+
+
+              <GooglePlaceAutoCompleteComp dspRoute={dspFromLocation} setDspRoute={setDspFromLocation} setRoute={setOrigin} topic='Load Origin' setPickLocationOnMap={setPickLocationOnMap} />
+
+              <TouchableOpacity
+                onPress={() => setDspToLocation(true)}
+                style={{
+                  paddingVertical: 12,
+                  paddingHorizontal: 15,
+                  borderWidth: 1,
+                  borderColor: icon,       // use your color variable
+                  borderRadius: 8,
+                  backgroundColor: backgroundLight,  // optional
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginHorizontal: wp(5),
+                }}
+              >
+                <ThemedText
+                  style={{
+                    fontSize: 16,
+                    color: destination ? icon : '#888', // grey placeholder if no destination
+                  }}
+                >
+                  {destination ? destination?.description : "Select Destination"}
+                </ThemedText>
+              </TouchableOpacity>
+
+
+              <GooglePlaceAutoCompleteComp dspRoute={dspToLocation} setDspRoute={setDspToLocation} setRoute={setDestination} topic="Load Destination" setPickLocationOnMap={setPickLocationOnMap} />
+
+
+              {locationPicKERdSP && (
+                <LocationPicker
+                  pickOriginLocation={origin}
+                  setPickOriginLocation={setOrigin}
+
+                  pickDestinationLoc={destination}
+                  setPickDestinationLoc={setDestination}
+                  setShowMap={setPickLocationOnMap}
+                  
+                  dspShowMap={locationPicKERdSP}
+                />)}
 
 
 
