@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View,TouchableOpacity } from 'react-native';
+import { Modal, View, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { BlurView } from 'expo-blur';
 import { ThemedText } from './ThemedText';
@@ -9,96 +9,91 @@ import { SelectLocationProp } from '@/types/types';
 import { getCurrentLocation } from '@/Utilities/utils';
 import * as Location from 'expo-location';
 
-
 interface GooglePlaceAutoCompleteProps {
     dspRoute: boolean;
     setDspRoute: (val: boolean) => void;
-    setRoute :React.Dispatch<React.SetStateAction<SelectLocationProp |null>>;
-    topic : string;
-    setPickLocationOnMap : React.Dispatch<React.SetStateAction<boolean>>;   
+    setRoute: React.Dispatch<React.SetStateAction<SelectLocationProp | null>>;
+    topic: string;
+    setPickLocationOnMap: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export  function GooglePlaceAutoCompleteComp({
+export function GooglePlaceAutoCompleteComp({
     dspRoute: dspToLocation,
     setDspRoute: setDspToLocation,
     setRoute: setDestination,
-    topic ,
-    setPickLocationOnMap 
+    topic,
+    setPickLocationOnMap
 }: GooglePlaceAutoCompleteProps) {
 
- const icon = useThemeColor('icon')
-  const backgroundLight = useThemeColor('backgroundLight')
+    const icon = useThemeColor('icon');
+    const backgroundLight = useThemeColor('backgroundLight');
+    const accent = useThemeColor('accent');
 
+    const [isDropdownVisible, setIsDropdownVisible] = React.useState(false);
+    const [loadingCurrentLocation, setLoadingCurrentLocation] = React.useState(false);
+    const [currentLocation, setCurrentLocation] = React.useState<Location.LocationObject | null>(null);
 
-  const [isDropdownVisible, setIsDropdownVisible] = React.useState(false);
-    
-    // Dynamic height based on dropdown visibility
-    const modalHeight = isDropdownVisible ? wp(100) : wp(40); 
+    const modalHeight = isDropdownVisible ? wp(100) : wp(40);
 
-      const [currentLocation, setCurrentLocation] = React.useState<Location.LocationObject | null>(null);
+    async function reverseGeocode(lat: number, lng: number) {
+        try {
+            const apiKey = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
+            const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+            const res = await fetch(url);
+            const data = await res.json();
 
-      async function reverseGeocode(lat: number, lng: number) {
-  try {
-    const apiKey = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
-    const res = await fetch(url);
-    const data = await res.json();
+            if (data.status !== "OK") throw new Error("Geocoding failed");
 
-    if (data.status !== "OK") throw new Error("Geocoding failed");
+            const result = data.results[0];
+            const countryComponent = result.address_components.find((c: any) =>
+                c.types.includes("country")
+            );
+            const cityComponent = result.address_components.find((c: any) =>
+                c.types.includes("locality")
+            );
 
-    const result = data.results[0];
-    const countryComponent = result.address_components.find((c: any) =>
-      c.types.includes("country")
-    );
-    const cityComponent = result.address_components.find((c: any) =>
-      c.types.includes("locality")
-    );
-
-
-     return{
-      description: result.formatted_address,
-      placeId: result.place_id,
-      latitude: lat,
-      longitude: lng,
-      country: countryComponent ? countryComponent.long_name : null,
-      city: cityComponent ? cityComponent.long_name : null,
+            return {
+                description: result.formatted_address,
+                placeId: result.place_id,
+                latitude: lat,
+                longitude: lng,
+                country: countryComponent ? countryComponent.long_name : null,
+                city: cityComponent ? cityComponent.long_name : null,
+            };
+        } catch (err) {
+            console.error("Reverse geocoding error:", err);
+            return null;
+        }
     }
-    
-  } catch (err) {
-    console.error("Reverse geocoding error:", err);
-    return null;
-  }
-}
-    
 
     return (
         <Modal transparent statusBarTranslucent visible={dspToLocation} animationType="fade">
-            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
-                <BlurView intensity={100} style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center' }}>
-                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        <View
-                            style={{
-                                backgroundColor: backgroundLight,
-                                borderRadius: wp(4),
-                                padding: wp(4),
-                                width: wp(80),
-                                gap: wp(3),
-                                height: modalHeight,
-                            }}
-                        >
+            <View style={styles.overlay}>
+                <BlurView intensity={100} style={styles.blurContainer}>
+
+                    {loadingCurrentLocation && (
+                        <View style={styles.loaderContainer}>
+                            <ActivityIndicator size="large" color={accent} />
+                        </View>
+                    )}
+
+                    <View style={styles.innerContainer}>
+                        <View style={[styles.modalBox, { backgroundColor: backgroundLight, height: modalHeight }]}>
+
                             <ThemedText style={{ fontSize: 16, fontWeight: 'bold', color: icon, textAlign: 'center' }}>
                                 {topic} <ThemedText color="red">*</ThemedText>
                             </ThemedText>
+
                             <GooglePlacesAutocomplete
                                 placeholder="Search"
                                 fetchDetails={true}
                                 onPress={(data, details = null) => {
                                     if (details) {
-                                        const countryComponent = details.address_components.find((component: any) =>
-                                            component.types.includes('country')
+                                        const countryComponent = details.address_components.find((c: any) =>
+                                            c.types.includes('country')
                                         );
-                                        const cityComponent = details.address_components.find((component: any) =>
-                                            component.types.includes('locality')
+                                        const cityComponent = details.address_components.find((c: any) =>
+                                            c.types.includes('locality')
                                         );
 
                                         setDestination({
@@ -124,78 +119,74 @@ export  function GooglePlaceAutoCompleteComp({
                                     onBlur: () => setIsDropdownVisible(false),
                                 }}
                                 styles={{
-                                    textInputContainer: {
-                                        width: '100%',
-                                    },
+                                    textInputContainer: { width: '100%' },
                                     textInput: {
                                         height: 44,
-                                        borderRadius: 5,
+                                        borderRadius: 8,
                                         paddingVertical: 5,
                                         paddingHorizontal: 10,
                                         fontSize: 15,
                                         borderWidth: 1,
                                         borderColor: icon,
                                     },
-                                    listView: {
-                                        position: 'absolute',
-                                        top: 45,
-                                        left: 0,
-                                        right: 0,
-                                        backgroundColor: 'white',
-                                        zIndex: 1000,
-                                    },
-                                    row: {
-                                        padding: 13,
-                                        backgroundColor: 'white',
-                                    },
-                                    separator: {
-                                        height: 0.5,
-                                        backgroundColor: backgroundLight,
-                                    },
-                                    description: {
-                                        fontWeight: 'bold',
-                                    },
-                                    predefinedPlacesDescription: {
-                                        color: '#1faadb',
-                                    },
+                                    listView: { position: 'absolute', top: 45, left: 0, right: 0, backgroundColor: 'white', zIndex: 1000 },
+                                    row: { padding: 13, backgroundColor: 'white' },
+                                    separator: { height: 0.5, backgroundColor: backgroundLight },
+                                    description: { fontWeight: 'bold' },
+                                    predefinedPlacesDescription: { color: '#1faadb' },
                                 }}
                             />
 
- <View style={{flexDirection:"row",justifyContent:"space-evenly",width:wp(80),marginTop:hp(2)}}>
+                            <View style={styles.buttonRow}>
+                                {/* Pick on Map Button */}
+                                <TouchableOpacity
+                                    style={styles.button}
+                                    onPress={() => {
+                                        setPickLocationOnMap(true);
+                                        setIsDropdownVisible(false);
+                                        setDspToLocation(false);
+                                    }}
+                                >
+                                    <ThemedText style={styles.buttonText}>Pick On Map</ThemedText>
+                                </TouchableOpacity>
 
-                        <TouchableOpacity onPress={()=>{setPickLocationOnMap(true);   setIsDropdownVisible(false);setDspToLocation(false); } } >
-  <ThemedText>Pick On Map</ThemedText>
-</TouchableOpacity>
+                                {/* Current Location Button */}
+                                {!currentLocation && (
+                                    <TouchableOpacity
+                                        style={styles.button}
+                                        onPress={async () => {
+                                            try {
+                                                setLoadingCurrentLocation(true);
 
+                                                const loc = await getCurrentLocation();
+                                                setCurrentLocation(loc);
 
+                                                const destination = await reverseGeocode(
+                                                    loc!.coords.latitude,
+                                                    loc!.coords.longitude
+                                                );
 
-<TouchableOpacity
-  onPress={async () => {
-    try {
-      // 1️⃣ Get current location
-      const loc = await getCurrentLocation(setCurrentLocation); // <-- modify getCurrentLocation to return coords
+                                                if (destination) {
+                                                    setDestination(destination);
+                                                    setIsDropdownVisible(false);
+                                                    setDspToLocation(false);
+                                                }
+                                            } catch (err) {
+                                                console.error("Location fetch error:", err);
+                                            } finally {
+                                                setLoadingCurrentLocation(false);
+                                            }
+                                        }}
+                                    >
+                                        {loadingCurrentLocation ? (
+                                            <ActivityIndicator color={accent} />
+                                        ) : (
+                                            <ThemedText style={styles.buttonText}>Current Location</ThemedText>
+                                        )}
+                                    </TouchableOpacity>
+                                )}
+                            </View>
 
-      // 2️⃣ Run reverse geocode with coords
-      if (currentLocation) {
-        const destination = await reverseGeocode(
-          currentLocation.coords.latitude,
-          currentLocation.coords.longitude
-        );
-        if (destination) {
-          setDestination(destination);
-          setIsDropdownVisible(false);
-          setDspToLocation(false);
-        }
-      }
-    } catch (err) {
-      console.error("Location fetch error:", err);
-    }
-  }}
->
-  <ThemedText>Current Location</ThemedText>
-</TouchableOpacity>
-
-                        </View>
 
                         </View>
                     </View>
@@ -204,3 +195,28 @@ export  function GooglePlaceAutoCompleteComp({
         </Modal>
     );
 }
+
+const styles = StyleSheet.create({
+    overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+    blurContainer: { flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center' },
+    innerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    modalBox: { borderRadius: wp(4), padding: wp(4), width: wp(80), gap: wp(3) },
+    loaderContainer: { position: 'absolute', top: '50%', left: '50%', marginLeft: -20, marginTop: -20, zIndex: 10 },
+    buttonRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginTop: hp(2)
+    },
+    button: {
+        flex: 1,
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingVertical: hp(1.2),
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'transparent',
+    },
+    buttonText: { fontSize: 15, fontWeight: '600' },
+
+});

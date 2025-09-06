@@ -107,7 +107,7 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
               marginHorizontal: 16,
               borderRadius: 8
             }}
-            onPress={() => router.push({ pathname: "/Tracking/Map", params: { id: 8048 } })}
+            onPress={() => router.push({ pathname: "/Tracking/Map", params: { deviceId: 9319 } })}
           >
             <ThemedText>First Device</ThemedText>
             <ThemedText>Subscirbed</ThemedText>

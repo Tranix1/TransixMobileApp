@@ -12,7 +12,7 @@ import * as Updates from 'expo-updates';
 import { auth } from '../components/config/fireBase'
 import { signOut, sendEmailVerification } from 'firebase/auth'
 
-
+// https://www.youtube.com/watch?v=Ci3Has4L5W4
 // https://flespi.com/blog/teltonika-device-data-via-api
 
 import NetInfo from '@react-native-community/netinfo';
@@ -105,51 +105,61 @@ function Index() {
         btnTitle: string
     }
 
-    const theData: DataItem[] = [
-        {
-            id: 1,
-            topic: "Long-Term Contracts",
-            description: 'Secure long-term contracts with trusted partners to ensure consistency, reduce risk, and grow your business steadily.',
+  const theData: DataItem[] = [
+  {
+    id: 1,
+    topic: 'Long-Term Contracts',
+    description:
+      'Secure long-term contracts with trusted partners to ensure consistency, reduce risk, and grow your business steadily.',
+    btnTitle: 'Open Contracts',
+  },
+  {
+    id: 2,
+    topic: 'Tracking',
+    description:
+      'Track your trucks and cargo live on the app. Improve safety, monitor routes, and keep customers updated anytime.',
+    btnTitle: 'View Tracking',
+  },
+  {
+    id: 3,
+    topic: 'Fuel',
+    description:
+      'Find nearby fuel stations with the best prices. Enjoy discounts and get quick directions to save time and money.',
+    btnTitle: 'Get Fuel',
+  },
+  {
+    id: 4,
+    topic: 'Truck Stop',
+    description:
+      'Locate safe and comfortable truck stops on your journey. Rest, refresh, refuel, and access facilities conveniently.',
+    btnTitle: 'Visit Truck Stop',
+  },
+  {
+    id: 5,
+    topic: 'GIT (Goods in Transit Insurance)',
+    description:
+      'Protect your trucks and cargo while on the road. Get insurance that covers theft, accidents, and damages during transit.',
+    btnTitle: 'Get GIT',
+  },
+  
 
-            btnTitle: "Open Contracts  "
-        },
-        {
-            id: 2,
-            topic: "First Level Verification",
-            description: 'Verify your business today to build trust with customers, access exclusive deals, and boost your company’s reputation easily.',
-            btnTitle: "Get Verified  "
-        },
-        {
-            id: 3,
-            topic: "GIT (Goods in Transit Insurance)",
-            description: 'Protect your trucks and cargo while on the road. Get insurance that covers theft, accidents, and damages during transit.',
-            btnTitle: "Get GIT  "
-        },
-        {
-            id: 4,
-            topic: "Tracking",
-            description: 'Track your trucks and cargo live on the app. Improve safety, monitor routes, and keep customers updated anytime.',
-            btnTitle: "View Tracking  "
-        },
-        {
-            id: 5,
-            topic: "Fuel   ",
-            description: 'Find nearby fuel service stations with the best prices. Enjoy special discounts and get quick directions to save time and money.',
-            btnTitle: "Get Fuel "
-        },
-        {
-            id: 6,
+{ id: 6,
             topic: "Warehouse   ",
             description: 'Find secure, affordable warehouses near your routes. Store your goods safely with easy directions and discounted rates for members.',
             btnTitle: "Check Warehouses  "
         },
-        {
-            id: 7,
-            topic: "Truck Stop   ",
-            description: 'Locate safe and comfortable truck stops on your journey. Rest, refresh, refuel, and access facilities conveniently anytime.',
-            btnTitle: "Visit Truck Stop  "
-        },
-    ]
+
+
+
+  {
+    id: 7,
+    topic: 'Verification',
+    description:
+      'Verify your business today to build trust with customers, access exclusive deals, and boost your company’s reputation easily.',
+    btnTitle: 'Get Verified',
+  },
+];
+
 
 
     interface HomeItemProps {
@@ -711,20 +721,7 @@ function Index() {
 
 
 
-                    {/* <View style={{ flexDirection: 'row', gap: wp(2), marginBottom: wp(5), paddingHorizontal: wp(2) }}>
-                <View style={{ borderWidth: .5, borderColor: accent, padding: wp(3), borderRadius: wp(6), flex: 1, alignItems: 'center' }}>
-                    <ThemedText color={accent}>
-                        Add Logistics
-                    </ThemedText>
-                </View>
-                <View style={{
-                    borderWidth: .5, borderColor: accent, padding: wp(3), borderRadius: wp(6), flex: 1, alignItems: 'center'
-                }}>
-                    <ThemedText color={accent}>
-                        Add To Store
-                    </ThemedText>
-                </View>
-            </View> */}
+                   
 
 
 
@@ -736,7 +733,9 @@ function Index() {
                         buttonTitle={item.btnTitle}
                         btnBackground="#6bacbf24"
                         isAvaialble={true}
-                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")} />}
+                        btnPressValue={() => router.push("/Tracking/Index")} />}
+                        
+                    
 
 
                     {item.id === 3 && <HomeItemView
@@ -747,7 +746,9 @@ function Index() {
                         buttonTitle={item.btnTitle}
                         btnBackground="#fb927424"
                         isAvaialble={true}
-                        btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")} />}
+                        // btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")} />}
+    btnPressValue={() => router.push("/Fuel/Index")} />}
+
 
                     {item.id === 4 && <HomeItemView
                         topic={item.topic}
@@ -757,37 +758,43 @@ function Index() {
                         buttonTitle={item.btnTitle}
                         btnBackground="#bada5f24"
                         isAvaialble={true}
-                        btnPressValue={() => router.push("/Tracking/Index")} />}
+                        // btnPressValue={() => router.push("/Tracking/Index")} />}
+    btnPressValue={() => router.push("/TruckStop/Index")} />}
 
-                    {item.id === 5 && <HomeItemView
-                        topic={item.topic}
-                        description={item.description}
-                        mainColor="#bada5f"
-                        icon="#333"
-                        buttonTitle={item.btnTitle}
-                        btnBackground="#bada5f24"
-                        isAvaialble={true}
-                        btnPressValue={() => router.push("/Fuel/Index")} />}
 
-                    {item.id === 6 && <HomeItemView
-                        topic={item.topic}
-                        description={item.description}
-                        mainColor="#bada5f"
-                        icon="#333"
-                        buttonTitle={item.btnTitle}
-                        btnBackground="#bada5f24"
-                        isAvaialble={true}
-                        btnPressValue={()  => router.push("/Warehouse/Index")}
-                         />}
-                    {item.id === 7 && <HomeItemView
-                        topic={item.topic}
-                        description={item.description}
-                        mainColor="#bada5f"
-                        icon="#333"
-                        buttonTitle={item.btnTitle}
-                        btnBackground="#bada5f24"
-                        isAvaialble={true}
-                        btnPressValue={() => router.push("/TruckStop/Index")} />}
+
+{item.id === 5 && <HomeItemView
+    topic={item.topic}
+    description={item.description}
+    mainColor='#f4c542'
+    icon="#333"
+    buttonTitle={item.btnTitle}
+    btnBackground="#f4c54224"  // Corrected
+    isAvaialble={true}
+                        btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")} />}
+
+
+{item.id === 6 && <HomeItemView
+    topic={item.topic}
+    description={item.description}
+    mainColor='#e06eb5'
+    icon="#333"
+    buttonTitle={item.btnTitle}
+    btnBackground="#e06eb524"  // Corrected
+    isAvaialble={true}
+    btnPressValue={() => router.push("/Warehouse/Index")} />}Z
+
+{item.id === 7 && <HomeItemView
+    topic={item.topic}
+    description={item.description}
+    mainColor='#f47c42'
+    icon="#333"
+    buttonTitle={item.btnTitle}
+    btnBackground="#f47c4224"  // Corrected
+    isAvaialble={true}
+                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")} /> }
+
+
                 </View>))}
             </ScrollView>
         </View>

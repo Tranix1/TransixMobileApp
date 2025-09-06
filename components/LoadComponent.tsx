@@ -98,6 +98,23 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
                             </View>
 
 
+  <View style={{ alignItems: 'flex-end', gap: wp(0.5) }}>
+          {item.distance && (
+            <ThemedText type="tiny" style={styles.distanceInfo}>
+              Distance: {item.distance}
+            </ThemedText>
+          )}
+          {item.duration && (
+            <ThemedText type="tiny" style={styles.distanceInfo}>
+              Duration: {item.duration}
+            </ThemedText>
+          )}
+          {item.durationInTraffic && (
+            <ThemedText type="tiny" style={styles.distanceInfo}>
+              In Traffic: {item.durationInTraffic}
+            </ThemedText>
+          )}
+        </View>
         
         <TouchableHighlight underlayColor={backgroundLight} onPress={ondetailsPress} style={{ backgroundColor: background, padding: wp(1), borderRadius: wp(90) }}>
           <Ionicons name='ellipsis-vertical' size={wp(4)} color={icon} />
@@ -329,6 +346,19 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
 
 <Divider style={{ marginTop: wp(2) }} />
 
+<TouchableOpacity style={{
+    backgroundColor: '#2563eb', // simple professional blue
+    paddingVertical: wp(2),
+    paddingHorizontal: wp(4),
+    borderRadius: wp(4),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: wp(2),
+    elevation: 4,
+  }} >
+<ThemedText>View On Map</ThemedText>
+</TouchableOpacity>
+
                  {item.proofOfOrder && <TouchableOpacity style={styles.proofButton} onPress={()=>dspProofOfOrder(item.proofOfOrderType) }>
   <ThemedText type="defaultSemiBold" style={styles.proofButtonText}>
     Proof of order
@@ -535,7 +565,11 @@ proofButtonText: {
   fontSize: wp(4),
   textTransform: 'uppercase',
   letterSpacing: 0.5
-}
+},distanceInfo: {
+  fontSize: wp(2.8),
+  color: '#6b7280', // professional gray, visible on light/dark
+  textAlign: 'right',
+},
 
 });
 

@@ -193,7 +193,7 @@ export const toggleItemById = (
 
 
 export const getCurrentLocation = async (
-  setCurrentLocation: React.Dispatch<React.SetStateAction<Location.LocationObject | null>>
+  // setCurrentLocation: React.Dispatch<React.SetStateAction<Location.LocationObject | null>>
 ) => {
   try {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -203,7 +203,7 @@ export const getCurrentLocation = async (
     }
 
     const location = await Location.getCurrentPositionAsync({});
-         setCurrentLocation(location);
+         return location
 
   } catch (error) {
     console.error('Error getting current location:', error);

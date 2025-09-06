@@ -3,6 +3,22 @@ import React, { useState } from "react";
 import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal, ToastAndroid, Image, Pressable } from "react-native";
 import { BlurView } from 'expo-blur';
 
+
+
+
+
+const itemColors = [
+    '#4285f4', 
+    '#6bacbf', 
+    '#fb9274', 
+    '#bada5f', 
+    '#f4c542', 
+    '#e06eb5', 
+    '#f47c42', 
+  ];
+
+
+
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
@@ -38,13 +54,6 @@ import { SelectLocationProp } from '@/types/types';
 import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplete';
 import { LocationPicker } from '@/components/LocationPicker';
 const AddLoadDB = () => {
-  const googleMapsApiKey = Constants.expoConfig?.extra?.Development_Key_Google_Cloud;
-  console.log("Google Maps API Key:", googleMapsApiKey);
-
-
-
-
-
 
 
   const { expoPushToken } = usePushNotifications();
@@ -57,17 +66,11 @@ const AddLoadDB = () => {
 
   // Form state variables
   const [typeofLoad, setTypeofLoad] = useState("");
-  const [fromLocation, setFromLocation] = useState("");
   const [dspFromLocation, setDspFromLocation] = useState(false);
   const [toLocation, setToLocation] = useState("");
 
-
-
   const [destination, setDestination] = useState<SelectLocationProp | null>(null);
   const [origin, setOrigin] = useState<SelectLocationProp | null>(null);
-
-  const [pickLocation, setPickLocation] = useState<SelectLocationProp | null>(null);
-  const [pickSecLoc, setPickLocationSecLoc] = useState<SelectLocationProp | null>(null);
 
   const [locationPicKERdSP, setPickLocationOnMap] = useState(false);
 
@@ -109,77 +112,55 @@ const AddLoadDB = () => {
   const [selectedTruckCapacity, setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>(null)
   const [showCountries, setShowCountries] = useState(false);
   const [operationCountries, setOperationCountries] = useState<string[]>([]);
-
-
   const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>([]);
+  const [distance, setDistance] = useState("");
+  const [duration, setDuration] = useState("");
+  const [durationInTraffic, setDurationInTraffic] = useState(""); 
+  const [routePolyline, setRoutePolyline] = useState("");
+  const [bounds, setBounds] = useState(null); 
 
+const apiKey = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
 
-  // const address = "Harare";
-  // fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${fromLocation}&destination=${toLocation}&key=AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4`)
-  //   .then(res => res.json())
-  //   .then(data => {
-  //     console.log("heyy u good", data);
+React.useEffect(() => {
+  if (!origin || !destination) return;
 
-  //     if (data.status === "OK" && data.routes.length > 0) {
-  //       const distance = data.routes[0].legs[0].distance.text;
-  //       const duration = data.routes[0].legs[0].duration.text;
+  async function fetchDirections() {
+    try {
+      const fromLocation = `${origin?.latitude},${origin?.longitude}`;
+      const toLocation = `${destination?.latitude},${destination?.longitude}`;
 
-  //       // Access the coordinate data here
-  //       const startLat = data.routes[0].legs[0].start_location.lat;
-  //       const startLng = data.routes[0].legs[0].start_location.lng;
-  //       const endLat = data.routes[0].legs[0].end_location.lat;
-  //       const endLng = data.routes[0].legs[0].end_location.lng;
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLocation}&destination=${toLocation}&departure_time=now&key=${apiKey}`
+      );
+      const data = await res.json();
 
-  //       console.log(`Distance: ${distance}`);
-  //       console.log(`Duration: ${duration}`);
-  //       console.log(`Start Coordinates: Latitude ${startLat}, Longitude ${startLng}`);
-  //       console.log(`End Coordinates: Latitude ${endLat}, Longitude ${endLng}`);
+      if (data.status === "OK" && data.routes.length > 0) {
+        const route = data.routes[0];
+        const leg = route.legs[0];
 
-  //     } else {
-  //       console.log("No route found or API error.");
-  //     }
-  //   })
-  //   .catch(error => console.error("API call failed:", error));
+        setDistance(leg.distance.text);
+        setDuration(leg.duration.text);
 
-
-
-  function getDirections(fromLocation: string, toLocation: string, apiKey: string) {
-    fetch(
-      `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLocation}&destination=${toLocation}&key=${apiKey}`
-    )
-      .then(res => res.json())
-      .then(data => {
-        console.log("Directions API response:", data.routes[0].overview_polyline.points);
-
-        if (data.status === "OK" && data.routes.length > 0) {
-          const leg = data.routes[0].legs[0];
-          const distance = leg.distance.text;
-          const duration = leg.duration.text;
-
-          const startLat = leg.start_location.lat;
-          const startLng = leg.start_location.lng;
-          const endLat = leg.end_location.lat;
-          const endLng = leg.end_location.lng;
-
-
-        } else {
-          console.log("No route found or API error.");
+        // ✅ ETA with traffic
+        if (leg.duration_in_traffic) {
+          setDurationInTraffic(leg.duration_in_traffic.text);
         }
-      })
-      .catch(error => console.error("API call failed:", error));
+
+        // ✅ Encoded polyline
+        setRoutePolyline(route.overview_polyline.points);
+
+        // ✅ Bounds for auto-zoom
+        setBounds(route.bounds);
+      } else {
+        console.warn("No route found:", data.status);
+      }
+    } catch (err) {
+      console.error("Directions API error:", err);
+    }
   }
 
-  // Example usage:
-  const from = "-19.8458,34.8427"; // Beira
-  const to = "-17.8252,31.0335";   // Harare
-  const key = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
-  getDirections(from, to, key);
-
-
-
-
-
-
+  fetchDirections();
+}, [origin, destination]);
 
 
 
@@ -230,7 +211,6 @@ const AddLoadDB = () => {
   // Function to clear all form fields
   const clearFormFields = () => {
     setTypeofLoad("");
-    setFromLocation("");
     setToLocation("");
     setRate("");
     setRateExplanation("");
@@ -277,8 +257,8 @@ const AddLoadDB = () => {
     setIsSubmitting(true)
     const MissingDriverDetails = [
       !typeofLoad && "Enter Load to be transported",
-      !fromLocation && "Enter source Location",
-      !toLocation && "Enter destination location",
+      !origin && "Enter source Location",
+      !destination && "Enter destination location",
       !rate && "Enter Load Rate ",
       !paymentTerms && "Enter Payment Terms",
       trucksNeeded.length === 0 && "Select at leat 1 truck reqiured",
@@ -315,8 +295,11 @@ const AddLoadDB = () => {
       created_at: Date.now().toString(),
       isVerified: false,
       typeofLoad,
-      destination: toLocation,
-      origin: fromLocation,
+      destination: destination?.description ,
+      destinationFull : destination,
+
+      origin: origin?.description ,
+      originFull : origin,
       rate,
       rateexplantion,
       currency: selectedCurrency.name,
@@ -337,6 +320,13 @@ const AddLoadDB = () => {
       expoPushToken: expoPushToken || null,
       proofOfOrder: proofOfOerSub,
       proofOfOrderType: proofOfOrderFileType[0] || null,
+   
+        distance,
+        duration,
+        durationInTraffic, 
+
+        routePolyline,
+        bounds,
     };
 
     try {
@@ -347,8 +337,8 @@ const AddLoadDB = () => {
         trucksNeeded,
         loadItem: {
           typeofLoad: typeofLoad,
-          origin: fromLocation, // <-- Use the correct state variable
-          destination: toLocation, // <-- Use the correct state variable
+          origin: origin!.description, // <-- Use the correct state variable
+          destination: destination!.description, // <-- Use the correct state variable
           rate: rate,
           model: selectedModelType.name,
           currency: selectedCurrency.name,
@@ -452,7 +442,15 @@ const AddLoadDB = () => {
               />
 
 
-
+ {distance && duration && (
+                  <View style={{ padding: 16,borderRadius: 12,shadowColor: "#000",shadowOffset: { width: 0, height: 2 },shadowOpacity: 0.2,shadowRadius: 4,elevation: 5,backgroundColor:backgroundLight}}>
+                    <ThemedText style={styles.infoText}>Distance: {distance}</ThemedText>
+                    <ThemedText style={styles.infoText}>Duration: {duration}</ThemedText>
+                    {durationInTraffic && (
+                      <ThemedText style={styles.infoText}>Duration in Traffic: {durationInTraffic}</ThemedText>
+                    )}
+                  </View>
+                )}
 
 
               <TouchableOpacity
@@ -479,8 +477,8 @@ const AddLoadDB = () => {
                 </ThemedText>
               </TouchableOpacity>
 
-
-
+             
+                 
 
 
               <GooglePlaceAutoCompleteComp dspRoute={dspFromLocation} setDspRoute={setDspFromLocation} setRoute={setOrigin} topic='Load Origin' setPickLocationOnMap={setPickLocationOnMap} />
@@ -521,18 +519,9 @@ const AddLoadDB = () => {
                   pickDestinationLoc={destination}
                   setPickDestinationLoc={setDestination}
                   setShowMap={setPickLocationOnMap}
-                  
+
                   dspShowMap={locationPicKERdSP}
                 />)}
-
-
-
-
-
-
-
-
-
 
 
               <ThemedText>
@@ -987,6 +976,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: hp(1),
+  }, 
+  
+  infoText: {
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 6,
   },
 });
 

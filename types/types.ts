@@ -192,6 +192,8 @@ export type LoadFormData = {
 export type Load = {
     id: string,
     distance: string,
+    duration : string,
+    durationInTraffic : string,
     created_at: string,
     destination: string,
     userId: string;
