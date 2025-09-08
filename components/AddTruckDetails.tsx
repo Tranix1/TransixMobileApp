@@ -21,7 +21,7 @@ import type { ImagePickerAsset } from 'expo-image-picker';
 
 interface SlctTruckCapacityProps {
     selectedTruckType: { id: number, name: string } | null;
-    setSelectedTruckType: React.Dispatch<React.SetStateAction<{ id: number, name: string } | null>>;
+    setSelectedTruckType: React.Dispatch<React.SetStateAction<{ id: number, name: string } | null>> ;
     selectedCargoArea: { id: number, name: string } | null;
     setSelectedCargoArea: React.Dispatch<React.SetStateAction<TruckTypeProps | null>>;
     selectedTankerType: { id: number, name: string } | null;

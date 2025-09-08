@@ -12,6 +12,9 @@ import {
 } from "react-native";
 import MapView, { Marker, Polyline, LatLng } from "react-native-maps";
 import ScreenWrapper from "@/components/ScreenWrapper";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useThemeColor } from '@/hooks/useThemeColor';
+
 // Traccar API types
 interface Device {
   id: number;
@@ -70,6 +73,12 @@ type BottomTab = "info" | "history";
 export default function Tracking() {
   // Use Expo Router's hook to get local parameters
   const params = useLocalSearchParams();
+  
+  const icon = useThemeColor('icon')
+    const accent = useThemeColor('accent')
+    const background = useThemeColor('background')
+    const backgroundLight = useThemeColor('backgroundLight')
+
   const deviceId = params.deviceId ? Number(params.deviceId) : null;
 
   const [deviceCoords, setDeviceCoords] = useState<Position | null>(null);
@@ -87,6 +96,23 @@ export default function Tracking() {
     coords: LatLng | LatLng[];
     info?: any;
   } | null>(null);
+
+  // Helper function to get the formatted date string for buttons
+  const getDayButtonText = (offset: number) => {
+    const today = new Date();
+    const targetDate = new Date(today.setDate(today.getDate() - offset));
+
+    if (offset === 0) {
+      return "Today";
+    }
+    if (offset === 1) {
+      return "Yesterday";
+    }
+
+    const dayOfWeek = targetDate.toLocaleDateString('en-US', { weekday: 'short' });
+    const dayOfMonth = targetDate.getDate();
+    return `${dayOfWeek} ${dayOfMonth}`;
+  };
 
   // Fetch data
   useEffect(() => {
@@ -208,19 +234,10 @@ export default function Tracking() {
     return `Strong (${sat} satellites)`;
   };
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="blue" />
-        <Text>Loading data...</Text>
-      </View>
-    );
-  }
-
   if (errorMsg) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: "red" }}>{errorMsg}</Text>
+        <ThemedText style={{ color: "red" }}>{errorMsg}</ThemedText>
       </View>
     );
   }
@@ -245,14 +262,12 @@ export default function Tracking() {
         {deviceCoords ? (
           <MapView
             style={styles.map}
-            region={
-              mapRegion || {
-                latitude: deviceCoords.latitude,
-                longitude: deviceCoords.longitude,
-                latitudeDelta: 0.05,
-                longitudeDelta: 0.05,
-              }
-            }
+            region={{
+              latitude: deviceCoords.latitude,
+              longitude: deviceCoords.longitude,
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+            }}
           >
             {selectedItem?.type === "device" && (
               <Marker
@@ -289,35 +304,52 @@ export default function Tracking() {
           </MapView>
         ) : (
           <View style={styles.center}>
-            <Text>No device coordinates available.</Text>
+            <ThemedText>No device coordinates available.</ThemedText>
           </View>
         )}
 
-        <View>
-          <ThemedText style={{ fontSize: 20, fontWeight: "bold" }}>
-            {" "}
+        {/* Device Title */}
+        <View style={styles.titleBox}>
+          <Ionicons name="car-outline" size={22} style={styles.icon} color={icon}  />
+          <ThemedText style={styles.deviceName}>
             {deviceInfo?.name ?? "Unknown"}
           </ThemedText>
         </View>
+
         {/* Info */}
         {bottomTab === "info" && (
           <View style={styles.infoBox}>
-            <ThemedText>
-              Speed:{" "}
-              {deviceCoords?.speed
-                ? (deviceCoords.speed * 1.852).toFixed(1)
-                : "0"}{" "}
-              km/h
-            </ThemedText>
-            <ThemedText>
-              Time:{" "}
-              {deviceCoords?.deviceTime
-                ? new Date(deviceCoords.deviceTime).toLocaleString()
-                : "N/A"}
-            </ThemedText>
-            <ThemedText>Status: {deviceInfo?.status ?? "Unknown"}</ThemedText>
-            <ThemedText>State: {getVehicleState()}</ThemedText>
-            <ThemedText>Satellites: {getSatelliteStatus()}</ThemedText>
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons name="speedometer" size={20} style={styles.icon} color={icon}/>
+              <ThemedText>
+                Speed:{" "}
+                {deviceCoords?.speed
+                  ? (deviceCoords.speed * 1.852).toFixed(1)
+                  : "0"}{" "}
+                km/h
+              </ThemedText>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="time-outline" size={20} style={styles.icon} color={icon} />
+              <ThemedText>
+                Time:{" "}
+                {deviceCoords?.deviceTime
+                  ? new Date(deviceCoords.deviceTime).toLocaleString()
+                  : "N/A"}
+              </ThemedText>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="information-circle-outline" size={20} style={styles.icon} color={icon} />
+              <ThemedText>Status: {deviceInfo?.status ?? "Unknown"}</ThemedText>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="car-sport-outline" size={20} style={styles.icon}  color={icon}/>
+              <ThemedText>State: {getVehicleState()}</ThemedText>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="navigate-outline" size={20} style={styles.icon}  color={icon}/>
+              <ThemedText>Satellites: {getSatelliteStatus()}</ThemedText>
+            </View>
           </View>
         )}
 
@@ -325,131 +357,148 @@ export default function Tracking() {
         {bottomTab === "history" && (
           <View style={{ flex: 1 }}>
             {/* Day selectors */}
-            <View style={styles.dayButtons}>
-              <Button
-                title="Today"
-                onPress={() => {
-                  setSelectedDayOffset(0);
-                  if (deviceCoords) {
-                    setSelectedItem({
-                      type: "device",
-                      coords: {
-                        latitude: deviceCoords.latitude,
-                        longitude: deviceCoords.longitude,
-                      },
-                      info: deviceCoords,
-                    });
-                  }
-                }}
-              />
-              <Button title="Yesterday" onPress={() => setSelectedDayOffset(1)} />
-              <Button title="2 Days Ago" onPress={() => setSelectedDayOffset(2)} />
-            </View>
-
-            {/* Summary */}
-            <ScrollView style={{ flex: 1, padding: 10 }}>
-              {tab === "summary" &&
-                (getCombinedSummary().length === 0 ? (
-                  <ThemedText>No trips or stops for this day.</ThemedText>
-                ) : (
-                  getCombinedSummary().map((item, idx) => (
-                    <TouchableOpacity
-                      key={idx}
-                      onPress={() => {
-                        if (item.type === "trip") {
-                          setSelectedItem({
-                            type: "trip",
-                            coords: [
-                              {
-                                latitude: item.startLat,
-                                longitude: item.startLon,
-                              },
-                              { latitude: item.endLat, longitude: item.endLon },
-                            ],
-                            info: item,
-                          });
-                        } else {
-                          setSelectedItem({
-                            type: "stop",
-                            coords: {
-                              latitude: item.latitude,
-                              longitude: item.longitude,
-                            },
-                            info: item,
-                          });
-                        }
-                      }}
+            <View style={{height:50}}> 
+            <ScrollView horizontal >
+              {Array.from({ length: 7 }, (_, i) => {
+                const dayText = getDayButtonText(i);
+                return (
+                  <TouchableOpacity
+                    key={i}
+                  style={[
+                    styles.dayButton,
+                    i === selectedDayOffset && { backgroundColor: backgroundLight,borderColor:accent },
+                  ]}
+                  onPress={() => {
+                      setLoading(true);
+                      setSelectedDayOffset(i);
+                    }}
+                  >
+                    <ThemedText
                       style={[
-                        styles.card,
-                        item.type === "trip" ? styles.tripCard : styles.stopCard,
+                        styles.dayButtonText,
+                        i === selectedDayOffset && styles.activeDayButtonText,
                       ]}
                     >
-                      <Text style={styles.cardHeader}>
-                        {item.type === "trip" ? "Trip" : "Stop"}
-                      </Text>
-                      <Text>
-                        Start: {new Date(item.startTime).toLocaleTimeString()} | End:{" "}
-                        {new Date(item.endTime).toLocaleTimeString()}
-                      </Text>
-                      <Text>Duration: {(item.duration / 60000).toFixed(1)} min</Text>
-                      {item.type === "trip" && (
-                        <>
-                          <Text>
-                            Distance: {(item.distance / 1000).toFixed(2)} km
-                          </Text>
-                          <Text>
-                            Average Speed: {item.averageSpeed.toFixed(1)} km/h
-                          </Text>
-                        </>
-                      )}
-                      <Text>
-                        Address:{" "}
-                        {item.type === "trip"
-                          ? `From: ${item.startAddress || "N/A"} to ${
-                              item.endAddress || "N/A"
-                            }`
-                          : item.address || "N/A"}
-                      </Text>
-                    </TouchableOpacity>
-                  ))
-                ))}
+                      {dayText}
+                    </ThemedText>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
+            </View>
+
+            {/* Summary or loading indicator */}
+            {loading ? (
+              <View style={styles.center}>
+                <ActivityIndicator size="large" color={accent} />
+                <Text>Loading history...</Text>
+              </View>
+            ) : (
+              <ScrollView style={{ flex: 1, padding: 10 }}>
+                {tab === "summary" &&
+                  (getCombinedSummary().length === 0 ? (
+                    <ThemedText>No trips or stops for this day.</ThemedText>
+                  ) : (
+                    getCombinedSummary().map((item, idx) => (
+                      <TouchableOpacity
+                        key={idx}
+                        onPress={() => {
+                          if (item.type === "trip") {
+                            setSelectedItem({
+                              type: "trip",
+                              coords: [
+                                { latitude: item.startLat, longitude: item.startLon },
+                                { latitude: item.endLat, longitude: item.endLon },
+                              ],
+                              info: item,
+                            });
+                          } else {
+                            setSelectedItem({
+                              type: "stop",
+                              coords: {
+                                latitude: item.latitude,
+                                longitude: item.longitude,
+                              },
+                              info: item,
+                            });
+                          }
+                        }}
+                        style={[
+                          styles.card,
+                          item.type === "trip" ? {borderWidth:3 , borderBlockColor:accent , } : {borderWidth:3 , borderBlockColor:icon , },
+                        ]}
+                      >
+                        <ThemedText style={styles.cardHeader}>
+                          {item.type === "trip" ? "Trip" : "Stop"}
+                        </ThemedText>
+                        <ThemedText>
+                          Start: {new Date(item.startTime).toLocaleTimeString()} | End:{" "}
+                          {new Date(item.endTime).toLocaleTimeString()}
+                        </ThemedText>
+                        <ThemedText>
+                          Duration: {(item.duration / 60000).toFixed(1)} min
+                        </ThemedText>
+                        {item.type === "trip" && (
+                          <>
+                            <ThemedText>
+                              Distance: {(item.distance / 1000).toFixed(2)} km
+                            </ThemedText>
+                            <ThemedText>
+                              Average Speed: {item.averageSpeed.toFixed(1)} km/h
+                            </ThemedText>
+                          </>
+                        )}
+                        <ThemedText>
+                          Address:{" "}
+                          {item.type === "trip"
+                            ? `From: ${item.startAddress || "N/A"} → ${
+                                item.endAddress || "N/A"
+                              }`
+                            : item.address || "N/A"}
+                        </ThemedText>
+                      </TouchableOpacity>
+                    ))
+                  ))}
+              </ScrollView>
+            )}
           </View>
         )}
 
-        {/* Bottom buttons */}
+        {/* Bottom Tabs */}
         <View style={styles.bottomTabs}>
           <TouchableOpacity
             style={[
               styles.bottomBtn,
-              bottomTab === "info" && styles.activeBottomBtn,
+              bottomTab === "info" && {borderWidth:1,  backgroundColor: backgroundLight},
             ]}
             onPress={() => setBottomTab("info")}
           >
-            <Text
+            <Ionicons name="information-circle-outline" size={18} style={styles.icon} color={icon} />
+            <ThemedText
               style={[
                 styles.bottomBtnText,
                 bottomTab === "info" && styles.activeBottomBtnText,
               ]}
             >
               Info
-            </Text>
+            </ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.bottomBtn,
-              bottomTab === "history" && styles.activeBottomBtn,
+              bottomTab === "history" && {borderWidth:1,  backgroundColor: backgroundLight},
             ]}
             onPress={() => setBottomTab("history")}
           >
-            <Text
+            <Ionicons name="time-outline" size={18} style={styles.icon} color={icon} />
+            <ThemedText
               style={[
                 styles.bottomBtnText,
                 bottomTab === "history" && styles.activeBottomBtnText,
               ]}
             >
               History
-            </Text>
+            </ThemedText>
           </TouchableOpacity>
         </View>
       </View>
@@ -461,30 +510,56 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  infoBox: { padding: 12 },
 
-  dayButtons: {
+  titleBox: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginVertical: 10,
+    alignItems: "center",
+    padding: 10,
+  },
+  deviceName: { fontSize: 20, fontWeight: "bold", marginLeft: 6 },
+
+  infoBox: { padding: 12 },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 4,
+  },
+  icon: { marginRight: 6, },
+
+  dayButtonsContainer: {
+    flexDirection: "row",
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+  },
+  dayButton: {
+    height:35,
+    paddingHorizontal: 15,
+    marginHorizontal: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeDayButton: {
+    borderColor: 'blue',
+    borderWidth: 1,
+  },
+  dayButtonText: {
+    fontSize: 14,
+    fontWeight: 'normal',
+  },
+  activeDayButtonText: {
+    fontWeight: 'bold',
   },
 
   card: {
-    backgroundColor: "#f8f8f8",
     padding: 10,
     marginVertical: 5,
     borderRadius: 8,
   },
-  tripCard: {
-    backgroundColor: "#d4edda",
-    borderColor: "#c3e6cb",
-    borderWidth: 1,
-  },
-  stopCard: {
-    backgroundColor: "#f8d7da",
-    borderColor: "#f5c6cb",
-    borderWidth: 1,
-  },
+  tripCard: { borderWidth: 1 },
+  stopCard: { borderWidth: 1 },
   cardHeader: { fontWeight: "bold", fontSize: 16, marginBottom: 5 },
 
   bottomTabs: {
@@ -492,7 +567,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: "#ccc",
   },
   bottomBtn: {
     flex: 1,
@@ -500,11 +574,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginHorizontal: 6,
     borderRadius: 8,
-    backgroundColor: "#e0e0e0",
+    flexDirection: "row",
+    justifyContent: "center",
   },
-  bottomBtnText: { fontSize: 16, color: "#333" },
-  activeBottomBtn: {
-    backgroundColor: "#007bff",
-  },
-  activeBottomBtnText: { color: "white", fontWeight: "bold" },
+  bottomBtnText: { fontSize: 16, marginLeft: 4 },
+  activeBottomBtnText: { fontWeight: "bold" },
 });

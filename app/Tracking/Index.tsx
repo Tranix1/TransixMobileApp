@@ -33,7 +33,7 @@ export default function Index() {
 const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(false)
     const LoadTructs = async () => {
       let filters: any[] = [];
-        const maLoads = await fetchDocuments("Cargo");
+        const maLoads = await fetchDocuments("TrackedVehicles");
 
         if (maLoads.data.length) {
 
@@ -85,10 +85,10 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
   return (
     <ScreenWrapper>
 
-           <Heading page='Create Load' rightComponent={
+           <Heading page='Tracking' rightComponent={
                 <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: wp(3) }}>
                   <View>
-                    <TouchableNativeFeedback onPress={() => console.log('add to draft')}>
+                    <TouchableNativeFeedback onPress={() => router.push('/Tracking/AddTrackedVehicle')}>
                       <ThemedText style={{ alignSelf: 'flex-start' }}>Add Draft</ThemedText>
                     </TouchableNativeFeedback>
                   </View>
@@ -107,7 +107,7 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
               marginHorizontal: 16,
               borderRadius: 8
             }}
-            onPress={() => router.push({ pathname: "/Tracking/Map", params: { deviceId: 9319 } })}
+            onPress={() => router.push({ pathname: "/Tracking/Map", params: { deviceId: 93192} })}
           >
             <ThemedText>First Device</ThemedText>
             <ThemedText>Subscirbed</ThemedText>
@@ -125,14 +125,14 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
                 ListEmptyComponent={
                  <View style={styles.emptyContainer}>
                            {!filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
-                                Loads Loading…
+                                Vehicles Loading…
                             </ThemedText>}
                             
                            {!filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
                                 Please Wait
                             </ThemedText>}
                            {filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
-                               Specified Load Not Available!
+                               Specified Vehicle Not Available!
                             </ThemedText>}
                            {filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
                                 pull to refresh

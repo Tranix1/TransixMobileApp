@@ -58,7 +58,7 @@ const AddLoadDB = () => {
 
   const { expoPushToken } = usePushNotifications();
   const icon = useThemeColor('icon')
-  const accent = useThemeColor('accent')
+  const accent = useThemeColor('accent')  
   const background = useThemeColor('background')
   const backgroundLight = useThemeColor('backgroundLight')
 
