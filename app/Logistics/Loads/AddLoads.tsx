@@ -3,22 +3,6 @@ import React, { useState } from "react";
 import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal, ToastAndroid, Image, Pressable } from "react-native";
 import { BlurView } from 'expo-blur';
 
-
-
-
-
-const itemColors = [
-    '#4285f4', 
-    '#6bacbf', 
-    '#fb9274', 
-    '#bada5f', 
-    '#f4c542', 
-    '#e06eb5', 
-    '#f47c42', 
-  ];
-
-
-
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
 import Button from "@/components/Button";

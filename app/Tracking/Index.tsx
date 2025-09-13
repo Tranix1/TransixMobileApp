@@ -27,6 +27,7 @@ export default function Index() {
   const accent = useThemeColor('accent')
   const icon = useThemeColor('icon')
   const { user } = useAuth();
+  const backgroundLight = useThemeColor('backgroundLight')
 
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +39,7 @@ export default function Index() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
+  const [selectedVehicleName, setSelectedVehicleName] = useState('');
 
 
   const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
@@ -86,8 +88,9 @@ export default function Index() {
     }
   };
 
-  const handleSubscription = (vehicleId: string) => {
+  const handleSubscription = (vehicleId: string, vehicleName: string) => {
     setSelectedVehicleId(vehicleId);
+    setSelectedVehicleName(vehicleName);
     setIsModalVisible(true);
   };
 
@@ -145,7 +148,7 @@ export default function Index() {
                 <ThemedText style={{ alignSelf: 'flex-start' }}>Add Vehicle</ThemedText>
               </TouchableNativeFeedback>
             </View>
-            {user?.uid !== '123' && (
+            {user?.uid === '123' && (
               <View style={{ marginLeft: wp(4) }}>
                 <TouchableNativeFeedback onPress={() => router.push('/Tracking/AddAgent')}>
                   <ThemedText style={{ alignSelf: 'flex-start' }}>Add Agent</ThemedText>
@@ -162,26 +165,61 @@ export default function Index() {
         data={devices}
         renderItem={({ item }) => {
           const isSubscribed = item.subscription && item.subscription.status === 'active' && new Date(item.subscription.expiryDate) > new Date();
+          const subscriptionColor = isSubscribed ? 'green' : 'red';
+
           return (
-            <TouchableOpacity
-              style={{
-                padding: 7,
-                marginVertical: 8,
-                marginHorizontal: 16,
-                borderRadius: 8,
-                backgroundColor: isSubscribed ? '#e8f5e9' : '#ffebee',
-              }}
-              onPress={() => {
-                if (isSubscribed) {
-                  router.push({ pathname: "/Tracking/Map", params: { deviceId: item.deviceId } });
-                } else {
-                  handleSubscription(item.id);
-                }
-              }}
-            >
-              <ThemedText>{item.vehicleName}</ThemedText>
-              <ThemedText>{isSubscribed ? `Subscribed until ${new Date(item.subscription.expiryDate).toLocaleDateString()}` : 'Subscription expired'}</ThemedText>
-            </TouchableOpacity>
+          <TouchableOpacity
+  style={{
+    padding: 12,
+    marginVertical: 8,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    // borderColor: subscriptionColor,
+    backgroundColor: backgroundLight,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
+  }}
+  activeOpacity={0.8}
+  onPress={() => {
+    if (isSubscribed) {
+      router.push({
+        pathname: "/Tracking/Map",
+        params: { deviceId: item.deviceId },
+      });
+    } else {
+      handleSubscription(item.id);
+    }
+  }}
+>
+  <View style={{ flexDirection: "column" }}>
+    <ThemedText
+      style={{
+        fontSize: 16,
+        fontWeight: "600",
+        marginBottom: 4,
+      }}
+    >
+      {item.vehicleName}
+    </ThemedText>
+
+    <ThemedText
+      style={{
+        fontSize: 14,
+        fontWeight: "500",
+        color: isSubscribed ? subscriptionColor : "red",
+      }}
+    >
+      {isSubscribed
+        ? `Subscribed until ${new Date(item.subscription.expiryDate).toLocaleDateString()}`
+        : "Subscription expired"}
+    </ThemedText>
+  </View>
+</TouchableOpacity>
+
           );
         }}
         refreshControl={

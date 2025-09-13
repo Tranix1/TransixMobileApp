@@ -1,59 +1,73 @@
 
 const { Paynow } = require("paynow");
-import { addDocument } from "@/db/operations";
 import { ToastAndroid } from "react-native";
 
-
 export async function handleMakePayment(
-  ammount: number,
+  amount: number,
   paymentPurpose: string,
-   setPaymentUpdate: (status: string) => void,
+  setPaymentUpdate: (status: string) => void,
   phoneNumber: string
-) {
-
-  let uniqueRecepipt = Math.floor(100000000000 + Math.random() * 900000000000).toString()
-
+): Promise<{ success: boolean; message: string }> {
+  let uniqueReceipt = Math.floor(100000000000 + Math.random() * 900000000000).toString();
 
   let paynow = new Paynow("20036", "e33d1e4a-26df-4c10-91ab-c29bca24c96f");
-
-  let payment = paynow.createPayment(`${uniqueRecepipt}r`, "kelvinyaya8@gmail.com");
+  let payment = paynow.createPayment(`${uniqueReceipt}r`, "kelvinyaya8@gmail.com");
 
   paynow.resultUrl = "https://transix.net";
   paynow.returnUrl = "https://transix.net";
 
-  // Add items/services
-  payment.add(paymentPurpose, ammount);
+  payment.add(paymentPurpose, amount);
 
   try {
-     setPaymentUpdate("🔃 Initiating payment...");
+    setPaymentUpdate("📡 Initiating payment...");
     let response = await paynow.sendMobile(payment, phoneNumber, "ecocash");
 
-    if (response.success) {
-      let pollUrl = response.pollUrl;
-       setPaymentUpdate("✅ Payment initiated! Polling...");
+    if (!response.success) {
+      setPaymentUpdate(`❌ Error: ${response.error}`);
+      return { success: false, message: response.error || "Payment request failed" };
+    }
 
+    setPaymentUpdate("⏳ Payment initiated! Waiting for confirmation...");
+    let pollUrl = response.pollUrl;
+
+    return await new Promise((resolve) => {
       let pollInterval = setInterval(async () => {
         try {
           let status = await paynow.pollTransaction(pollUrl);
-          setPaymentUpdate(`🔄payment Status: ${status.status}`);
+          console.log("PAYNOW POLL STATUS:", status); // 🔎 debug log
+          setPaymentUpdate(`Payment Status: ${status.status}`);
 
           if (status.status === "paid") {
-            ToastAndroid.show("✅ Payment Complete!", ToastAndroid.SHORT)
-            setPaymentUpdate("Payment Sucessfull")
             clearInterval(pollInterval);
-          } else if (status.status === "cancelled" || status.status === "failed") {
-             setPaymentUpdate("❌ Payment Failed or Cancelled.");
+            setPaymentUpdate("✅ Payment Successful");
+            ToastAndroid.show("Payment Complete!", ToastAndroid.SHORT);
+            resolve({ success: true, message: "Payment complete" });
+
+          } else if (status.status === "cancelled") {
             clearInterval(pollInterval);
+            setPaymentUpdate("❌ User Cancelled Payment");
+            resolve({ success: false, message: "User cancelled payment" });
+
+          } else if (status.status === "failed") {
+            clearInterval(pollInterval);
+            setPaymentUpdate("❌ Payment Failed (e.g. insufficient balance)");
+            resolve({ success: false, message: "Payment failed (e.g. insufficient balance)" });
+
+          } 
+          // Delayed success → keep polling until resolved
+          else if (status.status === "awaiting delivery" || status.status === "sent") {
+            setPaymentUpdate("⌛ Waiting for Ecocash confirmation...");
           }
+
         } catch (pollError) {
-           setPaymentUpdate("⚠️ Polling Error.");
           clearInterval(pollInterval);
+          setPaymentUpdate("⚠️ Polling Error.");
+          resolve({ success: false, message: "Polling error" });
         }
-      }, 10000);
-    } else {
-       setPaymentUpdate(`❌ Error: ${response.error}`);
-    }
-  } catch (error) {
-     setPaymentUpdate("⚠️ Payment Error.");
+      }, 8000); // poll every 8s
+    });
+  } catch (error: any) {
+    setPaymentUpdate("Payment Error.");
+    return { success: false, message: error.message || "Payment error" };
   }
 }
