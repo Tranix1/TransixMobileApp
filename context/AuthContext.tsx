@@ -2,7 +2,7 @@ import { auth } from "@/app/components/config/fireBase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendEmailVerification } from "firebase/auth";
-import { createContext, ReactElement, useContext, useState } from "react";
+import { createContext, ReactElement, useContext, useState, useEffect } from "react";
 import { ToastAndroid } from "react-native";
 
 
@@ -29,16 +29,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isSignedIn, setIsSignedIN] = useState(false);
 
+    useEffect(() => {
+        const loadUser = async () => {
+            const storedUser = await AsyncStorage.getItem('user');
+            if (storedUser) {
+                const parsedUser = JSON.parse(storedUser);
+                const aditional = await readById('personalData', parsedUser.uid)
+                setUser({ ...parsedUser, ...aditional });
+                setIsSignedIN(true);
+            }
+        };
+
+        loadUser();
+    }, []);
+
 
     const setupUser = async (userData: any) => {
         if (userData) {
             console.log(user?.organisation)
             const aditional = await readById('personalData', userData.uid)
-            setUser({ ...userData, ...aditional })
+            const fullUser = { ...userData, ...aditional };
+            setUser(fullUser)
             setIsSignedIN(true);
-            await AsyncStorage.setItem('user', JSON.stringify({
-                ...userData,
-            }))
+            await AsyncStorage.setItem('user', JSON.stringify(fullUser))
             return;
         } else {
             console.log("here")
@@ -82,9 +95,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
             const aditional = await readById('users', user.uid)
-            setUser({ uid: user.uid, email: user.email, displayName: user.displayName, phoneNumber: user.phoneNumber, photoURL: user.photoURL, ...aditional } as User);
+            const fullUser = { uid: user.uid, email: user.email, displayName: user.displayName, phoneNumber: user.phoneNumber, photoURL: user.photoURL, ...aditional };
+            setUser(fullUser as User);
             setIsSignedIN(true);
-            await AsyncStorage.setItem("user", JSON.stringify({ ...user }));
+            await AsyncStorage.setItem("user", JSON.stringify(fullUser));
 
             router.dismissAll();
             return { success: true, message: 'Login successful' };

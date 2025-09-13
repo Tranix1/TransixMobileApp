@@ -8,8 +8,7 @@ export async function handleMakePayment(
   ammount: number,
   paymentPurpose: string,
    setPaymentUpdate: (status: string) => void,
-  dbName: string,
-  dbData: object
+  phoneNumber: string
 ) {
 
   let uniqueRecepipt = Math.floor(100000000000 + Math.random() * 900000000000).toString()
@@ -27,7 +26,7 @@ export async function handleMakePayment(
 
   try {
      setPaymentUpdate("🔃 Initiating payment...");
-    let response = await paynow.sendMobile(payment, "0771111111", "ecocash");
+    let response = await paynow.sendMobile(payment, phoneNumber, "ecocash");
 
     if (response.success) {
       let pollUrl = response.pollUrl;
@@ -40,9 +39,7 @@ export async function handleMakePayment(
 
           if (status.status === "paid") {
             ToastAndroid.show("✅ Payment Complete!", ToastAndroid.SHORT)
-            setPaymentUpdate("Adding Contract")
-            await addDocument(dbName, { ...dbData, pollUrl: pollUrl }, )
-            setPaymentUpdate("Done Adding Contract")
+            setPaymentUpdate("Payment Sucessfull")
             clearInterval(pollInterval);
           } else if (status.status === "cancelled" || status.status === "failed") {
              setPaymentUpdate("❌ Payment Failed or Cancelled.");

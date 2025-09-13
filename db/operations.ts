@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, where, onSnapshot, runTransaction, serverTimestamp, startAfter, limit, orderBy, DocumentData, Query, setDoc, getDoc } from "firebase/firestore";
+    import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, where, onSnapshot, runTransaction, serverTimestamp, startAfter, limit, orderBy, DocumentData, Query, setDoc, getDoc } from "firebase/firestore";
 import { db, auth } from "../app/components/config/fireBase";
 import { getDownloadURL, ref, uploadBytes, } from "firebase/storage";
 import { storage } from "./fireBaseConfig";
@@ -86,7 +86,16 @@ export const fetchDocuments = async (
             dataQuery = query(dataQuery, ...filters);
         }
 
-        const querySnapshot = await getDocs(dataQuery);
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => {
+                reject(new Error("Request timed out after 10 seconds. Please check your internet connection."));
+            }, 10000); // 10 seconds
+        });
+
+        const querySnapshotPromise = getDocs(dataQuery);
+
+        const querySnapshot = await Promise.race([querySnapshotPromise, timeoutPromise]) as any;
+
         const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
         const data = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
@@ -183,6 +192,17 @@ export const checkDocumentExists = async (collectionName: string, filters: Array
         return !querySnapshot.empty;
     } catch (error) {
         console.error("Error checking document existence:", error);
+        throw error;
+    }
+};
+
+export const isTrackingAgent = async (userId: string) => {
+    try {
+        const q = query(collection(db, "trackingAgents"), where("userId", "==", userId));
+        const querySnapshot = await getDocs(q);
+        return !querySnapshot.empty;
+    } catch (error) {
+        console.error("Error checking tracking agent existence:", error);
         throw error;
     }
 };
@@ -331,3 +351,35 @@ export const uploadImage = async (
 // const lastVisible = secondPage[secondPage.length - 1];
 
 // const exists = await checkDocumentExists("Loads", [where("userId", "==", "123")]);
+export const getUsers = async () => {
+    try {
+        const querySnapshot = await getDocs(collection(db, "personalData"));
+        const users = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        return users;
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        throw error;
+    }
+};
+
+export const searchUsersByEmail = async (email: string) => {
+    try {
+        const q = query(collection(db, "personalData"), where("email", "==", email));
+        const querySnapshot = await getDocs(q);
+        const users = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        return users;
+    } catch (error) {
+        console.error("Error searching users by email:", error);
+        throw error;
+    }
+};
+
+export const addTrackingAgent = async (salesmanId: string, agentId: string) => {
+    try {
+        const agentRef = doc(db, "trackingAgents", agentId);
+        await setDoc(agentRef, { userId: agentId, salesmanId: salesmanId, createdAt: serverTimestamp() });
+    } catch (error) {
+        console.error("Error adding tracking agent:", error);
+        throw error;
+    }
+};

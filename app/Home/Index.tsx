@@ -11,44 +11,14 @@ import { useAuth } from '@/context/AuthContext'
 import * as Updates from 'expo-updates';
 import { auth } from '../components/config/fireBase'
 import { signOut, sendEmailVerification } from 'firebase/auth'
+import HomeItemView from '@/components/HomeItemView';
+import CustomHeader from '@/components/CustomHeader';
 
 // https://www.youtube.com/watch?v=Ci3Has4L5W4
 // https://flespi.com/blog/teltonika-device-data-via-api
 
 import NetInfo from '@react-native-community/netinfo';
 function Index() {
-    function CustomHeader() {
-        const background = useThemeColor("background")
-        return (
-            <View
-                style={{
-                    backgroundColor: background,
-                    paddingHorizontal: wp(2),
-                    paddingVertical: wp(1),
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: wp(1),
-                }}
-            >
-                <View>
-                    <ThemedText type="title">Transix</ThemedText>
-                    <ThemedText type="tiny">The future of Transport & Logistics</ThemedText>
-                </View>
-                <View style={{ flexDirection: 'row', gap: wp(2) }}>
-
-                    <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-                        <TouchableNativeFeedback onPress={() => checkAuth(true)}>
-                            <View style={{ padding: wp(2) }}>
-                                <Ionicons name='reorder-three' size={wp(6)} color={icon} />
-                            </View>
-                        </TouchableNativeFeedback>
-                    </View>
-                </View>
-            </View>
-
-        )
-    }
     const accent = useThemeColor('accent')
     const icon = useThemeColor('icon')
     const backgroundColor = useThemeColor('backgroundLight')
@@ -160,62 +130,10 @@ function Index() {
   },
 ];
 
-
-
-    interface HomeItemProps {
-        topic: string
-        description: string
-        mainColor: string
-        icon: string
-        buttonTitle: string
-        btnBackground: string
-        btnPressValue: () => void
-
-        isAvaialble: boolean
-
-    }
-    const colorScheme = useColorScheme()
-    const HomeItemView: React.FC<HomeItemProps> = ({
-        topic, description, mainColor, btnBackground, icon, buttonTitle, isAvaialble, btnPressValue
-    }) => (
-        <View style={[styles.homefeature, { borderColor: mainColor, backgroundColor: background, overflow: 'hidden', }]}>
-
-            {!isAvaialble &&
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, height: '125%', alignItems: 'center', justifyContent: 'center', backgroundColor: colorScheme === 'light' ? 'rgba(255, 255, 255, 0.6)' : "rgba(0, 0, 0, 0.6)" }}>
-                    <ThemedText type='defaultSemiBold'> Coming Soon  </ThemedText>
-                    <Ionicons name='time-outline' size={wp(6)} color={colorScheme === 'light' ? "black" : "white"} />
-                </View>}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }}>
-                <View style={{ backgroundColor: mainColor, borderRadius: wp(2), padding: wp(1.5) }}>
-                    <Octicons name='verified' color={'#fff'} size={wp(4)} />
-                </View>
-                <ThemedText type='subtitle' color={mainColor} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
-                    {topic}
-                </ThemedText>
-            </View>
-
-            <View>
-                <ThemedText
-                    type='default'
-                    numberOfLines={0}
-                    style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8) }}
-                >
-                    {description}
-                </ThemedText>
-            </View>
-
-            <Button
-                onPress={btnPressValue}
-                colors={{ text: mainColor, bg: btnBackground }}
-                title={buttonTitle} // ✅ Dynamic title
-                Icon={<Ionicons name='chevron-forward-outline' size={wp(4)} color={mainColor} />} />
-        </View>
-    )
-
     return (
 
         <View style={{ flex: 1 }}>
-            <CustomHeader />
+            <CustomHeader onPressMenu={() => checkAuth(true)} />
             <SafeAreaView>
                 <Modal onRequestClose={() => setDspMenu(false)} statusBarTranslucent visible={dspMenu} transparent animationType='fade'>
                     <Pressable onPressIn={() => { } } style={{ flex: 1, }}>
@@ -700,7 +618,7 @@ function Index() {
 
 
 
-                {theData.map((item) => (<View>
+                {theData.map((item) => (<View key={item.id}>
 
 
 
@@ -782,7 +700,7 @@ function Index() {
     buttonTitle={item.btnTitle}
     btnBackground="#e06eb524"  // Corrected
     isAvaialble={true}
-    btnPressValue={() => router.push("/Warehouse/Index")} />}Z
+    btnPressValue={() => router.push("/Warehouse/Index")} />}
 
 {item.id === 7 && <HomeItemView
     topic={item.topic}
