@@ -10,7 +10,8 @@ interface HomeItemProps {
     topic: string;
     description: string;
     mainColor: string;
-    icon: string;
+    icon?: string; // legacy, not used anymore
+    iconElement?: React.ReactNode;
     buttonTitle: string;
     btnBackground: string;
     btnPressValue: () => void;
@@ -18,7 +19,7 @@ interface HomeItemProps {
 }
 
 const HomeItemView: React.FC<HomeItemProps> = ({
-    topic, description, mainColor, btnBackground, icon, buttonTitle, isAvaialble, btnPressValue
+    topic, description, mainColor, btnBackground, iconElement, buttonTitle, isAvaialble, btnPressValue
 }) => {
     const colorScheme = useColorScheme();
 
@@ -31,7 +32,7 @@ const HomeItemView: React.FC<HomeItemProps> = ({
                 </View>}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }}>
                 <View style={{ backgroundColor: mainColor, borderRadius: wp(2), padding: wp(1.5) }}>
-                    <Octicons name='verified' color={'#fff'} size={wp(4)} />
+                    {iconElement ? iconElement : <Octicons name='verified' color={'#fff'} size={wp(4)} />}
                 </View>
                 <ThemedText type='subtitle' color={mainColor} style={{ fontWeight: 'bold', fontSize: wp(4.5) }}>
                     {topic}

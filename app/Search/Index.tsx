@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, TouchableOpacity, TextInput, Share, TouchableHighlight } from "react-native";
+import { View, ScrollView, TouchableOpacity, TextInput, Share, TouchableHighlight, Animated, FlatList, ActivityIndicator, StyleSheet } from "react-native";
 
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from "../components/config/fireBase";
 
-import { EvilIcons, Ionicons } from "@expo/vector-icons";
+import { EvilIcons, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { ThemedText } from "@/components/ThemedText";
@@ -51,6 +51,8 @@ function SearchIterms({ navigation }: SearchItermsProps) {
   const [filteredData, setFilteredData] = useState<Load[]>([]);
   const [filteredDataTrucks, setFilteredDataTruks] = useState<Truck[]>([]);
   const [wordEntered, setWordEntered] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchAnimation] = useState(new Animated.Value(0));
 
   useEffect(() => {
     try {
@@ -67,6 +69,7 @@ function SearchIterms({ navigation }: SearchItermsProps) {
 
         loadedData = loadedData.sort((a, b) => b.timeStamp - a.timeStamp);
         setLoadsList(loadedData);
+        setIsLoading(false);
       });
 
       // Clean up function to unsubscribe from the listener when the component unmounts
@@ -103,13 +106,31 @@ function SearchIterms({ navigation }: SearchItermsProps) {
   const handleFilter = (text: string) => {
     const searchWord = text;
     setTextTyped(text);
+    setWordEntered(text);
+    
+    // Animate search results
+    if (text.length > 0) {
+      Animated.timing(searchAnimation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(searchAnimation, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+
     const newFilter = loadsList.filter((value) => {
-      return (value.fromLocation || value.toLocation)?.toLowerCase().includes(searchWord.toLowerCase());
+      return (value.fromLocation || value.toLocation || value.companyName || value.typeofLoad)?.toLowerCase().includes(searchWord.toLowerCase());
     });
 
     const newFilterTrucks = allTrucks.filter((value) => {
-      return (value.fromLocation || value.toLocation)?.toLowerCase().includes(searchWord.toLowerCase());
+      return (value.fromLocation || value.toLocation || value.CompanyName || value.truckType)?.toLowerCase().includes(searchWord.toLowerCase());
     });
+    
     if (searchWord === "") {
       setFilteredData([]);
       setFilteredDataTruks([]);
@@ -123,37 +144,94 @@ function SearchIterms({ navigation }: SearchItermsProps) {
     setFilteredData([]);
     setFilteredDataTruks([]);
     setWordEntered("");
+    setTextTyped("");
   };
 
-  const displaySearchedTrucks = filteredDataTrucks.slice(0, 15).map((value, key) => {
-    return (
-      <TouchableOpacity style={{ flex: 1, marginBottom: 6, padding: 6 }} key={value.id} onPress={() => navigation.navigate('selectedUserTrucks', { userId: value.userId, itemKey: value.timeStamp, CompanyName: value.CompanyName })}>
+  // Modern card component for trucks
+  const renderTruckCard = ({ item }: { item: Truck }) => (
+    <TouchableOpacity 
+      style={[styles.modernCard, { backgroundColor: backgroundLight }]}
+      onPress={() => navigation.navigate('selectedUserTrucks', { userId: item.userId, itemKey: item.timeStamp, CompanyName: item.CompanyName })}
+      activeOpacity={0.7}
+    >
+      <View style={styles.cardHeader}>
+        <View style={styles.companyInfo}>
+          <MaterialCommunityIcons name="truck" size={24} color={accent} />
+          <ThemedText style={[styles.companyName, { color: accent }]}>{item.CompanyName}</ThemedText>
+        </View>
+        {item.isVerified && (
+          <MaterialIcons name="verified" size={20} color="#4CAF50" />
+        )}
+      </View>
+      
+      <View style={styles.routeContainer}>
+        <View style={styles.locationRow}>
+          <Ionicons name="location" size={16} color={icon} />
+          <ThemedText style={styles.locationText}>{item.fromLocation}</ThemedText>
+        </View>
+        <View style={styles.arrowContainer}>
+          <Ionicons name="arrow-forward" size={16} color={icon} />
+        </View>
+        <View style={styles.locationRow}>
+          <Ionicons name="flag" size={16} color={accent} />
+          <ThemedText style={styles.locationText}>{item.toLocation}</ThemedText>
+        </View>
+      </View>
 
-        {value.isVerified && <View style={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'white', zIndex: 66 }} >
-          <MaterialIcons name="verified" size={24} color="green" />
-        </View>}
-        <ThemedText style={{ color: '#6a0c0c', textAlign: 'center', fontSize: 17 }}>{value.CompanyName} </ThemedText>
-        <ThemedText >from {value.fromLocation} to {value.toLocation} </ThemedText>
-        {value.truckTonnage && <ThemedText> Truck Ton : {value.truckTonnage}</ThemedText>}
-        <ThemedText>Trailer Type : {value.truckType}</ThemedText>
-      </TouchableOpacity>
-    );
-  });
+      <View style={styles.detailsRow}>
+        {item.truckTonnage && (
+          <View style={styles.detailChip}>
+            <ThemedText style={styles.detailText}>{item.truckTonnage} Ton</ThemedText>
+          </View>
+        )}
+        <View style={styles.detailChip}>
+          <ThemedText style={styles.detailText}>{item.truckType}</ThemedText>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
 
-  const displaySearched = filteredData.slice(0, 15).map((value, key) => {
-    return (
-      <TouchableOpacity style={{ flex: 1, marginBottom: 6, padding: 6 }} key={value.id} onPress={() => navigation.navigate('selectedUserLoads', { userId: value.userId, companyNameG: value.companyName, itemKey: value.timeStamp })}  >
+  // Modern card component for loads
+  const renderLoadCard = ({ item }: { item: Load }) => (
+    <TouchableOpacity 
+      style={[styles.modernCard, { backgroundColor: backgroundLight }]}
+      onPress={() => navigation.navigate('selectedUserLoads', { userId: item.userId, companyNameG: item.companyName, itemKey: item.timeStamp })}
+      activeOpacity={0.7}
+    >
+      <View style={styles.cardHeader}>
+        <View style={styles.companyInfo}>
+          <MaterialCommunityIcons name="package-variant" size={24} color={accent} />
+          <ThemedText style={[styles.companyName, { color: accent }]}>{item.companyName}</ThemedText>
+        </View>
+        {item.isVerified && (
+          <MaterialIcons name="verified" size={20} color="#4CAF50" />
+        )}
+      </View>
+      
+      <View style={styles.routeContainer}>
+        <View style={styles.locationRow}>
+          <Ionicons name="location" size={16} color={icon} />
+          <ThemedText style={styles.locationText}>{item.fromLocation}</ThemedText>
+        </View>
+        <View style={styles.arrowContainer}>
+          <Ionicons name="arrow-forward" size={16} color={icon} />
+        </View>
+        <View style={styles.locationRow}>
+          <Ionicons name="flag" size={16} color={accent} />
+          <ThemedText style={styles.locationText}>{item.toLocation}</ThemedText>
+        </View>
+      </View>
 
-        {value.isVerified && <View style={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'white', zIndex: 66 }} >
-          <MaterialIcons name="verified" size={24} color="green" />
-        </View>}
-        <ThemedText style={{ color: '#6a0c0c', textAlign: 'center', fontSize: 17 }}>{value.companyName} </ThemedText>
-        <ThemedText style={{ fontSize: 17 }} >Commodity {value.typeofLoad}  </ThemedText>
-        <ThemedText style={{ color: 'green', fontWeight: 'bold', fontSize: 15 }} >Rate {value.ratePerTonne} </ThemedText>
-        <ThemedText >from {value.fromLocation} to {value.toLocation} </ThemedText>
-      </TouchableOpacity>
-    );
-  });
+      <View style={styles.detailsRow}>
+        <View style={styles.detailChip}>
+          <ThemedText style={styles.detailText}>{item.typeofLoad}</ThemedText>
+        </View>
+        <View style={[styles.detailChip, styles.rateChip]}>
+          <ThemedText style={[styles.detailText, styles.rateText]}>{item.ratePerTonne}</ThemedText>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
 
   const handleShareApp = async () => {
     try {
@@ -209,22 +287,32 @@ Experience the future of transportation and logistics!`;
     <ScreenWrapper>
 
 
-      <View style={{ margin: wp(4), marginTop: wp(3), flexDirection: 'row', gap: 2, alignItems: 'center' }}>
+      {/* Enhanced Header with Search */}
+      <View style={styles.headerContainer}>
         <TouchableHighlight
-          underlayColor={'#7f7f7f1c'}
+          underlayColor={coolGray}
           onPress={() => router.back()}
-          style={{ padding: wp(2), marginLeft: wp(0), borderRadius: wp(5), marginBottom: wp(3) }}
+          style={styles.backButton}
         >
-          <Ionicons name='chevron-back' size={wp(5)} color={icon} />
+          <Ionicons name='chevron-back' size={wp(6)} color={icon} />
         </TouchableHighlight>
-        <Input onChangeText={(text) => handleFilter(text)}
-          placeholder='Search...'
-          autoFocus
-          Icon={<EvilIcons name='search' size={wp(6)} color={icon} />}
-          isDynamicwidth
-          containerStyles={{ backgroundColor: backgroundColor, borderRadius: wp(8), flex: 1 }} />
+        
+        <View style={styles.searchContainer}>
+          <Input 
+            onChangeText={(text) => handleFilter(text)}
+            placeholder='Search loads, trucks, locations...'
+            autoFocus
+            Icon={<EvilIcons name='search' size={wp(6)} color={icon} />}
+            isDynamicwidth
+            containerStyles={[styles.searchInput, { backgroundColor: backgroundColor }]} 
+          />
+          {textTyped.length > 0 && (
+            <TouchableOpacity onPress={clearInput} style={styles.clearButton}>
+              <Ionicons name="close-circle" size={wp(5)} color={icon} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
-
 
 
       <View style={{marginBottom:30}}>
@@ -233,51 +321,37 @@ Experience the future of transportation and logistics!`;
 
 
 
-        <View style={{ marginVertical: wp(2) }}>
+        {/* Country Selection */}
+        <View style={styles.filterSection}>
+          <View style={styles.filterHeader}>
+            <Ionicons name="location-outline" size={wp(4)} color={icon} />
+            <ThemedText style={styles.filterLabel}>Select Country</ThemedText>
+          </View>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: wp(2),
-              gap: wp(2),
-            }}
+            contentContainerStyle={styles.countryScrollContainer}
           >
             {Countries.map((item) => {
               const isSelected = item.id === selectedCountryId?.id;
               return (
                 <TouchableOpacity
                   key={item.id}
-                  onPress={() => {
-                    setSelectedCountryId(item);
-                    // Optionally filter products here or trigger a filter function
-                  }}
-// "#DC143C"
-                  style={{
-                    backgroundColor: isSelected ? accent : backgroundLight,
-                    borderColor: isSelected ? accent : coolGray,
-                    borderWidth: 1,
-                    marginLeft: wp(2),
-                    borderRadius: wp(2),
-                    paddingHorizontal: wp(3),
-
-
-                    marginRight: wp(1),
-                    shadowColor: isSelected ? accent : '#000',
-                    shadowOpacity: isSelected ? 0.15 : 0.05,
-                    shadowRadius: 4,
-                    elevation: isSelected ? 2 : 0,
-                    height: 20,
-                    justifyContent: "center",
-                    alignItems: "center"
-                  }}
-                  activeOpacity={0.8}
+                  onPress={() => setSelectedCountryId(item)}
+                  style={[
+                    styles.countryChip,
+                    {
+                      backgroundColor: isSelected ? accent : backgroundLight,
+                      borderColor: isSelected ? accent : coolGray,
+                    }
+                  ]}
+                  activeOpacity={0.7}
                 >
                   <ThemedText
-                    type="defaultSemiBold"
-                    style={{
-                      color: isSelected ? 'white' : textColor,
-                      fontSize: wp(2.5),
-                    }}
+                    style={[
+                      styles.countryChipText,
+                      { color: isSelected ? 'white' : textColor }
+                    ]}
                   >
                     {item.name}
                   </ThemedText>
@@ -299,65 +373,65 @@ Experience the future of transportation and logistics!`;
 
 
 
-        <View style={{ flexDirection: "row", margin: 6 }}>
-          <TouchableOpacity
-            // key={tab}
-            onPress={() => setIndusrty("transport&Lgistcs")}
-            style={{
-              paddingVertical: wp(0.1),
-              marginLeft: wp(2),
-              borderRadius: wp(2),
-              paddingHorizontal: wp(3),
-              backgroundColor: industry === "transport&Lgistcs" ? accent : backgroundLight,
-              borderWidth: 1,
-              borderColor: industry === "transport&Lgistcs" ? accent : coolGray,
-              flex: 1,
-              justifyContent: "center",
-              alignItems: "center",
-              height:25
-            }}
-            activeOpacity={0.8}
-          >
-            <ThemedText
-              type="defaultSemiBold"
-              style={{
-                color: industry === "transport&Lgistcs" ? 'white' : textColor,
-                fontSize: wp(3.5),
-              }}
+        {/* Industry Selection */}
+        <View style={styles.filterSection}>
+          <View style={styles.filterHeader}>
+            <MaterialCommunityIcons name="truck-outline" size={wp(4)} color={icon} />
+            <ThemedText style={styles.filterLabel}>Select Category</ThemedText>
+          </View>
+          <View style={styles.industryContainer}>
+            <TouchableOpacity
+              onPress={() => setIndusrty("transport&Lgistcs")}
+              style={[
+                styles.industryButton,
+                {
+                  backgroundColor: industry === "transport&Lgistcs" ? accent : backgroundLight,
+                  borderColor: industry === "transport&Lgistcs" ? accent : coolGray,
+                }
+              ]}
+              activeOpacity={0.7}
             >
-              Loads & Trucks
-            </ThemedText>
-          </TouchableOpacity>
+              <MaterialCommunityIcons 
+                name="truck" 
+                size={wp(4)} 
+                color={industry === "transport&Lgistcs" ? 'white' : icon} 
+              />
+              <ThemedText
+                style={[
+                  styles.industryButtonText,
+                  { color: industry === "transport&Lgistcs" ? 'white' : textColor }
+                ]}
+              >
+                Transport & Logistics
+              </ThemedText>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            // key={tab}
-            // onPress={() => setSelectedTab(tab)}))
-            onPress={() => setIndusrty("Store")}
-            style={{
-              paddingVertical: wp(0.1),
-              marginLeft: wp(2),
-              borderRadius: wp(2),
-              paddingHorizontal: wp(3),
-              backgroundColor: industry === "Store" ? accent : backgroundLight,
-              borderWidth: 1,
-              borderColor: industry === "Store" ? accent : coolGray,
-              flex: 1,
-              justifyContent: "center",
-              alignItems: "center"
-            }}
-            activeOpacity={0.8}
-          >
-            <ThemedText
-              type="defaultSemiBold"
-              style={{
-                color: industry === "Store" ? 'white' : textColor,
-                fontSize: wp(3.5),
-              }}
+            <TouchableOpacity
+              onPress={() => setIndusrty("Store")}
+              style={[
+                styles.industryButton,
+                {
+                  backgroundColor: industry === "Store" ? accent : backgroundLight,
+                  borderColor: industry === "Store" ? accent : coolGray,
+                }
+              ]}
+              activeOpacity={0.7}
             >
-              Store
-            </ThemedText>
-          </TouchableOpacity>
-
+              <MaterialCommunityIcons 
+                name="store" 
+                size={wp(4)} 
+                color={industry === "Store" ? 'white' : icon} 
+              />
+              <ThemedText
+                style={[
+                  styles.industryButtonText,
+                  { color: industry === "Store" ? 'white' : textColor }
+                ]}
+              >
+                Store
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
         </View>
 
 
@@ -410,52 +484,322 @@ Experience the future of transportation and logistics!`;
 
       </View>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      {allTrucks.length <= 0 && loadsList.length <= 0 && <ThemedText>Loading......</ThemedText>}
-
-      <View style={{ flexDirection: 'row', }} >
-        {filteredData.length > 0 && (
-          <ScrollView style={{ width: 280 }} >
-            {<ThemedText >
-              {loadsList.length > 0 && filteredData.length <= 0 ? "Load Not Available" : "Available Loads"} </ThemedText>}
-            {displaySearched}
-          </ScrollView>
-
-        )
-        }
-
-        <View style={{ width: 2, backgroundColor: '#6a0c0c' }} >
+      {/* Loading State */}
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={accent} />
+          <ThemedText style={styles.loadingText}>Loading...</ThemedText>
         </View>
+      )}
 
-        {filteredDataTrucks.length > 0 && <ScrollView >
-          {<ThemedText  >
-            {allTrucks.length > 0 && filteredDataTrucks.length <= 0 ? "Trucks Not Available" : "Available Trucks"}
-          </ThemedText>}
-          {displaySearchedTrucks}
-        </ScrollView>}
+      {/* Search Results */}
+      {textTyped.length > 0 && (
+        <Animated.View 
+          style={[
+            styles.resultsContainer,
+            {
+              opacity: searchAnimation,
+              transform: [{
+                translateY: searchAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                })
+              }]
+            }
+          ]}
+        >
+          {/* Results Header */}
+          <View style={styles.resultsHeader}>
+            <ThemedText style={styles.resultsTitle}>
+              Search Results ({filteredData.length + filteredDataTrucks.length})
+            </ThemedText>
+          </View>
 
+          {/* Loads Section */}
+          {filteredData.length > 0 && (
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <MaterialCommunityIcons name="package-variant" size={20} color={accent} />
+                <ThemedText style={styles.sectionTitle}>Available Loads ({filteredData.length})</ThemedText>
+              </View>
+              <FlatList
+                data={filteredData.slice(0, 15)}
+                renderItem={renderLoadCard}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.listContainer}
+              />
+            </View>
+          )}
 
-      </View>
+          {/* Trucks Section */}
+          {filteredDataTrucks.length > 0 && (
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <MaterialCommunityIcons name="truck" size={20} color={accent} />
+                <ThemedText style={styles.sectionTitle}>Available Trucks ({filteredDataTrucks.length})</ThemedText>
+              </View>
+              <FlatList
+                data={filteredDataTrucks.slice(0, 15)}
+                renderItem={renderTruckCard}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.listContainer}
+              />
+            </View>
+          )}
 
-      {/* {textTyped && allTrucks.length > 0 && filteredDataTrucks.length <= 0 && loadsList.length > 0 && filteredData.length <= 0 && <Text style={{ fontSize: 20, }} >  No Loads Or Truck Available </Text>} */}
-      {textTyped && allTrucks.length > 0 && filteredDataTrucks.length <= 0 && loadsList.length > 0 && filteredData.length <= 0 && <TouchableOpacity onPress={handleShareApp} >
-        <ThemedText style={{ fontSize: 20, textDecorationLine: 'underline' }} > Share or recommend our app for more services and  products!</ThemedText>
-      </TouchableOpacity>}
-
+          {/* No Results */}
+          {filteredData.length === 0 && filteredDataTrucks.length === 0 && textTyped.length > 0 && (
+            <View style={styles.noResultsContainer}>
+              <MaterialCommunityIcons name="magnify-close" size={48} color={coolGray} />
+              <ThemedText style={styles.noResultsTitle}>No Results Found</ThemedText>
+              <ThemedText style={styles.noResultsSubtitle}>
+                Try searching with different keywords or locations
+              </ThemedText>
+              <TouchableOpacity onPress={handleShareApp} style={styles.shareButton}>
+                <ThemedText style={styles.shareButtonText}>
+                  Share our app for more services!
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
+          )}
+        </Animated.View>
+      )}
     </ScreenWrapper>
   );
 }
+
+const styles = StyleSheet.create({
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: wp(4),
+    paddingTop: wp(3),
+    paddingBottom: wp(2),
+    gap: wp(2),
+  },
+  backButton: {
+    padding: wp(2),
+    borderRadius: wp(5),
+  },
+  searchContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  searchInput: {
+    flex: 1,
+    borderRadius: wp(8),
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+  },
+  clearButton: {
+    position: 'absolute',
+    right: wp(3),
+    padding: wp(1),
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: hp(20),
+  },
+  loadingText: {
+    marginTop: wp(3),
+    fontSize: wp(4),
+  },
+  resultsContainer: {
+    flex: 1,
+    paddingHorizontal: wp(4),
+  },
+  resultsHeader: {
+    paddingVertical: wp(3),
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+    marginBottom: wp(3),
+  },
+  resultsTitle: {
+    fontSize: wp(4.5),
+    fontWeight: '600',
+  },
+  sectionContainer: {
+    marginBottom: wp(4),
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: wp(2),
+    paddingHorizontal: wp(1),
+    gap: wp(2),
+  },
+  sectionTitle: {
+    fontSize: wp(4),
+    fontWeight: '500',
+  },
+  listContainer: {
+    paddingBottom: wp(2),
+  },
+  modernCard: {
+    padding: wp(4),
+    marginVertical: wp(2),
+    borderRadius: wp(3),
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: wp(3),
+  },
+  companyInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: wp(2),
+    flex: 1,
+  },
+  companyName: {
+    fontSize: wp(4.2),
+    fontWeight: '600',
+    flex: 1,
+  },
+  routeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: wp(3),
+    paddingVertical: wp(2),
+    paddingHorizontal: wp(3),
+    backgroundColor: 'rgba(0,0,0,0.02)',
+    borderRadius: wp(2),
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: wp(1),
+    flex: 1,
+  },
+  locationText: {
+    fontSize: wp(3.5),
+    flex: 1,
+  },
+  arrowContainer: {
+    paddingHorizontal: wp(2),
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    gap: wp(2),
+    flexWrap: 'wrap',
+  },
+  detailChip: {
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    paddingHorizontal: wp(3),
+    paddingVertical: wp(1),
+    borderRadius: wp(4),
+  },
+  detailText: {
+    fontSize: wp(3),
+    fontWeight: '500',
+  },
+  rateChip: {
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+  },
+  rateText: {
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+  noResultsContainer: {
+    alignItems: 'center',
+    paddingVertical: hp(10),
+    paddingHorizontal: wp(8),
+  },
+  noResultsTitle: {
+    fontSize: wp(5),
+    fontWeight: '600',
+    marginTop: wp(4),
+    textAlign: 'center',
+  },
+  noResultsSubtitle: {
+    fontSize: wp(3.5),
+    textAlign: 'center',
+    marginTop: wp(2),
+    opacity: 0.7,
+  },
+  shareButton: {
+    marginTop: wp(6),
+    paddingVertical: wp(3),
+    paddingHorizontal: wp(6),
+    borderRadius: wp(6),
+    borderWidth: 1,
+    borderColor: '#007AFF',
+  },
+  shareButtonText: {
+    color: '#007AFF',
+    fontSize: wp(3.5),
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  // Filter Section Styles
+  filterSection: {
+    marginVertical: wp(3),
+    paddingHorizontal: wp(4),
+  },
+  filterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: wp(2),
+    gap: wp(2),
+  },
+  filterLabel: {
+    fontSize: wp(3.5),
+    fontWeight: '600',
+  },
+  countryScrollContainer: {
+    paddingHorizontal: wp(1),
+    gap: wp(2),
+  },
+  countryChip: {
+    paddingHorizontal: wp(3),
+    paddingVertical: wp(1.5),
+    borderRadius: wp(5),
+    borderWidth: 1,
+    marginHorizontal: wp(1),
+    minWidth: wp(18),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countryChipText: {
+    fontSize: wp(3),
+    fontWeight: '500',
+  },
+  industryContainer: {
+    flexDirection: 'row',
+    gap: wp(3),
+  },
+  industryButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: wp(2.5),
+    paddingHorizontal: wp(3),
+    borderRadius: wp(2),
+    borderWidth: 1,
+    gap: wp(2),
+  },
+  industryButtonText: {
+    fontSize: wp(3.2),
+    fontWeight: '600',
+  },
+});
+
 export default React.memo(SearchIterms);

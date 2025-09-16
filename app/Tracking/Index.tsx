@@ -174,7 +174,6 @@ export default function Index() {
     marginVertical: 8,
     marginHorizontal: 16,
     borderRadius: 12,
-    borderWidth: 1,
     // borderColor: subscriptionColor,
     backgroundColor: backgroundLight,
     shadowColor: "#000",

@@ -25,6 +25,7 @@ function Index() {
     const background = useThemeColor('background')
     const coolGray = useThemeColor('coolGray')
     const textlight = useThemeColor('textlight')
+    const border = useThemeColor('border')
 
 
     const { user } = useAuth()
@@ -45,7 +46,7 @@ function Index() {
         }
     }, [])
     function checkAuth(theAction: any) {
-        if (!isConnectedInternet) { ToastAndroid.show("You are offline. Please check your internet connection.", ToastAndroid.SHORT); return} 
+        if (!isConnectedInternet) { ToastAndroid.show("You are offline. Please check your internet connection.", ToastAndroid.SHORT); return }
 
         if (auth.currentUser) {
             if (!user?.organisation || !user.phoneNumber || !user.country) {
@@ -75,45 +76,46 @@ function Index() {
         btnTitle: string
     }
 
-  const theData: DataItem[] = [
-  {
-    id: 1,
-    topic: 'Long-Term Contracts',
-    description:
-      'Secure long-term contracts with trusted partners to ensure consistency, reduce risk, and grow your business steadily.',
-    btnTitle: 'Open Contracts',
-  },
-  {
-    id: 2,
-    topic: 'Tracking',
-    description:
-      'Track your trucks and cargo live on the app. Improve safety, monitor routes, and keep customers updated anytime.',
-    btnTitle: 'View Tracking',
-  },
-  {
-    id: 3,
-    topic: 'Fuel',
-    description:
-      'Find nearby fuel stations with the best prices. Enjoy discounts and get quick directions to save time and money.',
-    btnTitle: 'Get Fuel',
-  },
-  {
-    id: 4,
-    topic: 'Truck Stop',
-    description:
-      'Locate safe and comfortable truck stops on your journey. Rest, refresh, refuel, and access facilities conveniently.',
-    btnTitle: 'Visit Truck Stop',
-  },
-  {
-    id: 5,
-    topic: 'GIT (Goods in Transit Insurance)',
-    description:
-      'Protect your trucks and cargo while on the road. Get insurance that covers theft, accidents, and damages during transit.',
-    btnTitle: 'Get GIT',
-  },
-  
+    const theData: DataItem[] = [
+        {
+            id: 1,
+            topic: 'Long-Term Contracts',
+            description:
+                'Secure long-term contracts with trusted partners to ensure consistency, reduce risk, and grow your business steadily.',
+            btnTitle: 'Open Contracts',
+        },
+        {
+            id: 2,
+            topic: 'Tracking',
+            description:
+                'Track your trucks and cargo live on the app. Improve safety, monitor routes, and keep customers updated anytime.',
+            btnTitle: 'View Tracking',
+        },
+        {
+            id: 3,
+            topic: 'Fuel',
+            description:
+                'Find nearby fuel stations with the best prices. Enjoy discounts and get quick directions to save time and money.',
+            btnTitle: 'Get Fuel',
+        },
+        {
+            id: 4,
+            topic: 'Truck Stop',
+            description:
+                'Locate safe and comfortable truck stops on your journey. Rest, refresh, refuel, and access facilities conveniently.',
+            btnTitle: 'Visit Truck Stop',
+        },
+        {
+            id: 5,
+            topic: 'GIT (Goods in Transit Insurance)',
+            description:
+                'Protect your trucks and cargo while on the road. Get insurance that covers theft, accidents, and damages during transit.',
+            btnTitle: 'Get GIT',
+        },
 
-{ id: 6,
+
+        {
+            id: 6,
             topic: "Warehouse   ",
             description: 'Find secure, affordable warehouses near your routes. Store your goods safely with easy directions and discounted rates for members.',
             btnTitle: "Check Warehouses  "
@@ -121,14 +123,14 @@ function Index() {
 
 
 
-  {
-    id: 7,
-    topic: 'Verification',
-    description:
-      'Verify your business today to build trust with customers, access exclusive deals, and boost your company’s reputation easily.',
-    btnTitle: 'Get Verified',
-  },
-];
+        {
+            id: 7,
+            topic: 'Verification',
+            description:
+                'Verify your business today to build trust with customers, access exclusive deals, and boost your company’s reputation easily.',
+            btnTitle: 'Get Verified',
+        },
+    ];
 
     return (
 
@@ -136,7 +138,7 @@ function Index() {
             <CustomHeader onPressMenu={() => checkAuth(true)} />
             <SafeAreaView>
                 <Modal onRequestClose={() => setDspMenu(false)} statusBarTranslucent visible={dspMenu} transparent animationType='fade'>
-                    <Pressable onPressIn={() => { } } style={{ flex: 1, }}>
+                    <Pressable onPressIn={() => { }} style={{ flex: 1, }}>
                         <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-start', flex: 1, padding: wp(4), }}>
                             <View style={{
                                 backgroundColor: backgroundColor, padding: wp(4), elevation: 12,
@@ -185,14 +187,14 @@ function Index() {
                                                     {!user?.organisation &&
                                                         <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
                                                             <TouchableNativeFeedback
-                                                                onPress={() => { router.push('/Account/Profile'); setDspMenu(false) } }>
+                                                                onPress={() => { router.push('/Account/Profile'); setDspMenu(false) }}>
                                                                 <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
                                                                     <Ionicons name='alert-circle-outline' color={icon} size={wp(6)} />
                                                                 </View>
                                                             </TouchableNativeFeedback>
                                                         </View>}
                                                 </View>
-                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: backgroundColor, padding: wp(3), borderRadius: wp(4) }} onPress={() => { router.push('/Account/Index'); setDspMenu(false) } }>
+                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: border, padding: wp(3), borderRadius: wp(4) }} onPress={() => { router.push('/Account/Index'); setDspMenu(false) }}>
                                                     <MaterialIcons name="manage-accounts" size={wp(5)} color={accent} style={{ marginLeft: wp(1) }} />
                                                     <ThemedText>
                                                         Manage Account
@@ -213,7 +215,7 @@ function Index() {
 
                                                     </View>
                                                 </View>
-                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: backgroundColor, padding: wp(3), borderRadius: wp(4) }} onPress={() => { router.push('/Account/Login'); setDspMenu(false) } }>
+                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: border, padding: wp(3), borderRadius: wp(4) }} onPress={() => { router.push('/Account/Login'); setDspMenu(false) }}>
                                                     <AntDesign name='login' size={wp(3)} color={accent} style={{ marginLeft: wp(1) }} />
                                                     <ThemedText>
                                                         Login Now
@@ -223,7 +225,7 @@ function Index() {
 
                                             </View>}
                                     </View>
-                                    <TouchableNativeFeedback onPress={() => { router.push("/BooksAndBids/SlctBidsAndBooks"); setDspMenu(false) } }>
+                                    <TouchableNativeFeedback onPress={() => { router.push("/BooksAndBids/SlctBidsAndBooks"); setDspMenu(false) }}>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -233,7 +235,7 @@ function Index() {
                                             </View>
                                         </View>
                                     </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={() => { router.push("/Logistics/Contracts/ViewMiniContracts"); setDspMenu(false) } }>
+                                    <TouchableNativeFeedback onPress={() => { router.push("/Logistics/Contracts/ViewMiniContracts"); setDspMenu(false) }}>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <Ionicons name="reader" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -243,7 +245,7 @@ function Index() {
                                             </View>
                                         </View>
                                     </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={() => { router.push({ pathname: '/Logistics/Trucks/Index', params: { userId: user?.uid } }); setDspMenu(false) } }>
+                                    <TouchableNativeFeedback onPress={() => { router.push({ pathname: '/Logistics/Trucks/Index', params: { userId: user?.uid } }); setDspMenu(false) }}>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -254,7 +256,7 @@ function Index() {
                                         </View>
                                     </TouchableNativeFeedback>
                                     <TouchableNativeFeedback
-                                        onPress={() => { router.push({ pathname: '/Logistics/Loads/Index', params: { userId: user?.uid } }); setDspMenu(false) } }>
+                                        onPress={() => { router.push({ pathname: '/Logistics/Loads/Index', params: { userId: user?.uid } }); setDspMenu(false) }}>
                                         <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                             <FontAwesome6 name="boxes-stacked" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                             <View>
@@ -290,7 +292,7 @@ function Index() {
                                     </View>
 
                                 </View>
-                                <TouchableNativeFeedback onPress={() => { router.push('/Account/Settings'); setDspMenu(false) } }>
+                                <TouchableNativeFeedback onPress={() => { router.push('/Account/Settings'); setDspMenu(false) }}>
                                     <View style={{ paddingHorizontal: wp(4), flexDirection: 'row', gap: wp(3), paddingVertical: wp(4) }}>
                                         <Ionicons name="settings-outline" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
 
@@ -367,7 +369,7 @@ function Index() {
 
 
                             <TouchableOpacity
-                                onPress={() => { router.push("/Account/Login"); setDspCreateAcc(false) } }
+                                onPress={() => { router.push("/Account/Login"); setDspCreateAcc(false) }}
                                 style={{
                                     backgroundColor: "#d1f7e9",
                                     width: wp(70),
@@ -482,7 +484,7 @@ function Index() {
                                         console.log("Error sending verification email:", error)
                                         alert("Failed to send verification email. Try again.")
                                     }
-                                } }
+                                }}
                             >
                                 <ThemedText style={{ color: accent, fontWeight: "bold" }}>New code</ThemedText>
                             </TouchableOpacity>
@@ -497,7 +499,7 @@ function Index() {
                                 onPress={async () => {
                                     await signOut(auth); ToastAndroid.show('Signed out successfully.', ToastAndroid.SHORT)
                                     setDspVerifyAcc(false)
-                                } }
+                                }}
                             >
                                 <ThemedText style={{ color: "#e50914", fontWeight: "bold" }}>Sign out</ThemedText>
                             </TouchableOpacity>
@@ -522,7 +524,7 @@ function Index() {
 
                 <View style={{ margin: wp(4), marginTop: 0 }}>
                     <TouchableOpacity onPress={() => router.push("/Search/Index")}
-                        style={{ backgroundColor: backgroundColor, borderRadius: wp(8), padding: wp(3), flexDirection: 'row', gap: wp(2), borderWidth: .4, borderColor: icon }}>
+                        style={{ backgroundColor: backgroundColor, borderRadius: wp(8), padding: wp(3), flexDirection: 'row', gap: wp(2), borderWidth: 1, borderColor: border }}>
                         <EvilIcons name='search' size={wp(6)} color={icon} />
                         <ThemedText color={textlight}>
                             Search..
@@ -532,7 +534,7 @@ function Index() {
 
 
 
-                <View style={[styles.homefeature, { borderColor: backgroundColor, backgroundColor: background, }]}>
+                <View style={[styles.homefeature, { borderColor: border, backgroundColor: background, }]}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
                         <View style={{}}>
                             <MaterialCommunityIcons name="lightning-bolt-circle" size={wp(4)} color={icon} />
@@ -632,6 +634,7 @@ function Index() {
                         description={item.description}
                         mainColor="#4285f4"
                         icon="#333"
+                        iconElement={<FontAwesome6 name="file-contract" size={wp(4)} color={'#fff'} />}
                         buttonTitle={item.btnTitle}
                         btnBackground="#4285f424"
                         isAvaialble={true}
@@ -639,7 +642,7 @@ function Index() {
 
 
 
-                   
+
 
 
 
@@ -648,12 +651,13 @@ function Index() {
                         description={item.description}
                         mainColor="#6bacbf"
                         icon="#333"
+                        iconElement={<MaterialCommunityIcons name="satellite-uplink" size={wp(4)} color={'#fff'} />}
                         buttonTitle={item.btnTitle}
                         btnBackground="#6bacbf24"
                         isAvaialble={true}
                         btnPressValue={() => router.push("/Tracking/Index")} />}
-                        
-                    
+
+
 
 
                     {item.id === 3 && <HomeItemView
@@ -661,11 +665,12 @@ function Index() {
                         description={item.description}
                         mainColor="#fb9274"
                         icon="#333"
+                        iconElement={<MaterialCommunityIcons name="fuel" size={wp(4)} color={'#fff'} />}
                         buttonTitle={item.btnTitle}
                         btnBackground="#fb927424"
                         isAvaialble={true}
                         // btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")} />}
-    btnPressValue={() => router.push("/Fuel/Index")} />}
+                        btnPressValue={() => router.push("/Fuel/Index")} />}
 
 
                     {item.id === 4 && <HomeItemView
@@ -673,44 +678,48 @@ function Index() {
                         description={item.description}
                         mainColor="#bada5f"
                         icon="#333"
+                        iconElement={<MaterialCommunityIcons name="coffee" size={wp(4)} color={'#fff'} />}
                         buttonTitle={item.btnTitle}
                         btnBackground="#bada5f24"
                         isAvaialble={true}
-                        // btnPressValue={() => router.push("/Tracking/Index")} />}
-    btnPressValue={() => router.push("/TruckStop/Index")} />}
+                        // btnPressValue={() => router.push("/Tracking/Index")} />
+                        btnPressValue={() => router.push("/TruckStop/Index")} />}
 
 
 
-{item.id === 5 && <HomeItemView
-    topic={item.topic}
-    description={item.description}
-    mainColor='#f4c542'
-    icon="#333"
-    buttonTitle={item.btnTitle}
-    btnBackground="#f4c54224"  // Corrected
-    isAvaialble={true}
+                    {item.id === 5 && <HomeItemView
+                        topic={item.topic}
+                        description={item.description}
+                        mainColor='#f4c542'
+                        icon="#333"
+                        iconElement={<MaterialCommunityIcons name="shield-check" size={wp(4)} color={'#fff'} />}
+                        buttonTitle={item.btnTitle}
+                        btnBackground="#f4c54224"  // Corrected
+                        isAvaialble={true}
                         btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")} />}
 
 
-{item.id === 6 && <HomeItemView
-    topic={item.topic}
-    description={item.description}
-    mainColor='#e06eb5'
-    icon="#333"
-    buttonTitle={item.btnTitle}
-    btnBackground="#e06eb524"  // Corrected
-    isAvaialble={true}
-    btnPressValue={() => router.push("/Warehouse/Index")} />}
+                    {item.id === 6 && <HomeItemView
+                        topic={item.topic}
+                        description={item.description}
+                        mainColor='#e06eb5'
+                        icon="#333"
+                        iconElement={<MaterialCommunityIcons name="warehouse" size={wp(4)} color={'#fff'} />}
+                        buttonTitle={item.btnTitle}
+                        btnBackground="#e06eb524"  // Corrected
+                        isAvaialble={true}
+                        btnPressValue={() => router.push("/Warehouse/Index")} />}
 
-{item.id === 7 && <HomeItemView
-    topic={item.topic}
-    description={item.description}
-    mainColor='#f47c42'
-    icon="#333"
-    buttonTitle={item.btnTitle}
-    btnBackground="#f47c4224"  // Corrected
-    isAvaialble={true}
-                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")} /> }
+                    {item.id === 7 && <HomeItemView
+                        topic={item.topic}
+                        description={item.description}
+                        mainColor='#f47c42'
+                        icon="#333"
+                        iconElement={<Ionicons name="checkmark-shield" size={wp(4)} color={'#fff'} />}
+                        buttonTitle={item.btnTitle}
+                        btnBackground="#f47c4224"  // Corrected
+                        isAvaialble={true}
+                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")} />}
 
 
                 </View>))}
@@ -728,7 +737,7 @@ const styles = StyleSheet.create({
         gap: wp(2),
         marginBottom: wp(4),
         borderWidth: 0.5,
-         borderRadius:8 ,  shadowColor: "#0f9d58" ,
+        borderRadius: 8, shadowColor: "#0f9d58",
         shadowOffset: { width: 1, height: 2 },
         shadowOpacity: 0.7,
         shadowRadius: 5,
