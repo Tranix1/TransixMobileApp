@@ -30,7 +30,7 @@ const AddAgent = () => {
     }
     try {
       await addTrackingAgent(user.uid, agent.id);
-      Alert.alert('Success', `${agent.name} has been added as a tracking agent.`);
+      Alert.alert('Success', `${agent.organisation} has been added as a tracking agent.`);
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to add tracking agent.');
     }

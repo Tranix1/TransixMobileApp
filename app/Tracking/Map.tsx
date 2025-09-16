@@ -105,6 +105,92 @@ export default function Tracking() {
   const [originName, setOriginName] = useState<string | null>(null);
   const [destinationName, setDestinationName] = useState<string | null>(null);
 
+  // Reverse geocode cache so we never call twice for same coordinates
+  const [addressCache, setAddressCache] = useState<Record<string, string>>({});
+
+  const addrKey = (lat: number, lng: number) => `${lat.toFixed(5)},${lng.toFixed(5)}`;
+
+  // Remove Google Plus Codes and keep addresses concise
+  const cleanAddressString = (s: string, maxLen: number = 70) => {
+    try {
+      let str = s.trim();
+      // Drop leading plus-code like "52HW+CX8"
+      const parts = str.split(",").map((p) => p.trim());
+      if (parts.length > 0 && /\+/.test(parts[0]) && /^[A-Z0-9+\s-]{4,}$/.test(parts[0])) {
+        parts.shift();
+      }
+      // Rebuild and optionally keep to first 2-3 parts for readability
+      let rebuilt = parts.slice(0, 3).join(", ");
+      if (rebuilt.length > maxLen) {
+        rebuilt = parts.slice(0, 2).join(", ");
+      }
+      if (rebuilt.length > maxLen) {
+        rebuilt = rebuilt.slice(0, maxLen - 1) + "…";
+      }
+      return rebuilt || s;
+    } catch {
+      return s;
+    }
+  };
+
+  // Simple text truncation helper used by map markers and history list
+  const truncate = (text: string, maxLen: number): string => {
+    if (typeof text !== "string") return String(text);
+    if (maxLen <= 0) return "";
+    return text.length > maxLen ? text.slice(0, Math.max(0, maxLen - 1)) + "…" : text;
+  };
+
+  // Format duration from milliseconds to a compact string (e.g., 1h 12m or 8m)
+  const formatDuration = (ms: number): string => {
+    const totalMin = Math.max(0, Math.round(ms / 60000));
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  };
+
+  // Format time string (ISO) to HH:MM based on locale
+  const formatTime = (iso: string): string => {
+    try {
+      return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "--:--";
+    }
+  };
+
+  const parseBestAddress = (j: any, lat: number, lng: number) => {
+    if (j.status === "OK" && j.results && j.results.length > 0) {
+      const best = j.results[0];
+      const formatted = best.formatted_address as string | undefined;
+      if (formatted && formatted.trim().length > 0) return cleanAddressString(formatted);
+
+      const comps: Array<any> = best.address_components || [];
+      const get = (type: string) => comps.find((c) => (c.types || []).includes(type))?.long_name;
+      const city = get("locality") || get("sublocality") || get("administrative_area_level_2");
+      const admin = get("administrative_area_level_1");
+      const country = get("country");
+      const fallbackParts = [city, admin, country].filter(Boolean) as string[];
+      if (fallbackParts.length) return cleanAddressString(fallbackParts.join(", "));
+    }
+    return `(${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+  };
+
+  const reverseGeocodeCached = async (lat: number, lng: number): Promise<string> => {
+    const key = addrKey(lat, lng);
+    if (addressCache[key]) return addressCache[key];
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`;
+      const r = await fetch(url);
+      const j = await r.json();
+      const best = parseBestAddress(j, lat, lng);
+      setAddressCache((prev) => ({ ...prev, [key]: best }));
+      return best;
+    } catch {
+      const fallback = `(${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+      setAddressCache((prev) => ({ ...prev, [key]: fallback }));
+      return fallback;
+    }
+  };
+
   const mapRef = useRef<MapView | null>(null);
   const selectedItemRef = useRef(selectedItem);
   const [hasFitted, setHasFitted] = useState(false);
@@ -198,14 +284,38 @@ export default function Tracking() {
           `https://server.traccar.org/api/reports/trips?deviceId=${deviceId}&from=${start.toISOString()}&to=${end.toISOString()}`,
           { headers: { Authorization: basicAuth, Accept: "application/json" } }
         );
-        setTrips(tripsResponse.ok ? await tripsResponse.json() : []);
+        const tripsJson: Trip[] = tripsResponse.ok ? await tripsResponse.json() : [];
+        setTrips(tripsJson);
 
         // Stops
         const stopsResponse = await fetch(
           `https://server.traccar.org/api/reports/stops?deviceId=${deviceId}&from=${start.toISOString()}&to=${end.toISOString()}`,
           { headers: { Authorization: basicAuth, Accept: "application/json" } }
         );
-        setStops(stopsResponse.ok ? await stopsResponse.json() : []);
+        const stopsJson: Stop[] = stopsResponse.ok ? await stopsResponse.json() : [];
+        setStops(stopsJson);
+
+        // Enrich missing addresses using reverse geocode with caching (no duplicates)
+        const coordsToFetch: Array<{ lat: number; lng: number }> = [];
+        tripsJson.forEach((t) => {
+          if (!t.startAddress || t.startAddress === "N/A") coordsToFetch.push({ lat: t.startLat, lng: t.startLon });
+          if (!t.endAddress || t.endAddress === "N/A") coordsToFetch.push({ lat: t.endLat, lng: t.endLon });
+        });
+        stopsJson.forEach((s) => {
+          if (!s.address || s.address === "N/A") coordsToFetch.push({ lat: s.latitude, lng: s.longitude });
+        });
+
+        const uniqueKeys = new Set<string>();
+        const uniqueCoords = coordsToFetch.filter(({ lat, lng }) => {
+          const k = addrKey(lat, lng);
+          if (addressCache[k] || uniqueKeys.has(k)) return false;
+          uniqueKeys.add(k);
+          return true;
+        });
+
+        if (uniqueCoords.length) {
+          await Promise.all(uniqueCoords.map(({ lat, lng }) => reverseGeocodeCached(lat, lng)));
+        }
       } catch (error: any) {
         setErrorMsg(error.message || "Error fetching device data.");
       } finally {
@@ -287,24 +397,14 @@ export default function Tracking() {
           setRouteCoords([]);
         }
 
-        // Reverse geocode origin & destination for human names
-        const geocode = async (lat: number, lng: number) => {
-          const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`;
-          const r = await fetch(geoUrl);
-          const j = await r.json();
-          if (j.status === "OK" && j.results && j.results.length > 0) {
-            return j.results[0].formatted_address;
-          }
-          return null;
-        };
-
+        // Reverse geocode origin & destination for human names, using cache
         const [oName, dName] = await Promise.all([
-          geocode(trip.startLat, trip.startLon),
-          geocode(trip.endLat, trip.endLon),
+          reverseGeocodeCached(trip.startLat, trip.startLon),
+          reverseGeocodeCached(trip.endLat, trip.endLon),
         ]);
 
-        setOriginName(oName ?? `(${trip.startLat.toFixed(4)}, ${trip.startLon.toFixed(4)})`);
-        setDestinationName(dName ?? `(${trip.endLat.toFixed(4)}, ${trip.endLon.toFixed(4)})`);
+        setOriginName(oName);
+        setDestinationName(dName);
       } catch (err) {
         console.error("Failed to fetch route or geocode:", err);
         setRouteCoords([]);
@@ -381,8 +481,12 @@ export default function Tracking() {
             {selectedItem?.type === "stop" && (
               <Marker
                 coordinate={selectedItem.coords as LatLng}
-                pinColor="orange"
-                title={selectedItem.info.address}
+                pinColor="#e53935"
+                title={(() => {
+                  const info = selectedItem.info as Stop;
+                  const k = addrKey(info.latitude, info.longitude);
+                  return addressCache[k] || info.address || "Stop";
+                })()}
               />
             )}
 
@@ -393,7 +497,7 @@ export default function Tracking() {
                 <Marker
                   coordinate={(selectedItem.coords as LatLng[])[0]}
                   pinColor="green"
-                  title={originName ?? "Trip Start"}
+                  title={originName ? truncate(originName, 70) : "Trip Start"}
                   description={
                     (selectedItem.info as Trip).startAddress ||
                     undefined
@@ -403,8 +507,8 @@ export default function Tracking() {
                 {/* Destination */}
                 <Marker
                   coordinate={(selectedItem.coords as LatLng[])[1]}
-                  pinColor="red"
-                  title={destinationName ?? "Trip End"}
+                  pinColor="#e53935"
+                  title={destinationName ? truncate(destinationName, 70) : "Trip End"}
                   description={
                     (selectedItem.info as Trip).endAddress ||
                     undefined
@@ -521,7 +625,7 @@ export default function Tracking() {
             {/* Day selectors */}
             <View style={{ height: 50 }}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {Array.from({ length: 7 }, (_, i) => {
+                {Array.from({ length: 14 }, (_, i) => {
                   const dayText = getDayButtonText(i);
                   return (
                     <TouchableOpacity
@@ -564,7 +668,7 @@ export default function Tracking() {
                 <Text>Loading history...</Text>
               </View>
             ) : (
-              <ScrollView style={{ flex: 1, padding: 10 }}>
+              <ScrollView contentContainerStyle={{ padding: 10, paddingBottom: 120 }}>
                 {tab === "summary" &&
                   (getCombinedSummary().length === 0 ? (
                     <ThemedText>No trips or stops for this day.</ThemedText>
@@ -596,37 +700,86 @@ export default function Tracking() {
                         style={[
                           styles.card,
                           item.type === "trip"
-                            ? { borderWidth: 3, borderColor: accent }
-                            : { borderWidth: 3, borderColor: icon },
+                            ? { borderWidth: 2, borderColor: accent, backgroundColor: backgroundLight }
+                            : { borderWidth: 2, borderColor: '#e53935', backgroundColor: backgroundLight },
                         ]}
                       >
-                        <ThemedText style={styles.cardHeader}>
-                          {item.type === "trip" ? "Trip" : "Stop"}
-                        </ThemedText>
-                        <ThemedText>
-                          Start: {new Date(item.startTime).toLocaleTimeString()} | End:{" "}
-                          {new Date(item.endTime).toLocaleTimeString()}
-                        </ThemedText>
-                        <ThemedText>
-                          Duration: {(item.duration / 60000).toFixed(1)} min
-                        </ThemedText>
-                        {item.type === "trip" && (
+                        {item.type === "trip" ? (
                           <>
-                            <ThemedText>
-                              Distance: {(item.distance / 1000).toFixed(2)} km
+                            <ThemedText style={styles.cardHeader}>
+                              {`Trip • ${(item.distance / 1000).toFixed(2)} km • ${formatDuration(item.duration)}`}
                             </ThemedText>
-                            <ThemedText>
-                              Average Speed: {item.averageSpeed.toFixed(1)} km/h
+                            <ThemedText style={{ marginTop: 2 }}>
+                              <Text style={{ fontWeight: "bold" }}>Time: </Text>
+                              {`${formatTime(item.startTime)} - ${formatTime(item.endTime)}`}
                             </ThemedText>
+                            <ThemedText style={{ marginTop: 2 }}>
+                              <Text style={{ fontWeight: "bold" }}>Avg speed: </Text>
+                              {`${item.averageSpeed.toFixed(1)} km/h`}
+                            </ThemedText>
+                            <View style={{
+                              backgroundColor: backgroundLight,
+                              paddingVertical: 6,
+                              paddingHorizontal: 8,
+                              borderRadius: 8,
+                              marginTop: 8,
+                            }}>
+                              <ThemedText>
+                                <Text style={{ fontWeight: "bold" }}>From: </Text>
+                                {(() => {
+                                  const fromK = addrKey(item.startLat, item.startLon);
+                                  const fromRaw = addressCache[fromK] || item.startAddress || `(${item.startLat.toFixed(4)}, ${item.startLon.toFixed(4)})`;
+                                  const fromClean = cleanAddressString(fromRaw);
+                                  return truncate(fromClean, 60);
+                                })()}
+                              </ThemedText>
+                            </View>
+                            <View style={{
+                              backgroundColor: backgroundLight,
+                              paddingVertical: 6,
+                              paddingHorizontal: 8,
+                              borderRadius: 8,
+                              marginTop: 6,
+                            }}>
+                              <ThemedText>
+                                <Text style={{ fontWeight: "bold" }}>To: </Text>
+                                {(() => {
+                                  const toK = addrKey(item.endLat, item.endLon);
+                                  const toRaw = addressCache[toK] || item.endAddress || `(${item.endLat.toFixed(4)}, ${item.endLon.toFixed(4)})`;
+                                  const toClean = cleanAddressString(toRaw);
+                                  return truncate(toClean, 60);
+                                })()}
+                              </ThemedText>
+                            </View>
+                          </>
+                        ) : (
+                          <>
+                            <ThemedText style={styles.cardHeader}>
+                              {`Stop • ${formatDuration(item.duration)}`}
+                            </ThemedText>
+                            <ThemedText style={{ marginTop: 2 }}>
+                              <Text style={{ fontWeight: "bold" }}>Time: </Text>
+                              {`${formatTime(item.startTime)} - ${formatTime(item.endTime)}`}
+                            </ThemedText>
+                            <View style={{
+                              backgroundColor: backgroundLight,
+                              paddingVertical: 6,
+                              paddingHorizontal: 8,
+                              borderRadius: 8,
+                              marginTop: 8,
+                            }}>
+                              <ThemedText>
+                                <Text style={{ fontWeight: "bold" }}>Location: </Text>
+                                {(() => {
+                                  const stopK = addrKey(item.latitude, item.longitude);
+                                  const addrRaw = addressCache[stopK] || item.address || `(${item.latitude.toFixed(4)}, ${item.longitude.toFixed(4)})`;
+                                  const addrClean = cleanAddressString(addrRaw);
+                                  return truncate(addrClean, 70);
+                                })()}
+                              </ThemedText>
+                            </View>
                           </>
                         )}
-                        <ThemedText>
-                          Address:{" "}
-                          {item.type === "trip"
-                            ? `From: ${item.startAddress || "N/A"} → ${item.endAddress || "N/A"
-                            }`
-                            : item.address || "N/A"}
-                        </ThemedText>
                       </TouchableOpacity>
                     ))
                   ))}

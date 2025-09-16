@@ -70,6 +70,11 @@ export default function AddTrackedVehicle() {
       const deviceId = traccarDevice.id;
       if (!deviceId) throw new Error("Device ID not returned from Traccar.");
 
+      // Set up a 30-day free trial subscription for the new vehicle
+      const trialStartAt = new Date();
+      const trialEndAt = new Date(trialStartAt);
+      trialEndAt.setDate(trialEndAt.getDate() + 30);
+
       await addDocument("TrackedVehicles", {
         vehicleName,
         imei,
@@ -79,6 +84,15 @@ export default function AddTrackedVehicle() {
         customerName: selectedUser.email,
         salesmanId: salesman?.uid,
         salesmanName: salesman?.displayName,
+        // Subscription metadata
+        subscription: {
+          status: "trial", // trial | active | expired | cancelled
+          trialDays: 30,
+          trialStartAt: trialStartAt.toISOString(),
+          trialEndAt: trialEndAt.toISOString(),
+          nextBillingAt: trialEndAt.toISOString(),
+          isTrial: true,
+        },
       });
 
       Alert.alert("Success", "Vehicle added successfully!");

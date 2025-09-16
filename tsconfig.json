@@ -2,6 +2,7 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "skipLibCheck": true,
     "paths": {
       "@/*": [
         "./*"
@@ -15,6 +16,11 @@
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-, "app/BookiAndBids/Index.js", "app/MakeOffer/BookBidlCargo.tsx"  ]
+    "expo-env.d.ts",
+    "app/BookiAndBids/Index.js",
+    "app/MakeOffer/BookBidlCargo.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

@@ -18,8 +18,13 @@ interface Device {
   status?: string;
   deviceId: number;
   subscription?: {
-    status: string;
-    expiryDate: string;
+    status: string; // trial | active | expired | cancelled
+    expiryDate?: string; // for active subscriptions
+    trialStartAt?: string; // ISO string
+    trialEndAt?: string;   // ISO string
+    nextBillingAt?: string;
+    isTrial?: boolean;
+    trialDays?: number;
   };
 }
 
@@ -148,7 +153,7 @@ export default function Index() {
                 <ThemedText style={{ alignSelf: 'flex-start' }}>Add Vehicle</ThemedText>
               </TouchableNativeFeedback>
             </View>
-            {user?.uid === '123' && (
+            {user?.uid === 'QOC9krp5BOR7NhFXRuX5f32u17e2' && (
               <View style={{ marginLeft: wp(4) }}>
                 <TouchableNativeFeedback onPress={() => router.push('/Tracking/AddAgent')}>
                   <ThemedText style={{ alignSelf: 'flex-start' }}>Add Agent</ThemedText>
@@ -164,8 +169,11 @@ export default function Index() {
         contentContainerStyle={{}}
         data={devices}
         renderItem={({ item }) => {
-          const isSubscribed = item.subscription && item.subscription.status === 'active' && new Date(item.subscription.expiryDate) > new Date();
-          const subscriptionColor = isSubscribed ? 'green' : 'red';
+          const now = new Date();
+          const isActivePaid = !!(item.subscription && item.subscription.status === 'active' && item.subscription.expiryDate && new Date(item.subscription.expiryDate) > now);
+          const isActiveTrial = !!(item.subscription && item.subscription.status === 'trial' && item.subscription.trialEndAt && new Date(item.subscription.trialEndAt) > now);
+          const isAccessible = isActivePaid || isActiveTrial;
+          const subscriptionColor = isAccessible ? 'green' : 'red';
 
           return (
           <TouchableOpacity
@@ -184,13 +192,13 @@ export default function Index() {
   }}
   activeOpacity={0.8}
   onPress={() => {
-    if (isSubscribed) {
+    if (isAccessible) {
       router.push({
         pathname: "/Tracking/Map",
         params: { deviceId: item.deviceId },
       });
     } else {
-      handleSubscription(item.id);
+      handleSubscription(item.id, item.vehicleName);
     }
   }}
 >
@@ -209,12 +217,14 @@ export default function Index() {
       style={{
         fontSize: 14,
         fontWeight: "500",
-        color: isSubscribed ? subscriptionColor : "red",
+        color: isAccessible ? subscriptionColor : "red",
       }}
     >
-      {isSubscribed
-        ? `Subscribed until ${new Date(item.subscription.expiryDate).toLocaleDateString()}`
-        : "Subscription expired"}
+      {isActivePaid
+        ? `Subscribed until ${item.subscription?.expiryDate ? new Date(item.subscription.expiryDate).toLocaleDateString() : ''}`
+        : isActiveTrial
+          ? `Free trial until ${item.subscription?.trialEndAt ? new Date(item.subscription.trialEndAt).toLocaleDateString() : ''}`
+          : "Subscription expired"}
     </ThemedText>
   </View>
 </TouchableOpacity>
@@ -274,6 +284,7 @@ export default function Index() {
         isVisible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
         vehicleId={selectedVehicleId}
+        vehicleName={selectedVehicleName}
       />
 
     </ScreenWrapper>
