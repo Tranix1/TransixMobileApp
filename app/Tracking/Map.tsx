@@ -9,6 +9,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
+import AccentRingLoader from "@/components/AccentRingLoader";
 import MapView, { Marker, Polyline, LatLng } from "react-native-maps";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -540,6 +541,11 @@ export default function Tracking() {
               </>
             )}
           </MapView>
+        ) : loading ? (
+          <View style={styles.center}>
+            <AccentRingLoader color={accent} size={50} />
+            <ThemedText style={{ marginTop: 10 }}>Loading map...</ThemedText>
+          </View>
         ) : (
           <View style={styles.center}>
             <ThemedText>No device coordinates available.</ThemedText>
@@ -664,7 +670,7 @@ export default function Tracking() {
             {/* Summary or loading indicator */}
             {loading ? (
               <View style={styles.center}>
-                <ActivityIndicator size="large" color={accent} />
+                <AccentRingLoader color={accent} size={50} />
                 <Text>Loading history...</Text>
               </View>
             ) : (

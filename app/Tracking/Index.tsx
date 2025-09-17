@@ -11,6 +11,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from "@/context/AuthContext";
 import SubscriptionPaymentModal from "@/components/SubscriptionPaymentModal";
+import AccentRingLoader from "@/components/AccentRingLoader";
 
 interface Device {
   id: string;
@@ -135,7 +136,8 @@ export default function Index() {
     return (
       <ScreenWrapper>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" />
+                          <AccentRingLoader color={accent} size={48} dotSize={8} />
+          
           <ThemedText>Loading devices...</ThemedText>
         </View>
       </ScreenWrapper>
@@ -260,10 +262,10 @@ export default function Index() {
         ListFooterComponent={
           <View style={{ marginBottom: wp(10), marginTop: wp(6) }}>
             {
-              loadingMore ?
+              !loadingMore ?
                 <View style={{ flexDirection: "row", gap: wp(4), alignItems: 'center', justifyContent: 'center' }}>
-                  <ThemedText type='tiny' style={{ color: icon }}>Loading More</ThemedText>
-                  <ActivityIndicator size="small" color={accent} />
+                  <ThemedText type='tiny' style={{ color: icon }}>Loading More</ThemedText><AccentRingLoader color={accent} size={20} dotSize={4} />
+                  
                 </View>
                 :
                 (!lastVisible && devices.length > 0) ?
