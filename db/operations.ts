@@ -45,6 +45,22 @@ export const updateDocument = async (collectionName: string, docId: string, data
 };
 
 /**
+ * Update a document in a Firestore collection, or create it if it doesn't exist.
+ * @param collectionName - The name of the Firestore collection.
+ * @param docId - The ID of the document to update or create.
+ * @param data - The data to update/set in the document.
+ */
+export const updateOrCreateDocument = async (collectionName: string, docId: string, data: object) => {
+    try {
+        const docRef = doc(db, collectionName, docId);
+        await setDoc(docRef, data, { merge: true });
+    } catch (error) {
+        console.error("Error updating/creating document:", error);
+        throw error;
+    }
+};
+
+/**
  * Delete a document from a Firestore collection.
  * @param collectionName - The name of the Firestore collection.
  * @param docId - The ID of the document to delete.

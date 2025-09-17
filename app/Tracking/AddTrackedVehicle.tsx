@@ -11,12 +11,36 @@ import { useAuth } from "@/context/AuthContext";
 export default function AddTrackedVehicle() {
   const [vehicleName, setVehicleName] = useState("");
   const [imei, setImei] = useState("");
-  const [deviceType, setDeviceType] = useState<{ id: number, name: string } | null>(null);
+  const [vehicleCategory, setVehicleCategory] = useState<{ id: number, name: string } | null>(null);
+  const [vehicleSubType, setVehicleSubType] = useState<{ id: number, name: string } | null>(null);
+  const [paymentType, setPaymentType] = useState<{ id: number, name: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const { user: salesman } = useAuth();
+
+  // Vehicle categories
+  const vehicleCategories = [
+    { id: 1, name: "Commercial" },
+    { id: 2, name: "Personal" },
+    { id: 3, name: "Car Dealer" }
+  ];
+
+  // Commercial vehicle sub-types
+  const commercialSubTypes = [
+    { id: 1, name: "Truck" },
+    { id: 2, name: "Kombi" },
+    { id: 3, name: "Van" },
+    { id: 4, name: "eTaxi (Uber)" },
+    { id: 5, name: "Old Model Taxi (General)" }
+  ];
+
+  // Payment types for Personal and Car Dealer
+  const paymentTypes = [
+    { id: 1, name: "Once-off Payment" },
+    { id: 2, name: "Subscription" }
+  ];
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -31,9 +55,27 @@ export default function AddTrackedVehicle() {
     fetchUsers();
   }, []);
 
+  // Reset sub-type when category changes
+  useEffect(() => {
+    setVehicleSubType(null);
+    setPaymentType(null);
+  }, [vehicleCategory]);
+
   const handleAddVehicle = async () => {
-    if (!vehicleName || !imei || !selectedUser) {
-      Alert.alert("Error", "Please fill in all fields and select a user.");
+    if (!vehicleName || !imei || !selectedUser || !vehicleCategory) {
+      Alert.alert("Error", "Please fill in all required fields and select a user.");
+      return;
+    }
+
+    // Validate commercial vehicle sub-type
+    if (vehicleCategory.name === "Commercial" && !vehicleSubType) {
+      Alert.alert("Error", "Please select a vehicle sub-type for commercial vehicles.");
+      return;
+    }
+
+    // Validate payment type for Personal and Car Dealer
+    if ((vehicleCategory.name === "Personal" || vehicleCategory.name === "Car Dealer") && !paymentType) {
+      Alert.alert("Error", "Please select a payment type.");
       return;
     }
 
@@ -55,7 +97,7 @@ export default function AddTrackedVehicle() {
           body: JSON.stringify({
             name: vehicleName,
             uniqueId: imei,
-            category: deviceType?.name,
+            category: vehicleCategory.name + (vehicleSubType ? ` - ${vehicleSubType.name}` : ""),
           }),
         }
       );
@@ -63,42 +105,86 @@ export default function AddTrackedVehicle() {
       if (!traccarResponse.ok) {
         const errorBody = await traccarResponse.text();
         console.error("Traccar API Error:", traccarResponse.status, errorBody);
-        throw new Error("Failed to add device to Traccar.");
+        throw new Error("Failed to add device to Server.");
       }
 
       const traccarDevice = await traccarResponse.json();
       const deviceId = traccarDevice.id;
-      if (!deviceId) throw new Error("Device ID not returned from Traccar.");
+      if (!deviceId) throw new Error("Device ID not returned from Server.");
 
-      // Set up a 30-day free trial subscription for the new vehicle
-      const trialStartAt = new Date();
-      const trialEndAt = new Date(trialStartAt);
-      trialEndAt.setDate(trialEndAt.getDate() + 30);
+      // Determine subscription type based on category and payment type
+      let subscriptionData;
+      const isOnceOff = paymentType?.name === "Once-off Payment";
+      const isCommercial = vehicleCategory.name === "Commercial";
 
-      await addDocument("TrackedVehicles", {
-        vehicleName,
-        imei,
-        deviceType: deviceType?.name,
-        deviceId, // Store the Traccar device ID
-        customerId: selectedUser.id,
-        customerName: selectedUser.email,
-        salesmanId: salesman?.uid,
-        salesmanName: salesman?.displayName,
-        // Subscription metadata
-        subscription: {
-          status: "trial", // trial | active | expired | cancelled
+      if (isCommercial) {
+        // Commercial vehicles get standard trial
+        const trialStartAt = new Date();
+        const trialEndAt = new Date(trialStartAt);
+        trialEndAt.setDate(trialEndAt.getDate() + 30);
+        
+        subscriptionData = {
+          status: "trial",
           trialDays: 30,
           trialStartAt: trialStartAt.toISOString(),
           trialEndAt: trialEndAt.toISOString(),
           nextBillingAt: trialEndAt.toISOString(),
           isTrial: true,
-        },
+          isOnceOff: false,
+        };
+      } else if (isOnceOff) {
+        // Once-off payment: immediate access but with restrictions and auto-deletion
+        const accessStartAt = new Date();
+        const accessEndAt = new Date(accessStartAt);
+        accessEndAt.setHours(accessEndAt.getHours() + 6); // 6 hours access time
+        
+        subscriptionData = {
+          status: "once_off",
+          accessStartAt: accessStartAt.toISOString(),
+          accessEndAt: accessEndAt.toISOString(),
+          isOnceOff: true,
+          restrictToCurrentLocation: true, // No history access
+          autoDeleteFromTraccar: true,
+        };
+      } else {
+        // Regular subscription for Personal/Car Dealer
+        const trialStartAt = new Date();
+        const trialEndAt = new Date(trialStartAt);
+        trialEndAt.setDate(trialEndAt.getDate() + 7); // 7 days for non-commercial
+        
+        subscriptionData = {
+          status: "trial",
+          trialDays: 7,
+          trialStartAt: trialStartAt.toISOString(),
+          trialEndAt: trialEndAt.toISOString(),
+          nextBillingAt: trialEndAt.toISOString(),
+          isTrial: true,
+          isOnceOff: false,
+        };
+      }
+
+      await addDocument("TrackedVehicles", {
+        vehicleName,
+        imei,
+        vehicleCategory: vehicleCategory.name,
+        vehicleSubType: vehicleSubType?.name || null,
+        paymentType: paymentType?.name || null,
+        deviceId,
+        customerId: selectedUser.id,
+        customerName: selectedUser.displayName,
+        customerEmail: selectedUser.email, 
+        salesmanId: salesman?.uid,
+        salesmanName: salesman?.displayName,
+        createdAt: new Date().toISOString(),
+        subscription: subscriptionData,
       });
 
       Alert.alert("Success", "Vehicle added successfully!");
       setVehicleName("");
       setImei("");
-      setDeviceType(null);
+      setVehicleCategory(null);
+      setVehicleSubType(null);
+      setPaymentType(null);
       setSelectedUser(null);
       setSearchQuery("");
     } catch (error: any) {
@@ -132,11 +218,39 @@ export default function AddTrackedVehicle() {
         />
 
         <DropDownItem
-          allData={[{ id: 1, name: "FMB 920" }, { id: 2, name: "FMC 920" }]}
-          selectedItem={deviceType}
-          setSelectedItem={setDeviceType}
-          placeholder="Select Truck Type"
+          allData={vehicleCategories}
+          selectedItem={vehicleCategory}
+          setSelectedItem={setVehicleCategory}
+          placeholder="Select Vehicle Category"
         />
+
+        {vehicleCategory?.name === "Commercial" && (
+          <DropDownItem
+            allData={commercialSubTypes}
+            selectedItem={vehicleSubType}
+            setSelectedItem={setVehicleSubType}
+            placeholder="Select Vehicle Type"
+          />
+        )}
+
+        {(vehicleCategory?.name === "Personal" || vehicleCategory?.name === "Car Dealer") && (
+          <DropDownItem
+            allData={paymentTypes}
+            selectedItem={paymentType}
+            setSelectedItem={setPaymentType}
+            placeholder="Select Payment Type"
+          />
+        )}
+
+        {paymentType?.name === "Once-off Payment" && (
+          <View style={styles.infoBox}>
+            <ThemedText type="defaultSemiBold" style={styles.infoTitle}>Once-off Payment Info:</ThemedText>
+            <ThemedText type="tiny" style={styles.infoText}>• Current location tracking only (no history)</ThemedText>
+            <ThemedText type="tiny" style={styles.infoText}>• 6 hours access time</ThemedText>
+            <ThemedText type="tiny" style={styles.infoText}>• Vehicle automatically removed from Server after access period</ThemedText>
+            <ThemedText type="tiny" style={styles.infoText}>• Can be re-added later</ThemedText>
+          </View>
+        )}
 
         <Input
           placeholder="Search user by email..."
@@ -185,5 +299,20 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
+  },
+  infoBox: {
+    backgroundColor: "#f0f8ff",
+    padding: 12,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: "#007bff",
+  },
+  infoTitle: {
+    marginBottom: 8,
+    color: "#007bff",
+  },
+  infoText: {
+    marginBottom: 2,
+    color: "#555",
   },
 });

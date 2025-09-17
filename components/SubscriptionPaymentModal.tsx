@@ -18,10 +18,12 @@ interface SubscriptionPaymentModalProps {
 
 
 const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({ isVisible, onClose, vehicleId, vehicleName }) => {
+  
   const [phoneNumber, setPhoneNumber] = useState('');
   const [paymentUpdate, setPaymentUpdate] = useState('');
   const [isLoadingPayment, setIsLoadingPayment] = useState(false);
-
+  
+  const accent = useThemeColor("accent");
   const background = useThemeColor('background')
 
 const handlePayment = async () => {
@@ -46,14 +48,20 @@ const handlePayment = async () => {
       const expiryDate = new Date();
       expiryDate.setMonth(expiryDate.getMonth() + 1);
 
-      await updateDocument("TrackedVehicles", vehicleId, {
-        subscription: {
-          status: "active",
-          expiryDate: expiryDate.toISOString(),
-        },
-      });
-
-      onClose();
+      try {
+        await updateDocument("TrackedVehicles", vehicleId, {
+          subscription: {
+            status: "active",
+            expiryDate: expiryDate.toISOString(),
+          },
+          paymentType: "Subscription",
+        });
+        setPaymentUpdate("✅ Payment successful! Vehicle upgraded to subscription.");
+        setTimeout(() => onClose(), 2000);
+      } catch (updateError: any) {
+        console.error("Error updating vehicle subscription:", updateError);
+        setPaymentUpdate("⚠️ Payment successful but failed to update vehicle. Please contact support.");
+      }
     } else {
       setPaymentUpdate(`❌ ${result.message}`);
     }
@@ -85,11 +93,14 @@ const handlePayment = async () => {
             editable={!isLoadingPayment} // ✅ replaces disabled
 
           />
-          <TouchableOpacity style={styles.button} onPress={handlePayment} disabled={isLoadingPayment}>
+          <TouchableOpacity style={{  backgroundColor: accent,
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',}} onPress={handlePayment} disabled={isLoadingPayment}>
             <Text style={styles.buttonText}>Pay Now</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.closeButton} onPress={onClose} >
-            <Text style={styles.closeButtonText}>Close</Text>
+            <Text style={{color:accent}}>Close</Text>
           </TouchableOpacity>
           {paymentUpdate && <ThemedText style={{ marginTop: 10, textAlign: 'center' }}>{paymentUpdate}</ThemedText>}
         </View>
@@ -133,9 +144,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     alignItems: 'center',
   },
-  closeButtonText: {
-    color: '#007bff',
-  },
+ 
 });
 
 export default SubscriptionPaymentModal;

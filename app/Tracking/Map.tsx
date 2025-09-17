@@ -8,6 +8,7 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import AccentRingLoader from "@/components/AccentRingLoader";
 import MapView, { Marker, Polyline, LatLng } from "react-native-maps";
@@ -17,6 +18,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { darkMapStyle } from "@/Utilities/MapDarkMode";
 import { decodePolyline } from "@/Utilities/decodePolyline";
+import SubscriptionPaymentModal from "@/components/SubscriptionPaymentModal";
 
 // Traccar API types (kept from your original)
 interface Device {
@@ -84,6 +86,8 @@ export default function Tracking() {
   const theme = useColorScheme() ?? "light";
 
   const deviceId = params.deviceId ? Number(params.deviceId) : null;
+  const firebaseDocId = params.firebaseDocId as string;
+  const isOnceOff = params.isOnceOff === 'true';
 
   const [deviceCoords, setDeviceCoords] = useState<Position | null>(null);
   const [deviceInfo, setDeviceInfo] = useState<Device | null>(null);
@@ -100,6 +104,9 @@ export default function Tracking() {
     coords: LatLng | LatLng[];
     info?: any;
   } | null>(null);
+
+  // Payment modal state
+  const [isUpgradeModalVisible, setIsUpgradeModalVisible] = useState(false);
 
   // Route & names states for Google Directions + reverse geocode
   const [routeCoords, setRouteCoords] = useState<LatLng[]>([]);
@@ -425,13 +432,13 @@ export default function Tracking() {
     }
   }, [selectedItem]);
 
-  if (errorMsg) {
-    return (
-      <View style={styles.center}>
-        <ThemedText style={{ color: "red" }}>{errorMsg}</ThemedText>
-      </View>
-    );
-  }
+  // if (errorMsg) {
+  //   return (
+  //     <View style={styles.center}>
+  //       <ThemedText style={{ color: "red" }}>{errorMsg}</ThemedText>
+  //     </View>
+  //   );
+  // }
 
   const mapRegion = selectedItem
     ? {
@@ -565,8 +572,8 @@ export default function Tracking() {
           </ThemedText>
         </View>
 
-        {/* Info */}
-        {bottomTab === "info" && (
+        {/* Info - Always show for all users */}
+        {(isOnceOff || (!isOnceOff && bottomTab === "info")) && (
           <View style={styles.infoBox}>
             <View style={styles.infoRow}>
               <MaterialCommunityIcons
@@ -626,7 +633,7 @@ export default function Tracking() {
         )}
 
         {/* History */}
-        {bottomTab === "history" && (
+        {!isOnceOff && bottomTab === "history" && (
           <View style={{ flex: 1 }}>
             {/* Day selectors */}
             <View style={{ height: 50 }}>
@@ -661,11 +668,6 @@ export default function Tracking() {
                 })}
               </ScrollView>
             </View>
-
-
-
-
-            
 
             {/* Summary or loading indicator */}
             {loading ? (
@@ -794,48 +796,93 @@ export default function Tracking() {
           </View>
         )}
 
-        {/* Bottom Tabs */}
-        <View style={{flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 12,
-    borderTopWidth: 1,borderColor:accent}}>
-          <TouchableOpacity
-            style={[
-              styles.bottomBtn,
-              bottomTab === "info" && { borderWidth: 1, backgroundColor: backgroundLight,borderColor:accent },
-            ]}
-            onPress={() => setBottomTab("info")}
-          >
-           
-            <Ionicons name="time-outline" size={18} style={styles.icon} color={bottomTab === "info" ?accent:icon} />
 
-            <ThemedText
-              style={[
-                styles.bottomBtnText,
-                bottomTab === "info" && {fontWeight:"bold",color:accent},
-              ]}
+        {/* Bottom Section */}
+        {isOnceOff ? (
+          /* Upgrade Button for Once-off Users */
+          <View style={{
+            paddingVertical: 12,
+            paddingHorizontal: 16,
+            borderTopWidth: 1,
+            borderColor: accent
+          }}>
+            <TouchableOpacity 
+              style={{
+                backgroundColor: accent,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderRadius: 12,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                elevation: 1,
+                shadowColor: "#000",
+                shadowOpacity: 0.08,
+                shadowOffset: { width: 0, height: 1 },
+                shadowRadius: 2,
+              }}
+              onPress={() => {
+                setIsUpgradeModalVisible(true);
+              }}
             >
-              Info
-            </ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.bottomBtn,
-              bottomTab === "history" && { borderWidth: 1, backgroundColor: backgroundLight ,borderColor: accent},
-            ]}
-            onPress={() => setBottomTab("history")}
-          >
-            <Ionicons name="time-outline" size={18} style={styles.icon} color={bottomTab === "history" ?accent:icon} />
-            <ThemedText
+              <Ionicons name="arrow-up-circle-outline" size={18} color="white" style={{ marginRight: 6 }} />
+              <ThemedText style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
+                Upgrade Now
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          /* Regular tabs for subscription users */
+          <View style={{flexDirection: "row",
+      justifyContent: "space-around",
+      paddingVertical: 12,
+      borderTopWidth: 1,borderColor:accent}}>
+            <TouchableOpacity
               style={[
-                styles.bottomBtnText,
-                bottomTab === "history" && {fontWeight:"bold",color:accent},
+                styles.bottomBtn,
+                bottomTab === "info" && { borderWidth: 1, backgroundColor: backgroundLight,borderColor:accent },
               ]}
+              onPress={() => setBottomTab("info")}
             >
-              History
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
+             
+              <Ionicons name="information-circle-outline" size={18} style={styles.icon} color={bottomTab === "info" ?accent:icon} />
+
+              <ThemedText
+                style={[
+                  styles.bottomBtnText,
+                  bottomTab === "info" && {fontWeight:"bold",color:accent},
+                ]}
+              >
+                Info
+              </ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.bottomBtn,
+                bottomTab === "history" && { borderWidth: 1, backgroundColor: backgroundLight ,borderColor: accent},
+              ]}
+              onPress={() => setBottomTab("history")}
+            >
+              <Ionicons name="time-outline" size={18} style={styles.icon} color={bottomTab === "history" ?accent:icon} />
+              <ThemedText
+                style={[
+                  styles.bottomBtnText,
+                  bottomTab === "history" && {fontWeight:"bold",color:accent},
+                ]}
+              >
+                History
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Upgrade Payment Modal */}
+        <SubscriptionPaymentModal
+          isVisible={isUpgradeModalVisible}
+          onClose={() => setIsUpgradeModalVisible(false)}
+          vehicleId={firebaseDocId || ''}
+          vehicleName={deviceInfo?.name || 'Vehicle'}
+        />
       </View>
     </ScreenWrapper>
   );
@@ -909,4 +956,28 @@ const styles = StyleSheet.create({
   },
   bottomBtnText: { fontSize: 16, marginLeft: 4 },
   activeBottomBtnText: { fontWeight: "bold" },
+  
+  restrictionContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  restrictionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  restrictionText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 8,
+    opacity: 0.8,
+  },
+  
+ 
+ 
+
 });

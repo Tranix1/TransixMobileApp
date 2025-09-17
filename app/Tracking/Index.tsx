@@ -12,20 +12,31 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from "@/context/AuthContext";
 import SubscriptionPaymentModal from "@/components/SubscriptionPaymentModal";
 import AccentRingLoader from "@/components/AccentRingLoader";
+import { VehicleLifecycleService, startVehicleLifecycleMonitoring } from '@/services/vehicleLifecycleService';
 
 interface Device {
   id: string;
   vehicleName: string;
   status?: string;
   deviceId: number;
+  vehicleCategory?: string;
+  vehicleSubType?: string;
+  paymentType?: string;
+  customerEmail?: string;
   subscription?: {
-    status: string; // trial | active | expired | cancelled
+    status: string; // trial | active | expired | cancelled | once_off | deleted_from_traccar
     expiryDate?: string; // for active subscriptions
     trialStartAt?: string; // ISO string
     trialEndAt?: string;   // ISO string
     nextBillingAt?: string;
     isTrial?: boolean;
     trialDays?: number;
+    isOnceOff?: boolean;
+    accessStartAt?: string;
+    accessEndAt?: string;
+    restrictToCurrentLocation?: boolean;
+    autoDeleteFromTraccar?: boolean;
+    deletedAt?: string;
   };
 }
 
@@ -58,6 +69,9 @@ export default function Index() {
       }
     };
     checkAgentStatus();
+    
+    // Start vehicle lifecycle monitoring
+    startVehicleLifecycleMonitoring();
   }, [user]);
 
   const LoadTructs = async () => {
@@ -98,6 +112,32 @@ export default function Index() {
     setSelectedVehicleId(vehicleId);
     setSelectedVehicleName(vehicleName);
     setIsModalVisible(true);
+  };
+
+  const handleReAddVehicle = async (vehicleId: string, vehicleName: string) => {
+    Alert.alert(
+      "Re-add Vehicle",
+      `Do you want to re-add "${vehicleName}" for another 6-hour tracking session?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Re-add",
+          onPress: async () => {
+            try {
+              const result = await VehicleLifecycleService.reAddVehicleToTraccar(vehicleId);
+              if (result.success) {
+                Alert.alert("Success", "Vehicle re-added successfully! You have 6 hours of tracking.");
+                LoadTructs(); // Refresh the list
+              } else {
+                Alert.alert("Error", result.error || "Failed to re-add vehicle");
+              }
+            } catch (error: any) {
+              Alert.alert("Error", error.message || "Failed to re-add vehicle");
+            }
+          }
+        }
+      ]
+    );
   };
 
   const loadMoreLoads = async () => {
@@ -174,8 +214,11 @@ export default function Index() {
           const now = new Date();
           const isActivePaid = !!(item.subscription && item.subscription.status === 'active' && item.subscription.expiryDate && new Date(item.subscription.expiryDate) > now);
           const isActiveTrial = !!(item.subscription && item.subscription.status === 'trial' && item.subscription.trialEndAt && new Date(item.subscription.trialEndAt) > now);
-          const isAccessible = isActivePaid || isActiveTrial;
-          const subscriptionColor = isAccessible ? 'green' : 'red';
+          const isOnceOffActive = VehicleLifecycleService.isOnceOffAccessValid(item);
+          const isDeletedFromTraccar = item.subscription?.status === 'deleted_from_traccar';
+          const isAccessible = isActivePaid || isActiveTrial || isOnceOffActive;
+          const subscriptionColor = isAccessible ? 'green' : isDeletedFromTraccar ? 'orange' : 'red';
+          const remainingTime = VehicleLifecycleService.getRemainingAccessTime(item);
 
           return (
           <TouchableOpacity
@@ -197,8 +240,14 @@ export default function Index() {
     if (isAccessible) {
       router.push({
         pathname: "/Tracking/Map",
-        params: { deviceId: item.deviceId },
+        params: { 
+          deviceId: item.deviceId,
+          firebaseDocId: item.id,
+          isOnceOff: item.subscription?.isOnceOff ? 'true' : 'false'
+        },
       });
+    } else if (isDeletedFromTraccar) {
+      handleReAddVehicle(item.id, item.vehicleName);
     } else {
       handleSubscription(item.id, item.vehicleName);
     }
@@ -219,15 +268,35 @@ export default function Index() {
       style={{
         fontSize: 14,
         fontWeight: "500",
-        color: isAccessible ? subscriptionColor : "red",
+        color: subscriptionColor,
       }}
     >
       {isActivePaid
         ? `Subscribed until ${item.subscription?.expiryDate ? new Date(item.subscription.expiryDate).toLocaleDateString() : ''}`
         : isActiveTrial
           ? `Free trial until ${item.subscription?.trialEndAt ? new Date(item.subscription.trialEndAt).toLocaleDateString() : ''}`
-          : "Subscription expired"}
+          : isOnceOffActive
+            ? `Once-off access: ${remainingTime}`
+            : isDeletedFromTraccar
+              ? "Tap to re-add for tracking"
+              : "Subscription expired"}
     </ThemedText>
+    
+    {/* Show vehicle category and payment type */}
+    {(item.vehicleCategory || item.paymentType) && (
+      <View style={{ flexDirection: 'row', marginTop: 4, flexWrap: 'wrap' }}>
+        {item.vehicleCategory && (
+          <ThemedText style={{ fontSize: 12, color: icon, marginRight: 8 }}>
+            {item.vehicleCategory}{item.vehicleSubType ? ` - ${item.vehicleSubType}` : ''}
+          </ThemedText>
+        )}
+        {item.paymentType && (
+          <ThemedText style={{ fontSize: 12, color: accent, fontWeight: '500' }}>
+            {item.paymentType}
+          </ThemedText>
+        )}
+      </View>
+    )}
   </View>
 </TouchableOpacity>
 
@@ -251,6 +320,9 @@ export default function Index() {
             {!filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
               Please add a vehicle to start tracking.
             </ThemedText>}
+            {!filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
+              Commercial, Personal, and Car Dealer vehicles available.
+            </ThemedText>}
             {filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
               Specified Vehicle Not Available!
             </ThemedText>}
@@ -262,7 +334,7 @@ export default function Index() {
         ListFooterComponent={
           <View style={{ marginBottom: wp(10), marginTop: wp(6) }}>
             {
-              !loadingMore ?
+                loadingMore ?
                 <View style={{ flexDirection: "row", gap: wp(4), alignItems: 'center', justifyContent: 'center' }}>
                   <ThemedText type='tiny' style={{ color: icon }}>Loading More</ThemedText><AccentRingLoader color={accent} size={20} dotSize={4} />
                   
