@@ -1,7 +1,7 @@
 import React from "react"
 import { View, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native"
 import { collection, addDoc, } from 'firebase/firestore';
-import { db, } from "../../components/config/fireBase";
+import { db, } from "@/db/fireBaseConfig";
 
 import { handleChange } from "@/Utilities/utils";
 

@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet,ToastAndroid } from "react-native";
-import { auth, db } from "../components/config/fireBase";
-import { addDocument , runFirestoreTransaction , checkDocumentExists,setDocuments } from "@/db/operations";
+import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, ToastAndroid } from "react-native";
+import { auth, db } from "@/db/fireBaseConfig";
+import { addDocument, runFirestoreTransaction, checkDocumentExists, setDocuments } from "@/db/operations";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Feather,} from "@expo/vector-icons";
-import { collection, serverTimestamp,  query, where, onSnapshot, getDocs } from 'firebase/firestore';
+import { Feather, } from "@expo/vector-icons";
+import { collection, serverTimestamp, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 import { Truck } from "@/types/types";
 import { toggleItemById } from "@/Utilities/utils";
 import { updateDocument } from "@/db/operations";
@@ -15,7 +15,7 @@ import { wp, hp } from "@/constants/common";
 import Heading from "@/components/Heading";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { formatCurrency } from '@/services/services'
-import { usePushNotifications,sendPushNotification } from "@/Utilities/pushNotification";
+import { usePushNotifications, sendPushNotification } from "@/Utilities/pushNotification";
 
 function BookLContract({ }) {
   const accent = useThemeColor("accent");
@@ -118,17 +118,17 @@ function BookLContract({ }) {
     async function handleSubmitDetails() {
       try {
         if (auth.currentUser) {
-          
+
           const userId = auth.currentUser.uid
           const existingBBDoc = await checkExistixtBBDoc(`${userId}${Contractitem.loadId}${item.timeStamp}`);
           if (!existingBBDoc) {
-             const theData= {
+            const theData = {
 
               truckId: item.id,
-              created_at: Date.now().toString() ,
+              created_at: Date.now().toString(),
               requestId: `${userId}${Contractitem.loadId}${item.timeStamp}`,
               cargoId: Contractitem.loadId,
-              companyName : Contractitem.companyName ,
+              companyName: Contractitem.companyName,
               onwerId: Contractitem.userId,
               productName: Contractitem.typeofLoad,
               origin: Contractitem.origin,
@@ -136,29 +136,29 @@ function BookLContract({ }) {
               rate: bidRate ? bidRate : Contractitem.rate,
               currency: Contractitem.currency,
               model: Contractitem.model,
-              ownerDecision:  "Pending",
-              status : bidRate ? "Bidded":"Booked" ,
-              loadId : item.id ,
+              ownerDecision: "Pending",
+              status: bidRate ? "Bidded" : "Booked",
+              loadId: item.id,
               approvedTrck: false,
               alreadyInContract: true,
-              expoPushToken : expoPushToken || null
+              expoPushToken: expoPushToken || null
               // contractName: Contractitem.contractName,
+            }
+            addDocument("loadRequests", theData)
+            await sendPushNotification(
+              `${Contractitem.expoPushToken}`,
+              //   "Truck Accepted",
+              `New Truck ${bidRate ? "Bidding" : "Booking"} Received`,
+              `company "${item.CompanyName}" has requested to carry your load "${Contractitem.typeofLoad}" from ${Contractitem.origin} to ${Contractitem.destination} ${bidRate && "at"} rate ${Contractitem.currency} ${bidRate ? bidRate : Contractitem.rate} ${Contractitem.model}. Tap to view request.`,
+
+              {
+                pathname: '/BooksAndBids/ViewBidsAndBooks',
+                params: {
+                  dbName: "bookings",
+                  dspRoute: "Booked by Carriers"
+                }
               }
-            addDocument( "loadRequests",theData)
-                  await sendPushNotification( 
-  `${Contractitem.expoPushToken}` ,
-//   "Truck Accepted",
-     `New Truck ${bidRate ? "Bidding" : "Booking"} Received`,
-   `company "${item.CompanyName}" has requested to carry your load "${Contractitem.typeofLoad}" from ${Contractitem.origin} to ${Contractitem.destination} ${bidRate &&"at"} rate ${Contractitem.currency } ${bidRate ?bidRate : Contractitem.rate} ${Contractitem.model}. Tap to view request.`,
-
-    { 
-    pathname: '/BooksAndBids/ViewBidsAndBooks', 
-    params: { 
-      dbName: "bookings", 
-      dspRoute: "Booked by Carriers" 
-    } 
-  }
-);
+            );
 
 
 
@@ -166,38 +166,38 @@ function BookLContract({ }) {
 
 
 
-   const existingBBDoc = await checkDocumentExists("newIterms" , [where('receriverId', '==', userId)] );
-        // const existingChat = await checkExistingChat(addChatId);
-        let newBiddedDoc = 0
-        let newBOOKEDDoc = 0
+            const existingBBDoc = await checkDocumentExists("newIterms", [where('receriverId', '==', userId)]);
+            // const existingChat = await checkExistingChat(addChatId);
+            let newBiddedDoc = 0
+            let newBOOKEDDoc = 0
 
-        // dbName === "bookings" ? newBOOKEDDoc = 1  : newBiddedDoc = 1
-      // Chat doesn't exist, add it to 'ppleInTouch'
-      if(!existingBBDoc){
-        setDocuments("bidBookingStats" ,{
-        bookingdocs : newBOOKEDDoc ,
-        biddingdocs : newBiddedDoc ,
-        timestamp : serverTimestamp() ,
-        receriverId : item.userId ,
-        }  )
-    
-    }
-    else{
+            // dbName === "bookings" ? newBOOKEDDoc = 1  : newBiddedDoc = 1
+            // Chat doesn't exist, add it to 'ppleInTouch'
+            if (!existingBBDoc) {
+              setDocuments("bidBookingStats", {
+                bookingdocs: newBOOKEDDoc,
+                biddingdocs: newBiddedDoc,
+                timestamp: serverTimestamp(),
+                receriverId: item.userId,
+              })
 
-   await runFirestoreTransaction(`bidBookingStats/${userId}`, (data) => {
-    const currentBiddingDocs = data?.biddingdocs || 0;
-    const currentBookingsDocs = data?.bookingdocs || 0;
+            }
+            else {
 
-    return {
-        // biddingdocs: dbName !== "bookings" ? currentBiddingDocs + 1 : currentBiddingDocs,
-        // bookingdocs: dbName === "bookings" ? currentBookingsDocs + 1 : currentBookingsDocs,
-    };
-});
+              await runFirestoreTransaction(`bidBookingStats/${userId}`, (data) => {
+                const currentBiddingDocs = data?.biddingdocs || 0;
+                const currentBookingsDocs = data?.bookingdocs || 0;
+
+                return {
+                  // biddingdocs: dbName !== "bookings" ? currentBiddingDocs + 1 : currentBiddingDocs,
+                  // bookingdocs: dbName === "bookings" ? currentBookingsDocs + 1 : currentBookingsDocs,
+                };
+              });
 
 
-    }
+            }
 
-ToastAndroid.show(`Load ${bidRate ? "BIDDING" : "BOOKING"} completed successfully.`,ToastAndroid.SHORT);
+            ToastAndroid.show(`Load ${bidRate ? "BIDDING" : "BOOKING"} completed successfully.`, ToastAndroid.SHORT);
 
           } else {
             alert("Truck alreadyy Booked")
@@ -482,7 +482,7 @@ ToastAndroid.show(`Load ${bidRate ? "BIDDING" : "BOOKING"} completed successfull
             <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
 
               <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate {Contractitem.model} </ThemedText>
-              <ThemedText   >{Contractitem.currency} { formatCurrency( !bidRate ? Contractitem.rate: bidRate )}</ThemedText>
+              <ThemedText   >{Contractitem.currency} {formatCurrency(!bidRate ? Contractitem.rate : bidRate)}</ThemedText>
             </View>
 
             <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { onSnapshot, query, collection, where } from "firebase/firestore";
-import { auth, db } from "../components/config/fireBase";
+import { auth, db } from "@/db/fireBaseConfig";
 import { ThemedText } from "@/components/ThemedText";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { router } from "expo-router";
@@ -53,7 +53,7 @@ function SlctBookingsandBiddings({ }) {
           label="Requested by Carriers"
           count={newItermBooked}
           color="#6a0c0c"
-          onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: {  dspRoute: "Requested by Carriers" } })}
+          onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dspRoute: "Requested by Carriers" } })}
         />
         <ModernCard
           label="Requested Loads"

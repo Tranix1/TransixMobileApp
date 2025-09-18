@@ -15,7 +15,7 @@ import {
   getDocs,
   startAfter,
 } from "firebase/firestore";
-import { auth, db } from "../components/config/fireBase";
+import { auth, db } from "@/db/fireBaseConfig";
 import { Ionicons, Octicons } from "@expo/vector-icons";
 import FontAwesome6 from "react-native-vector-icons/FontAwesome6";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -26,7 +26,7 @@ import { wp, hp } from "@/constants/common";
 import Divider from "@/components/Divider";
 
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
-import {  fetchDocuments,  } from '@/db/operations';
+import { fetchDocuments, } from '@/db/operations';
 
 import { RequestedCargo } from "@/components/CargoYouRequest";
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -40,8 +40,8 @@ const coolGray = "#e5e7eb";
 function BookingsandBiddings({ }) {
   const { dspRoute } = useLocalSearchParams();
 
-    const backgroundLight = useThemeColor('backgroundLight')
-    const textColor = useThemeColor('text')
+  const backgroundLight = useThemeColor('backgroundLight')
+  const textColor = useThemeColor('text')
   const icon = useThemeColor('icon')
   const [refreshing, setRefreshing] = useState(false)
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
@@ -50,14 +50,14 @@ function BookingsandBiddings({ }) {
   const [fectedDocuments, setFetchedDocuments] = React.useState<any>([])
   const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
 
-  const [requestType , setRequestType]=React.useState("")
+  const [requestType, setRequestType] = React.useState("")
 
   const LoadTructs = async () => {
     let filters: any[] = [];
 
-        dspRoute === "" ? filters.push(where("status", "==", requestType)) : filters.push(where("status", "==", requestType));
-        if (requestType) filters.push(where("status", "==", requestType));
-        const result = await fetchDocuments('loadRequests', 10, lastVisible, filters);
+    dspRoute === "" ? filters.push(where("status", "==", requestType)) : filters.push(where("status", "==", requestType));
+    if (requestType) filters.push(where("status", "==", requestType));
+    const result = await fetchDocuments('loadRequests', 10, lastVisible, filters);
 
     if (result) {
 
@@ -82,12 +82,12 @@ function BookingsandBiddings({ }) {
   };
 
   const loadMoreLoads = async () => {
-  let filters: any[] = [];
+    let filters: any[] = [];
 
-        if (requestType) filters.push(where("status", "==", requestType));
+    if (requestType) filters.push(where("status", "==", requestType));
     if (loadingMore || !lastVisible) return;
     setLoadingMore(true);
-        const result = await fetchDocuments('loadRequests', 10, lastVisible, filters);
+    const result = await fetchDocuments('loadRequests', 10, lastVisible, filters);
     if (result) {
       setFetchedDocuments([...fectedDocuments, ...result.data as any[]]);
       setLastVisible(result.lastVisible);
@@ -102,58 +102,58 @@ function BookingsandBiddings({ }) {
       {/* Header */}
       <Heading page={dspRoute ? dspRoute.toString() : " Bookings and Biddings"} />
 
-      <View style={{flexDirection:"row" , marginHorizontal:4, justifyContent:"space-evenly"}}>
-       <TouchableOpacity
-       onPress={()=>setRequestType("Booked")}
-                                    style={{
-                                          paddingVertical: wp(0.5),
-                                        marginLeft: wp(2),
-                                        borderRadius: wp(2),
-                                        paddingHorizontal: wp(10),
-                                        backgroundColor: requestType === "Booked" ? accent : backgroundLight,
-                                        borderWidth: 1,
-                                        borderColor: requestType === "Booked"  ? accent : coolGray,
-                                    }}
-                                    activeOpacity={0.8}
-                                >
-                                    <ThemedText
-                                        type="defaultSemiBold"
-                                        style={{
-                                            color: requestType === "Booked"  ? 'white' : textColor,
-                                            fontSize: wp(3.5),
-                                        }}
-                                    >
-                                        Bookings
-                                    </ThemedText>
-                                </TouchableOpacity>
+      <View style={{ flexDirection: "row", marginHorizontal: 4, justifyContent: "space-evenly" }}>
+        <TouchableOpacity
+          onPress={() => setRequestType("Booked")}
+          style={{
+            paddingVertical: wp(0.5),
+            marginLeft: wp(2),
+            borderRadius: wp(2),
+            paddingHorizontal: wp(10),
+            backgroundColor: requestType === "Booked" ? accent : backgroundLight,
+            borderWidth: 1,
+            borderColor: requestType === "Booked" ? accent : coolGray,
+          }}
+          activeOpacity={0.8}
+        >
+          <ThemedText
+            type="defaultSemiBold"
+            style={{
+              color: requestType === "Booked" ? 'white' : textColor,
+              fontSize: wp(3.5),
+            }}
+          >
+            Bookings
+          </ThemedText>
+        </TouchableOpacity>
 
 
-                                     <TouchableOpacity
-                                     onPress={()=>setRequestType("Bidded")}
-                                    style={{
-                                        paddingVertical: wp(0.5),
-                                        marginLeft: wp(2),
-                                        borderRadius: wp(2),
-                                        paddingHorizontal: wp(10),
-                                        backgroundColor: requestType === "Bidded" ? accent : backgroundLight,
-                                        borderWidth: 1,
-                                        borderColor: requestType === "Bidded"  ? accent : coolGray,
-                                    }}
-                                    activeOpacity={0.8}
-                                >
-                                    <ThemedText
-                                        type="defaultSemiBold"
-                                        style={{
-                                            color: requestType === "Bidded"   ? 'white' : textColor,
-                                            fontSize: wp(4),
-                                        }}
-                                    >
-                                        Biddings
-                                    </ThemedText>
-                                </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setRequestType("Bidded")}
+          style={{
+            paddingVertical: wp(0.5),
+            marginLeft: wp(2),
+            borderRadius: wp(2),
+            paddingHorizontal: wp(10),
+            backgroundColor: requestType === "Bidded" ? accent : backgroundLight,
+            borderWidth: 1,
+            borderColor: requestType === "Bidded" ? accent : coolGray,
+          }}
+          activeOpacity={0.8}
+        >
+          <ThemedText
+            type="defaultSemiBold"
+            style={{
+              color: requestType === "Bidded" ? 'white' : textColor,
+              fontSize: wp(4),
+            }}
+          >
+            Biddings
+          </ThemedText>
+        </TouchableOpacity>
 
 
-                                
+
       </View>
 
 
@@ -161,11 +161,11 @@ function BookingsandBiddings({ }) {
         keyExtractor={(item) => item.id.toString()}
         data={fectedDocuments}
 
-       
+
         renderItem={({ item, index, separators }) =>
-   <RequestedCargo item={item} index={index} separators={separators} dspRoute={`${dspRoute}`} />
-    // : <CargoRequested item={item} index={index} separators={separators} />
-}
+          <RequestedCargo item={item} index={index} separators={separators} dspRoute={`${dspRoute}`} />
+          // : <CargoRequested item={item} index={index} separators={separators} />
+        }
         contentContainerStyle={{ padding: wp(4) }}
         refreshControl={
           <RefreshControl
@@ -213,7 +213,7 @@ function BookingsandBiddings({ }) {
       />
 
 
-        
+
 
 
     </ScreenWrapper>

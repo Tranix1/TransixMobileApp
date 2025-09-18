@@ -69,7 +69,7 @@ export default function Index() {
       }
     };
     checkAgentStatus();
-    
+
     // Start vehicle lifecycle monitoring
     startVehicleLifecycleMonitoring();
   }, [user]);
@@ -117,7 +117,7 @@ export default function Index() {
   const handleReAddVehicle = async (vehicleId: string, vehicleName: string) => {
     Alert.alert(
       "Re-add Vehicle",
-      `Do you want to re-add "${vehicleName}" for another 6-hour tracking session?`,
+      `Do you want to re-add "${vehicleName}" for another 4-hour tracking session?`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -126,8 +126,21 @@ export default function Index() {
             try {
               const result = await VehicleLifecycleService.reAddVehicleToTraccar(vehicleId);
               if (result.success) {
-                Alert.alert("Success", "Vehicle re-added successfully! You have 6 hours of tracking.");
-                LoadTructs(); // Refresh the list
+                Alert.alert("Success", "Vehicle re-added successfully! You have 4 hours of tracking.");
+                // Immediately navigate to map using the new deviceId
+                if (result.deviceId) {
+                  router.push({
+                    pathname: "/Tracking/Map",
+                    params: {
+                      deviceId: result.deviceId,
+                      firebaseDocId: vehicleId,
+                      isOnceOff: 'true'
+                    },
+                  });
+                } else {
+                  // Fallback: refresh list if deviceId wasn't returned for any reason
+                  LoadTructs();
+                }
               } else {
                 Alert.alert("Error", result.error || "Failed to re-add vehicle");
               }
@@ -176,8 +189,8 @@ export default function Index() {
     return (
       <ScreenWrapper>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-                          <AccentRingLoader color={accent} size={48} dotSize={8} />
-          
+          <AccentRingLoader color={accent} size={48} dotSize={8} />
+
           <ThemedText>Loading devices...</ThemedText>
         </View>
       </ScreenWrapper>
@@ -216,89 +229,113 @@ export default function Index() {
           const isActiveTrial = !!(item.subscription && item.subscription.status === 'trial' && item.subscription.trialEndAt && new Date(item.subscription.trialEndAt) > now);
           const isOnceOffActive = VehicleLifecycleService.isOnceOffAccessValid(item);
           const isDeletedFromTraccar = item.subscription?.status === 'deleted_from_traccar';
+          const isOnceOff = !!item.subscription?.isOnceOff;
+          const isOnceOffExpired = isOnceOff && !isOnceOffActive && !isDeletedFromTraccar;
           const isAccessible = isActivePaid || isActiveTrial || isOnceOffActive;
           const subscriptionColor = isAccessible ? 'green' : isDeletedFromTraccar ? 'orange' : 'red';
           const remainingTime = VehicleLifecycleService.getRemainingAccessTime(item);
 
-          return (
-          <TouchableOpacity
-  style={{
-    padding: 12,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    // borderColor: subscriptionColor,
-    backgroundColor: backgroundLight,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  }}
-  activeOpacity={0.8}
-  onPress={() => {
-    if (isAccessible) {
-      router.push({
-        pathname: "/Tracking/Map",
-        params: { 
-          deviceId: item.deviceId,
-          firebaseDocId: item.id,
-          isOnceOff: item.subscription?.isOnceOff ? 'true' : 'false'
-        },
-      });
-    } else if (isDeletedFromTraccar) {
-      handleReAddVehicle(item.id, item.vehicleName);
-    } else {
-      handleSubscription(item.id, item.vehicleName);
-    }
-  }}
->
-  <View style={{ flexDirection: "column" }}>
-    <ThemedText
-      style={{
-        fontSize: 16,
-        fontWeight: "600",
-        marginBottom: 4,
-      }}
-    >
-      {item.vehicleName}
-    </ThemedText>
+          // Derive cooldownUntil: prefer stored cooldownUntil, otherwise accessEndAt + 30min
+          let cooldownUntil: Date | null = null;
+          if ((item as any).subscription?.cooldownUntil) {
+            cooldownUntil = new Date((item as any).subscription.cooldownUntil);
+          } else if ((item as any).subscription?.accessEndAt) {
+            const accessEnd = new Date((item as any).subscription.accessEndAt);
+            cooldownUntil = new Date(accessEnd.getTime() + 30 * 60 * 1000);
+          }
+          const cooldownMs = cooldownUntil ? cooldownUntil.getTime() - now.getTime() : 0;
+          const cooldownRemainingMin = cooldownUntil ? Math.max(0, Math.ceil(cooldownMs / 60000)) : 0;
 
-    <ThemedText
-      style={{
-        fontSize: 14,
-        fontWeight: "500",
-        color: subscriptionColor,
-      }}
-    >
-      {isActivePaid
-        ? `Subscribed until ${item.subscription?.expiryDate ? new Date(item.subscription.expiryDate).toLocaleDateString() : ''}`
-        : isActiveTrial
-          ? `Free trial until ${item.subscription?.trialEndAt ? new Date(item.subscription.trialEndAt).toLocaleDateString() : ''}`
-          : isOnceOffActive
-            ? `Once-off access: ${remainingTime}`
-            : isDeletedFromTraccar
-              ? "Tap to re-add for tracking"
-              : "Subscription expired"}
-    </ThemedText>
-    
-    {/* Show vehicle category and payment type */}
-    {(item.vehicleCategory || item.paymentType) && (
-      <View style={{ flexDirection: 'row', marginTop: 4, flexWrap: 'wrap' }}>
-        {item.vehicleCategory && (
-          <ThemedText style={{ fontSize: 12, color: icon, marginRight: 8 }}>
-            {item.vehicleCategory}{item.vehicleSubType ? ` - ${item.vehicleSubType}` : ''}
-          </ThemedText>
-        )}
-        {item.paymentType && (
-          <ThemedText style={{ fontSize: 12, color: accent, fontWeight: '500' }}>
-            {item.paymentType}
-          </ThemedText>
-        )}
-      </View>
-    )}
-  </View>
-</TouchableOpacity>
+          return (
+            <TouchableOpacity
+              style={{
+                padding: 12,
+                marginVertical: 8,
+                marginHorizontal: 16,
+                borderRadius: 12,
+                // borderColor: subscriptionColor,
+                backgroundColor: backgroundLight,
+                shadowColor: "#000",
+                shadowOpacity: 0.05,
+                shadowOffset: { width: 0, height: 2 },
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+              activeOpacity={0.8}
+              onPress={() => {
+                if (isAccessible) {
+                  router.push({
+                    pathname: "/Tracking/Map",
+                    params: {
+                      deviceId: item.deviceId,
+                      firebaseDocId: item.id,
+                      isOnceOff: item.subscription?.isOnceOff ? 'true' : 'false'
+                    },
+                  });
+                } else if (isDeletedFromTraccar) {
+                  handleReAddVehicle(item.id, item.vehicleName);
+                } else if (isOnceOffExpired) {
+                  // If cooldown has passed (or not set), allow re-adding immediately
+                  if (!cooldownUntil || cooldownRemainingMin === 0) {
+                    handleReAddVehicle(item.id, item.vehicleName);
+                  } else {
+                    Alert.alert("Session regenerating", `Please wait ${cooldownRemainingMin} minute(s) before starting a new 4-hour session.`);
+                  }
+                } else {
+                  handleSubscription(item.id, item.vehicleName);
+                }
+              }}
+            >
+              <View style={{ flexDirection: "column" }}>
+                <ThemedText
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "600",
+                    marginBottom: 4,
+                  }}
+                >
+                  {item.vehicleName}
+                </ThemedText>
+
+                <ThemedText
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "500",
+                    color: subscriptionColor,
+                  }}
+                >
+                  {isActivePaid
+                    ? `Subscribed until ${item.subscription?.expiryDate ? new Date(item.subscription.expiryDate).toLocaleDateString() : ''}`
+                    : isActiveTrial
+                      ? `Free trial until ${item.subscription?.trialEndAt ? new Date(item.subscription.trialEndAt).toLocaleDateString() : ''}`
+                      : isOnceOffActive
+                        ? `Once-off access: ${remainingTime}`
+                        : isDeletedFromTraccar
+                          ? "Tap to start a new 4-hour session"
+                          : isOnceOff
+                            ? (cooldownRemainingMin > 0
+                              ? `Session regenerating: ${cooldownRemainingMin}m left`
+                              : "Tap to start a new 4-hour session")
+                            : "Subscription expired"}
+                </ThemedText>
+
+                {/* Show vehicle category and payment type */}
+                {(item.vehicleCategory || item.paymentType) && (
+                  <View style={{ flexDirection: 'row', marginTop: 4, flexWrap: 'wrap' }}>
+                    {item.vehicleCategory && (
+                      <ThemedText style={{ fontSize: 12, color: icon, marginRight: 8 }}>
+                        {item.vehicleCategory}{item.vehicleSubType ? ` - ${item.vehicleSubType}` : ''}
+                      </ThemedText>
+                    )}
+                    {item.paymentType && (
+                      <ThemedText style={{ fontSize: 12, color: accent, fontWeight: '500' }}>
+                        {item.paymentType}
+                      </ThemedText>
+                    )}
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
 
           );
         }}
@@ -334,10 +371,10 @@ export default function Index() {
         ListFooterComponent={
           <View style={{ marginBottom: wp(10), marginTop: wp(6) }}>
             {
-                loadingMore ?
+              loadingMore ?
                 <View style={{ flexDirection: "row", gap: wp(4), alignItems: 'center', justifyContent: 'center' }}>
                   <ThemedText type='tiny' style={{ color: icon }}>Loading More</ThemedText><AccentRingLoader color={accent} size={20} dotSize={4} />
-                  
+
                 </View>
                 :
                 (!lastVisible && devices.length > 0) ?

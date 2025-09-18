@@ -6,9 +6,9 @@ import * as SplashScreen from 'expo-splash-screen';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Linking } from "react-native";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
-import { auth } from "./components/config/fireBase";
+import { auth } from "@/db/fireBaseConfig";
 
-import { useNotificationRouting } from "@/Utilities/pushNotification"; 
+import { useNotificationRouting } from "@/Utilities/pushNotification";
 
 export default function RootLayout() {
     const router = useRouter();
@@ -45,7 +45,7 @@ export default function RootLayout() {
 
     }, [loaded]);
 
-    useNotificationRouting(); 
+    useNotificationRouting();
 
 
     return (

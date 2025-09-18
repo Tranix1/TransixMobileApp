@@ -37,12 +37,13 @@ import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplet
 import { SelectLocationProp } from '@/types/types';
 import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplete';
 import { LocationPicker } from '@/components/LocationPicker';
+import { model } from '@/db/fireBaseConfig';
 const AddLoadDB = () => {
 
 
   const { expoPushToken } = usePushNotifications();
   const icon = useThemeColor('icon')
-  const accent = useThemeColor('accent')  
+  const accent = useThemeColor('accent')
   const background = useThemeColor('background')
   const backgroundLight = useThemeColor('backgroundLight')
 
@@ -99,57 +100,81 @@ const AddLoadDB = () => {
   const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>([]);
   const [distance, setDistance] = useState("");
   const [duration, setDuration] = useState("");
-  const [durationInTraffic, setDurationInTraffic] = useState(""); 
+  const [durationInTraffic, setDurationInTraffic] = useState("");
   const [routePolyline, setRoutePolyline] = useState("");
-  const [bounds, setBounds] = useState(null); 
+  const [bounds, setBounds] = useState(null);
 
-const apiKey = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
+  const apiKey = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
 
-React.useEffect(() => {
-  if (!origin || !destination) return;
+  React.useEffect(() => {
+    if (!origin || !destination) return;
 
-  async function fetchDirections() {
-    try {
-      const fromLocation = `${origin?.latitude},${origin?.longitude}`;
-      const toLocation = `${destination?.latitude},${destination?.longitude}`;
+    async function fetchDirections() {
+      try {
+        const fromLocation = `${origin?.latitude},${origin?.longitude}`;
+        const toLocation = `${destination?.latitude},${destination?.longitude}`;
 
-      const res = await fetch(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLocation}&destination=${toLocation}&departure_time=now&key=${apiKey}`
-      );
-      const data = await res.json();
+        const res = await fetch(
+          `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLocation}&destination=${toLocation}&departure_time=now&key=${apiKey}`
+        );
+        const data = await res.json();
 
-      if (data.status === "OK" && data.routes.length > 0) {
-        const route = data.routes[0];
-        const leg = route.legs[0];
+        if (data.status === "OK" && data.routes.length > 0) {
+          const route = data.routes[0];
+          const leg = route.legs[0];
 
-        setDistance(leg.distance.text);
-        setDuration(leg.duration.text);
+          setDistance(leg.distance.text);
+          setDuration(leg.duration.text);
 
-        // ✅ ETA with traffic
-        if (leg.duration_in_traffic) {
-          setDurationInTraffic(leg.duration_in_traffic.text);
+          // ✅ ETA with traffic
+          if (leg.duration_in_traffic) {
+            setDurationInTraffic(leg.duration_in_traffic.text);
+          }
+
+          // ✅ Encoded polyline
+          setRoutePolyline(route.overview_polyline.points);
+
+          // ✅ Bounds for auto-zoom
+          setBounds(route.bounds);
+        } else {
+          console.warn("No route found:", data.status);
         }
-
-        // ✅ Encoded polyline
-        setRoutePolyline(route.overview_polyline.points);
-
-        // ✅ Bounds for auto-zoom
-        setBounds(route.bounds);
-      } else {
-        console.warn("No route found:", data.status);
+      } catch (err) {
+        console.error("Directions API error:", err);
       }
-    } catch (err) {
-      console.error("Directions API error:", err);
     }
-  }
 
-  fetchDirections();
-}, [origin, destination]);
-
+    fetchDirections();
+  }, [origin, destination]);
 
 
 
 
+
+  // Vertex AI quick Q&A state
+  const [aiQuestion, setAiQuestion] = useState("");
+  const [aiAnswer, setAiAnswer] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const askVertex = async () => {
+    if (!aiQuestion.trim()) return;
+    try {
+      setAiLoading(true);
+      setAiAnswer("");
+      console.log('[VertexAI] Sending prompt:', aiQuestion);
+      const result: any = await (model as any).generateContent(aiQuestion);
+      console.log('[VertexAI] Raw response:', result);
+      const text = typeof result?.response?.text === 'function'
+        ? result.response.text()
+        : (result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || "");
+      setAiAnswer(text || "(no response)");
+    } catch (e: any) {
+      console.error('[VertexAI] Error while generating content:', e);
+      setAiAnswer(e?.message || 'Failed to get response');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   function pushTruck() {
     const newTruck: TruckNeededType = {
@@ -270,7 +295,7 @@ React.useEffect(() => {
     }
 
     let proofOfOerSub
-    if (proofOfOrder.length > 0) { proofOfOerSub = await uploadImage(proofOfOrder[0], "TruckBroker", setUploadImageUpdate, "Company Registration Certificate"); }
+    if (proofOfOrder.length > 0) { proofOfOerSub = await uploadImage(proofOfOrder[0], "CargoProof", setUploadImageUpdate, "Company Registration Certificate"); }
     const loadData = {
       userId: user?.uid,
       companyName: user?.organisation,
@@ -279,11 +304,11 @@ React.useEffect(() => {
       created_at: Date.now().toString(),
       isVerified: false,
       typeofLoad,
-      destination: destination?.description ,
-      destinationFull : destination,
+      destination: destination?.description,
+      destinationFull: destination,
 
-      origin: origin?.description ,
-      originFull : origin,
+      origin: origin?.description,
+      originFull: origin,
       rate,
       rateexplantion,
       currency: selectedCurrency.name,
@@ -302,15 +327,15 @@ React.useEffect(() => {
       trucksRequired: trucksNeeded,
       loadId: `Lo${Math.floor(100000000000 + Math.random() * 900000000000).toString()}ad`,
       expoPushToken: expoPushToken || null,
-      proofOfOrder: proofOfOerSub||null,
+      proofOfOrder: proofOfOerSub || null,
       proofOfOrderType: proofOfOrderFileType[0] || null,
-   
-        distance,
-        duration,
-        durationInTraffic, 
 
-        routePolyline,
-        bounds,
+      distance,
+      duration,
+      durationInTraffic,
+
+      routePolyline,
+      bounds,
     };
 
     try {
@@ -413,6 +438,24 @@ React.useEffect(() => {
         {step === 0 && (
           <ScrollView keyboardShouldPersistTaps="always" >
             <View style={styles.viewMainDsp}>
+              {/* Vertex AI Q&A */}
+              <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#7B61FF" }}>
+                Ask AI (Beta)
+              </ThemedText>
+              <Input
+                placeholder="Ask a simple question about loads..."
+                value={aiQuestion}
+                onChangeText={setAiQuestion}
+              />
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Button title={aiLoading ? "Asking..." : "Ask AI"} onPress={askVertex} disabled={aiLoading} />
+              </View>
+              {aiAnswer ? (
+                <View style={{ padding: 12, borderRadius: 8, backgroundColor: backgroundLight }}>
+                  <ThemedText>{aiAnswer}</ThemedText>
+                </View>
+              ) : null}
+
               <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
                 Load Details
               </ThemedText>
@@ -426,15 +469,15 @@ React.useEffect(() => {
               />
 
 
- {distance && duration && (
-                  <View style={{ padding: 16,borderRadius: 12,shadowColor: "#000",shadowOffset: { width: 0, height: 2 },shadowOpacity: 0.2,shadowRadius: 4,elevation: 5,backgroundColor:backgroundLight}}>
-                    <ThemedText style={styles.infoText}>Distance: {distance}</ThemedText>
-                    <ThemedText style={styles.infoText}>Duration: {duration}</ThemedText>
-                    {durationInTraffic && (
-                      <ThemedText style={styles.infoText}>Duration in Traffic: {durationInTraffic}</ThemedText>
-                    )}
-                  </View>
-                )}
+              {distance && duration && (
+                <View style={{ padding: 16, borderRadius: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 5, backgroundColor: backgroundLight }}>
+                  <ThemedText style={styles.infoText}>Distance: {distance}</ThemedText>
+                  <ThemedText style={styles.infoText}>Duration: {duration}</ThemedText>
+                  {durationInTraffic && (
+                    <ThemedText style={styles.infoText}>Duration in Traffic: {durationInTraffic}</ThemedText>
+                  )}
+                </View>
+              )}
 
 
               <TouchableOpacity
@@ -461,8 +504,8 @@ React.useEffect(() => {
                 </ThemedText>
               </TouchableOpacity>
 
-             
-                 
+
+
 
 
               <GooglePlaceAutoCompleteComp dspRoute={dspFromLocation} setDspRoute={setDspFromLocation} setRoute={setOrigin} topic='Load Origin' setPickLocationOnMap={setPickLocationOnMap} />
@@ -960,8 +1003,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: hp(1),
-  }, 
-  
+  },
+
   infoText: {
     fontSize: 16,
     fontWeight: "500",

@@ -1,6 +1,6 @@
 import { ActivityIndicator, RefreshControl, StyleSheet, Text, TouchableOpacity, View, ToastAndroid, FlatList } from 'react-native'
 import React, { useEffect, useState, useCallback, useRef } from 'react'
-import { auth, db } from '../../components/config/fireBase'
+import { auth, db } from '@/db/fireBaseConfig'
 import { collection, onSnapshot, where, query, doc, deleteDoc } from 'firebase/firestore'
 import { AntDesign, FontAwesome6, Ionicons } from '@expo/vector-icons'
 import { useThemeColor } from '@/hooks/useThemeColor'

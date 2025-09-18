@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet } from "react-native";
-import { auth, db } from "../../components/config/fireBase";
+import { auth, db } from "@/db/fireBaseConfig";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { collection, serverTimestamp, addDoc, query, where, onSnapshot, getDocs } from 'firebase/firestore';

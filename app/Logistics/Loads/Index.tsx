@@ -1,13 +1,13 @@
-import {  View, ToastAndroid } from 'react-native'
-import React, { useEffect, useState,} from 'react'
+import { View, ToastAndroid } from 'react-native'
+import React, { useEffect, useState, } from 'react'
 import { addDocument, checkDocumentExists, fetchDocuments, runFirestoreTransaction, setDocuments } from '@/db/operations';
 import { Load } from '@/types/types';
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
 import { LoadsComponent } from '@/components/LoadHomePage';
 import { router, useLocalSearchParams } from 'expo-router'
-import { auth } from '@/app/components/config/fireBase';
-import { where,serverTimestamp } from 'firebase/firestore';
+import { auth } from '@/db/fireBaseConfig';
+import { where, serverTimestamp } from 'firebase/firestore';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -16,7 +16,7 @@ const Index = () => {
 
     const { user } = useAuth();
 
-  const { userId } = useLocalSearchParams();
+    const { userId } = useLocalSearchParams();
 
     const [refreshing, setRefreshing] = useState(false)
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
@@ -32,15 +32,15 @@ const Index = () => {
 
 
     const [bottomMode, setBottomMode] = useState<'Bid' | 'Book' | ''>('');
-    
-const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(false)
+
+    const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
     const LoadTructs = async () => {
-      let filters: any[] = [];
+        let filters: any[] = [];
         const maLoads = await fetchDocuments("Cargo");
 
         if (maLoads.data.length) {
 
-            if(filters.length > 0 && maLoads.data.length < 0 )setFilteredPNotAavaialble(true)
+            if (filters.length > 0 && maLoads.data.length < 0) setFilteredPNotAavaialble(true)
             setLoads(maLoads.data as Load[])
             setLastVisible(maLoads.lastVisible)
         }
@@ -74,38 +74,38 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
 
 
 
- 
+
 
 
 
     return (
-                <GestureHandlerRootView style={{ flex: 1,}}>
+        <GestureHandlerRootView style={{ flex: 1, }}>
 
-            <View style={{flex:1}}>
+            <View style={{ flex: 1 }}>
 
-            <LoadsComponent
-             Loads={Loads}
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            loadMoreLoads={loadMoreLoads}
-            lastVisible={lastVisible}
-            loadingMore={loadingMore}
-            expandId={expandId}
-            setSelectedLoad={setSelectedLoad}
-            setExpandID={setExpandID}
-            setBottomMode={setBottomMode}
-            selectedLoad={selectedLoad}
-            setBidRate={setBidRate}
-            bidRate={bidRate}
-            setShowfilter={setShowfilter}
-            setShowSheet={setShowSheet}
-            bottomMode={bottomMode}
-            organisationName={"Username"}
-            userId ={userId}
-            filteredPNotAavaialble={filteredPNotAavaialble}
-            />
+                <LoadsComponent
+                    Loads={Loads}
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    loadMoreLoads={loadMoreLoads}
+                    lastVisible={lastVisible}
+                    loadingMore={loadingMore}
+                    expandId={expandId}
+                    setSelectedLoad={setSelectedLoad}
+                    setExpandID={setExpandID}
+                    setBottomMode={setBottomMode}
+                    selectedLoad={selectedLoad}
+                    setBidRate={setBidRate}
+                    bidRate={bidRate}
+                    setShowfilter={setShowfilter}
+                    setShowSheet={setShowSheet}
+                    bottomMode={bottomMode}
+                    organisationName={"Username"}
+                    userId={userId}
+                    filteredPNotAavaialble={filteredPNotAavaialble}
+                />
             </View>
-                </GestureHandlerRootView>
+        </GestureHandlerRootView>
 
 
 

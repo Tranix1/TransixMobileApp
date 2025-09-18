@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator, Animated, } from "react-native";
 import * as DocumentPicker from 'expo-document-picker';
-import { db, auth } from "../../components/config/fireBase";
+import { db, auth } from "@/db/fireBaseConfig";
 import { collection, addDoc, } from 'firebase/firestore';
 
 const { Paynow } = require("paynow");
@@ -247,78 +247,78 @@ const ApplyVerification = () => {
         <ScreenWrapper >
 
             <Heading page="Apply Verification" />
-        {dspInfo && (
-  <View
-    style={{
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 10,
-      backgroundColor: background,
-      padding: 20,
-      justifyContent: "center",
-    }}
-  >
-    <ThemedText style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10, textAlign: "center" }}>
-      Get Verified Now
-    </ThemedText>
+            {dspInfo && (
+                <View
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        zIndex: 10,
+                        backgroundColor: background,
+                        padding: 20,
+                        justifyContent: "center",
+                    }}
+                >
+                    <ThemedText style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10, textAlign: "center" }}>
+                        Get Verified Now
+                    </ThemedText>
 
-    <ThemedText style={{ fontSize: 14, marginBottom: 20, textAlign: "center" }}>
-      Please prepare the following requirements in PDF format.
-    </ThemedText>
+                    <ThemedText style={{ fontSize: 14, marginBottom: 20, textAlign: "center" }}>
+                        Please prepare the following requirements in PDF format.
+                    </ThemedText>
 
-    <View style={{ marginBottom: 15 }}>
-      <ThemedText style={{ fontWeight: "bold", marginBottom: 5 }}>Business Documents</ThemedText>
-      <ThemedText>• Certificate of Incorporation</ThemedText>
-      <ThemedText>• Board Resolution</ThemedText>
-      <ThemedText>• Tax Clearance</ThemedText>
-    </View>
+                    <View style={{ marginBottom: 15 }}>
+                        <ThemedText style={{ fontWeight: "bold", marginBottom: 5 }}>Business Documents</ThemedText>
+                        <ThemedText>• Certificate of Incorporation</ThemedText>
+                        <ThemedText>• Board Resolution</ThemedText>
+                        <ThemedText>• Tax Clearance</ThemedText>
+                    </View>
 
-    <View style={{ marginBottom: 15 }}>
-      <ThemedText style={{ fontWeight: "bold", marginBottom: 5 }}>Authorized Business Director</ThemedText>
-      <ThemedText>• National ID or Passport</ThemedText>
-      <ThemedText>• Contact email and phone number</ThemedText>
-    </View>
+                    <View style={{ marginBottom: 15 }}>
+                        <ThemedText style={{ fontWeight: "bold", marginBottom: 5 }}>Authorized Business Director</ThemedText>
+                        <ThemedText>• National ID or Passport</ThemedText>
+                        <ThemedText>• Contact email and phone number</ThemedText>
+                    </View>
 
-    <View style={{ marginBottom: 15 }}>
-      <ThemedText style={{ fontWeight: "bold", marginBottom: 5 }}>Business Location</ThemedText>
-      <ThemedText>• Proof of Residence</ThemedText>
-      <ThemedText>• Full Business Address</ThemedText>
-    </View>
+                    <View style={{ marginBottom: 15 }}>
+                        <ThemedText style={{ fontWeight: "bold", marginBottom: 5 }}>Business Location</ThemedText>
+                        <ThemedText>• Proof of Residence</ThemedText>
+                        <ThemedText>• Full Business Address</ThemedText>
+                    </View>
 
-    <ThemedText style={{ marginBottom: 20 }}>
-      You will need funds for your subscription. You can also claim your first 3 months free.
-    </ThemedText>
+                    <ThemedText style={{ marginBottom: 20 }}>
+                        You will need funds for your subscription. You can also claim your first 3 months free.
+                    </ThemedText>
 
-    <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
-      <TouchableOpacity
-        style={{
-          backgroundColor: "#e74c3c",
-          paddingVertical: 10,
-          paddingHorizontal: 20,
-          borderRadius: 8,
-        }}
-        onPress={() => router.back()}
-      >
-        <ThemedText style={{ color: "white", fontWeight: "bold" }}>Not Yet</ThemedText>
-      </TouchableOpacity>
+                    <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: "#e74c3c",
+                                paddingVertical: 10,
+                                paddingHorizontal: 20,
+                                borderRadius: 8,
+                            }}
+                            onPress={() => router.back()}
+                        >
+                            <ThemedText style={{ color: "white", fontWeight: "bold" }}>Not Yet</ThemedText>
+                        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={{
-          backgroundColor: "#27ae60",
-          paddingVertical: 10,
-          paddingHorizontal: 20,
-          borderRadius: 8,
-        }}
-        onPress={() => setDspInfo(false)}
-      >
-        <ThemedText style={{ color: "white", fontWeight: "bold" }}>Understood</ThemedText>
-      </TouchableOpacity>
-    </View>
-  </View>
-)}
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: "#27ae60",
+                                paddingVertical: 10,
+                                paddingHorizontal: 20,
+                                borderRadius: 8,
+                            }}
+                            onPress={() => setDspInfo(false)}
+                        >
+                            <ThemedText style={{ color: "white", fontWeight: "bold" }}>Understood</ThemedText>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )}
 
 
             <View style={{ padding: wp(2), paddingHorizontal: wp(4), backgroundColor: background, borderRadius: wp(20), shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 8, alignSelf: 'center' }} >
@@ -348,7 +348,7 @@ const ApplyVerification = () => {
                 {selectedDocuments[2] && <ThemedText style={{ color: 'green', fontWeight: 'bold', textAlign: "center", fontSize: 12 }} >Tax clearance</ThemedText>}
                 {selectedDocuments[2] && <ThemedText style={{ borderWidth: 1, borderColor: "#6a0c0c", padding: 5, textAlign: 'center', marginBottom: 15 }}>{selectedDocuments[2].name}</ThemedText>}
                 {selectedDocuments[1] && !selectedDocuments[2] && <TouchableOpacity onPress={pickDocument} style={{ backgroundColor: '#6a0c0c', height: 40, justifyContent: 'center', alignSelf: 'center', marginBottom: 15, width: 200 }} >
-                    <ThemedText style={{ backgroundColor: 'white', color: "black",textAlign:"center" }} >Tax clearance</ThemedText>
+                    <ThemedText style={{ backgroundColor: 'white', color: "black", textAlign: "center" }} >Tax clearance</ThemedText>
                 </TouchableOpacity>}
 
 

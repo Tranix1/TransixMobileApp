@@ -1,8 +1,8 @@
-    import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, where, onSnapshot, runTransaction, serverTimestamp, startAfter, limit, orderBy, DocumentData, Query, setDoc, getDoc } from "firebase/firestore";
-import { db, auth } from "../app/components/config/fireBase";
+import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, where, onSnapshot, runTransaction, serverTimestamp, startAfter, limit, orderBy, DocumentData, Query, setDoc, getDoc } from "firebase/firestore";
+import { db, auth } from "./fireBaseConfig";
 import { getDownloadURL, ref, uploadBytes, } from "firebase/storage";
 import { storage } from "./fireBaseConfig";
-import { usePushNotifications,sendPushNotification } from "@/Utilities/pushNotification";
+import { usePushNotifications, sendPushNotification } from "@/Utilities/pushNotification";
 /**
  * Add a document to a Firestore collection.
  * @param collectionName - The name of the Firestore collection.

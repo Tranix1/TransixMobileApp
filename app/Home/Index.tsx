@@ -9,7 +9,7 @@ import { router, useFocusEffect } from "expo-router";
 import { BlurView } from 'expo-blur'
 import { useAuth } from '@/context/AuthContext'
 import * as Updates from 'expo-updates';
-import { auth } from '../components/config/fireBase'
+import { auth } from '@/db/fireBaseConfig'
 import { signOut, sendEmailVerification } from 'firebase/auth'
 import HomeItemView from '@/components/HomeItemView';
 import CustomHeader from '@/components/CustomHeader';

@@ -8,7 +8,7 @@ import { Image } from 'expo-image'
 import { FontAwesome5, FontAwesome6, Fontisto, Octicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { collection, serverTimestamp, addDoc, query, where, onSnapshot, getDocs } from 'firebase/firestore';
-import { auth, db } from '@/app/components/config/fireBase'
+import { auth, db } from '@/db/fireBaseConfig'
 
 const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contracts }) => {
     const backgroundLight = useThemeColor('backgroundLight')
@@ -39,7 +39,7 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
 
 
     return (
-        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id, dspDetails: "false",  } })} style={[styles.container, { backgroundColor: background, borderColor: backgroundLight }]}>
+        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id, dspDetails: "false", } })} style={[styles.container, { backgroundColor: background, borderColor: backgroundLight }]}>
             <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truck.imageUrl }} style={styles.image} />
             <View style={styles.detailsContainer}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -47,35 +47,35 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
 
                 </View>
                 {/* ADD THE CONDITION HERE!!!!! */}
-              
-<View style={{flexDirection:"row" , justifyContent:"space-evenly"}} >
-                <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
 
-                    <Fontisto name="truck" size={wp(4)} style={{ width: wp(6) }} color={icon} />
-                    <ThemedText numberOfLines={1} type='tiny' style={[{  fontSize: 15 }]}>
-                        {truck.truckType || 'N/A'}
-                    </ThemedText>
-                    
+                <View style={{ flexDirection: "row", justifyContent: "space-evenly" }} >
+                    <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
+
+                        <Fontisto name="truck" size={wp(4)} style={{ width: wp(6) }} color={icon} />
+                        <ThemedText numberOfLines={1} type='tiny' style={[{ fontSize: 15 }]}>
+                            {truck.truckType || 'N/A'}
+                        </ThemedText>
+
+                    </View>
+                    <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: 'flex-start', borderRadius: wp(2), alignItems: 'center' }}>
+
+                        <FontAwesome5 name="user-alt" size={wp(3.5)} style={{ width: wp(5) }} color={icon} />
+                        <ThemedText numberOfLines={1} type='tiny' style={[{ fontSize: 13 }]}>
+                            {/* {truck.truckType || 'N/A'} */}
+
+                            {truck.ownerName && "Owner"}
+                            {truck.brokerName && "Broker"}
+                        </ThemedText>
+
+                    </View>
                 </View>
-                 <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: 'flex-start', borderRadius: wp(2), alignItems: 'center' }}>
-
-                    <FontAwesome5 name="user-alt" size={wp(3.5)} style={{ width: wp(5) }} color={icon} />
-                    <ThemedText numberOfLines={1} type='tiny' style={[{  fontSize: 13 }]}>
-                        {/* {truck.truckType || 'N/A'} */}
-
-                                {truck.ownerName && "Owner"  }
-                                {truck.brokerName && "Broker"  }
-                    </ThemedText>
-                    
-                </View>
- </View>
                 <View style={{ gap: wp(3), paddingHorizontal: wp(2), marginTop: wp(1) }}>
 
 
 
                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
                         <FontAwesome5 name="truck-loading" size={wp(3.6)} style={{ width: wp(6) }} color={icon} />
-                        <ThemedText numberOfLines={1} type='tiny' style={[{  fontSize: 15 }]}>
+                        <ThemedText numberOfLines={1} type='tiny' style={[{ fontSize: 15 }]}>
                             {truck.cargoArea || 'N/A'}
                         </ThemedText>
                     </View>
@@ -83,14 +83,14 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
                         {/* Else if international trucks diasplay were permits are availeble */}
                         <FontAwesome6 name="map-location-dot" size={wp(4)} style={{ width: wp(6) }} color={icon} />
-                        <ThemedText numberOfLines={1} type='tiny' style={[{  fontSize: 15 }]}>
+                        <ThemedText numberOfLines={1} type='tiny' style={[{ fontSize: 15 }]}>
                             {truck.locations?.map(item => item + ', ') || 'N/A'}
                         </ThemedText>
                     </View>
 
                     <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
                         <FontAwesome5 name="weight" size={wp(3.6)} style={{ width: wp(6) }} color={icon} />
-                        <ThemedText numberOfLines={1} type='tiny' style={[{  fontSize: 15 }]}>
+                        <ThemedText numberOfLines={1} type='tiny' style={[{ fontSize: 15 }]}>
                             {truck.truckCapacity || 'N/A'}
                         </ThemedText>
                     </View>

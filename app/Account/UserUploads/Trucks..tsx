@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
-import { auth, db } from '../../components/config/fireBase';
+import { auth, db } from '@/db/fireBaseConfig';
 import { collection, onSnapshot, where, query, doc, deleteDoc } from 'firebase/firestore';
 import AntDesign from 'react-native-vector-icons/AntDesign'; // Corrected import
 // import defaultImage from "../images/logo.jpg" //commented out because it is not used

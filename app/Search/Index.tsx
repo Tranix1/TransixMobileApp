@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, ScrollView, TouchableOpacity, TextInput, Share, TouchableHighlight, Animated, FlatList, ActivityIndicator, StyleSheet } from "react-native";
 
 import { collection, onSnapshot, query } from 'firebase/firestore';
-import { db } from "../components/config/fireBase";
+import { db } from "@/db/fireBaseConfig";
 
 import { EvilIcons, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -107,7 +107,7 @@ function SearchIterms({ navigation }: SearchItermsProps) {
     const searchWord = text;
     setTextTyped(text);
     setWordEntered(text);
-    
+
     // Animate search results
     if (text.length > 0) {
       Animated.timing(searchAnimation, {
@@ -130,7 +130,7 @@ function SearchIterms({ navigation }: SearchItermsProps) {
     const newFilterTrucks = allTrucks.filter((value) => {
       return (value.fromLocation || value.toLocation || value.CompanyName || value.truckType)?.toLowerCase().includes(searchWord.toLowerCase());
     });
-    
+
     if (searchWord === "") {
       setFilteredData([]);
       setFilteredDataTruks([]);
@@ -149,7 +149,7 @@ function SearchIterms({ navigation }: SearchItermsProps) {
 
   // Modern card component for trucks
   const renderTruckCard = ({ item }: { item: Truck }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[styles.modernCard, { backgroundColor: backgroundLight }]}
       onPress={() => navigation.navigate('selectedUserTrucks', { userId: item.userId, itemKey: item.timeStamp, CompanyName: item.CompanyName })}
       activeOpacity={0.7}
@@ -163,7 +163,7 @@ function SearchIterms({ navigation }: SearchItermsProps) {
           <MaterialIcons name="verified" size={20} color="#4CAF50" />
         )}
       </View>
-      
+
       <View style={styles.routeContainer}>
         <View style={styles.locationRow}>
           <Ionicons name="location" size={16} color={icon} />
@@ -193,7 +193,7 @@ function SearchIterms({ navigation }: SearchItermsProps) {
 
   // Modern card component for loads
   const renderLoadCard = ({ item }: { item: Load }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[styles.modernCard, { backgroundColor: backgroundLight }]}
       onPress={() => navigation.navigate('selectedUserLoads', { userId: item.userId, companyNameG: item.companyName, itemKey: item.timeStamp })}
       activeOpacity={0.7}
@@ -207,7 +207,7 @@ function SearchIterms({ navigation }: SearchItermsProps) {
           <MaterialIcons name="verified" size={20} color="#4CAF50" />
         )}
       </View>
-      
+
       <View style={styles.routeContainer}>
         <View style={styles.locationRow}>
           <Ionicons name="location" size={16} color={icon} />
@@ -296,15 +296,15 @@ Experience the future of transportation and logistics!`;
         >
           <Ionicons name='chevron-back' size={wp(6)} color={icon} />
         </TouchableHighlight>
-        
+
         <View style={styles.searchContainer}>
-          <Input 
+          <Input
             onChangeText={(text) => handleFilter(text)}
             placeholder='Search loads, trucks, locations...'
             autoFocus
             Icon={<EvilIcons name='search' size={wp(6)} color={icon} />}
             isDynamicwidth
-            containerStyles={[styles.searchInput, { backgroundColor: backgroundColor }]} 
+            containerStyles={[styles.searchInput, { backgroundColor: backgroundColor }]}
           />
           {textTyped.length > 0 && (
             <TouchableOpacity onPress={clearInput} style={styles.clearButton}>
@@ -315,7 +315,7 @@ Experience the future of transportation and logistics!`;
       </View>
 
 
-      <View style={{marginBottom:30}}>
+      <View style={{ marginBottom: 30 }}>
 
 
 
@@ -391,10 +391,10 @@ Experience the future of transportation and logistics!`;
               ]}
               activeOpacity={0.7}
             >
-              <MaterialCommunityIcons 
-                name="truck" 
-                size={wp(4)} 
-                color={industry === "transport&Lgistcs" ? 'white' : icon} 
+              <MaterialCommunityIcons
+                name="truck"
+                size={wp(4)}
+                color={industry === "transport&Lgistcs" ? 'white' : icon}
               />
               <ThemedText
                 style={[
@@ -417,10 +417,10 @@ Experience the future of transportation and logistics!`;
               ]}
               activeOpacity={0.7}
             >
-              <MaterialCommunityIcons 
-                name="store" 
-                size={wp(4)} 
-                color={industry === "Store" ? 'white' : icon} 
+              <MaterialCommunityIcons
+                name="store"
+                size={wp(4)}
+                color={industry === "Store" ? 'white' : icon}
               />
               <ThemedText
                 style={[
@@ -494,7 +494,7 @@ Experience the future of transportation and logistics!`;
 
       {/* Search Results */}
       {textTyped.length > 0 && (
-        <Animated.View 
+        <Animated.View
           style={[
             styles.resultsContainer,
             {
