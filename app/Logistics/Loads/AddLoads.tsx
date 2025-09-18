@@ -302,7 +302,7 @@ React.useEffect(() => {
       trucksRequired: trucksNeeded,
       loadId: `Lo${Math.floor(100000000000 + Math.random() * 900000000000).toString()}ad`,
       expoPushToken: expoPushToken || null,
-      proofOfOrder: proofOfOerSub,
+      proofOfOrder: proofOfOerSub||null,
       proofOfOrderType: proofOfOrderFileType[0] || null,
    
         distance,

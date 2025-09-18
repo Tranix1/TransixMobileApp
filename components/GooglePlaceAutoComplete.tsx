@@ -215,7 +215,8 @@ const styles = StyleSheet.create({
         paddingVertical: hp(1.2),
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'transparent',
+        backgroundColor: '#424242',
+        marginTop: hp(2.7),
     },
     buttonText: { fontSize: 15, fontWeight: '600' },
 

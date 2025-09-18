@@ -136,7 +136,7 @@ export default function AddTrackedVehicle() {
         // Once-off payment: immediate access but with restrictions and auto-deletion
         const accessStartAt = new Date();
         const accessEndAt = new Date(accessStartAt);
-        accessEndAt.setHours(accessEndAt.getHours() + 6); // 6 hours access time
+        accessEndAt.setHours(accessEndAt.getHours() + 4); // 4 hours access time
         
         subscriptionData = {
           status: "once_off",
@@ -246,7 +246,7 @@ export default function AddTrackedVehicle() {
           <View style={styles.infoBox}>
             <ThemedText type="defaultSemiBold" style={styles.infoTitle}>Once-off Payment Info:</ThemedText>
             <ThemedText type="tiny" style={styles.infoText}>• Current location tracking only (no history)</ThemedText>
-            <ThemedText type="tiny" style={styles.infoText}>• 6 hours access time</ThemedText>
+            <ThemedText type="tiny" style={styles.infoText}>• 4 hours access time</ThemedText>
             <ThemedText type="tiny" style={styles.infoText}>• Vehicle automatically removed from Server after access period</ThemedText>
             <ThemedText type="tiny" style={styles.infoText}>• Can be re-added later</ThemedText>
           </View>

@@ -432,13 +432,13 @@ export default function Tracking() {
     }
   }, [selectedItem]);
 
-  // if (errorMsg) {
-  //   return (
-  //     <View style={styles.center}>
-  //       <ThemedText style={{ color: "red" }}>{errorMsg}</ThemedText>
-  //     </View>
-  //   );
-  // }
+  if (errorMsg) {
+    return (
+      <View style={{flex: 1, justifyContent: "center", alignItems: "center",backgroundColor:background}}>
+        <ThemedText style={{ color: "red" }}>{errorMsg}</ThemedText>
+      </View>
+    );
+  }
 
   const mapRegion = selectedItem
     ? {

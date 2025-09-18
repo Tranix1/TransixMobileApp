@@ -26,7 +26,7 @@ export class VehicleLifecycleService {
     try {
       const now = new Date();
       const vehiclesRef = collection(db, 'TrackedVehicles');
-      
+
       // Query for once-off vehicles that have expired
       const expiredQuery = query(
         vehiclesRef,
@@ -35,13 +35,13 @@ export class VehicleLifecycleService {
       );
 
       const snapshot = await getDocs(expiredQuery);
-      
+
       for (const docSnapshot of snapshot.docs) {
         const vehicle = { id: docSnapshot.id, ...docSnapshot.data() } as VehicleDocument;
-        
+
         if (vehicle.subscription.accessEndAt) {
           const accessEndTime = new Date(vehicle.subscription.accessEndAt);
-          
+
           if (now > accessEndTime) {
             console.log(`Processing expired vehicle: ${vehicle.id}`);
             await this.deleteVehicleFromTraccar(vehicle);
@@ -84,11 +84,14 @@ export class VehicleLifecycleService {
   private static async markVehicleAsDeleted(vehicleId: string): Promise<void> {
     try {
       const vehicleRef = doc(db, 'TrackedVehicles', vehicleId);
+      const nowIso = new Date().toISOString();
+      const cooldownUntilIso = new Date(Date.now() + 30 * 60 * 1000).toISOString();
       await updateDoc(vehicleRef, {
         'subscription.status': 'deleted_from_traccar',
-        'subscription.deletedAt': new Date().toISOString(),
+        'subscription.deletedAt': nowIso,
+        'subscription.cooldownUntil': cooldownUntilIso,
       });
-      
+
       console.log(`Marked vehicle ${vehicleId} as deleted in Firebase`);
     } catch (error) {
       console.error(`Error marking vehicle ${vehicleId} as deleted:`, error);
@@ -103,18 +106,29 @@ export class VehicleLifecycleService {
     try {
       const vehicleRef = doc(db, 'TrackedVehicles', vehicleId);
       const vehicleDoc = await getDocs(query(collection(db, 'TrackedVehicles'), where('__name__', '==', vehicleId)));
-      
+
       if (vehicleDoc.empty) {
         return { success: false, error: 'Vehicle not found' };
       }
 
       const vehicle = vehicleDoc.docs[0].data() as any;
-      
+
+      // Enforce cooldown if present
+      if (vehicle.subscription?.cooldownUntil) {
+        const now = new Date();
+        const cooldownUntil = new Date(vehicle.subscription.cooldownUntil);
+        if (now < cooldownUntil) {
+          const remainingMs = cooldownUntil.getTime() - now.getTime();
+          const remainingMin = Math.ceil(remainingMs / 60000);
+          return { success: false, error: `Please wait ${remainingMin} min before re-adding.` };
+        }
+      }
+
       // Validate required fields for Traccar
       if (!vehicle.imei || !vehicle.vehicleName) {
         return { success: false, error: 'Missing IMEI or vehicle name' };
       }
-      
+
       // Re-add to Traccar using stored IMEI and vehicle name
       const traccarResponse = await fetch('https://server.traccar.org/api/devices', {
         method: 'POST',
@@ -145,7 +159,7 @@ export class VehicleLifecycleService {
       // Update Firebase with new device ID and reset access time
       const accessStartAt = new Date();
       const accessEndAt = new Date(accessStartAt);
-      accessEndAt.setHours(accessEndAt.getHours() + 6); // 6 hours access
+      accessEndAt.setHours(accessEndAt.getHours() + 4); // 4 hours access
 
       await updateDoc(vehicleRef, {
         deviceId: newDeviceId,
@@ -154,6 +168,7 @@ export class VehicleLifecycleService {
         'subscription.accessEndAt': accessEndAt.toISOString(),
         'subscription.autoDeleteFromTraccar': true,
         'subscription.deletedAt': null,
+        'subscription.cooldownUntil': null,
       });
 
       console.log(`Successfully re-added vehicle ${vehicle.vehicleName} (IMEI: ${vehicle.imei}) to Traccar with device ID: ${newDeviceId}`);
@@ -178,7 +193,7 @@ export class VehicleLifecycleService {
 
     const now = new Date();
     const accessEndTime = new Date(vehicle.subscription.accessEndAt);
-    
+
     return now <= accessEndTime;
   }
 
@@ -193,14 +208,14 @@ export class VehicleLifecycleService {
     const now = new Date();
     const accessEndTime = new Date(vehicle.subscription.accessEndAt);
     const remainingMs = accessEndTime.getTime() - now.getTime();
-    
+
     if (remainingMs <= 0) {
       return null;
     }
 
     const hours = Math.floor(remainingMs / (1000 * 60 * 60));
     const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m remaining`;
     } else {
@@ -216,10 +231,10 @@ export const startVehicleLifecycleMonitoring = () => {
   if (cleanupInterval) {
     clearInterval(cleanupInterval);
   }
-  
+
   // Run immediately
   VehicleLifecycleService.processExpiredOnceOffVehicles();
-  
+
   // Then run every 30 minutes
   cleanupInterval = setInterval(() => {
     VehicleLifecycleService.processExpiredOnceOffVehicles();

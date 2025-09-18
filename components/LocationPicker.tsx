@@ -16,7 +16,6 @@ export type SelectLocationProp = {
   city: string | null;
 };
 
-    const icon = useThemeColor('icon');
 
 interface LocationPickerProps {
   pickOriginLocation: SelectLocationProp | null;
@@ -26,6 +25,7 @@ interface LocationPickerProps {
   setShowMap: React.Dispatch<React.SetStateAction<boolean>>;
   dspShowMap: boolean;
 }
+
 
 
 const GOOGLE_API_KEY = "AIzaSyACiyh-wyKUcTXP0w9FU_N00l7L1ahZP8w";
@@ -38,6 +38,10 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   setShowMap,
   dspShowMap,
 }) => {
+  const icon = useThemeColor('icon');
+
+const backgroundLight = useThemeColor('backgroundLight');
+
   // Helper: fetch address from lat/lng
   const getAddressFromCoords = async (latitude: number, longitude: number) => {
     try {
