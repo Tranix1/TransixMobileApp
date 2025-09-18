@@ -48,6 +48,12 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
         if (tankerType && selectedCargoArea) filters.push(where("tankerType", "==", tankerType))
         // Conditionally add the country filter
         if (operationCountries.length > 0) filters.push(where("locations", "array-contains-any", operationCountries));
+        
+        // Only show approved trucks to users (except truck owners viewing their own)
+        if (!userId) {
+            filters.push(where("isApproved", "==", true));
+            filters.push(where("approvalStatus", "==", "approved"));
+        }
 
         // Fetch data from Firestore with the initially applied filters
         const maTrucks = await fetchDocuments(contractId ? "ContractRequests" : "Trucks", 10, undefined, filters);

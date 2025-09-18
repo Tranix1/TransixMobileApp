@@ -13,6 +13,7 @@ import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 import { BlurView } from 'expo-blur';   
 import { Truck, User } from "@/types/types";
 import { deleteDocument, readById ,updateDocument} from "@/db/operations";
+import { TruckTrackerManager } from "@/components/TruckTrackerManager";
 import { Image } from 'expo-image'
 import { useAuth } from "@/context/AuthContext";
 import Divider from "@/components/Divider";
@@ -683,6 +684,77 @@ setReasonForDenial("")
                             )}
                         </View>
                     }
+
+                    {/* Tracker Status Section */}
+                    <View style={{
+                        backgroundColor: backgroundLight,
+                        padding: wp(3),
+                        borderRadius: 8,
+                        marginVertical: wp(2)
+                    }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <ThemedText style={{ fontWeight: 'bold', fontSize: 16 }}>
+                                Tracker Status
+                            </ThemedText>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <View style={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: 4,
+                                    backgroundColor: truckData.hasTracker ? '#51cf66' : '#ff6b6b',
+                                    marginRight: wp(1)
+                                }} />
+                                <ThemedText style={{ 
+                                    fontSize: 14, 
+                                    color: truckData.hasTracker ? '#51cf66' : '#ff6b6b',
+                                    fontWeight: '500'
+                                }}>
+                                    {truckData.hasTracker ? 'Truck has tracker' : 'Truck doesn\'t have a tracker'}
+                                </ThemedText>
+                            </View>
+                        </View>
+
+                        {truckData.hasTracker && (
+                            <View style={{ marginTop: wp(2) }}>
+                                <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+                                    Tracker Name: {truckData.trackerName || 'Not specified'}
+                                </ThemedText>
+                                <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+                                    Status: {truckData.trackerStatus === 'active' ? 'Active' : 'Available'}
+                                </ThemedText>
+                            </View>
+                        )}
+
+                        {/* Show tracker manager for truck owner */}
+                        {user?.uid === truckData.userId && (
+                            <TruckTrackerManager 
+                                truck={truckData} 
+                                isOwner={true}
+                                onTrackerUpdate={() => {
+                                    // Refresh truck data
+                                    readById("Trucks", truckid as string, setTruckData);
+                                }}
+                            />
+                        )}
+
+                        {/* Show Get Tracker button for non-owners if no tracker */}
+                        {user?.uid !== truckData.userId && !truckData.hasTracker && (
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: accent,
+                                    padding: wp(2),
+                                    borderRadius: 8,
+                                    alignItems: 'center',
+                                    marginTop: wp(2)
+                                }}
+                                onPress={() => router.push('/Tracking/AddTrackedVehicle')}
+                            >
+                                <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>
+                                    Get Tracker Now
+                                </ThemedText>
+                            </TouchableOpacity>
+                        )}
+                    </View>
 
                     {(dspDetails==="true"||user?.uid === truckData.userId ) && <View>
                         <ThemedText style={{ textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Truck Details</ThemedText>

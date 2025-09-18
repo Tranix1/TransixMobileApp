@@ -74,6 +74,7 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
 
 
     const icon = useThemeColor('icon')
+    const backgroundLight = useThemeColor('backgroundLight')
     return (
         <View>
 
@@ -209,10 +210,50 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
 
             </View>
 
+            {/* Tracker Status Section */}
+            <View style={{
+                backgroundColor: backgroundLight,
+                padding: wp(3),
+                borderRadius: 8,
+                marginTop: wp(3)
+            }}>
+                <ThemedText style={{ fontWeight: 'bold', marginBottom: wp(2) }}>
+                    Tracker Information
+                </ThemedText>
+                
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: wp(2) }}>
+                    <View style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: 4,
+                        backgroundColor: formData.hasTracker ? '#51cf66' : '#ff6b6b',
+                        marginRight: wp(2)
+                    }} />
+                    <ThemedText style={{ fontSize: 14 }}>
+                        {formData.hasTracker ? 'Tracker Available' : 'No Tracker'}
+                    </ThemedText>
+                </View>
 
+                {formData.hasTracker && (
+                    <View>
+                        <ThemedText style={{ fontSize: 12, opacity: 0.7, marginBottom: wp(1) }}>
+                            Tracker Name: {formData.trackerName || 'Not specified'}
+                        </ThemedText>
+                        <ThemedText style={{ fontSize: 12, opacity: 0.7, marginBottom: wp(1) }}>
+                            IMEI: {formData.trackerImei || 'Not specified'}
+                        </ThemedText>
+                        <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+                            Status: {formData.trackerStatus === 'active' ? 'Active' : 'Available'}
+                        </ThemedText>
+                    </View>
+                )}
 
-
-
+                {!formData.hasTracker && (
+                    <ThemedText style={{ fontSize: 12, opacity: 0.7, fontStyle: 'italic' }}>
+                        Add a tracker to enable real-time monitoring and improve load matching opportunities
+                    </ThemedText>
+                )}
+            </View>
 
         </View>
     );

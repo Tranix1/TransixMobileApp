@@ -3,10 +3,13 @@ import { View, Button, Alert, StyleSheet, FlatList, TouchableOpacity } from "rea
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 import Input from "@/components/Input";
-import { addDocument, getUsers } from "@/db/operations";
+import { addDocument, getUsers, fetchDocuments, updateDocument } from "@/db/operations";
 import { DropDownItem } from "@/components/DropDown";
 import { ThemedText } from "@/components/ThemedText";
 import { useAuth } from "@/context/AuthContext";
+import { where } from "firebase/firestore";
+import { wp } from "@/constants/common";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function AddTrackedVehicle() {
   const [vehicleName, setVehicleName] = useState("");
@@ -18,7 +21,13 @@ export default function AddTrackedVehicle() {
   const [users, setUsers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [userTrucks, setUserTrucks] = useState<any[]>([]);
+  const [selectedTruck, setSelectedTruck] = useState<any | null>(null);
+  console.log(selectedTruck)
+  const [showUserTrucks, setShowUserTrucks] = useState(false);
   const { user: salesman } = useAuth();
+  const accent = useThemeColor('accent');
+  const backgroundLight = useThemeColor('backgroundLight');
 
   // Vehicle categories
   const vehicleCategories = [
@@ -41,6 +50,21 @@ export default function AddTrackedVehicle() {
     { id: 1, name: "Once-off Payment" },
     { id: 2, name: "Subscription" }
   ];
+
+  // Fetch user's trucks when a user is selected
+  const fetchUserTrucks = async (userId: string) => {
+    try {
+      const trucks = await fetchDocuments("Trucks", 50, undefined, [
+        where("userId", "==", userId),
+        where("isApproved", "==", true)
+      ]);
+      setUserTrucks(trucks.data || []);
+      setShowUserTrucks(true);
+    } catch (error) {
+      console.error("Error fetching user trucks:", error);
+      Alert.alert("Error", "Failed to fetch user trucks");
+    }
+  };
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -144,52 +168,62 @@ export default function AddTrackedVehicle() {
           accessEndAt: accessEndAt.toISOString(),
           isOnceOff: true,
           restrictToCurrentLocation: true, // No history access
-          autoDeleteFromTraccar: true,
-        };
-      } else {
-        // Regular subscription for Personal/Car Dealer
-        const trialStartAt = new Date();
-        const trialEndAt = new Date(trialStartAt);
-        trialEndAt.setDate(trialEndAt.getDate() + 7); // 7 days for non-commercial
-        
-        subscriptionData = {
-          status: "trial",
-          trialDays: 7,
-          trialStartAt: trialStartAt.toISOString(),
-          trialEndAt: trialEndAt.toISOString(),
-          nextBillingAt: trialEndAt.toISOString(),
-          isTrial: true,
-          isOnceOff: false,
         };
       }
 
-      await addDocument("TrackedVehicles", {
+      const vehicleData = {
         vehicleName,
         imei,
-        vehicleCategory: vehicleCategory.name,
-        vehicleSubType: vehicleSubType?.name || null,
+        category: vehicleCategory.name,
+        subType: vehicleSubType?.name || null,
         paymentType: paymentType?.name || null,
-        deviceId,
-        customerId: selectedUser.id,
-        customerName: selectedUser.displayName,
-        customerEmail: selectedUser.email, 
+        userId: selectedUser.uid,
+        userEmail: selectedUser.email,
+        userName: selectedUser.displayName || selectedUser.email,
         salesmanId: salesman?.uid,
-        salesmanName: salesman?.displayName,
+        salesmanEmail: salesman?.email,
         createdAt: new Date().toISOString(),
-        subscription: subscriptionData,
-      });
+        status: "active",
+        deviceId: deviceId,
+        // Link to truck if selected
+        truckId: selectedTruck?.truckId || null,
+        truckDetails: selectedTruck ? {
+          truckType: selectedTruck.truckType,
+          cargoArea: selectedTruck.cargoArea,
+          truckCapacity: selectedTruck.truckCapacity,
+          numberPlate: selectedTruck.truckNumberPlate
+        } : null
+      };
 
+      const docRef = await addDocument("TrackedVehicles", vehicleData);
+      
+      // Update truck tracker status if linked
+      if (selectedTruck) {
+        await updateDocument("Trucks", selectedTruck.id, {
+          hasTracker: true,
+          trackerStatus: 'active',
+          trackingDeviceId: deviceId,
+           trackerImei: imei,
+          trackerId: `TRK${Date.now()}`,
+          trackerAddedAt: Date.now().toString()
+        });
+      }
+      
       Alert.alert("Success", "Vehicle added successfully!");
+      
+      // Reset form
       setVehicleName("");
       setImei("");
       setVehicleCategory(null);
       setVehicleSubType(null);
       setPaymentType(null);
       setSelectedUser(null);
+      setSelectedTruck(null);
       setSearchQuery("");
-    } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to add vehicle.");
-      console.error(error);
+      setShowUserTrucks(false);
+    } catch (error) {
+      console.error("Error adding vehicle:", error);
+      Alert.alert("Error", "Failed to add vehicle. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -253,31 +287,90 @@ export default function AddTrackedVehicle() {
         )}
 
         <Input
-          placeholder="Search user by email..."
+          placeholder="Search users by email"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
 
-        {searchQuery.length > 0 && (
+        {searchQuery && (
           <FlatList
             data={filteredUsers}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.uid}
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.userItem}
                 onPress={() => {
                   setSelectedUser(item);
                   setSearchQuery(item.email);
+                  fetchUserTrucks(item.uid);
                 }}
               >
                 <ThemedText>{item.email}</ThemedText>
               </TouchableOpacity>
             )}
+            style={styles.userList}
           />
         )}
 
         {selectedUser && (
-          <ThemedText type="italic">Selected User: {selectedUser.email}</ThemedText>
+          <View style={{ marginTop: wp(3) }}>
+            <ThemedText style={{ fontWeight: 'bold', marginBottom: wp(2) }}>
+              Selected User: {selectedUser.email}
+            </ThemedText>
+            
+            <TouchableOpacity
+              style={[styles.truckButton, { backgroundColor: backgroundLight }]}
+              onPress={() => setShowUserTrucks(!showUserTrucks)}
+            >
+              <ThemedText style={{ color: accent }}>
+                {showUserTrucks ? 'Hide' : 'Show'} User's Trucks ({userTrucks.length})
+              </ThemedText>
+            </TouchableOpacity>
+
+            {showUserTrucks && userTrucks.length > 0 && (
+              <View style={{ marginTop: wp(2) }}>
+                <ThemedText style={{ marginBottom: wp(1) }}>Select Truck (Optional):</ThemedText>
+                <FlatList
+                  data={userTrucks}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[
+                        styles.truckItem,
+                        selectedTruck?.id === item.id && { backgroundColor: `${accent}20` }
+                      ]}
+                      onPress={() => setSelectedTruck(selectedTruck?.id === item.id ? null : item)}
+                    >
+                      <View>
+                        <ThemedText style={{ fontWeight: 'bold' }}>
+                          {item.truckType} - {item.cargoArea}
+                        </ThemedText>
+                        <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+                          Capacity: {item.truckCapacity} | ID: {item.truckId}
+                        </ThemedText>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: wp(1) }}>
+                          <View style={[
+                            styles.statusDot,
+                            { backgroundColor: item.hasTracker ? '#51cf66' : '#ff6b6b' }
+                          ]} />
+                          <ThemedText style={{ fontSize: 11 }}>
+                            {item.hasTracker ? 'Has Tracker' : 'No Tracker'}
+                          </ThemedText>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                  style={{ maxHeight: 200 }}
+                />
+              </View>
+            )}
+
+            {showUserTrucks && userTrucks.length === 0 && (
+              <ThemedText style={{ textAlign: 'center', opacity: 0.7, marginTop: wp(2) }}>
+                No approved trucks found for this user
+              </ThemedText>
+            )}
+          </View>
         )}
 
         <Button
@@ -298,21 +391,43 @@ const styles = StyleSheet.create({
   userItem: {
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#ccc",
+  },
+  userList: {
+    maxHeight: 150,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+  },
+  truckButton: {
+    padding: wp(2),
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  truckItem: {
+    padding: wp(2),
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    marginBottom: wp(1),
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: wp(1),
   },
   infoBox: {
-    backgroundColor: "#f0f8ff",
+    backgroundColor: '#e3f2fd',
     padding: 12,
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: "#007bff",
+    borderLeftColor: '#2196f3',
   },
   infoTitle: {
-    marginBottom: 8,
-    color: "#007bff",
+    marginBottom: 4,
   },
   infoText: {
     marginBottom: 2,
-    color: "#555",
   },
 });

@@ -72,48 +72,56 @@ function AddTrucks() {
 
 
   const [uploadingOwnerD, setUploadingOwerD] = React.useState(false)
+  const [isSubmittingOwner, setIsSubmittingOwner] = React.useState(false)
   const handleUpdateTOwnerDetails = async () => {
+    setIsSubmittingOwner(true);
+    try {
+      const missingTruckDetails = [
+        !ownerNameAddDb && "Enter Owner Name ",
+        !ownerPhonNumAddDb && "Enter Phone Number",
+        !ownerEmailAddDb && "Enter Email Address",
+        !selectedOwnerDocuments[0] && "Pick Proof of ownership document or image ",
+        !selectedOwnerDocuments[1] && "Pick Id document or image",
+        !selectedOwnerDocuments[2] && "Pick Proof Of Residence",
+      ].filter(Boolean);
 
-    setUploadingOwerD(true)
-    const missingTruckDetails = [
-      !ownerNameAddDb && "Enter Owner Name ",
-      !ownerPhonNumAddDb && "Enter Phone Number",
-      !ownerEmailAddDb && "Enter Truck Nick Name ",
-      !selectedOwnerDocuments[0] && "Pick Proof of ownership document or imaage ",
-      !selectedOwnerDocuments[1] && "Pick Id document or imaage",
-      !selectedOwnerDocuments[2] && "Pick Proof Of Residence",
-    ].filter(Boolean);
+      if (missingTruckDetails.length > 0) {
+        alertBox("Missing Ownership Details", missingTruckDetails.join("\n"), [], "error");
+        return;
+      }
 
-    if (missingTruckDetails.length > 0) {
-      // setContractDErr(true);
-      alertBox("Missing Ownership Details", missingTruckDetails.join("\n"), [], "error");
-      setUploadingOwerD(false)
-      setSpinnerItem(false)
-      return;
+      let proofOfTruckOwnerhip, directorOwnerId, ownerProofOfRes;
+
+      proofOfTruckOwnerhip = await uploadImage(selectedOwnerDocuments[0], "TruckOwnership", setUploadImageUpdate, "Ownership uploading");
+      directorOwnerId = await uploadImage(selectedOwnerDocuments[1], "TruckOwnership", setUploadImageUpdate, "ID uploading");
+      ownerProofOfRes = await uploadImage(selectedOwnerDocuments[2], "TruckOwnership", setUploadImageUpdate, "Proof Of Res uploading");
+
+
+      await setDocuments("truckPersonDetails", { 
+        userId: user?.uid,
+        personType: 'owner',
+        ownerName: ownerNameAddDb, 
+        ownerPhoneNum: ownerPhonNumAddDb, 
+        ownerEmail: ownerEmailAddDb,
+         ownershipProof: proofOfTruckOwnerhip ||null, 
+        directorOwnerId: directorOwnerId||null , 
+        ownerProofOfRes: ownerProofOfRes||null ,
+
+        proofOfTruckOwnerhipType : ownerFileType[0]||null,
+        directorOwnerIdType : ownerFileType[1]||null,
+        ownerProofOfResType : ownerFileType[2]||null ,
+        createdAt: Date.now().toString(),
+        isApproved: false,
+        approvalStatus: 'pending'
+       })
+      setOwnerdetailsDsp(false)
+      ToastAndroid.show("Store Details created successfully!", ToastAndroid.SHORT);
+    } catch (error) {
+      console.error("Error saving owner details:", error);
+      alertBox("Error", "Failed to save owner details", [], "error");
+    } finally {
+      setIsSubmittingOwner(false);
     }
-
-
-    let proofOfTruckOwnerhip, directorOwnerId, ownerProofOfRes;
-
-    proofOfTruckOwnerhip = await uploadImage(selectedOwnerDocuments[0], "TruckOwnership", setUploadImageUpdate, "Ownership uploading");
-    directorOwnerId = await uploadImage(selectedOwnerDocuments[1], "TruckOwnership", setUploadImageUpdate, "ID uploading");
-    ownerProofOfRes = await uploadImage(selectedOwnerDocuments[1], "TruckOwnership", setUploadImageUpdate, "Proof Of Res uploading");
-
-
-    await setDocuments("truckOwnerDetails", { 
-      ownerName: ownerNameAddDb, 
-      ownerPhoneNum: ownerPhonNumAddDb, 
-      ownerEmail: ownerEmailAddDb,
-       ownershipProof: proofOfTruckOwnerhip ||null, 
-      directorOwnerId: directorOwnerId||null , 
-      ownerProofOfRes: ownerProofOfRes||null ,
-
-      proofOfTruckOwnerhipType : ownerFileType[0]||null,
-      directorOwnerIdType : ownerFileType[1]||null,
-      ownerProofOfResType : ownerFileType[2]||null ,
-     })
-    setOwnerdetailsDsp(false)
-    ToastAndroid.show("Store Details created successfully!", ToastAndroid.SHORT);
   };
 
 
@@ -149,7 +157,9 @@ function AddTrucks() {
       companyLtterHead = await uploadImage(selectedBrokerDocuments[3], "TruckBroker", setUploadImageUpdate, "Company Letter Head");
 
     }
-    await setDocuments("truckBrokerDetails", {
+    await setDocuments("truckPersonDetails", {
+       userId: user?.uid,
+       personType: 'broker',
        typeOfBroker: typeOfBroker,
         brokerName: ownerNameAddDb, 
         brokerPhoneNum: ownerPhonNumAddDb,
@@ -162,7 +172,9 @@ function AddTrucks() {
            proofOfResidenceType : brokerFileType[1] ||null,
            companyRegCertificateType : brokerFileType[2]||null ,
            companyLtterHeadType : brokerFileType[3]||null ,
-          
+           createdAt: Date.now().toString(),
+           isApproved: false,
+           approvalStatus: 'pending'
           })
     setOwnerdetailsDsp(false)
 
@@ -199,12 +211,15 @@ const [dataChecked, setDataChecked] = useState(false); // controls UI entry
 
 useEffect(() => {
   const fetchAll = async () => {
-    const broker = await getDocById('truckBrokerDetails', (data) => {
-      setBrokerDetails(data || null);
-    });
-
-    const owner = await getDocById('truckOwnerDetails', (data) => {
-      setOwnerDetails(data || null);
+    // Check for both owner and broker in the unified collection
+    const personDetails = await getDocById('truckPersonDetails', (data) => {
+      if (data) {
+        if (data.personType === 'owner') {
+          setOwnerDetails(data || null);
+        } else if (data.personType === 'broker') {
+          setBrokerDetails(data || null);
+        }
+      }
     });
 
     setLoading(false);
@@ -293,9 +308,12 @@ useEffect(() => {
       !formData.truckName && "Enter Truck Nick Name ",
       !selectedTruckType && "Select Truck Type",
       !selectedCargoArea && "Select Truck Cargo Area",
-      selectedCargoArea?.name === "Tanker" && !selectedTankerType && "Select Type of Tannker",
+      selectedCargoArea?.name === "Tanker" && !selectedTankerType && "Select Type of Tanker",
       !selectedTruckCapacity && "Select Truck Capacity",
       operationCountries.length <= 0 && "Select the countries where the truck has permits.",
+      (!gitImage || gitImage.length === 0) && "Upload GIT Certificate",
+      (!truckNumberPlate || truckNumberPlate.length === 0) && "Upload Number Plate image",
+      !truckOwnerOBroker && "Select if you are Owner or Broker",
     ].filter(Boolean);
 
     if (missingTruckDetails.length > 0) {
@@ -373,9 +391,9 @@ useEffect(() => {
 
     let subTrckGIT, subTrckNumberPlate, subTrckThrdPlate
 
-    if (gitImage) subTrckGIT = await uploadImage( gitImage[0], "Trucks", setUploadImageUpdate, "Trailer Book Second");
-    if (truckNumberPlate) subTrckNumberPlate = await uploadImage(truckNumberPlate[4], "Trucks", setUploadImageUpdate, "Trailer Book Second");
-    if (truckThirdPlate) subTrckThrdPlate = await uploadImage(truckThirdPlate[4], "Trucks", setUploadImageUpdate, "Trailer Book Second");
+    if (gitImage && gitImage.length > 0) subTrckGIT = await uploadImage(gitImage[0], "Trucks", setUploadImageUpdate, "GIT Certificate");
+    if (truckNumberPlate && truckNumberPlate.length > 0) subTrckNumberPlate = await uploadImage(truckNumberPlate[0], "Trucks", setUploadImageUpdate, "Number Plate");
+    if (truckThirdPlate && truckThirdPlate.length > 0) subTrckThrdPlate = await uploadImage(truckThirdPlate[0], "Trucks", setUploadImageUpdate, "Third Party Insurance");
 
 
     setUploadImageUpdate("")
@@ -438,7 +456,23 @@ useEffect(() => {
         tankerType: selectedTankerType ? selectedTankerType?.name : null,
         truckCapacity: selectedTruckCapacity?.name,
         ...formData,
-        expoPushToken: expoPushToken || null
+        expoPushToken: expoPushToken || null,
+        
+        // Approval system
+        isApproved: false,
+        approvalStatus: 'pending', // pending, approved, rejected
+        submittedAt: Date.now().toString(),
+        userType: truckOwnerOBroker, // Owner or Broker
+        
+        // Tracker system
+        hasTracker: false,
+        trackerStatus: 'not_available', // not_available, available, active
+        trackerId: null,
+        trackerImei: null,
+        trackerName: null,
+        
+        // Generate unique truck ID
+        truckId: `TR${Math.floor(100000 + Math.random() * 900000)}`
       }
 
       addDocument("Trucks", submitData)
