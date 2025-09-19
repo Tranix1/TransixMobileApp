@@ -313,7 +313,7 @@ useEffect(() => {
       operationCountries.length <= 0 && "Select the countries where the truck has permits.",
       (!gitImage || gitImage.length === 0) && "Upload GIT Certificate",
       (!truckNumberPlate || truckNumberPlate.length === 0) && "Upload Number Plate image",
-      !truckOwnerOBroker && "Select if you are Owner or Broker",
+      !dataChecked && "Select if you are Owner or Broker",
     ].filter(Boolean);
 
     if (missingTruckDetails.length > 0) {

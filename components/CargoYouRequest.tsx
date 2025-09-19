@@ -1,5 +1,5 @@
 import React, { useEffect, useState, ReactElement } from "react";
-import { View, TouchableOpacity,  ToastAndroid } from "react-native";
+import { View, TouchableOpacity, ToastAndroid } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { wp } from "@/constants/common";
 import Divider from "@/components/Divider";
@@ -7,6 +7,9 @@ import { router } from 'expo-router'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 import { deleteDocument, } from "@/db/operations";
+
+import { LoadTracker } from "@/components/LoadTracker";
+import { useAuth } from '@/context/AuthContext';
 
 export const RequestedCargo = ({
   item, dspRoute
@@ -20,6 +23,7 @@ export const RequestedCargo = ({
 
   const textColor = useThemeColor('text')
   const coolGray = "#e5e7eb";
+  const { user } = useAuth();
 
   const [showAlert, setshowAlert] = useState<ReactElement | null>(null);
   function alertBox(title: string, message: string, buttons?: Alertbutton[], type?: "default" | "error" | "success" | "laoding" | "destructive" | undefined) {
@@ -73,6 +77,18 @@ export const RequestedCargo = ({
           <ThemedText style={{ color: "#222", fontStyle: "italic" }}> {item.denialReason} </ThemedText>
         </View>}
       </View>
+
+      {/* Load Tracker Component - only show for booked loads */}
+      {item.status === "Booked" && (
+        <LoadTracker
+          loadRequest={item}
+          isTruckOwner={user?.uid === item.truckId || user?.uid === item.truckOwnerId}
+          onTrackerShared={() => {
+            // Refresh the data or show success message
+            ToastAndroid.show("Tracker shared successfully!", ToastAndroid.SHORT);
+          }}
+        />
+      )}
 
       {dspRoute !== "Requested Loads" && <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: wp(2), gap: wp(2) }}>
         <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: "#6a0c0c", paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.truckId, updateReuestDoc: item.id, expoPushToken: item.expoPushToken, productName: item.productName, origin: item.origin, destination: item.destination, model: item.model, rate: item.rate, currency: item.currency, dspDetails: "true", truckBeingReuested: 'true' } })} >

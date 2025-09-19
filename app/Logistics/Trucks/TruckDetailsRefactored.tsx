@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, RefreshControl, TouchableOpacity, Modal, Pressable, ToastAndroid, Alert } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { ThemedText } from '@/components/ThemedText';
 import Heading from '@/components/Heading';
@@ -198,6 +198,13 @@ const TruckDetailsRefactored = () => {
         };
         checkSavedProducts();
     }, []);
+
+    // Refresh data when screen comes into focus (e.g., returning from edit)
+    useFocusEffect(
+        React.useCallback(() => {
+            getData();
+        }, [truckid])
+    );
 
     // Organize images by category
     const imageCategories = organizeImagesByCategory(truckData);
