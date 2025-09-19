@@ -1,11 +1,11 @@
-import { StyleSheet, TouchableOpacity, View, TouchableHighlight , Linking  } from 'react-native'
+import { StyleSheet, TouchableOpacity, View, TouchableHighlight, Linking } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { Load } from '@/types/types'
 import { wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { ThemedText } from './ThemedText'
 import { Image } from 'expo-image'
-import { EvilIcons, FontAwesome,  Ionicons,  Octicons } from '@expo/vector-icons'
+import { EvilIcons, FontAwesome, Ionicons, Octicons } from '@expo/vector-icons'
 import { formatCurrency } from '@/services/services'
 import Divider from './Divider'
 import FormatedText from './FormatedText'
@@ -23,20 +23,20 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
 
   const [expand, setExpand] = useState(false)
 
-  
+
 
   const [dspProofImage, setDspProofImage] = useState(false);
-    function dspProofOfOrder(proofOfOrderType : string){
-      console.log(proofOfOrderType)
-      if(proofOfOrderType ==="pdf"){
-        Linking.openURL(item.proofOfOrder)
+  function dspProofOfOrder(proofOfOrderType: string) {
+    console.log(proofOfOrderType)
+    if (proofOfOrderType === "pdf") {
+      Linking.openURL(item.proofOfOrder)
 
-      }else if (proofOfOrderType==="image" ){
-        setDspProofImage(true)
-      }else{
+    } else if (proofOfOrderType === "image") {
+      setDspProofImage(true)
+    } else {
 
-      }
-    }  
+    }
+  }
 
 
   function replaceSpacesWithPercent(url: string): string {
@@ -53,7 +53,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
   }
 
 
- 
+
   const url = `https://transix.net/selectedUserLoads/${item.userId}/${item.companyName}/${item.deletionTime}`;
   const updatedUrl = replaceSpacesWithPercent(url);
   const message = `${item.companyName}
@@ -84,21 +84,21 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
 
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'space-between', marginBottom: wp(1) }}>
 
-           <View style={{ flexDirection: 'row' }}>
+        <View style={{ flexDirection: 'row' }}>
 
-                                {!item?.logo && <FontAwesome name='user-circle' color={coolGray} size={wp(9)} />}
-                                {item?.logo && <Image
-                                    style={{ width: 35, height: 35, borderRadius: 17.5, backgroundColor: '#ddd', }}
-                                    source={{ uri: item?.logo || 'https://via.placeholder.com/100' }}
-                                />}
+          {!item?.logo && <FontAwesome name='user-circle' color={coolGray} size={wp(9)} />}
+          {item?.logo && <Image
+            style={{ width: 35, height: 35, borderRadius: 17.5, backgroundColor: '#ddd', }}
+            source={{ uri: item?.logo || 'https://via.placeholder.com/100' }}
+          />}
 
-                                {item &&
-                                    <ThemedText type="subtitle" style={{marginLeft:20}}>{item.companyName}</ThemedText>
-                                }
-                            </View>
+          {item &&
+            <ThemedText type="subtitle" style={{ marginLeft: 20 }}>{item.companyName}</ThemedText>
+          }
+        </View>
 
 
-  <View style={{ alignItems: 'flex-end', gap: wp(0.5) }}>
+        <View style={{ alignItems: 'flex-end', gap: wp(0.5) }}>
           {item.distance && (
             <ThemedText type="tiny" style={styles.distanceInfo}>
               Distance: {item.distance}
@@ -115,7 +115,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
             </ThemedText>
           )}
         </View>
-        
+
         <TouchableHighlight underlayColor={backgroundLight} onPress={ondetailsPress} style={{ backgroundColor: background, padding: wp(1), borderRadius: wp(90) }}>
           <Ionicons name='ellipsis-vertical' size={wp(4)} color={icon} />
         </TouchableHighlight>
@@ -126,7 +126,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
           {/* <Feather name="package" size={wp(4)} style={styles.icon} color={icon} /> */}
           <View style={{ marginBottom: wp(1) }}>
-            <ThemedText type='tiny' style={{ fontSize:13,fontStyle:'italic' }}>
+            <ThemedText type='tiny' style={{ fontSize: 13, fontStyle: 'italic' }}>
               Load
             </ThemedText>
             <ThemedText type='subtitle'>
@@ -140,8 +140,8 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
               <ThemedText type='tiny' style={{}}>Return Load</ThemedText>
             </View>
           )}
-            
-                {item.proofOfOrderType && (
+
+          {item.proofOfOrderType && (
             <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
               <ThemedText type='tiny' style={{}}>Proof Attached</ThemedText>
             </View>
@@ -152,7 +152,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
               <ThemedText type='tiny' style={{}}>Round Trip</ThemedText>
             </View>
           )}
-         
+
           {item.isVerified && (
             <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(1) }]}>
               <Octicons name='verified' size={wp(4)} color={'#4eb3de'} />
@@ -168,7 +168,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
 
           <View style={{ gap: wp(1), flex: 2, }}>
-            <ThemedText type='default' style={{ fontSize:13,fontStyle:'italic' }}>
+            <ThemedText type='default' style={{ fontSize: 13, fontStyle: 'italic' }}>
               From
             </ThemedText>
             <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
@@ -176,7 +176,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
             </ThemedText>
           </View>
           <View style={{ gap: wp(1), flex: 2, }}>
-            <ThemedText type='default' style={{  fontSize:13,fontStyle:'italic'  }}>
+            <ThemedText type='default' style={{ fontSize: 13, fontStyle: 'italic' }}>
               To
             </ThemedText>
             <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
@@ -186,30 +186,30 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
         </View>
       </View>
 
-            <View style={{backgroundColor: backgroundLight,  padding: wp(2), borderRadius: wp(2) }}>
+      <View style={{ backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }}>
 
-    
+
         <View style={styles.detailRow}>
           <ThemedText type='default' style={{ flex: 2 }}>
             Rate {item.model}
           </ThemedText>
           <ThemedText type='subtitle' style={[{ color: textColor, fontSize: wp(4.5), lineHeight: wp(5), flex: 2 }]}>
-           {item.currency} {formatCurrency(item.rate)}
+            {item.currency} {formatCurrency(item.rate)}
           </ThemedText>
-          
+
         </View>
-           {item.rateexplantion && <View style={styles.detailRow }>
+        {item.rateexplantion && <View style={styles.detailRow}>
           <ThemedText type='default' style={{ flex: 2 }}>
             Rate Exlantion
           </ThemedText>
           <ThemedText type='subtitle' style={[{ color: textColor, fontSize: wp(4.5), lineHeight: wp(5), flex: 2 }]}>
-           {item.rateexplantion}
+            {item.rateexplantion}
           </ThemedText>
-          
+
         </View>}
 
-            </View>
-            
+      </View>
+
 
       <View style={[{ marginTop: wp(1), backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2), flex: 1, gap: wp(2) }]}>
 
@@ -223,28 +223,28 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
             </ThemedText>
           </View>
         }
-             {item.loadingDate &&
+        {item.loadingDate &&
           <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
             <ThemedText type='default' style={{ flex: 2 }}>
               Laoding
             </ThemedText>
             <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-              {item.loadingDate }
+              {item.loadingDate}
             </ThemedText>
           </View>
         }
 
-         {item.alertMsg && (
+        {item.alertMsg && (
           <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
             <ThemedText type='default' style={{ flex: 2 }}>
-              Alert 
+              Alert
             </ThemedText>
             <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
               {item.alertMsg}
             </ThemedText>
           </View>
         )}
-        
+
         {item.fuelAvai && (
           <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
             <ThemedText type='default' style={{ flex: 2 }}>
@@ -268,7 +268,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
 
 
 
-       
+
 
         {expand && (
           <View>
@@ -287,7 +287,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
                 </View>
               </>
             )}
-          
+
 
             <Divider style={{ marginTop: wp(2) }} />
             {item.returnLoad && (
@@ -333,70 +333,105 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
 
 
             <View style={{ marginTop: wp(2), gap: wp(2) }}>
-                  <ThemedText type='tiny' style={{ marginBottom: wp(1) }}>Trucks Required</ThemedText>
-                  
-                  {item.trucksRequired.map((neededTruck , index)=>(
-                    <View style={{flexDirection:"row",justifyContent:'space-evenly'}} key={index} > 
-                      <ThemedText>{neededTruck.truckType?.name} </ThemedText>
-                      <ThemedText>{neededTruck.capacity?.name} </ThemedText>
-                      <ThemedText>{neededTruck.cargoArea?.name} </ThemedText>
-                    </View>
-                  ) )  }
+              <ThemedText type='tiny' style={{ marginBottom: wp(1) }}>Trucks Required</ThemedText>
+
+              {item.trucksRequired && item.trucksRequired.length > 0 ? (
+                item.trucksRequired.map((neededTruck, index) => (
+                  <View style={{ flexDirection: "row", justifyContent: 'space-evenly' }} key={index}>
+                    <ThemedText>
+                      {typeof neededTruck.truckType === 'string'
+                        ? neededTruck.truckType
+                        : neededTruck.truckType?.name || 'N/A'
+                      }
+                    </ThemedText>
+                    <ThemedText>
+                      {typeof neededTruck.capacity === 'string'
+                        ? neededTruck.capacity
+                        : neededTruck.capacity?.name || 'N/A'
+                      }
+                    </ThemedText>
+                    <ThemedText>
+                      {typeof neededTruck.cargoArea === 'string'
+                        ? neededTruck.cargoArea
+                        : neededTruck.cargoArea?.name || 'N/A'
+                      }
+                    </ThemedText>
+                  </View>
+                ))
+              ) : (
+                <ThemedText type='tiny' style={{ color: coolGray, textAlign: 'center' }}>
+                  No truck requirements specified
+                </ThemedText>
+              )}
             </View>
 
-<Divider style={{ marginTop: wp(2) }} />
+            <Divider style={{ marginTop: wp(2) }} />
 
-<TouchableOpacity style={{
-    backgroundColor: '#2563eb', // simple professional blue
-    paddingVertical: wp(2),
-    paddingHorizontal: wp(4),
-    borderRadius: wp(4),
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: wp(2),
-    elevation: 4,
-  }} >
-<ThemedText>View On Map</ThemedText>
-</TouchableOpacity>
+            <TouchableOpacity style={{
+              backgroundColor: '#2563eb', // simple professional blue
+              paddingVertical: wp(2),
+              paddingHorizontal: wp(4),
+              borderRadius: wp(4),
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginVertical: wp(2),
+              elevation: 4,
+            }} >
+              <ThemedText>View On Map</ThemedText>
+            </TouchableOpacity>
 
-                 {item.proofOfOrder && <TouchableOpacity style={styles.proofButton} onPress={()=>dspProofOfOrder(item.proofOfOrderType) }>
-  <ThemedText type="defaultSemiBold" style={styles.proofButtonText}>
-    Proof of order
-  </ThemedText>
-</TouchableOpacity>}
+            {(item.proofOfOrder || (item.loadImages && item.loadImages.length > 0)) && (
+              <TouchableOpacity
+                style={styles.proofButton}
+                onPress={() => {
+                  if (item.proofOfOrder) {
+                    dspProofOfOrder(item.proofOfOrderType);
+                  } else if (item.loadImages && item.loadImages.length > 0) {
+                    setDspProofImage(true);
+                  }
+                }}
+              >
+                <ThemedText type="defaultSemiBold" style={styles.proofButtonText}>
+                  {item.proofOfOrder ? 'Proof of order' : 'Load Images'}
+                </ThemedText>
+              </TouchableOpacity>
+            )}
 
 
 
 
-<ImageViewing
-  images={[{ uri: item.proofOfOrder}]} 
-  imageIndex={0} 
-  visible={dspProofImage}
-  onRequestClose={() => setDspProofImage(false)}
-  presentationStyle="fullScreen"
-  HeaderComponent={() => (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingTop: 8,
-        paddingHorizontal: 15,
-        position: 'absolute',
-        top: 10,
-        zIndex: 999,
-        backgroundColor: backgroundLight,
-        borderRadius: 5,
-      }}
-    >
-      <TouchableOpacity onPress={() => setDspProofImage(false)} style={{ marginRight: 8, marginLeft: 4 }}>
-        <AntDesign name="close" size={15} color="#fff" />
-      </TouchableOpacity>
-      <ThemedText style={{ fontWeight: 'bold', fontSize: 14 }}>
-        Proof of Order
-      </ThemedText>
-    </View>
-  )}
-/>
+            <ImageViewing
+              images={item.proofOfOrder
+                ? [{ uri: item.proofOfOrder }]
+                : (item.loadImages || []).map(img => ({ uri: img.uri || img }))
+              }
+              imageIndex={0}
+              visible={dspProofImage}
+              onRequestClose={() => setDspProofImage(false)}
+              presentationStyle="fullScreen"
+              HeaderComponent={() => (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingTop: 8,
+                    paddingHorizontal: 15,
+                    position: 'absolute',
+                    top: 10,
+                    zIndex: 999,
+                    backgroundColor: backgroundLight,
+                    borderRadius: 5,
+                  }}
+                >
+                  <TouchableOpacity onPress={() => setDspProofImage(false)} style={{ marginRight: 8, marginLeft: 4 }}>
+                    <AntDesign name="close" size={15} color="#fff" />
+                  </TouchableOpacity>
+                  <ThemedText style={{ fontWeight: 'bold', fontSize: 14 }}>
+                    {item.proofOfOrder ? 'Proof of Order' : 'Load Images'}
+                  </ThemedText>
+                </View>
+              )}
+            />
 
 
           </View>
@@ -405,10 +440,10 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
       </View>
       <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: wp(1), marginTop: wp(2) }} onPress={() => toggleItemById(item.id)}>
         <EvilIcons color={icon} size={wp(6)} name={expand ? 'chevron-up' : 'chevron-down'} />
-             </TouchableOpacity>
+      </TouchableOpacity>
 
-   
-      
+
+
     </TouchableOpacity>
   );
 };
@@ -545,31 +580,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: 'center',
     borderRadius: wp(2),
-  },proofButton: {
-  backgroundColor: "#4eb37a", // matches theme
-  paddingVertical: wp(2),
-  paddingHorizontal: wp(4),
-  borderRadius: wp(4),
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexDirection: 'row',
-  gap: wp(1),
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 4
-},
-proofButtonText: {
-  color: '#fff',
-  fontSize: wp(4),
-  textTransform: 'uppercase',
-  letterSpacing: 0.5
-},distanceInfo: {
-  fontSize: wp(2.8),
-  color: '#6b7280', // professional gray, visible on light/dark
-  textAlign: 'right',
-},
+  }, proofButton: {
+    backgroundColor: "#4eb37a", // matches theme
+    paddingVertical: wp(2),
+    paddingHorizontal: wp(4),
+    borderRadius: wp(4),
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: wp(1),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4
+  },
+  proofButtonText: {
+    color: '#fff',
+    fontSize: wp(4),
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
+  }, distanceInfo: {
+    fontSize: wp(2.8),
+    color: '#6b7280', // professional gray, visible on light/dark
+    textAlign: 'right',
+  },
 
 });
 

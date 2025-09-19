@@ -27,6 +27,13 @@ import { AIRecommendations } from '@/components/AIRecommendations';
 import { LoadingDateSelector } from '@/components/LoadingDateSelector';
 import { AfricanTruckSelector } from '@/components/AfricanTruckSelector';
 
+// New extracted components
+import { UserTypeSelector } from '@/components/UserTypeSelector';
+import { StepIndicator } from '@/components/StepIndicator';
+import { LocationSelector } from '@/components/LocationSelector';
+import { RateInput } from '@/components/RateInput';
+import { LoadSummary } from '@/components/LoadSummary';
+
 import { usePushNotifications, } from "@/Utilities/pushNotification";
 
 import { uploadImage } from "@/db/operations";
@@ -42,7 +49,16 @@ import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplet
 import { SelectLocationProp } from '@/types/types';
 import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplete';
 import { LocationPicker } from '@/components/LocationPicker';
-import { model } from '@/db/fireBaseConfig';
+
+// New utilities
+import {
+  validateLoadForm,
+  prepareLoadData,
+  getDefaultFormState,
+  CURRENCY_OPTIONS,
+  MODEL_OPTIONS
+} from '@/Utilities/loadUtils';
+import { analyzeLoadImages, askVertexAI } from '@/Utilities/aiAnalysisUtils';
 const AddLoadDB = () => {
 
 
@@ -52,60 +68,46 @@ const AddLoadDB = () => {
   const background = useThemeColor('background')
   const backgroundLight = useThemeColor('backgroundLight')
 
-  const [step, setStep] = useState(0);
-
-  // User type selection
+  // Initialize form state using utility function
+  const defaultState = getDefaultFormState();
+  const [step, setStep] = useState(defaultState.step);
   const [userType, setUserType] = useState<'general' | 'professional' | null>(null);
 
   // Form state variables
-  const [typeofLoad, setTypeofLoad] = useState("");
+  const [typeofLoad, setTypeofLoad] = useState(defaultState.typeofLoad);
   const [dspFromLocation, setDspFromLocation] = useState(false);
-  const [toLocation, setToLocation] = useState("");
-
+  const [toLocation, setToLocation] = useState(defaultState.toLocation);
   const [destination, setDestination] = useState<SelectLocationProp | null>(null);
   const [origin, setOrigin] = useState<SelectLocationProp | null>(null);
-
   const [locationPicKERdSP, setPickLocationOnMap] = useState(false);
-
   const [dspToLocation, setDspToLocation] = useState(false);
-  const [rate, setRate] = useState("");
-  const [rateexplantion, setRateExplanation] = useState("");
-  const [paymentTerms, setPaymentTerms] = useState("");
-  const [requirements, setRequirements] = useState("");
-  const [loadingDate, setLoadingDate] = useState("");
-  const [additionalInfo, setAdditionalInfo] = useState("");
-  const [alertMsg, setAlertMsg] = useState("");
-  const [fuelAvai, setFuelAvai] = useState("");
-  const [returnLoad, setReturnLoad] = useState("");
-  const [returnRate, setReturnRate] = useState("");
-  const [returnTerms, setReturnTerms] = useState("");
+  const [rate, setRate] = useState(defaultState.rate);
+  const [rateexplantion, setRateExplanation] = useState(defaultState.rateexplantion);
+  const [paymentTerms, setPaymentTerms] = useState(defaultState.paymentTerms);
+  const [requirements, setRequirements] = useState(defaultState.requirements);
+  const [loadingDate, setLoadingDate] = useState(defaultState.loadingDate);
+  const [additionalInfo, setAdditionalInfo] = useState(defaultState.additionalInfo);
+  const [alertMsg, setAlertMsg] = useState(defaultState.alertMsg);
+  const [fuelAvai, setFuelAvai] = useState(defaultState.fuelAvai);
+  const [returnLoad, setReturnLoad] = useState(defaultState.returnLoad);
+  const [returnRate, setReturnRate] = useState(defaultState.returnRate);
+  const [returnTerms, setReturnTerms] = useState(defaultState.returnTerms);
 
-
-  const [selectedCurrency, setSelectedCurrency] = React.useState({ id: 1, name: "USD" })
-  const [selectedReturnCurrency, setSelectedRetrunCurrency] = React.useState({ id: selectedCurrency.id, name: selectedCurrency.name })
-
-  const [selectedModelType, setSelectedModelType] = React.useState({ id: 1, name: "Solid" })
-
-  const [selectedReturnModelType, setSelectedReturnModelType] = React.useState({ id: selectedModelType.id, name: selectedModelType.name })
+  const [selectedCurrency, setSelectedCurrency] = React.useState(defaultState.selectedCurrency);
+  const [selectedReturnCurrency, setSelectedRetrunCurrency] = React.useState(defaultState.selectedRetrunCurrency);
+  const [selectedModelType, setSelectedModelType] = React.useState(defaultState.selectedModelType);
+  const [selectedReturnModelType, setSelectedReturnModelType] = React.useState(defaultState.selectedReturnModelType);
 
   // Truck Form Data
-  const [formDataTruck, setFormDataTruck] = useState<TruckFormData>({
-    additionalInfo: "",
-    driverPhone: "",
-    maxloadCapacity: "",
-    truckName: "",
-    otherCargoArea: "",
-    otherTankerType: ""
-  });
+  const [formDataTruck, setFormDataTruck] = useState<TruckFormData>(defaultState.formDataTruck);
 
-
-  const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(null)
-  const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string } | null>(null)
-  const [selectedTankerType, setSelectedTankerType] = useState<{ id: number, name: string } | null>(null)
-  const [selectedTruckCapacity, setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>(null)
-  const [showCountries, setShowCountries] = useState(false);
-  const [operationCountries, setOperationCountries] = useState<string[]>([]);
-  const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>([]);
+  const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(defaultState.selectedCargoArea);
+  const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string } | null>(defaultState.selectedTruckType);
+  const [selectedTankerType, setSelectedTankerType] = useState<{ id: number, name: string } | null>(defaultState.selectedTankerType);
+  const [selectedTruckCapacity, setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>(defaultState.selectedTruckCapacity);
+  const [showCountries, setShowCountries] = useState(defaultState.showCountries);
+  const [operationCountries, setOperationCountries] = useState<string[]>(defaultState.operationCountries);
+  const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>(defaultState.trucksNeeded);
   const [distance, setDistance] = useState("");
   const [duration, setDuration] = useState("");
   const [durationInTraffic, setDurationInTraffic] = useState("");
@@ -180,187 +182,22 @@ const AddLoadDB = () => {
   const [selectedAfricanTrucks, setSelectedAfricanTrucks] = useState<TruckTypeProps[]>([]);
 
   const askVertex = async () => {
-    if (!aiQuestion.trim()) return;
-    try {
-      setAiLoading(true);
-      setAiAnswer("");
-      console.log('[VertexAI] Sending prompt:', aiQuestion);
-      const result: any = await (model as any).generateContent(aiQuestion);
-      console.log('[VertexAI] Raw response:', result);
-      const text = typeof result?.response?.text === 'function'
-        ? result.response.text()
-        : (result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || "");
-      setAiAnswer(text || "(no response)");
-    } catch (e: any) {
-      console.error('[VertexAI] Error while generating content:', e);
-      setAiAnswer(e?.message || 'Failed to get response');
-    } finally {
-      setAiLoading(false);
-    }
+    await askVertexAI(aiQuestion, setAiLoading, setAiAnswer);
   };
 
   // AI-powered truck type detection from images
-  const analyzeLoadImages = async () => {
-    if (loadImages.length === 0) {
-      setAiAnalysisError("Please add images of your load first");
-      return;
-    }
-
-    try {
-      setAiLoading(true);
-      setAiAnalysisError(null);
-
-      // Convert images to base64 for AI analysis
-      const imagePromises = loadImages.map(async (image) => {
-        const response = await fetch(image.uri);
-        const blob = await response.blob();
-        return new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
-      });
-
-      const base64Images = await Promise.all(imagePromises);
-
-      // Create AI prompt for truck type detection
-      const prompt = `You are a logistics expert. Analyze these cargo/load images and determine the most suitable truck type for transportation.
-      
-      Consider these factors:
-      - Size and dimensions of the cargo
-      - Weight and density (estimate from appearance)
-      - Fragility and handling requirements
-      - Special transportation needs (refrigeration, hazardous materials, etc.)
-      - Loading/unloading requirements
-      
-      Based on the images, recommend:
-      1. Cargo Area Type (choose exactly one from: Flatbed, Container, Tanker, Refrigerated, Dry Van, Open Top, Side Curtain, Low Loader, Car Carrier, Other)
-      2. Truck Type (choose exactly one from: Light Truck, Medium Truck, Heavy Truck, Articulated Truck, Rigid Truck)
-      3. Capacity Range (choose exactly one from: 1-5 tons, 5-15 tons, 15-30 tons, 30-50 tons, 50+ tons)
-      4. Tanker Type (only if cargo area is Tanker, choose from: Fuel Tanker, Water Tanker, Chemical Tanker, Food Grade Tanker, Other, or use null if not applicable)
-      
-      IMPORTANT: Respond ONLY with valid JSON in this exact format (no additional text, no markdown formatting):
-      {
-        "cargoArea": "recommended cargo area",
-        "truckType": "recommended truck type", 
-        "capacity": "recommended capacity range",
-        "tankerType": "recommended tanker type or null",
-        "reasoning": "brief explanation of the recommendation"
-      }`;
-
-      const result: any = await (model as any).generateContent([
-        { text: prompt },
-        ...base64Images.map(img => ({ inlineData: { mimeType: "image/jpeg", data: img.split(',')[1] } }))
-      ]);
-
-      const responseText = typeof result?.response?.text === 'function'
-        ? result.response.text()
-        : (result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || "");
-
-      // Parse AI response with error handling
-      let aiResponse;
-      try {
-        // Clean the response text to extract JSON
-        const cleanedResponse = responseText.replace(/```json\n?|```\n?/g, '').trim();
-        aiResponse = JSON.parse(cleanedResponse);
-      } catch (parseError) {
-        console.error('Failed to parse AI response as JSON:', parseError);
-        console.log('Raw AI response:', responseText);
-        
-        // Try to extract JSON from the response using regex
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          try {
-            aiResponse = JSON.parse(jsonMatch[0]);
-          } catch (regexParseError) {
-            throw new Error('AI response is not in valid JSON format. Please try again with clearer images.');
-          }
-        } else {
-          throw new Error('AI response does not contain valid JSON. Please try again with clearer images.');
-        }
-      }
-
-      // Map AI recommendations to app data structures
-      const cargoAreaMap: { [key: string]: TruckTypeProps } = {
-        "Flatbed": { id: 1, name: "Flatbed", image: undefined, description: "Open flat platform for general cargo" },
-        "Container": { id: 2, name: "Container", image: undefined, description: "Standard shipping container transport" },
-        "Tanker": { id: 3, name: "Tanker", image: undefined, description: "Liquid transport vehicle" },
-        "Refrigerated": { id: 4, name: "Refrigerated", image: undefined, description: "Temperature-controlled transport" },
-        "Dry Van": { id: 5, name: "Dry Van", image: undefined, description: "Enclosed dry cargo transport" },
-        "Open Top": { id: 6, name: "Open Top", image: undefined, description: "Open-top container transport" },
-        "Side Curtain": { id: 7, name: "Side Curtain", image: undefined, description: "Side curtain trailer" },
-        "Low Loader": { id: 8, name: "Low Loader", image: undefined, description: "Low platform for heavy equipment" },
-        "Car Carrier": { id: 9, name: "Car Carrier", image: undefined, description: "Multi-level vehicle transport" },
-        "Other": { id: 10, name: "Other", image: undefined, description: "Specialized transport" }
-      };
-
-      const truckTypeMap: { [key: string]: { id: number, name: string } } = {
-        "Light Truck": { id: 1, name: "Light Truck" },
-        "Medium Truck": { id: 2, name: "Medium Truck" },
-        "Heavy Truck": { id: 3, name: "Heavy Truck" },
-        "Articulated Truck": { id: 4, name: "Articulated Truck" },
-        "Rigid Truck": { id: 5, name: "Rigid Truck" }
-      };
-
-      const capacityMap: { [key: string]: { id: number, name: string } } = {
-        "1-5 tons": { id: 1, name: "1-5 tons" },
-        "5-15 tons": { id: 2, name: "5-15 tons" },
-        "15-30 tons": { id: 3, name: "15-30 tons" },
-        "30-50 tons": { id: 4, name: "30-50 tons" },
-        "50+ tons": { id: 5, name: "50+ tons" }
-      };
-
-      const tankerTypeMap: { [key: string]: { id: number, name: string } } = {
-        "Fuel Tanker": { id: 1, name: "Fuel Tanker" },
-        "Water Tanker": { id: 2, name: "Water Tanker" },
-        "Chemical Tanker": { id: 3, name: "Chemical Tanker" },
-        "Food Grade Tanker": { id: 4, name: "Food Grade Tanker" },
-        "Other": { id: 5, name: "Other" }
-      };
-
-      // Validate AI response structure
-      if (!aiResponse.cargoArea || !aiResponse.truckType || !aiResponse.capacity) {
-        throw new Error('AI response is missing required fields. Please try again.');
-      }
-
-      // Set detected values with fallbacks
-      const detectedCargoArea = cargoAreaMap[aiResponse.cargoArea] || cargoAreaMap["Other"];
-      const detectedTruckType = truckTypeMap[aiResponse.truckType] || truckTypeMap["Heavy Truck"];
-      const detectedCapacity = capacityMap[aiResponse.capacity] || capacityMap["15-30 tons"];
-      
-      setAiDetectedCargoArea(detectedCargoArea);
-      setAiDetectedTruckType(detectedTruckType);
-      setAiDetectedCapacity(detectedCapacity);
-
-      // Handle tanker type if applicable
-      if (aiResponse.tankerType && aiResponse.tankerType !== "null" && aiResponse.tankerType !== null) {
-        const detectedTankerType = tankerTypeMap[aiResponse.tankerType] || tankerTypeMap["Other"];
-        setAiDetectedTankerType(detectedTankerType);
-      } else {
-        setAiDetectedTankerType(null);
-      }
-
-      setAiAnalysisComplete(true);
-      ToastAndroid.show('AI analysis complete! Review the recommendations below.', ToastAndroid.SHORT);
-      
-      // Store AI reasoning for display
-      setAiAnswer(aiResponse.reasoning || 'AI analysis completed successfully.');
-      
-      // Log successful analysis for debugging
-      console.log('AI Analysis Results:', {
-        cargoArea: detectedCargoArea.name,
-        truckType: detectedTruckType.name,
-        capacity: detectedCapacity.name,
-        tankerType: aiResponse.tankerType,
-        reasoning: aiResponse.reasoning
-      });
-
-    } catch (error: any) {
-      console.error('AI analysis error:', error);
-      setAiAnalysisError(error.message || 'Failed to analyze images');
-    } finally {
-      setAiLoading(false);
-    }
+  const handleAnalyzeLoadImages = async () => {
+    await analyzeLoadImages(
+      loadImages,
+      setAiLoading,
+      setAiAnalysisError,
+      setAiAnalysisComplete,
+      setAiDetectedCargoArea,
+      setAiDetectedTruckType,
+      setAiDetectedCapacity,
+      setAiDetectedTankerType,
+      setAiAnswer
+    );
   };
 
   function pushTruck() {
@@ -406,40 +243,34 @@ const AddLoadDB = () => {
 
   // Function to clear all form fields
   const clearFormFields = () => {
-    setTypeofLoad("");
-    setToLocation("");
-    setRate("");
-    setRateExplanation("");
-    setPaymentTerms("");
-    setRequirements("");
-    setLoadingDate("");
-    setAdditionalInfo("");
-    setAlertMsg("");
-    setFuelAvai("");
-    setReturnLoad("");
-    setReturnRate("");
-    setReturnTerms("");
-    setSelectedCurrency({ id: 1, name: "USD" });
-    setSelectedRetrunCurrency({ id: 1, name: "USD" });
-    setSelectedModelType({ id: 1, name: "Solid" });
-    setSelectedReturnModelType({ id: 1, name: "Solid" });
-    setFormDataTruck({
-      additionalInfo: "",
-      driverPhone: "",
-      maxloadCapacity: "",
-      truckName: "",
-      otherCargoArea: "",
-      otherTankerType: ""
-    });
-    setSelectedCargoArea(null);
-    setSelectedTruckType(null);
-    setSelectedTankerType(null);
-    setSelectedTruckCapacity(null);
-    setShowCountries(false);
-    setOperationCountries([]);
-    setTrucksNeeded([]); // Clear the array of added trucks
-    setStep(0); // Reset the step if you have a multi-step form
-    setUploadImageUpdate("")
+    const defaultState = getDefaultFormState();
+    setTypeofLoad(defaultState.typeofLoad);
+    setToLocation(defaultState.toLocation);
+    setRate(defaultState.rate);
+    setRateExplanation(defaultState.rateexplantion);
+    setPaymentTerms(defaultState.paymentTerms);
+    setRequirements(defaultState.requirements);
+    setLoadingDate(defaultState.loadingDate);
+    setAdditionalInfo(defaultState.additionalInfo);
+    setAlertMsg(defaultState.alertMsg);
+    setFuelAvai(defaultState.fuelAvai);
+    setReturnLoad(defaultState.returnLoad);
+    setReturnRate(defaultState.returnRate);
+    setReturnTerms(defaultState.returnTerms);
+    setSelectedCurrency(defaultState.selectedCurrency);
+    setSelectedRetrunCurrency(defaultState.selectedRetrunCurrency);
+    setSelectedModelType(defaultState.selectedModelType);
+    setSelectedReturnModelType(defaultState.selectedReturnModelType);
+    setFormDataTruck(defaultState.formDataTruck);
+    setSelectedCargoArea(defaultState.selectedCargoArea);
+    setSelectedTruckType(defaultState.selectedTruckType);
+    setSelectedTankerType(defaultState.selectedTankerType);
+    setSelectedTruckCapacity(defaultState.selectedTruckCapacity);
+    setShowCountries(defaultState.showCountries);
+    setOperationCountries(defaultState.operationCountries);
+    setTrucksNeeded(defaultState.trucksNeeded);
+    setStep(defaultState.step);
+    setUploadImageUpdate(defaultState.uploadImageUpdate);
   };
 
 
@@ -452,27 +283,21 @@ const AddLoadDB = () => {
   const handleSubmit = async () => {
     setIsSubmitting(true)
 
-    // Different validation based on user type
-    const MissingDriverDetails = userType === 'general' ? [
-      !typeofLoad && "Enter Load to be transported",
-      !origin && "Enter source Location",
-      !destination && "Enter destination location",
-      !selectedLoadingDate && "Select loading date",
-      loadImages.length === 0 && "Upload images of your load",
-      selectedAfricanTrucks.length === 0 && "Select at least 1 truck type",
-    ] : [
-      !typeofLoad && "Enter Load to be transported",
-      !origin && "Enter source Location",
-      !destination && "Enter destination location",
-      !rate && "Enter Load Rate ",
-      !paymentTerms && "Enter Payment Terms",
-      trucksNeeded.length === 0 && "Select at least 1 truck required",
-    ];
+    // Use utility function for validation
+    const validationErrors = validateLoadForm(userType, {
+      typeofLoad,
+      origin,
+      destination,
+      rate,
+      paymentTerms,
+      selectedLoadingDate,
+      loadImages,
+      selectedAfricanTrucks,
+      trucksNeeded
+    });
 
-    const filteredMissing = MissingDriverDetails.filter(Boolean);
-
-    if (filteredMissing.length > 0) {
-      alertBox("Missing Load Details", filteredMissing.join("\n"), [], "error");
+    if (validationErrors.length > 0) {
+      alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
       setIsSubmitting(false)
       return;
     }
@@ -520,63 +345,41 @@ const AddLoadDB = () => {
       setTrucksNeeded(generalTrucksNeeded);
     }
 
-    const loadData = {
-      userId: user?.uid,
-      companyName: user?.organisation,
-      contact: user?.phoneNumber || '',
-      logo: user.photoURL,
-      created_at: Date.now().toString(),
-      isVerified: false,
-      userType: userType,
+    // Use utility function to prepare load data
+    const loadData = prepareLoadData(userType!, {
       typeofLoad,
-      destination: destination?.description,
-      destinationFull: destination,
-      origin: origin?.description,
-      originFull: origin,
-
-      // Professional user fields
-      rate: (userType as string) === 'professional' ? (rate || '') : (budget || ''),
-      rateexplantion: (userType as string) === 'professional' ? (rateexplantion || '') : '',
-      currency: (userType as string) === 'professional' ? (selectedCurrency?.name || 'USD') : (budgetCurrency?.name || 'USD'),
-      model: (userType as string) === 'professional' ? (selectedModelType?.name || 'Solid') : 'Solid',
-      paymentTerms: (userType as string) === 'professional' ? (paymentTerms || 'To be discussed') : 'To be discussed',
-
-      // General user fields
-      budget: userType === 'general' ? (budget || '') : '',
-      budgetCurrency: userType === 'general' ? (budgetCurrency?.name || 'USD') : '',
-      loadingDate: userType === 'general' ? (selectedLoadingDate?.name || '') : (loadingDate || ''),
-
-      // Common fields
-      requirements: (userType as string) === 'professional' ? (requirements || 'Standard requirements') : 'General cargo transport',
-      additionalInfo: (userType as string) === 'professional' ? (additionalInfo || '') : 'Load posted by general user with AI assistance',
-      alertMsg: (userType as string) === 'professional' ? (alertMsg || '') : '',
-      fuelAvai: (userType as string) === 'professional' ? (fuelAvai || '') : '',
-      returnLoad: (userType as string) === 'professional' ? (returnLoad || '') : '',
-      returnRate: (userType as string) === 'professional' ? (returnRate || '') : '',
-      returnModel: (userType as string) === 'professional' ? (selectedReturnModelType?.name || '') : '',
-      returnCurrency: (userType as string) === 'professional' ? (selectedReturnCurrency?.name || '') : '',
-      returnTerms: (userType as string) === 'professional' ? (returnTerms || '') : '',
-      trucksRequired: userType === 'general' ? (selectedAfricanTrucks.length > 0 ? selectedAfricanTrucks.map(truck => ({
-        cargoArea: truck,
-        truckType: { id: 2, name: "Medium Truck" },
-        tankerType: null,
-        capacity: { id: 2, name: "5-15 tons" },
-        operationCountries: [origin?.country || 'South Africa', destination?.country || 'South Africa'].filter((v, i, a) => a.indexOf(v) === i),
-      })) : []) : trucksNeeded,
-      loadId: `Lo${Math.floor(100000000000 + Math.random() * 900000000000).toString()}ad`,
-      expoPushToken: expoPushToken || null,
-
-      // Different proof handling
-      proofOfOrder: (userType as string) === 'professional' ? (proofOfOerSub || null) : null,
-      proofOfOrderType: (userType as string) === 'professional' ? (proofOfOrderFileType[0] || null) : null,
-      loadImages: userType === 'general' ? (loadImagesUrls || []) : [],
-
-      distance: distance || 0,
-      duration: duration || 0,
-      durationInTraffic: durationInTraffic || 0,
-      routePolyline: routePolyline || '',
-      bounds: bounds || null,
-    };
+      origin,
+      destination,
+      rate,
+      rateexplantion,
+      paymentTerms,
+      requirements,
+      additionalInfo,
+      alertMsg,
+      fuelAvai,
+      returnLoad,
+      returnRate,
+      returnTerms,
+      selectedCurrency,
+      selectedModelType,
+      selectedReturnCurrency,
+      selectedReturnModelType,
+      budget,
+      budgetCurrency,
+      selectedLoadingDate,
+      loadingDate,
+      loadImages,
+      selectedAfricanTrucks,
+      trucksNeeded,
+      proofOfOerSub,
+      proofOfOrderFileType,
+      loadImagesUrls,
+      distance,
+      duration,
+      durationInTraffic,
+      routePolyline,
+      bounds
+    }, user, expoPushToken);
 
     try {
       // Ensure addDocument is not a React hook or using hooks internally.
@@ -624,154 +427,20 @@ const AddLoadDB = () => {
       } />
 
       {/* User Type Selection */}
-      {!userType && (
-        <View style={{ padding: wp(4), backgroundColor: backgroundLight, margin: wp(4), borderRadius: 12 }}>
-          <ThemedText style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: wp(4) }}>
-            How would you like to add your load?
-          </ThemedText>
-
-          <TouchableOpacity
-            style={[styles.userTypeButton, { backgroundColor: background }]}
-            onPress={() => setUserType('general')}
-          >
-            <Ionicons name="person-outline" size={24} color={accent} />
-            <View style={{ marginLeft: wp(3) }}>
-              <ThemedText style={{ fontSize: 16, fontWeight: 'bold' }}>General User</ThemedText>
-              <ThemedText style={{ fontSize: 12, opacity: 0.7, marginTop: 2 }}>
-                I don't know much about trucks - use AI to help me
-              </ThemedText>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.userTypeButton, { backgroundColor: background }]}
-            onPress={() => setUserType('professional')}
-          >
-            <Ionicons name="business-outline" size={24} color={accent} />
-            <View style={{ marginLeft: wp(3) }}>
-              <ThemedText style={{ fontSize: 16, fontWeight: 'bold' }}>Professional</ThemedText>
-              <ThemedText style={{ fontSize: 12, opacity: 0.7, marginTop: 2 }}>
-                I'm a load broker/consignee - I know the details
-              </ThemedText>
-            </View>
-          </TouchableOpacity>
-        </View>
-      )}
+      <UserTypeSelector
+        userType={userType}
+        setUserType={setUserType}
+      />
 
       {userType && (
-        <View style={{ padding: wp(4), backgroundColor: backgroundLight, margin: wp(4), borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Ionicons
-              name={userType === 'general' ? "person" : "business"}
-              size={20}
-              color={accent}
-            />
-            <ThemedText style={{ marginLeft: wp(2), fontWeight: 'bold' }}>
-              {userType === 'general' ? 'General User' : 'Professional User'}
-            </ThemedText>
-          </View>
-          <TouchableOpacity onPress={() => setUserType(null)}>
-            <Ionicons name="close-circle" size={20} color={icon} />
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {userType && (
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: wp(6), alignItems: 'center' }}>
-          {userType === 'general' 
-            ? ['Load Details', 'Images & AI', 'Truck Selection', 'Review & Submit'].map((stepLabel, index) => (
-            <View key={index} style={{ alignItems: 'center', flexDirection: 'row', flex: index > 0 ? 1 : 0 }}>
-              {index > 0 && (
-                <View
-                  style={{
-                    borderWidth: 1,
-                    borderRadius: wp(40),
-                    borderColor: step >= index ? '#0f9d58' : '#ccc',
-                    marginHorizontal: wp(2),
-                    flex: 1,
-                    marginBottom: wp(5),
-                  }}
-                />
-              )}
-              <TouchableOpacity onPress={() => setStep(index)} style={{ alignItems: 'center' }}>
-                <View
-                  style={{
-                    width: wp(8),
-                    height: wp(8),
-                    borderRadius: wp(4),
-                    backgroundColor: step >= index ? accent : '#ccc',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginBottom: wp(1),
-                  }}
-                >
-                  {step > index ? (
-                    <Ionicons name="checkmark" size={wp(4)} color={'white'} />
-                  ) : (
-                    <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>{index}</ThemedText>
-                  )}
-                </View>
-                <ThemedText
-                  type="tiny"
-                  style={{
-                    maxWidth: wp(12),
-                    textAlign: 'center',
-                    color: step >= index ? '#0f9d58' : '#ccc',
-                    fontWeight: step >= index ? 'bold' : 'normal',
-                  }}
-                >
-                  {stepLabel}
-                </ThemedText>
-              </TouchableOpacity>
-            </View>
-          ))
-            : ['Load Details', 'Additional Info', 'Return Load', "Truck Req"].map((stepLabel, index) => (
-            <View key={index} style={{ alignItems: 'center', flexDirection: 'row', flex: index > 0 ? 1 : 0 }}>
-              {index > 0 && (
-                <View
-                  style={{
-                    borderWidth: 1,
-                    borderRadius: wp(40),
-                    borderColor: step >= index ? '#0f9d58' : '#ccc',
-                    marginHorizontal: wp(2),
-                    flex: 1,
-                    marginBottom: wp(5),
-                  }}
-                />
-              )}
-              <TouchableOpacity onPress={() => setStep(index)} style={{ alignItems: 'center' }}>
-                <View
-                  style={{
-                    width: wp(8),
-                    height: wp(8),
-                    borderRadius: wp(4),
-                    backgroundColor: step >= index ? accent : '#ccc',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginBottom: wp(1),
-                  }}
-                >
-                  {step > index ? (
-                    <Ionicons name="checkmark" size={wp(4)} color={'white'} />
-                  ) : (
-                    <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>{index}</ThemedText>
-                  )}
-                </View>
-                <ThemedText
-                  type="tiny"
-                  style={{
-                    maxWidth: wp(12),
-                    textAlign: 'center',
-                    color: step >= index ? '#0f9d58' : '#ccc',
-                    fontWeight: step >= index ? 'bold' : 'normal',
-                  }}
-                >
-                  {stepLabel}
-                </ThemedText>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
+        <StepIndicator
+          steps={userType === 'general'
+            ? ['Load Details', 'Images & AI', 'Truck Selection', 'Review & Submit']
+            : ['Load Details', 'Additional Info', 'Return Load', 'Truck Req']
+          }
+          currentStep={step}
+          onStepPress={setStep}
+        />
       )}
 
 
@@ -840,91 +509,21 @@ const AddLoadDB = () => {
               )}
 
               {/* Common location fields */}
-              <ThemedText>
-                Origin Location<ThemedText color="red">*</ThemedText>
-              </ThemedText>
-
-
-              {distance && duration && (
-                <View style={{ padding: 16, borderRadius: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 5, backgroundColor: backgroundLight }}>
-                  <ThemedText style={styles.infoText}>Distance: {distance}</ThemedText>
-                  <ThemedText style={styles.infoText}>Duration: {duration}</ThemedText>
-                  {durationInTraffic && (
-                    <ThemedText style={styles.infoText}>Duration in Traffic: {durationInTraffic}</ThemedText>
-                  )}
-                </View>
-              )}
-
-
-              <TouchableOpacity
-                onPress={() => setDspFromLocation(true)}
-                style={{
-                  paddingVertical: 12,
-                  paddingHorizontal: 15,
-                  borderWidth: 1,
-                  borderColor: icon,       // use your color variable
-                  borderRadius: 8,
-                  backgroundColor: backgroundLight,  // optional
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginHorizontal: wp(5),
-                }}
-              >
-                <ThemedText
-                  style={{
-                    fontSize: 16,
-                    color: origin ? icon : '#888', // grey placeholder if no destination
-                  }}
-                >
-                  {origin ? origin?.description : "Select Origin"}
-                </ThemedText>
-              </TouchableOpacity>
-
-
-
-
-
-              <GooglePlaceAutoCompleteComp dspRoute={dspFromLocation} setDspRoute={setDspFromLocation} setRoute={setOrigin} topic='Load Origin' setPickLocationOnMap={setPickLocationOnMap} />
-
-              <TouchableOpacity
-                onPress={() => setDspToLocation(true)}
-                style={{
-                  paddingVertical: 12,
-                  paddingHorizontal: 15,
-                  borderWidth: 1,
-                  borderColor: icon,       // use your color variable
-                  borderRadius: 8,
-                  backgroundColor: backgroundLight,  // optional
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginHorizontal: wp(5),
-                }}
-              >
-                <ThemedText
-                  style={{
-                    fontSize: 16,
-                    color: destination ? icon : '#888', // grey placeholder if no destination
-                  }}
-                >
-                  {destination ? destination?.description : "Select Destination"}
-                </ThemedText>
-              </TouchableOpacity>
-
-
-              <GooglePlaceAutoCompleteComp dspRoute={dspToLocation} setDspRoute={setDspToLocation} setRoute={setDestination} topic="Load Destination" setPickLocationOnMap={setPickLocationOnMap} />
-
-
-              {locationPicKERdSP && (
-                <LocationPicker
-                  pickOriginLocation={origin}
-                  setPickOriginLocation={setOrigin}
-
-                  pickDestinationLoc={destination}
-                  setPickDestinationLoc={setDestination}
-                  setShowMap={setPickLocationOnMap}
-
-                  dspShowMap={locationPicKERdSP}
-                />)}
+              <LocationSelector
+                origin={origin}
+                destination={destination}
+                setOrigin={setOrigin}
+                setDestination={setDestination}
+                dspFromLocation={dspFromLocation}
+                setDspFromLocation={setDspFromLocation}
+                dspToLocation={dspToLocation}
+                setDspToLocation={setDspToLocation}
+                locationPicKERdSP={locationPicKERdSP}
+                setPickLocationOnMap={setPickLocationOnMap}
+                distance={distance}
+                duration={duration}
+                durationInTraffic={durationInTraffic}
+              />
 
 
               <ThemedText>
@@ -935,58 +534,15 @@ const AddLoadDB = () => {
                 onChangeText={setToLocation}
               />
 
-              <ThemedText>
-                Rate <ThemedText color="red">*</ThemedText>
-              </ThemedText>
-
-
-
-              <View style={styles.row}>
-                <View style={{ width: wp(27.5), marginRight: wp(2) }}>
-                  <ThemedText type="defaultSemiBold">Currency</ThemedText>
-                  <DropDownItem
-                    allData={[
-                      { id: 1, name: "USD" },
-                      { id: 2, name: "RSA" },
-                      { id: 3, name: "ZWG" }
-                    ]}
-                    selectedItem={selectedCurrency}
-                    setSelectedItem={setSelectedCurrency}
-                    placeholder=""
-                  />
-                </View>
-                <View style={{ flex: 1, }}>
-                  <ThemedText type="defaultSemiBold" style={{ textAlign: "center" }}>Rate</ThemedText>
-
-                  <Input
-                    value={rate}
-                    onChangeText={setRate}
-                    style={{ height: 45.5 }}
-                  />
-                </View>
-                <View style={{ width: wp(28), marginLeft: wp(2) }}>
-                  <ThemedText type="defaultSemiBold">Model</ThemedText>
-                  <DropDownItem
-                    allData={[
-                      { id: 1, name: "Solid" },
-                      { id: 2, name: "/ Tonne" },
-                      { id: 3, name: "/ KM" }
-                    ]}
-                    selectedItem={selectedModelType}
-                    setSelectedItem={setSelectedModelType}
-                    placeholder=""
-                  />
-                </View>
-              </View>
-              <ThemedText>
-                Explain rate<ThemedText style={{ fontStyle: "italic" }}> like link and triaxle rate</ThemedText>
-              </ThemedText>
-
-              <Input
-                placeholder="explain rate if neccesary"
-                value={rateexplantion}
-                onChangeText={setRateExplanation}
-                style={{ height: 45.5 }}
+              <RateInput
+                rate={rate}
+                setRate={setRate}
+                selectedCurrency={selectedCurrency}
+                setSelectedCurrency={setSelectedCurrency}
+                selectedModelType={selectedModelType}
+                setSelectedModelType={setSelectedModelType}
+                rateExplanation={rateexplantion}
+                setRateExplanation={setRateExplanation}
               />
 
 
@@ -1016,7 +572,7 @@ const AddLoadDB = () => {
               <LoadImageUpload
                 loadImages={loadImages}
                 setLoadImages={setLoadImages}
-                onAnalyzeImages={analyzeLoadImages}
+                onAnalyzeImages={handleAnalyzeLoadImages}
                 aiLoading={aiLoading}
                 aiAnalysisComplete={aiAnalysisComplete}
                 aiAnalysisError={aiAnalysisError}
@@ -1041,7 +597,7 @@ const AddLoadDB = () => {
                   onAnalyzeAgain={() => {
                     setAiAnalysisComplete(false);
                     setAiAnalysisError(null);
-                    analyzeLoadImages();
+                    handleAnalyzeLoadImages();
                   }}
                 />
               )}
@@ -1275,13 +831,13 @@ const AddLoadDB = () => {
                     Selected Truck Types:
                   </ThemedText>
                   {selectedAfricanTrucks.map((truck, index) => (
-                    <View key={truck.id} style={{ 
-                      flexDirection: 'row', 
-                      alignItems: 'center', 
-                      padding: wp(2), 
-                      backgroundColor: backgroundLight, 
-                      borderRadius: 8, 
-                      marginBottom: wp(1) 
+                    <View key={truck.id} style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      padding: wp(2),
+                      backgroundColor: backgroundLight,
+                      borderRadius: 8,
+                      marginBottom: wp(1)
                     }}>
                       <ThemedText style={{ flex: 1, color: accent, fontWeight: '600' }}>
                         {truck.name}
@@ -1317,48 +873,17 @@ const AddLoadDB = () => {
                 value={returnLoad}
                 onChangeText={setReturnLoad}
               />
-              <ThemedText>
-                Rate<ThemedText color="red">*</ThemedText>
-              </ThemedText>
-
-
-              <View style={styles.row}>
-                <View style={{ width: wp(27.5), marginRight: wp(2) }}>
-                  <ThemedText type="defaultSemiBold">Currency</ThemedText>
-                  <DropDownItem
-                    allData={[
-                      { id: 1, name: "USD" },
-                      { id: 2, name: "RSA" },
-                      { id: 3, name: "ZWG" }
-                    ]}
-                    selectedItem={selectedReturnCurrency}
-                    setSelectedItem={setSelectedRetrunCurrency}
-                    placeholder=""
-                  />
-                </View>
-                <View style={{ flex: 1, }}>
-                  <ThemedText type="defaultSemiBold" style={{ textAlign: "center" }}>Return Rate</ThemedText>
-
-                  <Input
-                    value={returnRate}
-                    onChangeText={setReturnRate}
-                    style={{ height: 45 }}
-                  />
-                </View>
-                <View style={{ width: wp(28), marginLeft: wp(2) }}>
-                  <ThemedText type="defaultSemiBold">Model</ThemedText>
-                  <DropDownItem
-                    allData={[
-                      { id: 1, name: "Solid" },
-                      { id: 2, name: "/ Tonne" },
-                      { id: 3, name: "/ KM" }
-                    ]}
-                    selectedItem={selectedReturnModelType}
-                    setSelectedItem={setSelectedReturnModelType}
-                    placeholder=""
-                  />
-                </View>
-              </View>
+              <RateInput
+                rate={returnRate}
+                setRate={setReturnRate}
+                selectedCurrency={selectedReturnCurrency}
+                setSelectedCurrency={setSelectedRetrunCurrency}
+                selectedModelType={selectedReturnModelType}
+                setSelectedModelType={setSelectedReturnModelType}
+                rateExplanation={returnTerms}
+                setRateExplanation={setReturnTerms}
+                isReturnRate={true}
+              />
 
 
 
@@ -1382,59 +907,21 @@ const AddLoadDB = () => {
           </ScrollView>
         )}
         {step === 3 && userType === 'general' && (
-          <ScrollView>
-            <View style={styles.viewMainDsp}>
-              <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-                Review & Submit
-              </ThemedText>
-              <Divider />
-
-              <View style={{ backgroundColor: backgroundLight, padding: wp(4), borderRadius: 12, marginBottom: wp(3) }}>
-                <ThemedText style={{ fontSize: 16, fontWeight: 'bold', marginBottom: wp(2) }}>Load Summary</ThemedText>
-                
-                <View style={{ marginBottom: wp(2) }}>
-                  <ThemedText style={{ fontWeight: 'bold' }}>Load Type:</ThemedText>
-                  <ThemedText>{typeofLoad}</ThemedText>
-                </View>
-
-                <View style={{ marginBottom: wp(2) }}>
-                  <ThemedText style={{ fontWeight: 'bold' }}>Route:</ThemedText>
-                  <ThemedText>{origin?.description} → {destination?.description}</ThemedText>
-                </View>
-
-                <View style={{ marginBottom: wp(2) }}>
-                  <ThemedText style={{ fontWeight: 'bold' }}>Loading Date:</ThemedText>
-                  <ThemedText>{selectedLoadingDate?.name}</ThemedText>
-                </View>
-
-                {budget && (
-                  <View style={{ marginBottom: wp(2) }}>
-                    <ThemedText style={{ fontWeight: 'bold' }}>Budget:</ThemedText>
-                    <ThemedText>{budget} {budgetCurrency.name}</ThemedText>
-                  </View>
-                )}
-
-                <View style={{ marginBottom: wp(2) }}>
-                  <ThemedText style={{ fontWeight: 'bold' }}>Images:</ThemedText>
-                  <ThemedText>{loadImages.length} image(s) uploaded</ThemedText>
-                </View>
-
-                <View style={{ marginBottom: wp(2) }}>
-                  <ThemedText style={{ fontWeight: 'bold' }}>Selected Truck Types:</ThemedText>
-                  <ThemedText>{selectedAfricanTrucks.map(t => t.name).join(', ')}</ThemedText>
-                </View>
-              </View>
-
-              <Button 
-                onPress={handleSubmit} 
-                title={isSubmitting ? "Submitting..." : "Submit Load Request"} 
-                disabled={isSubmitting} 
-                loading={isSubmitting} 
-                colors={{ text: '#0f9d58', bg: '#0f9d5824' }} 
-                style={{ borderWidth: 1, borderColor: accent }} 
-              />
-            </View>
-          </ScrollView>
+          <LoadSummary
+            userType={userType}
+            formData={{
+              typeofLoad,
+              origin: origin || undefined,
+              destination: destination || undefined,
+              selectedLoadingDate: selectedLoadingDate || undefined,
+              budget,
+              budgetCurrency,
+              loadImages,
+              selectedAfricanTrucks
+            }}
+            isSubmitting={isSubmitting}
+            onSubmit={handleSubmit}
+          />
         )}
         {step === 3 && (userType as string) === 'professional' && (<ScrollView>
           <View style={styles.viewMainDsp}>

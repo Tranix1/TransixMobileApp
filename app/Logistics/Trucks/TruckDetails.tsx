@@ -1,4 +1,4 @@
-import { View, ScrollView, RefreshControl, TouchableOpacity, Modal, TouchableNativeFeedback, Linking, Pressable,ToastAndroid,Dimensions,StyleSheet } from "react-native";
+import { View, ScrollView, RefreshControl, TouchableOpacity, Modal, TouchableNativeFeedback, Linking, Pressable, ToastAndroid, Dimensions, StyleSheet } from "react-native";
 
 import { router, useLocalSearchParams } from "expo-router";
 import ScreenWrapper from "@/components/ScreenWrapper";
@@ -10,9 +10,9 @@ import { hp, wp } from "@/constants/common";
 import React, { ReactElement, useEffect, useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
-import { BlurView } from 'expo-blur';   
+import { BlurView } from 'expo-blur';
 import { Truck, User } from "@/types/types";
-import { deleteDocument, readById ,updateDocument} from "@/db/operations";
+import { deleteDocument, readById, updateDocument } from "@/db/operations";
 import { TruckTrackerManager } from "@/components/TruckTrackerManager";
 import { Image } from 'expo-image'
 import { useAuth } from "@/context/AuthContext";
@@ -35,14 +35,14 @@ const TruckDetails = () => {
 
 
 
-    
+
     const icon = useThemeColor("icon");
     const accent = useThemeColor("accent");
     const accentlight = useThemeColor("accentlight");
     const background = useThemeColor("background");
     const coolGray = useThemeColor("coolGray");
     const backgroundLight = useThemeColor("backgroundLight");
-    const { truckid,updateReuestDoc , dspDetails,  truckBeingReuested , productName,origin,destination,model,rate ,currency,expoPushToken} = useLocalSearchParams();
+    const { truckid, updateReuestDoc, dspDetails, truckBeingReuested, productName, origin, destination, model, rate, currency, expoPushToken } = useLocalSearchParams();
     const [truckData, setTruckData] = useState<Truck>({} as Truck)
     const [modalVisible, setModalVisible] = useState(false);
     const [refreshing, setRefreshing] = useState(false)
@@ -142,74 +142,23 @@ const TruckDetails = () => {
 
 
 
-truckData.driverLicense ,truckData.driverPassport ,truckData.driverIntPermit 
+    truckData.driverLicense, truckData.driverPassport, truckData.driverIntPermit
 
 
-  const [isVisible, setIsVisible] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [viewerIndex, setViewerIndex] = useState(0);   // internal tracking while viewing
+    const [isVisible, setIsVisible] = useState(false);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [viewerIndex, setViewerIndex] = useState(0);   // internal tracking while viewing
 
-console.log(currentIndex)
+    console.log(currentIndex)
 
-//  const images = [
-//   truckData.truckBookImage ? { uri: truckData.truckBookImage } : null,
-//   truckData.trailerBookF ? { uri: truckData.trailerBookF } : null,
-//   truckData.trailerBookSc ? { uri: truckData.trailerBookSc } : null,
-//   truckData.driverLicense ? { uri: truckData.driverLicense } : null,
-//   truckData.driverPassport ? { uri: truckData.driverPassport } : null,
-//   truckData.driverIntPermit ? { uri: truckData.driverIntPermit } : null,
-// ].filter(Boolean) as { uri: string }[];
-
-
-
-
-
-
-
-const truckDetailImages = [];
-const driverDetailImages = [];
-const additionalImages = [];
-
-if (truckData.truckBookImage) {
-  truckDetailImages.push({ label: 'Truck Book Image', uri: truckData.truckBookImage });
-}
-if (truckData.trailerBookF) {
-  truckDetailImages.push({ label: 'Trailer Book', uri: truckData.trailerBookF });
-}
-if (truckData.trailerBookSc) {
-  truckDetailImages.push({ label: 'Trailer Book Second', uri: truckData.trailerBookSc });
-}
-
-if (truckData.driverLicense) {
-  driverDetailImages.push({ label: 'Driver License', uri: truckData.driverLicense });
-}
-if (truckData.driverPassport) {
-  driverDetailImages.push({ label: 'Driver Passport', uri: truckData.driverPassport });
-}
-if (truckData.driverIntPermit) {
-  driverDetailImages.push({ label: 'Driver International Permit', uri: truckData.driverIntPermit });
-}
-
-if (truckData.gitImage) {
-  additionalImages.push({ label: 'GIT Image', uri: truckData.gitImage });
-}
-if (truckData.truckNumberPlate) {
-  additionalImages.push({ label: 'Truck Number Plate', uri: truckData.truckNumberPlate });
-}
-if (truckData.truckThirdPlate) {
-  additionalImages.push({ label: 'Truck Third Plate', uri:  truckData.truckThirdPlate });
-}
-
-const labeledImages = [...truckDetailImages, ...driverDetailImages, ...additionalImages];
-
-
-const driverOffset = truckDetailImages.length;
-const additionalOffset = driverOffset + driverDetailImages.length;
-
-
-
-const images = labeledImages.map(item => ({ uri: item.uri }));
-const labels = labeledImages.map(item => item.label);
+    //  const images = [
+    //   truckData.truckBookImage ? { uri: truckData.truckBookImage } : null,
+    //   truckData.trailerBookF ? { uri: truckData.trailerBookF } : null,
+    //   truckData.trailerBookSc ? { uri: truckData.trailerBookSc } : null,
+    //   truckData.driverLicense ? { uri: truckData.driverLicense } : null,
+    //   truckData.driverPassport ? { uri: truckData.driverPassport } : null,
+    //   truckData.driverIntPermit ? { uri: truckData.driverIntPermit } : null,
+    // ].filter(Boolean) as { uri: string }[];
 
 
 
@@ -217,36 +166,87 @@ const labels = labeledImages.map(item => item.label);
 
 
 
-    const [reasonForDenail , setReasonForDenial]=React.useState("")
-    const [truckDenialReason , setTruckDenialReason]=React.useState(false)
+    const truckDetailImages = [];
+    const driverDetailImages = [];
+    const additionalImages = [];
 
-   async function accecptTruckRquest(decision : string){
-       // Update Booking State
+    if (truckData.truckBookImage) {
+        truckDetailImages.push({ label: 'Truck Book Image', uri: truckData.truckBookImage });
+    }
+    if (truckData.trailerBookF) {
+        truckDetailImages.push({ label: 'Trailer Book', uri: truckData.trailerBookF });
+    }
+    if (truckData.trailerBookSc) {
+        truckDetailImages.push({ label: 'Trailer Book Second', uri: truckData.trailerBookSc });
+    }
 
-       if(decision==="Approved" ){
-        await updateDocument("CargoBookings", `${updateReuestDoc}`, {ownerDecision:  decision,})
+    if (truckData.driverLicense) {
+        driverDetailImages.push({ label: 'Driver License', uri: truckData.driverLicense });
+    }
+    if (truckData.driverPassport) {
+        driverDetailImages.push({ label: 'Driver Passport', uri: truckData.driverPassport });
+    }
+    if (truckData.driverIntPermit) {
+        driverDetailImages.push({ label: 'Driver International Permit', uri: truckData.driverIntPermit });
+    }
 
-    await sendPushNotification( 
-  `${expoPushToken}` ,
-//   "Truck Accepted",
-    `Truck Accepted`,
-   `Truck "${truckData.truckName}" has been accepted for load "${productName}" ( ${origin} to ${destination}) rate ${currency } ${rate} ${model} . Tap to view details.`,
-    { pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "bookings", dspRoute: "Booked Loads" } },
-);
+    if (truckData.gitImage) {
+        additionalImages.push({ label: 'GIT Image', uri: truckData.gitImage });
+    }
+    if (truckData.truckNumberPlate) {
+        additionalImages.push({ label: 'Truck Number Plate', uri: truckData.truckNumberPlate });
+    }
+    if (truckData.truckThirdPlate) {
+        additionalImages.push({ label: 'Truck Third Plate', uri: truckData.truckThirdPlate });
+    }
 
-    }else if(decision==="Denied"){
-        if(!reasonForDenail){  alert("Enter Reason For Denial");return}       
-       await updateDocument("CargoBookings", `${updateReuestDoc}`, {ownerDecision:  decision,denialReason : reasonForDenail})
-await sendPushNotification(
-  `${expoPushToken}`,
-  `Truck  Denied`,
-    `Truck "${truckData.truckName}" was Denied for load "${productName}" ( ${origin} to ${destination}) rate ${currency } ${rate} ${model} . Reason: Details not clear.`,
-    { pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "bookings", dspRoute: "Booked Loads" } },
-)
-setTruckDenialReason(false)
-setReasonForDenial("")
-    }  
-       alert("Done Adding")
+    const labeledImages = [...truckDetailImages, ...driverDetailImages, ...additionalImages];
+
+
+    const driverOffset = truckDetailImages.length;
+    const additionalOffset = driverOffset + driverDetailImages.length;
+
+
+
+    const images = labeledImages.map(item => ({ uri: item.uri }));
+    const labels = labeledImages.map(item => item.label);
+
+
+
+
+
+
+
+    const [reasonForDenail, setReasonForDenial] = React.useState("")
+    const [truckDenialReason, setTruckDenialReason] = React.useState(false)
+
+    async function accecptTruckRquest(decision: string) {
+        // Update Booking State
+
+        if (decision === "Approved") {
+            await updateDocument("CargoBookings", `${updateReuestDoc}`, { ownerDecision: decision, })
+
+            await sendPushNotification(
+                `${expoPushToken}`,
+                //   "Truck Accepted",
+                `Truck Accepted`,
+                `Truck "${truckData.truckName}" has been accepted for load "${productName}" ( ${origin} to ${destination}) rate ${currency} ${rate} ${model} . Tap to view details.`,
+                { pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "bookings", dspRoute: "Booked Loads" } },
+            );
+
+        } else if (decision === "Denied") {
+            if (!reasonForDenail) { alert("Enter Reason For Denial"); return }
+            await updateDocument("CargoBookings", `${updateReuestDoc}`, { ownerDecision: decision, denialReason: reasonForDenail })
+            await sendPushNotification(
+                `${expoPushToken}`,
+                `Truck  Denied`,
+                `Truck "${truckData.truckName}" was Denied for load "${productName}" ( ${origin} to ${destination}) rate ${currency} ${rate} ${model} . Reason: Details not clear.`,
+                { pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dbName: "bookings", dspRoute: "Booked Loads" } },
+            )
+            setTruckDenialReason(false)
+            setReasonForDenial("")
+        }
+        alert("Done Adding")
         // Update Truck
 
     }
@@ -269,7 +269,7 @@ setReasonForDenial("")
                                 <ThemedText type="title" style={{ textAlign: 'center', marginBottom: wp(4) }}>
                                     Manage Truck
                                 </ThemedText>
-                                  <TouchableOpacity
+                                <TouchableOpacity
                                     style={{ backgroundColor: "#1E90FF", alignItems: 'center', padding: wp(2), borderRadius: wp(4) }}
                                 >
                                     <ThemedText color="#fff" type="subtitle">Truck Available</ThemedText>
@@ -279,11 +279,14 @@ setReasonForDenial("")
                                 <TouchableOpacity
                                     onPress={() => {
                                         setModalVisible(false);
-                                        router.push('/Logistics/Trucks/AddTrucks');
+                                        router.push({
+                                            pathname: '/Logistics/Trucks/EditTruck',
+                                            params: { truckId: truckData.id }
+                                        });
                                     }}
                                     style={{ backgroundColor: accent, alignItems: 'center', padding: wp(2), borderRadius: wp(4) }}
                                 >
-                                    <ThemedText color="#fff" type="subtitle">Edit Truck</ThemedText>
+                                    <ThemedText color="#fff" type="subtitle">Edit Truck Images</ThemedText>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     onPress={() => {
@@ -297,7 +300,7 @@ setReasonForDenial("")
                                                     onPress: async () => {
                                                         try {
                                                             // Add delete logic here
-                                                           await deleteDocument('Trucks', truckData.id)
+                                                            await deleteDocument('Trucks', truckData.id)
                                                             ToastAndroid.show("Success Truck deleted successfully", ToastAndroid.SHORT);
                                                         } catch (error) {
                                                             alertBox("Error", "Failed to delete truck", [], "error");
@@ -322,7 +325,7 @@ setReasonForDenial("")
 
 
 
-   <Modal transparent statusBarTranslucent visible={truckDenialReason} animationType="fade">
+            <Modal transparent statusBarTranslucent visible={truckDenialReason} animationType="fade">
                 <Pressable onPress={() => setTruckDenialReason(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
                     <BlurView intensity={100} style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center' }}>
 
@@ -334,15 +337,15 @@ setReasonForDenial("")
                                     </TouchableOpacity>
                                 </View>
                                 <ThemedText type="title" style={{ textAlign: 'center', marginBottom: wp(2.5) }}>
-                                        Reason for Denying
+                                    Reason for Denying
                                 </ThemedText>
 
                                 <ThemedText type="tiny">e.g. Missing documents, incorrect truck info, or load mismatch</ThemedText>
-<Input placeholder="Enter reason for denying this truck" value={reasonForDenail} onChangeText={(text)=>setReasonForDenial(text)} />
-<TouchableOpacity style={{borderWidth:1 , borderColor:icon,borderRadius:8 ,backgroundColor:background,height:hp(5), width:wp(56), justifyContent:"center",alignItems:"center" ,alignSelf:"center",marginTop: wp(-3),flexDirection:"row", gap: wp(2)}} onPress={()=>accecptTruckRquest("Denied") }>
-    <ThemedText style={{fontWeight:"bold"}}>Send</ThemedText>
-    <Ionicons name="send-outline"  size={19} color={icon} />
-</TouchableOpacity>
+                                <Input placeholder="Enter reason for denying this truck" value={reasonForDenail} onChangeText={(text) => setReasonForDenial(text)} />
+                                <TouchableOpacity style={{ borderWidth: 1, borderColor: icon, borderRadius: 8, backgroundColor: background, height: hp(5), width: wp(56), justifyContent: "center", alignItems: "center", alignSelf: "center", marginTop: wp(-3), flexDirection: "row", gap: wp(2) }} onPress={() => accecptTruckRquest("Denied")}>
+                                    <ThemedText style={{ fontWeight: "bold" }}>Send</ThemedText>
+                                    <Ionicons name="send-outline" size={19} color={icon} />
+                                </TouchableOpacity>
 
 
                             </View>
@@ -357,7 +360,7 @@ setReasonForDenial("")
                 rightComponent={
                     <View style={{ flexDirection: 'row', gap: wp(2), marginRight: wp(2) }}>
                         {!refreshing && user?.uid === truckData.userId &&
-                           ( <View style={{ overflow: 'hidden', borderRadius: wp(2.4) }}>
+                            (<View style={{ overflow: 'hidden', borderRadius: wp(2.4) }}>
                                 <TouchableNativeFeedback onPress={() => setModalVisible(true)}>
                                     <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: wp(2), padding: wp(1.5) }}>
                                         <Ionicons name='reorder-three-outline' size={wp(6)} color={icon} />
@@ -491,7 +494,7 @@ setReasonForDenial("")
                         paddingBottom: wp(4),
                     }}
                 >
-                    {truckBeingReuested==="true"&& (
+                    {truckBeingReuested === "true" && (
                         <View style={{ flexDirection: "row", justifyContent: "center", gap: wp(3), marginVertical: wp(2) }}>
                             <TouchableOpacity
                                 style={{
@@ -508,7 +511,7 @@ setReasonForDenial("")
                                     elevation: 3,
                                 }}
                                 activeOpacity={0.85}
-                                onPress={()=>accecptTruckRquest("Approved") }
+                                onPress={() => accecptTruckRquest("Approved")}
                             >
                                 <ThemedText style={{ color: "#fff", fontWeight: "600", fontSize: 16, letterSpacing: 0.5 }}>
                                     Accept
@@ -529,7 +532,7 @@ setReasonForDenial("")
                                     elevation: 3,
                                 }}
                                 activeOpacity={0.85}
-                                onPress={()=>setTruckDenialReason(true)}
+                                onPress={() => setTruckDenialReason(true)}
                             >
                                 <ThemedText style={{ color: "#fff", fontWeight: "600", fontSize: 16, letterSpacing: 0.5 }}>
                                     Deny
@@ -569,16 +572,16 @@ setReasonForDenial("")
                                 Truck Registered By
                             </ThemedText>
                             <ThemedText type="subtitle" style={{}}>
-                                {truckData.ownerName && "Truck Owner"  }
-                                {truckData.brokerName && "Truck Broker"  }
-                                
+                                {truckData.ownerName && "Truck Owner"}
+                                {truckData.brokerName && "Truck Broker"}
+
                             </ThemedText>
                         </View>
 
                     </View>
 
 
-  <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
                         <View style={{ flex: 1 }}>
                             <ThemedText type="tiny" style={{}}>
                                 Truck Type
@@ -587,7 +590,7 @@ setReasonForDenial("")
                                 {truckData.truckType || '--'}
                             </ThemedText>
                         </View>
-                        <ThemedText type="subtitle"  color="#1E90FF" >|</ThemedText>
+                        <ThemedText type="subtitle" color="#1E90FF" >|</ThemedText>
                         <View style={{ flex: 1 }}>
                             <ThemedText type="tiny" style={{}}>
                                 Cargo Area:
@@ -647,7 +650,7 @@ setReasonForDenial("")
 
 
 
-                    
+
                     {/* <Divider /> */}
                     <View style={{}}>
                         <View style={{ flexDirection: 'row' }}>
@@ -701,44 +704,44 @@ setReasonForDenial("")
                                     width: 8,
                                     height: 8,
                                     borderRadius: 4,
-                                    backgroundColor: truckData.hasTracker ? '#51cf66' : '#ff6b6b',
+                                    backgroundColor: (truckData as any).hasTracker ? '#51cf66' : '#ff6b6b',
                                     marginRight: wp(1)
                                 }} />
-                                <ThemedText style={{ 
-                                    fontSize: 14, 
-                                    color: truckData.hasTracker ? '#51cf66' : '#ff6b6b',
+                                <ThemedText style={{
+                                    fontSize: 14,
+                                    color: (truckData as any).hasTracker ? '#51cf66' : '#ff6b6b',
                                     fontWeight: '500'
                                 }}>
-                                    {truckData.hasTracker ? 'Truck has tracker' : 'Truck doesn\'t have a tracker'}
+                                    {(truckData as any).hasTracker ? 'Truck has tracker' : 'Truck doesn\'t have a tracker'}
                                 </ThemedText>
                             </View>
                         </View>
 
-                        {truckData.hasTracker && (
+                        {(truckData as any).hasTracker && (
                             <View style={{ marginTop: wp(2) }}>
                                 <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
-                                    Tracker Name: {truckData.trackerName || 'Not specified'}
+                                    Tracker Name: {(truckData as any).trackerName || 'Not specified'}
                                 </ThemedText>
                                 <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
-                                    Status: {truckData.trackerStatus === 'active' ? 'Active' : 'Available'}
+                                    Status: {(truckData as any).trackerStatus === 'active' ? 'Active' : 'Available'}
                                 </ThemedText>
                             </View>
                         )}
 
                         {/* Show tracker manager for truck owner */}
                         {user?.uid === truckData.userId && (
-                            <TruckTrackerManager 
-                                truck={truckData} 
+                            <TruckTrackerManager
+                                truck={truckData}
                                 isOwner={true}
                                 onTrackerUpdate={() => {
                                     // Refresh truck data
-                                    readById("Trucks", truckid as string, setTruckData);
+                                    getData();
                                 }}
                             />
                         )}
 
                         {/* Show Get Tracker button for non-owners if no tracker */}
-                        {user?.uid !== truckData.userId && !truckData.hasTracker && (
+                        {user?.uid !== truckData.userId && !(truckData as any).hasTracker && (
                             <TouchableOpacity
                                 style={{
                                     backgroundColor: accent,
@@ -756,57 +759,55 @@ setReasonForDenial("")
                         )}
                     </View>
 
-                    {(dspDetails==="true"||user?.uid === truckData.userId ) && <View>
-                        <ThemedText style={{ textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Truck Details</ThemedText>
+                    {(dspDetails === "true" || user?.uid === truckData.userId) && <View>
+                        <ThemedText style={{ textAlign: 'center', marginVertical: wp(4), color: "#1E90FF" }}>Truck Details</ThemedText>
 
-<ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
+                        <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
 
-{truckDetailImages.map((item, index) => (
-  <TouchableOpacity
-    key={index}
-    onPress={() => {
-      setCurrentIndex(index); // offset 0
-       setViewerIndex(index)
-      setIsVisible(true);
-    }}
-  >
-    <Image source={{ uri: item.uri }} style={{ height: hp(30), borderRadius: 10, width: wp(80), margin: 5 }}  />
-  </TouchableOpacity>
-))}
-
-
- </ScrollView>
+                            {truckDetailImages.map((item, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    onPress={() => {
+                                        setCurrentIndex(index); // offset 0
+                                        setViewerIndex(index)
+                                        setIsVisible(true);
+                                    }}
+                                >
+                                    <Image source={{ uri: item.uri }} style={{ height: hp(30), borderRadius: 10, width: wp(80), margin: 5 }} />
+                                </TouchableOpacity>
+                            ))}
 
 
-  <Image source={{ uri: truckData.trailerBookSc }}  />
+                        </ScrollView>
 
 
+                        <Image source={{ uri: truckData.trailerBookSc }} />
 
 
 
-                        <ThemedText style={{  textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}>Driver Details</ThemedText>
+
+
+                        <ThemedText style={{ textAlign: 'center', marginVertical: wp(4), color: "#1E90FF" }}>Driver Details</ThemedText>
                         <Divider />
                         <ThemedText type="tiny" style={{ marginTop: hp(1) }}>Driver Phone</ThemedText>
                         <ThemedText type="subtitle">{formatNumber(parseFloat(truckData.driverPhone))}</ThemedText>
                         <Divider />
 
-<ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
-                        {driverDetailImages.map((item, index) => (
-  <TouchableOpacity
-    key={index}
-    onPress={() => {
-     setCurrentIndex(index + driverOffset); // ✅ dynamic offset
-        setViewerIndex (index + driverOffset)
-      setIsVisible(true);
-    }}
-  >
-    <Image source={{ uri: item.uri }} style={styles.imageStyle} />
-  </TouchableOpacity>
-))}
+                        <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
+                            {driverDetailImages.map((item, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    onPress={() => {
+                                        setCurrentIndex(index + driverOffset); // ✅ dynamic offset
+                                        setViewerIndex(index + driverOffset)
+                                        setIsVisible(true);
+                                    }}
+                                >
+                                    <Image source={{ uri: item.uri }} style={styles.imageStyle} />
+                                </TouchableOpacity>
+                            ))}
 
- </ScrollView>
-
-
+                        </ScrollView>
 
 
 
@@ -814,63 +815,65 @@ setReasonForDenial("")
 
 
 
-              <ThemedText style={{  textAlign: 'center', marginVertical: wp(4),color:"#1E90FF" }}> Additional Details</ThemedText>
+
+
+                        <ThemedText style={{ textAlign: 'center', marginVertical: wp(4), color: "#1E90FF" }}> Additional Details</ThemedText>
                         <Divider />
 
-<ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} > 
-                        {additionalImages.map((item, index) => (
-  <TouchableOpacity
-    key={index}
-    onPress={() => {
-            setCurrentIndex(index + additionalOffset); // ✅ dynamic offset
-        setViewerIndex(index + additionalOffset)
-      setIsVisible(true);
-    }}
-  >
-  
-    <Image source={{ uri: item.uri }} style={styles.imageStyle} />
-  </TouchableOpacity>
-))}
- </ScrollView>
+                        <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
+                            {additionalImages.map((item, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    onPress={() => {
+                                        setCurrentIndex(index + additionalOffset); // ✅ dynamic offset
+                                        setViewerIndex(index + additionalOffset)
+                                        setIsVisible(true);
+                                    }}
+                                >
+
+                                    <Image source={{ uri: item.uri }} style={styles.imageStyle} />
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
 
 
 
-<ImageViewing
-  images={images}
-  imageIndex={currentIndex}
-  visible={isVisible}
-  onRequestClose={() => setIsVisible(false)}
-  onImageIndexChange={(index) => setViewerIndex (index)} // only update internal tracker
- 
-  presentationStyle="fullScreen"
-  HeaderComponent={() => (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingTop: 8,
-        paddingHorizontal: 15,
-        position: 'absolute',
-        top: 10,
-        zIndex: 999,
-        backgroundColor: backgroundLight,
-        borderRadius: 5,
-      }}
-    >
-      <TouchableOpacity onPress={() => setIsVisible(false)} style={{marginRight:8 , marginLeft:4}}>
-        <AntDesign name="close" size={15} color="#fff" />
-      </TouchableOpacity>
-      <ThemedText style={{ fontWeight: 'bold', fontSize: 14 }}>
-        {labels[viewerIndex] || 'Document'}
-      </ThemedText>
-    </View>
-  )}
-/>
+                        <ImageViewing
+                            images={images}
+                            imageIndex={currentIndex}
+                            visible={isVisible}
+                            onRequestClose={() => setIsVisible(false)}
+                            onImageIndexChange={(index) => setViewerIndex(index)} // only update internal tracker
+
+                            presentationStyle="fullScreen"
+                            HeaderComponent={() => (
+                                <View
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        paddingTop: 8,
+                                        paddingHorizontal: 15,
+                                        position: 'absolute',
+                                        top: 10,
+                                        zIndex: 999,
+                                        backgroundColor: backgroundLight,
+                                        borderRadius: 5,
+                                    }}
+                                >
+                                    <TouchableOpacity onPress={() => setIsVisible(false)} style={{ marginRight: 8, marginLeft: 4 }}>
+                                        <AntDesign name="close" size={15} color="#fff" />
+                                    </TouchableOpacity>
+                                    <ThemedText style={{ fontWeight: 'bold', fontSize: 14 }}>
+                                        {labels[viewerIndex] || 'Document'}
+                                    </ThemedText>
+                                </View>
+                            )}
+                        />
 
 
                         <Divider />
 
-                      
+
 
                     </View>}
 
@@ -890,7 +893,7 @@ setReasonForDenial("")
                             shadowOpacity: 0.12,
                             shadowRadius: 4,
                             elevation: 2,
-                            paddingHorizontal:5
+                            paddingHorizontal: 5
                         }}
                         onPress={() =>
                             router.push({
@@ -916,7 +919,7 @@ setReasonForDenial("")
 export default TruckDetails
 
 const styles = StyleSheet.create({
-imageStyle:{ height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }
+    imageStyle: { height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }
 
 
 });
