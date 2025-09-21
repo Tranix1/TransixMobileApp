@@ -1,7 +1,8 @@
 export const darkMapStyle = [
+  // ✅ Base background
   {
     "elementType": "geometry",
-    "stylers": [{ "color": "#1d2c4d" }] // base background
+    "stylers": [{ "color": "#1d2c4d" }]
   },
   {
     "elementType": "labels.text.fill",
@@ -11,21 +12,25 @@ export const darkMapStyle = [
     "elementType": "labels.text.stroke",
     "stylers": [{ "color": "#1a3646" }]
   },
-  // ✅ Residential houses/buildings
+
+  // ✅ Man-made / built-up (residential feel)
   {
     "featureType": "landscape.man_made",
+    "elementType": "geometry.fill",
+    "stylers": [{ "color": "#344667" }] // slightly brighter for houses/blocks
+  },
+
+  // ✅ Natural landscape
+  {
+    "featureType": "landscape.natural",
     "elementType": "geometry",
     "stylers": [{ "color": "#2b3a56" }]
   },
-  {
-    "featureType": "landscape.residential",
-    "elementType": "geometry",
-    "stylers": [{ "color": "#344667" }] // slightly brighter than background
-  },
-  // ✅ Parks/green areas
+
+  // ✅ Parks / green areas
   {
     "featureType": "poi.park",
-    "elementType": "geometry",
+    "elementType": "geometry.fill",
     "stylers": [{ "color": "#263c3f" }]
   },
   {
@@ -33,7 +38,8 @@ export const darkMapStyle = [
     "elementType": "labels.text.fill",
     "stylers": [{ "color": "#6b9a76" }]
   },
-  // ✅ Roads
+
+  // ✅ Roads (general)
   {
     "featureType": "road",
     "elementType": "geometry",
@@ -49,6 +55,8 @@ export const darkMapStyle = [
     "elementType": "labels.text.fill",
     "stylers": [{ "color": "#9ca5b3" }]
   },
+
+  // ✅ Highways
   {
     "featureType": "road.highway",
     "elementType": "geometry",
@@ -64,6 +72,14 @@ export const darkMapStyle = [
     "elementType": "labels.text.fill",
     "stylers": [{ "color": "#f3d19c" }]
   },
+
+  // ✅ Local roads (to highlight residential neighborhoods)
+  {
+    "featureType": "road.local",
+    "elementType": "geometry.fill",
+    "stylers": [{ "color": "#3f4d6b" }]
+  },
+
   // ✅ Points of Interest
   {
     "featureType": "poi",
@@ -72,9 +88,10 @@ export const darkMapStyle = [
   },
   {
     "featureType": "poi.business",
-    "elementType": "geometry",
+    "elementType": "geometry.fill",
     "stylers": [{ "color": "#2d3a4f" }]
   },
+
   // ✅ Transit
   {
     "featureType": "transit",
@@ -86,10 +103,11 @@ export const darkMapStyle = [
     "elementType": "labels.text.fill",
     "stylers": [{ "color": "#d59563" }]
   },
+
   // ✅ Water
   {
     "featureType": "water",
-    "elementType": "geometry",
+    "elementType": "geometry.fill",
     "stylers": [{ "color": "#17263c" }]
   },
   {

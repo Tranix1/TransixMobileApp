@@ -130,7 +130,7 @@ export const organizeImagesByCategory = (truckData: any) => {
     };
 
     Object.entries(truckData).forEach(([key, value]) => {
-        if (typeof value === 'string' && value.startsWith('http')) {
+        if (typeof value === 'string' && (value.startsWith('http') || value.startsWith('file://') || value.startsWith('content://'))) {
             const category = getImageFieldCategory(key);
             if (categories[category as keyof typeof categories]) {
                 categories[category as keyof typeof categories].push({

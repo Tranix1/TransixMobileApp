@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, ScrollView, TouchableOpacity, Alert, ToastAndroid, Image, StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import ScreenWrapper from '@/components/ScreenWrapper';
@@ -31,6 +31,7 @@ const EditTruck = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [imageUpdateCount, setImageUpdateCount] = useState(0); // Track image updates for re-rendering
+    const [imageCache, setImageCache] = useState<{ [key: string]: string }>({}); // Cache for image URIs
 
     // State for dropdowns
     const [selectedTruckType, setSelectedTruckType] = useState<TruckTypeProps | null>(null);
@@ -50,10 +51,22 @@ const EditTruck = () => {
             const truck = await readById('Trucks', truckId as string);
             if (truck) {
                 const truckData = truck as Truck;
+                console.log('Loaded truck data:', truckData);
+                console.log('Truck userId:', truckData.userId);
+                console.log('Current user uid:', user?.uid);
                 setEditableTruckData(truckData);
                 setTruckCapacity(truckData.truckCapacity || "");
                 setTankerType(truckData.tankerType || "");
                 setOperationCountries(truckData.locations || []);
+
+                // Initialize image cache with existing images
+                const initialCache: { [key: string]: string } = {};
+                Object.entries(truckData).forEach(([key, value]) => {
+                    if (typeof value === 'string' && (value.startsWith('http') || value.startsWith('file://') || value.startsWith('content://'))) {
+                        initialCache[key] = value;
+                    }
+                });
+                setImageCache(initialCache);
             } else {
                 Alert.alert('Error', 'Truck not found');
                 router.back();
@@ -67,19 +80,30 @@ const EditTruck = () => {
         }
     };
 
-    const handleImagePress = (field: keyof Truck) => {
+    const handleImagePress = useCallback((field: keyof Truck) => {
+        console.log(`Image pressed for field: ${field}`);
         selectImage((image) => {
             if (image.uri) {
                 console.log(`Updating image for field: ${field}`, image.uri);
-                // Update the state with the new image URI and increment update count
+
+                // Update both the editable truck data and image cache
                 setEditableTruckData(prev => ({
                     ...prev,
                     [field]: image.uri
                 }));
+
+                setImageCache(prev => ({
+                    ...prev,
+                    [field]: image.uri
+                }));
+
+                // Increment update count to force re-render
                 setImageUpdateCount(prev => prev + 1);
+            } else {
+                console.log('No image URI received');
             }
         });
-    };
+    }, []);
 
     const handleSaveChanges = async () => {
         try {
@@ -130,7 +154,8 @@ const EditTruck = () => {
         );
     }
 
-    if (user?.uid !== editableTruckData.userId) {
+    // Check if user has permission to edit this truck
+    if (user?.uid && editableTruckData.userId && user.uid !== editableTruckData.userId) {
         return (
             <ScreenWrapper>
                 <View style={styles.center}>
@@ -181,40 +206,54 @@ const EditTruck = () => {
 
                 <Divider />
 
-                {Object.entries(organizeImagesByCategory(editableTruckData as Truck)).map(([category, images]) => (
-                    images.length > 0 && (
-                        <View key={category} style={styles.section}>
-                            <ThemedText type="title" style={styles.sectionTitle}>
-                                {category.charAt(0).toUpperCase() + category.slice(1)} Images
-                            </ThemedText>
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={styles.imageContainer}
-                            >
-                                {images.map((item) => (
-                                    <TouchableOpacity
-                                        key={item.field}
-                                        onPress={() => handleImagePress(item.field as keyof Truck)}
-                                        style={styles.imageWrapper}
-                                    >
-                                        <Image
-                                            key={`${item.field}-${editableTruckData[item.field as keyof Truck]}-${imageUpdateCount}`} // Force re-render with field, URI, and update count
-                                            source={{ uri: String(editableTruckData[item.field as keyof Truck] || '') }}
-                                            style={styles.image}
-                                            onError={() => console.log('Image load error for field:', item.field)}
-                                            onLoad={() => console.log('Image loaded successfully for field:', item.field)}
-                                            resizeMode="cover"
-                                        />
-                                        <View style={styles.editIcon}>
-                                            <Ionicons name="create-outline" size={wp(4)} color="white" />
-                                        </View>
-                                    </TouchableOpacity>
-                                ))}
-                            </ScrollView>
-                        </View>
-                    )
-                ))}
+                {Object.entries(organizeImagesByCategory({ ...editableTruckData, ...imageCache } as Truck)).map(([category, images]) => {
+                    console.log(`Category: ${category}, Images count: ${images.length}`);
+                    console.log(`Merged data for organizeImagesByCategory:`, { ...editableTruckData, ...imageCache });
+                    images.forEach(img => console.log(`Image field: ${img.field}, URI: ${img.uri}`));
+
+                    if (images.length > 0) {
+                        return (
+                            <View key={category} style={styles.section}>
+                                <ThemedText type="title" style={styles.sectionTitle}>
+                                    {category.charAt(0).toUpperCase() + category.slice(1)} Images
+                                </ThemedText>
+                                <ScrollView
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={styles.imageContainer}
+                                >
+                                    {images.map((item) => {
+                                        // Get the current image URI from cache or truck data
+                                        const currentImageUri = imageCache[item.field] || editableTruckData[item.field as keyof Truck] || item.uri;
+
+                                        return (
+                                            <TouchableOpacity
+                                                key={`${item.field}-${imageUpdateCount}`}
+                                                onPress={() => handleImagePress(item.field as keyof Truck)}
+                                                style={styles.imageWrapper}
+                                            >
+                                                <Image
+                                                    key={`${item.field}-${currentImageUri}-${imageUpdateCount}`}
+                                                    source={{ uri: String(currentImageUri || '') }}
+                                                    style={styles.image}
+                                                    onError={(error) => {
+                                                        console.log('Image load error for field:', item.field, error);
+                                                    }}
+                                                    onLoad={() => console.log('Image loaded successfully for field:', item.field)}
+                                                    resizeMode="cover"
+                                                />
+                                                <View style={styles.editIcon}>
+                                                    <Ionicons name="create-outline" size={wp(4)} color="white" />
+                                                </View>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </ScrollView>
+                            </View>
+                        );
+                    }
+                    return null;
+                })}
 
             </ScrollView>
         </ScreenWrapper>
