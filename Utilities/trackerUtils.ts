@@ -105,3 +105,72 @@ export const formatTrackerSharedDate = (timestamp: string): string => {
         return 'Unknown date';
     }
 };
+
+/**
+ * Request tracker sharing from truck owner
+ */
+export const requestTrackerSharing = async (
+    loadRequestId: string,
+    truckOwnerId: string,
+    loadOwnerId: string
+): Promise<boolean> => {
+    try {
+        await updateDocument('loadRequests', loadRequestId, {
+            trackerSharingRequested: true,
+            trackerSharingRequestedAt: Date.now().toString(),
+            trackerSharingRequestedBy: loadOwnerId
+        });
+
+        // Send notification to truck owner
+        // This would integrate with your notification system
+        console.log(`Tracker sharing requested for load ${loadRequestId} by ${loadOwnerId}`);
+
+        return true;
+    } catch (error) {
+        console.error('Error requesting tracker sharing:', error);
+        return false;
+    }
+};
+
+/**
+ * Accept tracker sharing request
+ */
+export const acceptTrackerSharing = async (
+    loadRequestId: string,
+    truckId: string,
+    trackerId: string
+): Promise<boolean> => {
+    try {
+        await updateDocument('loadRequests', loadRequestId, {
+            trackerShared: true,
+            trackerSharedAt: Date.now().toString(),
+            trackerSharedBy: truckId,
+            trackerId: trackerId,
+            trackerSharingAccepted: true
+        });
+
+        console.log(`Tracker sharing accepted for load ${loadRequestId}`);
+        return true;
+    } catch (error) {
+        console.error('Error accepting tracker sharing:', error);
+        return false;
+    }
+};
+
+/**
+ * Check if tracker can be shared (not already shared and truck has active tracker)
+ */
+export const canShareTracker = async (truckId: string): Promise<boolean> => {
+    try {
+        const truck = await readById('Trucks', truckId);
+        if (!truck) return false;
+
+        return truck.hasTracker &&
+            truck.trackerStatus === 'active' &&
+            truck.trackingDeviceId &&
+            !truck.trackerShared;
+    } catch (error) {
+        console.error('Error checking tracker sharing capability:', error);
+        return false;
+    }
+};

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, ToastAndroid } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, ToastAndroid, Alert } from "react-native";
 import { auth, db } from "@/db/fireBaseConfig";
-import { addDocument, runFirestoreTransaction, checkDocumentExists, setDocuments } from "@/db/operations";
+import { addDocument, runFirestoreTransaction, checkDocumentExists, setDocuments, readById } from "@/db/operations";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Feather, } from "@expo/vector-icons";
 import { collection, serverTimestamp, query, where, onSnapshot, getDocs } from 'firebase/firestore';
@@ -15,7 +15,7 @@ import { wp, hp } from "@/constants/common";
 import Heading from "@/components/Heading";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { formatCurrency } from '@/services/services'
-import { usePushNotifications, sendPushNotification } from "@/Utilities/pushNotification";
+import { usePushNotifications, sendPushNotification, sendBookingWithTrackerNotification } from "@/Utilities/pushNotification";
 
 function BookLContract({ }) {
   const accent = useThemeColor("accent");
@@ -121,10 +121,20 @@ function BookLContract({ }) {
 
           const userId = auth.currentUser.uid
           const existingBBDoc = await checkExistixtBBDoc(`${userId}${Contractitem.loadId}${item.timeStamp}`);
+
+          // Check if truck has tracker and if it's available for sharing
+          const truckData = await readById('Trucks', item.id) as any;
+          const hasTracker = truckData?.hasTracker;
+          const trackerStatus = truckData?.trackerStatus;
+          const trackingDeviceId = truckData?.trackingDeviceId;
+
+          // Note: Allow booking even without tracker, but track the status
+
           if (!existingBBDoc) {
             const theData = {
 
               truckId: item.id,
+              trackingDeviceId: (item as any).trackingDeviceId,
               created_at: Date.now().toString(),
               requestId: `${userId}${Contractitem.loadId}${item.timeStamp}`,
               cargoId: Contractitem.loadId,
@@ -141,30 +151,25 @@ function BookLContract({ }) {
               loadId: item.id,
               approvedTrck: false,
               alreadyInContract: true,
-              expoPushToken: expoPushToken || null
+              expoPushToken: expoPushToken || null,
+              trackerShared: false, // Track if tracker is shared
+              trackerSharingRequested: false, // Track if sharing was requested
+              loadOwnerId: Contractitem.userId, // Load owner ID for notifications
+              truckOwnerId: truckData?.userId, // Truck owner ID for notifications
+              truckHasTracker: hasTracker, // Store tracker availability status
+              trackerStatus: trackerStatus // Store tracker status
               // contractName: Contractitem.contractName,
             }
             addDocument("loadRequests", theData)
-            await sendPushNotification(
-              `${Contractitem.expoPushToken}`,
-              //   "Truck Accepted",
-              `New Truck ${bidRate ? "Bidding" : "Booking"} Received`,
-              `company "${item.CompanyName}" has requested to carry your load "${Contractitem.typeofLoad}" from ${Contractitem.origin} to ${Contractitem.destination} ${bidRate && "at"} rate ${Contractitem.currency} ${bidRate ? bidRate : Contractitem.rate} ${Contractitem.model}. Tap to view request.`,
 
-              {
-                pathname: '/BooksAndBids/ViewBidsAndBooks',
-                params: {
-                  dbName: "bookings",
-                  dspRoute: "Booked by Carriers"
-                }
-              }
+            // Send notification with tracker status information
+            await sendBookingWithTrackerNotification(
+              Contractitem.expoPushToken,
+              truckData?.ownerName || "Truck Owner",
+              `${Contractitem.origin} to ${Contractitem.destination}`,
+              hasTracker && trackerStatus === 'active' && trackingDeviceId,
+              theData.requestId
             );
-
-
-
-
-
-
 
             const existingBBDoc = await checkDocumentExists("newIterms", [where('receriverId', '==', userId)]);
             // const existingChat = await checkExistingChat(addChatId);
@@ -661,3 +666,4 @@ const styles = StyleSheet.create({
     fontSize: wp(4)
   }
 });
+

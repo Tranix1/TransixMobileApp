@@ -45,21 +45,21 @@ export function usePushNotifications() {
   }, []);
 
   // Schedule local push
-//   const schedulePushNotification = async () => {
-//     await Notifications.scheduleNotificationAsync({
-//       content: {
-//         title: "You've got mail! 📬",
-//         body: 'Here is the notification body',
-//         data: { data: 'goes here', test: { test1: 'more data' } },
-//       },
-   
-//         trigger: {
-//     type: 'timeInterval',
-//     seconds: 2,
-//     repeats: false, // Optional — set to true if you want it to repeat
-//   },
-//     });
-//   };
+  //   const schedulePushNotification = async () => {
+  //     await Notifications.scheduleNotificationAsync({
+  //       content: {
+  //         title: "You've got mail! 📬",
+  //         body: 'Here is the notification body',
+  //         data: { data: 'goes here', test: { test1: 'more data' } },
+  //       },
+
+  //         trigger: {
+  //     type: 'timeInterval',
+  //     seconds: 2,
+  //     repeats: false, // Optional — set to true if you want it to repeat
+  //   },
+  //     });
+  //   };
 
   return {
     expoPushToken,
@@ -147,8 +147,66 @@ export async function sendPushNotification(
   console.log("Byeee")
 }
 
+// Tracker sharing specific notifications
+export const sendTrackerSharingRequestNotification = async (
+  truckOwnerToken: string,
+  loadOwnerName: string,
+  loadDetails: string,
+  loadRequestId: string
+) => {
+  const title = "Tracker Sharing Request";
+  const body = `${loadOwnerName} has requested to share your truck's tracker for load: ${loadDetails}`;
 
-import { router,  } from "expo-router";
+  await sendPushNotification(
+    truckOwnerToken,
+    title,
+    body,
+    `/BooksAndBids/ViewBidsAndBooks?dspRoute=Requested by Carriers`,
+    { loadRequestId, type: 'tracker_sharing_request' }
+  );
+};
+
+export const sendTrackerSharingAcceptedNotification = async (
+  loadOwnerToken: string,
+  truckOwnerName: string,
+  truckDetails: string,
+  loadRequestId: string
+) => {
+  const title = "Tracker Sharing Accepted";
+  const body = `${truckOwnerName} has accepted your tracker sharing request for truck: ${truckDetails}`;
+
+  await sendPushNotification(
+    loadOwnerToken,
+    title,
+    body,
+    `/BooksAndBids/ViewBidsAndBooks?dspRoute=Requested Loads`,
+    { loadRequestId, type: 'tracker_sharing_accepted' }
+  );
+};
+
+export const sendBookingWithTrackerNotification = async (
+  loadOwnerToken: string,
+  truckOwnerName: string,
+  loadDetails: string,
+  hasTracker: boolean,
+  loadRequestId: string
+) => {
+  const title = hasTracker ? "Load Booked - Truck Has Tracker" : "Load Booked - Truck Has No Tracker";
+  const body = hasTracker
+    ? `${truckOwnerName} has booked your load: ${loadDetails}. ✅ This truck has an active tracker available for sharing.`
+    : `${truckOwnerName} has booked your load: ${loadDetails}. ⚠️ This truck does not have a tracker.`;
+
+  await sendPushNotification(
+    loadOwnerToken,
+    title,
+    body,
+    `/BooksAndBids/ViewBidsAndBooks?dspRoute=Requested Loads`,
+    { loadRequestId, type: 'booking_with_tracker', hasTracker }
+  );
+};
+
+
+import { router, } from "expo-router";
 // hooks/useNotificationRouting.ts
 
 
@@ -168,12 +226,12 @@ export function useNotificationRouting() {
         if (data?.route) {
           console.log('➡️ Navigating to route:', data.route);
           router.push(data.route);
-          
+
           // router.replace("/Logistics/Contracts/AddContracts");
         } else {
           console.log('❌ No route in notification data');
         }
-      }, 1000); 
+      }, 1000);
     });
 
     return () => subscription.remove();

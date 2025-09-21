@@ -50,7 +50,7 @@ function BookingsandBiddings({ }) {
   const [fectedDocuments, setFetchedDocuments] = React.useState<any>([])
   const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
 
-  const [requestType, setRequestType] = React.useState("")
+  const [requestType, setRequestType] = React.useState("Booked") // Default to Books view
 
   const LoadTructs = async () => {
     let filters: any[] = [];

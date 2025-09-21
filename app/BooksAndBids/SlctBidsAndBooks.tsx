@@ -16,18 +16,36 @@ function SlctBookingsandBiddings({ }) {
     try {
       if (auth.currentUser) {
         const userId = auth.currentUser.uid;
-        const loadsQuery = query(collection(db, "newIterms"), where("receriverId", "==", userId));
-        const unsubscribe = onSnapshot(loadsQuery, (querySnapshot) => {
-          querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            setNewBkedIterm(data.bookingdocs || 0);
-            setNewBiddedIterm(data.biddingdocs || 0);
-          });
+
+        // Query for bookings (loadRequests with status "Booked")
+        const bookingsQuery = query(
+          collection(db, "loadRequests"),
+          where("loadOwnerId", "==", userId),
+          where("status", "==", "Booked")
+        );
+
+        // Query for bids (loadRequests with status "Bidded")
+        const bidsQuery = query(
+          collection(db, "loadRequests"),
+          where("loadOwnerId", "==", userId),
+          where("status", "==", "Bidded")
+        );
+
+        const unsubscribeBookings = onSnapshot(bookingsQuery, (querySnapshot) => {
+          setNewBkedIterm(querySnapshot.size);
         });
-        return () => unsubscribe();
+
+        const unsubscribeBids = onSnapshot(bidsQuery, (querySnapshot) => {
+          setNewBiddedIterm(querySnapshot.size);
+        });
+
+        return () => {
+          unsubscribeBookings();
+          unsubscribeBids();
+        };
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching booking/bid counts:", error);
     }
   }, []);
 
