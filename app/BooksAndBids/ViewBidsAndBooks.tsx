@@ -55,13 +55,20 @@ function BookingsandBiddings({ }) {
   const LoadTructs = async () => {
     let filters: any[] = [];
 
-    dspRoute === "" ? filters.push(where("status", "==", requestType)) : filters.push(where("status", "==", requestType));
-    if (requestType) filters.push(where("status", "==", requestType));
+    if (requestType) {
+      filters.push(where("status", "==", requestType));
+    }
+
+    if (dspRoute === "Requested by Carriers") {
+      filters.push(where("carrierId", "==", auth.currentUser?.uid));
+    } else if (dspRoute === "Requested Loads") {
+      filters.push(where("loadOwnerId", "==", auth.currentUser?.uid));
+    }
+
     const result = await fetchDocuments('loadRequests', 10, lastVisible, filters);
 
     if (result) {
-
-      if (filters.length > 0 && result.data.length < 0) setFilteredPNotAavaialble(true)
+      if (filters.length > 0 && result.data.length === 0) setFilteredPNotAavaialble(true)
       setFetchedDocuments(result.data as any[])
       setLastVisible(result.lastVisible)
     }

@@ -120,10 +120,9 @@ export const RequestedCargo = ({
                 try {
                   // Add delete logic here
                   if (dspRoute === "Requested Loads") {
-                    await deleteDocument('Cargo', item.loadId)
-                    await deleteDocument('CargoBookings', item.id)
+                    await deleteDocument('loadRequests', item.id)
                   } else if (dspRoute !== "Requested Loads") {
-                    await deleteDocument('CargoBookings', item.id)
+                    await deleteDocument('loadRequests', item.id)
                   }
                   ToastAndroid.show("Success : Request deleted successfully", ToastAndroid.SHORT);
                 } catch (error) {

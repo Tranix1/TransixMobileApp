@@ -117,8 +117,7 @@ function BookLContract({ }) {
 
     async function handleSubmitDetails() {
       try {
-        if (auth.currentUser) {
-
+        if (auth.currentUser) { 
           const userId = auth.currentUser.uid
           const existingBBDoc = await checkExistixtBBDoc(`${userId}${Contractitem.loadId}${item.timeStamp}`);
 
@@ -148,7 +147,7 @@ function BookLContract({ }) {
               model: Contractitem.model,
               ownerDecision: "Pending",
               status: bidRate ? "Bidded" : "Booked",
-              loadId: item.id,
+              loadId: Contractitem.id,
               approvedTrck: false,
               alreadyInContract: true,
               expoPushToken: expoPushToken || null,

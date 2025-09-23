@@ -11,15 +11,18 @@
     "ios": {
       "supportsTablet": true
     },
-     "android": {
+    "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/TrnaixxNewBG.jpg",
         "backgroundColor": "#ffffff"
       },
       "package": "com.yayapana.TransixNewVersion",
+      "permissions": [
+        "CAMERA"
+      ],
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyACiyh-wyKUcTXP0w9FU_N00l7L1ahZP8w" 
+          "apiKey": "AIzaSyACiyh-wyKUcTXP0w9FU_N00l7L1ahZP8w"
         }
       }
     },
@@ -30,6 +33,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-notifications",
       [
         "expo-splash-screen",
         {
@@ -41,6 +45,13 @@
       ],
       "expo-font",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": false,
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to take photos."
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
@@ -49,7 +60,7 @@
             "buildToolsVersion": "35.0.0"
           },
           "ios": {
-            "deploymentTarget": "15.1" 
+            "deploymentTarget": "15.1"
           }
         }
       ]

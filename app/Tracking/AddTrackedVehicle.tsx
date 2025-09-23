@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Button, Alert, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import { View, Button, Alert, StyleSheet, FlatList, TouchableOpacity,ScrollView } from "react-native";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 import Input from "@/components/Input";
@@ -23,7 +23,6 @@ export default function AddTrackedVehicle() {
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [userTrucks, setUserTrucks] = useState<any[]>([]);
   const [selectedTruck, setSelectedTruck] = useState<any | null>(null);
-  console.log(selectedTruck)
   const [showUserTrucks, setShowUserTrucks] = useState(false);
   const { user: salesman } = useAuth();
   const accent = useThemeColor('accent');
@@ -52,19 +51,22 @@ export default function AddTrackedVehicle() {
   ];
 
   // Fetch user's trucks when a user is selected
-  const fetchUserTrucks = async (userId: string) => {
-    try {
-      const trucks = await fetchDocuments("Trucks", 50, undefined, [
-        where("userId", "==", userId),
-        where("isApproved", "==", true)
-      ]);
-      setUserTrucks(trucks.data || []);
-      setShowUserTrucks(true);
-    } catch (error) {
-      console.error("Error fetching user trucks:", error);
-      Alert.alert("Error", "Failed to fetch user trucks");
-    }
-  };
+ // Fetch user's trucks when a user is selected
+const fetchUserTrucks = async (userId: string) => {
+  try {
+    const trucks = await fetchDocuments("Trucks", 50, undefined, [
+      where("userId", "==", userId),
+      where("isApproved", "==", true),
+      where("hasTracker", "==", false) // fetch only trucks without tracker
+    ]);
+    setUserTrucks(trucks.data || []);
+    setShowUserTrucks(true);
+  } catch (error) {
+    console.error("Error fetching user trucks:", error);
+    Alert.alert("Error", "Failed to fetch user trucks");
+  }
+};
+
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -233,10 +235,15 @@ export default function AddTrackedVehicle() {
     user.email && typeof user.email === 'string' && user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  return (
-    <ScreenWrapper>
-      <Heading page="Add Tracked Vehicle" />
+return (
+  <ScreenWrapper>
+    <Heading page="Add Tracked Vehicle" />
 
+    <ScrollView
+      contentContainerStyle={{ paddingBottom: 350 }}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.form}>
         <Input
           placeholder="Vehicle Name"
@@ -278,7 +285,9 @@ export default function AddTrackedVehicle() {
 
         {paymentType?.name === "Once-off Payment" && (
           <View style={styles.infoBox}>
-            <ThemedText type="defaultSemiBold" style={styles.infoTitle}>Once-off Payment Info:</ThemedText>
+            <ThemedText type="defaultSemiBold" style={styles.infoTitle}>
+              Once-off Payment Info:
+            </ThemedText>
             <ThemedText type="tiny" style={styles.infoText}>• Current location tracking only (no history)</ThemedText>
             <ThemedText type="tiny" style={styles.infoText}>• 4 hours access time</ThemedText>
             <ThemedText type="tiny" style={styles.infoText}>• Vehicle automatically removed from Server after access period</ThemedText>
@@ -293,23 +302,23 @@ export default function AddTrackedVehicle() {
         />
 
         {searchQuery && (
-          <FlatList
-            data={filteredUsers}
-            keyExtractor={(item) => item.uid}
-            renderItem={({ item }) => (
+          <View style={styles.userList}>
+            {filteredUsers.map((item) => (
               <TouchableOpacity
+                key={item.uid}
                 style={styles.userItem}
                 onPress={() => {
                   setSelectedUser(item);
                   setSearchQuery(item.email);
-                  fetchUserTrucks(item.uid);
+                  vehicleCategory?.name === "Commercial" &&
+                    vehicleSubType?.name === "Truck" &&
+                    fetchUserTrucks(item.uid);
                 }}
               >
                 <ThemedText>{item.email}</ThemedText>
               </TouchableOpacity>
-            )}
-            style={styles.userList}
-          />
+            ))}
+          </View>
         )}
 
         {selectedUser && (
@@ -317,58 +326,66 @@ export default function AddTrackedVehicle() {
             <ThemedText style={{ fontWeight: 'bold', marginBottom: wp(2) }}>
               Selected User: {selectedUser.email}
             </ThemedText>
-            
-            <TouchableOpacity
-              style={[styles.truckButton, { backgroundColor: backgroundLight }]}
-              onPress={() => setShowUserTrucks(!showUserTrucks)}
-            >
-              <ThemedText style={{ color: accent }}>
-                {showUserTrucks ? 'Hide' : 'Show'} User's Trucks ({userTrucks.length})
-              </ThemedText>
-            </TouchableOpacity>
 
-            {showUserTrucks && userTrucks.length > 0 && (
-              <View style={{ marginTop: wp(2) }}>
-                <ThemedText style={{ marginBottom: wp(1) }}>Select Truck (Optional):</ThemedText>
-                <FlatList
-                  data={userTrucks}
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={[
-                        styles.truckItem,
-                        selectedTruck?.id === item.id && { backgroundColor: `${accent}20` }
-                      ]}
-                      onPress={() => setSelectedTruck(selectedTruck?.id === item.id ? null : item)}
-                    >
-                      <View>
-                        <ThemedText style={{ fontWeight: 'bold' }}>
-                          {item.truckType} - {item.cargoArea}
-                        </ThemedText>
-                        <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
-                          Capacity: {item.truckCapacity} | ID: {item.truckId}
-                        </ThemedText>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: wp(1) }}>
-                          <View style={[
-                            styles.statusDot,
-                            { backgroundColor: item.hasTracker ? '#51cf66' : '#ff6b6b' }
-                          ]} />
-                          <ThemedText style={{ fontSize: 11 }}>
-                            {item.hasTracker ? 'Has Tracker' : 'No Tracker'}
+            {vehicleCategory?.name === "Commercial" && vehicleSubType?.name === "Truck" && (
+              <View>
+                <TouchableOpacity
+                  style={[styles.truckButton, { backgroundColor: backgroundLight }]}
+                  onPress={() => setShowUserTrucks(!showUserTrucks)}
+                >
+                  <ThemedText style={{ color: accent }}>
+                    {showUserTrucks ? 'Hide' : 'Show'} User's Trucks ({userTrucks.length})
+                  </ThemedText>
+                </TouchableOpacity>
+
+                {showUserTrucks && userTrucks.length > 0 && (
+                  <View style={{ maxHeight: 200 }}>
+                    <ThemedText style={{ marginBottom: wp(1), marginTop: wp(2) }}>
+                      Select Truck:
+                    </ThemedText>
+
+                    {userTrucks.map((item) => (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={[
+                          styles.truckItem,
+                          selectedTruck?.id === item.id && { backgroundColor: `${accent}20` },
+                        ]}
+                         onPress={() => {
+                setSelectedTruck(selectedTruck?.id === item.id ? null : item);
+                setShowUserTrucks(false); // hide trucks list after selection
+              }}
+                      >
+                        <View>
+                          <ThemedText style={{ fontWeight: 'bold' }}>
+                            {item.truckType} - {item.cargoArea}
                           </ThemedText>
+                          <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+                            Capacity: {item.truckCapacity} | ID: {item.truckId}
+                          </ThemedText>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: wp(1) }}>
+                            <View
+                              style={[
+                                styles.statusDot,
+                                { backgroundColor: item.hasTracker ? '#51cf66' : '#ff6b6b' },
+                              ]}
+                            />
+                            <ThemedText style={{ fontSize: 11 }}>
+                              {item.hasTracker ? 'Has Tracker' : 'No Tracker'}
+                            </ThemedText>
+                          </View>
                         </View>
-                      </View>
-                    </TouchableOpacity>
-                  )}
-                  style={{ maxHeight: 200 }}
-                />
-              </View>
-            )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
 
-            {showUserTrucks && userTrucks.length === 0 && (
-              <ThemedText style={{ textAlign: 'center', opacity: 0.7, marginTop: wp(2) }}>
-                No approved trucks found for this user
-              </ThemedText>
+                {showUserTrucks && userTrucks.length === 0 && (
+                  <ThemedText style={{ textAlign: 'center', opacity: 0.7, marginTop: wp(2) }}>
+                    No approved trucks found for this user
+                  </ThemedText>
+                )}
+              </View>
             )}
           </View>
         )}
@@ -379,8 +396,10 @@ export default function AddTrackedVehicle() {
           disabled={loading}
         />
       </View>
-    </ScreenWrapper>
-  );
+    </ScrollView>
+  </ScreenWrapper>
+);
+
 }
 
 const styles = StyleSheet.create({

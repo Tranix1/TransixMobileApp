@@ -43,36 +43,27 @@ type ImageAsset = {
   [key: string]: any; // in case you're using additional properties
 };
 
+
 export const selectManyImages = async (
   setImages: React.Dispatch<React.SetStateAction<ImagePickerAsset[]>>,
-
-  enableEditing : boolean  ,
-  AddToStore?: boolean // new optional prop
-
+  enableEditing: boolean,
+  AddToStore?: boolean // optional for multiple selection
 ) => {
-  const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-  if (!permissionResult.granted) {
-    alert('Permission is required to select an image.');
-    return;
-  }
-
+  // No permission check - uses Android Photo Picker automatically
   const pickerResult = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images'],
-    allowsEditing: enableEditing ?true :false ,
-    legacy: true,
-     aspect: [1, 1],
-    quality: .7,
-    allowsMultipleSelection:AddToStore ? true: false ,
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: enableEditing,
+    allowsMultipleSelection: AddToStore ?? false,
+    aspect: [1, 1],
+    quality: 0.7,
   });
-
-
 
   if (pickerResult.canceled || !pickerResult.assets?.length) {
     return;
   }
 
-  const validAssets: ImageAsset[] = [];
+  const validAssets: ImagePickerAsset[] = [];
+  let skippedTooLarge = false;
 
   for (const asset of pickerResult.assets) {
     if (!asset.uri) continue;
@@ -84,24 +75,27 @@ export const selectManyImages = async (
       if (fileInfo.exists && fileInfo.size) {
         fileSize = fileInfo.size;
       } else {
-        alert('Could not determine file size for one image. Skipping it.');
-        continue;
+        continue; // skip assets we cannot read
       }
     }
 
     if (fileSize > 1.5 * 1024 * 1024) {
-      alert('One of the selected images is larger than 1.5MB. It will be skipped.');
-      continue;
+      skippedTooLarge = true;
+      continue; // skip large images
     }
 
     validAssets.push(asset);
   }
 
-  if (validAssets.length > 0) {
-    setImages(prevImages => [...prevImages, ...validAssets] as ImagePicker.ImagePickerAsset[]);
+  if (skippedTooLarge) {
+    alert('Some images were skipped because they were larger than 1.5MB.');
+  }
 
+  if (validAssets.length > 0) {
+    setImages(prevImages => [...prevImages, ...validAssets]);
   }
 };
+
 
 
 
@@ -161,7 +155,7 @@ export const pickDocument = async (
 
 
 
-  
+
 
 
 // Handle Data change in a form in an nput element and set it to the corresponding variable
@@ -203,10 +197,10 @@ export const getCurrentLocation = async (
     }
 
     const location = await Location.getCurrentPositionAsync({});
-         return location
+    return location
 
   } catch (error) {
     console.error('Error getting current location:', error);
     return null;
-  } 
+  }
 }
