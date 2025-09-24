@@ -17,7 +17,7 @@ export const AfricanTruckSelector: React.FC<AfricanTruckSelectorProps> = ({
   const accent = useThemeColor('accent');
   const backgroundLight = useThemeColor('backgroundLight');
   const background = useThemeColor('background');
-
+const text = useThemeColor('text'); 
   // Most common African truck types with Dropside as primary
   const africanTruckTypes: TruckTypeProps[] = [
     { id: 1, name: "Dropside", description: "Most common in Africa - open sides for easy loading", image: undefined },
@@ -64,7 +64,7 @@ export const AfricanTruckSelector: React.FC<AfricanTruckSelectorProps> = ({
               <ThemedText style={{ 
                 fontSize: 16, 
                 fontWeight: 'bold',
-                color: isSelected ? accent : undefined 
+                color: isSelected ? accent : text
               }}>
                 {truck.name}
                 {truck.name === 'Dropside' && (

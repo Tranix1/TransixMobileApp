@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, TextInput, FlatList, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
+import { View, FlatList, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { searchUsersByEmail, addTrackingAgent } from '@/db/operations';
 import { useAuth } from '@/context/AuthContext';
-
+import Input from '@/components/Input';
+import Heading from '@/components/Heading';
 const AddAgent = () => {
   const [email, setEmail] = useState('');
   const [users, setUsers] = useState<any[]>([]);
@@ -38,16 +39,17 @@ const AddAgent = () => {
 
   return (
     <ScreenWrapper>
-      <ThemedText type="title">Add Agent</ThemedText>
+      <Heading page='Add Agent' />
       <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.input}
+        <View style={{width:'85%'}}> 
+        <Input
           placeholder="Search by email"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
         />
+        </View>
         <TouchableOpacity style={styles.button} onPress={handleSearch}>
           <Text style={styles.buttonText}>Search</Text>
         </TouchableOpacity>
@@ -76,19 +78,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 10,
   },
-  input: {
-    flex: 1,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 5,
-    padding: 10,
-    marginRight: 10,
-  },
+ 
   button: {
     backgroundColor: '#007BFF',
-    padding: 10,
+    padding:3,
+    height:50,
     borderRadius: 5,
+    marginLeft: 10,
     justifyContent: 'center',
+    
+    
   },
   buttonText: {
     color: '#fff',

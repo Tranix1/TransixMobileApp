@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   StyleSheet,
-  ActivityIndicator, 
+  ActivityIndicator,
   Text,
   ScrollView,
   TouchableOpacity,
@@ -434,7 +434,7 @@ export default function Tracking() {
 
   if (errorMsg) {
     return (
-      <View style={{flex: 1, justifyContent: "center", alignItems: "center",backgroundColor:background}}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: background }}>
         <ThemedText style={{ color: "red" }}>{errorMsg}</ThemedText>
       </View>
     );
@@ -658,7 +658,7 @@ export default function Tracking() {
                       <ThemedText
                         style={[
                           styles.dayButtonText,
-                          i === selectedDayOffset && {fontWeight:"bold",color:accent},
+                          i === selectedDayOffset && { fontWeight: "bold", color: accent },
                         ]}
                       >
                         {dayText}
@@ -806,7 +806,7 @@ export default function Tracking() {
             borderTopWidth: 1,
             borderColor: accent
           }}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={{
                 backgroundColor: accent,
                 paddingVertical: 12,
@@ -833,24 +833,26 @@ export default function Tracking() {
           </View>
         ) : (
           /* Regular tabs for subscription users */
-          <View style={{flexDirection: "row",
-      justifyContent: "space-around",
-      paddingVertical: 12,
-      borderTopWidth: 1,borderColor:accent}}>
+          <View style={{
+            flexDirection: "row",
+            justifyContent: "space-around",
+            paddingVertical: 12,
+            borderTopWidth: 1, borderColor: accent
+          }}>
             <TouchableOpacity
               style={[
                 styles.bottomBtn,
-                bottomTab === "info" && { borderWidth: 1, backgroundColor: backgroundLight,borderColor:accent },
+                bottomTab === "info" && { borderWidth: 1, backgroundColor: backgroundLight, borderColor: accent },
               ]}
               onPress={() => setBottomTab("info")}
             >
-             
-              <Ionicons name="information-circle-outline" size={18} style={styles.icon} color={bottomTab === "info" ?accent:icon} />
+
+              <Ionicons name="information-circle-outline" size={18} style={styles.icon} color={bottomTab === "info" ? accent : icon} />
 
               <ThemedText
                 style={[
                   styles.bottomBtnText,
-                  bottomTab === "info" && {fontWeight:"bold",color:accent},
+                  bottomTab === "info" && { fontWeight: "bold", color: accent },
                 ]}
               >
                 Info
@@ -859,15 +861,15 @@ export default function Tracking() {
             <TouchableOpacity
               style={[
                 styles.bottomBtn,
-                bottomTab === "history" && { borderWidth: 1, backgroundColor: backgroundLight ,borderColor: accent},
+                bottomTab === "history" && { borderWidth: 1, backgroundColor: backgroundLight, borderColor: accent },
               ]}
               onPress={() => setBottomTab("history")}
             >
-              <Ionicons name="time-outline" size={18} style={styles.icon} color={bottomTab === "history" ?accent:icon} />
+              <Ionicons name="time-outline" size={18} style={styles.icon} color={bottomTab === "history" ? accent : icon} />
               <ThemedText
                 style={[
                   styles.bottomBtnText,
-                  bottomTab === "history" && {fontWeight:"bold",color:accent},
+                  bottomTab === "history" && { fontWeight: "bold", color: accent },
                 ]}
               >
                 History
@@ -944,7 +946,7 @@ const styles = StyleSheet.create({
   stopCard: { borderWidth: 1 },
   cardHeader: { fontWeight: "bold", fontSize: 16, marginBottom: 5 },
 
-  
+
   bottomBtn: {
     flex: 1,
     alignItems: "center",
@@ -956,7 +958,7 @@ const styles = StyleSheet.create({
   },
   bottomBtnText: { fontSize: 16, marginLeft: 4 },
   activeBottomBtnText: { fontWeight: "bold" },
-  
+
   restrictionContainer: {
     flex: 1,
     justifyContent: "center",
@@ -976,8 +978,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     opacity: 0.8,
   },
-  
- 
- 
+
+
+
 
 });

@@ -1,746 +1,146 @@
-import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, TouchableNativeFeedback, View, TouchableOpacity, TouchableHighlight, Image, useColorScheme, ToastAndroid } from 'react-native'
-import React, { useState } from 'react'
-import { ThemedText } from '@/components/ThemedText'
-import { hp, wp } from '@/constants/common'
-import { AntDesign, EvilIcons, FontAwesome, FontAwesome6, Fontisto, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons'
-import { useThemeColor } from '@/hooks/useThemeColor'
-import Button from '@/components/Button'
-import { router, useFocusEffect } from "expo-router";
-import { BlurView } from 'expo-blur'
-import { useAuth } from '@/context/AuthContext'
-import * as Updates from 'expo-updates';
-import { auth } from '@/db/fireBaseConfig'
-import { signOut, sendEmailVerification } from 'firebase/auth'
-import HomeItemView from '@/components/HomeItemView';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ToastAndroid, Animated } from 'react-native';
+import { useThemeColor } from '@/hooks/useThemeColor';
+import { router } from "expo-router";
+import { useAuth } from '@/context/AuthContext';
 import CustomHeader from '@/components/CustomHeader';
-
-// https://www.youtube.com/watch?v=Ci3Has4L5W4
-// https://flespi.com/blog/teltonika-device-data-via-api
-
+import AppLoadingScreen from '@/components/AppLoadingScreen';
+import AuthStatusModal from '@/components/AuthStatusModal';
+import UserMenuModal from '@/components/UserMenuModal';
+import HomeContent from '@/components/HomeContent';
+import { useAuthState } from '@/hooks/useAuthState';
 import NetInfo from '@react-native-community/netinfo';
+
 function Index() {
-    const accent = useThemeColor('accent')
-    const icon = useThemeColor('icon')
-    const backgroundColor = useThemeColor('backgroundLight')
-    const background = useThemeColor('background')
-    const coolGray = useThemeColor('coolGray')
-    const textlight = useThemeColor('textlight')
-    const border = useThemeColor('border')
+    const { user: contextUser } = useAuth();
+    const {
+        isLoading,
+        isAuthenticated,
+        user,
+        needsProfileSetup,
+        needsEmailVerification,
+        error,
+        updateUserProfile
+    } = useAuthState();
 
+    const [dspCreateAcc, setDspCreateAcc] = useState(false);
+    const [dspVerifyAcc, setDspVerifyAcc] = useState(false);
+    const [dspMenu, setDspMenu] = useState(false);
+    const [isConnectedInternet, setIsConnectedInternet] = useState(true);
+    const [fadeAnim] = useState(new Animated.Value(0));
 
-    const { user } = useAuth()
-
-    const [dspCreateAcc, setDspCreateAcc] = useState(false)
-    const [dspVerifyAcc, setDspVerifyAcc] = useState(false)
-    const [dspMenu, setDspMenu] = useState(false)
-
-    const [isConnectedInternet, setIsConnectedInternet] = useState(true)
-
-    React.useEffect(() => {
+    useEffect(() => {
         const unsubscribe = NetInfo.addEventListener(state => {
-            setIsConnectedInternet(state.isConnected as any)
-        })
+            setIsConnectedInternet(state.isConnected as any);
+        });
 
         return () => {
-            unsubscribe()
+            unsubscribe();
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!isLoading) {
+            // Fade in animation when content is ready
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+            }).start();
         }
-    }, [])
-    function checkAuth(theAction: any) {
-        if (!isConnectedInternet) { ToastAndroid.show("You are offline. Please check your internet connection.", ToastAndroid.SHORT); return }
+    }, [isLoading]);
 
-        if (auth.currentUser) {
-            if (!user?.organisation || !user.phoneNumber || !user.country) {
-                router.push({ pathname: '/Account/Profile', params: { operation: 'create' }, })
-            } else if (!auth.currentUser.emailVerified) {
-                console.log("hiii")
-                setDspVerifyAcc(true)
-            } else {
-                // user exists and email is verified
-                if (typeof theAction === 'function') {
-                    theAction() // call the action
-                } else {
-                    setDspMenu(true) // if it's not a function, open the menu
-                }
+    const checkAuth = (theAction?: () => void) => {
+        if (!isConnectedInternet) {
+            ToastAndroid.show("You are offline. Please check your internet connection.", ToastAndroid.SHORT);
+            return;
+        }
 
-            }
+        if (!isAuthenticated) {
+            setDspCreateAcc(true);
+            return;
+        }
+
+        if (needsProfileSetup) {
+            router.push({ pathname: '/Account/Profile', params: { operation: 'create' } });
+            return;
+        }
+
+        if (needsEmailVerification) {
+            setDspVerifyAcc(true);
+            return;
+        }
+
+        // User is authenticated and verified
+        if (typeof theAction === 'function') {
+            theAction();
         } else {
-            // no user logged in
-            setDspCreateAcc(true)
+            setDspMenu(true);
         }
+    };
+
+    // Show loading screen while checking authentication
+    if (isLoading) {
+        return (
+            <AppLoadingScreen
+                message="Initializing Transix..."
+                showProgress={true}
+                progress={75}
+            />
+        );
     }
 
-    interface DataItem {
-        topic: string
-        description: string
-        id: number
-        btnTitle: string
+    // Show error state if there's an authentication error
+    if (error) {
+        return (
+            <AppLoadingScreen
+                message="Something went wrong. Please try again."
+            />
+        );
     }
-
-    const theData: DataItem[] = [
-        {
-            id: 1,
-            topic: 'Long-Term Contracts',
-            description:
-                'Secure long-term contracts with trusted partners to ensure consistency, reduce risk, and grow your business steadily.',
-            btnTitle: 'Open Contracts',
-        },
-        {
-            id: 2,
-            topic: 'Tracking',
-            description:
-                'Track your trucks and cargo live on the app. Improve safety, monitor routes, and keep customers updated anytime.',
-            btnTitle: 'View Tracking',
-        },
-        {
-            id: 3,
-            topic: 'Fuel',
-            description:
-                'Find nearby fuel stations with the best prices. Enjoy discounts and get quick directions to save time and money.',
-            btnTitle: 'Get Fuel',
-        },
-        {
-            id: 4,
-            topic: 'Truck Stop',
-            description:
-                'Locate safe and comfortable truck stops on your journey. Rest, refresh, refuel, and access facilities conveniently.',
-            btnTitle: 'Visit Truck Stop',
-        },
-        {
-            id: 5,
-            topic: 'GIT (Goods in Transit Insurance)',
-            description:
-                'Protect your trucks and cargo while on the road. Get insurance that covers theft, accidents, and damages during transit.',
-            btnTitle: 'Get GIT',
-        },
-
-
-        {
-            id: 6,
-            topic: "Warehouse   ",
-            description: 'Find secure, affordable warehouses near your routes. Store your goods safely with easy directions and discounted rates for members.',
-            btnTitle: "Check Warehouses  "
-        },
-
-
-
-        {
-            id: 7,
-            topic: 'Verification',
-            description:
-                'Verify your business today to build trust with customers, access exclusive deals, and boost your company’s reputation easily.',
-            btnTitle: 'Get Verified',
-        },
-    ];
 
     return (
-
-        <View style={{ flex: 1 }}>
-            <CustomHeader onPressMenu={() => checkAuth(true)} />
-            <SafeAreaView>
-                <Modal onRequestClose={() => setDspMenu(false)} statusBarTranslucent visible={dspMenu} transparent animationType='fade'>
-                    <Pressable onPressIn={() => { }} style={{ flex: 1, }}>
-                        <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-start', flex: 1, padding: wp(4), }}>
-                            <View style={{
-                                backgroundColor: backgroundColor, padding: wp(4), elevation: 12,
-                                shadowColor: '#0c0c0c69', borderRadius: wp(6), marginTop: hp(15)
-                            }}>
-
-                                <TouchableOpacity
-                                    onPress={() => setDspMenu(false)}
-                                    style={{
-                                        position: "absolute",
-                                        top: wp(2),
-                                        right: wp(2),
-                                        padding: wp(2),
-                                        borderRadius: wp(10),
-                                        backgroundColor: background,
-                                    }}
-                                >
-                                    <Ionicons name="close" size={wp(4)} color={icon} />
-                                </TouchableOpacity>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-
-                                    <ThemedText type='title' color={accent} style={{ flex: 1, textAlign: 'center' }}>
-                                        Transix
-                                    </ThemedText>
-
-                                </View>
-                                <View style={{ marginVertical: wp(4), gap: 4, marginBottom: wp(2) }}>
-                                    <View style={{ borderTopRightRadius: wp(5), borderTopLeftRadius: wp(5), backgroundColor: background, padding: wp(4) }}>
-                                        {user ?
-
-                                            <View style={{ gap: wp(4), }}>
-                                                <View style={{ flexDirection: 'row', padding: wp(2), gap: wp(2), alignItems: 'center', }}>
-                                                    {!user?.photoURL && <FontAwesome name='user-circle' color={coolGray} size={wp(10)} />}
-                                                    {user?.photoURL && <Image
-                                                        style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#ddd', }}
-                                                        source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }} />}
-                                                    <View style={{ flex: 1 }}>
-                                                        <ThemedText type='subtitle'>
-                                                            {user?.organisation || user?.displayName || 'No name'}
-                                                        </ThemedText>
-                                                        <ThemedText type='tiny' color={coolGray}>
-                                                            {user?.email}
-                                                        </ThemedText>
-
-                                                    </View>
-                                                    {!user?.organisation &&
-                                                        <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
-                                                            <TouchableNativeFeedback
-                                                                onPress={() => { router.push('/Account/Profile'); setDspMenu(false) }}>
-                                                                <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
-                                                                    <Ionicons name='alert-circle-outline' color={icon} size={wp(6)} />
-                                                                </View>
-                                                            </TouchableNativeFeedback>
-                                                        </View>}
-                                                </View>
-                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: border, padding: wp(3), borderRadius: wp(4) }} onPress={() => { router.push('/Account/Index'); setDspMenu(false) }}>
-                                                    <MaterialIcons name="manage-accounts" size={wp(5)} color={accent} style={{ marginLeft: wp(1) }} />
-                                                    <ThemedText>
-                                                        Manage Account
-                                                    </ThemedText>
-                                                </TouchableOpacity>
-                                            </View>
-                                            :
-                                            <View style={{ gap: wp(4), }}>
-                                                <View style={{ flexDirection: 'row', padding: wp(2), gap: wp(2), alignItems: 'center' }}>
-                                                    <FontAwesome name='user-circle' color={coolGray} size={wp(10)} />
-                                                    <View>
-                                                        <ThemedText>
-                                                            You are not Logged In
-                                                        </ThemedText>
-                                                        <ThemedText type='tiny' color={coolGray}>
-                                                            Click button below to Login or Create New Account
-                                                        </ThemedText>
-
-                                                    </View>
-                                                </View>
-                                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'center', borderWidth: 1, borderColor: border, padding: wp(3), borderRadius: wp(4) }} onPress={() => { router.push('/Account/Login'); setDspMenu(false) }}>
-                                                    <AntDesign name='login' size={wp(3)} color={accent} style={{ marginLeft: wp(1) }} />
-                                                    <ThemedText>
-                                                        Login Now
-                                                    </ThemedText>
-                                                </TouchableOpacity>
-
-
-                                            </View>}
-                                    </View>
-                                    <TouchableNativeFeedback onPress={() => { router.push("/BooksAndBids/SlctBidsAndBooks"); setDspMenu(false) }}>
-                                        <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                                            <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                                            <View>
-                                                <ThemedText type='default'>
-                                                    My Requests
-                                                </ThemedText>
-                                            </View>
-                                        </View>
-                                    </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={() => { router.push("/Logistics/Contracts/ViewMiniContracts"); setDspMenu(false) }}>
-                                        <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                                            <Ionicons name="reader" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                                            <View>
-                                                <ThemedText type='default'>
-                                                    My Contracts
-                                                </ThemedText>
-                                            </View>
-                                        </View>
-                                    </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback onPress={() => { router.push({ pathname: '/Logistics/Trucks/Index', params: { userId: user?.uid } }); setDspMenu(false) }}>
-                                        <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                                            <FontAwesome6 name="truck-front" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                                            <View>
-                                                <ThemedText type='default'>
-                                                    Manage My Trucks
-                                                </ThemedText>
-                                            </View>
-                                        </View>
-                                    </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback
-                                        onPress={() => { router.push({ pathname: '/Logistics/Loads/Index', params: { userId: user?.uid } }); setDspMenu(false) }}>
-                                        <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                                            <FontAwesome6 name="boxes-stacked" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                                            <View>
-                                                <ThemedText type='default'>
-                                                    Manage My Loads
-                                                </ThemedText>
-                                            </View>
-                                        </View>
-                                    </TouchableNativeFeedback>
-                                    <TouchableNativeFeedback>
-                                        <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                                            <MaterialIcons name="work-history" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-
-                                            <View>
-                                                <ThemedText type='default'>
-                                                    My Payments History
-                                                </ThemedText>
-                                            </View>
-                                        </View>
-                                    </TouchableNativeFeedback>
-                                    <View style={{ borderBottomRightRadius: wp(5), borderBottomLeftRadius: wp(5), overflow: 'hidden' }}>
-
-                                        <TouchableNativeFeedback>
-                                            <View style={{ backgroundColor: background, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                                                <FontAwesome6 name="shop" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                                                <View>
-                                                    <ThemedText type='default'>
-                                                        Manage My Shop
-                                                    </ThemedText>
-                                                </View>
-                                            </View>
-                                        </TouchableNativeFeedback>
-                                    </View>
-
-                                </View>
-                                <TouchableNativeFeedback onPress={() => { router.push('/Account/Settings'); setDspMenu(false) }}>
-                                    <View style={{ paddingHorizontal: wp(4), flexDirection: 'row', gap: wp(3), paddingVertical: wp(4) }}>
-                                        <Ionicons name="settings-outline" size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-
-                                        <View>
-                                            <ThemedText type='default'>
-                                                Settings
-                                            </ThemedText>
-                                        </View>
-                                    </View>
-                                </TouchableNativeFeedback>
-                                <View style={{ marginBottom: wp(0) }} />
-                            </View>
-                        </BlurView>
-                    </Pressable>
-                </Modal>
-            </SafeAreaView>
-
-
-            <Modal statusBarTranslucent visible={dspCreateAcc} animationType='fade' transparent>
-                <Pressable onPressIn={() => setDspCreateAcc(false)} style={{ flex: 1, }}>
-                    <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', flex: 1, padding: wp(4), alignItems: 'center' }}>
-                        <View
-                            style={{
-                                justifyContent: "center",
-                                alignItems: "center",
-                                padding: wp(6),
-                                backgroundColor: background,
-                                borderRadius: wp(6),
-                                margin: wp(4),
-                                shadowColor: "#000",
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.15,
-                                shadowRadius: 8,
-                                elevation: 10,
-                            }}
-                        >
-                            <TouchableOpacity
-                                onPress={() => setDspCreateAcc(false)}
-                                style={{
-                                    position: "absolute",
-                                    top: wp(2),
-                                    right: wp(2),
-                                    padding: wp(2),
-                                    borderRadius: wp(10),
-                                    backgroundColor: backgroundColor,
-                                }}
-                            >
-                                <Ionicons name="close" size={wp(4)} color={icon} />
-                            </TouchableOpacity>
-                            <ThemedText
-                                type="title"
-                                style={{
-                                    marginBottom: wp(2),
-                                    textAlign: "center",
-                                    color: accent,
-                                    fontWeight: "bold",
-                                    fontSize: wp(5),
-                                }}
-                            >
-                                Get Authenticated
-                            </ThemedText>
-
-
-                            <ThemedText
-                                type="tiny"
-                                style={{
-                                    marginBottom: wp(6),
-                                    textAlign: "center",
-                                    color: coolGray,
-                                }}
-                            >
-                                Create an account or sign in to add items, book loads, bid on loads, and access more features.
-                            </ThemedText>
-
-
-                            <TouchableOpacity
-                                onPress={() => { router.push("/Account/Login"); setDspCreateAcc(false) }}
-                                style={{
-                                    backgroundColor: "#d1f7e9",
-                                    width: wp(70),
-                                    // paddingVertical: wp(2),
-                                    borderRadius: wp(3),
-                                    alignItems: "center",
-                                }}
-                            >
-                                <ThemedText style={{ color: "#0f9d58", fontWeight: "bold" }}>Autheticate</ThemedText>
-                            </TouchableOpacity>
-                        </View>
-                    </BlurView>
-
-                </Pressable>
-            </Modal>
-
-
-
-
-
-
-
-            <Modal statusBarTranslucent visible={dspVerifyAcc} animationType='fade' transparent>
-                <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', flex: 1, padding: wp(4), alignItems: 'center' }}>
-                    <View
-                        style={{
-                            justifyContent: "center",
-                            alignItems: "center",
-                            padding: wp(6),
-                            backgroundColor: background,
-                            borderRadius: wp(6),
-                            margin: wp(4),
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.15,
-                            shadowRadius: 8,
-                            elevation: 10,
-                        }}
-                    >
-                        <TouchableOpacity
-                            onPress={() => setDspVerifyAcc(false)}
-                            style={{
-                                position: "absolute",
-                                top: wp(2),
-                                right: wp(2),
-                                padding: wp(2),
-                                borderRadius: wp(10),
-                                backgroundColor: backgroundColor,
-                            }}
-                        >
-                            <Ionicons name="close" size={wp(4)} color={icon} />
-                        </TouchableOpacity>
-                        <ThemedText
-                            type="title"
-                            style={{
-                                marginBottom: wp(2),
-                                textAlign: "center",
-                                color: accent,
-                                fontWeight: "bold",
-                                fontSize: wp(5),
-                            }}
-                        >
-                            Verify Your Email
-                        </ThemedText>
-                        <ThemedText
-                            type="default"
-                            style={{
-                                marginBottom: wp(4),
-                                textAlign: "center",
-                                color: icon,
-                                fontSize: wp(3.8),
-                            }}
-                        >
-                            {auth.currentUser?.email}
-                        </ThemedText>
-
-                        <ThemedText
-                            type="tiny"
-                            style={{
-                                marginBottom: wp(6),
-                                textAlign: "center",
-                                color: coolGray,
-                            }}
-                        >
-                            Please check your inbox and click the verification link. Once verified, tap Refresh.
-                        </ThemedText>
-
-                        <View
-                            style={{
-                                flexDirection: "row",
-                                justifyContent: "space-between",
-                                width: "100%",
-                                gap: wp(3),
-                            }}
-                        >
-                            <TouchableOpacity
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: "#e0e7ef",
-                                    paddingVertical: wp(2),
-                                    borderRadius: wp(3),
-                                    alignItems: "center",
-                                }}
-                                onPress={async () => {
-                                    try {
-                                        console.log("Sending verification email...")
-
-                                        await sendEmailVerification(auth.currentUser as any)
-                                        ToastAndroid.show('verification email Link sent!', ToastAndroid.SHORT)
-                                        setDspVerifyAcc(false)
-                                    } catch (error) {
-                                        console.log("Error sending verification email:", error)
-                                        alert("Failed to send verification email. Try again.")
-                                    }
-                                }}
-                            >
-                                <ThemedText style={{ color: accent, fontWeight: "bold" }}>New code</ThemedText>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: "#f8d7da",
-                                    paddingVertical: wp(2),
-                                    borderRadius: wp(3),
-                                    alignItems: "center",
-                                }}
-                                onPress={async () => {
-                                    await signOut(auth); ToastAndroid.show('Signed out successfully.', ToastAndroid.SHORT)
-                                    setDspVerifyAcc(false)
-                                }}
-                            >
-                                <ThemedText style={{ color: "#e50914", fontWeight: "bold" }}>Sign out</ThemedText>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => Updates.reloadAsync()}
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: "#d1f7e9",
-                                    paddingVertical: wp(2),
-                                    borderRadius: wp(3),
-                                    alignItems: "center",
-                                }}
-                            >
-                                <ThemedText style={{ color: "#0f9d58", fontWeight: "bold" }}>Refresh</ThemedText>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </BlurView>
-            </Modal>
-
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ marginVertical: wp(4), marginHorizontal: wp(2) }}>
-
-                <View style={{ margin: wp(4), marginTop: 0 }}>
-                    <TouchableOpacity onPress={() => router.push("/Search/Index")}
-                        style={{ backgroundColor: backgroundColor, borderRadius: wp(8), padding: wp(3), flexDirection: 'row', gap: wp(2), borderWidth: 1, borderColor: border }}>
-                        <EvilIcons name='search' size={wp(6)} color={icon} />
-                        <ThemedText color={textlight}>
-                            Search..
-                        </ThemedText>
-                    </TouchableOpacity>
-                </View>
-
-
-
-                <View style={[styles.homefeature, { borderColor: border, backgroundColor: background, }]}>
-                    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
-                        <View style={{}}>
-                            <MaterialCommunityIcons name="lightning-bolt-circle" size={wp(4)} color={icon} />
-                        </View>
-                        <ThemedText type='subtitle' style={{ fontWeight: 'bold', fontSize: wp(3.5) }}>
-                            Quick Links
-                        </ThemedText>
-                    </View>
-                    <View style={[{ flexDirection: 'row', gap: wp(2), justifyContent: 'space-between' }]}>
-                        <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() => checkAuth(() => router.push('/Logistics/Contracts/NewContract'))}
-
-                                underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
-                                <Ionicons name="reader" size={wp(5)} color="#e50914" />
-                            </TouchableHighlight>
-                            <ThemedText type='tiny' style={{ textAlign: 'center' }}>
-                                Create Contract
-                            </ThemedText>
-                        </View>
-                        <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() => checkAuth(() => router.push('/Logistics/Trucks/AddTrucks'))} underlayColor={'#0f9d585a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#0f9d5824' }}>
-                                <Fontisto name="truck" size={wp(5)} color="#0f9d58" />
-                            </TouchableHighlight>
-                            <ThemedText type='tiny' style={{ textAlign: 'center' }}>
-                                Add Truck
-                            </ThemedText>
-                        </View>
-                        <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() => checkAuth(() => router.push('/Logistics/Loads/AddLoads'))} underlayColor={'#4285f45a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#4285f424' }}>
-                                <FontAwesome6 name="box" size={wp(5)} color="#4285f4" />
-                            </TouchableHighlight>
-                            <ThemedText type='tiny' style={{ textAlign: 'center' }}>
-                                Add Load
-                            </ThemedText>
-                        </View>
-                        <View style={{ alignItems: 'center', justifyContent: 'flex-start', gap: wp(2), width: wp(16) }}>
-                            <TouchableHighlight onPress={() => checkAuth(() => router.push('/Transport/Store/CreateProduct'))} underlayColor={'#F480245a'} style={{ justifyContent: 'center', width: wp(14), alignItems: 'center', height: wp(14), borderRadius: wp(60), backgroundColor: '#F4802424' }}>
-                                <Fontisto name="dollar" size={wp(5)} color="#F48024" />
-                            </TouchableHighlight>
-                            <ThemedText type='tiny' style={{ textAlign: 'center' }}>
-                                Sell Products
-                            </ThemedText>
-                        </View>
-
-                    </View>
-
-                </View>
-
-                {/* <View style={[styles.homefeature, { borderColor: '#4285f4', backgroundColor: background, padding: wp(4) }]}>
-       
-                               <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(2) }]}>
-                                   <View style={{}}>
-                                       <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} />
-                                   </View>
-                                   <ThemedText type='defaultSemiBold' color={'#4285f4'} style={{ fontSize: wp(3.5), flex: 1 }}>
-                                       Long-Term Contracts
-                                   </ThemedText>
-                                   <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ flexDirection: 'row', gap: wp(1) }}>
-                                       <ThemedText type='tiny'>
-                                           Open Contracts
-                                       </ThemedText>
-                                       <Ionicons name='arrow-forward' color={icon} />
-                                   </TouchableOpacity>
-                               </View>
-                               <ThemedText color={icon} type='tiny' numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5) }}>Create contract and start transporting loads today!</ThemedText>
-       
-                               <View style={{ marginVertical: wp(5), alignItems: 'center', gap: wp(4), }}>
-       
-                                   <ThemedText numberOfLines={0} style={{ marginVertical: wp(2), lineHeight: wp(5), fontSize: wp(3.8),marginBottom:16 }}
-                                   >
-                                   Secure long-term contracts with trusted partners to ensure consistent and reliable business operations.
-                                   </ThemedText>
-       
-                                   <TouchableOpacity onPress={() => router.push('/Logistics/Contracts/ViewMiniContracts')} style={{ paddingHorizontal: wp(4), paddingVertical: wp(1.5), backgroundColor: '#212121', borderRadius: wp(3), flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
-                                       <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" />
-                                       <ThemedText color='#fff' >
-                                           Booked Contracts
-                                       </ThemedText>
-                                   </TouchableOpacity>
-                               </View>
-       
-                           </View> */}
-
-
-
-                {theData.map((item) => (<View key={item.id}>
-
-
-
-
-
-                    {/* <FontAwesome6 name="file-signature" size={wp(3)} color="#fff" /> */}
-                    {/* <FontAwesome6 name="file-contract" color={'#4285f4'} size={wp(3)} /> */}
-
-                    {item.id === 1 && <HomeItemView
-                        topic={item.topic}
-                        description={item.description}
-                        mainColor="#4285f4"
-                        icon="#333"
-                        iconElement={<FontAwesome6 name="file-contract" size={wp(4)} color={'#fff'} />}
-                        buttonTitle={item.btnTitle}
-                        btnBackground="#4285f424"
-                        isAvaialble={true}
-                        btnPressValue={() => router.push('/Logistics/Contracts/ViewMiniContracts')} />}
-
-
-
-
-
-
-
-                    {item.id === 2 && <HomeItemView
-                        topic={item.topic}
-                        description={item.description}
-                        mainColor="#6bacbf"
-                        icon="#333"
-                        iconElement={<MaterialCommunityIcons name="satellite-uplink" size={wp(4)} color={'#fff'} />}
-                        buttonTitle={item.btnTitle}
-                        btnBackground="#6bacbf24"
-                        isAvaialble={true}
-                        btnPressValue={() => router.push("/Tracking/Index")} />}
-
-
-
-
-                    {item.id === 3 && <HomeItemView
-                        topic={item.topic}
-                        description={item.description}
-                        mainColor="#fb9274"
-                        icon="#333"
-                        iconElement={<MaterialCommunityIcons name="fuel" size={wp(4)} color={'#fff'} />}
-                        buttonTitle={item.btnTitle}
-                        btnBackground="#fb927424"
-                        isAvaialble={true}
-                        // btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")} />}
-                        btnPressValue={() => router.push("/Fuel/Index")} />}
-
-
-                    {item.id === 4 && <HomeItemView
-                        topic={item.topic}
-                        description={item.description}
-                        mainColor="#bada5f"
-                        icon="#333"
-                        iconElement={<MaterialCommunityIcons name="coffee" size={wp(4)} color={'#fff'} />}
-                        buttonTitle={item.btnTitle}
-                        btnBackground="#bada5f24"
-                        isAvaialble={true}
-                        // btnPressValue={() => router.push("/Tracking/Index")} />
-                        btnPressValue={() => router.push("/TruckStop/Index")} />}
-
-
-
-                    {item.id === 5 && <HomeItemView
-                        topic={item.topic}
-                        description={item.description}
-                        mainColor='#f4c542'
-                        icon="#333"
-                        iconElement={<MaterialCommunityIcons name="shield-check" size={wp(4)} color={'#fff'} />}
-                        buttonTitle={item.btnTitle}
-                        btnBackground="#f4c54224"  // Corrected
-                        isAvaialble={true}
-                        btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")} />}
-
-
-                    {item.id === 6 && <HomeItemView
-                        topic={item.topic}
-                        description={item.description}
-                        mainColor='#e06eb5'
-                        icon="#333"
-                        iconElement={<MaterialCommunityIcons name="warehouse" size={wp(4)} color={'#fff'} />}
-                        buttonTitle={item.btnTitle}
-                        btnBackground="#e06eb524"  // Corrected
-                        isAvaialble={true}
-                        btnPressValue={() => router.push("/Warehouse/Index")} />}
-
-                    {item.id === 7 && <HomeItemView
-                        topic={item.topic}
-                        description={item.description}
-                        mainColor='#f47c42'
-                        icon="#333"
-                        iconElement={<Ionicons name="checkmark-shield" size={wp(4)} color={'#fff'} />}
-                        buttonTitle={item.btnTitle}
-                        btnBackground="#f47c4224"  // Corrected
-                        isAvaialble={true}
-                        btnPressValue={() => router.push("/Account/Verification/ApplyVerification")} />}
-
-
-                </View>))}
-            </ScrollView>
+        <View style={styles.container}>
+            <CustomHeader onPressMenu={() => checkAuth()} />
+
+            <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+                <HomeContent onAuthCheck={checkAuth} />
+            </Animated.View>
+
+            {/* Authentication Modals */}
+            <AuthStatusModal
+                visible={dspCreateAcc}
+                onClose={() => setDspCreateAcc(false)}
+                user={user}
+                type="create"
+            />
+
+            <AuthStatusModal
+                visible={dspVerifyAcc}
+                onClose={() => setDspVerifyAcc(false)}
+                user={user}
+                type="verify"
+            />
+
+            <UserMenuModal
+                visible={dspMenu}
+                onClose={() => setDspMenu(false)}
+                user={user}
+                onProfileUpdate={updateUserProfile}
+            />
         </View>
-    )
+    );
 }
 
-export default Index
+export default Index;
 
 const styles = StyleSheet.create({
-    homefeature: {
-        padding: wp(4),
-        // borderRadius: wp(6),
-        gap: wp(2),
-        marginBottom: wp(4),
-        borderWidth: 0.5,
-        borderRadius: 8, shadowColor: "#0f9d58",
-        shadowOffset: { width: 1, height: 2 },
-        shadowOpacity: 0.7,
-        shadowRadius: 5,
-        elevation: 6
-    }
-})
+    container: {
+        flex: 1,
+    },
+    content: {
+        flex: 1,
+    },
+});
+
+

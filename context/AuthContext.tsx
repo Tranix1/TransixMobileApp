@@ -229,12 +229,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             };
 
             // 4. Save to Firestore (or your DB)
+            console.log('Saving to database:', fullUser);
             await setDocuments("personalData", fullUser);
 
             // 5. Set locally
             await AsyncStorage.setItem("user", JSON.stringify(fullUser));
             setUser(fullUser);
             setIsSignedIN(true);
+
+            // 6. Also update the profile cache
+            await AsyncStorage.setItem(`profile_${fullUser.uid}`, JSON.stringify(fullUser));
+
+            // 7. Verify the data was saved by reading it back
+            const savedData = await readById('personalData', fullUser.uid);
+            console.log('Data saved to database:', savedData);
 
             return { success: true };
         } catch (error) {

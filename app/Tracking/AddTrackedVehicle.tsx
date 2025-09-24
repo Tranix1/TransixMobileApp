@@ -436,17 +436,21 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginRight: wp(1),
   },
-  infoBox: {
-    backgroundColor: '#e3f2fd',
-    padding: 12,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#2196f3',
-  },
+ infoBox: {
+  backgroundColor: "#e3f2fd", 
+  padding: 12,
+  borderRadius: 8,
+  borderLeftWidth: 4,
+  borderLeftColor: "#2196f3", 
+},
   infoTitle: {
     marginBottom: 4,
+    color: "#1565c0", // deep blue for title (strong emphasis, readable)
+
   },
   infoText: {
     marginBottom: 2,
+    color: "#37474f", // blue-gray for text (professional, softer than black)
+
   },
 });

@@ -76,7 +76,6 @@ const AddLoadDB = () => {
   // Form state variables
   const [typeofLoad, setTypeofLoad] = useState(defaultState.typeofLoad);
   const [dspFromLocation, setDspFromLocation] = useState(false);
-  const [toLocation, setToLocation] = useState(defaultState.toLocation);
   const [destination, setDestination] = useState<SelectLocationProp | null>(null);
   const [origin, setOrigin] = useState<SelectLocationProp | null>(null);
   const [locationPicKERdSP, setPickLocationOnMap] = useState(false);
@@ -245,7 +244,6 @@ const AddLoadDB = () => {
   const clearFormFields = () => {
     const defaultState = getDefaultFormState();
     setTypeofLoad(defaultState.typeofLoad);
-    setToLocation(defaultState.toLocation);
     setRate(defaultState.rate);
     setRateExplanation(defaultState.rateexplantion);
     setPaymentTerms(defaultState.paymentTerms);
@@ -525,16 +523,7 @@ const AddLoadDB = () => {
                 durationInTraffic={durationInTraffic}
               />
 
-
-              <ThemedText>
-                To Location<ThemedText color="red">*</ThemedText>
-              </ThemedText>
-              <Input
-                value={toLocation}
-                onChangeText={setToLocation}
-              />
-
-              <RateInput
+              {userType !== 'general'&&<RateInput
                 rate={rate}
                 setRate={setRate}
                 selectedCurrency={selectedCurrency}
@@ -543,9 +532,10 @@ const AddLoadDB = () => {
                 setSelectedModelType={setSelectedModelType}
                 rateExplanation={rateexplantion}
                 setRateExplanation={setRateExplanation}
-              />
+              />}
 
 
+<Divider />
 
               <ThemedText>
                 Payment Terms<ThemedText color="red">*</ThemedText>
@@ -553,6 +543,7 @@ const AddLoadDB = () => {
               <Input
                 value={paymentTerms}
                 onChangeText={setPaymentTerms}
+                placeholder='e.g., Payment terms, Payment method, Payment schedule'
               />
             </View>
             <Divider />
