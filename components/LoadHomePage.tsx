@@ -1,5 +1,5 @@
 import React, { useCallback, useRef } from 'react';
-import { ActivityIndicator, RefreshControl, StyleSheet, Image, TouchableNativeFeedback, TouchableOpacity, View, Modal, Linking, FlatList } from 'react-native'
+import { ActivityIndicator, RefreshControl, StyleSheet, Image, TouchableNativeFeedback, TouchableOpacity, View, Modal, Linking, FlatList, ToastAndroid } from 'react-native'
 import { AntDesign, FontAwesome6, FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 import LoadComponent from './LoadComponent';
@@ -355,66 +355,58 @@ Contact: ${selectedLoad.contact}`;
                                                     <ThemedText type='subtitle' color={coolGray} style={{ textAlign: 'center' }}>
                                                         Bid Rate
                                                     </ThemedText>
-                                                    {
-                                                        selectedLoad.rate && (
-                                                            <View style={{}}>
+                                                    <View style={{}}>
+                                                        {selectedLoad.rate && (
+                                                            <View
+                                                                style={{
+                                                                    flexDirection: 'row',
+                                                                    flexWrap: 'wrap',
+                                                                    justifyContent: 'center',
+                                                                    marginBottom: wp(2)
+                                                                }}
+                                                            >
+                                                                <ThemedText style={{ color: '#616161', fontSize: 16, fontWeight: '500' }} type='tiny'>
+                                                                    from
+                                                                </ThemedText>
 
-
-
-
-                                                                <View
+                                                                <ThemedText
                                                                     style={{
-                                                                        flexDirection: 'row',
-                                                                        flexWrap: 'wrap',
-                                                                        justifyContent: 'center',
+                                                                        color: '#1976D2', // blue
+                                                                        fontSize: 16,
+                                                                        fontWeight: 'bold',
+                                                                        marginHorizontal: 6,
                                                                     }}
+                                                                    type='tiny'
                                                                 >
-                                                                    <ThemedText style={{ color: '#616161', fontSize: 16, fontWeight: '500' }} type='tiny'>
-                                                                        from
-                                                                    </ThemedText>
+                                                                    {selectedLoad.currency} {selectedLoad.rate} {selectedLoad.model}
+                                                                </ThemedText>
 
-                                                                    <ThemedText
-                                                                        style={{
-                                                                            color: '#1976D2', // blue
-                                                                            fontSize: 16,
-                                                                            fontWeight: 'bold',
-                                                                            marginHorizontal: 6,
-                                                                        }}
-                                                                        type='tiny'
-                                                                    >
-                                                                        {selectedLoad.currency} {selectedLoad.rate} {selectedLoad.model}
-                                                                    </ThemedText>
+                                                                <ThemedText style={{ color: '#616161', fontSize: 16, fontWeight: '500' }} type='tiny'>
+                                                                    to
+                                                                </ThemedText>
 
-                                                                    <ThemedText style={{ color: '#616161', fontSize: 16, fontWeight: '500' }} type='tiny'>
-                                                                        to
-                                                                    </ThemedText>
-
-                                                                    <ThemedText
-                                                                        style={{
-                                                                            color: bidRate ? '#2E7D32' : '#9E9E9E', // green or grey
-                                                                            fontSize: 16,
-                                                                            fontWeight: 'bold',
-                                                                            marginLeft: 6,
-                                                                        }}
-                                                                        type='tiny'
-                                                                    >
-                                                                        {selectedLoad.currency} {bidRate ? bidRate : "--"}
-                                                                    </ThemedText>
-                                                                </View>
-
-
-                                                                <Input
-                                                                    onChangeText={(text) => setBidRate(text)}
-                                                                    value={bidRate}
-                                                                    keyboardType="numeric"
-                                                                    placeholderTextColor={coolGray}
-                                                                    placeholder="Bid rate"
-                                                                />
-
-
+                                                                <ThemedText
+                                                                    style={{
+                                                                        color: bidRate ? '#2E7D32' : '#9E9E9E', // green or grey
+                                                                        fontSize: 16,
+                                                                        fontWeight: 'bold',
+                                                                        marginLeft: 6,
+                                                                    }}
+                                                                    type='tiny'
+                                                                >
+                                                                    {selectedLoad.currency} {bidRate ? bidRate : "--"}
+                                                                </ThemedText>
                                                             </View>
-                                                        )
-                                                    }
+                                                        )}
+
+                                                        <Input
+                                                            onChangeText={(text) => setBidRate(text)}
+                                                            value={bidRate}
+                                                            keyboardType="numeric"
+                                                            placeholderTextColor={coolGray}
+                                                            placeholder="Bid rate"
+                                                        />
+                                                    </View>
 
                                                 </View>
 
@@ -430,7 +422,7 @@ Contact: ${selectedLoad.contact}`;
                                                         onPress={() => submitBidsOBookings("biddings" as 'biddings', selectedLoad as Load)} */}
                                                     <TouchableOpacity onPress={() => router.push({
                                                         pathname: '/MakeOffer/BookBidlCargo',
-                                                        params: { contract: JSON.stringify(selectedLoad), bidRate: bidRate }
+                                                        params: { cargo: JSON.stringify(selectedLoad), bidRate: bidRate }
                                                     })}
                                                         style={[{ backgroundColor: '#0f9d5824', flex: 2, padding: wp(3), borderRadius: wp(4), alignItems: 'center' }]}
                                                     >

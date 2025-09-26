@@ -52,6 +52,27 @@ function BookingsandBiddings({ }) {
 
   const [requestType, setRequestType] = React.useState("Booked") // Default to Books view
 
+  // Debug function to check all loadRequests
+  const debugLoadRequests = async () => {
+    try {
+      const allRequestsQuery = query(collection(db, "loadRequests"));
+      const snapshot = await getDocs(allRequestsQuery);
+      console.log('🔍 All loadRequests in database:');
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        console.log(`📄 Doc ${doc.id}:`, {
+          loadOwnerId: data.loadOwnerId,
+          truckOwnerId: data.truckOwnerId,
+          status: data.status,
+          companyName: data.companyName,
+          productName: data.productName
+        });
+      });
+    } catch (error) {
+      console.error('❌ Error fetching all requests:', error);
+    }
+  };
+
   const LoadTructs = async () => {
     let filters: any[] = [];
 
@@ -60,22 +81,39 @@ function BookingsandBiddings({ }) {
     }
 
     if (dspRoute === "Requested by Carriers") {
-      filters.push(where("carrierId", "==", auth.currentUser?.uid));
+      // Show loads where current user is the truck owner (carrier)
+      filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
     } else if (dspRoute === "Requested Loads") {
+      // Show loads where current user is the load owner (courier requests)
       filters.push(where("loadOwnerId", "==", auth.currentUser?.uid));
+    } else {
+      // Default to "My Loads" - show loads requested by current user as carrier
+      filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
     }
+
+    console.log('🔍 Loading with filters:', { dspRoute, requestType, filters: filters.length });
+
+    // Debug: Check all requests in database
+    await debugLoadRequests();
 
     const result = await fetchDocuments('loadRequests', 10, lastVisible, filters);
 
     if (result) {
-      if (filters.length > 0 && result.data.length === 0) setFilteredPNotAavaialble(true)
+      console.log('📊 Fetched documents:', result.data.length);
+      if (filters.length > 0 && result.data.length === 0) {
+        setFilteredPNotAavaialble(true);
+        console.log('❌ No documents found with current filters');
+      } else {
+        setFilteredPNotAavaialble(false);
+      }
       setFetchedDocuments(result.data as any[])
       setLastVisible(result.lastVisible)
     }
   }
   useEffect(() => {
+    setFilteredPNotAavaialble(false); // Reset filter state when route changes
     LoadTructs();
-  }, [requestType])
+  }, [requestType, dspRoute])
 
   const onRefresh = async () => {
     try {
@@ -92,6 +130,18 @@ function BookingsandBiddings({ }) {
     let filters: any[] = [];
 
     if (requestType) filters.push(where("status", "==", requestType));
+
+    if (dspRoute === "Requested by Carriers") {
+      // Show loads where current user is the truck owner (carrier)
+      filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
+    } else if (dspRoute === "Requested Loads") {
+      // Show loads where current user is the load owner (courier requests)
+      filters.push(where("loadOwnerId", "==", auth.currentUser?.uid));
+    } else {
+      // Default to "My Loads" - show loads requested by current user as carrier
+      filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
+    }
+
     if (loadingMore || !lastVisible) return;
     setLoadingMore(true);
     const result = await fetchDocuments('loadRequests', 10, lastVisible, filters);
@@ -107,7 +157,7 @@ function BookingsandBiddings({ }) {
   return (
     <ScreenWrapper >
       {/* Header */}
-      <Heading page={dspRoute ? dspRoute.toString() : " Bookings and Biddings"} />
+      <Heading page={dspRoute ? dspRoute.toString() : "My Loads"} />
 
       <View style={{ flexDirection: "row", marginHorizontal: 4, justifyContent: "space-evenly" }}>
         <TouchableOpacity
@@ -186,17 +236,20 @@ function BookingsandBiddings({ }) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             {!filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
-              Contracts Loading…
+              Requests Loading…
             </ThemedText>}
 
             {!filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
               Please Wait
             </ThemedText>}
             {filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
-              Specified Contract Not Available!
+              No {requestType.toLowerCase()} requests found
             </ThemedText>}
             {filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
-              pull to refresh
+              Route: {dspRoute || 'My Loads'} | Status: {requestType}
+            </ThemedText>}
+            {filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
+              Pull to refresh
             </ThemedText>}
           </View>
         }
@@ -210,7 +263,7 @@ function BookingsandBiddings({ }) {
             ) : (!lastVisible && fectedDocuments.length > 0) ? (
               <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                 <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>
-                  No more Contracts to Load
+                  No more Requests to Load
                 </ThemedText>
                 <Ionicons color={icon} name='alert-circle-outline' size={wp(6)} />
               </View>

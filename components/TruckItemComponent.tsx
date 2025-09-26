@@ -88,11 +88,32 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
                         </ThemedText>
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center' }}>
-                        <FontAwesome5 name="weight" size={wp(3.6)} style={{ width: wp(6) }} color={icon} />
-                        <ThemedText numberOfLines={1} type='tiny' style={[{ fontSize: 15 }]}>
-                            {truck.truckCapacity || 'N/A'}
-                        </ThemedText>
+                    <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderRadius: wp(4), alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <FontAwesome5 name="weight" size={wp(3.6)} style={{ width: wp(6) }} color={icon} />
+                            <ThemedText numberOfLines={1} type='tiny' style={[{ fontSize: 15 }]}>
+                                {truck.truckCapacity || 'N/A'}
+                            </ThemedText>
+                        </View>
+
+                        {/* Truck Status - Smooth beside capacity */}
+                       {truck.userId === auth.currentUser?.uid && <ThemedText numberOfLines={1} type='tiny' style={[{
+                            fontSize: 13,
+                            fontWeight: 'bold',
+                            color: truck.approvalStatus === 'approved' ? '#0f9d58' :
+                                truck.approvalStatus === 'pending' ? '#F48024' :
+                                    truck.approvalStatus === 'rejected' ? '#e50914' : textColor,
+                            backgroundColor: truck.approvalStatus === 'approved' ? '#0f9d5824' :
+                                truck.approvalStatus === 'pending' ? '#F4802424' :
+                                    truck.approvalStatus === 'rejected' ? '#e5091424' : backgroundLight,
+                            paddingHorizontal: wp(2),
+                            paddingVertical: wp(1),
+                            borderRadius: wp(2)
+                        }]}>
+                            {truck.approvalStatus === 'approved' ? 'Approved' :
+                                truck.approvalStatus === 'pending' ? 'Pending' :
+                                    truck.approvalStatus === 'rejected' ? 'Declined' : 'Unknown'}
+                        </ThemedText>}
                     </View>
                 </View>
 

@@ -4,22 +4,16 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 
-// // Set notification handler once
-// Notifications.setNotificationHandler({
-//   handleNotification: async () => ({
-//     shouldPlaySound: false,
-//     shouldSetBadge: false,
-//     shouldShowBanner: true,
-//     shouldShowList: true,
-//   }),
-// });
-
+// Set notification handler for both development and production
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,  // <-- this is the required property
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
+  handleNotification: async (notification) => {
+    console.log('📱 Notification received:', notification);
+    return {
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    };
+  },
 });
 
 // Main hook to u   se in any screen/component
@@ -78,6 +72,9 @@ async function registerForPushNotificationsAsync() {
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#FF231F7C',
+      sound: 'default',
+      enableVibrate: true,
+      enableLights: true,
     });
   }
 
@@ -86,7 +83,14 @@ async function registerForPushNotificationsAsync() {
     let finalStatus = existingStatus;
 
     if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
+      const { status } = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+          allowAnnouncements: true,
+        },
+      });
       finalStatus = status;
     }
 
@@ -96,18 +100,40 @@ async function registerForPushNotificationsAsync() {
     }
 
     try {
+      // Try multiple ways to get project ID for better compatibility
       const projectId =
-        Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
-      if (!projectId) throw new Error('Project ID not found');
+        Constants?.expoConfig?.extra?.eas?.projectId ??
+        Constants?.easConfig?.projectId ??
+        Constants?.expoConfig?.extra?.projectId;
 
-      token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-      console.log('Expo Push Token:', token);
+      if (!projectId) {
+        console.error('Project ID not found in Constants');
+        throw new Error('Project ID not found');
+      }
+
+      console.log('Using Project ID:', projectId);
+
+      const tokenData = await Notifications.getExpoPushTokenAsync({
+        projectId,
+        development: __DEV__ // Use development flag for proper token generation
+      });
+
+      token = tokenData.data;
+      console.log('✅ Expo Push Token generated:', token);
     } catch (e) {
-      console.error('Push token error:', e);
-      token = '';
+      console.error('❌ Push token error:', e);
+      // Try fallback method
+      try {
+        const fallbackToken = await Notifications.getExpoPushTokenAsync();
+        token = fallbackToken.data;
+        console.log('✅ Fallback Push Token:', token);
+      } catch (fallbackError) {
+        console.error('❌ Fallback token error:', fallbackError);
+        token = '';
+      }
     }
   } else {
-    Alert.alert('Device Error', 'Must use a physical device for push notifications');
+    console.warn('⚠️ Must use a physical device for push notifications');
   }
 
   return token;
@@ -122,7 +148,21 @@ export async function sendPushNotification(
   route: any, // ✅ New argument to specify route
   extraData: Record<string, any> = {} // Optional data like IDs
 ) {
-  console.log("hiiii")
+  // More lenient token validation
+  if (!expoPushToken || expoPushToken.trim() === '') {
+    console.error('❌ No push token provided or token is empty');
+    console.log('🔍 Token value:', expoPushToken);
+    return;
+  }
+
+  // Check if token looks valid (starts with ExponentPushToken)
+  if (!expoPushToken.startsWith('ExponentPushToken[')) {
+    console.warn('⚠️ Token format might be invalid:', expoPushToken);
+    console.log('📤 Attempting to send anyway...');
+  }
+
+  console.log('📤 Sending push notification to:', expoPushToken);
+
   const message = {
     to: expoPushToken,
     sound: 'default',
@@ -132,19 +172,31 @@ export async function sendPushNotification(
       route,        // 👈 Required for routing with expo-router
       ...extraData, // 👈 Optional additional data
     },
+    priority: 'high',
+    channelId: 'myNotificationChannel', // Android channel
   };
 
-  await fetch('https://exp.host/--/api/v2/push/send', {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Accept-encoding': 'gzip, deflate',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(message),
-  });
+  try {
+    const response = await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Accept-encoding': 'gzip, deflate',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(message),
+    });
 
-  console.log("Byeee")
+    const result = await response.json();
+
+    if (response.ok) {
+      console.log('✅ Push notification sent successfully:', result);
+    } else {
+      console.error('❌ Push notification failed:', result);
+    }
+  } catch (error) {
+    console.error('❌ Error sending push notification:', error);
+  }
 }
 
 // Tracker sharing specific notifications
@@ -154,16 +206,27 @@ export const sendTrackerSharingRequestNotification = async (
   loadDetails: string,
   loadRequestId: string
 ) => {
+  console.log('🔔 sendTrackerSharingRequestNotification called with token:', truckOwnerToken);
+
+  if (!truckOwnerToken) {
+    console.error('❌ No truckOwnerToken provided to sendTrackerSharingRequestNotification');
+    return;
+  }
+
   const title = "Tracker Sharing Request";
   const body = `${loadOwnerName} has requested to share your truck's tracker for load: ${loadDetails}`;
 
-  await sendPushNotification(
-    truckOwnerToken,
-    title,
-    body,
-    `/BooksAndBids/ViewBidsAndBooks?dspRoute=Requested by Carriers`,
-    { loadRequestId, type: 'tracker_sharing_request' }
-  );
+  try {
+    await sendPushNotification(
+      truckOwnerToken,
+      title,
+      body,
+      `/BooksAndBids/ViewBidsAndBooks?dspRoute=Requested by Carriers`,
+      { loadRequestId, type: 'tracker_sharing_request' }
+    );
+  } catch (error) {
+    console.error('❌ Error in sendTrackerSharingRequestNotification:', error);
+  }
 };
 
 export const sendTrackerSharingAcceptedNotification = async (
@@ -172,16 +235,27 @@ export const sendTrackerSharingAcceptedNotification = async (
   truckDetails: string,
   loadRequestId: string
 ) => {
+  console.log('🔔 sendTrackerSharingAcceptedNotification called with token:', loadOwnerToken);
+
+  if (!loadOwnerToken) {
+    console.error('❌ No loadOwnerToken provided to sendTrackerSharingAcceptedNotification');
+    return;
+  }
+
   const title = "Tracker Sharing Accepted";
   const body = `${truckOwnerName} has accepted your tracker sharing request for truck: ${truckDetails}`;
 
-  await sendPushNotification(
-    loadOwnerToken,
-    title,
-    body,
-    `/BooksAndBids/ViewBidsAndBooks?dspRoute=Requested Loads`,
-    { loadRequestId, type: 'tracker_sharing_accepted' }
-  );
+  try {
+    await sendPushNotification(
+      loadOwnerToken,
+      title,
+      body,
+      `/BooksAndBids/ViewBidsAndBooks?dspRoute=Requested Loads`,
+      { loadRequestId, type: 'tracker_sharing_accepted' }
+    );
+  } catch (error) {
+    console.error('❌ Error in sendTrackerSharingAcceptedNotification:', error);
+  }
 };
 
 export const sendBookingWithTrackerNotification = async (
@@ -191,18 +265,29 @@ export const sendBookingWithTrackerNotification = async (
   hasTracker: boolean,
   loadRequestId: string
 ) => {
+  console.log('🔔 sendBookingWithTrackerNotification called with token:', loadOwnerToken);
+
+  if (!loadOwnerToken) {
+    console.error('❌ No loadOwnerToken provided to sendBookingWithTrackerNotification');
+    return;
+  }
+
   const title = hasTracker ? "Load Booked - Truck Has Tracker" : "Load Booked - Truck Has No Tracker";
   const body = hasTracker
     ? `${truckOwnerName} has booked your load: ${loadDetails}. ✅ This truck has an active tracker available for sharing.`
     : `${truckOwnerName} has booked your load: ${loadDetails}. ⚠️ This truck does not have a tracker.`;
 
-  await sendPushNotification(
-    loadOwnerToken,
-    title,
-    body,
-    `/BooksAndBids/ViewBidsAndBooks?dspRoute=Requested Loads`,
-    { loadRequestId, type: 'booking_with_tracker', hasTracker }
-  );
+  try {
+    await sendPushNotification(
+      loadOwnerToken,
+      title,
+      body,
+      `/BooksAndBids/ViewBidsAndBooks?dspRoute=Requested Loads`,
+      { loadRequestId, type: 'booking_with_tracker', hasTracker }
+    );
+  } catch (error) {
+    console.error('❌ Error in sendBookingWithTrackerNotification:', error);
+  }
 };
 
 
@@ -221,13 +306,19 @@ export function useNotificationRouting() {
 
       const data = response.notification.request.content.data;
 
-      // Delay execution by 1 minute (60000 milliseconds)
+      // Delay execution by 1 second
       setTimeout(() => {
         if (data?.route) {
           console.log('➡️ Navigating to route:', data.route);
-          router.push(data.route);
 
-          // router.replace("/Logistics/Contracts/AddContracts");
+          // Handle both string routes and object routes
+          if (typeof data.route === 'string') {
+            router.push(data.route);
+          } else if (typeof data.route === 'object' && data.route.pathname) {
+            router.push(data.route);
+          } else {
+            console.log('❌ Invalid route format:', data.route);
+          }
         } else {
           console.log('❌ No route in notification data');
         }

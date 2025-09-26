@@ -79,16 +79,14 @@ export const RequestedCargo = ({
       </View>
 
       {/* Load Tracker Component - only show for booked loads */}
-      {item.status === "Booked" && (
         <LoadTracker
           loadRequest={item}
-          isTruckOwner={user?.uid === item.truckId || user?.uid === item.truckOwnerId}
+          isTruckOwner={dspRoute === "Requested Loads"}
           onTrackerShared={() => {
             // Refresh the data or show success message
             ToastAndroid.show("Tracker shared successfully!", ToastAndroid.SHORT);
           }}
         />
-      )}
 
       {dspRoute !== "Requested Loads" && <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: wp(2), gap: wp(2) }}>
         <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: "#6a0c0c", paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.truckId, updateReuestDoc: item.id, expoPushToken: item.expoPushToken, productName: item.productName, origin: item.origin, destination: item.destination, model: item.model, rate: item.rate, currency: item.currency, dspDetails: "true", truckBeingReuested: 'true' } })} >

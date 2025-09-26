@@ -17,7 +17,7 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import { formatCurrency } from '@/services/services'
 import { usePushNotifications, sendPushNotification, sendBookingWithTrackerNotification } from "@/Utilities/pushNotification";
 
-function BookLContract({ }) {
+function BookLCargo({ }) {
   const accent = useThemeColor("accent");
   const coolGray = useThemeColor("coolGray");
   const icon = useThemeColor("icon");
@@ -26,8 +26,8 @@ function BookLContract({ }) {
   const backgroundColor = useThemeColor("backgroundLight");
   const { expoPushToken } = usePushNotifications();
   const [bbVerifiedLoadD, setbbVerifiedLoadD] = React.useState<Truck[] | []>([]);
-  const { contract, bidRate } = useLocalSearchParams();
-  const Contractitem = JSON.parse(contract as any);
+  const { cargo, contract, bidRate, OperationType } = useLocalSearchParams();
+  const loadItem = JSON.parse((cargo || contract) as any);
 
   useEffect(() => {
     try {
@@ -75,19 +75,19 @@ function BookLContract({ }) {
   type BookJob = {
     id: string;
     truckInfo: Truck;
-    trckContractId: string;
+    trckCargoId: string;
     truckContrSt: boolean
-    contractId: string
-    contractOnwerId: string
-    contractName: string
+    cargoId: string
+    cargoOwnerId: string
+    cargoName: string
     approvedTrck: boolean
   }
 
-  const [trucksInContract, setTrucksInContract] = React.useState<BookJob[] | []>([])
+  const [trucksRequested, setTrucksRequested] = React.useState<BookJob[] | []>([])
   useEffect(() => {
     if (!auth.currentUser) return;
     const userId = auth.currentUser.uid;
-    const dataQuery = query(collection(db, "ContractRequests"));
+    const dataQuery = query(collection(db, "CargoRequests"));
     const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
       const loadedData: BookJob[] = [];
       snapshot.docChanges().forEach((change) => {
@@ -99,14 +99,14 @@ function BookLContract({ }) {
           loadedData.push(dataWithId);
         }
       });
-      setTrucksInContract(loadedData);
+      setTrucksRequested(loadedData);
     });
     return () => unsubscribe();
-  }, [setTrucksInContract]);
+  }, [setTrucksRequested]);
 
-  const checkExistixtBBDoc = async (trckContractId: string) => {
+  const checkExistixtBBDoc = async (trckCargoId: string) => {
     const chatsRef = collection(db, "loadRequests");
-    const chatQuery = query(chatsRef, where('requestId', '==', trckContractId), where('alreadyInContract', '==', true));
+    const chatQuery = query(chatsRef, where('requestId', '==', trckCargoId), where('alreadyInRequested', '==', true));
     const querySnapshot = await getDocs(chatQuery);
     return !querySnapshot.empty;
   };
@@ -117,9 +117,9 @@ function BookLContract({ }) {
 
     async function handleSubmitDetails() {
       try {
-        if (auth.currentUser) { 
+        if (auth.currentUser) {
           const userId = auth.currentUser.uid
-          const existingBBDoc = await checkExistixtBBDoc(`${userId}${Contractitem.loadId}${item.timeStamp}`);
+          const existingBBDoc = await checkExistixtBBDoc(`${userId}${loadItem.loadId}${item.timeStamp}`);
 
           // Check if truck has tracker and if it's available for sharing
           const truckData = await readById('Trucks', item.id) as any;
@@ -135,40 +135,46 @@ function BookLContract({ }) {
               truckId: item.id,
               trackingDeviceId: (item as any).trackingDeviceId,
               created_at: Date.now().toString(),
-              requestId: `${userId}${Contractitem.loadId}${item.timeStamp}`,
-              cargoId: Contractitem.loadId,
-              companyName: Contractitem.companyName,
-              onwerId: Contractitem.userId,
-              productName: Contractitem.typeofLoad,
-              origin: Contractitem.origin,
-              destination: Contractitem.destination,
-              rate: bidRate ? bidRate : Contractitem.rate,
-              currency: Contractitem.currency,
-              model: Contractitem.model,
+              requestId: `${userId}${loadItem.id}${item.timeStamp}`,
+              cargoId: loadItem.id,
+              companyName: loadItem.companyName,
+              onwerId: loadItem.userId,
+              productName: loadItem.typeofLoad,
+              origin: loadItem.origin,
+              destination: loadItem.destination,
+              rate: bidRate ? bidRate : loadItem.rate,
+              currency: loadItem.currency,
+              model: loadItem.model,
               ownerDecision: "Pending",
               status: bidRate ? "Bidded" : "Booked",
-              loadId: Contractitem.id,
+              loadId: loadItem.id,
               approvedTrck: false,
-              alreadyInContract: true,
+              alreadyInRequested: true,
               expoPushToken: expoPushToken || null,
               trackerShared: false, // Track if tracker is shared
               trackerSharingRequested: false, // Track if sharing was requested
-              loadOwnerId: Contractitem.userId, // Load owner ID for notifications
+              loadOwnerId: loadItem.userId, // Load owner ID for notifications
               truckOwnerId: truckData?.userId, // Truck owner ID for notifications
               truckHasTracker: hasTracker, // Store tracker availability status
               trackerStatus: trackerStatus // Store tracker status
-              // contractName: Contractitem.contractName,
             }
             addDocument("loadRequests", theData)
 
             // Send notification with tracker status information
-            await sendBookingWithTrackerNotification(
-              Contractitem.expoPushToken,
-              truckData?.ownerName || "Truck Owner",
-              `${Contractitem.origin} to ${Contractitem.destination}`,
-              hasTracker && trackerStatus === 'active' && trackingDeviceId,
-              theData.requestId
-            );
+            console.log('🔔 Load item expoPushToken:', loadItem.expoPushToken);
+            console.log('🔔 Current user expoPushToken:', expoPushToken);
+
+            if (loadItem.expoPushToken) {
+              await sendBookingWithTrackerNotification(
+                loadItem.expoPushToken,
+                truckData?.ownerName || "Truck Owner",
+                `${loadItem.origin} to ${loadItem.destination}`,
+                hasTracker && trackerStatus === 'active' && trackingDeviceId,
+                theData.requestId
+              );
+            } else {
+              console.warn('⚠️ No expoPushToken found in loadItem, skipping notification');
+            }
 
             const existingBBDoc = await checkDocumentExists("newIterms", [where('receriverId', '==', userId)]);
             // const existingChat = await checkExistingChat(addChatId);
@@ -228,13 +234,12 @@ function BookLContract({ }) {
           />
         )}
 
-        {/* Contract Status */}
-        {trucksInContract.map((scndItem) => {
-          function removeFrmContract() {
-            updateDocument("ContractRequests", scndItem.id, {
-              alreadyInContract: false,
+        {trucksRequested.map((scndItem) => {
+          function removeFrmRequest() {
+            updateDocument("loadRequests", scndItem.id, {
+              alreadyInRequested: false,
               reasonForLeaving: "hahahah",
-              contractId: Contractitem.contractId,
+              cargoId: loadItem.id,
               truckInfo: {
                 timestamp: serverTimestamp()
               }
@@ -243,16 +248,16 @@ function BookLContract({ }) {
           return (
             <View key={scndItem.id}>
               {(Number(item.timeStamp) === Number(scndItem.truckInfo.timeStamp)) && (
-                <View style={styles.contractStatusContainer}>
-                  <ThemedText type="defaultSemiBold" style={[styles.contractStatusText, { color: accent }]}>
+                <View style={styles.cargoStatusContainer}>
+                  <ThemedText type="defaultSemiBold" style={[styles.cargoStatusText, { color: accent }]}>
                     Truck Is Booked
                   </ThemedText>
                   <TouchableOpacity
-                    onPress={removeFrmContract}
-                    style={styles.removeContractButton}
+                    onPress={removeFrmRequest}
+                    style={styles.removeRequestButton}
                   >
                     <ThemedText style={styles.buttonTextWhite}>
-                      Remove from existing contract
+                      Remove from existing Requested cargo
                     </ThemedText>
                   </TouchableOpacity>
                 </View>
@@ -403,45 +408,9 @@ function BookLContract({ }) {
   })
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   return (
     <ScreenWrapper>
-      <Heading page={`Book Contract: ${Contractitem.contractName}`} />
+      <Heading page={`Book Cargo: ${loadItem.typeofLoad}`} />
 
       {/* Contract Card */}
       <View style={{
@@ -469,7 +438,7 @@ function BookLContract({ }) {
           paddingVertical: wp(2)
         }}>
           <ThemedText style={{ color: accent, textAlign: 'center', fontSize: wp(4.5), fontWeight: "bold" }}>
-            {Contractitem.companyName || ""}
+            {loadItem.companyName || ""}
             {'  '}
             <MaterialIcons name="verified" size={wp(4)} color="green" />
           </ThemedText>
@@ -481,23 +450,23 @@ function BookLContract({ }) {
           <View style={{ flexDirection: 'column', gap: wp(1) }}>
             <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
               <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Product</ThemedText>
-              <ThemedText >{Contractitem.typeofLoad || "Tobacco"}</ThemedText>
+              <ThemedText >{loadItem.typeofLoad || "Tobacco"}</ThemedText>
             </View>
             <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
 
-              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate {Contractitem.model} </ThemedText>
-              <ThemedText   >{Contractitem.currency} {formatCurrency(!bidRate ? Contractitem.rate : bidRate)}</ThemedText>
+              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate {loadItem.model} </ThemedText>
+              <ThemedText   >{loadItem.currency} {formatCurrency(!bidRate ? loadItem.rate : bidRate)}</ThemedText>
             </View>
 
             <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
 
               <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Origin</ThemedText>
-              <ThemedText   >{Contractitem.origin}</ThemedText>
+              <ThemedText   >{loadItem.origin}</ThemedText>
             </View>
             <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
 
               <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Destination</ThemedText>
-              <ThemedText   >{Contractitem.destination}</ThemedText>
+              <ThemedText   >{loadItem.destination}</ThemedText>
             </View>
 
 
@@ -537,7 +506,7 @@ function BookLContract({ }) {
     </ScreenWrapper>
   )
 }
-export default React.memo(BookLContract)
+export default React.memo(BookLCargo)
 
 const styles = StyleSheet.create({
   buttonStyle: {
@@ -577,13 +546,13 @@ const styles = StyleSheet.create({
     marginBottom: wp(2),
     width: "100%",
   },
-  contractStatusContainer: {
+  cargoStatusContainer: {
     marginBottom: wp(2),
   },
-  contractStatusText: {
+  cargoStatusText: {
     fontSize: wp(4),
   },
-  removeContractButton: {
+  removeRequestButton: {
     backgroundColor: "#e53935",
     borderRadius: wp(2),
     paddingVertical: wp(2),

@@ -142,6 +142,7 @@ filteredPNotAavaialble
           keyExtractor={(item) => item.id.toString()}
           ListHeaderComponent={() => (
             <>
+            
               <View style={{ marginHorizontal: wp(1), marginBottom: wp(1) }}>
                 {(selectedCargoArea ||
                   operationCountries.length > 0 ||

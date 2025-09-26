@@ -71,7 +71,7 @@ export const shareTrackerWithLoadOwner = async (
  * Check if user is truck owner for a load request
  */
 export const isTruckOwnerForLoad = (loadRequest: any, userId: string): boolean => {
-    return loadRequest.truckId === userId;
+    return loadRequest.truckOwnerId === userId;
 };
 
 /**

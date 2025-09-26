@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, ScrollView, TouchableOpacity, TouchableHighlight, StyleSheet } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, ScrollView, TouchableOpacity, TouchableHighlight, StyleSheet, Animated, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native';
 import { EvilIcons, MaterialCommunityIcons, Ionicons, FontAwesome6, Fontisto } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
@@ -19,6 +19,81 @@ export default function HomeContent({ onAuthCheck }: HomeContentProps) {
     const background = useThemeColor('background');
     const textlight = useThemeColor('textlight');
     const border = useThemeColor('border');
+
+    // Quick Links state
+    const [currentQuickLinkIndex, setCurrentQuickLinkIndex] = useState(0);
+    const quickLinksScrollRef = useRef<ScrollView>(null);
+    const screenWidth = Dimensions.get('window').width;
+    const [loadsCount, setLoadsCount] = useState(0);
+
+    // Quick Links data (8 items total)
+    const quickLinksData = [
+        {
+            id: 1,
+            title: 'Create Contract',
+            icon: <Ionicons name="reader" size={wp(5)} color="#e50914" />,
+            bgColor: '#F4802424',
+            underlayColor: '#F480245a',
+            onPress: () => onAuthCheck(() => router.push('/Logistics/Contracts/NewContract'))
+        },
+        {
+            id: 2,
+            title: 'Add Truck',
+            icon: <Fontisto name="truck" size={wp(5)} color="#0f9d58" />,
+            bgColor: '#0f9d5824',
+            underlayColor: '#0f9d585a',
+            onPress: () => onAuthCheck(() => router.push('/Logistics/Trucks/AddTrucks'))
+        },
+        {
+            id: 3,
+            title: 'Add Load',
+            icon: <FontAwesome6 name="box" size={wp(5)} color="#4285f4" />,
+            bgColor: '#4285f424',
+            underlayColor: '#4285f45a',
+            onPress: () => onAuthCheck(() => router.push('/Logistics/Loads/AddLoads'))
+        },
+        {
+            id: 4,
+            title: 'Sell Products',
+            icon: <Fontisto name="dollar" size={wp(5)} color="#F48024" />,
+            bgColor: '#F4802424',
+            underlayColor: '#F480245a',
+            onPress: () => onAuthCheck(() => router.push('/Transport/Store/CreateProduct'))
+        },
+        {
+            id: 5,
+            title: 'Truck Status',
+            icon: <Fontisto name="truck" size={wp(5)} color="#0f9d58" />,
+            bgColor: '#0f9d5824',
+            underlayColor: '#0f9d585a',
+            onPress: () => onAuthCheck(() => router.push('/Logistics/Trucks/Index'))
+        },
+        {
+            id: 6,
+            title: 'Owner Status',
+            icon: <MaterialCommunityIcons name="account-check" size={wp(5)} color="#4285f4" />,
+            bgColor: '#4285f424',
+            underlayColor: '#4285f45a',
+            onPress: () => onAuthCheck(() => router.push('/Account/Verification/Index'))
+        },
+        {
+            id: 7,
+            title: 'My Loads',
+            icon: <FontAwesome6 name="box" size={wp(5)} color="#F48024" />,
+            bgColor: '#F4802424',
+            underlayColor: '#F480245a',
+            onPress: () => onAuthCheck(() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dspRoute: "My Loads" } }))
+        },
+        {
+            id: 8,
+            title: 'Courier Requests',
+            icon: <MaterialCommunityIcons name="truck-delivery" size={wp(5)} color="#e06eb5" />,
+            bgColor: '#e06eb524',
+            underlayColor: '#e06eb55a',
+            onPress: () => onAuthCheck(() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dspRoute: "Requested Loads" } }))
+        }
+    ];
+
 
     const theData = [
         {
@@ -90,58 +165,92 @@ export default function HomeContent({ onAuthCheck }: HomeContentProps) {
                     </ThemedText>
                 </View>
 
-                <View style={styles.quickLinksGrid}>
-                    <View style={styles.quickLinkItem}>
-                        <TouchableHighlight
-                            onPress={() => onAuthCheck(() => router.push('/Logistics/Contracts/NewContract'))}
-                            underlayColor={'#F480245a'}
-                            style={[styles.quickLinkButton, { backgroundColor: '#F4802424' }]}
-                        >
-                            <Ionicons name="reader" size={wp(5)} color="#e50914" />
-                        </TouchableHighlight>
-                        <ThemedText type='tiny' style={styles.quickLinkLabel}>
-                            Create Contract
-                        </ThemedText>
+                {/* Quick Links - Two Pages */}
+                <ScrollView
+                    ref={quickLinksScrollRef}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.quickLinksScrollView}
+                    onMomentumScrollEnd={(event) => {
+                        const pageWidth = screenWidth - wp(2); // Full width minus container padding
+                        const index = Math.round(event.nativeEvent.contentOffset.x / pageWidth);
+                        setCurrentQuickLinkIndex(index);
+                    }}
+                >
+                    {/* Page 1 - Original 4 items */}
+                    <View style={[styles.quickLinksPage, { width: 325 }]}>
+                        <View style={styles.quickLinksGrid}>
+                            {quickLinksData.slice(0, 4).map((item) => (
+                                <View key={item.id} style={styles.quickLinkItem}>
+                                    <TouchableHighlight
+                                        onPress={item.onPress}
+                                        underlayColor={item.underlayColor}
+                                        style={[styles.quickLinkButton, { backgroundColor: item.bgColor }]}
+                                    >
+                                        {item.icon}
+                                    </TouchableHighlight>
+                                    <View style={styles.labelContainer}>
+                                        <ThemedText type='tiny' style={styles.quickLinkLabel} numberOfLines={2}>
+                                            {item.title}
+                                        </ThemedText>
+                                        {item.id === 7 && loadsCount > 0 && (
+                                            <View style={[styles.badge, { backgroundColor: accent }]}>
+                                                <ThemedText type='tiny' style={styles.badgeText}>
+                                                    {loadsCount}
+                                                </ThemedText>
+                                            </View>
+                                        )}
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
                     </View>
 
-                    <View style={styles.quickLinkItem}>
-                        <TouchableHighlight
-                            onPress={() => onAuthCheck(() => router.push('/Logistics/Trucks/AddTrucks'))}
-                            underlayColor={'#0f9d585a'}
-                            style={[styles.quickLinkButton, { backgroundColor: '#0f9d5824' }]}
-                        >
-                            <Fontisto name="truck" size={wp(5)} color="#0f9d58" />
-                        </TouchableHighlight>
-                        <ThemedText type='tiny' style={styles.quickLinkLabel}>
-                            Add Truck
-                        </ThemedText>
+                    {/* Page 2 - Status 4 items */}
+                    <View style={[styles.quickLinksPage, { width: screenWidth - wp(10) }]}>
+                        <View style={styles.quickLinksGrid}>
+                            {quickLinksData.slice(4, 8).map((item) => (
+                                <View key={item.id} style={styles.quickLinkItem}>
+                                    <TouchableHighlight
+                                        onPress={item.onPress}
+                                        underlayColor={item.underlayColor}
+                                        style={[styles.quickLinkButton, { backgroundColor: item.bgColor }]}
+                                    >
+                                        {item.icon}
+                                    </TouchableHighlight>
+                                    <View style={styles.labelContainer}>
+                                        <ThemedText type='tiny' style={styles.quickLinkLabel} numberOfLines={2}>
+                                            {item.title}
+                                        </ThemedText>
+                                        {item.id === 7 && loadsCount > 0 && (
+                                            <View style={[styles.badge, { backgroundColor: accent }]}>
+                                                <ThemedText type='tiny' style={styles.badgeText}>
+                                                    {loadsCount}
+                                                </ThemedText>
+                                            </View>
+                                        )}
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
                     </View>
+                </ScrollView>
 
-                    <View style={styles.quickLinkItem}>
-                        <TouchableHighlight
-                            onPress={() => onAuthCheck(() => router.push('/Logistics/Loads/AddLoads'))}
-                            underlayColor={'#4285f45a'}
-                            style={[styles.quickLinkButton, { backgroundColor: '#4285f424' }]}
-                        >
-                            <FontAwesome6 name="box" size={wp(5)} color="#4285f4" />
-                        </TouchableHighlight>
-                        <ThemedText type='tiny' style={styles.quickLinkLabel}>
-                            Add Load
-                        </ThemedText>
-                    </View>
-
-                    <View style={styles.quickLinkItem}>
-                        <TouchableHighlight
-                            onPress={() => onAuthCheck(() => router.push('/Transport/Store/CreateProduct'))}
-                            underlayColor={'#F480245a'}
-                            style={[styles.quickLinkButton, { backgroundColor: '#F4802424' }]}
-                        >
-                            <Fontisto name="dollar" size={wp(5)} color="#F48024" />
-                        </TouchableHighlight>
-                        <ThemedText type='tiny' style={styles.quickLinkLabel}>
-                            Sell Products
-                        </ThemedText>
-                    </View>
+                {/* Page Indicators */}
+                <View style={styles.pageIndicators}>
+                    {Array.from({ length: Math.ceil(quickLinksData.length / 4) }, (_, index) => (
+                        <View
+                            key={index}
+                            style={[
+                                styles.indicator,
+                                {
+                                    backgroundColor: index === currentQuickLinkIndex ? accent : border,
+                                    width: index === currentQuickLinkIndex ? wp(6) : wp(2),
+                                }
+                            ]}
+                        />
+                    ))}
                 </View>
             </View>
 
@@ -238,7 +347,7 @@ export default function HomeContent({ onAuthCheck }: HomeContentProps) {
                             description={item.description}
                             mainColor='#f47c42'
                             icon="#333"
-                            iconElement={<Ionicons name="checkmark-shield" size={wp(4)} color={'#fff'} />}
+                            iconElement={<Ionicons name="shield-checkmark" size={wp(4)} color={'#fff'} />}
                             buttonTitle={item.btnTitle}
                             btnBackground="#f47c4224"
                             isAvaialble={true}
@@ -288,16 +397,23 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: wp(3.5),
     },
+    quickLinksScrollView: {
+        flex: 1,
+    },
+    quickLinksPage: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     quickLinksGrid: {
         flexDirection: 'row',
-        gap: wp(2),
         justifyContent: 'space-between',
+        width: '100%',
     },
     quickLinkItem: {
         alignItems: 'center',
         justifyContent: 'flex-start',
         gap: wp(2),
-        width: wp(16),
+        flex: 1,
     },
     quickLinkButton: {
         justifyContent: 'center',
@@ -308,6 +424,39 @@ const styles = StyleSheet.create({
     },
     quickLinkLabel: {
         textAlign: 'center',
+        fontSize: wp(2.8),
+        lineHeight: wp(3.5),
+        flexWrap: 'wrap',
+    },
+    labelContainer: {
+        alignItems: 'center',
+        position: 'relative',
+    },
+    badge: {
+        position: 'absolute',
+        top: -wp(2),
+        right: -wp(2),
+        minWidth: wp(4),
+        height: wp(4),
+        borderRadius: wp(2),
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: wp(1),
+    },
+    badgeText: {
+        color: 'white',
+        fontSize: wp(2.2),
+        fontWeight: 'bold',
+    },
+    pageIndicators: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: wp(2),
+        marginTop: wp(2),
+    },
+    indicator: {
+        height: wp(2),
+        borderRadius: wp(1),
     },
 });
 

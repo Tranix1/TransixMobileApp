@@ -18,12 +18,19 @@
       },
       "package": "com.yayapana.TransixNewVersion",
       "permissions": [
-        "CAMERA"
+        "CAMERA",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "WAKE_LOCK"
       ],
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyACiyh-wyKUcTXP0w9FU_N00l7L1ahZP8w"
         }
+      },
+      "notification": {
+        "icon": "./assets/images/TrnaixxNewBG.jpg",
+        "color": "#6a0c0c"
       }
     },
     "web": {
@@ -58,8 +65,18 @@
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
             "buildToolsVersion": "35.0.0",
+            "ndkVersion": "26.1.10909125",
             "extraGradleProperties": {
-              "android.enableR8.fullMode": "true"
+              "android.enableR8.fullMode": "true",
+              "android.enableDexingArtifactTransform.desugaring": "false",
+              "android.useAndroidX": "true",
+              "android.enableJetifier": "true"
+            },
+            "packagingOptions": {
+              "pickFirst": [
+                "**/libc++_shared.so",
+                "**/libjsc.so"
+              ]
             }
           },
           "ios": {
