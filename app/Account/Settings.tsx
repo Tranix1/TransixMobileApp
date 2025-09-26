@@ -28,30 +28,30 @@ const Settings = () => {
         <ScreenWrapper>
             <Heading page='Settings' />
             <ScrollView contentContainerStyle={{ padding: wp(4), }}>
-                    <TouchableNativeFeedback onPress={() => router.push('/Account/Index')}>
-                <View style={{ flexDirection: 'row', gap: wp(4), marginBottom: wp(4) }}>
-                    <Image
-                        style={{ backgroundColor: coolgray, borderRadius: 999, width: wp(15), height: wp(15) }}
-                        source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
-                    />
-                    <View style={{ flex: 1 }}>
-                        <ThemedText type='title'>{user?.organisation || '-'}</ThemedText>
-                        <ThemedText type='tiny' color={icon}>{user?.email || 'Click button below to login'}</ThemedText>
-                        {!user &&
-                            <View style={{ marginTop: wp(2) }}>
-                                <Button title='Login' onPress={() => router.push('/Account/Login')} />
-                            </View>
-                        }
-                    </View>
-                    {user &&
-                        <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
+                <TouchableNativeFeedback onPress={() => router.push('/Account/Index')}>
+                    <View style={{ flexDirection: 'row', gap: wp(4), marginBottom: wp(4) }}>
+                        <Image
+                            style={{ backgroundColor: coolgray, borderRadius: 999, width: wp(15), height: wp(15) }}
+                            source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
+                        />
+                        <View style={{ flex: 1 }}>
+                            <ThemedText type='title'>{user?.organisation || '-'}</ThemedText>
+                            <ThemedText type='tiny' color={icon}>{user?.email || 'Click button below to login'}</ThemedText>
+                            {!user &&
+                                <View style={{ marginTop: wp(2) }}>
+                                    <Button title='Login' onPress={() => router.push('/Account/Login')} />
+                                </View>
+                            }
+                        </View>
+                        {user &&
+                            <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
                                 <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
                                     <Ionicons name='chevron-forward' color={icon} size={wp(4)} />
                                 </View>
-                        </View>
-                    }
-                </View>
-                            </TouchableNativeFeedback>
+                            </View>
+                        }
+                    </View>
+                </TouchableNativeFeedback>
 
                 {user &&
                     <ThemedText style={{ margin: wp(4) }} type='subtitle'>Account</ThemedText>
@@ -96,7 +96,33 @@ const Settings = () => {
                         </View>
                     </View>
                 }
+
+                {/* Admin Section */}
+                {user && (
+                    <>
+                        <ThemedText style={{ margin: wp(4) }} type='subtitle'>Admin</ThemedText>
+                        <View style={{ gap: wp(1), padding: wp(2), marginBottom: wp(4), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
+                            <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                <TouchableNativeFeedback onPress={() => router.push('/Account/Admin')}>
+                                    <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                        <Ionicons name='settings-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                        <View style={{ flex: 1 }}>
+                                            <ThemedText type='default'>
+                                                Admin Panel
+                                            </ThemedText>
+                                            <ThemedText type='tiny' color={coolgray}>
+                                                Manage app versions and updates
+                                            </ThemedText>
+                                        </View>
+                                        <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                    </View>
+                                </TouchableNativeFeedback>
+                            </View>
+                        </View>
+                    </>
+                )}
             </ScrollView>
+
         </ScreenWrapper>
     )
 }

@@ -57,7 +57,10 @@
           "android": {
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
-            "buildToolsVersion": "35.0.0"
+            "buildToolsVersion": "35.0.0",
+            "extraGradleProperties": {
+              "android.enableR8.fullMode": "true"
+            }
           },
           "ios": {
             "deploymentTarget": "15.1"

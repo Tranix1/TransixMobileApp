@@ -2,122 +2,127 @@ export const darkMapStyle = [
   // ✅ Base background
   {
     "elementType": "geometry",
-    "stylers": [{ "color": "#1d2c4d" }]
+    "stylers": [{ "color": "#121212" }] // Darker, pure black for true contrast
   },
   {
     "elementType": "labels.text.fill",
-    "stylers": [{ "color": "#8ec3b9" }]
+    "stylers": [{ "color": "#E0E0E0" }] // Bright white for maximum readability
   },
   {
     "elementType": "labels.text.stroke",
-    "stylers": [{ "color": "#1a3646" }]
+    "stylers": [{ "color": "#121212" }] // Matches background for a clean look
   },
 
   // ✅ Man-made / built-up (residential feel)
   {
     "featureType": "landscape.man_made",
     "elementType": "geometry.fill",
-    "stylers": [{ "color": "#344667" }] // slightly brighter for houses/blocks
+    "stylers": [{ "color": "#282828" }] // Dark gray for a distinct "house" feel
   },
 
-  // ✅ Natural landscape
+  // ✅ Natural landscape (ground)
   {
     "featureType": "landscape.natural",
     "elementType": "geometry",
-    "stylers": [{ "color": "#2b3a56" }]
+    "stylers": [{ "color": "#1A1A1A" }] // A slightly different dark tone to make the ground visible
   },
 
   // ✅ Parks / green areas
   {
     "featureType": "poi.park",
     "elementType": "geometry.fill",
-    "stylers": [{ "color": "#263c3f" }]
+    "stylers": [{ "color": "#004d00" }] // A deep green to stand out clearly
   },
   {
     "featureType": "poi.park",
     "elementType": "labels.text.fill",
-    "stylers": [{ "color": "#6b9a76" }]
+    "stylers": [{ "color": "#90EE90" }] // Lighter green for text
   },
 
   // ✅ Roads (general)
   {
     "featureType": "road",
     "elementType": "geometry",
-    "stylers": [{ "color": "#38414e" }]
+    "stylers": [{ "color": "#404040" }] // Medium gray for clear roads
   },
   {
     "featureType": "road",
     "elementType": "geometry.stroke",
-    "stylers": [{ "color": "#212a37" }]
+    "stylers": [{ "color": "#121212" }] // Matches background
   },
   {
     "featureType": "road",
     "elementType": "labels.text.fill",
-    "stylers": [{ "color": "#9ca5b3" }]
+    "stylers": [{ "color": "#B0B0B0" }] // Lighter gray for readability
   },
 
   // ✅ Highways
   {
     "featureType": "road.highway",
     "elementType": "geometry",
-    "stylers": [{ "color": "#746855" }]
+    "stylers": [{ "color": "#757575" }] // Even lighter gray for major roads
   },
   {
     "featureType": "road.highway",
     "elementType": "geometry.stroke",
-    "stylers": [{ "color": "#1f2835" }]
+    "stylers": [{ "color": "#121212" }]
   },
   {
     "featureType": "road.highway",
     "elementType": "labels.text.fill",
-    "stylers": [{ "color": "#f3d19c" }]
+    "stylers": [{ "color": "#FFFFF0" }] // Off-white for high contrast
   },
 
   // ✅ Local roads (to highlight residential neighborhoods)
   {
     "featureType": "road.local",
     "elementType": "geometry.fill",
-    "stylers": [{ "color": "#3f4d6b" }]
+    "stylers": [{ "color": "#303030" }] // A slightly darker road than general roads
   },
 
-  // ✅ Points of Interest
+  // ✅ Points of Interest (including car washes)
   {
     "featureType": "poi",
     "elementType": "labels.text.fill",
-    "stylers": [{ "color": "#d59563" }]
+    "stylers": [{ "color": "#FFA500" }] // Bright orange for visibility
   },
   {
     "featureType": "poi.business",
     "elementType": "geometry.fill",
-    "stylers": [{ "color": "#2d3a4f" }]
+    "stylers": [{ "color": "#424242" }] // Darker gray to stand out from other buildings
+  },
+  {
+    "featureType": "poi.business",
+    "elementType": "labels.icon",
+    "stylers": [{ "visibility": "on" }] // Explicitly turn on icons for places like car washes
   },
 
   // ✅ Transit
   {
     "featureType": "transit",
     "elementType": "geometry",
-    "stylers": [{ "color": "#2f3948" }]
+    "stylers": [{ "color": "#404040" }] // Matches roads for consistency
   },
   {
     "featureType": "transit.station",
     "elementType": "labels.text.fill",
-    "stylers": [{ "color": "#d59563" }]
+    "stylers": [{ "color": "#FFC0CB" }] // A light pink to stand out
   },
 
   // ✅ Water
   {
     "featureType": "water",
     "elementType": "geometry.fill",
-    "stylers": [{ "color": "#17263c" }]
+    "stylers": [{ "color": "#00008B" }] // Deep blue to be clearly water
   },
   {
     "featureType": "water",
     "elementType": "labels.text.fill",
-    "stylers": [{ "color": "#515c6d" }]
+    "stylers": [{ "color": "#ADD8E6" }] // Light blue for text
   },
   {
     "featureType": "water",
     "elementType": "labels.text.stroke",
-    "stylers": [{ "color": "#17263c" }]
+    "stylers": [{ "color": "#00008B" }] // Matches water background
   }
 ];

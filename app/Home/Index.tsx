@@ -7,8 +7,10 @@ import CustomHeader from '@/components/CustomHeader';
 import AppLoadingScreen from '@/components/AppLoadingScreen';
 import AuthStatusModal from '@/components/AuthStatusModal';
 import UserMenuModal from '@/components/UserMenuModal';
+import UpdateModal from '@/components/UpdateModal';
 import HomeContent from '@/components/HomeContent';
 import { useAuthState } from '@/hooks/useAuthState';
+import { useAppUpdate } from '@/hooks/useAppUpdate';
 import NetInfo from '@react-native-community/netinfo';
 
 function Index() {
@@ -22,6 +24,15 @@ function Index() {
         error,
         updateUserProfile
     } = useAuthState();
+
+    const {
+        showUpdateModal,
+        currentVersion,
+        latestVersion,
+        isForceUpdate,
+        checkForUpdate,
+        dismissUpdate
+    } = useAppUpdate();
 
     const [dspCreateAcc, setDspCreateAcc] = useState(false);
     const [dspVerifyAcc, setDspVerifyAcc] = useState(false);
@@ -49,6 +60,13 @@ function Index() {
             }).start();
         }
     }, [isLoading]);
+
+    // Check for app updates when component mounts
+    useEffect(() => {
+        if (!isLoading && isConnectedInternet) {
+            checkForUpdate();
+        }
+    }, [isLoading, isConnectedInternet]);
 
     const checkAuth = (theAction?: () => void) => {
         if (!isConnectedInternet) {
@@ -127,6 +145,16 @@ function Index() {
                 onClose={() => setDspMenu(false)}
                 user={user}
                 onProfileUpdate={updateUserProfile}
+            />
+
+            {/* Update Modal */}
+            <UpdateModal
+                visible={showUpdateModal}
+                onClose={dismissUpdate}
+                currentVersion={currentVersion}
+                latestVersion={latestVersion}
+                updateUrl="https://play.google.com/store/apps/details?id=com.yayapana.TransixNewVersion"
+                isForceUpdate={isForceUpdate}
             />
         </View>
     );
