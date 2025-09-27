@@ -48,6 +48,11 @@ const TruckDetails = () => {
     const [refreshing, setRefreshing] = useState(false)
     const [isSaved, setIsSaved] = useState(false);
 
+    // Admin approval states
+    const [showDeclineModal, setShowDeclineModal] = useState(false);
+    const [declineReason, setDeclineReason] = useState('');
+    const [processing, setProcessing] = useState(false);
+
     const { user } = useAuth();
     const getData = async () => {
         try {
@@ -251,6 +256,97 @@ const TruckDetails = () => {
 
     }
 
+    // Admin approval functions
+    const handleAdminApprove = async () => {
+        Alert.alert(
+            'Approve Truck',
+            'Are you sure you want to approve this truck?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Approve', onPress: () => approveTruck() }
+            ]
+        );
+    };
+
+    const approveTruck = async () => {
+        try {
+            setProcessing(true);
+
+            // Update truck status
+            await updateDocument('Trucks', truckData.id, {
+                isApproved: true,
+                approvalStatus: 'approved',
+                approvedAt: new Date().toISOString(),
+                approvedBy: 'admin'
+            });
+
+            // Send notification to truck owner
+            if (truckData.expoPushToken) {
+                await sendPushNotification(
+                    truckData.expoPushToken,
+                    'Truck Approved! 🎉',
+                    `Your truck (${truckData.truckType} - ${truckData.truckCapacity}) has been approved and is now visible to other users.`,
+                    '/Logistics/Trucks',
+                    { truckId: truckData.id, type: 'truck_approved' }
+                );
+            }
+
+            Alert.alert('Success', 'Truck approved successfully!', [
+                { text: 'OK', onPress: () => getData() }
+            ]);
+        } catch (error) {
+            console.error('Error approving truck:', error);
+            Alert.alert('Error', 'Failed to approve truck');
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const declineTruck = async () => {
+        if (!declineReason.trim()) {
+            Alert.alert('Error', 'Please provide a reason for declining');
+            return;
+        }
+
+        try {
+            setProcessing(true);
+
+            // Update truck status
+            await updateDocument('Trucks', truckData.id, {
+                isApproved: false,
+                approvalStatus: 'rejected',
+                rejectedAt: new Date().toISOString(),
+                rejectedBy: 'admin',
+                rejectionReason: declineReason.trim()
+            });
+
+            // Send notification to truck owner
+            if (truckData.expoPushToken) {
+                await sendPushNotification(
+                    truckData.expoPushToken,
+                    'Truck Declined',
+                    `Your truck (${truckData.truckType} - ${truckData.truckCapacity}) has been declined. Reason: ${declineReason}`,
+                    '/Logistics/Trucks',
+                    { truckId: truckData.id, type: 'truck_declined' }
+                );
+            }
+
+            Alert.alert('Success', 'Truck declined successfully!', [
+                {
+                    text: 'OK', onPress: () => {
+                        setShowDeclineModal(false);
+                        setDeclineReason('');
+                        getData();
+                    }
+                }
+            ]);
+        } catch (error) {
+            console.error('Error declining truck:', error);
+            Alert.alert('Error', 'Failed to decline truck');
+        } finally {
+            setProcessing(false);
+        }
+    };
 
     const placeholder = require('@/assets/images/failedimage.jpg')
     return (
@@ -877,6 +973,59 @@ const TruckDetails = () => {
 
                     </View>}
 
+                    {/* Admin Approval Buttons */}
+                    {dspDetails === 'admin' && !truckData.isApproved && (
+                        <View style={{ marginVertical: wp(4), gap: wp(3) }}>
+                            <ThemedText type="subtitle" style={{ textAlign: 'center', marginBottom: wp(2) }}>
+                                Admin Actions
+                            </ThemedText>
+
+                            <TouchableOpacity
+                                style={{
+                                    height: 45,
+                                    backgroundColor: '#28a745',
+                                    width: 240,
+                                    borderRadius: 21,
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    alignSelf: "center",
+                                    shadowColor: '#28a745',
+                                    shadowOffset: { width: 0, height: 2 },
+                                    shadowOpacity: 0.12,
+                                    shadowRadius: 4,
+                                    elevation: 2,
+                                }}
+                                onPress={() => handleAdminApprove()}
+                            >
+                                <ThemedText style={{ color: "white", fontWeight: 'bold' }}>
+                                    Approve Truck
+                                </ThemedText>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={{
+                                    height: 45,
+                                    backgroundColor: '#dc3545',
+                                    width: 240,
+                                    borderRadius: 21,
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    alignSelf: "center",
+                                    shadowColor: '#dc3545',
+                                    shadowOffset: { width: 0, height: 2 },
+                                    shadowOpacity: 0.12,
+                                    shadowRadius: 4,
+                                    elevation: 2,
+                                }}
+                                onPress={() => setShowDeclineModal(true)}
+                            >
+                                <ThemedText style={{ color: "white", fontWeight: 'bold' }}>
+                                    Decline Truck
+                                </ThemedText>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
                     <TouchableOpacity
                         style={{
                             height: 45,
@@ -912,6 +1061,54 @@ const TruckDetails = () => {
 
                 </View>
             </ScrollView>
+
+            {/* Admin Decline Modal */}
+            <Modal
+                visible={showDeclineModal}
+                transparent={true}
+                animationType="slide"
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: background }]}>
+                        <ThemedText type="title" style={styles.modalTitle}>
+                            Reason for Declining
+                        </ThemedText>
+
+                        <Input
+                            value={declineReason}
+                            onChangeText={setDeclineReason}
+                            placeholder="Please provide a reason for declining this truck..."
+                            multiline
+                            numberOfLines={4}
+                            style={styles.reasonInput}
+                        />
+
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: coolGray }]}
+                                onPress={() => {
+                                    setShowDeclineModal(false);
+                                    setDeclineReason('');
+                                }}
+                            >
+                                <ThemedText style={{ color: 'white', textAlign: 'center' }}>
+                                    Cancel
+                                </ThemedText>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: '#dc3545' }]}
+                                onPress={declineTruck}
+                                disabled={processing}
+                            >
+                                <ThemedText style={{ color: 'white', textAlign: 'center' }}>
+                                    {processing ? 'Declining...' : 'Decline'}
+                                </ThemedText>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </ScreenWrapper >
     )
 }
@@ -919,8 +1116,37 @@ const TruckDetails = () => {
 export default TruckDetails
 
 const styles = StyleSheet.create({
-    imageStyle: { height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 }
-
-
+    imageStyle: { height: wp(80), borderRadius: 10, width: wp(80), marginLeft: 5 },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: wp(4),
+    },
+    modalContent: {
+        width: '100%',
+        maxWidth: wp(80),
+        padding: wp(6),
+        borderRadius: wp(4),
+    },
+    modalTitle: {
+        textAlign: 'center',
+        marginBottom: wp(4),
+        fontWeight: 'bold',
+    },
+    reasonInput: {
+        marginBottom: wp(4),
+        minHeight: wp(20),
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        gap: wp(3),
+    },
+    modalButton: {
+        flex: 1,
+        paddingVertical: wp(3),
+        borderRadius: wp(2),
+    },
 });
 

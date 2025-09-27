@@ -1,34 +1,63 @@
 import moment from 'moment'
 
 export const formatDate = (_date: string | number = '', format?: string) => {
+    if (!_date) return '';
 
-    const createdData = new Date(_date);
-    const date = new Date();
+    console.log('formatDate input:', _date, 'type:', typeof _date);
 
+    // Handle different date formats
+    let createdData;
+    if (typeof _date === 'string') {
+        // If it's a string, try to parse it as a number first (timestamp)
+        if (!isNaN(Number(_date))) {
+            createdData = new Date(Number(_date));
+        } else {
+            createdData = new Date(_date);
+        }
+    } else {
+        createdData = new Date(_date);
+    }
 
-    const createdDate = new Date(createdData);
-    const diffInSeconds = Math.floor((date.valueOf() - parseInt(_date.toString())) / 1000);
+    // Check if the date is valid
+    if (isNaN(createdData.getTime())) {
+        console.log('Invalid date:', _date);
+        return 'Invalid date';
+    }
+
+    const now = new Date();
+    const diffInMs = now.getTime() - createdData.getTime();
+    const diffInSeconds = Math.floor(diffInMs / 1000);
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     const diffInHours = Math.floor(diffInMinutes / 60);
     const diffInDays = Math.floor(diffInHours / 24);
 
+    console.log('Date calculation:', {
+        createdData: createdData.toISOString(),
+        now: now.toISOString(),
+        diffInMs,
+        diffInDays
+    });
 
+
+    // Handle future dates (if createdData is in the future)
+    if (diffInMs < 0) {
+        return moment(createdData).format(format || 'DD MMM, YYYY');
+    }
+
+    // Handle past dates
     if (diffInHours < 24) {
         if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
         if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
-        return `${diffInHours} hours ago`;
+        return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
     } else if (diffInDays < 7) {
         return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-    } else if (date.getDate() === createdData.getDate() && date.getMonth() === createdData.getMonth() && date.getFullYear() === createdData.getFullYear()) {
-        return moment(_date).format(format || 'HH:mm');
-    } else if ((date.getDate() - 1) === createdData.getDate() && date.getMonth() === createdData.getMonth() && date.getFullYear() === createdData.getFullYear()) {
-        return 'Yesterday';
-    } else if ((date.getDate() - 7) < createdData.getDate() && date.getMonth() === createdData.getMonth() && date.getFullYear() === createdData.getFullYear()) {
-        return moment(_date).format(format || 'dddd');
     } else {
-        return moment(_date).format(format || 'DD MMM, YYYY');
+        return moment(createdData).format(format || 'DD MMM, YYYY');
     }
 }
+
+// Alias for formatDate to maintain backward compatibility
+export const getDate = formatDate;
 
 
 export const cleanNumber = (text: string) => {

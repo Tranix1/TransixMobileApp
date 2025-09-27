@@ -20,14 +20,14 @@ export type Truck = {
 
     created_at: string,
     CompanyName: string;
-    contact : string;
+    contact: string;
     driverLicense: string;
     driverPassport: string;
-    driverIntPermit : string;
-gitImage : string ;
-truckNumberPlate : string ;
-truckThirdPlate : string ;
-brokerName : string ;
+    driverIntPermit: string;
+    gitImage: string;
+    truckNumberPlate: string;
+    truckThirdPlate: string;
+    brokerName: string;
 
     id: string;
     imageUrl: string;
@@ -53,6 +53,21 @@ brokerName : string ;
     name: string;
     userId: string;
     withDetails: boolean;
+
+    // Approval system fields
+    isApproved?: boolean;
+    approvalStatus?: 'pending' | 'approved' | 'rejected' | 'edited';
+    submittedAt?: string;
+    approvedAt?: string;
+    rejectedAt?: string;
+    approvedBy?: string;
+    rejectedBy?: string;
+    rejectionReason?: string;
+    userType?: 'Owner' | 'Broker';
+
+    // Tracker system
+    hasTracker?: boolean;
+    expoPushToken?: string;
 } & TruckFormData;
 
 
@@ -180,20 +195,20 @@ export type LoadFormData = {
     returnTerms: string
     loadingDate: string
 }
-    type SelectedOption = { id: number; name: string } | null;
-    
-   export type TruckNeededType =  {
-        cargoArea: TruckTypeProps | null;
-        truckType: SelectedOption;
-        tankerType: SelectedOption;
-        capacity: SelectedOption;
-        operationCountries: string[];
-    }
+type SelectedOption = { id: number; name: string } | null;
+
+export type TruckNeededType = {
+    cargoArea: TruckTypeProps | null;
+    truckType: SelectedOption;
+    tankerType: SelectedOption;
+    capacity: SelectedOption;
+    operationCountries: string[];
+}
 export type Load = {
     id: string,
     distance: string,
-    duration : string,
-    durationInTraffic : string,
+    duration: string,
+    durationInTraffic: string,
     created_at: string,
     destination: string,
     userId: string;
@@ -212,8 +227,8 @@ export type Load = {
     roundTrip: boolean
     isVerified: boolean
     trucksRequired: TruckNeededType[]
-proofOfOrder : string ;
-proofOfOrderType : string
+    proofOfOrder: string;
+    proofOfOrderType: string
 
 } & LoadFormData;
 
@@ -258,7 +273,7 @@ export type ContractsFormDataScndType = {
     alertMsg: string;
     fuelAvai: string;
     additionalInfo: string;
-    trucksRequiredNum:string
+    trucksRequiredNum: string
 }
 
 export type ContractsFormDataType = {
@@ -315,7 +330,7 @@ export type Contracts = {
     contractId: string;
     contractName: string
     userId: string
-    contractLocation : string[]
+    contractLocation: string[]
 }
 
 
@@ -340,19 +355,19 @@ export type SpecifyTruckDetailsProps = {
 
     operationCountries: string[]
     setOperationCountries: React.Dispatch<React.SetStateAction<string[]>>;
-} 
-
-export type DocumentAsset= {
-  name: string
-  uri: string;
-  size: number;
-  mimeType?: string; // sometimes contentType instead
-
-  // Add any other properties here
 }
 
-export type SelectLocationProp ={
-    
+export type DocumentAsset = {
+    name: string
+    uri: string;
+    size: number;
+    mimeType?: string; // sometimes contentType instead
+
+    // Add any other properties here
+}
+
+export type SelectLocationProp = {
+
     description: string;
     placeId: string;
     latitude: number;

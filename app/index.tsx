@@ -1,4 +1,4 @@
-import  { useCallback, useRef } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { StyleSheet, TouchableNativeFeedback, View, LogBox } from "react-native";
@@ -9,10 +9,15 @@ import Trucks from "./Logistics/Trucks/Index";
 import Account from "./Account/SignUp";
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { FontAwesome6, Fontisto, Octicons, Entypo,  } from "@expo/vector-icons";
+import { FontAwesome6, Fontisto, Octicons, Entypo, } from "@expo/vector-icons";
 import { hp, wp } from "@/constants/common";
 import { router } from "expo-router";
 import ScreenWrapper from "@/components/ScreenWrapper";
+import AppLoadingScreen from "@/components/AppLoadingScreen";
+import UpdateModal from "@/components/UpdateModal";
+import { useAuthState } from "@/hooks/useAuthState";
+import { useAppUpdate } from "@/hooks/useAppUpdate";
+import NetInfo from '@react-native-community/netinfo';
 
 const Tab = createBottomTabNavigator();
 
@@ -22,7 +27,124 @@ export default function Index() {
   const background = useThemeColor("background");
   const backgroundColor = useThemeColor("background");
 
- 
+  const [isAppReady, setIsAppReady] = useState(false);
+  const [isConnectedInternet, setIsConnectedInternet] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [versionCheckComplete, setVersionCheckComplete] = useState(false);
+  const versionCheckRun = useRef(false);
+
+  const {
+    isLoading: authLoading,
+    isAuthenticated,
+    user,
+    needsProfileSetup,
+    needsEmailVerification,
+    error: authError,
+  } = useAuthState();
+
+  const {
+    showUpdateModal,
+    currentVersion,
+    latestVersion,
+    isForceUpdate,
+    checkForUpdate,
+    dismissUpdate,
+    isLoading: updateLoading
+  } = useAppUpdate();
+
+  // Check internet connection
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnectedInternet(state.isConnected as any);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Simulate loading progress
+  useEffect(() => {
+    if (authLoading) {
+      const progressInterval = setInterval(() => {
+        setLoadingProgress(prev => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 10;
+        });
+      }, 200);
+
+      return () => clearInterval(progressInterval);
+    } else {
+      setLoadingProgress(100);
+    }
+  }, [authLoading]);
+
+  // Determine if app is ready to show main content
+  useEffect(() => {
+    console.log('Auth loading:', authLoading, 'App ready:', isAppReady, 'Version check complete:', versionCheckComplete);
+    if (!authLoading) {
+      // Add a small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        console.log('Setting app ready to true');
+        setIsAppReady(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading]);
+
+  // Check for updates after app is ready - wait for completion before showing main content
+  useEffect(() => {
+    if (isAppReady && isConnectedInternet && !versionCheckRun.current) {
+      versionCheckRun.current = true;
+      console.log('Running version check...');
+
+      // Add timeout to prevent hanging
+      const versionTimeout = setTimeout(() => {
+        console.log('Version check timeout - allowing app to continue');
+        setVersionCheckComplete(true);
+      }, 5000); // 5 second timeout
+
+      // Run version check and wait for completion
+      checkForUpdate().then(() => {
+        clearTimeout(versionTimeout);
+        console.log('Version check completed, showUpdateModal:', showUpdateModal);
+        setVersionCheckComplete(true);
+      }).catch(error => {
+        clearTimeout(versionTimeout);
+        console.log('Version check failed:', error);
+        setVersionCheckComplete(true); // Still allow app to show even if version check fails
+      });
+    }
+  }, [isAppReady, isConnectedInternet]);
+
+  // Show loading screen while app is initializing or version check is running
+  if (!isAppReady || authLoading || !versionCheckComplete) {
+    return (
+      <ScreenWrapper>
+        <View style={{ flex: 1, backgroundColor: background }}>
+          <AppLoadingScreen
+            message="Initializing Transix..."
+            showProgress={true}
+            progress={loadingProgress}
+          />
+        </View>
+      </ScreenWrapper>
+    );
+  }
+
+  // Show error state if there's an authentication error
+  if (authError) {
+    return (
+      <ScreenWrapper>
+        <View style={{ flex: 1, backgroundColor: background }}>
+          <AppLoadingScreen
+            message="Something went wrong. Please try again."
+          />
+        </View>
+      </ScreenWrapper>
+    );
+  }
+
+  // Debug log for update modal state
+  console.log('Update modal state - showUpdateModal:', showUpdateModal, 'currentVersion:', currentVersion, 'latestVersion:', latestVersion);
+
   return (
     <ScreenWrapper>
 
@@ -82,6 +204,16 @@ export default function Index() {
           <Tab.Screen name="Trucks" component={Trucks} />
           <Tab.Screen name="Store" component={Store} />
         </Tab.Navigator>
+
+        {/* Update Modal */}
+        <UpdateModal
+          visible={showUpdateModal}
+          onClose={dismissUpdate}
+          currentVersion={currentVersion}
+          latestVersion={latestVersion}
+          updateUrl="https://play.google.com/store/apps/details?id=com.yayapana.TransixNewVersion"
+          isForceUpdate={isForceUpdate}
+        />
       </View>
     </ScreenWrapper>
 

@@ -3,6 +3,13 @@
   "compilerOptions": {
     "strict": true,
     "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "isolatedModules": true,
     "paths": {
       "@/*": [
         "./*"
@@ -16,9 +23,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts",
-    "app/BookiAndBids/Index.js",
-    "app/MakeOffer/BookBidlCargo.tsx"
+    "expo-env.d.ts"
   ],
   "exclude": [
     "node_modules"

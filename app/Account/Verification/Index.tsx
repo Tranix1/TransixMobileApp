@@ -8,7 +8,10 @@ import ScreenWrapper from '@/components/ScreenWrapper';
 import { fetchDocuments } from '@/db/operations';
 import { useAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
-import { where } from 'firebase/firestore';
+import { where, query, collection, getDocs, limit } from 'firebase/firestore';
+import { db } from '@/db/fireBaseConfig';
+import { formatDate } from '@/services/services';
+import { router } from 'expo-router';
 
 
 export default function VerificationIndex() {
@@ -28,6 +31,7 @@ export default function VerificationIndex() {
     const coolGray = useThemeColor('coolGray')
     const [selectedVerification, setSelectedVerification] = useState<string | null>(null);
     const [truckPersonDetails, setTruckPersonDetails] = useState<any>(null);
+    console.log(truckPersonDetails);
     const [truckDetailsLoading, setTruckDetailsLoading] = useState(false);
 
     const appSections = ['Trucks',
@@ -46,16 +50,42 @@ export default function VerificationIndex() {
 
         setTruckDetailsLoading(true);
         try {
-            const result = await fetchDocuments(
-                'truckPersonDetails',
-                1,
-                null,
-                [where('userId', '==', user.uid)]
-            );
+            // Method 1: Direct query without timeStamp ordering
+            try {
+                const q = query(
+                    collection(db, 'truckPersonDetails'),
+                    where('userId', '==', user.uid),
+                    limit(1)
+                );
 
-            if (result && result.data && result.data.length > 0) {
-                setTruckPersonDetails(result.data[0]);
-            } else {
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    const doc = querySnapshot.docs[0];
+                    const data = { id: doc.id, ...doc.data() };
+                    setTruckPersonDetails(data);
+                    return;
+                }
+            } catch (directQueryError) {
+                console.log('Direct query failed, trying fetchDocuments:', directQueryError);
+            }
+
+            // Method 2: Fallback to fetchDocuments with proper error handling
+            try {
+                const result = await fetchDocuments(
+                    'truckPersonDetails',
+                    1,
+                    null,
+                    [where('userId', '==', user.uid)]
+                );
+
+                if (result && result.data && result.data.length > 0) {
+                    setTruckPersonDetails(result.data[0]);
+                } else {
+                    setTruckPersonDetails(null);
+                }
+            } catch (fetchDocumentsError) {
+                console.error('Both query methods failed:', fetchDocumentsError);
                 setTruckPersonDetails(null);
             }
         } catch (error) {
@@ -208,6 +238,18 @@ export default function VerificationIndex() {
                                     </View>
                                 </View>
 
+                                {/* Created At */}
+                                {truckPersonDetails.createdAt && (
+                                    <View style={{ marginBottom: wp(2) }}>
+                                        <ThemedText style={{ color: textColor, fontSize: wp(3.5) }}>
+                                            Created: {formatDate(truckPersonDetails.createdAt)}
+                                        </ThemedText>
+                                        <ThemedText style={{ color: icon, fontSize: wp(2.5) }}>
+                                            Raw: {JSON.stringify(truckPersonDetails.createdAt)}
+                                        </ThemedText>
+                                    </View>
+                                )}
+
                                 {/* Additional Details */}
                                 {truckPersonDetails.companyName && (
                                     <View style={{ marginBottom: wp(2) }}>
@@ -220,7 +262,7 @@ export default function VerificationIndex() {
                                 {truckPersonDetails.submittedAt && (
                                     <View style={{ marginBottom: wp(2) }}>
                                         <ThemedText style={{ color: textColor, fontSize: wp(3.5) }}>
-                                            Submitted: {new Date(truckPersonDetails.submittedAt).toLocaleDateString()}
+                                            Submitted: {formatDate(truckPersonDetails.submittedAt)}
                                         </ThemedText>
                                     </View>
                                 )}
@@ -228,14 +270,19 @@ export default function VerificationIndex() {
                                 {truckPersonDetails.approvedAt && (
                                     <View style={{ marginBottom: wp(2) }}>
                                         <ThemedText style={{ color: textColor, fontSize: wp(3.5) }}>
-                                            Approved: {new Date(truckPersonDetails.approvedAt).toLocaleDateString()}
+                                            Approved: {formatDate(truckPersonDetails.approvedAt)}
                                         </ThemedText>
                                     </View>
                                 )}
 
-                                {/* Refresh Button */}
+                                {/* View Details Button */}
                                 <TouchableOpacity
-                                    onPress={fetchTruckPersonDetails}
+                                    onPress={() => {
+                                        router.push({
+                                            pathname: '/Account/Verification/TruckDetailsView',
+                                            params: { details: JSON.stringify(truckPersonDetails) }
+                                        });
+                                    }}
                                     style={{
                                         backgroundColor: accent,
                                         paddingVertical: wp(2.5),
@@ -246,7 +293,7 @@ export default function VerificationIndex() {
                                     }}
                                 >
                                     <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>
-                                        Refresh Status
+                                        View Details
                                     </ThemedText>
                                 </TouchableOpacity>
                             </View>

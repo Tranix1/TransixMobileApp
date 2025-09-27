@@ -97,7 +97,7 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
                         </View>
 
                         {/* Truck Status - Smooth beside capacity */}
-                       {truck.userId === auth.currentUser?.uid && <ThemedText numberOfLines={1} type='tiny' style={[{
+                        {truck.userId === auth.currentUser?.uid && <ThemedText numberOfLines={1} type='tiny' style={[{
                             fontSize: 13,
                             fontWeight: 'bold',
                             color: truck.approvalStatus === 'approved' ? '#0f9d58' :

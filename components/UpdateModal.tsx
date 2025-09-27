@@ -182,6 +182,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         paddingVertical: wp(3),
         borderRadius: wp(3),
+        paddingHorizontal: wp(3),
         gap: wp(2),
     },
     updateButtonText: {
@@ -194,6 +195,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         borderWidth: 1,
         borderColor: '#e0e7ef',
+        paddingHorizontal: wp(4),
     },
     laterButtonText: {
         fontWeight: "600",

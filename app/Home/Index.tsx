@@ -4,7 +4,6 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { router } from "expo-router";
 import { useAuth } from '@/context/AuthContext';
 import CustomHeader from '@/components/CustomHeader';
-import AppLoadingScreen from '@/components/AppLoadingScreen';
 import AuthStatusModal from '@/components/AuthStatusModal';
 import UserMenuModal from '@/components/UserMenuModal';
 import UpdateModal from '@/components/UpdateModal';
@@ -16,12 +15,10 @@ import NetInfo from '@react-native-community/netinfo';
 function Index() {
     const { user: contextUser } = useAuth();
     const {
-        isLoading,
         isAuthenticated,
         user,
         needsProfileSetup,
         needsEmailVerification,
-        error,
         updateUserProfile
     } = useAuthState();
 
@@ -51,22 +48,14 @@ function Index() {
     }, []);
 
     useEffect(() => {
-        if (!isLoading) {
-            // Fade in animation when content is ready
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 300,
-                useNativeDriver: true,
-            }).start();
-        }
-    }, [isLoading]);
+        // Fade in animation when content is ready
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+        }).start();
+    }, []);
 
-    // Check for app updates when component mounts
-    useEffect(() => {
-        if (!isLoading && isConnectedInternet) {
-            checkForUpdate();
-        }
-    }, [isLoading, isConnectedInternet]);
 
     const checkAuth = (theAction?: () => void) => {
         if (!isConnectedInternet) {
@@ -97,25 +86,6 @@ function Index() {
         }
     };
 
-    // Show loading screen while checking authentication
-    if (isLoading) {
-        return (
-            <AppLoadingScreen
-                message="Initializing Transix..."
-                showProgress={true}
-                progress={75}
-            />
-        );
-    }
-
-    // Show error state if there's an authentication error
-    if (error) {
-        return (
-            <AppLoadingScreen
-                message="Something went wrong. Please try again."
-            />
-        );
-    }
 
     return (
         <View style={styles.container}>

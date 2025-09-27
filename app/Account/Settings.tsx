@@ -118,6 +118,38 @@ const Settings = () => {
                                     </View>
                                 </TouchableNativeFeedback>
                             </View>
+                            <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/UpdateVersion')}>
+                                    <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                        <Ionicons name='refresh-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                        <View style={{ flex: 1 }}>
+                                            <ThemedText type='default'>
+                                                Update Version
+                                            </ThemedText>
+                                            <ThemedText type='tiny' color={coolgray}>
+                                                Update app version and force updates
+                                            </ThemedText>
+                                        </View>
+                                        <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                    </View>
+                                </TouchableNativeFeedback>
+                            </View>
+                            <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/ApproveTrucks')}>
+                                    <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                        <Ionicons name='checkmark-circle-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                        <View style={{ flex: 1 }}>
+                                            <ThemedText type='default'>
+                                                Approve Trucks
+                                            </ThemedText>
+                                            <ThemedText type='tiny' color={coolgray}>
+                                                Review and approve pending trucks
+                                            </ThemedText>
+                                        </View>
+                                        <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                    </View>
+                                </TouchableNativeFeedback>
+                            </View>
                         </View>
                     </>
                 )}

@@ -99,7 +99,7 @@ function AddTrucks() {
 
       await setDocuments("truckPersonDetails", { 
         userId: user?.uid,
-        personType: 'owner',
+        accType: 'owner',
         ownerName: ownerNameAddDb, 
         ownerPhoneNum: ownerPhonNumAddDb, 
         ownerEmail: ownerEmailAddDb,
@@ -159,7 +159,7 @@ function AddTrucks() {
     }
     await setDocuments("truckPersonDetails", {
        userId: user?.uid,
-       personType: 'broker',
+       accType: 'broker',
        typeOfBroker: typeOfBroker,
         brokerName: ownerNameAddDb, 
         brokerPhoneNum: ownerPhonNumAddDb,
@@ -214,9 +214,9 @@ useEffect(() => {
     // Check for both owner and broker in the unified collection
     const personDetails = await getDocById('truckPersonDetails', (data) => {
       if (data) {
-        if (data.personType === 'owner') {
+        if (data.accType === 'owner') {
           setOwnerDetails(data || null);
-        } else if (data.personType === 'broker') {
+        } else if (data.accType === 'broker') {
           setBrokerDetails(data || null);
         }
       }
