@@ -63,8 +63,8 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
                         <ThemedText numberOfLines={1} type='tiny' style={[{ fontSize: 13 }]}>
                             {/* {truck.truckType || 'N/A'} */}
 
-                            {truck.ownerName && "Owner"}
-                            {truck.brokerName && "Broker"}
+                                    {truck.accType === 'owner' && "Owner"}
+                            {truck.accType === 'broker' && "Broker"}
                         </ThemedText>
 
                     </View>

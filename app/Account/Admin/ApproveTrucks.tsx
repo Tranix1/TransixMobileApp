@@ -13,6 +13,7 @@ import { where } from 'firebase/firestore';
 import { Image } from 'expo-image';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { fixFirebaseUrl } from '@/Utilities/utils';
 import Button from '@/components/Button';
 
 const ApproveTrucks = () => {
@@ -71,7 +72,7 @@ const ApproveTrucks = () => {
         >
             <View style={styles.truckImageContainer}>
                 <Image
-                    source={{ uri: truck.imageUrl || 'https://via.placeholder.com/100' }}
+                    source={{ uri: fixFirebaseUrl(truck.imageUrl) || 'https://via.placeholder.com/100' }}
                     style={styles.truckImage}
                 />
             </View>

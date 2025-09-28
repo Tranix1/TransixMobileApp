@@ -7,6 +7,34 @@ import * as DocumentPicker from 'expo-document-picker';
 import { DocumentAsset } from '@/types/types';
 import * as Location from 'expo-location';
 
+/**
+ * Fixes Firebase Storage URL encoding issues
+ * Firebase Storage URLs need proper URL encoding for the path part
+ * @param url - The Firebase Storage URL to fix
+ * @returns The properly encoded URL
+ */
+export function fixFirebaseUrl(url: string): string {
+  if (!url) return url;
+
+  // Check if it's a Firebase Storage URL
+  if (url.includes('firebasestorage.googleapis.com')) {
+    // Extract the path part and encode it properly
+    const urlParts = url.split('/o/');
+    if (urlParts.length === 2) {
+      const [baseUrl, pathAndQuery] = urlParts;
+      const [path, query] = pathAndQuery.split('?');
+
+      // URL encode the path part (replace / with %2F)
+      const encodedPath = encodeURIComponent(path);
+
+      // Reconstruct the URL
+      return `${baseUrl}/o/${encodedPath}${query ? `?${query}` : ''}`;
+    }
+  }
+
+  return url;
+}
+
 // Reusable function to toggle local country
 export function toggleLocalCountry(
   count: string,

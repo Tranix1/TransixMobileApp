@@ -6,7 +6,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { wp } from '@/constants/common';
 import { fetchDocuments } from '@/db/operations';
-import { where } from 'firebase/firestore';
+import { where, collection, query, getDocs, orderBy } from 'firebase/firestore';
+import { db } from '@/db/fireBaseConfig';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import Button from '@/components/Button';
@@ -27,7 +28,7 @@ interface TruckPersonDetails {
     createdAt: string;
     submittedAt?: string;
     isApproved: boolean;
-    approvalStatus: 'pending' | 'approved' | 'rejected';
+    approvalStatus: 'pending' | 'approved' | 'rejected' | 'edited';
     approvedAt?: string;
     rejectedAt?: string;
     rejectionReason?: string;
@@ -35,6 +36,7 @@ interface TruckPersonDetails {
 
 const ApproveTruckAccounts = () => {
     const [truckAccounts, setTruckAccounts] = useState<TruckPersonDetails[]>([]);
+    console.log(truckAccounts);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -51,13 +53,26 @@ const ApproveTruckAccounts = () => {
     const loadPendingTruckAccounts = async () => {
         try {
             setLoading(true);
+
+       
+
+            // Now try with filters - using direct Firestore query
             const filters = [
                 where("approvalStatus", "in", ["pending", "edited"]),
                 where("isApproved", "==", false)
             ];
 
-            const result = await fetchDocuments("truckPersonDetails", 50, undefined, filters);
-            setTruckAccounts(result.data || []);
+            console.log('Loading truck accounts with filters:', filters);
+            const filteredQuery = query(
+                collection(db, 'truckPersonDetails'),
+                ...filters
+            );
+            const filteredSnapshot = await getDocs(filteredQuery);
+            const filteredData = filteredSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            console.log('Fetched result with filters:', filteredData);
+            console.log('Data length with filters:', filteredData.length);
+            setTruckAccounts(filteredData as TruckPersonDetails[]);
         } catch (error) {
             console.error('Error loading pending truck accounts:', error);
             Alert.alert('Error', 'Failed to load truck accounts');

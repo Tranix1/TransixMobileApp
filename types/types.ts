@@ -27,7 +27,7 @@ export type Truck = {
     gitImage: string;
     truckNumberPlate: string;
     truckThirdPlate: string;
-    brokerName: string;
+    accType: string;
 
     id: string;
     imageUrl: string;
@@ -35,7 +35,6 @@ export type Truck = {
     locations: string[];
 
     onwerEmail: string;
-    ownerName: string;
     ownerPhoneNum: string;
     timeStamp: {
         nanoseconds: number;

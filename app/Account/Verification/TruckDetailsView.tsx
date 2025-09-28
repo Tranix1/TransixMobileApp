@@ -15,6 +15,7 @@ import ImageViewing from 'react-native-image-viewing';
 import { BlurView } from 'expo-blur';
 import Button from '@/components/Button';
 import PDFViewer from '@/components/PDFViewer';
+import { fixFirebaseUrl } from '@/Utilities/utils';
 
 interface TruckPersonDetails {
     id: string;
@@ -95,26 +96,26 @@ const TruckDetailsView = () => {
 
         if (details.accType === 'owner') {
             if (details.ownershipProof && details.proofOfTruckOwnerhipType === 'image') {
-                imageList.push(details.ownershipProof);
+                imageList.push(fixFirebaseUrl(details.ownershipProof));
             }
             if (details.directorOwnerId && details.directorOwnerIdType === 'image') {
-                imageList.push(details.directorOwnerId);
+                imageList.push(fixFirebaseUrl(details.directorOwnerId));
             }
             if (details.ownerProofOfRes && details.ownerProofOfResType === 'image') {
-                imageList.push(details.ownerProofOfRes);
+                imageList.push(fixFirebaseUrl(details.ownerProofOfRes));
             }
         } else if (details.accType === 'broker') {
             if (details.brockerId && details.brockerIdType === 'image') {
-                imageList.push(details.brockerId);
+                imageList.push(fixFirebaseUrl(details.brockerId));
             }
             if (details.proofOfResidence && details.proofOfResidenceType === 'image') {
-                imageList.push(details.proofOfResidence);
+                imageList.push(fixFirebaseUrl(details.proofOfResidence));
             }
             if (details.companyRegCertificate && details.companyRegCertificateType === 'image') {
-                imageList.push(details.companyRegCertificate);
+                imageList.push(fixFirebaseUrl(details.companyRegCertificate));
             }
             if (details.companyLtterHead && details.companyLtterHeadType === 'image') {
-                imageList.push(details.companyLtterHead);
+                imageList.push(fixFirebaseUrl(details.companyLtterHead));
             }
         }
 
@@ -127,14 +128,15 @@ const TruckDetailsView = () => {
     };
 
     const handleDocumentPress = (url: string, type: string, title: string) => {
+        const fixedUrl = fixFirebaseUrl(url);
         if (type === 'pdf') {
             // Open PDF in viewer
-            setCurrentPdfUrl(url);
+            setCurrentPdfUrl(fixedUrl);
             setCurrentPdfTitle(title);
             setPdfViewerVisible(true);
         } else {
             // Open image in viewer
-            const imageIndex = images.findIndex(img => img === url);
+            const imageIndex = images.findIndex(img => img === fixedUrl);
             if (imageIndex !== -1) {
                 handleImagePress(imageIndex);
             }

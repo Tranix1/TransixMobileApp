@@ -1,4 +1,4 @@
-import { View, ScrollView, RefreshControl, TouchableOpacity, Modal, TouchableNativeFeedback, Linking, Pressable, ToastAndroid, Dimensions, StyleSheet } from "react-native";
+import { View, ScrollView, RefreshControl, TouchableOpacity, Modal, TouchableNativeFeedback, Linking, Pressable, ToastAndroid, Dimensions, StyleSheet, Alert } from "react-native";
 
 import { router, useLocalSearchParams } from "expo-router";
 import ScreenWrapper from "@/components/ScreenWrapper";
@@ -258,12 +258,12 @@ const TruckDetails = () => {
 
     // Admin approval functions
     const handleAdminApprove = async () => {
-        Alert.alert(
+        alertBox(
             'Approve Truck',
             'Are you sure you want to approve this truck?',
             [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Approve', onPress: () => approveTruck() }
+                // { title: 'Cancel', onPress: () => { } },
+                { title: 'Approve', onPress: () => approveTruck() }
             ]
         );
     };
@@ -291,12 +291,12 @@ const TruckDetails = () => {
                 );
             }
 
-            Alert.alert('Success', 'Truck approved successfully!', [
-                { text: 'OK', onPress: () => getData() }
+            alertBox('Success', 'Truck approved successfully!', [
+                { title: 'OK', onPress: () => getData() }
             ]);
         } catch (error) {
             console.error('Error approving truck:', error);
-            Alert.alert('Error', 'Failed to approve truck');
+            alertBox('Error', 'Failed to approve truck', [], 'error');
         } finally {
             setProcessing(false);
         }
@@ -304,7 +304,7 @@ const TruckDetails = () => {
 
     const declineTruck = async () => {
         if (!declineReason.trim()) {
-            Alert.alert('Error', 'Please provide a reason for declining');
+            alertBox('Error', 'Please provide a reason for declining', [], 'error');
             return;
         }
 
@@ -331,9 +331,9 @@ const TruckDetails = () => {
                 );
             }
 
-            Alert.alert('Success', 'Truck declined successfully!', [
+            alertBox('Success', 'Truck declined successfully!', [
                 {
-                    text: 'OK', onPress: () => {
+                    title: 'OK', onPress: () => {
                         setShowDeclineModal(false);
                         setDeclineReason('');
                         getData();
@@ -342,7 +342,7 @@ const TruckDetails = () => {
             ]);
         } catch (error) {
             console.error('Error declining truck:', error);
-            Alert.alert('Error', 'Failed to decline truck');
+            alertBox('Error', 'Failed to decline truck', [], 'error');
         } finally {
             setProcessing(false);
         }
@@ -745,8 +745,6 @@ const TruckDetails = () => {
                     </View>
 
 
-
-
                     {/* <Divider /> */}
                     <View style={{}}>
                         <View style={{ flexDirection: 'row' }}>
@@ -785,7 +783,7 @@ const TruckDetails = () => {
                     }
 
                     {/* Tracker Status Section */}
-                    <View style={{
+                    {user?.uid === truckData.userId && <View style={{
                         backgroundColor: backgroundLight,
                         padding: wp(3),
                         borderRadius: 8,
@@ -853,7 +851,7 @@ const TruckDetails = () => {
                                 </ThemedText>
                             </TouchableOpacity>
                         )}
-                    </View>
+                    </View>}
 
                     {(dspDetails === "true" || user?.uid === truckData.userId) && <View>
                         <ThemedText style={{ textAlign: 'center', marginVertical: wp(4), color: "#1E90FF" }}>Truck Details</ThemedText>

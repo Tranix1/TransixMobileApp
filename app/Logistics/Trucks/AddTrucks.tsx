@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, ToastAndroid ,ActivityIndicator} from "react-native"
+import { View, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, ToastAndroid, ActivityIndicator } from "react-native"
 
 import { countryCodes, } from "@/data/appConstants";
 
@@ -65,9 +65,9 @@ function AddTrucks() {
   const [ownerPhonNumAddDb, setOwnerPhoneNum] = useState('');
 
   const [selectedOwnerDocuments, setSelectedOwnerDocumentS] = useState<DocumentAsset[]>([]);
-  const [ownerFileType , setOwnerFileType ] =React.useState<('pdf' | 'image')[]>([])
+  const [ownerFileType, setOwnerFileType] = React.useState<('pdf' | 'image')[]>([])
   const [selectedBrokerDocuments, setSelectedBrokerDocumentS] = useState<DocumentAsset[]>([]);
-  const [brokerFileType , setBrokerFileType ] =React.useState<('pdf' | 'image')[]>([])
+  const [brokerFileType, setBrokerFileType] = React.useState<('pdf' | 'image')[]>([])
 
 
 
@@ -97,23 +97,23 @@ function AddTrucks() {
       ownerProofOfRes = await uploadImage(selectedOwnerDocuments[2], "TruckOwnership", setUploadImageUpdate, "Proof Of Res uploading");
 
 
-      await setDocuments("truckPersonDetails", { 
+      await setDocuments("truckPersonDetails", {
         userId: user?.uid,
         accType: 'owner',
-        ownerName: ownerNameAddDb, 
-        ownerPhoneNum: ownerPhonNumAddDb, 
+        ownerName: ownerNameAddDb,
+        ownerPhoneNum: ownerPhonNumAddDb,
         ownerEmail: ownerEmailAddDb,
-         ownershipProof: proofOfTruckOwnerhip ||null, 
-        directorOwnerId: directorOwnerId||null , 
-        ownerProofOfRes: ownerProofOfRes||null ,
+        ownershipProof: proofOfTruckOwnerhip || null,
+        directorOwnerId: directorOwnerId || null,
+        ownerProofOfRes: ownerProofOfRes || null,
 
-        proofOfTruckOwnerhipType : ownerFileType[0]||null,
-        directorOwnerIdType : ownerFileType[1]||null,
-        ownerProofOfResType : ownerFileType[2]||null ,
+        proofOfTruckOwnerhipType: ownerFileType[0] || null,
+        directorOwnerIdType: ownerFileType[1] || null,
+        ownerProofOfResType: ownerFileType[2] || null,
         createdAt: Date.now().toString(),
         isApproved: false,
         approvalStatus: 'pending'
-       })
+      })
       setOwnerdetailsDsp(false)
       ToastAndroid.show("Store Details created successfully!", ToastAndroid.SHORT);
     } catch (error) {
@@ -158,80 +158,79 @@ function AddTrucks() {
 
     }
     await setDocuments("truckPersonDetails", {
-       userId: user?.uid,
-       accType: 'broker',
-       typeOfBroker: typeOfBroker,
-        brokerName: ownerNameAddDb, 
-        brokerPhoneNum: ownerPhonNumAddDb,
-         brokerEmail: ownerEmailAddDb,
-          brockerId: brockerId || null, 
-          proofOfResidence: proofOfResidence || null, 
-          companyRegCertificate: companyRegCertificate || null,
-           companyLtterHead: companyLtterHead || null ,
-           brockerIdType : brokerFileType[0] ||null,
-           proofOfResidenceType : brokerFileType[1] ||null,
-           companyRegCertificateType : brokerFileType[2]||null ,
-           companyLtterHeadType : brokerFileType[3]||null ,
-           createdAt: Date.now().toString(),
-           isApproved: false,
-           approvalStatus: 'pending'
-          })
+      userId: user?.uid,
+      accType: 'broker',
+      typeOfBroker: typeOfBroker,
+      brokerName: ownerNameAddDb,
+      brokerPhoneNum: ownerPhonNumAddDb,
+      brokerEmail: ownerEmailAddDb,
+      brockerId: brockerId || null,
+      proofOfResidence: proofOfResidence || null,
+      companyRegCertificate: companyRegCertificate || null,
+      companyLtterHead: companyLtterHead || null,
+      brockerIdType: brokerFileType[0] || null,
+      proofOfResidenceType: brokerFileType[1] || null,
+      companyRegCertificateType: brokerFileType[2] || null,
+      companyLtterHeadType: brokerFileType[3] || null,
+      createdAt: Date.now().toString(),
+      isApproved: false,
+      approvalStatus: 'pending'
+    })
     setOwnerdetailsDsp(false)
 
     ToastAndroid.show("Broker Details submitted successfully!", ToastAndroid.SHORT);
   }
 
   interface TruckOwner {
-    ownerName: string;
-    ownerPhoneNum: string;
-    ownerEmail: string;
-    ownerProofOfRes: string;
-    directorOwnerId: string;
-    ownershipProof: string;
+    docId: string;
+    isApproved: boolean;
+    accType: 'owner';
   }
-
 
   interface TruckBroker {
-    brokerName: string;
-    brokerPhoneNum: string;
-    brokerEmail: string;
-    ownerProofOfRes: string;
-    proofOfResidence: string;
-    companyRegCertificate: string;
-    companyLetterHead: string;
-    brockerId: string;
+    docId: string;
+    isApproved: boolean;
+    accType: 'broker';
   }
 
 
 
-const [getOwnerDetails, setOwnerDetails] = useState<TruckOwner | null>(null);
-const [getBrokerDetails, setBrokerDetails] = useState<TruckBroker | null>(null);
-const [loading, setLoading] = useState(true);
-const [dataChecked, setDataChecked] = useState(false); // controls UI entry
+  const [getOwnerDetails, setOwnerDetails] = useState<TruckOwner | null>(null);
+  const [getBrokerDetails, setBrokerDetails] = useState<TruckBroker | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [dataChecked, setDataChecked] = useState(false); // controls UI entry
 
-useEffect(() => {
-  const fetchAll = async () => {
-    // Check for both owner and broker in the unified collection
-    const personDetails = await getDocById('truckPersonDetails', (data) => {
-      if (data) {
-        if (data.accType === 'owner') {
-          setOwnerDetails(data || null);
-        } else if (data.accType === 'broker') {
-          setBrokerDetails(data || null);
+  useEffect(() => {
+    const fetchAll = async () => {
+      // Check for both owner and broker in the unified collection
+      const personDetails = await getDocById('truckPersonDetails', (data) => {
+        if (data) {
+          if (data.accType === 'owner') {
+            setOwnerDetails({
+              docId: data.id || '',
+              isApproved: data.isApproved || false,
+              accType: 'owner'
+            });
+          } else if (data.accType === 'broker') {
+            setBrokerDetails({
+              docId: data.id || '',
+              isApproved: data.isApproved || false,
+              accType: 'broker'
+            });
+          }
         }
-      }
-    });
+      });
 
-    setLoading(false);
+      setLoading(false);
 
-    // Add a short delay before rendering UI to prevent flicker
-    setTimeout(() => {
-      setDataChecked(true);
-    }, 300); // 300ms feels natural
-  };
+      // Add a short delay before rendering UI to prevent flicker
+      setTimeout(() => {
+        setDataChecked(true);
+      }, 300); // 300ms feels natural
+    };
 
-  fetchAll();
-}, []);
+    fetchAll();
+  }, []);
 
 
 
@@ -248,7 +247,7 @@ useEffect(() => {
   const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(null)
   const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string } | null>(null)
   const [selectedTankerType, setSelectedTankerType] = useState<{ id: number, name: string } | null>(null)
-  const [selectedTruckCapacity, setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>(selectedTruckType?.name==="Super Link" && setSelectedCargoArea?.name!== "Tanker" ? { id:7, name: '34T'} : selectedTruckType?.name === "Triaxle"  && setSelectedCargoArea?.name!== "Tanker"?   { id: 5, name: '30T'} : null)
+  const [selectedTruckCapacity, setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>(selectedTruckType?.name === "Super Link" && setSelectedCargoArea?.name !== "Tanker" ? { id: 7, name: '34T' } : selectedTruckType?.name === "Triaxle" && setSelectedCargoArea?.name !== "Tanker" ? { id: 5, name: '30T' } : null)
 
   const [showCountries, setShowCountries] = useState(false);
   const [operationCountries, setOperationCountries] = useState<string[]>([]);
@@ -435,20 +434,11 @@ useEffect(() => {
         truckNumberPlate: subTrckNumberPlate || null,
         truckThirdPlate: subTrckThrdPlate || null,
 
-        ownerName: getOwnerDetails?.ownerName || "",
-        onwerEmail: getOwnerDetails?.ownerEmail || "",
-        ownerPhoneNum: getOwnerDetails?.ownerPhoneNum || "",
-        directorOwnerId: getOwnerDetails?.directorOwnerId || "",
-        ownershipProof: getOwnerDetails?.ownershipProof || "",
-        ownerProofOfRes: getOwnerDetails?.ownerProofOfRes || "",
-
-        brokerName: getBrokerDetails?.brokerName || "",
-        brokerPhoneNum: getBrokerDetails?.brokerPhoneNum || "",
-        brokerEmail: getBrokerDetails?.brokerEmail || "",
-        proofOfResidence: getBrokerDetails?.proofOfResidence || "",
-        companyRegCertificate: getBrokerDetails?.companyRegCertificate || "",
-        companyLetterHead: getBrokerDetails?.companyLetterHead || "",
-        brockerId: getBrokerDetails?.brockerId || "",
+        // Simplified owner/broker data - just reference the document
+        personDetailsDocId: getOwnerDetails?.docId || getBrokerDetails?.docId || null,
+        accTypeIsApproved: getOwnerDetails?.isApproved || getBrokerDetails?.isApproved || false,
+        
+        accType: getOwnerDetails?.accType || getBrokerDetails?.accType || null,
 
         locations: operationCountries,
         truckType: selectedTruckType?.name,
@@ -457,20 +447,20 @@ useEffect(() => {
         truckCapacity: selectedTruckCapacity?.name,
         ...formData,
         expoPushToken: expoPushToken || null,
-        
+
         // Approval system
-        isApproved: false,
         approvalStatus: 'pending', // pending, approved, rejected
+        isApproved: false ,
         submittedAt: Date.now().toString(),
         userType: truckOwnerOBroker, // Owner or Broker
-        
+
         // Tracker system
         hasTracker: false,
         trackerStatus: 'not_available', // not_available, available, active
         trackerId: null,
         trackerImei: null,
         trackerName: null,
-        
+
         // Generate unique truck ID
         truckId: `TR${Math.floor(100000 + Math.random() * 900000)}`
       }
@@ -486,19 +476,6 @@ useEffect(() => {
       setSpinnerItem(false)
     }
   };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   return (
     <ScreenWrapper>
@@ -516,33 +493,33 @@ useEffect(() => {
 
         <ScrollView>
 
-    {loading && (
-  <ActivityIndicator size="small" color={accent} />
-)}
+          {loading && (
+            <ActivityIndicator size="small" color={accent} />
+          )}
 
-{!loading && dataChecked && !getOwnerDetails && !getBrokerDetails && (
-  <View>
-    <ThemedText>Are you the truck owner or broker?</ThemedText>
-    <HorizontalTickComponent
-      data={[
-        { topic: "Owner", value: "Owner" },
-        { topic: "Broker", value: "Broker" },
-      ]}
-      condition={truckOwnerOBroker}
-      onSelect={setTuckOwnerOBroker}
-    />
-  </View>
-)}
+          {!loading && dataChecked && !getOwnerDetails && !getBrokerDetails && (
+            <View>
+              <ThemedText>Are you the truck owner or broker?</ThemedText>
+              <HorizontalTickComponent
+                data={[
+                  { topic: "Owner", value: "Owner" },
+                  { topic: "Broker", value: "Broker" },
+                ]}
+                condition={truckOwnerOBroker}
+                onSelect={setTuckOwnerOBroker}
+              />
+            </View>
+          )}
 
-{!loading && dataChecked && (getOwnerDetails || getBrokerDetails) && (
-  <ThemedText style={{ textAlign: "center" }}>
-    Adding as Truck {getOwnerDetails ? "Owner" : "Broker"}
-  </ThemedText>
-)}
+          {!loading && dataChecked && (getOwnerDetails || getBrokerDetails) && (
+            <ThemedText style={{ textAlign: "center" }}>
+              Adding as Truck {getOwnerDetails ? "Owner" : "Broker"}
+            </ThemedText>
+          )}
 
 
 
-        
+
 
 
 
@@ -644,7 +621,7 @@ useEffect(() => {
                       title="Ownership or Lease Doc"
                       subtitle="Upload company doc showing truck ownership or lease (PDF or Image)"
                       buttonTiitle="Upload Ownership/Lease Document"
-                      onPickDocument={()=>pickDocument(setSelectedOwnerDocumentS ,setOwnerFileType) }
+                      onPickDocument={() => pickDocument(setSelectedOwnerDocumentS, setOwnerFileType)}
                     />
 
                     <DocumentUploader
@@ -652,7 +629,7 @@ useEffect(() => {
                       title="Owner/Director ID"
                       subtitle="Upload ID matching company doc name (PDF or Image)"
                       buttonTiitle="Upload Owner/Director ID"
-                      onPickDocument={()=>pickDocument(setSelectedOwnerDocumentS,setOwnerFileType) }
+                      onPickDocument={() => pickDocument(setSelectedOwnerDocumentS, setOwnerFileType)}
                       disabled={!selectedOwnerDocuments[0]}
                       toastMessage="Upload ownership doc first"
                     />
@@ -662,7 +639,7 @@ useEffect(() => {
                       title="Proof of Residence"
                       subtitle="Upload utility bill, lease, or bank statement (PDF or Image)"
                       buttonTiitle="Proof of Address"
-                      onPickDocument={()=>pickDocument(setSelectedOwnerDocumentS,setOwnerFileType) }
+                      onPickDocument={() => pickDocument(setSelectedOwnerDocumentS, setOwnerFileType)}
                       disabled={!selectedOwnerDocuments[1]}
                       toastMessage="Upload ID document first"
                     />
@@ -799,7 +776,7 @@ useEffect(() => {
                       title="National ID / Passport"
                       subtitle="Upload your ID or Passport (PDF or Image)"
                       buttonTiitle="National ID / Passport"
-                      onPickDocument={()=>pickDocument(setSelectedBrokerDocumentS,setBrokerFileType)}
+                      onPickDocument={() => pickDocument(setSelectedBrokerDocumentS, setBrokerFileType)}
                     />
 
                     <DocumentUploader
@@ -807,7 +784,7 @@ useEffect(() => {
                       title="Proof of Residence"
                       subtitle="Upload utility bill, lease, or bank statement (PDF or Image)"
                       buttonTiitle="Proof of Address"
-                      onPickDocument={()=>pickDocument(setSelectedBrokerDocumentS,setBrokerFileType)}
+                      onPickDocument={() => pickDocument(setSelectedBrokerDocumentS, setBrokerFileType)}
                       disabled={!selectedBrokerDocuments[0]}
                       toastMessage="Please upload ID first"
                     />
@@ -818,7 +795,7 @@ useEffect(() => {
                         title="Company Certificate"
                         subtitle="Upload registration certificate (PDF or Image)"
                         buttonTiitle="Company Registration"
-                        onPickDocument={()=>pickDocument(setSelectedBrokerDocumentS,setBrokerFileType)}
+                        onPickDocument={() => pickDocument(setSelectedBrokerDocumentS, setBrokerFileType)}
                         disabled={!selectedBrokerDocuments[1]}
                         toastMessage="Upload address proof first"
                       />
@@ -830,7 +807,7 @@ useEffect(() => {
                         title="Company Letter"
                         subtitle="Upload signed letterhead or authorization (PDF or Image)"
                         buttonTiitle="Letter Head"
-                        onPickDocument={()=>pickDocument(setSelectedBrokerDocumentS,setBrokerFileType)}
+                        onPickDocument={() => pickDocument(setSelectedBrokerDocumentS, setBrokerFileType)}
                         disabled={!selectedBrokerDocuments[2]}
                         toastMessage="Upload certificate first"
                       />
@@ -905,7 +882,7 @@ useEffect(() => {
             <ThemedText>
               Drivers Phone Number<ThemedText color="red">*</ThemedText>
             </ThemedText>
-            <Input 
+            <Input
               Icon={<>
                 <Dropdown
                   style={[{ width: wp(15) }]}
@@ -1162,7 +1139,7 @@ useEffect(() => {
                 }} >
 
                   {gitImage[0] && (
-                    <Image source={{ uri: gitImage[0].uri }} style={{width: "100%",height: "100%",borderRadius: 10,resizeMode: "cover"}}/>)}
+                    <Image source={{ uri: gitImage[0].uri }} style={{ width: "100%", height: "100%", borderRadius: 10, resizeMode: "cover" }} />)}
 
 
                   {!gitImage[0] && <ThemedText style={{ fontSize: 14.5, textAlign: "center" }}>GIT Insurance</ThemedText>}
@@ -1218,7 +1195,7 @@ useEffect(() => {
             <ThemedText type="tiny" style={{ textAlign: 'center' }} color={coolGray}>{spinnerItem && ''} </ThemedText>
             <Button loading={spinnerItem} disabled={spinnerItem} title={spinnerItem ? "Submiting..." : "Submit"} onPress={handleSubmit} />
           </View>
-                 <View style={{height:10}} />   
+          <View style={{ height: 10 }} />
         </ScrollView>
       </View>
 
