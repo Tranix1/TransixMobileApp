@@ -10,6 +10,7 @@ import UpdateModal from '@/components/UpdateModal';
 import HomeContent from '@/components/HomeContent';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
+import { usePushNotifications } from '@/Utilities/pushNotification';
 import NetInfo from '@react-native-community/netinfo';
 
 function Index() {
@@ -30,6 +31,9 @@ function Index() {
         checkForUpdate,
         dismissUpdate
     } = useAppUpdate();
+
+    // Initialize push notifications
+    const { expoPushToken, schedulePushNotification } = usePushNotifications();
 
     const [dspCreateAcc, setDspCreateAcc] = useState(false);
     const [dspVerifyAcc, setDspVerifyAcc] = useState(false);
@@ -56,6 +60,16 @@ function Index() {
         }).start();
     }, []);
 
+    // Test notification function
+    const testNotification = async () => {
+        try {
+            await schedulePushNotification();
+            ToastAndroid.show('Test notification scheduled!', ToastAndroid.SHORT);
+        } catch (error) {
+            console.error('Error testing notification:', error);
+            ToastAndroid.show('Error testing notification', ToastAndroid.SHORT);
+        }
+    };
 
     const checkAuth = (theAction?: () => void) => {
         if (!isConnectedInternet) {

@@ -7,12 +7,14 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { hp, wp } from '@/constants/common';
 import { router } from 'expo-router';
 import HomeItemView from '@/components/HomeItemView';
+import { useAuth } from '@/context/AuthContext';
 
 interface HomeContentProps {
     onAuthCheck: (action?: () => void) => void;
 }
 
 export default function HomeContent({ onAuthCheck }: HomeContentProps) {
+    const { user } = useAuth();
     const accent = useThemeColor('accent');
     const icon = useThemeColor('icon');
     const backgroundColor = useThemeColor('backgroundLight');
@@ -66,7 +68,10 @@ export default function HomeContent({ onAuthCheck }: HomeContentProps) {
             icon: <Fontisto name="truck" size={wp(5)} color="#0f9d58" />,
             bgColor: '#0f9d5824',
             underlayColor: '#0f9d585a',
-            onPress: () => onAuthCheck(() => router.push('/Logistics/Trucks/Index'))
+            onPress: () => onAuthCheck(() => router.push({
+                pathname: '/Logistics/Trucks/Index',
+                params: { userId: user?.uid || '' }
+            }))
         },
         {
             id: 6,

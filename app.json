@@ -9,7 +9,13 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yayapana.TransixNewVersion",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
+      },
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +27,15 @@
         "CAMERA",
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
-        "WAKE_LOCK"
+        "WAKE_LOCK",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.WAKE_LOCK",
+        "com.google.android.c2dm.permission.RECEIVE"
       ],
       "config": {
         "googleMaps": {
@@ -30,7 +44,8 @@
       },
       "notification": {
         "icon": "./assets/images/TrnaixxNewBG.jpg",
-        "color": "#6a0c0c"
+        "color": "#6a0c0c",
+        "defaultChannel": "myNotificationChannel"
       }
     },
     "web": {
@@ -82,6 +97,14 @@
           "ios": {
             "deploymentTarget": "15.1"
           }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/TrnaixxNewBG.jpg",
+          "color": "#6a0c0c",
+          "defaultChannel": "myNotificationChannel"
         }
       ]
     ],

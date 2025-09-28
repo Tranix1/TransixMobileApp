@@ -59,7 +59,7 @@ const Settings = () => {
                 {user &&
                     <View style={{ gap: wp(1), padding: wp(2), marginBottom: wp(4), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
                         <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
-                            <TouchableNativeFeedback onPress={() => router.push('/Account/Edit')}>
+                            <TouchableNativeFeedback onPress={() => router.push('/Account/Profile')}>
                                 <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                     <AntDesign name='edit' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                     <View>
@@ -83,7 +83,7 @@ const Settings = () => {
                             </TouchableNativeFeedback>
                         </View>
                         <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
-                            <TouchableNativeFeedback onPress={() => router.push('/Account/Edit')}>
+                            <TouchableNativeFeedback onPress={() => router.push('/Account/Profile')}>
                                 <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                     <AntDesign name='deleteuser' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                     <View>
@@ -144,6 +144,22 @@ const Settings = () => {
                                             </ThemedText>
                                             <ThemedText type='tiny' color={coolgray}>
                                                 Review and approve pending trucks
+                                            </ThemedText>
+                                        </View>
+                                        <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                    </View>
+                                </TouchableNativeFeedback>
+                            </View>
+                            <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/ApproveTruckAccounts')}>
+                                    <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                        <Ionicons name='people-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                        <View style={{ flex: 1 }}>
+                                            <ThemedText type='default'>
+                                                Approve Truck Accounts
+                                            </ThemedText>
+                                            <ThemedText type='tiny' color={coolgray}>
+                                                Review and approve truck account verifications
                                             </ThemedText>
                                         </View>
                                         <Ionicons name='chevron-forward' size={wp(4)} color={icon} />

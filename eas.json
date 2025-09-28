@@ -14,8 +14,14 @@
     "production": {
       "autoIncrement": true,
       "android": {
-        "buildType": "apk",
+        "buildType": "app-bundle",
         "gradleCommand": ":app:assembleRelease"
+      },
+      "ios": {
+        "buildConfiguration": "Release"
+      },
+      "env": {
+        "EXPO_USE_FCM": "0"
       }
     }
   },

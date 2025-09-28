@@ -55,10 +55,26 @@ export function usePushNotifications() {
   //     });
   //   };
 
+  // Test notification function
+  const schedulePushNotification = async () => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Test Notification 🧪",
+        body: 'This is a test notification to verify setup',
+        data: { test: true },
+      },
+      trigger: {
+        type: 'timeInterval',
+        seconds: 2,
+        repeats: false,
+      },
+    });
+  };
+
   return {
     expoPushToken,
     notification,
-    // schedulePushNotification,
+    schedulePushNotification,
   };
 }
 
@@ -67,15 +83,22 @@ async function registerForPushNotificationsAsync() {
   let token;
 
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('myNotificationChannel', {
-      name: 'Default channel',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
-      sound: 'default',
-      enableVibrate: true,
-      enableLights: true,
-    });
+    try {
+      await Notifications.setNotificationChannelAsync('myNotificationChannel', {
+        name: 'Default channel',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+        sound: 'default',
+        enableVibrate: true,
+        enableLights: true,
+        showBadge: true,
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      });
+      console.log('✅ Android notification channel created');
+    } catch (error) {
+      console.error('❌ Error creating Android notification channel:', error);
+    }
   }
 
   if (Device.isDevice) {
@@ -89,6 +112,13 @@ async function registerForPushNotificationsAsync() {
           allowBadge: true,
           allowSound: true,
           allowAnnouncements: true,
+          allowCriticalAlerts: false,
+          provideAppNotificationSettings: true,
+        },
+        android: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
         },
       });
       finalStatus = status;
@@ -108,6 +138,7 @@ async function registerForPushNotificationsAsync() {
 
       if (!projectId) {
         console.error('Project ID not found in Constants');
+        console.log('Available Constants:', JSON.stringify(Constants, null, 2));
         throw new Error('Project ID not found');
       }
 

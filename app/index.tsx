@@ -17,6 +17,7 @@ import AppLoadingScreen from "@/components/AppLoadingScreen";
 import UpdateModal from "@/components/UpdateModal";
 import { useAuthState } from "@/hooks/useAuthState";
 import { useAppUpdate } from "@/hooks/useAppUpdate";
+import { usePushNotifications } from "@/Utilities/pushNotification";
 import NetInfo from '@react-native-community/netinfo';
 
 const Tab = createBottomTabNavigator();
@@ -51,6 +52,19 @@ export default function Index() {
     dismissUpdate,
     isLoading: updateLoading
   } = useAppUpdate();
+
+  // Initialize push notifications
+  const { expoPushToken, notification, schedulePushNotification } = usePushNotifications();
+
+  // Debug notification setup
+  useEffect(() => {
+    if (expoPushToken) {
+      console.log('🔔 Push token received:', expoPushToken);
+    }
+    if (notification) {
+      console.log('🔔 Notification received in app:', notification);
+    }
+  }, [expoPushToken, notification]);
 
   // Check internet connection
   useEffect(() => {

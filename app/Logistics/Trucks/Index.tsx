@@ -3,7 +3,7 @@ import { StyleSheet, View, } from 'react-native'
 import React, { useEffect, useId, useState } from 'react'
 import { hp, wp } from '@/constants/common'
 import { fetchDocuments } from '@/db/operations'
-import {  Truck } from '@/types/types'
+import { Truck } from '@/types/types'
 import { DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore'
 import { TruckTypeProps } from '@/types/types'
 import { useAuth } from '@/context/AuthContext'
@@ -12,32 +12,32 @@ import ScreenWrapper from '@/components/ScreenWrapper'
 import { FinalReturnComponent } from '@/components/TrucksHomePage'
 const Index = () => {
 
-    const { userId, organisationName, contractName, contractId,capacityG,cargoAreaG,truckTypeG,operationCountriesG  } = useLocalSearchParams();
+    const { userId, organisationName, contractName, contractId, capacityG, cargoAreaG, truckTypeG, operationCountriesG } = useLocalSearchParams();
 
     // const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
 
     const [trucks, setTrucks] = useState<Truck[]>([])
-    const [tankerType, setTankerType] = React.useState<string>( "")
-    const [truckCapacity, setTruckCapacity] = useState( capacityG? `${capacityG}` :  "")
+    const [tankerType, setTankerType] = React.useState<string>("")
+    const [truckCapacity, setTruckCapacity] = useState(capacityG ? `${capacityG}` : "")
     const [truckConfig, setTruckConfig] = React.useState("")
     const [truckSuspension, setTruckSuspension] = React.useState("")
     const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(() => {
-  if (!cargoAreaG) return null;
-  const value = Array.isArray(cargoAreaG) ? cargoAreaG[0] : cargoAreaG;
-  return JSON.parse(value);
-});
+        if (!cargoAreaG) return null;
+        const value = Array.isArray(cargoAreaG) ? cargoAreaG[0] : cargoAreaG;
+        return JSON.parse(value);
+    });
 
     const [refreshing, setRefreshing] = useState(false)
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
 
-    const [operationCountries, setOperationCountries] = useState<string[]> (() => {
-    if (!operationCountriesG) return [];
-    if (Array.isArray(operationCountriesG)) return JSON.parse(operationCountriesG[0]);
-    return JSON.parse(operationCountriesG);
+    const [operationCountries, setOperationCountries] = useState<string[]>(() => {
+        if (!operationCountriesG) return [];
+        if (Array.isArray(operationCountriesG)) return JSON.parse(operationCountriesG[0]);
+        return JSON.parse(operationCountriesG);
     });
 
-const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(false)
+    const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
     const LoadTructs = async () => {
         let filters: any[] = [];
 
@@ -48,7 +48,7 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
         if (tankerType && selectedCargoArea) filters.push(where("tankerType", "==", tankerType))
         // Conditionally add the country filter
         if (operationCountries.length > 0) filters.push(where("locations", "array-contains-any", operationCountries));
-        
+
         // Only show approved trucks to users (except truck owners viewing their own)
         if (!userId) {
             filters.push(where("isApproved", "==", true));
@@ -61,7 +61,7 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
         let trucksToSet: Truck[] = [];
 
         if (maTrucks && maTrucks.data) {
-            if(filters.length > 0 && maTrucks.data.length <= 0 )setFilteredPNotAavaialble(true)
+            if (filters.length > 0 && maTrucks.data.length <= 0) setFilteredPNotAavaialble(true)
 
             // If locationTruckS is true, we need to do the client-side filtering for ALL selected countries
             if (operationCountries.length > 0) {
@@ -72,7 +72,7 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
                 // Otherwise, use the data as fetched (which would be filtered only by truck properties)
                 trucksToSet = maTrucks.data as Truck[];
             }
-            
+
             setTrucks(trucksToSet);
             setLastVisible(maTrucks.lastVisible);
         }
@@ -145,7 +145,7 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
     return (
         <View style={{ flex: 1 }}>
 
-            {(!contractId || !userId||!capacityG ) && <View style={{ flex: 1 }}>
+            {(!contractId || !userId || !capacityG) && <View style={{ flex: 1 }}>
                 <FinalReturnComponent
                     // ... pass all props
                     showfilter={showfilter}
@@ -166,10 +166,10 @@ const [filteredPNotAavaialble ,setFilteredPNotAavaialble ] = React.useState(fals
                     loadingMore={loadingMore}
                     clearFilter={clearFilter}
 
-filteredPNotAavaialble={filteredPNotAavaialble}
+                    filteredPNotAavaialble={filteredPNotAavaialble}
                 />
             </View>}
-            {(contractId || userId||capacityG ) && <ScreenWrapper >
+            {(contractId || userId || capacityG) && <ScreenWrapper >
                 <FinalReturnComponent
                     // ... pass all props
                     showfilter={showfilter}
@@ -193,7 +193,7 @@ filteredPNotAavaialble={filteredPNotAavaialble}
                     clearFilter={clearFilter}
                     contractName={`${contractName}`}
                     contractId={`${contractId}`}
-filteredPNotAavaialble={filteredPNotAavaialble}
+                    filteredPNotAavaialble={filteredPNotAavaialble}
                 />
             </ScreenWrapper>}
         </View>

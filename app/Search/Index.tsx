@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, TouchableOpacity, TextInput, Share, TouchableHighlight, Animated, FlatList, ActivityIndicator, StyleSheet } from "react-native";
+import { View, ScrollView, TouchableOpacity, TextInput, Share, TouchableHighlight, Animated, FlatList, ActivityIndicator, StyleSheet, Modal, SafeAreaView } from "react-native";
+import { BlurView } from 'expo-blur';
 
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from "@/db/fireBaseConfig";
@@ -12,6 +13,7 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import { router } from "expo-router";
 import { wp, hp } from "@/constants/common";
 import Input from "@/components/Input";
+import Button from "@/components/Button";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 import { Countries } from '@/data/appConstants'
@@ -53,6 +55,15 @@ function SearchIterms({ navigation }: SearchItermsProps) {
   const [wordEntered, setWordEntered] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [searchAnimation] = useState(new Animated.Value(0));
+
+  // Filter modal state
+  const [showFilter, setShowFilter] = useState(false);
+  const [selectedCountryId, setSelectedCountryId] = useState<{
+    id: number;
+    name: string;
+  } | null>(Countries[0] ?? null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedTab, setSelectedTab] = useState("Showroom");
 
   useEffect(() => {
     try {
@@ -276,18 +287,11 @@ Experience the future of transportation and logistics!`;
   const backgroundLight = useThemeColor('backgroundLight')
   const textColor = useThemeColor('text')
 
-  const [industry, setIndusrty] = React.useState("")
   const tabKeys = ["Showroom", "Trailers", "Spares", "Service Provider"]
-  const [selectedTab, setSelectedTab] = useState(tabKeys[0]);
-  const [selectedCountryId, setSelectedCountryId] = useState<{
-    id: number;
-    name: string;
-  } | null>(Countries[0] ?? null)
+
   return (
     <ScreenWrapper>
-
-
-      {/* Enhanced Header with Search */}
+      {/* Simple Header with Search and Filter */}
       <View style={styles.headerContainer}>
         <TouchableHighlight
           underlayColor={coolGray}
@@ -312,176 +316,13 @@ Experience the future of transportation and logistics!`;
             </TouchableOpacity>
           )}
         </View>
-      </View>
 
-
-      <View style={{ marginBottom: 30 }}>
-
-
-
-
-
-        {/* Country Selection */}
-        <View style={styles.filterSection}>
-          <View style={styles.filterHeader}>
-            <Ionicons name="location-outline" size={wp(4)} color={icon} />
-            <ThemedText style={styles.filterLabel}>Select Country</ThemedText>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.countryScrollContainer}
-          >
-            {Countries.map((item) => {
-              const isSelected = item.id === selectedCountryId?.id;
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  onPress={() => setSelectedCountryId(item)}
-                  style={[
-                    styles.countryChip,
-                    {
-                      backgroundColor: isSelected ? accent : backgroundLight,
-                      borderColor: isSelected ? accent : coolGray,
-                    }
-                  ]}
-                  activeOpacity={0.7}
-                >
-                  <ThemedText
-                    style={[
-                      styles.countryChipText,
-                      { color: isSelected ? 'white' : textColor }
-                    ]}
-                  >
-                    {item.name}
-                  </ThemedText>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-
-
-
-
-
-
-
-
-
-
-
-
-        {/* Industry Selection */}
-        <View style={styles.filterSection}>
-          <View style={styles.filterHeader}>
-            <MaterialCommunityIcons name="truck-outline" size={wp(4)} color={icon} />
-            <ThemedText style={styles.filterLabel}>Select Category</ThemedText>
-          </View>
-          <View style={styles.industryContainer}>
-            <TouchableOpacity
-              onPress={() => setIndusrty("transport&Lgistcs")}
-              style={[
-                styles.industryButton,
-                {
-                  backgroundColor: industry === "transport&Lgistcs" ? accent : backgroundLight,
-                  borderColor: industry === "transport&Lgistcs" ? accent : coolGray,
-                }
-              ]}
-              activeOpacity={0.7}
-            >
-              <MaterialCommunityIcons
-                name="truck"
-                size={wp(4)}
-                color={industry === "transport&Lgistcs" ? 'white' : icon}
-              />
-              <ThemedText
-                style={[
-                  styles.industryButtonText,
-                  { color: industry === "transport&Lgistcs" ? 'white' : textColor }
-                ]}
-              >
-                Transport & Logistics
-              </ThemedText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => setIndusrty("Store")}
-              style={[
-                styles.industryButton,
-                {
-                  backgroundColor: industry === "Store" ? accent : backgroundLight,
-                  borderColor: industry === "Store" ? accent : coolGray,
-                }
-              ]}
-              activeOpacity={0.7}
-            >
-              <MaterialCommunityIcons
-                name="store"
-                size={wp(4)}
-                color={industry === "Store" ? 'white' : icon}
-              />
-              <ThemedText
-                style={[
-                  styles.industryButtonText,
-                  { color: industry === "Store" ? 'white' : textColor }
-                ]}
-              >
-                Store
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-
-
-
-
-        <View style={{ marginVertical: wp(2) }}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: wp(2),
-              gap: wp(2),
-            }}
-          >
-            {tabKeys.map((tab, idx) => {
-              return (
-                <TouchableOpacity
-                  key={tab}
-                  onPress={() => setSelectedTab(tab)}
-                  style={{
-                    paddingVertical: wp(0.1),
-                    marginLeft: wp(2),
-                    borderRadius: wp(2),
-                    paddingHorizontal: wp(3),
-                    backgroundColor: selectedTab === tab ? accent : backgroundLight,
-                    borderWidth: 1,
-                    borderColor: selectedTab === tab ? accent : coolGray,
-
-                    height: 20,
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <ThemedText
-                    type="defaultSemiBold"
-                    style={{
-                      color: selectedTab === tab ? 'white' : textColor,
-                      fontSize: wp(2.5),
-                    }}
-                  >
-                    {tab}
-                  </ThemedText>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-
+        <TouchableOpacity
+          onPress={() => setShowFilter(true)}
+          style={styles.filterButton}
+        >
+          <Ionicons name="filter" size={wp(5)} color={icon} />
+        </TouchableOpacity>
       </View>
 
       {/* Loading State */}
@@ -566,6 +407,210 @@ Experience the future of transportation and logistics!`;
           )}
         </Animated.View>
       )}
+
+      {/* Filter Modal */}
+      <Modal
+        visible={showFilter}
+        animationType="slide"
+        transparent={true}
+        statusBarTranslucent
+        onRequestClose={() => setShowFilter(false)}
+      >
+        <BlurView
+          intensity={10}
+          tint="systemMaterialDark"
+          experimentalBlurMethod="dimezisBlurView"
+          style={{ flex: 1 }}
+        >
+          <View style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+          }}>
+            <View style={{
+              width: '95%',
+              backgroundColor: background,
+              borderRadius: wp(4),
+              padding: wp(4),
+            }}>
+              <View style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: wp(4)
+              }}>
+                <ThemedText style={{ fontSize: wp(5), fontWeight: '600' }}>Filter Search</ThemedText>
+                <TouchableOpacity onPress={() => setShowFilter(false)}>
+                  <Ionicons name="close" size={wp(5)} color={icon} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <View style={{ gap: wp(4) }}>
+                  {/* Country Selection */}
+                  <View>
+                    <ThemedText style={{ fontSize: wp(4), fontWeight: '600', marginBottom: wp(2) }}>
+                      Select Country
+                    </ThemedText>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ gap: wp(2) }}
+                    >
+                      {Countries.map((item) => {
+                        const isSelected = item.id === selectedCountryId?.id;
+                        return (
+                          <TouchableOpacity
+                            key={item.id}
+                            onPress={() => setSelectedCountryId(item)}
+                            style={[
+                              styles.modalChip,
+                              {
+                                backgroundColor: isSelected ? accent : backgroundLight,
+                                borderColor: isSelected ? accent : coolGray,
+                              }
+                            ]}
+                            activeOpacity={0.7}
+                          >
+                            <ThemedText
+                              style={[
+                                styles.modalChipText,
+                                { color: isSelected ? 'white' : textColor }
+                              ]}
+                            >
+                              {item.name}
+                            </ThemedText>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+
+                  {/* Category Selection */}
+                  <View>
+                    <ThemedText style={{ fontSize: wp(4), fontWeight: '600', marginBottom: wp(2) }}>
+                      Select Category
+                    </ThemedText>
+                    <View style={{ gap: wp(2) }}>
+                      <TouchableOpacity
+                        onPress={() => setSelectedCategory("transport&Lgistcs")}
+                        style={[
+                          styles.modalButton,
+                          {
+                            backgroundColor: selectedCategory === "transport&Lgistcs" ? accent : backgroundLight,
+                            borderColor: selectedCategory === "transport&Lgistcs" ? accent : coolGray,
+                          }
+                        ]}
+                        activeOpacity={0.7}
+                      >
+                        <MaterialCommunityIcons
+                          name="truck"
+                          size={wp(4)}
+                          color={selectedCategory === "transport&Lgistcs" ? 'white' : icon}
+                        />
+                        <ThemedText
+                          style={[
+                            styles.modalButtonText,
+                            { color: selectedCategory === "transport&Lgistcs" ? 'white' : textColor }
+                          ]}
+                        >
+                          Transport & Logistics
+                        </ThemedText>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => setSelectedCategory("Store")}
+                        style={[
+                          styles.modalButton,
+                          {
+                            backgroundColor: selectedCategory === "Store" ? accent : backgroundLight,
+                            borderColor: selectedCategory === "Store" ? accent : coolGray,
+                          }
+                        ]}
+                        activeOpacity={0.7}
+                      >
+                        <MaterialCommunityIcons
+                          name="store"
+                          size={wp(4)}
+                          color={selectedCategory === "Store" ? 'white' : icon}
+                        />
+                        <ThemedText
+                          style={[
+                            styles.modalButtonText,
+                            { color: selectedCategory === "Store" ? 'white' : textColor }
+                          ]}
+                        >
+                          Store
+                        </ThemedText>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  {/* Tab Selection */}
+                  <View>
+                    <ThemedText style={{ fontSize: wp(4), fontWeight: '600', marginBottom: wp(2) }}>
+                      Select Type
+                    </ThemedText>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ gap: wp(2) }}
+                    >
+                      {tabKeys.map((tab) => {
+                        const isSelected = selectedTab === tab;
+                        return (
+                          <TouchableOpacity
+                            key={tab}
+                            onPress={() => setSelectedTab(tab)}
+                            style={[
+                              styles.modalChip,
+                              {
+                                backgroundColor: isSelected ? accent : backgroundLight,
+                                borderColor: isSelected ? accent : coolGray,
+                              }
+                            ]}
+                            activeOpacity={0.7}
+                          >
+                            <ThemedText
+                              style={[
+                                styles.modalChipText,
+                                { color: isSelected ? 'white' : textColor }
+                              ]}
+                            >
+                              {tab}
+                            </ThemedText>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+                </View>
+              </ScrollView>
+
+              <View style={{ marginTop: wp(4), gap: wp(2) }}>
+                <Button
+                  onPress={() => setShowFilter(false)}
+                  title="Apply Filter"
+                  colors={{ bg: accent + '1c', text: accent }}
+                  style={{ height: 45 }}
+                />
+                <Button
+                  onPress={() => {
+                    setSelectedCountryId(Countries[0] ?? null);
+                    setSelectedCategory("");
+                    setSelectedTab("Showroom");
+                    setShowFilter(false);
+                  }}
+                  title="Clear All"
+                  colors={{ bg: coolGray + '1c', text: coolGray }}
+                  style={{ height: 45 }}
+                />
+              </View>
+            </View>
+          </View>
+        </BlurView>
+      </Modal>
     </ScreenWrapper>
   );
 }
@@ -602,6 +647,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: wp(3),
     padding: wp(1),
+  },
+  filterButton: {
+    padding: wp(2),
+    borderRadius: wp(5),
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
   loadingContainer: {
     flex: 1,
@@ -748,26 +798,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  // Filter Section Styles
-  filterSection: {
-    marginVertical: wp(3),
-    paddingHorizontal: wp(4),
-  },
-  filterHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: wp(2),
-    gap: wp(2),
-  },
-  filterLabel: {
-    fontSize: wp(3.5),
-    fontWeight: '600',
-  },
-  countryScrollContainer: {
-    paddingHorizontal: wp(1),
-    gap: wp(2),
-  },
-  countryChip: {
+  // Modal styles
+  modalChip: {
     paddingHorizontal: wp(3),
     paddingVertical: wp(1.5),
     borderRadius: wp(5),
@@ -777,16 +809,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  countryChipText: {
+  modalChipText: {
     fontSize: wp(3),
     fontWeight: '500',
   },
-  industryContainer: {
-    flexDirection: 'row',
-    gap: wp(3),
-  },
-  industryButton: {
-    flex: 1,
+  modalButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -796,7 +823,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: wp(2),
   },
-  industryButtonText: {
+  modalButtonText: {
     fontSize: wp(3.2),
     fontWeight: '600',
   },

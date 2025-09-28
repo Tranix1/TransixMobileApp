@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import ScreenWrapper from '@/components/ScreenWrapper';
@@ -7,16 +5,36 @@ import Heading from '@/components/Heading';
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { wp } from '@/constants/common';
-import { fetchDocuments, updateDocument } from '@/db/operations';
-import { Truck } from '@/types/types';
+import { fetchDocuments } from '@/db/operations';
 import { where } from 'firebase/firestore';
-import { Image } from 'expo-image';
-import { FontAwesome5, Ionicons } from '@expo/vector-icons';
+import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import Button from '@/components/Button';
+import { formatDate } from '@/services/services';
 
-const ApproveTrucks = () => {
-    const [trucks, setTrucks] = useState<Truck[]>([]);
+interface TruckPersonDetails {
+    id: string;
+    userId: string;
+    accType: 'owner' | 'broker';
+    typeOfBroker?: string;
+    ownerName?: string;
+    brokerName?: string;
+    ownerPhoneNum?: string;
+    brokerPhoneNum?: string;
+    ownerEmail?: string;
+    brokerEmail?: string;
+    companyName?: string;
+    createdAt: string;
+    submittedAt?: string;
+    isApproved: boolean;
+    approvalStatus: 'pending' | 'approved' | 'rejected';
+    approvedAt?: string;
+    rejectedAt?: string;
+    rejectionReason?: string;
+}
+
+const ApproveTruckAccounts = () => {
+    const [truckAccounts, setTruckAccounts] = useState<TruckPersonDetails[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -27,22 +45,22 @@ const ApproveTrucks = () => {
     const accent = useThemeColor('accent');
 
     useEffect(() => {
-        loadUnapprovedTrucks();
+        loadPendingTruckAccounts();
     }, []);
 
-    const loadUnapprovedTrucks = async () => {
+    const loadPendingTruckAccounts = async () => {
         try {
             setLoading(true);
             const filters = [
-                where("isApproved", "==", false),
-                where("approvalStatus", "in", ["pending", "edited"])
+                where("approvalStatus", "in", ["pending", "edited"]),
+                where("isApproved", "==", false)
             ];
 
-            const result = await fetchDocuments("Trucks", 50, undefined, filters);
-            setTrucks(result.data || []);
+            const result = await fetchDocuments("truckPersonDetails", 50, undefined, filters);
+            setTruckAccounts(result.data || []);
         } catch (error) {
-            console.error('Error loading unapproved trucks:', error);
-            Alert.alert('Error', 'Failed to load trucks');
+            console.error('Error loading pending truck accounts:', error);
+            Alert.alert('Error', 'Failed to load truck accounts');
         } finally {
             setLoading(false);
         }
@@ -50,67 +68,89 @@ const ApproveTrucks = () => {
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await loadUnapprovedTrucks();
+        await loadPendingTruckAccounts();
         setRefreshing(false);
     };
 
-    const handleTruckPress = (truck: Truck) => {
+    const handleAccountPress = (account: TruckPersonDetails) => {
         router.push({
-            pathname: '/Logistics/Trucks/TruckDetails',
+            pathname: '/Account/Admin/TruckAccountDetailsView',
             params: {
-                truckid: truck.id,
-                dspDetails: 'admin'
+                accountId: account.id,
+                details: JSON.stringify(account)
             }
         });
     };
 
-    const renderTruckItem = ({ item: truck }: { item: Truck }) => (
+    const renderAccountItem = ({ item: account }: { item: TruckPersonDetails }) => (
         <TouchableOpacity
-            style={[styles.truckItem, { backgroundColor: backgroundLight }]}
-            onPress={() => handleTruckPress(truck)}
+            style={[styles.accountItem, { backgroundColor: backgroundLight }]}
+            onPress={() => handleAccountPress(account)}
         >
-            <View style={styles.truckImageContainer}>
-                <Image
-                    source={{ uri: truck.imageUrl || 'https://via.placeholder.com/100' }}
-                    style={styles.truckImage}
+            <View style={styles.accountIconContainer}>
+                <Ionicons
+                    name={account.accType === 'owner' ? 'person' : 'business'}
+                    size={wp(6)}
+                    color={accent}
                 />
             </View>
 
-            <View style={styles.truckInfo}>
+            <View style={styles.accountInfo}>
                 <ThemedText type="subtitle" numberOfLines={1}>
-                    {truck.CompanyName || 'Unknown Company'}
+                    {account.accType === 'owner' ? account.ownerName : account.brokerName || 'Unknown'}
                 </ThemedText>
 
-                <View style={styles.truckDetails}>
+                <View style={styles.accountDetails}>
                     <View style={styles.detailRow}>
-                        <FontAwesome5 name="truck" size={wp(3)} color={icon} style={{ width: wp(6) }} />
+                        <Ionicons name="mail" size={wp(3)} color={icon} style={{ width: wp(6) }} />
                         <ThemedText type="tiny" numberOfLines={1}>
-                            {truck.truckType || 'N/A'} - {truck.truckCapacity || 'N/A'}
+                            {account.accType === 'owner' ? account.ownerEmail : account.brokerEmail || 'N/A'}
                         </ThemedText>
                     </View>
 
                     <View style={styles.detailRow}>
-                        <FontAwesome5 name="map-marker-alt" size={wp(3)} color={icon} style={{ width: wp(6) }} />
+                        <Ionicons name="call" size={wp(3)} color={icon} style={{ width: wp(6) }} />
                         <ThemedText type="tiny" numberOfLines={1}>
-                            {truck.locations?.join(', ') || 'N/A'}
+                            {account.accType === 'owner' ? account.ownerPhoneNum : account.brokerPhoneNum || 'N/A'}
                         </ThemedText>
                     </View>
+
+                    {account.companyName && (
+                        <View style={styles.detailRow}>
+                            <Ionicons name="business" size={wp(3)} color={icon} style={{ width: wp(6) }} />
+                            <ThemedText type="tiny" numberOfLines={1}>
+                                {account.companyName}
+                            </ThemedText>
+                        </View>
+                    )}
                 </View>
 
                 <View style={styles.statusContainer}>
                     <View style={[
                         styles.statusBadge,
                         {
-                            backgroundColor: truck.approvalStatus === 'pending' ? '#F4802424' : '#17a2b824'
+                            backgroundColor: account.approvalStatus === 'pending' ? '#F4802424' :
+                                account.approvalStatus === 'edited' ? '#2196F324' :
+                                    account.approvalStatus === 'approved' ? '#4CAF5024' : '#F4433624'
                         }
                     ]}>
                         <ThemedText type="tiny" style={[
                             styles.statusText,
                             {
-                                color: truck.approvalStatus === 'pending' ? '#F48024' : '#17a2b8'
+                                color: account.approvalStatus === 'pending' ? '#F48024' :
+                                    account.approvalStatus === 'edited' ? '#2196F3' :
+                                        account.approvalStatus === 'approved' ? '#4CAF50' : '#F44336'
                             }
                         ]}>
-                            {truck.approvalStatus === 'pending' ? 'Pending' : 'Edited'}
+                            {account.approvalStatus === 'pending' ? 'Pending' :
+                                account.approvalStatus === 'edited' ? 'Edited' :
+                                    account.approvalStatus === 'approved' ? 'Approved' : 'Rejected'}
+                        </ThemedText>
+                    </View>
+
+                    <View style={styles.dateContainer}>
+                        <ThemedText type="tiny" style={{ color: icon }}>
+                            {account.submittedAt ? formatDate(account.submittedAt) : formatDate(account.createdAt)}
                         </ThemedText>
                     </View>
 
@@ -124,14 +164,14 @@ const ApproveTrucks = () => {
         <View style={styles.emptyContainer}>
             <Ionicons name="checkmark-circle-outline" size={wp(20)} color={icon} />
             <ThemedText type="title" style={styles.emptyTitle}>
-                No Trucks to Review
+                No Accounts to Review
             </ThemedText>
             <ThemedText type="default" style={styles.emptySubtitle}>
-                All trucks have been reviewed or there are no pending approvals.
+                All truck account verifications have been reviewed or there are no pending approvals.
             </ThemedText>
             <Button
                 title="Refresh"
-                onPress={loadUnapprovedTrucks}
+                onPress={loadPendingTruckAccounts}
                 style={styles.refreshButton}
             />
         </View>
@@ -140,9 +180,9 @@ const ApproveTrucks = () => {
     if (loading) {
         return (
             <ScreenWrapper>
-                <Heading page='Approve Trucks' />
+                <Heading page='Approve Truck Accounts' />
                 <View style={styles.loadingContainer}>
-                    <ThemedText type="default">Loading trucks...</ThemedText>
+                    <ThemedText type="default">Loading truck accounts...</ThemedText>
                 </View>
             </ScreenWrapper>
         );
@@ -150,22 +190,22 @@ const ApproveTrucks = () => {
 
     return (
         <ScreenWrapper>
-            <Heading page='Approve Trucks' />
+            <Heading page='Approve Truck Accounts' />
             <View style={styles.container}>
                 <View style={styles.header}>
                     <ThemedText type="subtitle">
-                        {trucks.length} truck{trucks.length !== 1 ? 's' : ''} pending review
+                        {truckAccounts.length} account{truckAccounts.length !== 1 ? 's' : ''} pending review
                     </ThemedText>
                     <Button
                         title="Refresh"
-                        onPress={loadUnapprovedTrucks}
+                        onPress={loadPendingTruckAccounts}
                         style={styles.refreshButton}
                     />
                 </View>
 
                 <FlatList
-                    data={trucks}
-                    renderItem={renderTruckItem}
+                    data={truckAccounts}
+                    renderItem={renderAccountItem}
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={styles.listContainer}
                     refreshControl={
@@ -200,25 +240,26 @@ const styles = StyleSheet.create({
     listContainer: {
         flexGrow: 1,
     },
-    truckItem: {
+    accountItem: {
         flexDirection: 'row',
         padding: wp(4),
         marginBottom: wp(3),
         borderRadius: wp(3),
         alignItems: 'center',
     },
-    truckImageContainer: {
+    accountIconContainer: {
         marginRight: wp(4),
+        width: wp(12),
+        height: wp(12),
+        borderRadius: wp(6),
+        backgroundColor: '#f0f0f0',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    truckImage: {
-        width: wp(20),
-        height: wp(15),
-        borderRadius: wp(2),
-    },
-    truckInfo: {
+    accountInfo: {
         flex: 1,
     },
-    truckDetails: {
+    accountDetails: {
         marginVertical: wp(2),
     },
     detailRow: {
@@ -239,6 +280,10 @@ const styles = StyleSheet.create({
     statusText: {
         fontWeight: 'bold',
         fontSize: wp(3),
+    },
+    dateContainer: {
+        flex: 1,
+        marginLeft: wp(2),
     },
     loadingContainer: {
         flex: 1,
@@ -264,4 +309,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default ApproveTrucks;
+export default ApproveTruckAccounts;

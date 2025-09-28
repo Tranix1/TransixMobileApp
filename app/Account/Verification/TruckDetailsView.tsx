@@ -81,7 +81,6 @@ const TruckDetailsView = () => {
         if (details) {
             try {
                 const parsedDetails = JSON.parse(details as string);
-                console.log('Parsed truck details:', parsedDetails);
                 setTruckDetails(parsedDetails);
                 prepareImages(parsedDetails);
             } catch (error) {
@@ -94,50 +93,31 @@ const TruckDetailsView = () => {
     const prepareImages = (details: TruckPersonDetails) => {
         const imageList: string[] = [];
 
-        console.log('Preparing images for accType:', details.accType);
-        console.log('Document types:', {
-            ownershipProof: details.proofOfTruckOwnerhipType,
-            directorOwnerId: details.directorOwnerIdType,
-            ownerProofOfRes: details.ownerProofOfResType,
-            brockerId: details.brockerIdType,
-            proofOfResidence: details.proofOfResidenceType,
-            companyRegCertificate: details.companyRegCertificateType,
-            companyLtterHead: details.companyLtterHeadType
-        });
-
         if (details.accType === 'owner') {
             if (details.ownershipProof && details.proofOfTruckOwnerhipType === 'image') {
-                console.log('Adding ownership proof image:', details.ownershipProof);
                 imageList.push(details.ownershipProof);
             }
             if (details.directorOwnerId && details.directorOwnerIdType === 'image') {
-                console.log('Adding director ID image:', details.directorOwnerId);
                 imageList.push(details.directorOwnerId);
             }
             if (details.ownerProofOfRes && details.ownerProofOfResType === 'image') {
-                console.log('Adding proof of residence image:', details.ownerProofOfRes);
                 imageList.push(details.ownerProofOfRes);
             }
         } else if (details.accType === 'broker') {
             if (details.brockerId && details.brockerIdType === 'image') {
-                console.log('Adding broker ID image:', details.brockerId);
                 imageList.push(details.brockerId);
             }
             if (details.proofOfResidence && details.proofOfResidenceType === 'image') {
-                console.log('Adding proof of residence image:', details.proofOfResidence);
                 imageList.push(details.proofOfResidence);
             }
             if (details.companyRegCertificate && details.companyRegCertificateType === 'image') {
-                console.log('Adding company certificate image:', details.companyRegCertificate);
                 imageList.push(details.companyRegCertificate);
             }
             if (details.companyLtterHead && details.companyLtterHeadType === 'image') {
-                console.log('Adding company letter head image:', details.companyLtterHead);
                 imageList.push(details.companyLtterHead);
             }
         }
 
-        console.log('Final image list:', imageList);
         setImages(imageList);
     };
 
@@ -147,24 +127,16 @@ const TruckDetailsView = () => {
     };
 
     const handleDocumentPress = (url: string, type: string, title: string) => {
-        console.log('Document pressed:', { url, type, title });
-        console.log('Available images:', images);
-
         if (type === 'pdf') {
             // Open PDF in viewer
-            console.log('Opening PDF:', url);
             setCurrentPdfUrl(url);
             setCurrentPdfTitle(title);
             setPdfViewerVisible(true);
         } else {
             // Open image in viewer
             const imageIndex = images.findIndex(img => img === url);
-            console.log('Looking for image in list, found index:', imageIndex);
             if (imageIndex !== -1) {
-                console.log('Opening image at index:', imageIndex);
                 handleImagePress(imageIndex);
-            } else {
-                console.log('Image not found in images list');
             }
         }
     };
