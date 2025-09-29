@@ -140,8 +140,18 @@ export const prepareLoadData = (
         typeofLoad: formData.typeofLoad,
         destination: formData.destination?.description,
         destinationFull: formData.destination,
+        destinationCoordinates: formData.destination ? {
+            latitude: formData.destination.latitude,
+            longitude: formData.destination.longitude,
+            address: formData.destination.description
+        } : null,
         origin: formData.origin?.description,
         originFull: formData.origin,
+        originCoordinates: formData.origin ? {
+            latitude: formData.origin.latitude,
+            longitude: formData.origin.longitude,
+            address: formData.origin.description
+        } : null,
 
         // Professional user fields
         rate: userType === 'professional' ? (formData.rate || '') : (formData.budget || ''),

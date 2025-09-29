@@ -147,8 +147,11 @@ const TruckDetailsView = () => {
         setModalVisible(false);
         // Navigate to edit page with the details
         router.push({
-            pathname: '/Logistics/Trucks/AddTrucks',
-            params: { editDetails: JSON.stringify(truckDetails) }
+            pathname: '/Account/Verification/EditTruckAccountDetails',
+            params: {
+                accountId: truckDetails?.id,
+                details: JSON.stringify(truckDetails)
+            }
         });
     };
 
@@ -356,7 +359,26 @@ const TruckDetailsView = () => {
 
     return (
         <ScreenWrapper>
-            <Heading page="Truck Verification Details" />
+            <Heading
+                page="Truck Verification Details"
+                rightComponent={
+                    <View style={{ flexDirection: 'row', marginRight: wp(2) }}>
+                        <View style={{ overflow: 'hidden', borderRadius: wp(10), alignSelf: 'flex-end' }}>
+                            <TouchableOpacity onPress={() => router.push({
+                                pathname: '/Account/Verification/EditTruckAccountDetails',
+                                params: {
+                                    accountId: truckDetails.id,
+                                    details: JSON.stringify(truckDetails)
+                                }
+                            })}>
+                                <View style={{ padding: wp(2), flex: 1, justifyContent: 'center' }}>
+                                    <Ionicons name='create-outline' color={icon} size={wp(4)} />
+                                </View>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                }
+            />
 
             <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
                 <View style={{ padding: wp(4) }}>

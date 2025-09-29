@@ -12,6 +12,7 @@ import FormatedText from './FormatedText'
 import ImageViewing from 'react-native-image-viewing';
 import { AntDesign } from '@expo/vector-icons'; // or any close icon
 import { WebView } from 'react-native-webview';
+import { router } from 'expo-router';
 
 const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string) => { }, ondetailsPress = () => { } }) => {
   const backgroundLight = useThemeColor('backgroundLight')
@@ -376,7 +377,35 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
               justifyContent: 'center',
               marginVertical: wp(2),
               elevation: 4,
-            }} >
+            }} onPress={() => {
+              // Extract coordinates from origin and destination strings
+              const originCoords = item.origin?.split(',').map(coord => parseFloat(coord.trim()));
+              const destinationCoords = item.destination?.split(',').map(coord => parseFloat(coord.trim()));
+
+              if (originCoords && destinationCoords && originCoords.length === 2 && destinationCoords.length === 2) {
+                router.push({
+                  pathname: "/Map/Index",
+                  params: {
+                    destinationLati: destinationCoords[0].toString(),
+                    destinationLongi: destinationCoords[1].toString(),
+                    ...(item.routePolyline && { routePolyline: item.routePolyline }),
+                    ...(item.bounds && { bounds: JSON.stringify(item.bounds) }),
+                    ...(item.distance && { distance: item.distance }),
+                    ...(item.duration && { duration: item.duration }),
+                    ...(item.durationInTraffic && { durationInTraffic: item.durationInTraffic }),
+                  }
+                });
+              } else {
+                // Fallback to basic map view if coordinates are not available
+                router.push({
+                  pathname: "/Map/Index",
+                  params: {
+                    destinationLati: "-17.8252",
+                    destinationLongi: "31.0335",
+                  }
+                });
+              }
+            }}>
               <ThemedText>View On Map</ThemedText>
             </TouchableOpacity>
 

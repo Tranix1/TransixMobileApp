@@ -12,7 +12,15 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 export default function Map() {
-  const { destinationLati, destinationLongi } = useLocalSearchParams();
+  const {
+    destinationLati,
+    destinationLongi,
+    routePolyline,
+    bounds,
+    distance,
+    duration,
+    durationInTraffic
+  } = useLocalSearchParams();
 
   const [currentLocation, setCurrentLocation] =
     useState<Location.LocationObject | null>(null);
@@ -44,13 +52,49 @@ export default function Map() {
 
   const originCoords = currentLocation?.coords
     ? {
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude,
-      }
+      latitude: currentLocation.coords.latitude,
+      longitude: currentLocation.coords.longitude,
+    }
     : null;
 
   useEffect(() => {
     async function fetchRoute() {
+      // If route data is already provided, use it instead of calling API
+      if (routePolyline) {
+        const points: LatLng[] = decodePolyline(routePolyline as string);
+        setRouteCoords(points);
+
+        // ✅ Fit map only once using provided bounds or coordinates
+        if (mapRef.current && points.length > 0 && !hasFitted) {
+          if (bounds) {
+            // Use provided bounds if available
+            const boundsData = JSON.parse(bounds as string);
+            mapRef.current.fitToCoordinates(
+              [
+                { latitude: boundsData.southwest.lat, longitude: boundsData.southwest.lng },
+                { latitude: boundsData.northeast.lat, longitude: boundsData.northeast.lng }
+              ],
+              {
+                edgePadding: { top: 100, right: 100, bottom: 100, left: 100 },
+                animated: true,
+              }
+            );
+          } else {
+            // Fallback to using route coordinates
+            mapRef.current.fitToCoordinates(
+              [originCoords!, destinationCoords, ...points],
+              {
+                edgePadding: { top: 100, right: 100, bottom: 100, left: 100 },
+                animated: true,
+              }
+            );
+          }
+          setHasFitted(true);
+        }
+        return;
+      }
+
+      // Only call API if route data is not provided
       const GOOGLE_MAPS_API_KEY =
         "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
       const origin = `${originCoords?.latitude},${originCoords?.longitude}`;
@@ -90,7 +134,7 @@ export default function Map() {
     if (originCoords) {
       fetchRoute();
     }
-  }, [originCoords]);
+  }, [originCoords, routePolyline, bounds]);
 
   const getInitialRegion = () => {
     if (!originCoords) return null;

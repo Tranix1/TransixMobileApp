@@ -27,7 +27,29 @@ interface Load {
   ratePerTonne: string;
   fromLocation: string;
   toLocation: string;
+  origin?: {
+    description: string;
+    placeId: string;
+    latitude: number;
+    longitude: number;
+    country: string | null;
+    city: string | null;
+  };
+  destination?: {
+    description: string;
+    placeId: string;
+    latitude: number;
+    longitude: number;
+    country: string | null;
+    city: string | null;
+  };
   isVerified?: boolean;
+  commodity?: string;
+  paymentTerms?: string;
+  requirements?: string;
+  additionalInfo?: string;
+  currency?: string;
+  model?: string;
 }
 
 interface Truck {
@@ -37,9 +59,30 @@ interface Truck {
   timeStamp: number;
   fromLocation: string;
   toLocation: string;
+  origin?: {
+    description: string;
+    placeId: string;
+    latitude: number;
+    longitude: number;
+    country: string | null;
+    city: string | null;
+  };
+  destination?: {
+    description: string;
+    placeId: string;
+    latitude: number;
+    longitude: number;
+    country: string | null;
+    city: string | null;
+  };
   truckTonnage?: string;
   truckType: string;
+  truckCapacity?: string;
+  cargoArea?: string;
+  tankerType?: string;
   isVerified?: boolean;
+  additionalInfo?: string;
+  operationCountries?: string[];
 }
 
 interface SearchItermsProps {
@@ -64,6 +107,13 @@ function SearchIterms({ navigation }: SearchItermsProps) {
   } | null>(Countries[0] ?? null);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedTab, setSelectedTab] = useState("Showroom");
+
+  // Advanced search states
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     try {
@@ -114,10 +164,138 @@ function SearchIterms({ navigation }: SearchItermsProps) {
     }
   }, []);
 
+  // Generate search suggestions based on available data
+  const generateSuggestions = (searchText: string) => {
+    if (searchText.length < 2) return [];
+
+    const suggestions = new Set<string>();
+    const searchLower = searchText.toLowerCase();
+
+    // Add location suggestions
+    loadsList.forEach(load => {
+      if (load.origin?.toLowerCase().includes(searchLower)) {
+        suggestions.add(load.origin);
+      }
+      if (load.destination?.toLowerCase().includes(searchLower)) {
+        suggestions.add(load.destination);
+      }
+      if (load.originFull?.description?.toLowerCase().includes(searchLower)) {
+        suggestions.add(load.originFull.description);
+      }
+      if (load.destinationFull?.description?.toLowerCase().includes(searchLower)) {
+        suggestions.add(load.destinationFull.description);
+      }
+    });
+
+    allTrucks.forEach(truck => {
+      if (truck.origin?.description?.toLowerCase().includes(searchLower)) {
+        suggestions.add(truck.origin.description);
+      }
+      if (truck.destination?.description?.toLowerCase().includes(searchLower)) {
+        suggestions.add(truck.destination.description);
+      }
+    });
+
+    return Array.from(suggestions).slice(0, 5);
+  };
+
+  // Enhanced search function with multiple criteria and category filtering
+  const performSearch = (searchText: string) => {
+    if (!searchText.trim()) {
+      setFilteredData([]);
+      setFilteredDataTruks([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const searchLower = searchText.toLowerCase();
+    const searchWords = searchLower.split(' ').filter(word => word.length > 0);
+
+    // Apply category filtering
+    let loadsToSearch = loadsList;
+    let trucksToSearch = allTrucks;
+
+    // Filter by category
+    if (selectedCategory === "transport&Lgistcs") {
+      // Only search loads and trucks (default behavior)
+      loadsToSearch = loadsList;
+      trucksToSearch = allTrucks;
+    } else if (selectedCategory === "Store") {
+      // For now, only show trucks as store items
+      // In the future, this could include other store items
+      loadsToSearch = [];
+      trucksToSearch = allTrucks;
+    }
+
+    // Search loads with multiple criteria
+    const filteredLoads = loadsToSearch.filter((load) => {
+      const searchableFields = [
+        load.companyName,
+        load.typeofLoad,
+        load.origin,
+        load.destination,
+        load.originFull?.description,
+        load.destinationFull?.description,
+        load.originFull?.city,
+        load.destinationFull?.city,
+        load.originFull?.country,
+        load.destinationFull?.country,
+        load.commodity,
+        load.paymentTerms,
+        load.requirements,
+        load.additionalInfo,
+        load.currency,
+        load.model
+      ].filter(Boolean);
+
+      const searchableText = searchableFields.join(' ').toLowerCase();
+
+      // Check if all search words are found in any of the fields
+      return searchWords.every(word => searchableText.includes(word));
+    });
+
+    // Search trucks with multiple criteria
+    const filteredTrucks = trucksToSearch.filter((truck) => {
+      const searchableFields = [
+        truck.CompanyName,
+        truck.truckType,
+        truck.truckCapacity,
+        truck.cargoArea,
+        truck.tankerType,
+        truck.origin?.description,
+        truck.destination?.description,
+        truck.origin?.city,
+        truck.destination?.city,
+        truck.origin?.country,
+        truck.destination?.country,
+        truck.additionalInfo,
+        ...(truck.operationCountries || [])
+      ].filter(Boolean);
+
+      const searchableText = searchableFields.join(' ').toLowerCase();
+
+      // Check if all search words are found in any of the fields
+      return searchWords.every(word => searchableText.includes(word));
+    });
+
+    setFilteredData(filteredLoads);
+    setFilteredDataTruks(filteredTrucks);
+  };
+
   const handleFilter = (text: string) => {
-    const searchWord = text;
     setTextTyped(text);
     setWordEntered(text);
+    setIsSearching(true);
+
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Generate suggestions
+    const suggestions = generateSuggestions(text);
+    setSearchSuggestions(suggestions);
+    setShowSuggestions(text.length > 1 && suggestions.length > 0);
 
     // Animate search results
     if (text.length > 0) {
@@ -134,21 +312,13 @@ function SearchIterms({ navigation }: SearchItermsProps) {
       }).start();
     }
 
-    const newFilter = loadsList.filter((value) => {
-      return (value.fromLocation || value.toLocation || value.companyName || value.typeofLoad)?.toLowerCase().includes(searchWord.toLowerCase());
-    });
+    // Debounce search to improve performance
+    const timeout = setTimeout(() => {
+      performSearch(text);
+      setIsSearching(false);
+    }, 300);
 
-    const newFilterTrucks = allTrucks.filter((value) => {
-      return (value.fromLocation || value.toLocation || value.CompanyName || value.truckType)?.toLowerCase().includes(searchWord.toLowerCase());
-    });
-
-    if (searchWord === "") {
-      setFilteredData([]);
-      setFilteredDataTruks([]);
-    } else {
-      setFilteredData(newFilter);
-      setFilteredDataTruks(newFilterTrucks);
-    }
+    setSearchTimeout(timeout);
   };
 
   const clearInput = () => {
@@ -156,6 +326,46 @@ function SearchIterms({ navigation }: SearchItermsProps) {
     setFilteredDataTruks([]);
     setWordEntered("");
     setTextTyped("");
+    setShowSuggestions(false);
+    setSearchSuggestions([]);
+    setIsSearching(false);
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+      setSearchTimeout(null);
+    }
+  };
+
+  const handleSuggestionPress = (suggestion: string) => {
+    setTextTyped(suggestion);
+    setWordEntered(suggestion);
+    setShowSuggestions(false);
+    addToSearchHistory(suggestion);
+    performSearch(suggestion);
+  };
+
+  const addToSearchHistory = (searchTerm: string) => {
+    if (searchTerm.trim() && !searchHistory.includes(searchTerm.trim())) {
+      setSearchHistory(prev => [searchTerm.trim(), ...prev.slice(0, 9)]);
+    }
+  };
+
+  const applyFilters = () => {
+    // Re-perform search with current filters
+    if (textTyped.trim()) {
+      performSearch(textTyped);
+    }
+    setShowFilter(false);
+  };
+
+  const clearFilters = () => {
+    setSelectedCountryId(Countries[0] ?? null);
+    setSelectedCategory("");
+    setSelectedTab("Showroom");
+    // Re-perform search without filters
+    if (textTyped.trim()) {
+      performSearch(textTyped);
+    }
+    setShowFilter(false);
   };
 
   // Modern card component for trucks
@@ -178,26 +388,40 @@ function SearchIterms({ navigation }: SearchItermsProps) {
       <View style={styles.routeContainer}>
         <View style={styles.locationRow}>
           <Ionicons name="location" size={16} color={icon} />
-          <ThemedText style={styles.locationText}>{item.fromLocation}</ThemedText>
+          <ThemedText style={styles.locationText}>
+            {item.origin || item.originFull?.description}
+          </ThemedText>
         </View>
         <View style={styles.arrowContainer}>
           <Ionicons name="arrow-forward" size={16} color={icon} />
         </View>
         <View style={styles.locationRow}>
           <Ionicons name="flag" size={16} color={accent} />
-          <ThemedText style={styles.locationText}>{item.toLocation}</ThemedText>
+          <ThemedText style={styles.locationText}>
+            {item.destination || item.destinationFull?.description}
+          </ThemedText>
         </View>
       </View>
 
       <View style={styles.detailsRow}>
-        {item.truckTonnage && (
+        {item.truckCapacity && (
           <View style={styles.detailChip}>
-            <ThemedText style={styles.detailText}>{item.truckTonnage} Ton</ThemedText>
+            <ThemedText style={styles.detailText}>{item.truckCapacity}</ThemedText>
           </View>
         )}
         <View style={styles.detailChip}>
           <ThemedText style={styles.detailText}>{item.truckType}</ThemedText>
         </View>
+        {item.cargoArea && (
+          <View style={styles.detailChip}>
+            <ThemedText style={styles.detailText}>{item.cargoArea}</ThemedText>
+          </View>
+        )}
+        {item.tankerType && (
+          <View style={styles.detailChip}>
+            <ThemedText style={styles.detailText}>{item.tankerType}</ThemedText>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -222,14 +446,18 @@ function SearchIterms({ navigation }: SearchItermsProps) {
       <View style={styles.routeContainer}>
         <View style={styles.locationRow}>
           <Ionicons name="location" size={16} color={icon} />
-          <ThemedText style={styles.locationText}>{item.fromLocation}</ThemedText>
+          <ThemedText style={styles.locationText}>
+            {item.origin || item.originFull?.description}
+          </ThemedText>
         </View>
         <View style={styles.arrowContainer}>
           <Ionicons name="arrow-forward" size={16} color={icon} />
         </View>
         <View style={styles.locationRow}>
           <Ionicons name="flag" size={16} color={accent} />
-          <ThemedText style={styles.locationText}>{item.toLocation}</ThemedText>
+          <ThemedText style={styles.locationText}>
+            {item.destination || item.destinationFull?.description}
+          </ThemedText>
         </View>
       </View>
 
@@ -237,9 +465,23 @@ function SearchIterms({ navigation }: SearchItermsProps) {
         <View style={styles.detailChip}>
           <ThemedText style={styles.detailText}>{item.typeofLoad}</ThemedText>
         </View>
-        <View style={[styles.detailChip, styles.rateChip]}>
-          <ThemedText style={[styles.detailText, styles.rateText]}>{item.ratePerTonne}</ThemedText>
-        </View>
+        {item.ratePerTonne && (
+          <View style={[styles.detailChip, styles.rateChip]}>
+            <ThemedText style={[styles.detailText, styles.rateText]}>
+              {item.ratePerTonne} {item.currency || ''}
+            </ThemedText>
+          </View>
+        )}
+        {item.commodity && (
+          <View style={styles.detailChip}>
+            <ThemedText style={styles.detailText}>{item.commodity}</ThemedText>
+          </View>
+        )}
+        {item.model && (
+          <View style={styles.detailChip}>
+            <ThemedText style={styles.detailText}>{item.model}</ThemedText>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -302,18 +544,71 @@ Experience the future of transportation and logistics!`;
         </TouchableHighlight>
 
         <View style={styles.searchContainer}>
-          <Input
-            onChangeText={(text) => handleFilter(text)}
-            placeholder='loads, trucks, locations...'
-            autoFocus
-            Icon={<EvilIcons name='search' size={wp(6)} color={icon} />}
-            isDynamicwidth
-            containerStyles={[styles.searchInput, { backgroundColor: backgroundColor }]}
-          />
-          {textTyped.length > 0 && (
-            <TouchableOpacity onPress={clearInput} style={styles.clearButton}>
-              <Ionicons name="close-circle" size={wp(5)} color={icon} />
-            </TouchableOpacity>
+          <View style={styles.searchInputContainer}>
+            <Input
+              onChangeText={(text) => handleFilter(text)}
+              placeholder='Search loads, trucks, locations, commodities...'
+              value={textTyped}
+              autoFocus
+              Icon={<EvilIcons name='search' size={wp(6)} color={icon} />}
+              isDynamicwidth
+              containerStyles={[styles.searchInput, { backgroundColor: backgroundColor }]}
+              onSubmitEditing={() => {
+                if (textTyped.trim()) {
+                  addToSearchHistory(textTyped.trim());
+                  performSearch(textTyped);
+                }
+              }}
+            />
+            {textTyped.length > 0 && (
+              <TouchableOpacity onPress={clearInput} style={styles.clearButton}>
+                <Ionicons name="close-circle" size={wp(5)} color={icon} />
+              </TouchableOpacity>
+            )}
+            {textTyped.length > 0 && (
+              <TouchableOpacity
+                onPress={() => {
+                  addToSearchHistory(textTyped.trim());
+                  performSearch(textTyped);
+                }}
+                style={styles.searchButton}
+              >
+                <Ionicons name="search" size={wp(5)} color={accent} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Search Suggestions */}
+          {showSuggestions && searchSuggestions.length > 0 && (
+            <View style={[styles.suggestionsContainer, { backgroundColor: backgroundLight }]}>
+              {searchSuggestions.map((suggestion, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.suggestionItem}
+                  onPress={() => handleSuggestionPress(suggestion)}
+                >
+                  <Ionicons name="search" size={wp(4)} color={icon} />
+                  <ThemedText style={styles.suggestionText}>{suggestion}</ThemedText>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {/* Search History */}
+          {!showSuggestions && textTyped.length === 0 && searchHistory.length > 0 && (
+            <View style={[styles.historyContainer, { backgroundColor: backgroundLight }]}>
+              <ThemedText style={styles.historyTitle}>Recent Searches</ThemedText>
+              {searchHistory.slice(0, 5).map((historyItem, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.historyItem}
+                  onPress={() => handleSuggestionPress(historyItem)}
+                >
+                  <Ionicons name="time" size={wp(4)} color={icon} />
+                  <ThemedText style={styles.historyText}>{historyItem}</ThemedText>
+                </TouchableOpacity>
+              ))}
+            </View>
           )}
         </View>
 
@@ -352,8 +647,11 @@ Experience the future of transportation and logistics!`;
           {/* Results Header */}
           <View style={styles.resultsHeader}>
             <ThemedText style={styles.resultsTitle}>
-              Search Results ({filteredData.length + filteredDataTrucks.length})
+              {isSearching ? 'Searching...' : `Search Results (${filteredData.length + filteredDataTrucks.length})`}
             </ThemedText>
+            {isSearching && (
+              <ActivityIndicator size="small" color={accent} style={{ marginLeft: wp(2) }} />
+            )}
           </View>
 
           {/* Loads Section */}
@@ -590,18 +888,13 @@ Experience the future of transportation and logistics!`;
 
               <View style={{ marginTop: wp(4), gap: wp(2) }}>
                 <Button
-                  onPress={() => setShowFilter(false)}
+                  onPress={applyFilters}
                   title="Apply Filter"
                   colors={{ bg: accent + '1c', text: accent }}
                   style={{ height: 45 }}
                 />
                 <Button
-                  onPress={() => {
-                    setSelectedCountryId(Countries[0] ?? null);
-                    setSelectedCategory("");
-                    setSelectedTab("Showroom");
-                    setShowFilter(false);
-                  }}
+                  onPress={clearFilters}
                   title="Clear All"
                   colors={{ bg: coolGray + '1c', text: coolGray }}
                   style={{ height: 45 }}
@@ -630,6 +923,9 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flex: 1,
+    position: 'relative',
+  },
+  searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     position: 'relative',
@@ -646,6 +942,11 @@ const styles = StyleSheet.create({
   clearButton: {
     position: 'absolute',
     right: wp(3),
+    padding: wp(1),
+  },
+  searchButton: {
+    position: 'absolute',
+    right: wp(8),
     padding: wp(1),
   },
   filterButton: {
@@ -826,6 +1127,71 @@ const styles = StyleSheet.create({
   modalButtonText: {
     fontSize: wp(3.2),
     fontWeight: '600',
+  },
+  // New styles for suggestions and history
+  suggestionsContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    borderRadius: wp(2),
+    marginTop: wp(1),
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    maxHeight: hp(30),
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: wp(3),
+    paddingHorizontal: wp(4),
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+    gap: wp(3),
+  },
+  suggestionText: {
+    flex: 1,
+    fontSize: wp(4),
+  },
+  historyContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    borderRadius: wp(2),
+    marginTop: wp(1),
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    maxHeight: hp(30),
+  },
+  historyTitle: {
+    fontSize: wp(3.5),
+    fontWeight: '600',
+    paddingVertical: wp(2),
+    paddingHorizontal: wp(4),
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  historyItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: wp(3),
+    paddingHorizontal: wp(4),
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+    gap: wp(3),
+  },
+  historyText: {
+    flex: 1,
+    fontSize: wp(4),
   },
 });
 

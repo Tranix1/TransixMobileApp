@@ -30,6 +30,7 @@ import { fetchDocuments, } from '@/db/operations';
 
 import { RequestedCargo } from "@/components/CargoYouRequest";
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { getCurrentLocation } from '@/Utilities/utils';
 
 
 const accent = "#6a0c0c";
@@ -49,6 +50,7 @@ function BookingsandBiddings({ }) {
 
   const [fectedDocuments, setFetchedDocuments] = React.useState<any>([])
   const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
+  const [currentLocation, setCurrentLocation] = React.useState<{ latitude: number, longitude: number } | null>(null)
 
   const [requestType, setRequestType] = React.useState("Booked") // Default to Books view
 
@@ -110,6 +112,25 @@ function BookingsandBiddings({ }) {
       setLastVisible(result.lastVisible)
     }
   }
+  // Get current location for tracking
+  useEffect(() => {
+    const getLocation = async () => {
+      try {
+        const location = await getCurrentLocation();
+        if (location) {
+          setCurrentLocation({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude
+          });
+        }
+      } catch (error) {
+        console.error('Error getting current location:', error);
+      }
+    };
+
+    getLocation();
+  }, []);
+
   useEffect(() => {
     setFilteredPNotAavaialble(false); // Reset filter state when route changes
     LoadTructs();
@@ -220,7 +241,13 @@ function BookingsandBiddings({ }) {
 
 
         renderItem={({ item, index, separators }) =>
-          <RequestedCargo item={item} index={index} separators={separators} dspRoute={`${dspRoute}`} />
+          <RequestedCargo
+            item={item}
+            index={index}
+            separators={separators}
+            dspRoute={`${dspRoute}`}
+            currentLocation={currentLocation}
+          />
           // : <CargoRequested item={item} index={index} separators={separators} />
         }
         contentContainerStyle={{ padding: wp(4) }}

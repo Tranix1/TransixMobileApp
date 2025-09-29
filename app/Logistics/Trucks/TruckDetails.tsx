@@ -24,6 +24,7 @@ import { AntDesign } from '@expo/vector-icons'; // or any close icon
 // import { sendPushNotification } from "@/Utilities/pushNotification";
 import { sendPushNotification } from "@/Utilities/pushNotification";
 import Input from "@/components/Input";
+import TruckAvailabilityModal, { TruckAvailabilityData } from "@/components/TruckAvailabilityModal";
 
 
 
@@ -45,6 +46,7 @@ const TruckDetails = () => {
     const { truckid, updateReuestDoc, dspDetails, truckBeingReuested, productName, origin, destination, model, rate, currency, expoPushToken } = useLocalSearchParams();
     const [truckData, setTruckData] = useState<Truck>({} as Truck)
     const [modalVisible, setModalVisible] = useState(false);
+    const [availabilityModalVisible, setAvailabilityModalVisible] = useState(false);
     const [refreshing, setRefreshing] = useState(false)
     const [isSaved, setIsSaved] = useState(false);
 
@@ -348,6 +350,28 @@ const TruckDetails = () => {
         }
     };
 
+    const handleSaveAvailability = async (availabilityData: TruckAvailabilityData) => {
+        try {
+            // Update truck with availability data
+            await updateDocument('Trucks', truckData.id, {
+                availability: availabilityData,
+                lastAvailabilityUpdate: new Date().toISOString(),
+            });
+
+            // Show success message
+            alertBox(
+                'Success',
+                availabilityData.isAvailable
+                    ? 'Truck availability updated successfully!'
+                    : 'Truck marked as unavailable',
+                [{ title: 'OK', onPress: () => getData() }]
+            );
+        } catch (error) {
+            console.error('Error saving truck availability:', error);
+            alertBox('Error', 'Failed to save truck availability', [], 'error');
+        }
+    };
+
     const placeholder = require('@/assets/images/failedimage.jpg')
     return (
         <ScreenWrapper>
@@ -367,6 +391,10 @@ const TruckDetails = () => {
                                 </ThemedText>
                                 <TouchableOpacity
                                     style={{ backgroundColor: "#1E90FF", alignItems: 'center', padding: wp(2), borderRadius: wp(4) }}
+                                    onPress={() => {
+                                        setModalVisible(false);
+                                        setAvailabilityModalVisible(true);
+                                    }}
                                 >
                                     <ThemedText color="#fff" type="subtitle">Truck Available</ThemedText>
                                     {/* <ThemedText color="#fff" type="subtitle">Truck Not Available</ThemedText> */}
@@ -1115,6 +1143,14 @@ const TruckDetails = () => {
                     </View>
                 </View>
             </Modal>
+
+            {/* Truck Availability Modal */}
+            <TruckAvailabilityModal
+                visible={availabilityModalVisible}
+                onClose={() => setAvailabilityModalVisible(false)}
+                onSave={handleSaveAvailability}
+                truckId={truckData.id}
+            />
         </ScreenWrapper >
     )
 }

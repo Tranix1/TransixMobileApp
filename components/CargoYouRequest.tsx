@@ -41,13 +41,13 @@ const getRelativeTime = (timestamp: number): string => {
 };
 
 export const RequestedCargo = ({
-  item, dspRoute
+  item, dspRoute, currentLocation
 }: {
   item: any
   index: any
   separators: any
   dspRoute: string
-
+  currentLocation?: { latitude: number, longitude: number } | null
 }) => {
 
   const textColor = useThemeColor('text')
@@ -113,6 +113,7 @@ export const RequestedCargo = ({
       <LoadTracker
         loadRequest={item}
         isTruckOwner={dspRoute === "Requested Loads"}
+        currentTruckLocation={currentLocation}
         onTrackerShared={() => {
           // Refresh the data or show success message
           ToastAndroid.show("Tracker shared successfully!", ToastAndroid.SHORT);

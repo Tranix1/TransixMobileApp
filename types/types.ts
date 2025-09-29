@@ -208,6 +208,8 @@ export type Load = {
     distance: string,
     duration: string,
     durationInTraffic: string,
+    routePolyline?: string;
+    bounds?: any;
     created_at: string,
     destination: string,
     userId: string;

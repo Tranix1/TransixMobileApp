@@ -647,16 +647,6 @@ const AddLoadDB = () => {
                 onChangeText={setFuelAvai}
               />
 
-
-
-
-
-
-
-
-
-
-
               {
                 (userType === 'general' ? loadImages.length > 0 : proofOfOrder[0]) ? (
                   <View>
