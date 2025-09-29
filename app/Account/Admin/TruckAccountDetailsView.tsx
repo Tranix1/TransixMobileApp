@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TouchableOpacity, Modal, Pressable, Alert, StyleSheet } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Modal, Pressable, Alert, StyleSheet, TextInput } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import ScreenWrapper from '@/components/ScreenWrapper';
@@ -418,6 +418,77 @@ const TruckAccountDetailsView = () => {
                 onRequestClose={() => setShowImageViewer(false)}
             />
 
+            {/* Action Buttons - Only show for pending/edited accounts */}
+            {accountDetails.approvalStatus === 'pending' || accountDetails.approvalStatus === 'edited' ? (
+                <View style={styles.actionButtonsContainer}>
+                    <Button
+                        title="Reject"
+                        onPress={() => setShowRejectModal(true)}
+                        style={[styles.actionButton, styles.rejectButton]}
+                        textStyle={styles.rejectButtonText}
+                        disabled={processing}
+                    />
+                    <Button
+                        title="Approve"
+                        onPress={handleApprove}
+                        style={[styles.actionButton, styles.approveButton]}
+                        textStyle={styles.approveButtonText}
+                        disabled={processing}
+                    />
+                </View>
+            ) : null}
+
+            {/* Rejection Modal */}
+            <Modal
+                visible={showRejectModal}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowRejectModal(false)}
+            >
+                <BlurView intensity={20} style={styles.modalOverlay}>
+                    <View style={[styles.modalContainer, { backgroundColor: background }]}>
+                        <ThemedText type="title" style={styles.modalTitle}>
+                            Reject Account
+                        </ThemedText>
+                        <ThemedText type="default" style={styles.modalSubtitle}>
+                            Please provide a reason for rejecting this account:
+                        </ThemedText>
+
+                        <View style={[styles.textInputContainer, { borderColor: border }]}>
+                            <TextInput
+                                style={[styles.textInput, { color: textColor }]}
+                                multiline
+                                numberOfLines={4}
+                                placeholder="Enter rejection reason..."
+                                placeholderTextColor={icon}
+                                value={rejectionReason}
+                                onChangeText={setRejectionReason}
+                            />
+                        </View>
+
+                        <View style={styles.modalButtons}>
+                            <Button
+                                title="Cancel"
+                                onPress={() => {
+                                    setShowRejectModal(false);
+                                    setRejectionReason('');
+                                }}
+                                style={[styles.modalButton, styles.cancelButton]}
+                                textStyle={styles.cancelButtonText}
+                                disabled={processing}
+                            />
+                            <Button
+                                title="Reject"
+                                onPress={handleReject}
+                                style={[styles.modalButton, styles.confirmRejectButton]}
+                                textStyle={styles.confirmRejectButtonText}
+                                disabled={processing || !rejectionReason.trim()}
+                            />
+                        </View>
+                    </View>
+                </BlurView>
+            </Modal>
+
             {/* PDF Viewer */}
             <PDFViewer
                 visible={showPDFViewer}
@@ -468,6 +539,93 @@ const styles = StyleSheet.create({
     },
     documentThumbnail: { width: '100%', height: '100%' },
     documentText: { textAlign: 'center' },
+    // Action buttons styles
+    actionButtonsContainer: {
+        flexDirection: 'row',
+        padding: wp(4),
+        gap: wp(3),
+        backgroundColor: 'transparent',
+    },
+    actionButton: {
+        flex: 1,
+        paddingVertical: wp(3),
+        borderRadius: wp(2),
+    },
+    rejectButton: {
+        backgroundColor: '#F44336',
+    },
+    rejectButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    approveButton: {
+        backgroundColor: '#4CAF50',
+    },
+    approveButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    // Modal styles
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: wp(4),
+    },
+    modalContainer: {
+        width: '100%',
+        maxWidth: wp(90),
+        borderRadius: wp(3),
+        padding: wp(5),
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    modalTitle: {
+        textAlign: 'center',
+        marginBottom: wp(2),
+    },
+    modalSubtitle: {
+        textAlign: 'center',
+        marginBottom: wp(4),
+        opacity: 0.7,
+    },
+    textInputContainer: {
+        borderWidth: 1,
+        borderRadius: wp(2),
+        padding: wp(3),
+        marginBottom: wp(4),
+        minHeight: wp(20),
+    },
+    textInput: {
+        textAlignVertical: 'top',
+        minHeight: wp(15),
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        gap: wp(3),
+    },
+    modalButton: {
+        flex: 1,
+        paddingVertical: wp(3),
+        borderRadius: wp(2),
+    },
+    cancelButton: {
+        backgroundColor: '#f0f0f0',
+    },
+    cancelButtonText: {
+        color: '#666',
+        fontWeight: 'bold',
+    },
+    confirmRejectButton: {
+        backgroundColor: '#F44336',
+    },
+    confirmRejectButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
 });
 
 export default TruckAccountDetailsView;

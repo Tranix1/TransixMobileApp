@@ -11,6 +11,35 @@ import { deleteDocument, } from "@/db/operations";
 import { LoadTracker } from "@/components/LoadTracker";
 import { useAuth } from '@/context/AuthContext';
 
+// Function to get relative time (e.g., "1 hr ago", "4 seconds ago")
+const getRelativeTime = (timestamp: number): string => {
+  const now = Date.now();
+  const diff = now - timestamp;
+
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (seconds < 60) {
+    return `${seconds} second${seconds !== 1 ? 's' : ''} ago`;
+  } else if (minutes < 60) {
+    return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+  } else if (hours < 24) {
+    return `${hours} hr${hours !== 1 ? 's' : ''} ago`;
+  } else if (days <= 2) {
+    return `${days} day${days !== 1 ? 's' : ''} ago`;
+  } else {
+    // More than 2 days - show the actual date
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+    });
+  }
+};
+
 export const RequestedCargo = ({
   item, dspRoute
 }: {
@@ -45,13 +74,15 @@ export const RequestedCargo = ({
 
       {showAlert}
 
-      <ThemedText type="subtitle" style={{ color: textColor, textAlign: 'center', marginBottom: wp(2) }}>{item.companyName}</ThemedText>
+      <ThemedText type="subtitle" style={{ color: textColor, textAlign: 'center', marginBottom: wp(2) }}>
+        {dspRoute === "Requested Loads" ? item.companyName : (item.truckOwnerName || item.companyName)}
+      </ThemedText>
 
       <Divider />
       <View style={{ backgroundColor: "#f4f4f4", borderRadius: 10, padding: wp(2), marginBottom: wp(2) }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
           <ThemedText style={{ width: 100, color: "#6a0c0c", fontWeight: "bold" }}>Status</ThemedText>
-          <ThemedText style={{ color: "#222" }}>{item.status} {item.created_at}</ThemedText>
+          <ThemedText style={{ color: "#222" }}>{item.status} {item.created_at ? getRelativeTime(parseInt(item.created_at)) : 'N/A'}</ThemedText>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
           <ThemedText style={{ width: 100, color: "#6a0c0c", fontWeight: "bold" }}>Commodity</ThemedText>
@@ -79,14 +110,14 @@ export const RequestedCargo = ({
       </View>
 
       {/* Load Tracker Component - only show for booked loads */}
-        <LoadTracker
-          loadRequest={item}
-          isTruckOwner={dspRoute === "Requested Loads"}
-          onTrackerShared={() => {
-            // Refresh the data or show success message
-            ToastAndroid.show("Tracker shared successfully!", ToastAndroid.SHORT);
-          }}
-        />
+      <LoadTracker
+        loadRequest={item}
+        isTruckOwner={dspRoute === "Requested Loads"}
+        onTrackerShared={() => {
+          // Refresh the data or show success message
+          ToastAndroid.show("Tracker shared successfully!", ToastAndroid.SHORT);
+        }}
+      />
 
       {dspRoute !== "Requested Loads" && <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: wp(2), gap: wp(2) }}>
         <TouchableOpacity style={{ alignItems: "center", justifyContent: 'center', backgroundColor: "#6a0c0c", paddingVertical: wp(2.5), borderRadius: wp(4), flex: 1 }} onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.truckId, updateReuestDoc: item.id, expoPushToken: item.expoPushToken, productName: item.productName, origin: item.origin, destination: item.destination, model: item.model, rate: item.rate, currency: item.currency, dspDetails: "true", truckBeingReuested: 'true' } })} >

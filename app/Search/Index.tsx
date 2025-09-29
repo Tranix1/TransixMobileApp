@@ -304,7 +304,7 @@ Experience the future of transportation and logistics!`;
         <View style={styles.searchContainer}>
           <Input
             onChangeText={(text) => handleFilter(text)}
-            placeholder='Search loads, trucks, locations...'
+            placeholder='loads, trucks, locations...'
             autoFocus
             Icon={<EvilIcons name='search' size={wp(6)} color={icon} />}
             isDynamicwidth
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: wp(4),
+    paddingHorizontal: wp(3),
     paddingTop: wp(3),
     paddingBottom: wp(2),
     gap: wp(2),

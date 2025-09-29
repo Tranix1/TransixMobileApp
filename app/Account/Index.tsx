@@ -75,7 +75,7 @@ const Index = () => {
                     </View>
                     <Divider />
                     <View style={styles.cardContent}>
-                        <DetailRow label="Phone Number" value={ user?.phoneNumber || 'N/A'} />
+                        <DetailRow label="Phone Number" value={user?.phoneNumber || 'N/A'} />
                         <DetailRow label="Country" value={user?.country || 'N/A'} />
                         <DetailRow label="Address" value={user?.address || 'N/A'} />
                         <DetailRow label="Organization" value={user?.organisation || 'N/A'} />
@@ -84,7 +84,7 @@ const Index = () => {
                 </View>
 
 
-               
+
 
             </ScrollView>
         </ScreenWrapper>

@@ -13,13 +13,13 @@ export default function Index() {
     const icon = useThemeColor('icon')
 
     const handleContactUs = () => {
-        const message = getContactMessage('warehouse');
+        const message = getContactMessage('serviceStation');
         openWhatsApp('+263787884434', message);
     };
 
     return (
         <ScreenWrapper>
-            <Heading page='Warehouse' />
+            <Heading page='Service Station' />
 
             {/* How It Works Section */}
             <View style={[styles.howItWorksCard, { backgroundColor: accent + '05', borderColor: accent }]}>
@@ -36,7 +36,7 @@ export default function Index() {
                             <ThemedText style={styles.stepNumberText}>1</ThemedText>
                         </View>
                         <ThemedText style={[styles.stepText, { color: icon }]}>
-                            Customers view your storage rates & availability
+                            Customers view your services & prices in our app
                         </ThemedText>
                     </View>
 
@@ -45,7 +45,7 @@ export default function Index() {
                             <ThemedText style={styles.stepNumberText}>2</ThemedText>
                         </View>
                         <ThemedText style={[styles.stepText, { color: icon }]}>
-                            They book space and get GPS navigation
+                            They book appointments and get GPS navigation
                         </ThemedText>
                     </View>
 
@@ -63,7 +63,7 @@ export default function Index() {
                             <ThemedText style={styles.stepNumberText}>4</ThemedText>
                         </View>
                         <ThemedText style={[styles.stepText, { color: icon }]}>
-                            Customers arrive, store goods, and track everything
+                            Customers arrive, get serviced, and leave satisfied
                         </ThemedText>
                     </View>
 
@@ -81,14 +81,14 @@ export default function Index() {
             {/* Contact Integration Card */}
             <View style={[styles.contactCard, { backgroundColor: accent + '10', borderColor: accent }]}>
                 <View style={styles.contactHeader}>
-                    <MaterialIcons name="warehouse" size={wp(6)} color={accent} />
+                    <MaterialIcons name="build" size={wp(6)} color={accent} />
                     <ThemedText type="subtitle" style={[styles.contactTitle, { color: accent }]}>
-                        Warehouse Partnership
+                        Service Station Partnership
                     </ThemedText>
                 </View>
 
                 <ThemedText style={[styles.contactDescription, { color: icon }]}>
-                    If you operate a warehouse with storage and logistics services and want to add your facility here, contact us to get customers fast!
+                    If you run a service station with vehicle maintenance and repair services and want to add your location here, contact us to get customers fast!
                 </ThemedText>
 
                 <View style={styles.featuresContainer}>
@@ -105,12 +105,12 @@ export default function Index() {
                             <ThemedText style={[styles.featureText, { color: icon }]}>Secure Online Payments</ThemedText>
                         </View>
                         <View style={styles.featureItem}>
-                            <MaterialIcons name="inventory" size={wp(4)} color={accent} />
-                            <ThemedText style={[styles.featureText, { color: icon }]}>Inventory Tracking</ThemedText>
+                            <MaterialIcons name="schedule" size={wp(4)} color={accent} />
+                            <ThemedText style={[styles.featureText, { color: icon }]}>Smart Scheduling</ThemedText>
                         </View>
                         <View style={styles.featureItem}>
-                            <MaterialIcons name="security" size={wp(4)} color={accent} />
-                            <ThemedText style={[styles.featureText, { color: icon }]}>Security Monitoring</ThemedText>
+                            <MaterialIcons name="build" size={wp(4)} color={accent} />
+                            <ThemedText style={[styles.featureText, { color: icon }]}>Service Reminders</ThemedText>
                         </View>
                     </View>
                 </View>
@@ -125,7 +125,7 @@ export default function Index() {
             </View>
 
             <ThemedText style={[styles.placeholderText, { color: icon }]}>
-                Warehouse services will be available soon. Contact us to be among the first partners!
+                Service station services will be available soon. Contact us to be among the first partners!
             </ThemedText>
         </ScreenWrapper>
     )

@@ -668,9 +668,9 @@ const TruckDetails = () => {
                                 Truck Registered By
                             </ThemedText>
                             <ThemedText type="subtitle" style={{}}>
-                                {truckData.ownerName && "Truck Owner"}
-                                {truckData.brokerName && "Truck Broker"}
 
+                                {truckData.accType === 'owner' && "Truck Owner"}
+                                {truckData.accType === 'broker' && "Truck Broker"}
                             </ThemedText>
                         </View>
 
@@ -868,6 +868,9 @@ const TruckDetails = () => {
                                     }}
                                 >
                                     <Image source={{ uri: item.uri }} style={{ height: hp(30), borderRadius: 10, width: wp(80), margin: 5 }} />
+                                    <ThemedText type="tiny" style={{ textAlign: 'center', marginTop: wp(1), color: icon }}>
+                                        {item.label}
+                                    </ThemedText>
                                 </TouchableOpacity>
                             ))}
 
@@ -898,6 +901,9 @@ const TruckDetails = () => {
                                     }}
                                 >
                                     <Image source={{ uri: item.uri }} style={styles.imageStyle} />
+                                    <ThemedText type="tiny" style={{ textAlign: 'center', marginTop: wp(1), color: icon }}>
+                                        {item.label}
+                                    </ThemedText>
                                 </TouchableOpacity>
                             ))}
 
@@ -924,8 +930,10 @@ const TruckDetails = () => {
                                         setIsVisible(true);
                                     }}
                                 >
-
                                     <Image source={{ uri: item.uri }} style={styles.imageStyle} />
+                                    <ThemedText type="tiny" style={{ textAlign: 'center', marginTop: wp(1), color: icon }}>
+                                        {item.label}
+                                    </ThemedText>
                                 </TouchableOpacity>
                             ))}
                         </ScrollView>

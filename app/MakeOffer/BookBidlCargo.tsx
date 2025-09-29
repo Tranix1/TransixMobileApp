@@ -33,7 +33,7 @@ function BookLCargo({ }) {
     try {
       if (auth.currentUser) {
         const userId = auth.currentUser.uid;
-        const dataQuery = query(collection(db, "Trucks"), where("userId", "==", userId));
+        const dataQuery = query(collection(db, "Trucks"), where("userId", "==", userId), where("isApproved", "==", true), where("accTypeIsApproved", "==", true), where("approvalStatus", "==", "approved"));
         const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
           const loadedData: Truck[] = [];
           snapshot.docChanges().forEach((change) => {
@@ -119,7 +119,7 @@ function BookLCargo({ }) {
       try {
         if (auth.currentUser) {
           const userId = auth.currentUser.uid
-          const existingBBDoc = await checkExistixtBBDoc(`${userId}${loadItem.loadId}${item.timeStamp}`);
+          const existingBBDoc = await checkExistixtBBDoc(`${userId}${loadItem.id}${item.timeStamp}`);
 
           // Check if truck has tracker and if it's available for sharing
           const truckData = await readById('Trucks', item.id) as any;
@@ -155,14 +155,11 @@ function BookLCargo({ }) {
               trackerSharingRequested: false, // Track if sharing was requested
               loadOwnerId: loadItem.userId, // Load owner ID for notifications
               truckOwnerId: truckData?.userId, // Truck owner ID for notifications
+              truckOwnerName: truckData?.ownerName || truckData?.CompanyName || "Truck Owner", // Truck owner name for display
               truckHasTracker: hasTracker, // Store tracker availability status
               trackerStatus: trackerStatus // Store tracker status
             }
             addDocument("loadRequests", theData)
-
-            // Send notification with tracker status information
-            console.log('🔔 Load item expoPushToken:', loadItem.expoPushToken);
-            console.log('🔔 Current user expoPushToken:', expoPushToken);
 
             if (loadItem.expoPushToken) {
               await sendBookingWithTrackerNotification(
