@@ -381,7 +381,7 @@ const AddLoadDB = () => {
 
     try {
       // Ensure addDocument is not a React hook or using hooks internally.
-      await addDocument("Cargo", loadData);
+      await addDocument( "Cargo" , loadData);
 
       await notifyTrucksByFilters({
         trucksNeeded,

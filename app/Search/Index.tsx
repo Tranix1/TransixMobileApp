@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, ScrollView, TouchableOpacity, TextInput, Share, TouchableHighlight, Animated, FlatList, ActivityIndicator, StyleSheet, Modal, SafeAreaView } from "react-native";
 import { BlurView } from 'expo-blur';
 
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from "@/db/fireBaseConfig";
 
 import { EvilIcons, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -24,7 +24,7 @@ interface Load {
   companyName: string;
   timeStamp: number;
   typeofLoad: string;
-  ratePerTonne: string;
+  rate: string;
   fromLocation: string;
   toLocation: string;
   origin?: {
@@ -50,6 +50,7 @@ interface Load {
   additionalInfo?: string;
   currency?: string;
   model?: string;
+  distance?: string;
 }
 
 interface Truck {
@@ -75,6 +76,39 @@ interface Truck {
     country: string | null;
     city: string | null;
   };
+  availability?: {
+    loadType: 'city-to-city' | 'local' | 'any-load';
+    origin: {
+      description: string;
+      placeId: string;
+      latitude: number;
+      longitude: number;
+      country: string | null;
+      city: string | null;
+    } | null;
+    destination: {
+      description: string;
+      placeId: string;
+      latitude: number;
+      longitude: number;
+      country: string | null;
+      city: string | null;
+    } | null;
+    localArea: {
+      description: string;
+      placeId: string;
+      latitude: number;
+      longitude: number;
+      country: string | null;
+      city: string | null;
+    } | null;
+    flexibleRouting: boolean;
+    additionalInfo: string;
+    isAvailable: boolean;
+    distance: string;
+    duration: string;
+    durationInTraffic: string;
+  };
   truckTonnage?: string;
   truckType: string;
   truckCapacity?: string;
@@ -85,11 +119,7 @@ interface Truck {
   operationCountries?: string[];
 }
 
-interface SearchItermsProps {
-  navigation: any; // You might want to define a more specific type for navigation
-}
-
-function SearchIterms({ navigation }: SearchItermsProps) {
+function SearchIterms() {
   const [loadsList, setLoadsList] = useState<Load[]>([]);
   const [textTyped, setTextTyped] = useState<string>("");
   const [allTrucks, setAllTrucks] = useState<Truck[]>([]);
@@ -117,19 +147,16 @@ function SearchIterms({ navigation }: SearchItermsProps) {
 
   useEffect(() => {
     try {
-      const dataQuery = query(collection(db, "Loads"));
+      const dataQuery = query(collection(db, "Cargo"));
 
       const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
-        let loadedData: Load[] = [];
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === 'added' || change.type === 'modified') {
-            const dataWithId: Load = { id: change.doc.id, ...change.doc.data() } as Load;
-            loadedData.push(dataWithId);
-          }
-        });
+        const loadedData: Load[] = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Load));
 
-        loadedData = loadedData.sort((a, b) => b.timeStamp - a.timeStamp);
-        setLoadsList(loadedData);
+        const sortedData = loadedData.sort((a, b) => b.timeStamp - a.timeStamp);
+        setLoadsList(sortedData);
         setIsLoading(false);
       });
 
@@ -142,19 +169,16 @@ function SearchIterms({ navigation }: SearchItermsProps) {
 
   useEffect(() => {
     try {
-      const dataQuery = query(collection(db, "Trucks"));
+      const dataQuery = query(collection(db, "Trucks"), where("isApproved", "==", true));
 
       const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
-        let loadedData: Truck[] = [];
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === 'added' || change.type === 'modified') {
-            const dataWithId: Truck = { id: change.doc.id, ...change.doc.data() } as Truck;
-            loadedData.push(dataWithId);
-          }
-        });
+        const loadedData: Truck[] = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Truck));
 
-        loadedData = loadedData.sort((a, b) => b.timeStamp - a.timeStamp);
-        setAllTrucks(loadedData);
+        const sortedData = loadedData.sort((a, b) => b.timeStamp - a.timeStamp);
+        setAllTrucks(sortedData);
       });
 
       // Clean up function to unsubscribe from the listener when the component unmounts
@@ -173,21 +197,32 @@ function SearchIterms({ navigation }: SearchItermsProps) {
 
     // Add location suggestions
     loadsList.forEach(load => {
-      if (load.origin?.toLowerCase().includes(searchLower)) {
-        suggestions.add(load.origin);
+      if (load.fromLocation?.toLowerCase().includes(searchLower)) {
+        suggestions.add(load.fromLocation);
       }
-      if (load.destination?.toLowerCase().includes(searchLower)) {
-        suggestions.add(load.destination);
+      if (load.toLocation?.toLowerCase().includes(searchLower)) {
+        suggestions.add(load.toLocation);
       }
-      if (load.originFull?.description?.toLowerCase().includes(searchLower)) {
-        suggestions.add(load.originFull.description);
+      if (load.origin?.description?.toLowerCase().includes(searchLower)) {
+        suggestions.add(load.origin.description);
       }
-      if (load.destinationFull?.description?.toLowerCase().includes(searchLower)) {
-        suggestions.add(load.destinationFull.description);
+      if (load.destination?.description?.toLowerCase().includes(searchLower)) {
+        suggestions.add(load.destination.description);
       }
     });
 
     allTrucks.forEach(truck => {
+      // Check availability data for location suggestions
+      if (truck.availability?.origin?.description?.toLowerCase().includes(searchLower)) {
+        suggestions.add(truck.availability.origin.description);
+      }
+      if (truck.availability?.destination?.description?.toLowerCase().includes(searchLower)) {
+        suggestions.add(truck.availability.destination.description);
+      }
+      if (truck.availability?.localArea?.description?.toLowerCase().includes(searchLower)) {
+        suggestions.add(truck.availability.localArea.description);
+      }
+      // Also check legacy location fields
       if (truck.origin?.description?.toLowerCase().includes(searchLower)) {
         suggestions.add(truck.origin.description);
       }
@@ -232,14 +267,14 @@ function SearchIterms({ navigation }: SearchItermsProps) {
       const searchableFields = [
         load.companyName,
         load.typeofLoad,
-        load.origin,
-        load.destination,
-        load.originFull?.description,
-        load.destinationFull?.description,
-        load.originFull?.city,
-        load.destinationFull?.city,
-        load.originFull?.country,
-        load.destinationFull?.country,
+        load.fromLocation,
+        load.toLocation,
+        load.origin?.description,
+        load.destination?.description,
+        load.origin?.city,
+        load.destination?.city,
+        load.origin?.country,
+        load.destination?.country,
         load.commodity,
         load.paymentTerms,
         load.requirements,
@@ -262,6 +297,17 @@ function SearchIterms({ navigation }: SearchItermsProps) {
         truck.truckCapacity,
         truck.cargoArea,
         truck.tankerType,
+        // Availability data (new format)
+        truck.availability?.origin?.description,
+        truck.availability?.destination?.description,
+        truck.availability?.localArea?.description,
+        truck.availability?.origin?.city,
+        truck.availability?.destination?.city,
+        truck.availability?.origin?.country,
+        truck.availability?.destination?.country,
+        truck.availability?.localArea?.city,
+        truck.availability?.localArea?.country,
+        // Legacy location fields
         truck.origin?.description,
         truck.destination?.description,
         truck.origin?.city,
@@ -372,7 +418,7 @@ function SearchIterms({ navigation }: SearchItermsProps) {
   const renderTruckCard = ({ item }: { item: Truck }) => (
     <TouchableOpacity
       style={[styles.modernCard, { backgroundColor: backgroundLight }]}
-      onPress={() => navigation.navigate('selectedUserTrucks', { userId: item.userId, itemKey: item.timeStamp, CompanyName: item.CompanyName })}
+      onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: item.id, dspDetails: "false", } })}
       activeOpacity={0.7}
     >
       <View style={styles.cardHeader}>
@@ -386,21 +432,47 @@ function SearchIterms({ navigation }: SearchItermsProps) {
       </View>
 
       <View style={styles.routeContainer}>
-        <View style={styles.locationRow}>
-          <Ionicons name="location" size={16} color={icon} />
-          <ThemedText style={styles.locationText}>
-            {item.origin || item.originFull?.description}
-          </ThemedText>
-        </View>
-        <View style={styles.arrowContainer}>
-          <Ionicons name="arrow-forward" size={16} color={icon} />
-        </View>
-        <View style={styles.locationRow}>
-          <Ionicons name="flag" size={16} color={accent} />
-          <ThemedText style={styles.locationText}>
-            {item.destination || item.destinationFull?.description}
-          </ThemedText>
-        </View>
+        {/* Show route based on availability load type */}
+        {item.availability?.loadType === 'local' ? (
+          // Local area display
+          <View style={styles.locationRow}>
+            <Ionicons name="home" size={16} color={icon} />
+            <ThemedText style={styles.locationText}>
+              Local Area: {item.availability?.localArea?.description || 'Not specified'}
+            </ThemedText>
+          </View>
+        ) : item.availability?.loadType === 'any-load' ? (
+          // Any load display (flexible routing)
+          <View style={styles.locationRow}>
+            <Ionicons name="swap-horizontal" size={16} color={icon} />
+            <ThemedText style={styles.locationText}>
+              Starting: {item.availability?.origin?.description || 'Not specified'}
+            </ThemedText>
+          </View>
+        ) : (
+          // City-to-city display (default)
+          <>
+            <View style={styles.locationRow}>
+              <Ionicons name="location" size={16} color={icon} />
+              <ThemedText style={styles.locationText}>
+                {item.availability?.origin?.description ||
+                  item.fromLocation ||
+                  item.origin?.description || 'Not specified'}
+              </ThemedText>
+            </View>
+            <View style={styles.arrowContainer}>
+              <Ionicons name="arrow-forward" size={16} color={icon} />
+            </View>
+            <View style={styles.locationRow}>
+              <Ionicons name="flag" size={16} color={accent} />
+              <ThemedText style={styles.locationText}>
+                {item.availability?.destination?.description ||
+                  item.toLocation ||
+                  item.destination?.description || 'Not specified'}
+              </ThemedText>
+            </View>
+          </>
+        )}
       </View>
 
       <View style={styles.detailsRow}>
@@ -422,6 +494,29 @@ function SearchIterms({ navigation }: SearchItermsProps) {
             <ThemedText style={styles.detailText}>{item.tankerType}</ThemedText>
           </View>
         )}
+        {/* Show availability load type */}
+        {item.availability?.loadType && (
+          <View style={[styles.detailChip, { backgroundColor: accent + '20' }]}>
+            <ThemedText style={[styles.detailText, { color: accent, fontWeight: '600' }]}>
+              {item.availability.loadType === 'city-to-city' ? 'City-to-City' :
+                item.availability.loadType === 'local' ? 'Local' :
+                  item.availability.loadType === 'any-load' ? 'Any Load' : ''}
+            </ThemedText>
+          </View>
+        )}
+        {/* Show availability status */}
+        {item.availability?.isAvailable !== undefined && (
+          <View style={[styles.detailChip, {
+            backgroundColor: item.availability.isAvailable ? '#4CAF5020' : '#F4433620'
+          }]}>
+            <ThemedText style={[styles.detailText, {
+              color: item.availability.isAvailable ? '#4CAF50' : '#F44336',
+              fontWeight: '600'
+            }]}>
+              {item.availability.isAvailable ? 'Available' : 'Unavailable'}
+            </ThemedText>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -430,7 +525,7 @@ function SearchIterms({ navigation }: SearchItermsProps) {
   const renderLoadCard = ({ item }: { item: Load }) => (
     <TouchableOpacity
       style={[styles.modernCard, { backgroundColor: backgroundLight }]}
-      onPress={() => navigation.navigate('selectedUserLoads', { userId: item.userId, companyNameG: item.companyName, itemKey: item.timeStamp })}
+      onPress={() => router.push({ pathname: "/Logistics/Loads/Index", params: { itemId: item.id, } })}
       activeOpacity={0.7}
     >
       <View style={styles.cardHeader}>
@@ -447,7 +542,7 @@ function SearchIterms({ navigation }: SearchItermsProps) {
         <View style={styles.locationRow}>
           <Ionicons name="location" size={16} color={icon} />
           <ThemedText style={styles.locationText}>
-            {item.origin || item.originFull?.description}
+            {item.fromLocation || item.origin?.description}
           </ThemedText>
         </View>
         <View style={styles.arrowContainer}>
@@ -456,7 +551,7 @@ function SearchIterms({ navigation }: SearchItermsProps) {
         <View style={styles.locationRow}>
           <Ionicons name="flag" size={16} color={accent} />
           <ThemedText style={styles.locationText}>
-            {item.destination || item.destinationFull?.description}
+            {item.toLocation || item.destination?.description}
           </ThemedText>
         </View>
       </View>
@@ -465,10 +560,10 @@ function SearchIterms({ navigation }: SearchItermsProps) {
         <View style={styles.detailChip}>
           <ThemedText style={styles.detailText}>{item.typeofLoad}</ThemedText>
         </View>
-        {item.ratePerTonne && (
+        {item.rate && (
           <View style={[styles.detailChip, styles.rateChip]}>
             <ThemedText style={[styles.detailText, styles.rateText]}>
-              {item.ratePerTonne} {item.currency || ''}
+              {item.rate} {item.currency || ''}
             </ThemedText>
           </View>
         )}
@@ -480,6 +575,14 @@ function SearchIterms({ navigation }: SearchItermsProps) {
         {item.model && (
           <View style={styles.detailChip}>
             <ThemedText style={styles.detailText}>{item.model}</ThemedText>
+          </View>
+        )}
+        {item.distance && (
+          <View style={styles.detailChip}>
+
+            <ThemedText type="tiny" style={styles.detailText}>
+              Distance: {item.distance}
+            </ThemedText>
           </View>
         )}
       </View>
@@ -550,7 +653,17 @@ Experience the future of transportation and logistics!`;
               placeholder='Search loads, trucks, locations, commodities...'
               value={textTyped}
               autoFocus
-              Icon={<EvilIcons name='search' size={wp(6)} color={icon} />}
+              Icon={ <TouchableOpacity
+                onPress={() => {
+                  if (textTyped.trim() &&textTyped.length > 0 && textTyped.trim().length > 0) {
+                    addToSearchHistory(textTyped.trim());
+                    performSearch(textTyped);
+                  }
+                }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <EvilIcons name='search' size={wp(6)} color={icon} />
+              </TouchableOpacity>}
               isDynamicwidth
               containerStyles={[styles.searchInput, { backgroundColor: backgroundColor }]}
               onSubmitEditing={() => {
@@ -565,17 +678,7 @@ Experience the future of transportation and logistics!`;
                 <Ionicons name="close-circle" size={wp(5)} color={icon} />
               </TouchableOpacity>
             )}
-            {textTyped.length > 0 && (
-              <TouchableOpacity
-                onPress={() => {
-                  addToSearchHistory(textTyped.trim());
-                  performSearch(textTyped);
-                }}
-                style={styles.searchButton}
-              >
-                <Ionicons name="search" size={wp(5)} color={accent} />
-              </TouchableOpacity>
-            )}
+          
           </View>
 
           {/* Search Suggestions */}
@@ -941,7 +1044,8 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     position: 'absolute',
-    right: wp(3),
+    right: wp(2),
+    top: wp(3),
     padding: wp(1),
   },
   searchButton: {
