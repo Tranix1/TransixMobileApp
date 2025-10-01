@@ -1,3 +1,4 @@
+
 {
   "cli": {
     "version": ">= 13.4.2",
@@ -13,10 +14,6 @@
     },
     "production": {
       "autoIncrement": true,
-      "android": {
-        "buildType": "app-bundle",
-        "gradleCommand": ":app:assembleRelease"
-      },
       "ios": {
         "buildConfiguration": "Release"
       },
