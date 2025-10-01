@@ -11,7 +11,9 @@ import {
     shouldShowTracker,
     getLocationAccuracyMessage,
     validateLoadLocationData,
-    LocationCoordinates
+    LocationCoordinates,
+    isWithinRouteBounds,
+    hasReachedDestination
 } from '@/Utilities/locationTrackerUtils';
 import { useDestinationArrival } from '@/hooks/useDestinationArrival';
 
@@ -58,12 +60,90 @@ export const LoadTracker: React.FC<LoadTrackerProps> = ({
 
             setIsCheckingStatus(true);
             try {
-                const status = await shouldShowTracker(
-                    loadRequest.id,
-                    loadRequest.truckId,
-                    currentTruckLocation?.latitude,
-                    currentTruckLocation?.longitude
-                );
+                // Use location data from loadRequest if available, otherwise fetch from database
+                let status;
+                if (loadRequest.originCoordinates && loadRequest.destinationCoordinates) {
+                    // Use location data from loadRequest
+                    const loadData = {
+                        originCoordinates: loadRequest.originCoordinates,
+                        destinationCoordinates: loadRequest.destinationCoordinates,
+                        routePolyline: loadRequest.routePolyline,
+                        bounds: loadRequest.bounds,
+                        distance: loadRequest.distance,
+                        duration: loadRequest.duration
+                    };
+
+                    // Check if load has precise coordinates
+                    if (!loadData.originCoordinates || !loadData.destinationCoordinates) {
+                        status = {
+                            shouldShow: false,
+                            reason: 'Load owner did not provide precise locations. Please ask them to update with accurate coordinates.',
+                            locationAccuracy: 'none' as const
+                        };
+                    } else {
+                        // Determine location accuracy based on available data
+                        let locationAccuracy: 'high' | 'medium' | 'low' = 'low';
+                        if (loadData.routePolyline && loadData.bounds) {
+                            locationAccuracy = 'high';
+                        } else if (loadData.distance && loadData.duration) {
+                            locationAccuracy = 'medium';
+                        }
+
+                        // If no current truck position, show tracker but with warning
+                        if (!currentTruckLocation?.latitude || !currentTruckLocation?.longitude) {
+                            status = {
+                                shouldShow: true,
+                                reason: 'Tracker available - waiting for truck position updates',
+                                locationAccuracy
+                            };
+                        } else {
+                            // Check if truck is within route bounds
+                            const withinRoute = isWithinRouteBounds(
+                                currentTruckLocation.latitude,
+                                currentTruckLocation.longitude,
+                                loadData.originCoordinates,
+                                loadData.destinationCoordinates
+                            );
+
+                            if (!withinRoute) {
+                                status = {
+                                    shouldShow: false,
+                                    reason: 'Truck is not on the specified route. Tracker will be available when truck starts the journey.',
+                                    locationAccuracy
+                                };
+                            } else {
+                                // Check if truck has reached destination
+                                const reachedDestination = hasReachedDestination(
+                                    currentTruckLocation.latitude,
+                                    currentTruckLocation.longitude,
+                                    loadData.destinationCoordinates
+                                );
+
+                                if (reachedDestination) {
+                                    status = {
+                                        shouldShow: false,
+                                        reason: 'Load has reached its destination. Tracking completed.',
+                                        locationAccuracy
+                                    };
+                                } else {
+                                    status = {
+                                        shouldShow: true,
+                                        reason: 'Truck is on route - tracking active',
+                                        locationAccuracy
+                                    };
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // Fallback to database fetch
+                    status = await shouldShowTracker(
+                        loadRequest.id,
+                        loadRequest.truckId,
+                        currentTruckLocation?.latitude,
+                        currentTruckLocation?.longitude
+                    );
+                }
 
                 // Override status if destination has been reached
                 if (arrivalData.hasArrived) {
@@ -73,7 +153,33 @@ export const LoadTracker: React.FC<LoadTrackerProps> = ({
                         locationAccuracy: status.locationAccuracy
                     });
                 } else {
-                    setTrackerStatus(status);
+                    // Customize the reason message based on user role
+                    let customizedReason = status.reason;
+
+                    if (status.reason.includes('Load owner did not provide precise locations')) {
+                        if (isTruckOwner) {
+                            customizedReason = 'The load owner has not provided precise pickup and delivery locations. Please ask them to update the load with accurate coordinates.';
+                        } else {
+                            customizedReason = 'You need to provide precise pickup and delivery locations for this load. Please update the load details with accurate coordinates.';
+                        }
+                    } else if (status.reason.includes('Truck is not on the specified route')) {
+                        if (isTruckOwner) {
+                            customizedReason = 'Your truck is not currently on the specified route. The tracker will be available when you start the journey.';
+                        } else {
+                            customizedReason = 'The assigned truck is not currently on the specified route. Tracking will be available when the journey begins.';
+                        }
+                    } else if (status.reason.includes('Truck is on route - tracking active')) {
+                        if (isTruckOwner) {
+                            customizedReason = 'Your truck is on route - tracking is active and working properly.';
+                        } else {
+                            customizedReason = 'The truck is on route - you can track the load in real-time.';
+                        }
+                    }
+
+                    setTrackerStatus({
+                        ...status,
+                        reason: customizedReason
+                    });
                 }
             } catch (error) {
                 console.error('Error checking tracker status:', error);
@@ -88,7 +194,7 @@ export const LoadTracker: React.FC<LoadTrackerProps> = ({
         };
 
         checkTrackerStatus();
-    }, [loadRequest.id, loadRequest.truckId, currentTruckLocation, arrivalData.hasArrived]);
+    }, [loadRequest.id, loadRequest.truckId, currentTruckLocation, arrivalData.hasArrived, isTruckOwner]);
 
     // Debug logging
     console.log('LoadTracker Debug:', {
@@ -178,8 +284,24 @@ export const LoadTracker: React.FC<LoadTrackerProps> = ({
             );
         }
 
-        // Show location accuracy message
+        // Show location accuracy message with role-specific context
         const accuracyMessage = getLocationAccuracyMessage(trackerStatus.locationAccuracy);
+        let contextualAccuracyMessage = accuracyMessage;
+
+        if (trackerStatus.locationAccuracy === 'none') {
+            if (isTruckOwner) {
+                contextualAccuracyMessage = '❌ Load owner needs to provide precise pickup and delivery coordinates';
+            } else {
+                contextualAccuracyMessage = '❌ You need to provide precise pickup and delivery coordinates for this load';
+            }
+        } else if (trackerStatus.locationAccuracy === 'low') {
+            if (isTruckOwner) {
+                contextualAccuracyMessage = '⚠️ Load has basic location data - ask load owner to add route details';
+            } else {
+                contextualAccuracyMessage = '⚠️ Consider adding route details for better tracking accuracy';
+            }
+        }
+
         const accuracyColor = trackerStatus.locationAccuracy === 'high' ? '#4caf50' :
             trackerStatus.locationAccuracy === 'medium' ? '#ff9800' :
                 trackerStatus.locationAccuracy === 'low' ? '#ff5722' : '#f44336';
@@ -205,11 +327,11 @@ export const LoadTracker: React.FC<LoadTrackerProps> = ({
 
                     <View style={[styles.accuracyContainer, { borderLeftColor: accuracyColor }]}>
                         <Text style={[styles.accuracyText, { color: accuracyColor }]}>
-                            {accuracyMessage}
+                            {contextualAccuracyMessage}
                         </Text>
                     </View>
 
-                    {trackerStatus.shouldShow && (
+                    {trackerStatus.shouldShow && isTruckOwner && (
                         <TouchableOpacity
                             style={[styles.actionButton, { backgroundColor: accent }]}
                             onPress={handleShareTracker}
@@ -239,7 +361,7 @@ export const LoadTracker: React.FC<LoadTrackerProps> = ({
                 </View>
             );
         } else {
-            // Load owner view
+            // Load owner view - can only view when tracker is shared
             if (!loadRequest.trackerShared) {
                 return (
                     <View style={styles.trackerContainer}>
@@ -251,12 +373,12 @@ export const LoadTracker: React.FC<LoadTrackerProps> = ({
                         </View>
 
                         <Text style={[styles.trackerDescription, { color: textColor }]}>
-                            {trackerStatus.reason}
+                            Waiting for truck owner to share tracker. You will be notified when tracking becomes available.
                         </Text>
 
-                        <View style={[styles.accuracyContainer, { borderLeftColor: accuracyColor }]}>
-                            <Text style={[styles.accuracyText, { color: accuracyColor }]}>
-                                {accuracyMessage}
+                        <View style={[styles.accuracyContainer, { borderLeftColor: '#ff9800' }]}>
+                            <Text style={[styles.accuracyText, { color: '#ff9800' }]}>
+                                ⏳ Tracker not yet shared by truck owner
                             </Text>
                         </View>
                     </View>
@@ -301,7 +423,7 @@ export const LoadTracker: React.FC<LoadTrackerProps> = ({
 
                     <View style={[styles.accuracyContainer, { borderLeftColor: accuracyColor }]}>
                         <Text style={[styles.accuracyText, { color: accuracyColor }]}>
-                            {accuracyMessage}
+                            {contextualAccuracyMessage}
                         </Text>
                     </View>
 
@@ -368,6 +490,17 @@ export const LoadTracker: React.FC<LoadTrackerProps> = ({
 
     return (
         <View style={styles.container}>
+            {/* Role indicator */}
+            <View style={[styles.roleIndicator, { backgroundColor: isTruckOwner ? '#e3f2fd' : '#f3e5f5' }]}>
+                <Ionicons
+                    name={isTruckOwner ? "car" : "cube"}
+                    size={wp(4)}
+                    color={isTruckOwner ? '#1976d2' : '#7b1fa2'}
+                />
+                <Text style={[styles.roleText, { color: isTruckOwner ? '#1976d2' : '#7b1fa2' }]}>
+                    {isTruckOwner ? 'Truck Owner View' : 'Load Owner View'}
+                </Text>
+            </View>
             {renderTrackerStatus()}
         </View>
     );
@@ -376,6 +509,20 @@ export const LoadTracker: React.FC<LoadTrackerProps> = ({
 const styles = StyleSheet.create({
     container: {
         marginVertical: wp(2),
+    },
+    roleIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: wp(3),
+        borderRadius: wp(2),
+        marginBottom: wp(2),
+        borderLeftWidth: 4,
+        borderLeftColor: '#2196f3',
+    },
+    roleText: {
+        marginLeft: wp(2),
+        fontSize: wp(3.5),
+        fontWeight: '600',
     },
     trackerContainer: {
         // backgroundColor: '#f8f9fa',

@@ -131,7 +131,6 @@ function BookLCargo({ }) {
 
           if (!existingBBDoc) {
             const theData = {
-
               truckId: item.id,
               trackingDeviceId: (item as any).trackingDeviceId,
               created_at: Date.now().toString(),
@@ -142,6 +141,9 @@ function BookLCargo({ }) {
               productName: loadItem.typeofLoad,
               origin: loadItem.origin,
               destination: loadItem.destination,
+              // Add location coordinates for tracking
+              originCoordinates: loadItem.originCoordinates || null,
+              destinationCoordinates: loadItem.destinationCoordinates || null,
               rate: bidRate ? bidRate : loadItem.rate,
               currency: loadItem.currency,
               model: loadItem.model,
@@ -157,7 +159,12 @@ function BookLCargo({ }) {
               truckOwnerId: truckData?.userId, // Truck owner ID for notifications
               truckOwnerName: truckData?.ownerName || truckData?.CompanyName || "Truck Owner", // Truck owner name for display
               truckHasTracker: hasTracker, // Store tracker availability status
-              trackerStatus: trackerStatus // Store tracker status
+              trackerStatus: trackerStatus, // Store tracker status
+              // Add route information for better tracking
+              routePolyline: loadItem.routePolyline || null,
+              bounds: loadItem.bounds || null,
+              distance: loadItem.distance || null,
+              duration: loadItem.duration || null
             }
             addDocument("loadRequests", theData)
 

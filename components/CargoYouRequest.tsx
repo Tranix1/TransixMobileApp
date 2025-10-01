@@ -112,8 +112,8 @@ export const RequestedCargo = ({
       {/* Load Tracker Component - only show for booked loads */}
       <LoadTracker
         loadRequest={item}
-        isTruckOwner={dspRoute === "Requested Loads"}
-        currentTruckLocation={currentLocation}
+        isTruckOwner={dspRoute !== "Requested Loads"}
+        currentTruckLocation={currentLocation || undefined}
         onTrackerShared={() => {
           // Refresh the data or show success message
           ToastAndroid.show("Tracker shared successfully!", ToastAndroid.SHORT);
