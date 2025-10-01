@@ -98,7 +98,7 @@ const Settings = () => {
                 }
 
                 {/* Admin Section */}
-                {user && (
+                {user && user?.uid === 'QOC9krp5BOR7NhFXRuX5f32u17e2' && (
                     <>
                         <ThemedText style={{ margin: wp(4) }} type='subtitle'>Admin</ThemedText>
                         <View style={{ gap: wp(1), padding: wp(2), marginBottom: wp(4), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
