@@ -1,19 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, StyleSheet, ScrollView, Linking, FlatList, RefreshControl, ActivityIndicator } from "react-native";
+import { View, TouchableOpacity, StyleSheet,  FlatList, RefreshControl, ActivityIndicator } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import {
-  onSnapshot,
   query,
-  doc,
   collection,
   where,
-  updateDoc,
-  deleteDoc,
-  runTransaction,
-  orderBy,
-  limit,
   getDocs,
-  startAfter,
 } from "firebase/firestore";
 import { auth, db } from "@/db/fireBaseConfig";
 import { Ionicons, Octicons } from "@expo/vector-icons";
@@ -86,11 +78,11 @@ function BookingsandBiddings({ }) {
       // Show loads where current user is the truck owner (carrier)
       filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
     } else if (dspRoute === "Requested Loads") {
-      // Show loads where current user is the load owner (courier requests)
-      filters.push(where("loadOwnerId", "==", auth.currentUser?.uid));
-    } else {
-      // Default to "My Loads" - show loads requested by current user as carrier
+      // Show loads where current user is the truck owner (truck owner requests)
       filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
+    } else {
+      // Default to "My Loads" - show loads where current user is the load owner (booked loads)
+      filters.push(where("loadOwnerId", "==", auth.currentUser?.uid));
     }
 
     console.log('🔍 Loading with filters:', { dspRoute, requestType, filters: filters.length });
@@ -156,11 +148,11 @@ function BookingsandBiddings({ }) {
       // Show loads where current user is the truck owner (carrier)
       filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
     } else if (dspRoute === "Requested Loads") {
-      // Show loads where current user is the load owner (courier requests)
-      filters.push(where("loadOwnerId", "==", auth.currentUser?.uid));
-    } else {
-      // Default to "My Loads" - show loads requested by current user as carrier
+      // Show loads where current user is the truck owner (truck owner requests)
       filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
+    } else {
+      // Default to "My Loads" - show loads where current user is the load owner (booked loads)
+      filters.push(where("loadOwnerId", "==", auth.currentUser?.uid));
     }
 
     if (loadingMore || !lastVisible) return;

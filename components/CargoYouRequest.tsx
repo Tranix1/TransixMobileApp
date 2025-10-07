@@ -75,44 +75,44 @@ export const RequestedCargo = ({
       {showAlert}
 
       <ThemedText type="subtitle" style={{ color: textColor, textAlign: 'center', marginBottom: wp(2) }}>
-        {dspRoute === "Requested Loads" ? item.companyName : (item.truckOwnerName || item.companyName)}
+        {dspRoute === "Requested Loads" ? (item.truckOwnerName || item.companyName) : item.companyName}
       </ThemedText>
 
       <Divider />
       <View style={{ backgroundColor: "#f4f4f4", borderRadius: 10, padding: wp(2), marginBottom: wp(2) }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
           <ThemedText style={{ width: 100, color: "#6a0c0c", fontWeight: "bold" }}>Status</ThemedText>
-          <ThemedText style={{ color: "#222" }}>{item.status} {item.created_at ? getRelativeTime(parseInt(item.created_at)) : 'N/A'}</ThemedText>
+          <ThemedText style={{ color: "#222", flex: 1, flexWrap: 'wrap' }}>{item.status} {item.created_at ? getRelativeTime(parseInt(item.created_at)) : 'N/A'}</ThemedText>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
           <ThemedText style={{ width: 100, color: "#6a0c0c", fontWeight: "bold" }}>Commodity</ThemedText>
-          <ThemedText style={{ color: "#222" }}>{item.productName} </ThemedText>
+          <ThemedText style={{ color: "#222", flex: 1, flexWrap: 'wrap' }}>{item.productName} </ThemedText>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
           <ThemedText style={{ width: 100, color: "#6a0c0c", fontWeight: "bold" }}>Rate {item.model} </ThemedText>
-          <ThemedText style={{ color: "#222" }}> {item.currency} {item.rate}  </ThemedText>
+          <ThemedText style={{ color: "#222", flex: 1, flexWrap: 'wrap' }}> {item.currency} {item.rate}  </ThemedText>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+        <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 10 }}>
           <ThemedText style={{ width: 100, color: "#6a0c0c", fontWeight: "bold" }}>Route</ThemedText>
-          <ThemedText style={{ color: "#222" }}>From {item.origin} To {item.destination} </ThemedText>
+          <ThemedText style={{ color: "#222", flex: 1, flexWrap: 'wrap' }}>From {item.origin} To {item.destination} </ThemedText>
         </View>
 
-        {dspRoute === "Requested Loads" && <View style={{ flexDirection: "row", alignItems: "center" }}>
+        {dspRoute === "Requested Loads" && <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
           <ThemedText style={{ width: 100, color: "#6a0c0c", fontWeight: "bold" }}>Decision</ThemedText>
           <View style={{ padding: wp(2), paddingVertical: wp(1), borderRadius: wp(20), backgroundColor: "#737373" }}>
             <ThemedText type="defaultSemiBold" style={{ color: "#fff" }}>{item.ownerDecision} </ThemedText>
           </View>
         </View>}
-        {(dspRoute === "Requested Loads") && item.denialReason && <View style={{ flexDirection: "row", alignItems: "center" }}>
+        {(dspRoute === "Requested Loads") && item.denialReason && <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 10 }}>
           <ThemedText style={{ width: 100, color: "#6a0c0c", fontWeight: "bold" }}>Reason</ThemedText>
-          <ThemedText style={{ color: "#222", fontStyle: "italic" }}> {item.denialReason} </ThemedText>
+          <ThemedText style={{ color: "#222", fontStyle: "italic", flex: 1, flexWrap: 'wrap' }}> {item.denialReason} </ThemedText>
         </View>}
       </View>
 
       {/* Load Tracker Component - only show for booked loads */}
       <LoadTracker
         loadRequest={item}
-        isTruckOwner={dspRoute !== "Requested Loads"}
+        isTruckOwner={dspRoute === "Requested Loads"}
         currentTruckLocation={currentLocation || undefined}
         onTrackerShared={() => {
           // Refresh the data or show success message

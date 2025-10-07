@@ -80,12 +80,13 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
     <TouchableOpacity
       style={[styles.container, { backgroundColor: background, borderColor: accent }]}
       activeOpacity={0.8}
+      onPress={ondetailsPress}
     >
 
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'space-between', marginBottom: wp(1) }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'space-evenly', marginBottom: wp(1) }}>
 
-        <View style={{ flexDirection: 'row' }}>
+        <View style={{ flexDirection: 'row', }}>
 
           {!item?.logo && <FontAwesome name='user-circle' color={coolGray} size={wp(9)} />}
           {item?.logo && <Image
@@ -94,7 +95,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
           />}
 
           {item &&
-            <ThemedText type="subtitle" style={{ marginLeft: 20 }}>{item.companyName}</ThemedText>
+            <ThemedText type="subtitle" numberOfLines={1} ellipsizeMode="tail" style={{alignSelf: 'center', width: 150 ,marginLeft: wp(2.5)}}>{item.companyName}</ThemedText>
           }
         </View>
 
@@ -117,9 +118,9 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
           )}
         </View>
 
-        <TouchableHighlight underlayColor={backgroundLight} onPress={ondetailsPress} style={{ backgroundColor: background, padding: wp(1), borderRadius: wp(90) }}>
+        {/* <TouchableHighlight underlayColor={backgroundLight}  style={{ backgroundColor: background, padding: wp(1), borderRadius: wp(90) }}>
           <Ionicons name='ellipsis-vertical' size={wp(4)} color={icon} />
-        </TouchableHighlight>
+        </TouchableHighlight> */}
 
       </View>
 
@@ -227,7 +228,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
         {item.loadingDate &&
           <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
             <ThemedText type='default' style={{ flex: 2 }}>
-              Laoding
+              Loading
             </ThemedText>
             <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
               {item.loadingDate}

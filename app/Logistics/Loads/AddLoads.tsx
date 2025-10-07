@@ -210,6 +210,19 @@ const AddLoadDB = () => {
 
 
     if (selectedCargoArea && selectedTruckType && selectedTruckCapacity && operationCountries.length > 0) {
+      // Check for duplicates before adding
+      const isDuplicate = trucksNeeded.some(existingTruck =>
+        existingTruck.cargoArea?.id === selectedCargoArea?.id &&
+        existingTruck.truckType?.id === selectedTruckType?.id &&
+        existingTruck.capacity?.id === selectedTruckCapacity?.id &&
+        existingTruck.tankerType?.id === selectedTankerType?.id &&
+        JSON.stringify(existingTruck.operationCountries.sort()) === JSON.stringify(operationCountries.sort())
+      );
+
+      if (isDuplicate) {
+        ToastAndroid.show('This truck configuration is already added', ToastAndroid.SHORT);
+        return;
+      }
 
       setTrucksNeeded(prev => [...prev, newTruck]);
 
@@ -219,9 +232,10 @@ const AddLoadDB = () => {
       setSelectedTankerType(null);
       setSelectedTruckCapacity(null);
       setOperationCountries([]);
-    } else {
 
-      ToastAndroid.show('Select All Truck Details', ToastAndroid.SHORT)
+      // ToastAndroid.show('Truck added successfully', ToastAndroid.SHORT);
+    } else {
+      ToastAndroid.show('Select All Truck Details', ToastAndroid.SHORT);
     }
 
   }
@@ -243,6 +257,8 @@ const AddLoadDB = () => {
   // Function to clear all form fields
   const clearFormFields = () => {
     const defaultState = getDefaultFormState();
+
+    // Reset all form fields
     setTypeofLoad(defaultState.typeofLoad);
     setRate(defaultState.rate);
     setRateExplanation(defaultState.rateexplantion);
@@ -269,6 +285,41 @@ const AddLoadDB = () => {
     setTrucksNeeded(defaultState.trucksNeeded);
     setStep(defaultState.step);
     setUploadImageUpdate(defaultState.uploadImageUpdate);
+
+    // Reset location fields
+    setOrigin(null);
+    setDestination(null);
+    setDspFromLocation(false);
+    setDspToLocation(false);
+    setPickLocationOnMap(false);
+    setDistance("");
+    setDuration("");
+    setDurationInTraffic("");
+    setRoutePolyline("");
+    setBounds(null);
+
+    // Reset user type and general user specific fields
+    setUserType(null);
+    setBudget("");
+    setBudgetCurrency({ id: 1, name: "USD" });
+    setLoadImages([]);
+    setSelectedLoadingDate(null);
+    setSelectedAfricanTrucks([]);
+
+    // Reset AI analysis fields
+    setAiQuestion("");
+    setAiAnswer("");
+    setAiLoading(false);
+    setAiDetectedTruckType(null);
+    setAiDetectedCargoArea(null);
+    setAiDetectedCapacity(null);
+    setAiDetectedTankerType(null);
+    setAiAnalysisComplete(false);
+    setAiAnalysisError(null);
+
+    // Reset proof of order fields
+    setProofOfOrder([]);
+    setProofOfOrderFileType([]);
   };
 
 
@@ -291,8 +342,9 @@ const AddLoadDB = () => {
       selectedLoadingDate,
       loadImages,
       selectedAfricanTrucks,
-      trucksNeeded
-    });
+      trucksNeeded,
+      requirements,
+    }, step);
 
     if (validationErrors.length > 0) {
       alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
@@ -381,7 +433,7 @@ const AddLoadDB = () => {
 
     try {
       // Ensure addDocument is not a React hook or using hooks internally.
-      await addDocument( "Cargo" , loadData);
+      await addDocument("Cargo", loadData);
 
       await notifyTrucksByFilters({
         trucksNeeded,
@@ -398,13 +450,16 @@ const AddLoadDB = () => {
 
       ToastAndroid.show('Trucks notified and load added successfully.', ToastAndroid.SHORT);
 
+      // Clear form and reset to initial state
+      clearFormFields();
+
+    
 
     } catch (error) {
       console.error("Error submitting load:", error);
       alert("Failed to submit load. Please try again.");
     } finally {
-
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   };
 
@@ -523,7 +578,7 @@ const AddLoadDB = () => {
                 durationInTraffic={durationInTraffic}
               />
 
-              {userType !== 'general'&&<RateInput
+              {userType !== 'general' && <RateInput
                 rate={rate}
                 setRate={setRate}
                 selectedCurrency={selectedCurrency}
@@ -535,7 +590,7 @@ const AddLoadDB = () => {
               />}
 
 
-<Divider />
+              <Divider />
 
               <ThemedText>
                 Payment Terms<ThemedText color="red">*</ThemedText>
@@ -947,9 +1002,6 @@ const AddLoadDB = () => {
               </View>
             ))}
 
-
-
-
             <AddTruckDetails
               selectedTruckType={selectedTruckType}
               setSelectedTruckType={setSelectedTruckType}
@@ -966,7 +1018,6 @@ const AddLoadDB = () => {
               operationCountries={operationCountries}
               setOperationCountries={setOperationCountries}
             />
-
 
             <TouchableOpacity
               onPress={pushTruck}

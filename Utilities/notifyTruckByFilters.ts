@@ -18,7 +18,7 @@ function showToast(message: string) {
   }
 }
 
-export const notifyTrucksByFilters = async ({
+export const  notifyTrucksByFilters = async ({
   trucksNeeded,
   contractId,
    loadItem,
@@ -47,6 +47,9 @@ export const notifyTrucksByFilters = async ({
     if (cargoArea) filters.push(where("cargoArea", "==", cargoArea?.name));
     if (tankerType) filters.push(where("tankerType", "==", tankerType?.name));
     if (capacity) filters.push(where("truckCapacity", "==", capacity?.name));
+    if (capacity) filters.push(where("truckCapacity", "==", capacity?.name));
+    filters.push(where("isApproved", "==", true));
+    filters.push(where("approvalStatus", "==", "approved")) ;
 
     const truckResult = await fetchDocuments("Trucks", 50, undefined, filters);
 

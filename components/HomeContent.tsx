@@ -361,6 +361,7 @@ export default function HomeContent({ onAuthCheck }: HomeContentProps) {
                     )}
                 </View>
             ))}
+
         </ScrollView>
     );
 }

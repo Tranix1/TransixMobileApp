@@ -51,9 +51,9 @@ const Index = () => {
 
         // Only show approved trucks to users (except truck owners viewing their own)
         if (!userId) {
-            filters.push(where("isApproved", "==", true));
-            filters.push(where("accTypeIsApproved", "==", true));
-            filters.push(where("approvalStatus", "==", "approved")) ;
+                filters.push(where("isApproved", "==", true));
+                filters.push(where("approvalStatus", "==", "approved")) ;
+                filters.push(where("accTypeIsApproved", "==", true));
         }
 
         // Fetch data from Firestore with the initially applied filters

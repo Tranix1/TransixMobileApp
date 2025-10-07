@@ -15,7 +15,7 @@
         "UIBackgroundModes": [
           "remote-notification"
         ]
-      },
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -85,14 +85,24 @@
               "android.enableR8.fullMode": "true",
               "android.enableDexingArtifactTransform.desugaring": "false",
               "android.useAndroidX": "true",
-              "android.enableJetifier": "true"
+              "android.enableJetifier": "true",
+              "android.enable16kbPageSizeSupport": "true",
+              "android.enablePageSizeCompatMode": "true",
+              "android.bundle.enableUncompressedNativeLibs": "false"
             },
             "packagingOptions": {
               "pickFirst": [
                 "**/libc++_shared.so",
                 "**/libjsc.so"
-              ]
-            }
+              ],
+              "jniLibs": {
+                "useLegacyPackaging": false
+              }
+            },
+            "proguardMinifyEnabled": true,
+            "proguardFiles": [
+              "proguard-rules.pro"
+            ]
           },
           "ios": {
             "deploymentTarget": "15.1"

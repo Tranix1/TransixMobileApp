@@ -1,4 +1,5 @@
 import { ImageSourcePropType } from "react-native";
+import { ImagePickerAsset } from "expo-image-picker";
 
 export type TruckTypeProps = {
     id: number, name: string, image: ImageSourcePropType | undefined, description: string | undefined
@@ -94,105 +95,62 @@ export interface Product {
 
     createdAt: Date;
     updatedAt: Date | null;
-
-
-
-    truckDetails: {
-        truckConfig: string;
-        truckSuspension: string;
-        truckType: string;
-        semiTrailerCapacity: string
-        semiTrailerSuspension: string;
-        semiTrailerConfig: string;
-    },
-
-    // User/seller information
-    seller: {
-        id: string;
-        name: string;
-        contact: string;
-        isVerified: boolean;
-        pushToken?: string; // For notifications
-    };
-
-    // Product-specific details (conditional based on category)
-    details: {
-        // For vehicles
-        vehicle?: {
-            type: string;
-            otherType: string;
-            make: string;
-            otherMake: string;
-            model: string;
-            year: number;
-            mileage: number;
-            engine: string;
-            transmission: string;
-            fuelType: string;
-            horsePower: string;
-            truckCapacity: string
-            otherTruckConfig: string;
-            otherTruckSuspension: string;
-        } | null;
-
-        trailers?: {
-            otherType: string;
-            otherMake: string;
-            otherTrailerConfig: string;
-            otherTrailerSuspension: string;
-        }
-    };
-
-    // Transaction details
-    transaction: {
-        type: 'sell' | 'rent' | 'swap';
-        priceNegotiable: boolean;
-        deliveryCost?: string;
-        swapPreferences?: string;
-        deliveryAvailable: boolean;
-
-    };
-
-    // Marketplace visibility
-    visibility: {
-        featured: boolean;
-        promoted: boolean;
-        frontPage: boolean;
-    };
-
-    // System metadata
-    metadata: {
-        views: number;
-        saves: number;
-        status: 'active' | 'sold' | 'expired' | 'removed';
-    };
-
-    location: {
-        storeCountry: string
-        exactLocation: string
-        storeCity: string
-        productLocation: string
-        coordinates: null
-    }
 }
 
+export interface TruckStop {
+    id?: string;
+    name: string;
+    location: string;
+    address: string;
+    coordinates: {
+        latitude: number;
+        longitude: number;
+    };
+    pricing: {
+        parking: string;
+        fuel: string;
+        food: string;
+        rest: string;
+    };
+    amenities: string[];
+    entertainment: string[];
+    images: string[];
+    contact: {
+        phone: string;
+        email: string;
+    };
+    operatingHours: {
+        open: string;
+        close: string;
+        days: string[];
+    };
+    description: string;
+    rating?: number;
+    isVerified: boolean;
+    userId: string;
+    createdAt: Date;
+    updatedAt: Date | null;
+}
+
+
 export type LoadFormData = {
-    typeofLoad: string
+    typeofLoad: string;
     rate: string;
     rateexplantion: string;
-    fromLocation: string
-    toLocation: string
-    paymentTerms: string
-    requirements: string
-    alertMsg: string
-    fuelAvai: string
-    additionalInfo: string
-    links: string
-    triaxle: string
-    returnRate: string
-    returnLoad: string
-    returnTerms: string
-    loadingDate: string
+    fromLocation: string;
+    toLocation: string;
+    paymentTerms: string;
+    requirements: string;
+    alertMsg: string;
+    fuelAvai: string;
+    additionalInfo: string;
+    links: string;
+    triaxle: string;
+    returnRate: string;
+    returnLoad: string;
+    returnTerms: string;
+    loadingDate: string;
+    loadImages: ImagePickerAsset[];
 }
 type SelectedOption = { id: number; name: string } | null;
 

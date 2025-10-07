@@ -132,7 +132,7 @@ function BookLCargo({ }) {
           if (!existingBBDoc) {
             const theData = {
               truckId: item.id,
-              trackingDeviceId: (item as any).trackingDeviceId,
+              trackingDeviceId: (item as any).trackingDeviceId || null,
               created_at: Date.now().toString(),
               requestId: `${userId}${loadItem.id}${item.timeStamp}`,
               cargoId: loadItem.id,

@@ -15,20 +15,37 @@ export const validateLoadForm = (
         loadImages?: ImagePickerAsset[];
         selectedAfricanTrucks?: any[];
         trucksNeeded?: any[];
-    }
+        requirements?: string;
+        additionalInfo?: string;
+        alertMsg?: string;
+        fuelAvai?: string;
+        returnLoad?: string;
+        returnRate?: string;
+        returnTerms?: string;
+        proofOfOrder?: any[];
+    },
+    currentStep?: number
 ): string[] => {
     if (!userType) return ['Please select user type'];
 
     const errors: string[] = [];
 
     // Common validations
-    if (!formData.typeofLoad) errors.push('Enter Load to be transported');
-    if (!formData.origin) errors.push('Enter source Location');
-    if (!formData.destination) errors.push('Enter destination location');
+    if (!formData.typeofLoad || formData.typeofLoad.trim() === '') {
+        errors.push('Enter Load to be transported');
+    }
+    if (!formData.origin) {
+        errors.push('Enter source Location');
+    }
+    if (!formData.destination) {
+        errors.push('Enter destination location');
+    }
 
     // User type specific validations
     if (userType === 'general') {
-        if (!formData.selectedLoadingDate) errors.push('Select loading date');
+        if (!formData.selectedLoadingDate) {
+            errors.push('Select loading date');
+        }
         if (!formData.loadImages || formData.loadImages.length === 0) {
             errors.push('Upload images of your load');
         }
@@ -36,10 +53,44 @@ export const validateLoadForm = (
             errors.push('Select at least 1 truck type');
         }
     } else {
-        if (!formData.rate) errors.push('Enter Load Rate');
-        if (!formData.paymentTerms) errors.push('Enter Payment Terms');
-        if (!formData.trucksNeeded || formData.trucksNeeded.length === 0) {
-            errors.push('Select at least 1 truck required');
+        // Professional user validations - only validate fields that should be filled at current step
+        if (!formData.rate || formData.rate.trim() === '') {
+            errors.push('Enter Load Rate');
+        }
+        if (!formData.paymentTerms || formData.paymentTerms.trim() === '') {
+            errors.push('Enter Payment Terms');
+        }
+
+        // Only validate step-specific fields if we're on the final submission
+        if (currentStep === undefined || currentStep >= 3) {
+            if (!formData.trucksNeeded || formData.trucksNeeded.length === 0) {
+                errors.push('Select at least 1 truck required');
+            }
+            // Only validate additional fields if they exist in the form data
+            if (formData.requirements !== undefined && (!formData.requirements || formData.requirements.trim() === '')) {
+                errors.push('Enter Requirements');
+            }
+            if (formData.additionalInfo !== undefined && (!formData.additionalInfo || formData.additionalInfo.trim() === '')) {
+                errors.push('Enter Additional Information');
+            }
+            if (formData.alertMsg !== undefined && (!formData.alertMsg || formData.alertMsg.trim() === '')) {
+                errors.push('Enter Alert Message');
+            }
+            if (formData.fuelAvai !== undefined && (!formData.fuelAvai || formData.fuelAvai.trim() === '')) {
+                errors.push('Enter Fuel & Tolls Information');
+            }
+            if (formData.returnLoad !== undefined && (!formData.returnLoad || formData.returnLoad.trim() === '')) {
+                errors.push('Enter Return Load details');
+            }
+            if (formData.returnRate !== undefined && (!formData.returnRate || formData.returnRate.trim() === '')) {
+                errors.push('Enter Return Load Rate');
+            }
+            if (formData.returnTerms !== undefined && (!formData.returnTerms || formData.returnTerms.trim() === '')) {
+                errors.push('Enter Return Load Terms');
+            }
+            if (formData.proofOfOrder !== undefined && (!formData.proofOfOrder || formData.proofOfOrder.length === 0)) {
+                errors.push('Upload proof of order document');
+            }
         }
     }
 
