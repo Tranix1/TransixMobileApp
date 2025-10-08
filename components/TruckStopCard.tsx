@@ -110,7 +110,7 @@ export const TruckStopCard: React.FC<TruckStopCardProps> = ({
                 </ThemedText>
                 <View style={styles.pricingGrid}>
                     {truckStop.pricing.parking && (
-                        <View style={styles.pricingItem}>
+                        <View style={[styles.pricingItem, { backgroundColor: icon + '10' }]}>
                             <MaterialIcons name="local-parking" size={wp(4)} color={accent} />
                             <ThemedText style={[styles.pricingText, { color: icon }]}>
                                 {truckStop.pricing.parking}
@@ -118,7 +118,7 @@ export const TruckStopCard: React.FC<TruckStopCardProps> = ({
                         </View>
                     )}
                     {truckStop.pricing.fuel && (
-                        <View style={styles.pricingItem}>
+                        <View style={[styles.pricingItem, { backgroundColor: icon + '10' }]}>
                             <MaterialIcons name="local-gas-station" size={wp(4)} color={accent} />
                             <ThemedText style={[styles.pricingText, { color: icon }]}>
                                 {truckStop.pricing.fuel}
@@ -126,7 +126,7 @@ export const TruckStopCard: React.FC<TruckStopCardProps> = ({
                         </View>
                     )}
                     {showAllDetails && truckStop.pricing.food && (
-                        <View style={styles.pricingItem}>
+                        <View style={[styles.pricingItem, { backgroundColor: icon + '10' }]}>
                             <MaterialIcons name="restaurant" size={wp(4)} color={accent} />
                             <ThemedText style={[styles.pricingText, { color: icon }]}>
                                 {truckStop.pricing.food}
@@ -134,7 +134,7 @@ export const TruckStopCard: React.FC<TruckStopCardProps> = ({
                         </View>
                     )}
                     {showAllDetails && truckStop.pricing.rest && (
-                        <View style={styles.pricingItem}>
+                        <View style={[styles.pricingItem, { backgroundColor: icon + '10' }]}>
                             <MaterialIcons name="hotel" size={wp(4)} color={accent} />
                             <ThemedText style={[styles.pricingText, { color: icon }]}>
                                 {truckStop.pricing.rest}
@@ -354,7 +354,6 @@ const styles = StyleSheet.create({
         gap: wp(1),
         paddingHorizontal: wp(2),
         paddingVertical: wp(1),
-        backgroundColor: 'rgba(0,0,0,0.05)',
         borderRadius: wp(2),
     },
     pricingText: {

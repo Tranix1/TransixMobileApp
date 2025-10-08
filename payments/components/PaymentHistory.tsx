@@ -16,19 +16,36 @@ interface Payment {
     id: string;
     serviceType?: string;
     fuelType?: string;
-    price: number;
-    quantity: number;
+    price?: number;
+    quantity?: number;
     totalAmount: number;
     stationName: string;
     stationId: string;
     purchaseDate: string;
     qrCode: string;
     status: 'pending' | 'completed' | 'cancelled';
-    serviceCategory?: 'fuel' | 'truckstop';
+    serviceCategory?: 'fuel' | 'truckstop' | 'tracking' | 'git' | 'warehouse' | 'loads' | 'trucks' | 'contracts';
     userId: string;
     userEmail?: string;
     paymentMethod: string;
     phoneNumber: string;
+
+    // New multi-item support
+    fuelItems?: Array<{
+        fuelType: string;
+        fuelName: string;
+        price: number;
+        quantity: number;
+        subtotal: number;
+    }>;
+    serviceItems?: Array<{
+        serviceType: string;
+        price: number;
+        quantity: number;
+        subtotal: number;
+    }>;
+    isMultiPayment?: boolean;
+
     createdAt: Date;
     updatedAt: Date;
 }
@@ -57,6 +74,7 @@ export default function PaymentHistory() {
             const result = await fetchDocuments("Payments", 20, undefined, filters);
 
             if (result.data.length) {
+                console.log('Loaded payments:', result.data);
                 setPayments(result.data as Payment[]);
                 setLastVisible(result.lastVisible);
             }
@@ -113,21 +131,61 @@ export default function PaymentHistory() {
     };
 
     const getServiceIcon = (payment: Payment) => {
-        if (payment.serviceCategory === 'fuel') {
-            return <Ionicons name="car" size={wp(5)} color="#FF6B35" />;
-        } else if (payment.serviceCategory === 'truckstop') {
-            return <Ionicons name="restaurant" size={wp(5)} color="#4ECDC4" />;
+        switch (payment.serviceCategory) {
+            case 'fuel':
+                return <Ionicons name="car" size={wp(5)} color="#FF6B35" />;
+            case 'truckstop':
+                return <Ionicons name="restaurant" size={wp(5)} color="#4ECDC4" />;
+            case 'tracking':
+                return <Ionicons name="location" size={wp(5)} color="#9C27B0" />;
+            case 'git':
+                return <Ionicons name="shield-checkmark" size={wp(5)} color="#FF9800" />;
+            case 'warehouse':
+                return <Ionicons name="storefront" size={wp(5)} color="#795548" />;
+            case 'loads':
+                return <Ionicons name="cube" size={wp(5)} color="#607D8B" />;
+            case 'trucks':
+                return <Ionicons name="car-sport" size={wp(5)} color="#3F51B5" />;
+            case 'contracts':
+                return <Ionicons name="document-text" size={wp(5)} color="#E91E63" />;
+            default:
+                // Fallback for old data or missing serviceCategory
+                if (payment.serviceType === 'fuel' || payment.fuelType) {
+                    return <Ionicons name="car" size={wp(5)} color="#FF6B35" />;
+                } else if (payment.serviceType) {
+                    return <Ionicons name="restaurant" size={wp(5)} color="#4ECDC4" />;
+                }
+                return <Ionicons name="card" size={wp(5)} color="#45B7D1" />;
         }
-        return <Ionicons name="card" size={wp(5)} color="#45B7D1" />;
     };
 
     const getServiceColor = (payment: Payment) => {
-        if (payment.serviceCategory === 'fuel') {
-            return '#FF6B35'; // Orange for fuel
-        } else if (payment.serviceCategory === 'truckstop') {
-            return '#4ECDC4'; // Teal for truck stop
+        switch (payment.serviceCategory) {
+            case 'fuel':
+                return '#FF6B35'; // Orange for fuel
+            case 'truckstop':
+                return '#4ECDC4'; // Teal for truck stop
+            case 'tracking':
+                return '#9C27B0'; // Purple for tracking
+            case 'git':
+                return '#FF9800'; // Orange for GIT insurance
+            case 'warehouse':
+                return '#795548'; // Brown for warehouse
+            case 'loads':
+                return '#607D8B'; // Blue-grey for loads
+            case 'trucks':
+                return '#3F51B5'; // Indigo for trucks
+            case 'contracts':
+                return '#E91E63'; // Pink for contracts
+            default:
+                // Fallback for old data or missing serviceCategory
+                if (payment.serviceType === 'fuel' || payment.fuelType) {
+                    return '#FF6B35'; // Orange for fuel
+                } else if (payment.serviceType) {
+                    return '#4ECDC4'; // Teal for other services
+                }
+                return '#45B7D1'; // Blue for other services
         }
-        return '#45B7D1'; // Blue for other services
     };
 
     const getServiceBackgroundColor = (payment: Payment) => {
@@ -141,12 +199,44 @@ export default function PaymentHistory() {
     };
 
     const getServiceName = (payment: Payment) => {
-        if (payment.serviceCategory === 'fuel') {
-            return payment.fuelType || 'Fuel';
-        } else if (payment.serviceCategory === 'truckstop') {
-            return payment.serviceType || 'Truck Stop Service';
+        // Handle multi-item payments
+        if (payment.isMultiPayment) {
+            if (payment.serviceCategory === 'fuel' && payment.fuelItems && payment.fuelItems.length > 0) {
+                const fuelNames = payment.fuelItems.map(item => item.fuelName).join(', ');
+                return `Fuel: ${fuelNames}`;
+            } else if (payment.serviceCategory === 'truckstop' && payment.serviceItems && payment.serviceItems.length > 0) {
+                const serviceNames = payment.serviceItems.map(item => item.serviceType).join(', ');
+                return `Truck Stop: ${serviceNames}`;
+            }
         }
-        return 'Service';
+
+        // Handle single item payments
+        switch (payment.serviceCategory) {
+            case 'fuel':
+                return payment.fuelType || 'Fuel';
+            case 'truckstop':
+                return payment.serviceType || 'Truck Stop Service';
+            case 'tracking':
+                return 'Vehicle Tracking Service';
+            case 'git':
+                return 'GIT Insurance';
+            case 'warehouse':
+                return 'Warehouse Storage';
+            case 'loads':
+                return 'Load Management';
+            case 'trucks':
+                return 'Truck Services';
+            case 'contracts':
+                return 'Contract Services';
+            default:
+                // Fallback for old data or missing serviceCategory
+                if (payment.serviceType === 'fuel' || payment.fuelType) {
+                    return payment.fuelType || 'Fuel';
+                } else if (payment.serviceType) {
+                    return payment.serviceType;
+                }
+                return 'Service';
+        }
     };
 
     const showQRCode = (payment: Payment) => {
@@ -155,6 +245,16 @@ export default function PaymentHistory() {
     };
 
     const renderPaymentItem = ({ item }: { item: Payment }) => {
+        console.log('Rendering payment item:', {
+            id: item.id,
+            serviceCategory: item.serviceCategory,
+            isMultiPayment: item.isMultiPayment,
+            fuelItems: item.fuelItems,
+            serviceItems: item.serviceItems,
+            paymentMethod: item.paymentMethod,
+            stationName: item.stationName,
+            totalAmount: item.totalAmount
+        });
         const serviceColor = getServiceColor(item);
         const serviceBackgroundColor = getServiceBackgroundColor(item);
 
@@ -196,16 +296,64 @@ export default function PaymentHistory() {
                 </View>
 
                 <View style={styles.paymentDetails}>
+                    {/* Payment Method */}
                     <View style={styles.detailRow}>
-                        <ThemedText type="tiny" style={[styles.detailLabel, { color: serviceColor }]}>Quantity:</ThemedText>
+                        <ThemedText type="tiny" style={[styles.detailLabel, { color: serviceColor }]}>Payment Method:</ThemedText>
                         <ThemedText type="tiny" style={styles.detailValue}>
-                            {item.quantity} {item.serviceCategory === 'fuel' ? 'L' : 'units'}
+                            {item.paymentMethod?.toUpperCase() || 'ECOCASH'}
                         </ThemedText>
                     </View>
-                    <View style={styles.detailRow}>
-                        <ThemedText type="tiny" style={[styles.detailLabel, { color: serviceColor }]}>Price per unit:</ThemedText>
-                        <ThemedText type="tiny" style={styles.detailValue}>${item.price}</ThemedText>
-                    </View>
+
+                    {/* Multi-item display */}
+                    {(item.isMultiPayment || (item.fuelItems && item.fuelItems.length > 0) || (item.serviceItems && item.serviceItems.length > 0)) && (
+                        <>
+                            {item.serviceCategory === 'fuel' && item.fuelItems && item.fuelItems.length > 0 && (
+                                <View style={styles.multiItemContainer}>
+                                    <ThemedText type="tiny" style={[styles.detailLabel, { color: serviceColor }]}>
+                                        Fuel Items:
+                                    </ThemedText>
+                                    {item.fuelItems.map((fuelItem, index) => (
+                                        <View key={index} style={styles.itemDetail}>
+                                            <ThemedText type="tiny" style={styles.detailValue}>
+                                                {fuelItem.fuelName}: {fuelItem.quantity}L @ ${fuelItem.price.toFixed(2)} = ${fuelItem.subtotal.toFixed(2)}
+                                            </ThemedText>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+                            {item.serviceCategory === 'truckstop' && item.serviceItems && item.serviceItems.length > 0 && (
+                                <View style={styles.multiItemContainer}>
+                                    <ThemedText type="tiny" style={[styles.detailLabel, { color: serviceColor }]}>
+                                        Services:
+                                    </ThemedText>
+                                    {item.serviceItems.map((serviceItem, index) => (
+                                        <View key={index} style={styles.itemDetail}>
+                                            <ThemedText type="tiny" style={styles.detailValue}>
+                                                {serviceItem.serviceType}: {serviceItem.quantity} units @ ${serviceItem.price.toFixed(2)} = ${serviceItem.subtotal.toFixed(2)}
+                                            </ThemedText>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+                        </>
+                    )}
+
+                    {/* Single item display - fallback for old data */}
+                    {!item.isMultiPayment && !item.fuelItems && !item.serviceItems && (
+                        <>
+                            <View style={styles.detailRow}>
+                                <ThemedText type="tiny" style={[styles.detailLabel, { color: serviceColor }]}>Quantity:</ThemedText>
+                                <ThemedText type="tiny" style={styles.detailValue}>
+                                    {item.quantity || 0} {item.serviceCategory === 'fuel' ? 'L' : 'units'}
+                                </ThemedText>
+                            </View>
+                            <View style={styles.detailRow}>
+                                <ThemedText type="tiny" style={[styles.detailLabel, { color: serviceColor }]}>Price per unit:</ThemedText>
+                                <ThemedText type="tiny" style={styles.detailValue}>${item.price || 0}</ThemedText>
+                            </View>
+                        </>
+                    )}
+
                     <View style={styles.detailRow}>
                         <ThemedText type="tiny" style={[styles.detailLabel, { color: serviceColor }]}>Payment ID:</ThemedText>
                         <ThemedText type="tiny" style={[styles.detailValue, { fontSize: wp(2.2) }]}>
@@ -500,5 +648,15 @@ const styles = StyleSheet.create({
         fontSize: wp(3.5),
         fontWeight: 'bold',
         textAlign: 'center',
+    },
+    multiItemContainer: {
+        marginBottom: wp(2),
+        padding: wp(2),
+        backgroundColor: 'rgba(0,0,0,0.05)',
+        borderRadius: wp(1.5),
+    },
+    itemDetail: {
+        marginLeft: wp(2),
+        marginTop: wp(1),
     },
 });

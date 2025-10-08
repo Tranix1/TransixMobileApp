@@ -150,6 +150,7 @@ export default function HomeContent({ onAuthCheck }: HomeContentProps) {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
         >
+
             {/* Search Bar */}
             <View style={styles.searchContainer}>
                 <TouchableOpacity

@@ -30,6 +30,13 @@ export function usePushNotifications() {
 
     const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
       console.log('Notification response received:', response);
+
+      // Handle routing if route data is provided
+      if (response.notification.request.content.data?.route) {
+        const route = response.notification.request.content.data.route;
+        console.log('Navigating to route:', route);
+        // You can add navigation logic here if needed
+      }
     });
 
     return () => {
@@ -75,6 +82,13 @@ export function usePushNotifications() {
     expoPushToken,
     notification,
     schedulePushNotification,
+    // Add function to get token info for debugging
+    getTokenInfo: () => ({
+      token: expoPushToken,
+      isProduction: !expoPushToken.includes('expo-go'),
+      isDevelopment: expoPushToken.includes('expo-go'),
+      projectId: Constants?.expoConfig?.extra?.eas?.projectId
+    })
   };
 }
 
@@ -146,7 +160,7 @@ async function registerForPushNotificationsAsync() {
 
       const tokenData = await Notifications.getExpoPushTokenAsync({
         projectId,
-        development: __DEV__ // Use development flag for proper token generation
+        development: false // Always use production tokens for consistent app identity
       });
 
       token = tokenData.data;
@@ -205,6 +219,8 @@ export async function sendPushNotification(
     },
     priority: 'high',
     channelId: 'myNotificationChannel', // Android channel
+    // Add app name for proper display
+    _displayInForeground: true,
   };
 
   try {

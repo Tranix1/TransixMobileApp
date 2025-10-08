@@ -41,26 +41,32 @@ interface FuelPaymentModalProps {
     fuelStation: FuelStation | null;
 }
 
-interface FuelPurchase {
-    id: string;
+interface FuelItem {
     fuelType: string;
+    fuelName: string;
     price: number;
     quantity: number;
+    subtotal: number;
+}
+
+interface FuelPurchase {
+    id: string;
+    fuelItems: FuelItem[];
     totalAmount: number;
     stationName: string;
     stationId: string;
     purchaseDate: string;
     qrCode: string;
     status: 'pending' | 'completed' | 'cancelled';
-    serviceType: 'fuel';
+    serviceCategory: 'fuel';
+    isMultiPayment: boolean;
 }
 
 const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose, fuelStation }) => {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [paymentUpdate, setPaymentUpdate] = useState('');
     const [isLoadingPayment, setIsLoadingPayment] = useState(false);
-    const [selectedFuelType, setSelectedFuelType] = useState<string>('');
-    const [quantity, setQuantity] = useState('1');
+    const [selectedFuelItems, setSelectedFuelItems] = useState<FuelItem[]>([]);
     const [showQRCode, setShowQRCode] = useState(false);
     const [purchaseData, setPurchaseData] = useState<FuelPurchase | null>(null);
 
@@ -93,10 +99,54 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
     const availableFuelTypes = getAvailableFuelTypes();
 
     const calculateTotal = () => {
-        if (!selectedFuelType || !quantity) return 0;
-        const fuelType = availableFuelTypes.find(f => f.type === selectedFuelType);
-        if (!fuelType) return 0;
-        return fuelType.price * parseFloat(quantity);
+        return selectedFuelItems.reduce((total, item) => total + item.subtotal, 0);
+    };
+
+    const updateFuelItem = (fuelType: string, field: 'quantity', value: number) => {
+        setSelectedFuelItems(prev => {
+            const existingIndex = prev.findIndex(item => item.fuelType === fuelType);
+            const fuelTypeData = availableFuelTypes.find(f => f.type === fuelType);
+
+            if (!fuelTypeData) return prev;
+
+            const updatedItem: FuelItem = {
+                fuelType,
+                fuelName: fuelTypeData.name,
+                price: existingIndex >= 0 ? prev[existingIndex].price : fuelTypeData.price,
+                quantity: field === 'quantity' ? value : (existingIndex >= 0 ? prev[existingIndex].quantity : 0),
+                subtotal: 0
+            };
+
+            // Calculate subtotal
+            updatedItem.subtotal = updatedItem.price * updatedItem.quantity;
+
+            if (existingIndex >= 0) {
+                const newItems = [...prev];
+                newItems[existingIndex] = updatedItem;
+                return newItems;
+            } else {
+                return [...prev, updatedItem];
+            }
+        });
+    };
+
+    const removeFuelItem = (fuelType: string) => {
+        setSelectedFuelItems(prev => prev.filter(item => item.fuelType !== fuelType));
+    };
+
+    const addFuelItem = (fuelType: string) => {
+        const fuelTypeData = availableFuelTypes.find(f => f.type === fuelType);
+        if (!fuelTypeData) return;
+
+        const newItem: FuelItem = {
+            fuelType,
+            fuelName: fuelTypeData.name,
+            price: fuelTypeData.price,
+            quantity: 1,
+            subtotal: fuelTypeData.price
+        };
+
+        setSelectedFuelItems(prev => [...prev, newItem]);
     };
 
     const savePaymentToDatabase = async (purchase: FuelPurchase) => {
@@ -111,6 +161,7 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
                 updatedAt: new Date(),
             };
 
+            console.log('Saving payment data to database:', paymentData);
             await addDocument('Payments', paymentData);
             console.log('Payment saved to database successfully');
         } catch (error) {
@@ -124,13 +175,14 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
             return;
         }
 
-        if (!selectedFuelType) {
-            setPaymentUpdate("Please select a fuel type.");
+        if (selectedFuelItems.length === 0) {
+            setPaymentUpdate("Please add at least one fuel type.");
             return;
         }
 
-        if (!quantity || parseFloat(quantity) <= 0) {
-            setPaymentUpdate("Please enter a valid quantity.");
+        const hasValidItems = selectedFuelItems.every(item => item.quantity > 0);
+        if (!hasValidItems) {
+            setPaymentUpdate("Please enter valid quantities for all fuel types.");
             return;
         }
 
@@ -139,16 +191,13 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
 
         try {
             const totalAmount = calculateTotal();
-            const fuelType = availableFuelTypes.find(f => f.type === selectedFuelType);
-
-            if (!fuelType) {
-                setPaymentUpdate("Invalid fuel type selected.");
-                return;
-            }
+            const fuelDescription = selectedFuelItems.map(item =>
+                `${item.fuelName} ${item.quantity}L @ $${item.price}`
+            ).join(', ');
 
             const result = await handleMakePayment(
                 totalAmount,
-                `Fuel Purchase - ${fuelType.name} (${quantity}L)`,
+                `Fuel Purchase - ${fuelDescription}`,
                 setPaymentUpdate,
                 phoneNumber
             );
@@ -156,18 +205,25 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
             if (result.success) {
                 // Generate purchase data and QR code
                 const purchaseId = generateSecureId();
+                const qrData = {
+                    purchaseId,
+                    stationId: fuelStation?.id || '',
+                    fuelItems: selectedFuelItems,
+                    totalAmount,
+                    timestamp: new Date().toISOString()
+                };
+
                 const purchase: FuelPurchase = {
                     id: purchaseId,
-                    fuelType: fuelType.name,
-                    price: fuelType.price,
-                    quantity: parseFloat(quantity),
+                    fuelItems: selectedFuelItems,
                     totalAmount: totalAmount,
                     stationName: fuelStation?.name || '',
                     stationId: fuelStation?.id || '',
                     purchaseDate: new Date().toISOString(),
-                    qrCode: `FUEL_PAYMENT:${purchaseId}:${fuelStation?.id}:${fuelType.type}:${quantity}:${totalAmount}`,
+                    qrCode: `FUEL_PAYMENT:${JSON.stringify(qrData)}`,
                     status: 'completed',
-                    serviceType: 'fuel'
+                    serviceCategory: 'fuel',
+                    isMultiPayment: selectedFuelItems.length > 1
                 };
 
                 setPurchaseData(purchase);
@@ -189,8 +245,7 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
     const handleClose = () => {
         setShowQRCode(false);
         setPurchaseData(null);
-        setSelectedFuelType('');
-        setQuantity('1');
+        setSelectedFuelItems([]);
         setPhoneNumber('');
         setPaymentUpdate('');
         onClose();
@@ -215,59 +270,107 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
                                 <ThemedText type='italic' style={styles.stationName}>{fuelStation.name}</ThemedText>
 
                                 <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                                    {/* Fuel Type Selection */}
+                                    {/* Available Fuel Types */}
                                     <View style={styles.section}>
-                                        <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Select Fuel Type</ThemedText>
+                                        <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Available Fuel Types</ThemedText>
                                         <View style={styles.fuelTypeContainer}>
-                                            {availableFuelTypes.map((fuel) => (
-                                                <TouchableOpacity
-                                                    key={fuel.type}
-                                                    style={[
-                                                        styles.fuelTypeButton,
-                                                        {
-                                                            backgroundColor: selectedFuelType === fuel.type ? accent + '20' : backgroundLight,
-                                                            borderColor: selectedFuelType === fuel.type ? accent : 'transparent'
-                                                        }
-                                                    ]}
-                                                    onPress={() => setSelectedFuelType(fuel.type)}
-                                                >
-                                                    <ThemedText
+                                            {availableFuelTypes.map((fuel) => {
+                                                const isSelected = selectedFuelItems.some(item => item.fuelType === fuel.type);
+                                                return (
+                                                    <TouchableOpacity
+                                                        key={fuel.type}
                                                         style={[
-                                                            styles.fuelTypeText,
-                                                            { color: selectedFuelType === fuel.type ? accent : icon }
+                                                            styles.fuelTypeButton,
+                                                            {
+                                                                backgroundColor: isSelected ? accent + '20' : backgroundLight,
+                                                                borderColor: isSelected ? accent : 'transparent'
+                                                            }
                                                         ]}
+                                                        onPress={() => isSelected ? removeFuelItem(fuel.type) : addFuelItem(fuel.type)}
                                                     >
-                                                        {fuel.name}
-                                                    </ThemedText>
-                                                    <ThemedText
-                                                        style={[
-                                                            styles.fuelPriceText,
-                                                            { color: selectedFuelType === fuel.type ? accent : icon }
-                                                        ]}
-                                                    >
-                                                        ${fuel.price}/L
-                                                    </ThemedText>
-                                                </TouchableOpacity>
-                                            ))}
+                                                        <ThemedText
+                                                            style={[
+                                                                styles.fuelTypeText,
+                                                                { color: isSelected ? accent : icon }
+                                                            ]}
+                                                        >
+                                                            {fuel.name}
+                                                        </ThemedText>
+                                                        <ThemedText
+                                                            style={[
+                                                                styles.fuelPriceText,
+                                                                { color: isSelected ? accent : icon }
+                                                            ]}
+                                                        >
+                                                            ${fuel.price}/L
+                                                        </ThemedText>
+                                                        <Ionicons
+                                                            name={isSelected ? "checkmark-circle" : "add-circle-outline"}
+                                                            size={wp(4)}
+                                                            color={isSelected ? accent : icon}
+                                                        />
+                                                    </TouchableOpacity>
+                                                );
+                                            })}
                                         </View>
                                     </View>
 
-                                    {/* Quantity Input */}
-                                    <View style={styles.section}>
-                                        <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Quantity (Liters)</ThemedText>
-                                        <Input
-                                            placeholder="Enter quantity"
-                                            value={quantity}
-                                            onChangeText={setQuantity}
-                                            keyboardType="numeric"
-                                            editable={!isLoadingPayment}
-                                        />
-                                    </View>
+                                    {/* Selected Fuel Items */}
+                                    {selectedFuelItems.length > 0 && (
+                                        <View style={styles.section}>
+                                            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Selected Fuel Items</ThemedText>
+                                            {selectedFuelItems.map((item, index) => (
+                                                <View key={item.fuelType} style={[styles.fuelItemContainer, { backgroundColor: backgroundLight, borderColor: icon + '30' }]}>
+                                                    <View style={styles.fuelItemHeader}>
+                                                        <ThemedText type="defaultSemiBold" style={styles.fuelItemName}>
+                                                            {item.fuelName}
+                                                        </ThemedText>
+                                                        <TouchableOpacity onPress={() => removeFuelItem(item.fuelType)}>
+                                                            <Ionicons name="close-circle" size={wp(4)} color="#ff4444" />
+                                                        </TouchableOpacity>
+                                                    </View>
 
-                                    {/* Total Amount */}
-                                    {selectedFuelType && quantity && (
-                                        <View style={styles.totalContainer}>
-                                            <ThemedText type="defaultSemiBold" style={styles.totalLabel}>Total Amount:</ThemedText>
+                                                    <View style={styles.fuelItemInputs}>
+                                                        <View style={styles.inputGroup}>
+                                                            <ThemedText style={styles.inputLabel}>Quantity (L)</ThemedText>
+                                                            <Input
+                                                                placeholder="0"
+                                                                value={item.quantity.toString()}
+                                                                onChangeText={(text) => updateFuelItem(item.fuelType, 'quantity', parseFloat(text) || 0)}
+                                                                keyboardType="numeric"
+                                                                editable={!isLoadingPayment}
+                                                                style={styles.smallInput}
+                                                                containerStyles={styles.smallInputContainer}
+                                                            />
+                                                        </View>
+
+                                                        <View style={styles.inputGroup}>
+                                                            <ThemedText style={styles.inputLabel}>Price</ThemedText>
+                                                            <View style={[styles.priceDisplayContainer, { backgroundColor: icon + '10', borderColor: icon + '40' }]}>
+                                                                <ThemedText style={[styles.priceDisplayText, { color: accent }]}>
+                                                                    ${item.price.toFixed(2)}
+                                                                </ThemedText>
+                                                            </View>
+                                                        </View>
+
+                                                        <View style={styles.inputGroup}>
+                                                            <ThemedText style={styles.inputLabel}>Subtotal</ThemedText>
+                                                            <View style={[styles.subtotalContainer, { backgroundColor: icon + '20' }]}>
+                                                                <ThemedText style={[styles.subtotalText, { color: accent }]}>
+                                                                    ${item.subtotal.toFixed(2)}
+                                                                </ThemedText>
+                                                            </View>
+                                                        </View>
+                                                    </View>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    )}
+
+                                    {/* Net Total Amount */}
+                                    {selectedFuelItems.length > 0 && (
+                                        <View style={[styles.totalContainer, { backgroundColor: backgroundLight }]}>
+                                            <ThemedText type="defaultSemiBold" style={styles.totalLabel}>Net Total Amount:</ThemedText>
                                             <ThemedText type="subtitle" style={[styles.totalAmount, { color: accent }]}>
                                                 ${calculateTotal().toFixed(2)}
                                             </ThemedText>
@@ -318,48 +421,64 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
 
                                 <ThemedText type='italic' style={styles.stationName}>{fuelStation.name}</ThemedText>
 
-                                <View style={styles.qrCodeContainer}>
-                                    <QRCode
-                                        value={purchaseData?.qrCode || ''}
-                                        size={wp(60)}
-                                        color="black"
-                                        backgroundColor="white"
-                                    />
-                                </View>
+                                <ScrollView
+                                    style={styles.qrScrollContent}
+                                    contentContainerStyle={styles.qrScrollContentContainer}
+                                    showsVerticalScrollIndicator={false}
+                                >
+                                    <View style={styles.qrCodeContainer}>
+                                        <QRCode
+                                            value={purchaseData?.qrCode || ''}
+                                            size={wp(60)}
+                                            color="black"
+                                            backgroundColor="white"
+                                        />
+                                    </View>
 
-                                <View style={styles.purchaseDetails}>
-                                    <ThemedText type="defaultSemiBold" style={styles.detailsTitle}>Purchase Details</ThemedText>
-                                    <View style={styles.detailRow}>
-                                        <ThemedText style={styles.detailLabel}>Fuel Type:</ThemedText>
-                                        <ThemedText style={styles.detailValue}>{purchaseData?.fuelType}</ThemedText>
-                                    </View>
-                                    <View style={styles.detailRow}>
-                                        <ThemedText style={styles.detailLabel}>Quantity:</ThemedText>
-                                        <ThemedText style={styles.detailValue}>{purchaseData?.quantity}L</ThemedText>
-                                    </View>
-                                    <View style={styles.detailRow}>
-                                        <ThemedText style={styles.detailLabel}>Price per Liter:</ThemedText>
-                                        <ThemedText style={styles.detailValue}>${purchaseData?.price}</ThemedText>
-                                    </View>
-                                    <View style={styles.detailRow}>
-                                        <ThemedText style={styles.detailLabel}>Total Amount:</ThemedText>
-                                        <ThemedText style={[styles.detailValue, { color: accent, fontWeight: 'bold' }]}>
-                                            ${purchaseData?.totalAmount.toFixed(2)}
-                                        </ThemedText>
-                                    </View>
-                                    <View style={styles.detailRow}>
-                                        <ThemedText style={styles.detailLabel}>Purchase ID:</ThemedText>
-                                        <ThemedText style={[styles.detailValue, { fontSize: wp(2.5) }]}>{purchaseData?.id}</ThemedText>
-                                    </View>
-                                </View>
+                                    <View style={[styles.purchaseDetails, { backgroundColor: backgroundLight }]}>
+                                        <ThemedText type="defaultSemiBold" style={styles.detailsTitle}>Purchase Details</ThemedText>
 
-                                <ThemedText style={styles.qrInstructions}>
-                                    Show this QR code to the fuel station attendant to complete your purchase.
-                                </ThemedText>
+                                        {/* Fuel Items */}
+                                        {purchaseData?.fuelItems.map((item, index) => (
+                                            <View key={index} style={[styles.fuelItemDetail, { backgroundColor: backgroundLight, borderLeftColor: accent }]}>
+                                                <ThemedText style={styles.fuelItemDetailTitle}>{item.fuelName}</ThemedText>
+                                                <View style={styles.detailRow}>
+                                                    <ThemedText style={styles.detailLabel}>Quantity:</ThemedText>
+                                                    <ThemedText style={styles.detailValue}>{item.quantity}L</ThemedText>
+                                                </View>
+                                                <View style={styles.detailRow}>
+                                                    <ThemedText style={styles.detailLabel}>Price per Liter:</ThemedText>
+                                                    <ThemedText style={styles.detailValue}>${item.price.toFixed(2)}</ThemedText>
+                                                </View>
+                                                <View style={styles.detailRow}>
+                                                    <ThemedText style={styles.detailLabel}>Subtotal:</ThemedText>
+                                                    <ThemedText style={[styles.detailValue, { color: accent, fontWeight: 'bold' }]}>
+                                                        ${item.subtotal.toFixed(2)}
+                                                    </ThemedText>
+                                                </View>
+                                            </View>
+                                        ))}
 
-                                <TouchableOpacity style={[styles.doneButton, { backgroundColor: accent }]} onPress={handleClose}>
-                                    <ThemedText style={styles.doneButtonText}>Done</ThemedText>
-                                </TouchableOpacity>
+                                        <View style={styles.detailRow}>
+                                            <ThemedText style={styles.detailLabel}>Net Total Amount:</ThemedText>
+                                            <ThemedText style={[styles.detailValue, { color: accent, fontWeight: 'bold', fontSize: wp(4) }]}>
+                                                ${purchaseData?.totalAmount.toFixed(2)}
+                                            </ThemedText>
+                                        </View>
+                                        <View style={styles.detailRow}>
+                                            <ThemedText style={styles.detailLabel}>Purchase ID:</ThemedText>
+                                            <ThemedText style={[styles.detailValue, { fontSize: wp(2.5) }]}>{purchaseData?.id}</ThemedText>
+                                        </View>
+                                    </View>
+
+                                    <ThemedText style={styles.qrInstructions}>
+                                        Show this QR code to the fuel station attendant to complete your purchase.
+                                    </ThemedText>
+
+                                    <TouchableOpacity style={[styles.doneButton, { backgroundColor: accent }]} onPress={handleClose}>
+                                        <ThemedText style={styles.doneButtonText}>Done</ThemedText>
+                                    </TouchableOpacity>
+                                </ScrollView>
                             </View>
                         )}
                     </View>
@@ -429,7 +548,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: wp(3),
-        backgroundColor: '#f0f0f0',
         borderRadius: wp(2),
         marginBottom: wp(3),
     },
@@ -459,9 +577,16 @@ const styles = StyleSheet.create({
     qrContainer: {
         alignItems: 'center',
     },
+    qrScrollContent: {
+        maxHeight: hp(60),
+        width: '100%',
+    },
+    qrScrollContentContainer: {
+        alignItems: 'center',
+    },
     qrCodeContainer: {
         padding: wp(4),
-        backgroundColor: 'white',
+        backgroundColor: 'white', // QR code needs white background for scanning
         borderRadius: wp(3),
         marginVertical: wp(4),
         shadowColor: "#000",
@@ -472,7 +597,6 @@ const styles = StyleSheet.create({
     },
     purchaseDetails: {
         width: '100%',
-        backgroundColor: '#f8f9fa',
         padding: wp(4),
         borderRadius: wp(2),
         marginBottom: wp(4),
@@ -489,7 +613,6 @@ const styles = StyleSheet.create({
     },
     detailLabel: {
         fontSize: wp(3.2),
-        color: '#666',
     },
     detailValue: {
         fontSize: wp(3.2),
@@ -498,7 +621,6 @@ const styles = StyleSheet.create({
     qrInstructions: {
         textAlign: 'center',
         fontSize: wp(3.2),
-        color: '#666',
         marginBottom: wp(4),
         lineHeight: wp(4.5),
     },
@@ -512,6 +634,78 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: wp(4),
         fontWeight: 'bold',
+    },
+    fuelItemContainer: {
+        padding: wp(3),
+        borderRadius: wp(2),
+        marginBottom: wp(2),
+        borderWidth: 1,
+    },
+    fuelItemHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: wp(2),
+    },
+    fuelItemName: {
+        fontSize: wp(3.5),
+    },
+    fuelItemInputs: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        gap: wp(2),
+    },
+    inputGroup: {
+        flex: 1,
+    },
+    inputLabel: {
+        fontSize: wp(2.8),
+        marginBottom: wp(1),
+        alignSelf: 'center',
+    },
+    smallInput: {
+        padding: wp(1.5),
+        fontSize: wp(3),
+        textAlign: 'center',
+    },
+    smallInputContainer: {
+        paddingVertical: wp(1),
+        paddingHorizontal: wp(2),
+        marginBottom: wp(0),
+        minHeight: hp(3),
+        height: hp(5),
+    },
+    subtotalContainer: {
+        padding: wp(2),
+        borderRadius: wp(1),
+        alignItems: 'center',
+    },
+    subtotalText: {
+        fontSize: wp(3.2),
+        fontWeight: 'bold',
+    },
+    priceDisplayContainer: {
+        padding: wp(2),
+        borderRadius: wp(1),
+        alignItems: 'center',
+        borderWidth: 1,
+        borderStyle: 'dashed',
+    },
+    priceDisplayText: {
+        fontSize: wp(3.2),
+        fontWeight: 'bold',
+    },
+    fuelItemDetail: {
+        padding: wp(2),
+        borderRadius: wp(1),
+        marginBottom: wp(2),
+        borderLeftWidth: 3,
+    },
+    fuelItemDetailTitle: {
+        fontSize: wp(3.5),
+        fontWeight: 'bold',
+        marginBottom: wp(1),
     },
 });
 

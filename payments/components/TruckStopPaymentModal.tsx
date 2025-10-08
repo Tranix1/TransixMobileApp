@@ -152,6 +152,7 @@ const TruckStopPaymentModal: React.FC<TruckStopPaymentModalProps> = ({ isVisible
                 updatedAt: new Date(),
             };
 
+            console.log('Saving truck stop payment data to database:', paymentData);
             await addDocument('Payments', paymentData);
             console.log('TruckStop payment saved to database successfully');
         } catch (error) {
@@ -265,37 +266,44 @@ const TruckStopPaymentModal: React.FC<TruckStopPaymentModalProps> = ({ isVisible
                                     <View style={styles.section}>
                                         <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Available Services</ThemedText>
                                         <View style={styles.serviceTypeContainer}>
-                                            {availableServices.map((service) => (
-                                                <TouchableOpacity
-                                                    key={service.type}
-                                                    style={[
-                                                        styles.serviceTypeButton,
-                                                        {
-                                                            backgroundColor: backgroundLight,
-                                                            borderColor: accent
-                                                        }
-                                                    ]}
-                                                    onPress={() => addServiceItem(service.type, service.price)}
-                                                >
-                                                    <ThemedText
+                                            {availableServices.map((service) => {
+                                                const isSelected = selectedServiceItems.some(item => item.serviceType === service.type);
+                                                return (
+                                                    <TouchableOpacity
+                                                        key={service.type}
                                                         style={[
-                                                            styles.serviceTypeText,
-                                                            { color: icon }
+                                                            styles.serviceTypeButton,
+                                                            {
+                                                                backgroundColor: isSelected ? accent + '20' : backgroundLight,
+                                                                borderColor: isSelected ? accent : 'transparent'
+                                                            }
                                                         ]}
+                                                        onPress={() => isSelected ? removeServiceItem(service.type) : addServiceItem(service.type, service.price)}
                                                     >
-                                                        {service.name}
-                                                    </ThemedText>
-                                                    <ThemedText
-                                                        style={[
-                                                            styles.servicePriceText,
-                                                            { color: accent }
-                                                        ]}
-                                                    >
-                                                        ${service.price}/unit
-                                                    </ThemedText>
-                                                    <Ionicons name="add" size={wp(4)} color={accent} />
-                                                </TouchableOpacity>
-                                            ))}
+                                                        <ThemedText
+                                                            style={[
+                                                                styles.serviceTypeText,
+                                                                { color: isSelected ? accent : icon }
+                                                            ]}
+                                                        >
+                                                            {service.name}
+                                                        </ThemedText>
+                                                        <ThemedText
+                                                            style={[
+                                                                styles.servicePriceText,
+                                                                { color: isSelected ? accent : icon }
+                                                            ]}
+                                                        >
+                                                            ${service.price}/unit
+                                                        </ThemedText>
+                                                        <Ionicons
+                                                            name={isSelected ? "checkmark-circle" : "add-circle-outline"}
+                                                            size={wp(4)}
+                                                            color={isSelected ? accent : icon}
+                                                        />
+                                                    </TouchableOpacity>
+                                                );
+                                            })}
                                         </View>
                                     </View>
 
@@ -304,49 +312,48 @@ const TruckStopPaymentModal: React.FC<TruckStopPaymentModalProps> = ({ isVisible
                                         <View style={styles.section}>
                                             <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Selected Services</ThemedText>
                                             {selectedServiceItems.map((item, index) => (
-                                                <View key={index} style={styles.selectedItemContainer}>
-                                                    <View style={styles.selectedItemInfo}>
-                                                        <ThemedText style={styles.selectedItemName}>
+                                                <View key={index} style={[styles.serviceItemContainer, { backgroundColor: backgroundLight, borderColor: icon + '30' }]}>
+                                                    <View style={styles.serviceItemHeader}>
+                                                        <ThemedText type="defaultSemiBold" style={styles.serviceItemName}>
                                                             {availableServices.find(s => s.type === item.serviceType)?.name}
                                                         </ThemedText>
-                                                        <ThemedText style={styles.selectedItemPrice}>
-                                                            ${item.price}/unit
-                                                        </ThemedText>
-                                                    </View>
-                                                    <View style={styles.quantityContainer}>
-                                                        <TouchableOpacity
-                                                            style={styles.quantityButton}
-                                                            onPress={() => {
-                                                                const newQuantity = parseFloat(item.quantity) - 1;
-                                                                if (newQuantity <= 0) {
-                                                                    removeServiceItem(item.serviceType);
-                                                                } else {
-                                                                    updateServiceQuantity(item.serviceType, newQuantity.toString());
-                                                                }
-                                                            }}
-                                                        >
-                                                            <Ionicons name="remove" size={wp(4)} color={accent} />
-                                                        </TouchableOpacity>
-                                                        <Input
-                                                            value={item.quantity}
-                                                            onChangeText={(text) => updateServiceQuantity(item.serviceType, text)}
-                                                            keyboardType="numeric"
-                                                            style={styles.quantityInput}
-                                                            editable={!isLoadingPayment}
-                                                        />
-                                                        <TouchableOpacity
-                                                            style={styles.quantityButton}
-                                                            onPress={() => {
-                                                                const newQuantity = parseFloat(item.quantity) + 1;
-                                                                updateServiceQuantity(item.serviceType, newQuantity.toString());
-                                                            }}
-                                                        >
-                                                            <Ionicons name="add" size={wp(4)} color={accent} />
+                                                        <TouchableOpacity onPress={() => removeServiceItem(item.serviceType)}>
+                                                            <Ionicons name="close-circle" size={wp(4)} color="#ff4444" />
                                                         </TouchableOpacity>
                                                     </View>
-                                                    <ThemedText style={styles.subtotalText}>
-                                                        ${(item.price * parseFloat(item.quantity)).toFixed(2)}
-                                                    </ThemedText>
+
+                                                    <View style={styles.serviceItemInputs}>
+                                                        <View style={styles.inputGroup}>
+                                                            <ThemedText style={styles.inputLabel}>Quantity</ThemedText>
+                                                            <Input
+                                                                placeholder="0"
+                                                                value={item.quantity}
+                                                                onChangeText={(text) => updateServiceQuantity(item.serviceType, text)}
+                                                                keyboardType="numeric"
+                                                                editable={!isLoadingPayment}
+                                                                style={styles.smallInput}
+                                                                containerStyles={styles.smallInputContainer}
+                                                            />
+                                                        </View>
+
+                                                        <View style={styles.inputGroup}>
+                                                            <ThemedText style={styles.inputLabel}>Price</ThemedText>
+                                                            <View style={[styles.priceDisplayContainer, { backgroundColor: icon + '10', borderColor: icon + '40' }]}>
+                                                                <ThemedText style={[styles.priceDisplayText, { color: accent }]}>
+                                                                    ${item.price.toFixed(2)}
+                                                                </ThemedText>
+                                                            </View>
+                                                        </View>
+
+                                                        <View style={styles.inputGroup}>
+                                                            <ThemedText style={styles.inputLabel}>Subtotal</ThemedText>
+                                                            <View style={[styles.subtotalContainer, { backgroundColor: icon + '20' }]}>
+                                                                <ThemedText style={[styles.subtotalText, { color: accent }]}>
+                                                                    ${(item.price * parseFloat(item.quantity)).toFixed(2)}
+                                                                </ThemedText>
+                                                            </View>
+                                                        </View>
+                                                    </View>
                                                 </View>
                                             ))}
                                         </View>
@@ -354,7 +361,7 @@ const TruckStopPaymentModal: React.FC<TruckStopPaymentModalProps> = ({ isVisible
 
                                     {/* Total Amount */}
                                     {selectedServiceItems.length > 0 && (
-                                        <View style={styles.totalContainer}>
+                                        <View style={[styles.totalContainer, { backgroundColor: backgroundLight }]}>
                                             <ThemedText type="defaultSemiBold" style={styles.totalLabel}>Total Amount:</ThemedText>
                                             <ThemedText type="subtitle" style={[styles.totalAmount, { color: accent }]}>
                                                 ${calculateTotal().toFixed(2)}
@@ -406,58 +413,64 @@ const TruckStopPaymentModal: React.FC<TruckStopPaymentModalProps> = ({ isVisible
 
                                 <ThemedText type='italic' style={styles.stationName}>{truckStop.name}</ThemedText>
 
-                                <View style={styles.qrCodeContainer}>
-                                    <QRCode
-                                        value={purchaseData?.qrCode || ''}
-                                        size={wp(60)}
-                                        color="black"
-                                        backgroundColor="white"
-                                    />
-                                </View>
+                                <ScrollView
+                                    style={styles.qrScrollContent}
+                                    contentContainerStyle={styles.qrScrollContentContainer}
+                                    showsVerticalScrollIndicator={false}
+                                >
+                                    <View style={styles.qrCodeContainer}>
+                                        <QRCode
+                                            value={purchaseData?.qrCode || ''}
+                                            size={wp(60)}
+                                            color="black"
+                                            backgroundColor="white"
+                                        />
+                                    </View>
 
-                                <View style={styles.purchaseDetails}>
-                                    <ThemedText type="defaultSemiBold" style={styles.detailsTitle}>Purchase Details</ThemedText>
+                                    <View style={[styles.purchaseDetails, { backgroundColor: backgroundLight }]}>
+                                        <ThemedText type="defaultSemiBold" style={styles.detailsTitle}>Purchase Details</ThemedText>
 
-                                    {/* Service Items */}
-                                    {purchaseData?.serviceItems.map((item, index) => (
-                                        <View key={index} style={styles.serviceItemDetail}>
-                                            <ThemedText style={styles.serviceItemName}>{item.serviceType}</ThemedText>
-                                            <View style={styles.serviceItemRow}>
-                                                <ThemedText style={styles.detailLabel}>Quantity:</ThemedText>
-                                                <ThemedText style={styles.detailValue}>{item.quantity} units</ThemedText>
+                                        {/* Service Items */}
+                                        {purchaseData?.serviceItems.map((item, index) => (
+                                            <View key={index} style={[styles.serviceItemDetail, { backgroundColor: backgroundLight, borderLeftColor: accent }]}>
+                                                <ThemedText style={[styles.serviceItemName, { color: accent }]}>{item.serviceType}</ThemedText>
+                                                <View style={styles.serviceItemRow}>
+                                                    <ThemedText style={styles.detailLabel}>Quantity:</ThemedText>
+                                                    <ThemedText style={styles.detailValue}>{item.quantity} units</ThemedText>
+                                                </View>
+                                                <View style={styles.serviceItemRow}>
+                                                    <ThemedText style={styles.detailLabel}>Price per Unit:</ThemedText>
+                                                    <ThemedText style={styles.detailValue}>${item.price}</ThemedText>
+                                                </View>
+                                                <View style={styles.serviceItemRow}>
+                                                    <ThemedText style={styles.detailLabel}>Subtotal:</ThemedText>
+                                                    <ThemedText style={[styles.detailValue, { color: accent, fontWeight: 'bold' }]}>
+                                                        ${item.subtotal.toFixed(2)}
+                                                    </ThemedText>
+                                                </View>
                                             </View>
-                                            <View style={styles.serviceItemRow}>
-                                                <ThemedText style={styles.detailLabel}>Price per Unit:</ThemedText>
-                                                <ThemedText style={styles.detailValue}>${item.price}</ThemedText>
-                                            </View>
-                                            <View style={styles.serviceItemRow}>
-                                                <ThemedText style={styles.detailLabel}>Subtotal:</ThemedText>
-                                                <ThemedText style={[styles.detailValue, { color: accent, fontWeight: 'bold' }]}>
-                                                    ${item.subtotal.toFixed(2)}
-                                                </ThemedText>
-                                            </View>
+                                        ))}
+
+                                        <View style={styles.detailRow}>
+                                            <ThemedText style={styles.detailLabel}>Total Amount:</ThemedText>
+                                            <ThemedText style={[styles.detailValue, { color: accent, fontWeight: 'bold', fontSize: wp(4) }]}>
+                                                ${purchaseData?.totalAmount.toFixed(2)}
+                                            </ThemedText>
                                         </View>
-                                    ))}
-
-                                    <View style={styles.detailRow}>
-                                        <ThemedText style={styles.detailLabel}>Total Amount:</ThemedText>
-                                        <ThemedText style={[styles.detailValue, { color: accent, fontWeight: 'bold', fontSize: wp(4) }]}>
-                                            ${purchaseData?.totalAmount.toFixed(2)}
-                                        </ThemedText>
+                                        <View style={styles.detailRow}>
+                                            <ThemedText style={styles.detailLabel}>Purchase ID:</ThemedText>
+                                            <ThemedText style={[styles.detailValue, { fontSize: wp(2.5) }]}>{purchaseData?.id}</ThemedText>
+                                        </View>
                                     </View>
-                                    <View style={styles.detailRow}>
-                                        <ThemedText style={styles.detailLabel}>Purchase ID:</ThemedText>
-                                        <ThemedText style={[styles.detailValue, { fontSize: wp(2.5) }]}>{purchaseData?.id}</ThemedText>
-                                    </View>
-                                </View>
 
-                                <ThemedText style={styles.qrInstructions}>
-                                    Show this QR code to the truck stop attendant to access your services.
-                                </ThemedText>
+                                    <ThemedText style={styles.qrInstructions}>
+                                        Show this QR code to the truck stop attendant to access your services.
+                                    </ThemedText>
 
-                                <TouchableOpacity style={[styles.doneButton, { backgroundColor: accent }]} onPress={handleClose}>
-                                    <ThemedText style={styles.doneButtonText}>Done</ThemedText>
-                                </TouchableOpacity>
+                                    <TouchableOpacity style={[styles.doneButton, { backgroundColor: accent }]} onPress={handleClose}>
+                                        <ThemedText style={styles.doneButtonText}>Done</ThemedText>
+                                    </TouchableOpacity>
+                                </ScrollView>
                             </View>
                         )}
                     </View>
@@ -527,7 +540,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: wp(3),
-        backgroundColor: '#f0f0f0',
         borderRadius: wp(2),
         marginBottom: wp(3),
     },
@@ -558,6 +570,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingBottom: wp(4),
     },
+    qrScrollContent: {
+        maxHeight: hp(60),
+        width: '100%',
+    },
+    qrScrollContentContainer: {
+        alignItems: 'center',
+    },
     qrCodeContainer: {
         padding: wp(4),
         backgroundColor: 'white',
@@ -571,7 +590,6 @@ const styles = StyleSheet.create({
     },
     purchaseDetails: {
         width: '100%',
-        backgroundColor: '#f8f9fa',
         padding: wp(4),
         borderRadius: wp(2),
         marginBottom: wp(4),
@@ -588,7 +606,6 @@ const styles = StyleSheet.create({
     },
     detailLabel: {
         fontSize: wp(3.2),
-        color: '#666',
     },
     detailValue: {
         fontSize: wp(3.2),
@@ -599,59 +616,80 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: wp(3),
-        backgroundColor: '#f8f9fa',
         borderRadius: wp(2),
         marginBottom: wp(2),
+        borderWidth: 1,
     },
-    selectedItemInfo: {
-        flex: 1,
-    },
-    selectedItemName: {
-        fontSize: wp(3.5),
-        fontWeight: '600',
-        marginBottom: wp(1),
-    },
-    selectedItemPrice: {
-        fontSize: wp(3),
-        color: '#666',
-    },
-    quantityContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: wp(2),
-        marginHorizontal: wp(3),
-    },
-    quantityButton: {
-        width: wp(8),
-        height: wp(8),
-        borderRadius: wp(4),
-        backgroundColor: '#e9ecef',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    quantityInput: {
-        width: wp(12),
-        textAlign: 'center',
-        fontSize: wp(3.5),
-    },
-    subtotalText: {
-        fontSize: wp(3.5),
-        fontWeight: 'bold',
-        color: '#007AFF',
-        minWidth: wp(15),
-        textAlign: 'right',
-    },
-    serviceItemDetail: {
-        backgroundColor: '#f8f9fa',
+    serviceItemContainer: {
         padding: wp(3),
         borderRadius: wp(2),
         marginBottom: wp(2),
+        borderWidth: 1,
+    },
+    serviceItemHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: wp(2),
+    },
+    serviceItemInputs: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        gap: wp(2),
+    },
+    inputGroup: {
+        flex: 1,
+    },
+    inputLabel: {
+        fontSize: wp(2.8),
+        marginBottom: wp(1),
+        alignSelf: 'center',
+    },
+    smallInput: {
+        padding: wp(1.5),
+        fontSize: wp(3),
+        textAlign: 'center',
+    },
+    smallInputContainer: {
+        paddingVertical: wp(1),
+        paddingHorizontal: wp(2),
+        marginBottom: wp(0),
+        minHeight: hp(3),
+        height: hp(5),
+    },
+    priceDisplayContainer: {
+        padding: wp(2),
+        borderRadius: wp(1),
+        alignItems: 'center',
+        borderWidth: 1,
+        borderStyle: 'dashed',
+    },
+    priceDisplayText: {
+        fontSize: wp(3.2),
+        fontWeight: 'bold',
+    },
+    subtotalContainer: {
+        padding: wp(2),
+        borderRadius: wp(1),
+        alignItems: 'center',
+        borderWidth: 1,
+        borderStyle: 'dashed',
+    },
+    subtotalText: {
+        fontSize: wp(3.2),
+        fontWeight: 'bold',
+    },
+    serviceItemDetail: {
+        padding: wp(3),
+        borderRadius: wp(2),
+        marginBottom: wp(2),
+        borderLeftWidth: 3,
     },
     serviceItemName: {
         fontSize: wp(3.5),
         fontWeight: 'bold',
         marginBottom: wp(2),
-        color: '#007AFF',
     },
     serviceItemRow: {
         flexDirection: 'row',
@@ -661,7 +699,6 @@ const styles = StyleSheet.create({
     qrInstructions: {
         textAlign: 'center',
         fontSize: wp(3.2),
-        color: '#666',
         marginBottom: wp(4),
         lineHeight: wp(4.5),
     },

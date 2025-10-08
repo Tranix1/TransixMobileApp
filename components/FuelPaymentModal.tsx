@@ -9,6 +9,8 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import Input from './Input';
 import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
+import { FuelPurchaseService } from '@/services/fuelPurchaseService';
+import { useAuth } from '@/context/AuthContext';
 
 interface FuelStation {
     id: string;
@@ -46,16 +48,24 @@ interface FuelPurchase {
         price: number;
         quantity: number;
         subtotal: number;
+        stationName: string;
+        stationId: string;
     }>;
     totalAmount: number;
-    stationName: string;
-    stationId: string;
+    stationNames: string[];
+    stationIds: string[];
     purchaseDate: string;
     qrCode: string;
     status: 'pending' | 'completed' | 'cancelled';
+    isMultiPayment: boolean;
 }
 
-const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose, fuelStation }) => {
+const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({
+    isVisible,
+    onClose,
+    fuelStation
+}) => {
+    const { user } = useAuth();
     const [phoneNumber, setPhoneNumber] = useState('');
     const [paymentUpdate, setPaymentUpdate] = useState('');
     const [isLoadingPayment, setIsLoadingPayment] = useState(false);
@@ -111,7 +121,11 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
                 )
             );
         } else {
-            setSelectedFuelItems(prev => [...prev, { fuelType, quantity: '1', price }]);
+            setSelectedFuelItems(prev => [...prev, {
+                fuelType,
+                quantity: '1',
+                price
+            }]);
         }
     };
 
@@ -158,7 +172,9 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
                 fuelType: item.fuelType,
                 price: item.price,
                 quantity: parseFloat(item.quantity),
-                subtotal: item.price * parseFloat(item.quantity)
+                subtotal: item.price * parseFloat(item.quantity),
+                stationName: fuelStation?.name || '',
+                stationId: fuelStation?.id || ''
             }));
 
             const fuelDescription = fuelItems.map(item =>
@@ -175,20 +191,46 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
             if (result.success) {
                 // Generate purchase data and QR code
                 const purchaseId = generateSecureId();
+
                 const purchase: FuelPurchase = {
                     id: purchaseId,
                     fuelItems: fuelItems,
                     totalAmount: totalAmount,
-                    stationName: fuelStation?.name || '',
-                    stationId: fuelStation?.id || '',
+                    stationNames: [fuelStation?.name || ''],
+                    stationIds: [fuelStation?.id || ''],
                     purchaseDate: new Date().toISOString(),
                     qrCode: `FUEL_PAYMENT:${purchaseId}:${fuelStation?.id}:${JSON.stringify(fuelItems)}:${totalAmount}`,
-                    status: 'completed'
+                    status: 'completed',
+                    isMultiPayment: false
                 };
 
                 setPurchaseData(purchase);
                 setShowQRCode(true);
                 setPaymentUpdate("✅ Payment successful! Your QR code is ready.");
+
+                // Save purchase record to database
+                if (user?.uid) {
+                    const purchaseRecord = {
+                        ...purchase,
+                        userId: user.uid,
+                        paymentMethod: 'ecocash',
+                        phoneNumber: phoneNumber,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    };
+
+                    FuelPurchaseService.saveFuelPurchase(purchaseRecord)
+                        .then(result => {
+                            if (result.success) {
+                                console.log('Fuel purchase saved successfully:', result.id);
+                            } else {
+                                console.error('Failed to save fuel purchase:', result.error);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error saving fuel purchase:', error);
+                        });
+                }
             } else {
                 setPaymentUpdate(`❌ ${result.message}`);
             }
@@ -224,16 +266,18 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
                                     </TouchableOpacity>
                                 </View>
 
-                                <ThemedText type='italic' style={styles.stationName}>{fuelStation.name}</ThemedText>
+                                <ThemedText type='italic' style={styles.stationName}>
+                                    {fuelStation?.name || ''}
+                                </ThemedText>
 
                                 <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
                                     {/* Available Fuel Types */}
                                     <View style={styles.section}>
                                         <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Available Fuel Types</ThemedText>
                                         <View style={styles.fuelTypeContainer}>
-                                            {availableFuelTypes.map((fuel) => (
+                                            {availableFuelTypes.map((fuel, index) => (
                                                 <TouchableOpacity
-                                                    key={fuel.type}
+                                                    key={`${fuel.type}-${index}`}
                                                     style={[
                                                         styles.fuelTypeButton,
                                                         {
@@ -270,10 +314,10 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
                                         <View style={styles.section}>
                                             <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Selected Fuel Items</ThemedText>
                                             {selectedFuelItems.map((item, index) => (
-                                                <View key={index} style={styles.selectedItemContainer}>
+                                                <View key={`${item.fuelType}-${index}`} style={styles.selectedItemContainer}>
                                                     <View style={styles.selectedItemInfo}>
                                                         <ThemedText style={styles.selectedItemName}>
-                                                            {availableFuelTypes.find(f => f.type === item.fuelType)?.name}
+                                                            {availableFuelTypes.find(f => f.type === item.fuelType)?.name || item.fuelType}
                                                         </ThemedText>
                                                         <ThemedText style={styles.selectedItemPrice}>
                                                             ${item.price}/L
@@ -370,7 +414,9 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
                                     </TouchableOpacity>
                                 </View>
 
-                                <ThemedText type='italic' style={styles.stationName}>{fuelStation.name}</ThemedText>
+                                <ThemedText type='italic' style={styles.stationName}>
+                                    {fuelStation?.name || ''}
+                                </ThemedText>
 
                                 <View style={styles.qrCodeContainer}>
                                     <QRCode
@@ -479,6 +525,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: wp(2),
     },
     fuelTypeText: {
         fontSize: wp(3.5),

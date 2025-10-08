@@ -335,3 +335,24 @@ export type SelectLocationProp = {
     city: string | null;
 
 }
+
+export interface FuelItem {
+    fuelType: string;
+    fuelName: string;
+    price: number;
+    quantity: number;
+    subtotal: number;
+}
+
+export interface FuelPurchase {
+    id: string;
+    fuelItems: FuelItem[];
+    totalAmount: number;
+    stationName: string;
+    stationId: string;
+    purchaseDate: string;
+    qrCode: string;
+    status: 'pending' | 'completed' | 'cancelled';
+    serviceType: 'fuel';
+    isMultiPayment: boolean;
+}
