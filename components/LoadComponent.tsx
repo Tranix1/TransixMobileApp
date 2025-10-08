@@ -13,6 +13,7 @@ import ImageViewing from 'react-native-image-viewing';
 import { AntDesign } from '@expo/vector-icons'; // or any close icon
 import { WebView } from 'react-native-webview';
 import { router } from 'expo-router';
+import { parseCoordinateString, isValidCoordinate, DEFAULT_COORDINATES } from '@/Utilities/coordinateUtils';
 
 const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string) => { }, ondetailsPress = () => { } }) => {
   const backgroundLight = useThemeColor('backgroundLight')
@@ -95,7 +96,7 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
           />}
 
           {item &&
-            <ThemedText type="subtitle" numberOfLines={1} ellipsizeMode="tail" style={{alignSelf: 'center', width: 150 ,marginLeft: wp(2.5)}}>{item.companyName}</ThemedText>
+            <ThemedText type="subtitle" numberOfLines={1} ellipsizeMode="tail" style={{ alignSelf: 'center', width: 150, marginLeft: wp(2.5) }}>{item.companyName}</ThemedText>
           }
         </View>
 
@@ -379,16 +380,19 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
               marginVertical: wp(2),
               elevation: 4,
             }} onPress={() => {
-              // Extract coordinates from origin and destination strings
-              const originCoords = item.origin?.split(',').map(coord => parseFloat(coord.trim()));
-              const destinationCoords = item.destination?.split(',').map(coord => parseFloat(coord.trim()));
+              // Extract coordinates from origin and destination strings using utility functions
+              const originCoords = parseCoordinateString(item.origin || '');
+              const destinationCoords = parseCoordinateString(item.destination || '');
 
-              if (originCoords && destinationCoords && originCoords.length === 2 && destinationCoords.length === 2) {
+              if (isValidCoordinate(originCoords) && isValidCoordinate(destinationCoords)) {
                 router.push({
-                  pathname: "/Map/Index",
+                  pathname: "/Map/ViewLoadRoutes",
                   params: {
-                    destinationLati: destinationCoords[0].toString(),
-                    destinationLongi: destinationCoords[1].toString(),
+                    loadData: JSON.stringify(item),
+                    originCoords: JSON.stringify(originCoords),
+                    destinationCoords: JSON.stringify(destinationCoords),
+                    destinationType: "Load Destination",
+                    destinationName: item.toLocation || "Load Destination",
                     ...(item.routePolyline && { routePolyline: item.routePolyline }),
                     ...(item.bounds && { bounds: JSON.stringify(item.bounds) }),
                     ...(item.distance && { distance: item.distance }),
@@ -399,10 +403,12 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
               } else {
                 // Fallback to basic map view if coordinates are not available
                 router.push({
-                  pathname: "/Map/Index",
+                  pathname: "/Map/ViewLoadRoutes",
                   params: {
-                    destinationLati: "-17.8252",
-                    destinationLongi: "31.0335",
+                    loadData: JSON.stringify(item),
+                    destinationCoords: JSON.stringify(DEFAULT_COORDINATES),
+                    destinationType: "Load Destination",
+                    destinationName: item.toLocation || "Load Destination",
                   }
                 });
               }

@@ -271,11 +271,6 @@ export const TruckStopCard: React.FC<TruckStopCardProps> = ({
                     <Ionicons name="card" size={wp(4)} color="white" />
                     <ThemedText style={styles.actionButtonText}>Pay for Services</ThemedText>
                 </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.directionsButton, { borderColor: accent }]}>
-                    <MaterialIcons name="directions" size={wp(4)} color={accent} />
-                    <ThemedText style={[styles.directionsButtonText, { color: accent }]}>Directions</ThemedText>
-                </TouchableOpacity>
             </View>
         </TouchableOpacity>
     );
@@ -449,23 +444,8 @@ const styles = StyleSheet.create({
         borderRadius: wp(2),
         gap: wp(2),
     },
-    directionsButton: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: wp(3),
-        paddingHorizontal: wp(4),
-        borderRadius: wp(2),
-        borderWidth: 1,
-        gap: wp(2),
-    },
     actionButtonText: {
         color: '#fff',
-        fontSize: wp(3.5),
-        fontWeight: '600',
-    },
-    directionsButtonText: {
         fontSize: wp(3.5),
         fontWeight: '600',
     },

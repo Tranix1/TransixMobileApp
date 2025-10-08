@@ -13,6 +13,7 @@ import Input from './Input';
 import { formatCurrency, formatDate } from '@/services/services';
 import { useAuth } from '@/context/AuthContext';
 import { router } from 'expo-router';
+import { parseCoordinateString, isValidCoordinate, DEFAULT_COORDINATES } from '@/Utilities/coordinateUtils';
 import { deleteDocument } from '@/db/operations';
 import { Share, Alert } from 'react-native';
 
@@ -468,6 +469,48 @@ Contact: ${selectedLoad.contact}`;
                                                 <AntDesign name='arrowright' size={wp(3)} color={'white'} style={{ marginLeft: wp(1) }} />
                                             </TouchableOpacity>
 
+                                        </View>
+                                        <View>
+                                            <TouchableOpacity
+                                                style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: '#2563eb', padding: wp(3), borderRadius: wp(4) }}
+                                                onPress={() => {
+                                                    // Extract coordinates from origin and destination strings using utility functions
+                                                    const originCoords = parseCoordinateString(selectedLoad.origin || '');
+                                                    const destinationCoords = parseCoordinateString(selectedLoad.destination || '');
+
+                                                    if (isValidCoordinate(originCoords) && isValidCoordinate(destinationCoords)) {
+                                                        router.push({
+                                                            pathname: "/Map/ViewLoadRoutes",
+                                                            params: {
+                                                                loadData: JSON.stringify(selectedLoad),
+                                                                originCoords: JSON.stringify(originCoords),
+                                                                destinationCoords: JSON.stringify(destinationCoords),
+                                                                destinationType: "Load Destination",
+                                                                destinationName: selectedLoad.toLocation || "Load Destination",
+                                                                ...(selectedLoad.routePolyline && { routePolyline: selectedLoad.routePolyline }),
+                                                                ...(selectedLoad.bounds && { bounds: JSON.stringify(selectedLoad.bounds) }),
+                                                                ...(selectedLoad.distance && { distance: selectedLoad.distance }),
+                                                                ...(selectedLoad.duration && { duration: selectedLoad.duration }),
+                                                                ...(selectedLoad.durationInTraffic && { durationInTraffic: selectedLoad.durationInTraffic }),
+                                                            }
+                                                        });
+                                                    } else {
+                                                        // Fallback to basic map view if coordinates are not available
+                                                        router.push({
+                                                            pathname: "/Map/ViewLoadRoutes",
+                                                            params: {
+                                                                loadData: JSON.stringify(selectedLoad),
+                                                                destinationCoords: JSON.stringify(DEFAULT_COORDINATES),
+                                                                destinationType: "Load Destination",
+                                                                destinationName: selectedLoad.toLocation || "Load Destination",
+                                                            }
+                                                        });
+                                                    }
+                                                }}
+                                            >
+                                                <Ionicons name="map" size={wp(4)} color="white" />
+                                                <ThemedText color='white'>View On Map</ThemedText>
+                                            </TouchableOpacity>
                                         </View>
                                     </>
                                 }

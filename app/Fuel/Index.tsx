@@ -11,6 +11,8 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { openWhatsApp, getContactMessage } from '@/Utilities/whatsappUtils';
 import { FuelPaymentModal } from "@/payments";
+import { getCurrentLocation } from '@/Utilities/utils';
+import { calculateDistance, Coordinate } from '@/Utilities/coordinateUtils';
 
 interface FuelStation {
     id: string;
@@ -51,8 +53,25 @@ export default function Index() {
     const [expandedId, setExpandedId] = useState<string>('');
     const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
     const [selectedFuelStation, setSelectedFuelStation] = useState<FuelStation | null>(null);
+    const [currentLocation, setCurrentLocation] = useState<Coordinate | null>(null);
+    const [sortByDistance, setSortByDistance] = useState(false);
 
     const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
+
+    const getCurrentUserLocation = async () => {
+        try {
+            const location = await getCurrentLocation();
+            if (location) {
+                setCurrentLocation({
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude
+                });
+            }
+        } catch (error) {
+            console.error('Error getting current location:', error);
+        }
+    };
+
     const LoadFuelStations = async () => {
         try {
             setLoading(true);
@@ -74,6 +93,7 @@ export default function Index() {
     }
     useEffect(() => {
         LoadFuelStations();
+        getCurrentUserLocation();
     }, [])
 
     const onRefresh = async () => {
@@ -129,36 +149,67 @@ export default function Index() {
         setIsPaymentModalVisible(true);
     };
 
+    const calculateFuelStationDistance = (fuelStation: FuelStation): number => {
+        if (!currentLocation || !fuelStation.location) return 0;
+
+        const stationLocation: Coordinate = {
+            latitude: fuelStation.location.latitude,
+            longitude: fuelStation.location.longitude
+        };
+
+        return calculateDistance(currentLocation, stationLocation);
+    };
+
+    const getSortedFuelStations = (): FuelStation[] => {
+        if (!sortByDistance || !currentLocation) {
+            return fuelStations;
+        }
+
+        return [...fuelStations].sort((a, b) => {
+            const distanceA = calculateFuelStationDistance(a);
+            const distanceB = calculateFuelStationDistance(b);
+            return distanceA - distanceB;
+        });
+    };
+
     return (
         <ScreenWrapper>
 
             <Heading page='Fuel' rightComponent={
-                <TouchableNativeFeedback onPress={handleAddFuel}>
-                    <ThemedText style={{ marginRight: wp(3) }} type='defaultSemiBold'>Add Fuel</ThemedText>
-                </TouchableNativeFeedback>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(3) }}>
+                    {currentLocation && (
+                        <TouchableNativeFeedback onPress={() => setSortByDistance(!sortByDistance)}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(1) }}>
+                                <Ionicons
+                                    name={sortByDistance ? "location" : "location-outline"}
+                                    size={wp(4)}
+                                    color={accent}
+                                />
+                                <ThemedText style={{ marginRight: wp(1) }} type='defaultSemiBold'>
+                                    {sortByDistance ? 'Sort by Time' : 'Sort by Distance'}
+                                </ThemedText>
+                            </View>
+                        </TouchableNativeFeedback>
+                    )}
+                    <TouchableNativeFeedback onPress={handleAddFuel}>
+                        <ThemedText style={{ marginRight: wp(3) }} type='defaultSemiBold'>Add Fuel</ThemedText>
+                    </TouchableNativeFeedback>
+                </View>
             } />
             <FlatList
                 keyExtractor={(item) => item.id.toString()}
                 contentContainerStyle={{}}
-                data={fuelStations}
+                data={getSortedFuelStations()}
                 renderItem={({ item }) => {
                     const isExpanded = expandedId === item.id;
                     const availableFuelTypes = Object.entries(item.fuelTypes).filter(([_, fuel]) => fuel.available);
                     const hasAvailableFuel = availableFuelTypes.length > 0;
+                    const distance = currentLocation ? calculateFuelStationDistance(item) : 0;
 
                     return (
                         <View style={[styles.fuelStationCard, { borderColor: accent + '20' }]}>
                             {/* Main Card Content */}
-                            <TouchableOpacity
-                                style={styles.mainCardContent}
-                                onPress={() => router.push({
-                                    pathname: "/Map/Index",
-                                    params: {
-                                        destinationLati: item.location.latitude.toString(),
-                                        destinationLongi: item.location.longitude.toString()
-                                    }
-                                })}
-                            >
+                            <View style={styles.mainCardContent}>
                                 <View style={styles.fuelStationHeader}>
                                     <View style={[styles.fuelIconContainer, { backgroundColor: accent + '15' }]}>
                                         <Ionicons name="car" size={wp(6)} color={accent} />
@@ -175,6 +226,14 @@ export default function Index() {
                                                     : item.location.description
                                                 }
                                             </ThemedText>
+                                            {currentLocation && distance > 0 && (
+                                                <View style={[styles.distanceContainer, { backgroundColor: accent + '15' }]}>
+                                                    <Ionicons name="navigate" size={wp(3.5)} color={accent} />
+                                                    <ThemedText type="tiny" style={[styles.distanceText, { color: accent }]}>
+                                                        {distance.toFixed(1)} km
+                                                    </ThemedText>
+                                                </View>
+                                            )}
                                         </View>
                                     </View>
                                     {/* <Ionicons name="chevron-forward" size={wp(5)} color={icon} /> */}
@@ -248,7 +307,7 @@ export default function Index() {
                                             );
                                         })}
                                 </View>
-                            </TouchableOpacity>
+                            </View>
 
                             {/* Expanded Details */}
                             {isExpanded && (
@@ -608,9 +667,23 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: wp(1.5),
+        flex: 1,
     },
     locationText: {
         fontSize: wp(3.2),
+        flex: 1,
+    },
+    distanceContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp(0.8),
+        paddingHorizontal: wp(2),
+        paddingVertical: wp(0.8),
+        borderRadius: wp(1.5),
+    },
+    distanceText: {
+        fontSize: wp(2.8),
+        fontWeight: '600',
     },
     fuelDetailsContainer: {
         flexDirection: 'row',
@@ -795,5 +868,3 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 })
-
-

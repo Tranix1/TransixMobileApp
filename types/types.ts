@@ -355,4 +355,15 @@ export interface FuelPurchase {
     status: 'pending' | 'completed' | 'cancelled';
     serviceType: 'fuel';
     isMultiPayment: boolean;
+    // Route details for navigation
+    routeDetails?: {
+        destinationLatitude: number;
+        destinationLongitude: number;
+        destinationName: string;
+        distance?: string;
+        duration?: string;
+        durationInTraffic?: string;
+        routePolyline?: string;
+        bounds?: any;
+    };
 }

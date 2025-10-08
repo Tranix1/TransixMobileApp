@@ -11,6 +11,7 @@ import Input from '@/components/Input';
 import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'expo-router';
 
 interface FuelStation {
     id: string;
@@ -60,6 +61,17 @@ interface FuelPurchase {
     status: 'pending' | 'completed' | 'cancelled';
     serviceCategory: 'fuel';
     isMultiPayment: boolean;
+    // Route details for navigation
+    routeDetails?: {
+        destinationLatitude: number;
+        destinationLongitude: number;
+        destinationName: string;
+        distance?: string;
+        duration?: string;
+        durationInTraffic?: string;
+        routePolyline?: string;
+        bounds?: any;
+    };
 }
 
 const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose, fuelStation }) => {
@@ -71,6 +83,7 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
     const [purchaseData, setPurchaseData] = useState<FuelPurchase | null>(null);
 
     const { user } = useAuth();
+    const router = useRouter();
     const accent = useThemeColor("accent");
     const background = useThemeColor('background');
     const icon = useThemeColor('icon');
@@ -223,12 +236,22 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
                     qrCode: `FUEL_PAYMENT:${JSON.stringify(qrData)}`,
                     status: 'completed',
                     serviceCategory: 'fuel',
-                    isMultiPayment: selectedFuelItems.length > 1
+                    isMultiPayment: selectedFuelItems.length > 1,
+                    // Add route details for navigation
+                    routeDetails: {
+                        destinationLatitude: fuelStation?.location.latitude || 0,
+                        destinationLongitude: fuelStation?.location.longitude || 0,
+                        destinationName: fuelStation?.name || 'Fuel Station',
+                        // Note: distance, duration, and routePolyline would be populated by Google Maps API
+                        // For now, we'll store the basic location info
+                    }
                 };
 
                 setPurchaseData(purchase);
                 setShowQRCode(true);
                 setPaymentUpdate("✅ Payment successful! Your QR code is ready.");
+                console.log('Payment successful, purchase data set:', purchase);
+                console.log('Route details:', purchase.routeDetails);
 
                 // Save payment to database
                 await savePaymentToDatabase(purchase);
@@ -239,6 +262,30 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
             setPaymentUpdate(error.message || "Failed to process payment.");
         } finally {
             setIsLoadingPayment(false);
+        }
+    };
+
+    const handleNavigateToMap = () => {
+        if (purchaseData?.routeDetails) {
+            console.log('Navigating to map with route details:', purchaseData.routeDetails);
+            // Close the modal first
+            handleClose();
+            // Use setTimeout to ensure modal closes before navigation
+            setTimeout(() => {
+                if (purchaseData?.routeDetails) {
+                    router.push({
+                        pathname: "/Map/Index",
+                        params: {
+                            destinationLati: purchaseData.routeDetails.destinationLatitude.toString(),
+                            destinationLongi: purchaseData.routeDetails.destinationLongitude.toString(),
+                            destinationName: purchaseData.routeDetails.destinationName,
+                            destinationType: 'Fuel Station'
+                        }
+                    });
+                }
+            }, 100);
+        } else {
+            console.log('No route details available for navigation');
         }
     };
 
@@ -475,6 +522,24 @@ const FuelPaymentModal: React.FC<FuelPaymentModalProps> = ({ isVisible, onClose,
                                         Show this QR code to the fuel station attendant to complete your purchase.
                                     </ThemedText>
 
+                                    {/* Navigation Button - Always show if purchase data exists */}
+                                    {purchaseData && (
+                                        <TouchableOpacity
+                                            style={[styles.navigateButton, { backgroundColor: backgroundLight, borderColor: accent }]}
+                                            onPress={() => {
+                                                console.log('Navigation button pressed');
+                                                console.log('Purchase data:', purchaseData);
+                                                console.log('Route details:', purchaseData.routeDetails);
+                                                handleNavigateToMap();
+                                            }}
+                                        >
+                                            <Ionicons name="navigate" size={wp(4)} color={accent} />
+                                            <ThemedText style={[styles.navigateButtonText, { color: accent }]}>
+                                                Get Directions
+                                            </ThemedText>
+                                        </TouchableOpacity>
+                                    )}
+
                                     <TouchableOpacity style={[styles.doneButton, { backgroundColor: accent }]} onPress={handleClose}>
                                         <ThemedText style={styles.doneButtonText}>Done</ThemedText>
                                     </TouchableOpacity>
@@ -706,6 +771,21 @@ const styles = StyleSheet.create({
         fontSize: wp(3.5),
         fontWeight: 'bold',
         marginBottom: wp(1),
+    },
+    navigateButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: wp(3),
+        paddingHorizontal: wp(4),
+        borderRadius: wp(2),
+        borderWidth: 2,
+        marginBottom: wp(3),
+        gap: wp(2),
+    },
+    navigateButtonText: {
+        fontSize: wp(3.5),
+        fontWeight: '600',
     },
 });
 

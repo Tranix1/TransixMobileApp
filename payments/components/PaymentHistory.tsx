@@ -46,6 +46,18 @@ interface Payment {
     }>;
     isMultiPayment?: boolean;
 
+    // Route details for navigation
+    routeDetails?: {
+        destinationLatitude: number;
+        destinationLongitude: number;
+        destinationName: string;
+        distance?: string;
+        duration?: string;
+        durationInTraffic?: string;
+        routePolyline?: string;
+        bounds?: any;
+    };
+
     createdAt: Date;
     updatedAt: Date;
 }
@@ -128,6 +140,25 @@ export default function PaymentHistory() {
             hour: '2-digit',
             minute: '2-digit'
         });
+    };
+
+    const handleNavigateToMap = (payment: Payment) => {
+        console.log('PaymentHistory: Navigation button pressed for payment:', payment.id);
+        console.log('PaymentHistory: Route details:', payment.routeDetails);
+        if (payment.routeDetails) {
+            const destinationType = payment.serviceCategory === 'fuel' ? 'Fuel Station' : 'Truck Stop';
+            router.push({
+                pathname: "/Map/Index",
+                params: {
+                    destinationLati: payment.routeDetails.destinationLatitude.toString(),
+                    destinationLongi: payment.routeDetails.destinationLongitude.toString(),
+                    destinationName: payment.routeDetails.destinationName,
+                    destinationType: destinationType
+                }
+            });
+        } else {
+            console.log('PaymentHistory: No route details available for payment:', payment.id);
+        }
     };
 
     const getServiceIcon = (payment: Payment) => {
@@ -362,13 +393,36 @@ export default function PaymentHistory() {
                     </View>
                 </View>
 
-                <TouchableOpacity
-                    style={[styles.qrButton, { backgroundColor: serviceColor }]}
-                    onPress={() => showQRCode(item)}
-                >
-                    <Ionicons name="qr-code" size={wp(4)} color="white" />
-                    <ThemedText style={styles.qrButtonText}>View QR Code</ThemedText>
-                </TouchableOpacity>
+                <View style={styles.actionButtonsContainer}>
+                    <TouchableOpacity
+                        style={[styles.qrButton, { backgroundColor: serviceColor }]}
+                        onPress={() => showQRCode(item)}
+                    >
+                        <Ionicons name="qr-code" size={wp(4)} color="white" />
+                        <ThemedText style={styles.qrButtonText}>View QR Code</ThemedText>
+                    </TouchableOpacity>
+
+                    {/* Navigation button for fuel and truck stop payments with route details */}
+                    {(item.serviceCategory === 'fuel' || item.serviceCategory === 'truckstop') && item.routeDetails && (
+                        <TouchableOpacity
+                            style={[styles.navigateButton, {
+                                backgroundColor: backgroundLight,
+                                borderColor: serviceColor
+                            }]}
+                            onPress={() => {
+                                console.log('PaymentHistory: Button pressed for payment:', item.id);
+                                console.log('PaymentHistory: Service category:', item.serviceCategory);
+                                console.log('PaymentHistory: Has route details:', !!item.routeDetails);
+                                handleNavigateToMap(item);
+                            }}
+                        >
+                            <Ionicons name="navigate" size={wp(4)} color={serviceColor} />
+                            <ThemedText style={[styles.navigateButtonText, { color: serviceColor }]}>
+                                Get Directions
+                            </ThemedText>
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
         );
     };
@@ -658,5 +712,25 @@ const styles = StyleSheet.create({
     itemDetail: {
         marginLeft: wp(2),
         marginTop: wp(1),
+    },
+    actionButtonsContainer: {
+        flexDirection: 'row',
+        gap: wp(2),
+        marginTop: wp(2),
+    },
+    navigateButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: wp(3),
+        paddingHorizontal: wp(4),
+        borderRadius: wp(2),
+        borderWidth: 2,
+        gap: wp(2),
+    },
+    navigateButtonText: {
+        fontSize: wp(3.5),
+        fontWeight: '600',
     },
 });

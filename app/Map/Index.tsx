@@ -1,18 +1,17 @@
 import React, { useEffect, useState, useRef } from "react";
-import { View, StyleSheet, ActivityIndicator, TouchableOpacity } from "react-native";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { decodePolyline, LatLng } from "@/Utilities/decodePolyline";
 import { useLocalSearchParams } from "expo-router";
 import * as Location from "expo-location";
 import { ThemedText } from "@/components/ThemedText";
 import { darkMapStyle } from "@/Utilities/MapDarkMode";
-import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { FuelPaymentModal } from "@/payments";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { hp, wp } from "@/constants/common";
+import { wp } from "@/constants/common";
 
 export default function Map() {
   const {
@@ -24,7 +23,9 @@ export default function Map() {
     bounds,
     distance,
     duration,
-    durationInTraffic
+    durationInTraffic,
+    destinationType,
+    destinationName
   } = useLocalSearchParams();
 
   const [currentLocation, setCurrentLocation] =
@@ -34,14 +35,19 @@ export default function Map() {
   );
 
   const [routeCoords, setRouteCoords] = useState<LatLng[]>([]);
-  const [hasFitted, setHasFitted] = useState(false); // ✅ prevents re-snapping
+  const [hasFitted, setHasFitted] = useState(false);
+  const [routeDetails, setRouteDetails] = useState<{
+    distance: string;
+    duration: string;
+    durationInTraffic?: string;
+  } | null>(null);
   const mapRef = useRef<MapView>(null);
   const theme = useColorScheme() ?? "light";
-  const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
-  const [selectedFuelStation, setSelectedFuelStation] = useState<any>(null);
 
   const accent = useThemeColor('accent');
   const background = useThemeColor('background');
+  const textColor = useThemeColor('text');
+  const icon = useThemeColor('icon');
 
   useEffect(() => {
     (async () => {
@@ -170,9 +176,18 @@ export default function Map() {
         const json = await response.json();
 
         if (json.status === "OK") {
-          const polyline = json.routes[0].overview_polyline.points;
+          const route = json.routes[0];
+          const polyline = route.overview_polyline.points;
           const points: LatLng[] = decodePolyline(polyline);
           setRouteCoords(points);
+
+          // Extract route details
+          const leg = route.legs[0];
+          setRouteDetails({
+            distance: leg.distance?.text || 'N/A',
+            duration: leg.duration?.text || 'N/A',
+            durationInTraffic: leg.duration_in_traffic?.text
+          });
 
           // ✅ Fit map only once
           if (mapRef.current && points.length > 0 && !hasFitted) {
@@ -232,35 +247,6 @@ export default function Map() {
 
   const initialRegion = getInitialRegion();
 
-  const handleFuelPayment = () => {
-    // Create a mock fuel station for payment
-    const mockFuelStation = {
-      id: 'map-fuel-station',
-      name: 'Fuel Station at Destination',
-      location: {
-        description: 'Destination Fuel Station',
-        latitude: destinationCoords.latitude,
-        longitude: destinationCoords.longitude,
-        city: null,
-        country: null,
-      },
-      fuelTypes: {
-        diesel: { price: '1.50', available: true },
-        petrol: { price: '1.45', available: true },
-        other: { name: 'Premium', price: '1.60', available: true },
-      },
-      contactNumber: '+263 77 123 4567',
-      operatingHours: '24/7',
-      amenities: ['ATM', 'Restaurant', 'Restrooms'],
-      description: 'Full-service fuel station with modern amenities',
-      addedBy: 'system',
-      addedAt: new Date(),
-    };
-
-    setSelectedFuelStation(mockFuelStation);
-    setIsPaymentModalVisible(true);
-  };
-
   if (!initialRegion) {
     return (
       <View style={styles.loadingContainer}>
@@ -291,7 +277,7 @@ export default function Map() {
         {originCoords && (
           <Marker
             coordinate={originCoords}
-            title={isValidProvidedOrigin ? "Load Origin" : "Your Current Location"}
+            title={isValidProvidedOrigin ? "Origin" : "Your Current Location"}
           >
             <LinearGradient
               colors={["#2196F3", "#1976D2"]}
@@ -303,12 +289,16 @@ export default function Map() {
         )}
 
         {isValidDestination && (
-          <Marker coordinate={destinationCoords} title="Destination">
+          <Marker
+            coordinate={destinationCoords}
+            title={destinationName as string || "Destination"}
+            description={destinationType as string || "Destination"}
+          >
             <LinearGradient
               colors={["#43A047", "#2E7D32"]}
               style={styles.markerCircle}
             >
-              <FontAwesome5 name="gas-pump" size={20} color="white" />
+              <FontAwesome5 name="map-marker-alt" size={20} color="white" />
             </LinearGradient>
           </Marker>
         )}
@@ -329,25 +319,36 @@ export default function Map() {
         )}
       </MapView>
 
-      {/* Fuel Payment Button Overlay */}
-      {isValidDestination && (
-        <View style={styles.paymentButtonContainer}>
-          <TouchableOpacity
-            style={[styles.paymentButton, { backgroundColor: accent }]}
-            onPress={handleFuelPayment}
-          >
-            <Ionicons name="card" size={wp(5)} color="white" />
-            <ThemedText style={styles.paymentButtonText}>Pay for Fuel</ThemedText>
-          </TouchableOpacity>
+      {/* Route Details Overlay */}
+      {routeDetails && (
+        <View style={[styles.detailsOverlay, { backgroundColor: background }]}>
+          <View style={styles.detailsContent}>
+            <ThemedText type="subtitle" style={styles.routeTitle}>Route Details</ThemedText>
+            <View style={styles.routeInfo}>
+              <View style={styles.routeDetailItem}>
+                <FontAwesome5 name="route" size={wp(5)} color={accent} />
+                <ThemedText type="tiny" style={styles.routeDetailText}>
+                  {routeDetails.distance}
+                </ThemedText>
+              </View>
+              <View style={styles.routeDetailItem}>
+                <FontAwesome5 name="clock" size={wp(5)} color={accent} />
+                <ThemedText type="tiny" style={styles.routeDetailText}>
+                  {routeDetails.duration}
+                </ThemedText>
+              </View>
+              {routeDetails.durationInTraffic && (
+                <View style={styles.routeDetailItem}>
+                  <FontAwesome5 name="traffic-light" size={wp(5)} color={accent} />
+                  <ThemedText type="tiny" style={styles.routeDetailText}>
+                    {routeDetails.durationInTraffic}
+                  </ThemedText>
+                </View>
+              )}
+            </View>
+          </View>
         </View>
       )}
-
-      {/* Fuel Payment Modal */}
-      <FuelPaymentModal
-        isVisible={isPaymentModalVisible}
-        onClose={() => setIsPaymentModalVisible(false)}
-        fuelStation={selectedFuelStation}
-      />
     </View>
   );
 }
@@ -378,30 +379,39 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 3,
   },
-  paymentButtonContainer: {
+  detailsOverlay: {
     position: 'absolute',
-    bottom: wp(10),
+    top: wp(8),
     left: wp(4),
     right: wp(4),
-    alignItems: 'center',
-  },
-  paymentButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: wp(4),
-    paddingHorizontal: wp(6),
     borderRadius: wp(3),
-    gap: wp(2),
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
   },
-  paymentButtonText: {
-    color: 'white',
-    fontSize: wp(4),
+  detailsContent: {
+    padding: wp(4),
+  },
+  routeTitle: {
+    textAlign: 'center',
+    marginBottom: wp(3),
     fontWeight: 'bold',
+  },
+  routeInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  routeDetailItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  routeDetailText: {
+    marginTop: wp(1),
+    fontSize: wp(3.5),
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });

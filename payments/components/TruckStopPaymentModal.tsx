@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '@/context/AuthContext';
 import { TruckStop } from '@/types/types';
+import { useRouter } from 'expo-router';
 
 interface TruckStopPaymentModalProps {
     isVisible: boolean;
@@ -34,6 +35,17 @@ interface TruckStopPurchase {
     qrCode: string;
     status: 'pending' | 'completed' | 'cancelled';
     serviceCategory: 'truckstop';
+    // Route details for navigation
+    routeDetails?: {
+        destinationLatitude: number;
+        destinationLongitude: number;
+        destinationName: string;
+        distance?: string;
+        duration?: string;
+        durationInTraffic?: string;
+        routePolyline?: string;
+        bounds?: any;
+    };
 }
 
 const TruckStopPaymentModal: React.FC<TruckStopPaymentModalProps> = ({ isVisible, onClose, truckStop }) => {
@@ -49,6 +61,7 @@ const TruckStopPaymentModal: React.FC<TruckStopPaymentModalProps> = ({ isVisible
     const [purchaseData, setPurchaseData] = useState<TruckStopPurchase | null>(null);
 
     const { user } = useAuth();
+    const router = useRouter();
     const accent = useThemeColor("accent");
     const background = useThemeColor('background');
     const icon = useThemeColor('icon');
@@ -215,12 +228,22 @@ const TruckStopPaymentModal: React.FC<TruckStopPaymentModalProps> = ({ isVisible
                     purchaseDate: new Date().toISOString(),
                     qrCode: `TRUCKSTOP_PAYMENT:${purchaseId}:${truckStop?.id || 'unknown'}:${JSON.stringify(serviceItems)}:${totalAmount}`,
                     status: 'completed',
-                    serviceCategory: 'truckstop'
+                    serviceCategory: 'truckstop',
+                    // Add route details for navigation
+                    routeDetails: {
+                        destinationLatitude: truckStop?.coordinates.latitude || 0,
+                        destinationLongitude: truckStop?.coordinates.longitude || 0,
+                        destinationName: truckStop?.name || 'Truck Stop',
+                        // Note: distance, duration, and routePolyline would be populated by Google Maps API
+                        // For now, we'll store the basic location info
+                    }
                 };
 
                 setPurchaseData(purchase);
                 setShowQRCode(true);
                 setPaymentUpdate("✅ Payment successful! Your QR code is ready.");
+                console.log('TruckStop payment successful, purchase data set:', purchase);
+                console.log('TruckStop route details:', purchase.routeDetails);
 
                 // Save payment to database
                 await savePaymentToDatabase(purchase);
@@ -231,6 +254,30 @@ const TruckStopPaymentModal: React.FC<TruckStopPaymentModalProps> = ({ isVisible
             setPaymentUpdate(error.message || "Failed to process payment.");
         } finally {
             setIsLoadingPayment(false);
+        }
+    };
+
+    const handleNavigateToMap = () => {
+        if (purchaseData?.routeDetails) {
+            console.log('TruckStop: Navigating to map with route details:', purchaseData.routeDetails);
+            // Close the modal first
+            handleClose();
+            // Use setTimeout to ensure modal closes before navigation
+            setTimeout(() => {
+                if (purchaseData?.routeDetails) {
+                    router.push({
+                        pathname: "/Map/Index",
+                        params: {
+                            destinationLati: purchaseData.routeDetails.destinationLatitude.toString(),
+                            destinationLongi: purchaseData.routeDetails.destinationLongitude.toString(),
+                            destinationName: purchaseData.routeDetails.destinationName,
+                            destinationType: 'Truck Stop'
+                        }
+                    });
+                }
+            }, 100);
+        } else {
+            console.log('TruckStop: No route details available for navigation');
         }
     };
 
@@ -467,6 +514,24 @@ const TruckStopPaymentModal: React.FC<TruckStopPaymentModalProps> = ({ isVisible
                                         Show this QR code to the truck stop attendant to access your services.
                                     </ThemedText>
 
+                                    {/* Navigation Button - Always show if purchase data exists */}
+                                    {purchaseData && (
+                                        <TouchableOpacity
+                                            style={[styles.navigateButton, { backgroundColor: backgroundLight, borderColor: accent }]}
+                                            onPress={() => {
+                                                console.log('TruckStop: Navigation button pressed');
+                                                console.log('TruckStop: Purchase data:', purchaseData);
+                                                console.log('TruckStop: Route details:', purchaseData.routeDetails);
+                                                handleNavigateToMap();
+                                            }}
+                                        >
+                                            <Ionicons name="navigate" size={wp(4)} color={accent} />
+                                            <ThemedText style={[styles.navigateButtonText, { color: accent }]}>
+                                                Get Directions
+                                            </ThemedText>
+                                        </TouchableOpacity>
+                                    )}
+
                                     <TouchableOpacity style={[styles.doneButton, { backgroundColor: accent }]} onPress={handleClose}>
                                         <ThemedText style={styles.doneButtonText}>Done</ThemedText>
                                     </TouchableOpacity>
@@ -701,6 +766,21 @@ const styles = StyleSheet.create({
         fontSize: wp(3.2),
         marginBottom: wp(4),
         lineHeight: wp(4.5),
+    },
+    navigateButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: wp(3),
+        paddingHorizontal: wp(4),
+        borderRadius: wp(2),
+        borderWidth: 2,
+        marginBottom: wp(3),
+        gap: wp(2),
+    },
+    navigateButtonText: {
+        fontSize: wp(3.5),
+        fontWeight: '600',
     },
     doneButton: {
         padding: wp(4),
