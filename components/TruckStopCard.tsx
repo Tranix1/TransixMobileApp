@@ -11,9 +11,12 @@ import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { wp, hp } from '@/constants/common';
 import { TruckStop } from '@/types/types';
+import AccentRingLoader from './AccentRingLoader';
 
 interface TruckStopCardProps {
     truckStop: TruckStop;
+    distance?: number;
+    isCalculatingDistance?: boolean;
     onPress?: () => void;
     onImagePress?: (images: string[], index: number) => void;
     onPaymentPress?: (truckStop: TruckStop) => void;
@@ -21,6 +24,8 @@ interface TruckStopCardProps {
 
 export const TruckStopCard: React.FC<TruckStopCardProps> = ({
     truckStop,
+    distance = 0,
+    isCalculatingDistance = false,
     onPress,
     onImagePress,
     onPaymentPress,
@@ -86,8 +91,30 @@ export const TruckStopCard: React.FC<TruckStopCardProps> = ({
                     <View style={styles.locationContainer}>
                         <MaterialIcons name="location-on" size={wp(3.5)} color={icon} />
                         <ThemedText style={[styles.location, { color: icon }]}>
-                            {truckStop.location}
+                            {truckStop.city && truckStop.country
+                                ? `${truckStop.city}, ${truckStop.country}`
+                                : truckStop.location || 'Location not specified'
+                            }
                         </ThemedText>
+                        {(distance > 0 || isCalculatingDistance) && (
+                            <View style={[styles.distanceContainer, { backgroundColor: accent + '15' }]}>
+                                {isCalculatingDistance ? (
+                                    <>
+                                        <AccentRingLoader color={accent} size={20} dotSize={4} />
+                                        <ThemedText type="tiny" style={[styles.distanceText, { color: accent }]}>
+                                            Loading...
+                                        </ThemedText>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Ionicons name="navigate" size={wp(3.5)} color={accent} />
+                                        <ThemedText type="tiny" style={[styles.distanceText, { color: accent }]}>
+                                            {distance.toFixed(1)} km
+                                        </ThemedText>
+                                    </>
+                                )}
+                            </View>
+                        )}
                     </View>
                 </View>
 
@@ -317,9 +344,23 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: wp(1),
+        flex: 1,
     },
     location: {
         fontSize: wp(3.5),
+        flex: 1,
+    },
+    distanceContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp(0.8),
+        paddingHorizontal: wp(2),
+        paddingVertical: wp(0.8),
+        borderRadius: wp(1.5),
+    },
+    distanceText: {
+        fontSize: wp(2.8),
+        fontWeight: '600',
     },
     ratingContainer: {
         alignItems: 'center',

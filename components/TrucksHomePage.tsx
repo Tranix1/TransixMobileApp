@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import { wp,hp } from '@/constants/common';
+import { wp, hp } from '@/constants/common';
 import { ThemedText } from './ThemedText'; // Assuming this is your custom ThemedText component
 import { Ionicons } from '@expo/vector-icons'; // Assuming you're using Expo for Ionicons
 import TruckItemComponent from './TruckItemComponent';
@@ -21,20 +21,21 @@ import { TruckTypeProps } from '@/types/types';
 
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { useAuth } from '@/context/AuthContext';
+import AccentRingLoader from '@/components/AccentRingLoader';
 
 type FinalReturnComponentProps = {
   showfilter: boolean;
   setShowfilter: React.Dispatch<React.SetStateAction<boolean>>;
-  truckCapacity: string ;
+  truckCapacity: string;
   setTruckCapacity: React.Dispatch<React.SetStateAction<string>>;
-selectedCargoArea: TruckTypeProps | null; // Adjust 'any' to actual image type if known
+  selectedCargoArea: TruckTypeProps | null; // Adjust 'any' to actual image type if known
   setSelectedTruckType: React.Dispatch<React.SetStateAction<TruckTypeProps | null>>;
-  tankerType: string ;
+  tankerType: string;
   setTankerType: React.Dispatch<React.SetStateAction<string>>;
   operationCountries: string[];
-  setOperationCountries: React.Dispatch<React.SetStateAction<string[] >> 
-  userId ?: string;
-  organisationName ?: string
+  setOperationCountries: React.Dispatch<React.SetStateAction<string[]>>
+  userId?: string;
+  organisationName?: string
 
   trucks: any
 
@@ -45,9 +46,11 @@ selectedCargoArea: TruckTypeProps | null; // Adjust 'any' to actual image type i
   loadingMore: boolean;
   clearFilter: () => void;
 
-  contractName ?: string 
-  contractId  ?: string
-filteredPNotAavaialble : boolean;
+  contractName?: string
+  contractId?: string
+  filteredPNotAavaialble: boolean;
+  isLoading?: boolean;
+  hasLoaded?: boolean;
 
 }
 
@@ -71,21 +74,23 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
   lastVisible,
   loadingMore,
   clearFilter,
-contractName ,
-contractId,
-filteredPNotAavaialble
+  contractName,
+  contractId,
+  filteredPNotAavaialble,
+  isLoading = false,
+  hasLoaded = false
 
 }) => {
-  
+
   console.log(contractName)
-    const { user } = useAuth();
-     const background = useThemeColor('backgroundLight')
-    const bg = useThemeColor('background')
-    const coolGray = useThemeColor('coolGray')
-    const accent = useThemeColor('accent')
-    const icon = useThemeColor('icon')
+  const { user } = useAuth();
+  const background = useThemeColor('backgroundLight')
+  const bg = useThemeColor('background')
+  const coolGray = useThemeColor('coolGray')
+  const accent = useThemeColor('accent')
+  const icon = useThemeColor('icon')
   return (
-    <View style={{ flex: 1}}>
+    <View style={{ flex: 1 }}>
       <SpecifyTruckDetails
         dspSpecTruckDet={showfilter}
         setDspSpecTruckDet={setShowfilter}
@@ -111,20 +116,20 @@ filteredPNotAavaialble
             marginBottom: wp(1),
           }}
         >
-          { !contractId &&!userId && <View>
-              <View style={{}}>
-                <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                  <ThemedText type="title" >Trucks</ThemedText>
-                  
-                </View>
+          {!contractId && !userId && <View>
+            <View style={{}}>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                <ThemedText type="title" >Trucks</ThemedText>
+
               </View>
-              {/* <ThemedzText type="tiny">Find a Truck for your Load Today</ThemedText> */}
             </View>
+            {/* <ThemedzText type="tiny">Find a Truck for your Load Today</ThemedText> */}
+          </View>
           }
-          { (userId|| contractId ) && (
-            <View style={{marginLeft:10,}}>
-              {(userId===user?.uid ||contractId !=="undefined" ) ? <ThemedText type="subtitle" > Manage Trucks </ThemedText> :
-              <ThemedText type="subtitle"  >{organisationName} Trucks </ThemedText>}
+          {(userId || contractId) && (
+            <View style={{ marginLeft: 10, }}>
+              {(userId === user?.uid || contractId !== "undefined") ? <ThemedText type="subtitle" > Manage Trucks </ThemedText> :
+                <ThemedText type="subtitle"  >{organisationName} Trucks </ThemedText>}
             </View>
           )}
           <View style={{ flexDirection: 'row', gap: wp(2) }}>
@@ -142,106 +147,122 @@ filteredPNotAavaialble
           keyExtractor={(item) => item.id.toString()}
           ListHeaderComponent={() => (
             <>
-            
+
               <View style={{ marginHorizontal: wp(1), marginBottom: wp(1) }}>
                 {(selectedCargoArea ||
                   operationCountries.length > 0 ||
                   truckCapacity) && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      clearFilter();
-                      setShowfilter(true);
-                    }}
-                    style={{
-                      padding: wp(2),
-                      flexDirection: 'row',
-                      backgroundColor: background,
-                      borderRadius: wp(6),
-                      marginBottom: wp(2),
-                      position: 'relative',
-                      alignItems: 'center',
-                    }}
-                  >
-                    {selectedCargoArea?.image && (
-                      <View style={{ marginRight: wp(2) }}>
-                        <Image
-                          source={selectedCargoArea.image}
-                          style={{
-                            width: wp(20),
-                            height: wp(15),
-                            borderRadius: wp(4),
-                            resizeMode: 'cover',
-                          }}
-                        />
-                      </View>
-                    )}
-
-                    <View style={{ flex: 1 }}>
-                      {selectedCargoArea?.name && (
-                        
-                        <ThemedText type="subtitle" style={{ marginBottom: wp(1) }}>
-                          {selectedCargoArea.name}
-                        </ThemedText>
-                      )}
-
-                      <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ gap: wp(2) }}
-                      >
-                        {truckCapacity && (
-                          <View style={[styles.countryButton, { backgroundColor: accent }]}>
-                            <ThemedText style={{ color: 'white' }}>{truckCapacity}</ThemedText>
-                          </View>
-                        )}
-                      
-                      </ScrollView>
-                      <ThemedText style={{ textAlign: 'center' }}>
-                        {operationCountries?.map((item) => item + ', ') || 'N/A'}
-                      </ThemedText>
-                    </View>
-
-                    <View
+                    <TouchableOpacity
+                      onPress={() => {
+                        clearFilter();
+                        setShowfilter(true);
+                      }}
                       style={{
-                        overflow: 'hidden',
-                        borderRadius: wp(10),
-                        position: 'absolute',
-                        right: wp(2),
-                        top: wp(2),
+                        padding: wp(2),
+                        flexDirection: 'row',
+                        backgroundColor: background,
+                        borderRadius: wp(6),
+                        marginBottom: wp(2),
+                        position: 'relative',
+                        alignItems: 'center',
                       }}
                     >
-                      <TouchableNativeFeedback onPress={clearFilter}>
-                        <View style={{ padding: wp(2) }}>
-                          <Ionicons name="close" size={wp(4)} color={icon} />
+                      {selectedCargoArea?.image && (
+                        <View style={{ marginRight: wp(2) }}>
+                          <Image
+                            source={selectedCargoArea.image}
+                            style={{
+                              width: wp(20),
+                              height: wp(15),
+                              borderRadius: wp(4),
+                              resizeMode: 'cover',
+                            }}
+                          />
                         </View>
-                      </TouchableNativeFeedback>
-                    </View>
-                  </TouchableOpacity>
-                )}
+                      )}
+
+                      <View style={{ flex: 1 }}>
+                        {selectedCargoArea?.name && (
+
+                          <ThemedText type="subtitle" style={{ marginBottom: wp(1) }}>
+                            {selectedCargoArea.name}
+                          </ThemedText>
+                        )}
+
+                        <ScrollView
+                          horizontal
+                          showsHorizontalScrollIndicator={false}
+                          contentContainerStyle={{ gap: wp(2) }}
+                        >
+                          {truckCapacity && (
+                            <View style={[styles.countryButton, { backgroundColor: accent }]}>
+                              <ThemedText style={{ color: 'white' }}>{truckCapacity}</ThemedText>
+                            </View>
+                          )}
+
+                        </ScrollView>
+                        <ThemedText style={{ textAlign: 'center' }}>
+                          {operationCountries?.map((item) => item + ', ') || 'N/A'}
+                        </ThemedText>
+                      </View>
+
+                      <View
+                        style={{
+                          overflow: 'hidden',
+                          borderRadius: wp(10),
+                          position: 'absolute',
+                          right: wp(2),
+                          top: wp(2),
+                        }}
+                      >
+                        <TouchableNativeFeedback onPress={clearFilter}>
+                          <View style={{ padding: wp(2) }}>
+                            <Ionicons name="close" size={wp(4)} color={icon} />
+                          </View>
+                        </TouchableNativeFeedback>
+                      </View>
+                    </TouchableOpacity>
+                  )}
               </View>
             </>
           )}
-          data={ trucks }
-          renderItem={({ item }) => <TruckItemComponent truck={contractId!=="undefined" && contractId  ? item.truckInfo : item } truckContract={contractId ? item: null } />}
+          data={trucks}
+          renderItem={({ item }) => <TruckItemComponent truck={contractId !== "undefined" && contractId ? item.truckInfo : item} truckContract={contractId ? item : null} />}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[accent]} />
           }
           ListEmptyComponent={
-               <View style={styles.emptyContainer}>
-                           {!filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
-                                Trucks Loading…
-                            </ThemedText>}
-                            
-                           {!filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
-                                Please Wait
-                            </ThemedText>}
-                           {filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
-                               Specified Truck Not Available!
-                            </ThemedText>}
-                           {filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
-                                pull to refresh
-                            </ThemedText>}
-                        </View>
+            <View style={styles.emptyContainer}>
+              {isLoading || !hasLoaded ? (
+                <>
+                  <AccentRingLoader color={accent} size={32} dotSize={6} />
+                  <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                    Loading Trucks…
+                  </ThemedText>
+                  <ThemedText type='tiny' style={styles.emptySubtext}>
+                    Please Wait
+                  </ThemedText>
+                </>
+              ) : filteredPNotAavaialble ? (
+                <>
+                  <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                    Specified Truck Not Available!
+                  </ThemedText>
+                  <ThemedText type='tiny' style={styles.emptySubtext}>
+                    Pull to refresh
+                  </ThemedText>
+                </>
+              ) : (
+                <>
+                  <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                    No Trucks Available
+                  </ThemedText>
+                  <ThemedText type='tiny' style={styles.emptySubtext}>
+                    Check back later
+                  </ThemedText>
+                </>
+              )}
+            </View>
           }
           onEndReached={loadMoreTrucks}
           onEndReachedThreshold={0.5}
@@ -252,7 +273,7 @@ filteredPNotAavaialble
                   <ThemedText type="tiny" style={{ color: icon }}>
                     Loading More
                   </ThemedText>
-                  <ActivityIndicator size="small" color={accent} />
+                  <AccentRingLoader color={accent} size={20} dotSize={4} />
                 </View>
               ) : !lastVisible && trucks.length > 0 ? (
                 <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
@@ -279,13 +300,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(3),
     borderRadius: wp(5),
   },
-      emptySubtext: {
-        textAlign: 'center',
-        marginTop: wp(2)
-    },  emptyText: {
-        textAlign: 'center'
-    },   emptyContainer: {
-        minHeight: hp(80),
-        justifyContent: 'center'
-    },
+  emptySubtext: {
+    textAlign: 'center',
+    marginTop: wp(2)
+  }, emptyText: {
+    textAlign: 'center'
+  }, emptyContainer: {
+    minHeight: hp(80),
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
 });

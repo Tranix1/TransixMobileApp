@@ -20,7 +20,7 @@ export const openWhatsApp = (phoneNumber: string, message: string) => {
         });
 };
 
-export const getContactMessage = (serviceType: 'fuel' | 'serviceStation' | 'warehouse' | 'truckStop') => {
+export const getContactMessage = (serviceType: 'fuel' | 'serviceStation' | 'warehouse' | 'truckStop' | 'tracking') => {
     const messages = {
         fuel: `🚛 *Fuel Station Partnership Opportunity* 🚛
 
@@ -121,38 +121,47 @@ Best regards,
 Transix Team`,
 
         truckStop: `🛑 *Truck Stop Partnership Opportunity* 🛑
+        
+        Hi! I'm interested in partnering with your truck stop to provide rest, food, and services through the Transix platform.
+        
+        *How It Works:*
+        1️⃣ Customers view your amenities & prices in our app
+        2️⃣ They get GPS navigation directly to your stop
+        3️⃣ Online payment is processed before arrival
+        4️⃣ Customers arrive, rest, eat, and leave refreshed
+        5️⃣ You get paid instantly - no payment delays!
+        
+        *Why Partner With Us?*
+        ✅ Get customers fast - thousands of truckers use our app
+        ✅ Increase your foot traffic by 50-70%
+        ✅ Reach new customers in your area
+        ✅ Zero payment delays - instant settlements
+        ✅ Easy amenity management
+        
+        *Cool Features for Partners:*
+        • 📍 Live GPS tracking & navigation
+        • 💳 Secure online payments (cards, mobile money)
+        • ⭐ Customer reviews & ratings system
+        • 📊 Traffic analytics dashboard
+        • 🎯 Targeted marketing to nearby truckers
+        • 📱 Easy menu & amenity updates
+        • 🚨 Real-time capacity alerts
+        • 🍽️ Food ordering system
+        • 🛏️ Rest area booking
+        
+        Ready to grow your business? Let's discuss partnership details!
+        
+        Best regards,
+        Transix Team`,
 
-Hi! I'm interested in partnering with your truck stop to provide rest, food, and services through the Transix platform.
+        tracking: `Hi! I need a vehicle tracker for my truck. 
 
-*How It Works:*
-1️⃣ Customers view your amenities & prices in our app
-2️⃣ They get GPS navigation directly to your stop
-3️⃣ Online payment is processed before arrival
-4️⃣ Customers arrive, rest, eat, and leave refreshed
-5️⃣ You get paid instantly - no payment delays!
+Can you please send me:
+• Pricing details
+• Installation info
+• What's included
 
-*Why Partner With Us?*
-✅ Get customers fast - thousands of truckers use our app
-✅ Increase your foot traffic by 50-70%
-✅ Reach new customers in your area
-✅ Zero payment delays - instant settlements
-✅ Easy amenity management
-
-*Cool Features for Partners:*
-• 📍 Live GPS tracking & navigation
-• 💳 Secure online payments (cards, mobile money)
-• ⭐ Customer reviews & ratings system
-• 📊 Traffic analytics dashboard
-• 🎯 Targeted marketing to nearby truckers
-• 📱 Easy menu & amenity updates
-• 🚨 Real-time capacity alerts
-• 🍽️ Food ordering system
-• 🛏️ Rest area booking
-
-Ready to grow your business? Let's discuss partnership details!
-
-Best regards,
-Transix Team`
+Thanks!`
     };
 
     return messages[serviceType];

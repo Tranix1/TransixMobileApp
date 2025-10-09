@@ -3,6 +3,7 @@ import { View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator, Sty
 import { auth, db } from '@/db/fireBaseConfig';
 import { collection, onSnapshot, where, query, doc, deleteDoc } from 'firebase/firestore';
 import AntDesign from 'react-native-vector-icons/AntDesign'; // Corrected import
+import AccentRingLoader from '@/components/AccentRingLoader';
 // import defaultImage from "../images/logo.jpg" //commented out because it is not used
 
 interface TruckItem {
@@ -64,7 +65,7 @@ function PersonalAccTrucks() {
                 <Text style={styles.location}> From {item.fromLocation} to {item.toLocation} </Text>
                 <Text>contact {item.contact}</Text>
 
-                {spinnerItem && <ActivityIndicator size={36} />}
+                {spinnerItem && <AccentRingLoader color="#007BFF" size={36} dotSize={8} />}
                 <TouchableOpacity onPress={() => deleteLoad(item.id)}>
                     <AntDesign name="delete" size={24} color="red" />
                 </TouchableOpacity>

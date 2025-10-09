@@ -22,6 +22,8 @@ const Index = () => {
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
     const [Loads, setLoads] = useState<Load[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     const [showfilter, setShowfilter] = useState(false)
     const [selectedLoad, setSelectedLoad] = useState<Load | null>(null);
@@ -35,14 +37,26 @@ const Index = () => {
 
     const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
     const LoadTructs = async () => {
-        let filters: any[] = [];
-        const maLoads = await fetchDocuments("Cargo");
+        try {
+            setIsLoading(true)
+            setError(null)
+            let filters: any[] = [];
+            const maLoads = await fetchDocuments("Cargo");
 
-        if (maLoads.data.length) {
-
-            if (filters.length > 0 && maLoads.data.length < 0) setFilteredPNotAavaialble(true)
-            setLoads(maLoads.data as Load[])
-            setLastVisible(maLoads.lastVisible)
+            if (maLoads.data.length) {
+                if (filters.length > 0 && maLoads.data.length < 0) setFilteredPNotAavaialble(true)
+                setLoads(maLoads.data as Load[])
+                setLastVisible(maLoads.lastVisible)
+            } else {
+                setLoads([])
+                setLastVisible(null)
+            }
+        } catch (error) {
+            console.error('Error loading loads:', error)
+            setError('Failed to load loads. Please try again.')
+            ToastAndroid.show('Failed to load loads', ToastAndroid.SHORT)
+        } finally {
+            setIsLoading(false)
         }
     }
     useEffect(() => {
@@ -52,24 +66,35 @@ const Index = () => {
     const onRefresh = async () => {
         try {
             setRefreshing(true);
+            setError(null);
             await LoadTructs();
-            setRefreshing(false);
-
         } catch (error) {
-
+            console.error('Error refreshing loads:', error);
+            setError('Failed to refresh loads. Please try again.');
+            ToastAndroid.show('Failed to refresh loads', ToastAndroid.SHORT);
+        } finally {
+            setRefreshing(false);
         }
     };
 
     const loadMoreLoads = async () => {
-
         if (loadingMore || !lastVisible) return;
-        setLoadingMore(true);
-        const result = await fetchDocuments('Cargo', 10, lastVisible);
-        if (result) {
-            setLoads([...Loads, ...result.data as Load[]]);
-            setLastVisible(result.lastVisible);
+
+        try {
+            setLoadingMore(true);
+            setError(null);
+            const result = await fetchDocuments('Cargo', 10, lastVisible);
+            if (result) {
+                setLoads([...Loads, ...result.data as Load[]]);
+                setLastVisible(result.lastVisible);
+            }
+        } catch (error) {
+            console.error('Error loading more loads:', error);
+            setError('Failed to load more loads. Please try again.');
+            ToastAndroid.show('Failed to load more loads', ToastAndroid.SHORT);
+        } finally {
+            setLoadingMore(false);
         }
-        setLoadingMore(false);
     };
 
 
@@ -103,6 +128,8 @@ const Index = () => {
                     organisationName={"Username"}
                     userId={userId}
                     filteredPNotAavaialble={filteredPNotAavaialble}
+                    isLoading={isLoading}
+                    error={error}
                 />
             </View>
         </GestureHandlerRootView>

@@ -166,6 +166,54 @@ const Settings = () => {
                                     </View>
                                 </TouchableNativeFeedback>
                             </View>
+                            <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                <TouchableNativeFeedback onPress={() => router.push('/Tracking/AddAgent')}>
+                                    <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                        <Ionicons name='person-add-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                        <View style={{ flex: 1 }}>
+                                            <ThemedText type='default'>
+                                                Add Tracking Agent
+                                            </ThemedText>
+                                            <ThemedText type='tiny' color={coolgray}>
+                                                Add users as tracking agents
+                                            </ThemedText>
+                                        </View>
+                                        <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                    </View>
+                                </TouchableNativeFeedback>
+                            </View>
+                            <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                <TouchableNativeFeedback onPress={() => router.push('/Fuel/AddServiceStationOwner')}>
+                                    <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                        <Ionicons name='business-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                        <View style={{ flex: 1 }}>
+                                            <ThemedText type='default'>
+                                                Add Service Station Owner
+                                            </ThemedText>
+                                            <ThemedText type='tiny' color={coolgray}>
+                                                Add users as service station owners
+                                            </ThemedText>
+                                        </View>
+                                        <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                    </View>
+                                </TouchableNativeFeedback>
+                            </View>
+                            <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                <TouchableNativeFeedback onPress={() => router.push('/TruckStop/AddTruckStopOwner')}>
+                                    <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                        <Ionicons name='car-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                        <View style={{ flex: 1 }}>
+                                            <ThemedText type='default'>
+                                                Add Truck Stop Owner
+                                            </ThemedText>
+                                            <ThemedText type='tiny' color={coolgray}>
+                                                Add users as truck stop owners
+                                            </ThemedText>
+                                        </View>
+                                        <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                    </View>
+                                </TouchableNativeFeedback>
+                            </View>
                         </View>
                     </>
                 )}

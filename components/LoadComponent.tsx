@@ -1,5 +1,5 @@
 import { StyleSheet, TouchableOpacity, View, TouchableHighlight, Linking } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { Load } from '@/types/types'
 import { wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
@@ -15,7 +15,14 @@ import { WebView } from 'react-native-webview';
 import { router } from 'expo-router';
 import { parseCoordinateString, isValidCoordinate, DEFAULT_COORDINATES } from '@/Utilities/coordinateUtils';
 
-const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string) => { }, ondetailsPress = () => { } }) => {
+interface DspAllLoadsProps {
+  item: Load;
+  expandID: string;
+  expandId: (id: string) => void;
+  ondetailsPress: () => void;
+}
+
+const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, ondetailsPress = () => { } }: DspAllLoadsProps) => {
   const backgroundLight = useThemeColor('backgroundLight')
   const background = useThemeColor('background')
   const coolGray = useThemeColor('coolGray')
@@ -44,26 +51,34 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
   function replaceSpacesWithPercent(url: string): string {
     return url.replace(/ /g, '%20');
   }
-  function toggleItemById(
+  const toggleItemById = useCallback((
     id: string,
-  ): void {
+  ): void => {
     setExpand(!expand)
     if (!expand)
       expandId(id)
     else
       expandId('')
-  }
+  }, [expand, expandId])
 
 
 
-  const url = `https://transix.net/selectedUserLoads/${item.userId}/${item.companyName}/${item.deletionTime}`;
-  const updatedUrl = replaceSpacesWithPercent(url);
-  const message = `${item.companyName}
+  const url = useMemo(() =>
+    `https://transix.net/selectedUserLoads/${item.userId}/${item.companyName}/${item.deletionTime}`,
+    [item.userId, item.companyName, item.deletionTime]
+  );
+
+  const updatedUrl = useMemo(() => replaceSpacesWithPercent(url), [url]);
+
+  const message = useMemo(() =>
+    `${item.companyName}
         Is this Load still available
         ${item.typeofLoad} from ${item.origin} to ${item.destination}
         ${item.rate}
 
-        From: ${updatedUrl}`;
+        From: ${updatedUrl}`,
+    [item.companyName, item.typeofLoad, item.origin, item.destination, item.rate, updatedUrl]
+  );
 
 
 
@@ -78,409 +93,447 @@ const DspAllLoads = ({ item = {} as Load, expandID = '', expandId = (id: string)
 
 
   return (
-    <TouchableOpacity
-      style={[styles.container, { backgroundColor: background, borderColor: accent }]}
-      activeOpacity={0.8}
-      onPress={ondetailsPress}
-    >
-
-
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(2), justifyContent: 'space-evenly', marginBottom: wp(1) }}>
-
-        <View style={{ flexDirection: 'row', }}>
-
-          {!item?.logo && <FontAwesome name='user-circle' color={coolGray} size={wp(9)} />}
+    <View>
+      <View
+        style={[styles.container, { backgroundColor: background, borderColor: accent }]}
+      >
+        {/* Header with company info */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(1), marginBottom: wp(1) }}>
+          {!item?.logo && <FontAwesome name='user-circle' color={coolGray} size={wp(8)} />}
           {item?.logo && <Image
-            style={{ width: 35, height: 35, borderRadius: 17.5, backgroundColor: '#ddd', }}
+            style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: '#ddd' }}
             source={{ uri: item?.logo || 'https://via.placeholder.com/100' }}
           />}
-
-          {item &&
-            <ThemedText type="subtitle" numberOfLines={1} ellipsizeMode="tail" style={{ alignSelf: 'center', width: 150, marginLeft: wp(2.5) }}>{item.companyName}</ThemedText>
-          }
-        </View>
-
-
-        <View style={{ alignItems: 'flex-end', gap: wp(0.5) }}>
-          {item.distance && (
-            <ThemedText type="tiny" style={styles.distanceInfo}>
-              Distance: {item.distance}
-            </ThemedText>
-          )}
-          {item.duration && (
-            <ThemedText type="tiny" style={styles.distanceInfo}>
-              Duration: {item.duration}
-            </ThemedText>
-          )}
-          {item.durationInTraffic && (
-            <ThemedText type="tiny" style={styles.distanceInfo}>
-              In Traffic: {item.durationInTraffic}
+          {item && (
+            <ThemedText
+              type="subtitle"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={{
+                flex: 1,
+                marginLeft: wp(2),
+                maxWidth: wp(60) // Limit width to prevent overlap
+              }}
+            >
+              {item.companyName}
             </ThemedText>
           )}
         </View>
 
-        {/* <TouchableHighlight underlayColor={backgroundLight}  style={{ backgroundColor: background, padding: wp(1), borderRadius: wp(90) }}>
-          <Ionicons name='ellipsis-vertical' size={wp(4)} color={icon} />
-        </TouchableHighlight> */}
+        {/* Distance and Time horizontal row */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: wp(1) }}>
+          <View style={{ flexDirection: 'row', flex: 1, gap: wp(4) }}>
+            {item.distance && (
+              <ThemedText type="tiny" style={styles.distanceInfo}>
+                Distance: {item.distance}
+              </ThemedText>
+            )}
+            {item.duration && (
+              <ThemedText type="tiny" style={styles.distanceInfo}>
+                Time: {item.duration}
+              </ThemedText>
+            )}
+          </View>
 
-      </View>
+          {/* Booking Button */}
+          <TouchableOpacity
+            style={[styles.bookingButton, { backgroundColor: accent }]}
+            onPress={ondetailsPress}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="checkmark-circle" size={wp(3.5)} color="white" />
+            <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(0.5), fontSize: wp(3.5) }}>Book</ThemedText>
+          </TouchableOpacity>
+        </View>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-          {/* <Feather name="package" size={wp(4)} style={styles.icon} color={icon} /> */}
-          <View style={{ marginBottom: wp(1) }}>
-            <ThemedText type='tiny' style={{ fontSize: 13, fontStyle: 'italic' }}>
-              Load
-            </ThemedText>
-            <ThemedText type='subtitle'>
-              {item.typeofLoad}
-            </ThemedText>
-          </View>
-        </View>
-        <View style={styles.tagsContainer}>
-          {item.returnLoad && (
-            <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
-              <ThemedText type='tiny' style={{}}>Return Load</ThemedText>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            {/* <Feather name="package" size={wp(4)} style={styles.icon} color={icon} /> */}
+            <View style={{ marginBottom: wp(1) }}>
+              <ThemedText type='tiny' style={{ fontSize: 13, fontStyle: 'italic' }}>
+                Load
+              </ThemedText>
+              <ThemedText type='subtitle'>
+                {item.typeofLoad}
+              </ThemedText>
             </View>
-          )}
-
-          {item.proofOfOrderType && (
-            <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
-              <ThemedText type='tiny' style={{}}>Proof Attached</ThemedText>
-            </View>
-          )}
-
-          {item.roundTrip && (
-            <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
-              <ThemedText type='tiny' style={{}}>Round Trip</ThemedText>
-            </View>
-          )}
-
-          {item.isVerified && (
-            <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(1) }]}>
-              <Octicons name='verified' size={wp(4)} color={'#4eb3de'} />
-            </View>
-          )}
-
-
-        </View>
-
-
-      </View>
-      <View style={[styles.detailRow, { backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-
-          <View style={{ gap: wp(1), flex: 2, }}>
-            <ThemedText type='default' style={{ fontSize: 13, fontStyle: 'italic' }}>
-              From
-            </ThemedText>
-            <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
-              {item.origin}
-            </ThemedText>
           </View>
-          <View style={{ gap: wp(1), flex: 2, }}>
-            <ThemedText type='default' style={{ fontSize: 13, fontStyle: 'italic' }}>
-              To
-            </ThemedText>
-            <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
-              {item.destination}
-            </ThemedText>
-          </View>
-        </View>
-      </View>
-
-      <View style={{ backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }}>
-
-
-        <View style={styles.detailRow}>
-          <ThemedText type='default' style={{ flex: 2 }}>
-            Rate {item.model}
-          </ThemedText>
-          <ThemedText type='subtitle' style={[{ color: textColor, fontSize: wp(4.5), lineHeight: wp(5), flex: 2 }]}>
-            {item.currency} {formatCurrency(item.rate)}
-          </ThemedText>
-
-        </View>
-        {item.rateexplantion && <View style={styles.detailRow}>
-          <ThemedText type='default' style={{ flex: 2 }}>
-            Rate Exlantion
-          </ThemedText>
-          <ThemedText type='subtitle' style={[{ color: textColor, fontSize: wp(4.5), lineHeight: wp(5), flex: 2 }]}>
-            {item.rateexplantion}
-          </ThemedText>
-
-        </View>}
-
-      </View>
-
-
-      <View style={[{ marginTop: wp(1), backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2), flex: 1, gap: wp(2) }]}>
-
-        {item.requirements &&
-          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-            <ThemedText type='default' style={{ flex: 2 }}>
-              Payment Terms
-            </ThemedText>
-            <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-              {item.paymentTerms}
-            </ThemedText>
-          </View>
-        }
-        {item.loadingDate &&
-          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-            <ThemedText type='default' style={{ flex: 2 }}>
-              Loading
-            </ThemedText>
-            <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-              {item.loadingDate}
-            </ThemedText>
-          </View>
-        }
-
-        {item.alertMsg && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-            <ThemedText type='default' style={{ flex: 2 }}>
-              Alert
-            </ThemedText>
-            <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-              {item.alertMsg}
-            </ThemedText>
-          </View>
-        )}
-
-        {item.fuelAvai && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-            <ThemedText type='default' style={{ flex: 2 }}>
-              Fuel & Tolls
-            </ThemedText>
-            <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-              {item.fuelAvai}
-            </ThemedText>
-          </View>
-        )}
-        {item.requirements &&
-          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-            <ThemedText type='default' style={{ flex: 2 }}>
-              Requirements
-            </ThemedText>
-            <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-              {item.requirements}
-            </ThemedText>
-          </View>
-        }
-
-
-
-
-
-        {expand && (
-          <View>
-
-            {item.additionalInfo && (
-              <>
-                <Divider />
-
-                <View style={{ flex: 1, gap: wp(2), marginTop: wp(2) }}>
-                  <ThemedText type='tiny' style={{ flex: 2 }}>
-                    Additional Info
-                  </ThemedText>
-                  <FormatedText numberOfLines={8} style={{ flex: 1 }}>
-                    {item.additionalInfo}
-                  </FormatedText>
-                </View>
-              </>
+          <View style={styles.tagsContainer}>
+            {item.returnLoad && (
+              <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+                <ThemedText type='tiny' style={{}}>Return Load</ThemedText>
+              </View>
             )}
 
+            {item.proofOfOrderType && (
+              <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+                <ThemedText type='tiny' style={{}}>Proof Attached</ThemedText>
+              </View>
+            )}
 
-            <Divider style={{ marginTop: wp(2) }} />
-            {item.returnLoad && (
-              <View style={{ marginTop: wp(2), gap: wp(2) }}>
-                <ThemedText type='tiny' style={{ marginBottom: wp(1) }}>
-                  Return Load
-                </ThemedText>
+            {item.roundTrip && (
+              <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+                <ThemedText type='tiny' style={{}}>Round Trip</ThemedText>
+              </View>
+            )}
 
-                {item.returnLoad && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-                    <ThemedText type='default' style={{ flex: 2 }}>
-                      Load Details
-                    </ThemedText>
-                    <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-                      {item.returnLoad}
-                    </ThemedText>
-                  </View>
-                )}
-                {item.returnRate && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-                    <ThemedText type='default' style={{ flex: 2 }}>
-                      Return Rate
-                    </ThemedText>
-                    <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-                      {item.returnRate}
-                    </ThemedText>
-                  </View>
-                )}
-                {item.returnTerms && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-                    <ThemedText type='default' style={{ flex: 2 }}>
-                      Return Terms
-                    </ThemedText>
-                    <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-                      {item.returnTerms}
-                    </ThemedText>
-                  </View>
-                )}
-
-
+            {item.isVerified && (
+              <View style={[{ flexDirection: 'row', alignItems: 'center', gap: wp(1) }]}>
+                <Octicons name='verified' size={wp(4)} color={'#4eb3de'} />
               </View>
             )}
 
 
-            <View style={{ marginTop: wp(2), gap: wp(2) }}>
-              <ThemedText type='tiny' style={{ marginBottom: wp(1) }}>Trucks Required</ThemedText>
+          </View>
 
-              {item.trucksRequired && item.trucksRequired.length > 0 ? (
-                item.trucksRequired.map((neededTruck, index) => (
-                  <View style={{ flexDirection: "row", justifyContent: 'space-evenly' }} key={index}>
-                    <ThemedText>
-                      {typeof neededTruck.truckType === 'string'
-                        ? neededTruck.truckType
-                        : neededTruck.truckType?.name || 'N/A'
-                      }
-                    </ThemedText>
-                    <ThemedText>
-                      {typeof neededTruck.capacity === 'string'
-                        ? neededTruck.capacity
-                        : neededTruck.capacity?.name || 'N/A'
-                      }
-                    </ThemedText>
-                    <ThemedText>
-                      {typeof neededTruck.cargoArea === 'string'
-                        ? neededTruck.cargoArea
-                        : neededTruck.cargoArea?.name || 'N/A'
-                      }
-                    </ThemedText>
-                  </View>
-                ))
-              ) : (
-                <ThemedText type='tiny' style={{ color: coolGray, textAlign: 'center' }}>
-                  No truck requirements specified
-                </ThemedText>
-              )}
+
+        </View>
+        <View style={[styles.detailRow, { backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+
+            <View style={{ gap: wp(1), flex: 2, }}>
+              <ThemedText type='default' style={{ fontSize: 13, fontStyle: 'italic' }}>
+                From
+              </ThemedText>
+              <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
+                {item.origin}
+              </ThemedText>
             </View>
+            <View style={{ gap: wp(1), flex: 2, }}>
+              <ThemedText type='default' style={{ fontSize: 13, fontStyle: 'italic' }}>
+                To
+              </ThemedText>
+              <ThemedText type='defaultSemiBold' style={{ fontSize: wp(4) }}>
+                {item.destination}
+              </ThemedText>
+            </View>
+          </View>
+        </View>
 
-            <Divider style={{ marginTop: wp(2) }} />
-
-            <TouchableOpacity style={{
-              backgroundColor: '#2563eb', // simple professional blue
-              paddingVertical: wp(2),
-              paddingHorizontal: wp(4),
-              borderRadius: wp(4),
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginVertical: wp(2),
-              elevation: 4,
-            }} onPress={() => {
-              // Extract coordinates from origin and destination strings using utility functions
-              const originCoords = parseCoordinateString(item.origin || '');
-              const destinationCoords = parseCoordinateString(item.destination || '');
-
-              if (isValidCoordinate(originCoords) && isValidCoordinate(destinationCoords)) {
-                router.push({
-                  pathname: "/Map/ViewLoadRoutes",
-                  params: {
-                    loadData: JSON.stringify(item),
-                    originCoords: JSON.stringify(originCoords),
-                    destinationCoords: JSON.stringify(destinationCoords),
-                    destinationType: "Load Destination",
-                    destinationName: item.toLocation || "Load Destination",
-                    ...(item.routePolyline && { routePolyline: item.routePolyline }),
-                    ...(item.bounds && { bounds: JSON.stringify(item.bounds) }),
-                    ...(item.distance && { distance: item.distance }),
-                    ...(item.duration && { duration: item.duration }),
-                    ...(item.durationInTraffic && { durationInTraffic: item.durationInTraffic }),
-                  }
-                });
-              } else {
-                // Fallback to basic map view if coordinates are not available
-                router.push({
-                  pathname: "/Map/ViewLoadRoutes",
-                  params: {
-                    loadData: JSON.stringify(item),
-                    destinationCoords: JSON.stringify(DEFAULT_COORDINATES),
-                    destinationType: "Load Destination",
-                    destinationName: item.toLocation || "Load Destination",
-                  }
-                });
-              }
-            }}>
-              <ThemedText>View On Map</ThemedText>
-            </TouchableOpacity>
-
-            {(item.proofOfOrder || (item.loadImages && item.loadImages.length > 0)) && (
-              <TouchableOpacity
-                style={styles.proofButton}
-                onPress={() => {
-                  if (item.proofOfOrder) {
-                    dspProofOfOrder(item.proofOfOrderType);
-                  } else if (item.loadImages && item.loadImages.length > 0) {
-                    setDspProofImage(true);
-                  }
-                }}
-              >
-                <ThemedText type="defaultSemiBold" style={styles.proofButtonText}>
-                  {item.proofOfOrder ? 'Proof of order' : 'Load Images'}
-                </ThemedText>
-              </TouchableOpacity>
-            )}
+        <View style={{ backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }}>
 
 
-
-
-            <ImageViewing
-              images={item.proofOfOrder
-                ? [{ uri: item.proofOfOrder }]
-                : (item.loadImages || []).map(img => ({ uri: img.uri || img }))
-              }
-              imageIndex={0}
-              visible={dspProofImage}
-              onRequestClose={() => setDspProofImage(false)}
-              presentationStyle="fullScreen"
-              HeaderComponent={() => (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingTop: 8,
-                    paddingHorizontal: 15,
-                    position: 'absolute',
-                    top: 10,
-                    zIndex: 999,
-                    backgroundColor: backgroundLight,
-                    borderRadius: 5,
-                  }}
-                >
-                  <TouchableOpacity onPress={() => setDspProofImage(false)} style={{ marginRight: 8, marginLeft: 4 }}>
-                    <AntDesign name="close" size={15} color="#fff" />
-                  </TouchableOpacity>
-                  <ThemedText style={{ fontWeight: 'bold', fontSize: 14 }}>
-                    {item.proofOfOrder ? 'Proof of Order' : 'Load Images'}
-                  </ThemedText>
-                </View>
-              )}
-            />
-
+          <View style={styles.detailRow}>
+            <ThemedText type='default' style={{ flex: 2 }}>
+              Rate {item.model}
+            </ThemedText>
+            <ThemedText type='subtitle' style={[{ color: textColor, fontSize: wp(4.5), lineHeight: wp(5), flex: 2 }]}>
+              {item.currency} {item.rate}
+            </ThemedText>
 
           </View>
-        )}
+          {item.rateexplantion && <View style={styles.detailRow}>
+            <ThemedText type='default' style={{ flex: 2 }}>
+              Rate Exlantion
+            </ThemedText>
+            <ThemedText type='subtitle' style={[{ color: textColor, fontSize: wp(4.5), lineHeight: wp(5), flex: 2 }]}>
+              {item.rateexplantion}
+            </ThemedText>
 
+          </View>}
+
+        </View>
+
+
+        <View style={[{ marginTop: wp(1), backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2), flex: 1, gap: wp(2) }]}>
+
+          {item.requirements &&
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+              <ThemedText type='default' style={{ flex: 2 }}>
+                Payment Terms
+              </ThemedText>
+              <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                {item.paymentTerms}
+              </ThemedText>
+            </View>
+          }
+          {item.loadingDate &&
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+              <ThemedText type='default' style={{ flex: 2 }}>
+                Loading
+              </ThemedText>
+              <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                {item.loadingDate}
+              </ThemedText>
+            </View>
+          }
+
+          {item.alertMsg && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+              <ThemedText type='default' style={{ flex: 2 }}>
+                Alert
+              </ThemedText>
+              <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                {item.alertMsg}
+              </ThemedText>
+            </View>
+          )}
+
+          {item.fuelAvai && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+              <ThemedText type='default' style={{ flex: 2 }}>
+                Fuel & Tolls
+              </ThemedText>
+              <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                {item.fuelAvai}
+              </ThemedText>
+            </View>
+          )}
+          {item.requirements &&
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+              <ThemedText type='default' style={{ flex: 2 }}>
+                Requirements
+              </ThemedText>
+              <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                {item.requirements}
+              </ThemedText>
+            </View>
+          }
+
+
+
+
+
+          {expand && (
+            <View>
+
+              {item.additionalInfo && (
+                <>
+                  <Divider />
+
+                  <View style={{ flex: 1, gap: wp(2), marginTop: wp(2) }}>
+                    <ThemedText type='tiny' style={{ flex: 2 }}>
+                      Additional Info
+                    </ThemedText>
+                    <FormatedText numberOfLines={8} style={{ flex: 1 }}>
+                      {item.additionalInfo}
+                    </FormatedText>
+                  </View>
+                </>
+              )}
+
+
+              <Divider style={{ marginTop: wp(2) }} />
+              {item.returnLoad && (
+                <View style={{ marginTop: wp(2), gap: wp(2) }}>
+                  <ThemedText type='tiny' style={{ marginBottom: wp(1) }}>
+                    Return Load
+                  </ThemedText>
+
+                  {item.returnLoad && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+                      <ThemedText type='default' style={{ flex: 2 }}>
+                        Load Details
+                      </ThemedText>
+                      <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                        {item.returnLoad}
+                      </ThemedText>
+                    </View>
+                  )}
+                  {item.returnRate && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+                      <ThemedText type='default' style={{ flex: 2 }}>
+                        Return Rate
+                      </ThemedText>
+                      <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                        {item.returnRate}
+                      </ThemedText>
+                    </View>
+                  )}
+                  {item.returnTerms && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+                      <ThemedText type='default' style={{ flex: 2 }}>
+                        Return Terms
+                      </ThemedText>
+                      <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                        {item.returnTerms}
+                      </ThemedText>
+                    </View>
+                  )}
+
+
+                </View>
+              )}
+
+
+              <View style={{ marginTop: wp(2), gap: wp(2) }}>
+                <ThemedText type='tiny' style={{ marginBottom: wp(1) }}>Trucks Required</ThemedText>
+
+                {item.trucksRequired && item.trucksRequired.length > 0 ? (
+                  item.trucksRequired.map((neededTruck: any, index: number) => (
+                    <View style={{ flexDirection: "row", justifyContent: 'space-evenly' }} key={index}>
+                      <ThemedText>
+                        {typeof neededTruck.truckType === 'string'
+                          ? neededTruck.truckType
+                          : neededTruck.truckType?.name || 'N/A'
+                        }
+                      </ThemedText>
+                      <ThemedText>
+                        {typeof neededTruck.capacity === 'string'
+                          ? neededTruck.capacity
+                          : neededTruck.capacity?.name || 'N/A'
+                        }
+                      </ThemedText>
+                      <ThemedText>
+                        {typeof neededTruck.cargoArea === 'string'
+                          ? neededTruck.cargoArea
+                          : neededTruck.cargoArea?.name || 'N/A'
+                        }
+                      </ThemedText>
+                    </View>
+                  ))
+                ) : (
+                  <ThemedText type='tiny' style={{ color: coolGray, textAlign: 'center' }}>
+                    No truck requirements specified
+                  </ThemedText>
+                )}
+              </View>
+
+              <Divider style={{ marginTop: wp(2) }} />
+
+              {/* Action Buttons */}
+              <View style={styles.actionButtonsContainer}>
+                {(item.proofOfOrder || (item.loadImages && item.loadImages.length > 0)) && (
+                  <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: '#4eb37a' }]}
+                    onPress={() => {
+                      if (item.proofOfOrder) {
+                        dspProofOfOrder(item.proofOfOrderType);
+                      } else if (item.loadImages && item.loadImages.length > 0) {
+                        setDspProofImage(true);
+                      }
+                    }}
+                  >
+                    <Ionicons name="document-text" size={wp(4)} color="white" />
+                    <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(1) }}>
+                      {item.proofOfOrder ? 'Proof' : 'Images'}
+                    </ThemedText>
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: '#2563eb' }]}
+                  onPress={() => {
+                    // Extract coordinates from origin and destination strings using utility functions
+                    const originCoords = parseCoordinateString(item.origin || '');
+                    const destinationCoords = parseCoordinateString(item.destination || '');
+
+                    if (isValidCoordinate(originCoords) && isValidCoordinate(destinationCoords)) {
+                      router.push({
+                        pathname: "/Map/ViewLoadRoutes",
+                        params: {
+                          loadData: JSON.stringify(item),
+                          originCoords: JSON.stringify(originCoords),
+                          destinationCoords: JSON.stringify(destinationCoords),
+                          destinationType: "Load Destination",
+                          destinationName: item.toLocation || "Load Destination",
+                          ...(item.routePolyline && { routePolyline: item.routePolyline }),
+                          ...(item.bounds && { bounds: JSON.stringify(item.bounds) }),
+                          ...(item.distance && { distance: item.distance }),
+                          ...(item.duration && { duration: item.duration }),
+                          ...(item.durationInTraffic && { durationInTraffic: item.durationInTraffic }),
+                          ...(item.returnLoad && { hasReturnLoad: 'true' }),
+                        }
+                      });
+                    } else {
+                      router.push({
+                        pathname: "/Map/ViewLoadRoutes",
+                        params: {
+                          loadData: JSON.stringify(item),
+                          destinationCoords: JSON.stringify(DEFAULT_COORDINATES),
+                          destinationType: "Load Destination",
+                          destinationName: item.toLocation || "Load Destination",
+                          ...(item.returnLoad && { hasReturnLoad: 'true' }),
+                        }
+                      });
+                    }
+                  }}
+                >
+                  <Ionicons name="map" size={wp(4)} color="white" />
+                  <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(1) }}>
+                    Map
+                  </ThemedText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: '#f59e0b' }]}
+                  onPress={() => {
+                    const url = `https://transix.net/selectedUserLoads/${item.userId}/${item.companyName}/${item.deletionTime}`;
+                    const updatedUrl = replaceSpacesWithPercent(url);
+                    const message = `${item.companyName}
+        Is this Load still available
+        ${item.typeofLoad} from ${item.origin} to ${item.destination}
+        ${item.rate}
+
+        From: ${updatedUrl}`;
+
+                    // You can implement sharing functionality here
+                    console.log('Share load:', message);
+                  }}
+                >
+                  <Ionicons name="share" size={wp(4)} color="white" />
+                  <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(1) }}>
+                    Share
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+
+              <ImageViewing
+                images={item.proofOfOrder
+                  ? [{ uri: item.proofOfOrder }]
+                  : (item.loadImages || []).map((img: any) => ({ uri: typeof img === 'string' ? img : img.uri || '' }))
+                }
+                imageIndex={0}
+                visible={dspProofImage}
+                onRequestClose={() => setDspProofImage(false)}
+                presentationStyle="fullScreen"
+                HeaderComponent={() => (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingTop: 8,
+                      paddingHorizontal: 15,
+                      position: 'absolute',
+                      top: 10,
+                      zIndex: 999,
+                      backgroundColor: backgroundLight,
+                      borderRadius: 5,
+                    }}
+                  >
+                    <TouchableOpacity onPress={() => setDspProofImage(false)} style={{ marginRight: 8, marginLeft: 4 }}>
+                      <AntDesign name="close" size={15} color="#fff" />
+                    </TouchableOpacity>
+                    <ThemedText style={{ fontWeight: 'bold', fontSize: 14 }}>
+                      {item.proofOfOrder ? 'Proof of Order' : 'Load Images'}
+                    </ThemedText>
+                  </View>
+                )}
+              />
+
+
+            </View>
+          )}
+
+          {/* Expand/Collapse Button - Inside main container */}
+          <TouchableOpacity
+            style={[styles.expandButton, { backgroundColor: backgroundLight, marginTop: wp(2) }]}
+            onPress={() => toggleItemById(item.id)}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={expand ? 'chevron-up' : 'chevron-down'}
+              size={wp(4)}
+              color={accent}
+            />
+            <ThemedText type="tiny" style={{ marginLeft: wp(1.5), color: accent, fontWeight: '500' }}>
+              {expand ? 'Show Less' : 'View Details'}
+            </ThemedText>
+          </TouchableOpacity>
+
+        </View>
       </View>
-      <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: wp(1), marginTop: wp(2) }} onPress={() => toggleItemById(item.id)}>
-        <EvilIcons color={icon} size={wp(6)} name={expand ? 'chevron-up' : 'chevron-down'} />
-      </TouchableOpacity>
-
-
-
-    </TouchableOpacity>
+    </View>
   );
 };
 
@@ -596,50 +649,67 @@ const styles = StyleSheet.create({
     marginTop: wp(2),
     gap: wp(2)
   },
-  actionButton: {
-    alignItems: "center",
-    justifyContent: 'center',
-    borderRadius: wp(2),
-    padding: wp(1),
-    paddingHorizontal: wp(2),
-    flexDirection: 'row',
-    gap: wp(1),
-  },
   bookingButtons: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     marginTop: wp(3)
   },
   bookingButton: {
-    width: wp(25),
-    height: wp(10),
+    flexDirection: 'row',
     alignItems: "center",
     justifyContent: 'center',
-    borderRadius: wp(2),
-  }, proofButton: {
-    backgroundColor: "#4eb37a", // matches theme
-    paddingVertical: wp(2),
-    paddingHorizontal: wp(4),
-    borderRadius: wp(4),
+    paddingVertical: wp(1.5),
+    paddingHorizontal: wp(3),
+    borderRadius: wp(1.5),
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    minWidth: wp(16),
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: wp(2),
+    gap: wp(2),
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
-    gap: wp(1),
+    paddingVertical: wp(2.5),
+    paddingHorizontal: wp(3),
+    borderRadius: wp(2),
+    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
-  proofButtonText: {
-    color: '#fff',
-    fontSize: wp(4),
-    textTransform: 'uppercase',
-    letterSpacing: 0.5
-  }, distanceInfo: {
-    fontSize: wp(2.8),
-    color: '#6b7280', // professional gray, visible on light/dark
-    textAlign: 'right',
+  expandButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: wp(2),
+    paddingHorizontal: wp(3),
+    marginHorizontal: wp(1),
+    marginBottom: wp(1),
+    borderRadius: wp(2),
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
+  },
+  distanceInfo: {
+    fontSize: wp(2.7),
+    color: '#6b7280',
+    textAlign: 'left',
+    fontWeight: '500',
+    flexShrink: 1,
+    minWidth: 0,
   },
 
 });

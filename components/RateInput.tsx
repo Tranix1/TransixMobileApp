@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
@@ -17,10 +17,16 @@ interface RateInputProps {
     rateExplanation: string;
     setRateExplanation: (explanation: string) => void;
     isReturnRate?: boolean;
+    // Support both naming conventions for backward compatibility
     returnCurrency?: { id: number, name: string };
     setReturnCurrency?: (currency: { id: number, name: string }) => void;
     returnModelType?: { id: number, name: string };
     setReturnModelType?: (model: { id: number, name: string }) => void;
+    // New naming convention used in AddLoads
+    selectedReturnCurrency?: { id: number, name: string };
+    setSelectedReturnCurrency?: (currency: { id: number, name: string }) => void;
+    selectedReturnModelType?: { id: number, name: string };
+    setSelectedReturnModelType?: (model: { id: number, name: string }) => void;
 }
 
 export const RateInput: React.FC<RateInputProps> = ({
@@ -36,14 +42,30 @@ export const RateInput: React.FC<RateInputProps> = ({
     returnCurrency,
     setReturnCurrency,
     returnModelType,
-    setReturnModelType
+    setReturnModelType,
+    selectedReturnCurrency,
+    setSelectedReturnCurrency,
+    selectedReturnModelType,
+    setSelectedReturnModelType
 }) => {
-    const currency = isReturnRate ? returnCurrency : selectedCurrency;
-    const setCurrency = isReturnRate ? setReturnCurrency : setSelectedCurrency;
-    const model = isReturnRate ? returnModelType : selectedModelType;
-    const setModel = isReturnRate ? setReturnModelType : setSelectedModelType;
+    // Handle both naming conventions for backward compatibility
+    const currency = isReturnRate ? (returnCurrency || selectedReturnCurrency) : selectedCurrency;
+    const setCurrency = isReturnRate ? (setReturnCurrency || setSelectedReturnCurrency) : setSelectedCurrency;
+    const model = isReturnRate ? (returnModelType || selectedReturnModelType) : selectedModelType;
+    const setModel = isReturnRate ? (setReturnModelType || setSelectedReturnModelType) : setSelectedModelType;
+
+    // Ensure we have valid setter functions
+    const safeSetCurrency = setCurrency || (() => { });
+    const safeSetModel = setModel || (() => { });
     const rateLabel = isReturnRate ? "Return Rate" : "Rate";
     const explanationLabel = isReturnRate ? "Return Terms" : "Explain rate";
+
+    // Auto-sync return currency with main currency when main currency changes
+    useEffect(() => {
+        if (isReturnRate && selectedCurrency && safeSetCurrency) {
+            safeSetCurrency(selectedCurrency);
+        }
+    }, [selectedCurrency, isReturnRate, safeSetCurrency]);
 
     return (
         <View>
@@ -56,8 +78,8 @@ export const RateInput: React.FC<RateInputProps> = ({
                     <ThemedText type="defaultSemiBold">Currency</ThemedText>
                     <DropDownItem
                         allData={CURRENCY_OPTIONS}
-                        selectedItem={currency!}
-                        setSelectedItem={setCurrency!}
+                        selectedItem={currency || { id: 0, name: '' }}
+                        setSelectedItem={safeSetCurrency}
                         placeholder=""
                     />
                 </View>
@@ -75,8 +97,8 @@ export const RateInput: React.FC<RateInputProps> = ({
                     <ThemedText type="defaultSemiBold">Model</ThemedText>
                     <DropDownItem
                         allData={MODEL_OPTIONS}
-                        selectedItem={model!}
-                        setSelectedItem={setModel!}
+                        selectedItem={model || { id: 0, name: '' }}
+                        setSelectedItem={safeSetModel}
                         placeholder=""
                     />
                 </View>

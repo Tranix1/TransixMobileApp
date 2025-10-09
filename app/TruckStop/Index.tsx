@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { View, TouchableOpacity, StyleSheet, FlatList, RefreshControl, Alert } from "react-native"
+import { View, TouchableOpacity, StyleSheet, FlatList, RefreshControl, TouchableNativeFeedback } from "react-native"
 import ScreenWrapper from "@/components/ScreenWrapper"
 import Heading from "@/components/Heading"
 import { ThemedText } from "@/components/ThemedText"
@@ -11,9 +11,12 @@ import { TruckStopCard } from '@/components/TruckStopCard'
 import { TruckStop } from '@/types/types'
 import { useAuth } from '@/context/AuthContext'
 import { router, useFocusEffect } from 'expo-router'
-import { fetchDocuments } from '@/db/operations'
+import { fetchDocuments, isServiceStationOwner as checkServiceStationOwner } from '@/db/operations'
 import ImageViewing from 'react-native-image-viewing'
 import { TruckStopPaymentModal } from '@/payments'
+import { getCurrentLocation } from '@/Utilities/utils'
+import { calculateDistance, Coordinate } from '@/Utilities/coordinateUtils'
+import AccentRingLoader from '@/components/AccentRingLoader'
 
 export default function Index() {
     const accent = useThemeColor('accent')
@@ -31,10 +34,42 @@ export default function Index() {
     const [currentImages, setCurrentImages] = useState<string[]>([])
     const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false)
     const [selectedTruckStop, setSelectedTruckStop] = useState<TruckStop | null>(null)
+    const [currentLocation, setCurrentLocation] = useState<Coordinate | null>(null)
+    const [sortByDistance, setSortByDistance] = useState(false)
+    const [isCalculatingDistances, setIsCalculatingDistances] = useState(false)
+    const [isServiceStationOwner, setIsServiceStationOwner] = useState(false)
 
     useEffect(() => {
         loadTruckStops()
+        getCurrentUserLocation()
     }, [])
+
+    useEffect(() => {
+        const checkServiceStationOwnerStatus = async () => {
+            if (user) {
+                const owner = await checkServiceStationOwner(user.uid);
+                setIsServiceStationOwner(owner);
+            }
+        };
+        checkServiceStationOwnerStatus();
+    }, [user]);
+
+    const getCurrentUserLocation = async () => {
+        try {
+            setIsCalculatingDistances(true);
+            const location = await getCurrentLocation();
+            if (location) {
+                setCurrentLocation({
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude
+                });
+            }
+        } catch (error) {
+            console.error('Error getting current location:', error);
+        } finally {
+            setIsCalculatingDistances(false);
+        }
+    };
 
     // Refresh data when screen comes into focus (after adding new truck stop)
     useFocusEffect(
@@ -59,7 +94,6 @@ export default function Index() {
             }
         } catch (error) {
             console.error('Error loading truck stops:', error)
-            Alert.alert('Error', 'Failed to load truck stops')
         } finally {
             setLoading(false)
         }
@@ -114,25 +148,86 @@ export default function Index() {
         setIsPaymentModalVisible(true);
     };
 
+    const calculateTruckStopDistance = (truckStop: TruckStop): number => {
+        if (!currentLocation || !truckStop.coordinates) return 0;
+
+        const truckStopLocation: Coordinate = {
+            latitude: truckStop.coordinates.latitude,
+            longitude: truckStop.coordinates.longitude
+        };
+
+        return calculateDistance(currentLocation, truckStopLocation);
+    };
+
+    const getSortedTruckStops = (): TruckStop[] => {
+        if (!sortByDistance || !currentLocation) {
+            return truckStops;
+        }
+
+        return [...truckStops].sort((a, b) => {
+            const distanceA = calculateTruckStopDistance(a);
+            const distanceB = calculateTruckStopDistance(b);
+            return distanceA - distanceB;
+        });
+    };
+
     return (
         <ScreenWrapper>
 
-            <Heading page='Truck Stop' rightComponent={<TouchableOpacity style={{ marginRight: wp(3) }} onPress={handleAddTruckStop}><ThemedText type='defaultSemiBold'>Add Truck Stop</ThemedText></TouchableOpacity>} />
+            <Heading page='Truck Stop' rightComponent={
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(3) }}>
+                    {currentLocation && (
+                        <TouchableNativeFeedback onPress={() => setSortByDistance(!sortByDistance)}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(1) }}>
+                                <Ionicons
+                                    name={sortByDistance ? "time-outline" : "location-outline"}
+                                    size={wp(4)}
+                                    color={accent}
+                                />
+                                <ThemedText style={{ fontSize: wp(3.5) }} type='defaultSemiBold'>
+                                    {sortByDistance ? 'Sort by Time' : 'Sort by Distance'}
+                                </ThemedText>
+                            </View>
+                        </TouchableNativeFeedback>
+                    )}
+                    {isServiceStationOwner && (
+                        <TouchableNativeFeedback onPress={handleAddTruckStop}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: wp(1) }}>
+                                <Ionicons
+                                    name="add-circle-outline"
+                                    size={wp(4)}
+                                    color={accent}
+                                />
+                                <ThemedText style={{ fontSize: wp(3.5) }} type='defaultSemiBold'>
+                                    Add Stop
+                                </ThemedText>
+                            </View>
+                        </TouchableNativeFeedback>
+                    )}
+                </View>
+            } />
 
-            {/* Truck Stops List */}
-            {loading ? (
-                <View style={styles.loadingContainer}>
-                    <ThemedText style={[styles.loadingText, { color: icon }]}>
-                        Loading truck stops...
+            {/* Distance Loading Indicator */}
+            {isCalculatingDistances && (
+                <View style={[styles.distanceLoadingContainer, { backgroundColor: accent + '10' }]}>
+                    <AccentRingLoader color={accent} size={24} dotSize={6} />
+                    <ThemedText type="tiny" style={[styles.distanceLoadingText, { color: accent }]}>
+                        Calculating distances...
                     </ThemedText>
                 </View>
-            ) : (
-                <FlatList
-                    data={truckStops}
-                    keyExtractor={(item) => item.id || ''}
-                    renderItem={({ item }) => (
+            )}
+
+            {/* Truck Stops List */}
+            <FlatList
+                data={getSortedTruckStops()}
+                keyExtractor={(item) => item.id || ''}
+                renderItem={({ item }) => {
+                    const distance = currentLocation ? calculateTruckStopDistance(item) : 0;
+                    return (
                         <TruckStopCard
                             truckStop={item}
+                            distance={distance}
+                            isCalculatingDistance={isCalculatingDistances}
                             onPress={() => {
                                 // Handle truck stop press - could navigate to details
                                 console.log('Truck stop pressed:', item.name)
@@ -140,39 +235,63 @@ export default function Index() {
                             onImagePress={(images, index) => handleImagePress(images, index)}
                             onPaymentPress={handleTruckStopPayment}
                         />
-                    )}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            colors={[accent]}
-                        />
-                    }
-                    onEndReached={loadMoreTruckStops}
-                    onEndReachedThreshold={0.5}
-                    ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
-                            <MaterialIcons name="local-parking" size={wp(15)} color={icon} />
-                            <ThemedText type="subtitle" style={[styles.emptyTitle, { color: icon }]}>
-                                No Truck Stops Available
-                            </ThemedText>
-                            <ThemedText style={[styles.emptyText, { color: icon }]}>
-                                Be the first to add a truck stop in your area!
-                            </ThemedText>
-                        </View>
-                    }
-                    ListFooterComponent={
-                        loadingMore ? (
-                            <View style={styles.loadingMoreContainer}>
-                                <ThemedText style={[styles.loadingMoreText, { color: icon }]}>
-                                    Loading more truck stops...
+                    );
+                }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[accent]}
+                    />
+                }
+                onEndReached={loadMoreTruckStops}
+                onEndReachedThreshold={0.5}
+                ListEmptyComponent={
+                    <View style={styles.emptyContainer}>
+                        {loading ? (
+                            <>
+                                <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                                    Loading Truck Stops…
                                 </ThemedText>
-                            </View>
-                        ) : null
-                    }
-                    showsVerticalScrollIndicator={false}
-                />
-            )}
+                                <ThemedText type='tiny' style={styles.emptySubtext}>
+                                    Please Wait
+                                </ThemedText>
+                            </>
+                        ) : (
+                            <>
+                                <MaterialIcons name="local-parking" size={wp(15)} color={icon} />
+                                <ThemedText type="subtitle" style={[styles.emptyTitle, { color: icon }]}>
+                                    No Truck Stops Available
+                                </ThemedText>
+                                <ThemedText style={[styles.emptyText, { color: icon }]}>
+                                    Be the first to add a truck stop in your area!
+                                </ThemedText>
+                            </>
+                        )}
+                    </View>
+                }
+                ListFooterComponent={
+                    <View style={{ marginBottom: wp(10), marginTop: wp(6) }}>
+                        {
+                            loadingMore ?
+                                <View style={{ flexDirection: "row", gap: wp(4), alignItems: 'center', justifyContent: 'center' }}>
+                                    <ThemedText type='tiny' style={{ color: icon }}>Loading More Truck Stops</ThemedText>
+                                    <AccentRingLoader color={accent} size={20} dotSize={4} />
+                                </View>
+                                :
+                                (!lastVisible && truckStops.length > 0) ?
+                                    <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                                        <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>No more truck stops to load
+                                        </ThemedText>
+                                        <Ionicons color={icon} style={{}} name='alert-circle-outline' size={wp(6)} />
+                                    </View>
+                                    : null
+                        }
+
+                    </View>
+                }
+                showsVerticalScrollIndicator={false}
+            />
 
 
 
@@ -393,5 +512,25 @@ const styles = StyleSheet.create({
     featureText: {
         fontSize: wp(3.2),
         flex: 1
-    }
+    },
+    // Distance loading styles
+    distanceLoadingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: wp(3),
+        paddingHorizontal: wp(4),
+        marginHorizontal: wp(4),
+        marginVertical: wp(2),
+        borderRadius: wp(2),
+        gap: wp(2),
+    },
+    distanceLoadingText: {
+        fontSize: wp(3.2),
+        fontWeight: '500',
+    },
+    emptySubtext: {
+        textAlign: 'center',
+        marginTop: wp(2)
+    },
 })

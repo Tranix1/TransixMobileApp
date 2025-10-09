@@ -449,13 +449,13 @@ const TruckAvailabilityModal: React.FC<TruckAvailabilityModalProps> = ({
                                         title="Cancel"
                                         onPress={handleClose}
                                         style={[styles.button, styles.cancelButton]}
-                                        // textStyle={styles.cancelButtonText}
+                                    // textStyle={styles.cancelButtonText}
                                     />
                                     <Button
                                         title={isAvailable ? "Set Available" : "Set Unavailable"}
                                         onPress={handleSave}
                                         style={[styles.button, styles.saveButton]}
-                                        // textStyle={styles.saveButtonText}
+                                    // textStyle={styles.saveButtonText}
                                     />
                                 </View>
                             </ScrollView>
@@ -498,6 +498,7 @@ const TruckAvailabilityModal: React.FC<TruckAvailabilityModalProps> = ({
                     setPickDestinationLoc={setDestination}
                     setShowMap={setPickLocationOnMap}
                     dspShowMap={locationPicKERdSP}
+                    mode="dual"
                 />
             )}
         </Modal>

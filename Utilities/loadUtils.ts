@@ -302,5 +302,6 @@ export const CURRENCY_OPTIONS = [
 export const MODEL_OPTIONS = [
     { id: 1, name: "Solid" },
     { id: 2, name: "/ Tonne" },
-    { id: 3, name: "/ KM" }
+    { id: 3, name: "/ KM" },
+    { id: 4, name: "/ Litre" }
 ];

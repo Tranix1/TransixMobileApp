@@ -10,6 +10,8 @@ import { useAuth } from '@/context/AuthContext'
 import { useLocalSearchParams } from 'expo-router'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import { FinalReturnComponent } from '@/components/TrucksHomePage'
+import AccentRingLoader from '@/components/AccentRingLoader';
+import { useThemeColor } from '@/hooks/useThemeColor';
 const Index = () => {
 
     const { userId, organisationName, contractName, contractId, capacityG, cargoAreaG, truckTypeG, operationCountriesG } = useLocalSearchParams();
@@ -30,6 +32,8 @@ const Index = () => {
     const [refreshing, setRefreshing] = useState(false)
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasLoaded, setHasLoaded] = useState(false);
 
     const [operationCountries, setOperationCountries] = useState<string[]>(() => {
         if (!operationCountriesG) return [];
@@ -39,43 +43,55 @@ const Index = () => {
 
     const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
     const LoadTructs = async () => {
-        let filters: any[] = [];
+        try {
+            setIsLoading(true);
+            let filters: any[] = [];
 
-        // Apply filters for truck properties first
-        if (userId) filters.push(where("userId", "==", userId));
-        if (truckCapacity) filters.push(where("truckCapacity", "==", truckCapacity));
-        if (selectedCargoArea) filters.push(where("cargoArea", "==", selectedCargoArea?.name));
-        if (tankerType && selectedCargoArea) filters.push(where("tankerType", "==", tankerType))
-        // Conditionally add the country filter
-        if (operationCountries.length > 0) filters.push(where("locations", "array-contains-any", operationCountries));
+            // Apply filters for truck properties first
+            if (userId) filters.push(where("userId", "==", userId));
+            if (truckCapacity) filters.push(where("truckCapacity", "==", truckCapacity));
+            if (selectedCargoArea) filters.push(where("cargoArea", "==", selectedCargoArea?.name));
+            if (tankerType && selectedCargoArea) filters.push(where("tankerType", "==", tankerType))
+            // Conditionally add the country filter
+            if (operationCountries.length > 0) filters.push(where("locations", "array-contains-any", operationCountries));
 
-        // Only show approved trucks to users (except truck owners viewing their own)
-        if (!userId) {
+            // Only show approved trucks to users (except truck owners viewing their own)
+            if (!userId) {
                 filters.push(where("isApproved", "==", true));
-                filters.push(where("approvalStatus", "==", "approved")) ;
+                filters.push(where("approvalStatus", "==", "approved"));
                 filters.push(where("accTypeIsApproved", "==", true));
-        }
-
-        // Fetch data from Firestore with the initially applied filters
-        const maTrucks = await fetchDocuments(contractId ? "ContractRequests" : "Trucks", 10, undefined, filters);
-
-        let trucksToSet: Truck[] = [];
-
-        if (maTrucks && maTrucks.data) {
-            if (filters.length > 0 && maTrucks.data.length <= 0) setFilteredPNotAavaialble(true)
-
-            // If locationTruckS is true, we need to do the client-side filtering for ALL selected countries
-            if (operationCountries.length > 0) {
-                trucksToSet = (maTrucks.data as Truck[]).filter(truck =>
-                    operationCountries.every(country => truck.locations?.includes(country))
-                );
-            } else {
-                // Otherwise, use the data as fetched (which would be filtered only by truck properties)
-                trucksToSet = maTrucks.data as Truck[];
             }
 
-            setTrucks(trucksToSet);
-            setLastVisible(maTrucks.lastVisible);
+            // Fetch data from Firestore with the initially applied filters
+            const maTrucks = await fetchDocuments(contractId ? "ContractRequests" : "Trucks", 10, undefined, filters);
+
+            let trucksToSet: Truck[] = [];
+
+            if (maTrucks && maTrucks.data) {
+                if (filters.length > 0 && maTrucks.data.length <= 0) setFilteredPNotAavaialble(true)
+
+                // If locationTruckS is true, we need to do the client-side filtering for ALL selected countries
+                if (operationCountries.length > 0) {
+                    trucksToSet = (maTrucks.data as Truck[]).filter(truck =>
+                        operationCountries.every(country => truck.locations?.includes(country))
+                    );
+                } else {
+                    // Otherwise, use the data as fetched (which would be filtered only by truck properties)
+                    trucksToSet = maTrucks.data as Truck[];
+                }
+
+                setTrucks(trucksToSet);
+                setLastVisible(maTrucks.lastVisible);
+            } else {
+                // If no data, set empty array
+                setTrucks([]);
+                setLastVisible(null);
+            }
+        } catch (error) {
+            console.error('Error loading trucks:', error);
+        } finally {
+            setIsLoading(false);
+            setHasLoaded(true);
         }
     };
 
@@ -195,6 +211,8 @@ const Index = () => {
                     contractName={`${contractName}`}
                     contractId={`${contractId}`}
                     filteredPNotAavaialble={filteredPNotAavaialble}
+                    isLoading={isLoading}
+                    hasLoaded={hasLoaded}
                 />
             </ScreenWrapper>}
         </View>

@@ -10,14 +10,14 @@ import { SelectLocationProp } from '@/types/types';
 interface LocationSelectorProps {
     origin: SelectLocationProp | null;
     destination: SelectLocationProp | null;
-    setOrigin: (location: SelectLocationProp | null) => void;
-    setDestination: (location: SelectLocationProp | null) => void;
+    setOrigin: React.Dispatch<React.SetStateAction<SelectLocationProp | null>>;
+    setDestination: React.Dispatch<React.SetStateAction<SelectLocationProp | null>>;
     dspFromLocation: boolean;
-    setDspFromLocation: (show: boolean) => void;
+    setDspFromLocation: React.Dispatch<React.SetStateAction<boolean>>;
     dspToLocation: boolean;
-    setDspToLocation: (show: boolean) => void;
+    setDspToLocation: React.Dispatch<React.SetStateAction<boolean>>;
     locationPicKERdSP: boolean;
-    setPickLocationOnMap: (show: boolean) => void;
+    setPickLocationOnMap: React.Dispatch<React.SetStateAction<boolean>>;
     distance?: string;
     duration?: string;
     durationInTraffic?: string;
@@ -113,6 +113,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                     setPickDestinationLoc={setDestination}
                     setShowMap={setPickLocationOnMap}
                     dspShowMap={locationPicKERdSP}
+                    mode="dual"
                 />
             )}
         </View>

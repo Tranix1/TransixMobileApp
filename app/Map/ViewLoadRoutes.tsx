@@ -44,14 +44,16 @@ export default function ViewLoadRoutes() {
     const coolGray = useThemeColor('coolGray');
 
     // State management
-    const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
     const [routeCoords, setRouteCoords] = useState<LatLng[]>([]);
+    const [returnRouteCoords, setReturnRouteCoords] = useState<LatLng[]>([]);
     const [hasFitted, setHasFitted] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [routeDetails, setRouteDetails] = useState<RouteDetails | null>(null);
+    const [returnRouteDetails, setReturnRouteDetails] = useState<RouteDetails | null>(null);
     const [showDetails, setShowDetails] = useState(true);
     const [routeDetailsLoading, setRouteDetailsLoading] = useState(false);
+    const [returnRouteDetailsLoading, setReturnRouteDetailsLoading] = useState(false);
 
     // Load data from params
     const loadData = params.loadData ? JSON.parse(params.loadData as string) as Load : null;
@@ -61,6 +63,7 @@ export default function ViewLoadRoutes() {
     const bounds = params.bounds as string;
     const destinationType = params.destinationType as string;
     const destinationName = params.destinationName as string;
+    const hasReturnLoad = params.hasReturnLoad === 'true';
 
     // Validate coordinates using utility functions
     const isValidOrigin = isValidCoordinate(originCoords);
@@ -82,17 +85,6 @@ export default function ViewLoadRoutes() {
         try {
             setLoading(true);
             setError(null);
-
-            // Request location permission
-            let { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== "granted") {
-                setError("Location permission denied");
-                return;
-            }
-
-            // Get current location as fallback
-            const location = await Location.getCurrentPositionAsync({});
-            setCurrentLocation(location);
 
             // Process route data
             await processRouteData();
@@ -123,6 +115,11 @@ export default function ViewLoadRoutes() {
                     await fetchRouteDetailsOnly();
                 }
 
+                // If there's a return load, fetch return route
+                if (hasReturnLoad && isValidOrigin && isValidDestination) {
+                    await fetchReturnRouteFromAPI();
+                }
+
                 // Fit map to route
                 if (mapRef.current && points.length > 0 && !hasFitted) {
                     await fitMapToRoute(points);
@@ -133,6 +130,11 @@ export default function ViewLoadRoutes() {
             // If no polyline but we have coordinates, fetch route from API
             if (isValidOrigin && isValidDestination) {
                 await fetchRouteFromAPI();
+
+                // If there's a return load, fetch return route
+                if (hasReturnLoad) {
+                    await fetchReturnRouteFromAPI();
+                }
                 return;
             }
 
@@ -238,6 +240,47 @@ export default function ViewLoadRoutes() {
         }
     };
 
+    const fetchReturnRouteFromAPI = async () => {
+        try {
+            setReturnRouteDetailsLoading(true);
+            const GOOGLE_MAPS_API_KEY = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
+            // Return route: destination to origin (reverse)
+            const origin = `${destinationCoords!.latitude},${destinationCoords!.longitude}`;
+            const destination = `${originCoords!.latitude},${originCoords!.longitude}`;
+
+            const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${GOOGLE_MAPS_API_KEY}`;
+
+            const response = await fetch(url);
+            const json = await response.json();
+
+            if (json.status === "OK" && json.routes.length > 0) {
+                const route = json.routes[0];
+                const polyline = route.overview_polyline.points;
+                const points = decodePolyline(polyline);
+                setReturnRouteCoords(points);
+
+                // Extract route details
+                const leg = route.legs[0];
+                setReturnRouteDetails({
+                    distance: leg.distance?.text || 'N/A',
+                    duration: leg.duration?.text || 'N/A',
+                    durationInTraffic: leg.duration_in_traffic?.text
+                });
+
+                // Fit map to both routes
+                if (mapRef.current && !hasFitted) {
+                    await fitMapToBothRoutes();
+                }
+            } else {
+                console.error("Return route API error:", json.status);
+            }
+        } catch (err) {
+            console.error('Error fetching return route from API:', err);
+        } finally {
+            setReturnRouteDetailsLoading(false);
+        }
+    };
+
     const fitMapToRoute = async (points: LatLng[]) => {
         try {
             if (!mapRef.current || points.length === 0) return;
@@ -253,6 +296,26 @@ export default function ViewLoadRoutes() {
             setHasFitted(true);
         } catch (err) {
             console.error('Error fitting map to route:', err);
+        }
+    };
+
+    const fitMapToBothRoutes = async () => {
+        try {
+            if (!mapRef.current) return;
+
+            const allCoords = [...routeCoords, ...returnRouteCoords];
+            if (isValidOrigin) allCoords.unshift(originCoords!);
+            if (isValidDestination) allCoords.push(destinationCoords!);
+
+            if (allCoords.length > 0) {
+                mapRef.current.fitToCoordinates(allCoords, {
+                    edgePadding: { top: 100, right: 50, bottom: 200, left: 50 },
+                    animated: true,
+                });
+                setHasFitted(true);
+            }
+        } catch (err) {
+            console.error('Error fitting map to both routes:', err);
         }
     };
 
@@ -351,8 +414,6 @@ export default function ViewLoadRoutes() {
                     initialRegion={initialRegion}
                     provider="google"
                     customMapStyle={theme === "dark" ? darkMapStyle : undefined}
-                    showsUserLocation={true}
-                    showsMyLocationButton={true}
                     showsCompass={true}
                     showsScale={true}
                 >
@@ -388,7 +449,7 @@ export default function ViewLoadRoutes() {
                         </Marker>
                     )}
 
-                    {/* Route Polyline */}
+                    {/* Main Route Polyline */}
                     {routeCoords.length > 0 && (
                         <>
                             <Polyline
@@ -399,6 +460,22 @@ export default function ViewLoadRoutes() {
                             <Polyline
                                 coordinates={routeCoords}
                                 strokeColor={accent + '80'}
+                                strokeWidth={3}
+                            />
+                        </>
+                    )}
+
+                    {/* Return Route Polyline */}
+                    {returnRouteCoords.length > 0 && (
+                        <>
+                            <Polyline
+                                coordinates={returnRouteCoords}
+                                strokeColor="#FF6B6B"
+                                strokeWidth={6}
+                            />
+                            <Polyline
+                                coordinates={returnRouteCoords}
+                                strokeColor="#FF6B6B80"
                                 strokeWidth={3}
                             />
                         </>
@@ -454,8 +531,12 @@ export default function ViewLoadRoutes() {
                                 </View>
                             )}
 
-                            {/* Distance and Duration Display - Using existing pattern */}
+                            {/* Main Route Details */}
                             <View style={styles.routeInfoContainer}>
+                                <ThemedText type="defaultSemiBold" style={[styles.routeTitle, { color: accent }]}>
+                                    Main Route
+                                </ThemedText>
+
                                 {loadData?.distance && (
                                     <ThemedText type="tiny" style={styles.distanceInfo}>
                                         Distance: {loadData.distance}
@@ -499,28 +580,115 @@ export default function ViewLoadRoutes() {
                                         Loading route details...
                                     </ThemedText>
                                 )}
-
-                                {/* Manual refresh buttons */}
-                                {!routeDetailsLoading && isValidOrigin && isValidDestination && (
-                                    <TouchableOpacity
-                                        style={styles.refreshButton}
-                                        onPress={handleRefreshRouteDetails}
-                                    >
-                                        <Ionicons name="refresh" size={wp(4)} color={accent} />
-                                    </TouchableOpacity>
-                                )}
-                                {!routeDetails && !routeDetailsLoading && isValidOrigin && isValidDestination && (
-                                    <TouchableOpacity
-                                        style={[styles.getDetailsButton, { backgroundColor: accent }]}
-                                        onPress={handleRefreshRouteDetails}
-                                    >
-                                        <ThemedText style={styles.getDetailsButtonText}>Get Route Details</ThemedText>
-                                    </TouchableOpacity>
-                                )}
                             </View>
+
+                            {/* Return Route Details */}
+                            {hasReturnLoad && (
+                                <View style={styles.routeInfoContainer}>
+                                    <ThemedText type="defaultSemiBold" style={[styles.routeTitle, { color: "#FF6B6B" }]}>
+                                        Return Route
+                                    </ThemedText>
+
+                                    {returnRouteDetails && (
+                                        <>
+                                            {returnRouteDetails.distance && (
+                                                <ThemedText type="tiny" style={styles.distanceInfo}>
+                                                    Distance: {returnRouteDetails.distance}
+                                                </ThemedText>
+                                            )}
+                                            {returnRouteDetails.duration && (
+                                                <ThemedText type="tiny" style={styles.distanceInfo}>
+                                                    Duration: {returnRouteDetails.duration}
+                                                </ThemedText>
+                                            )}
+                                            {returnRouteDetails.durationInTraffic && (
+                                                <ThemedText type="tiny" style={styles.distanceInfo}>
+                                                    In Traffic: {returnRouteDetails.durationInTraffic}
+                                                </ThemedText>
+                                            )}
+                                        </>
+                                    )}
+
+                                    {/* Return route loading state */}
+                                    {returnRouteDetailsLoading && (
+                                        <ThemedText type="tiny" style={styles.distanceInfo}>
+                                            Loading return route details...
+                                        </ThemedText>
+                                    )}
+                                </View>
+                            )}
+
+                            {/* Manual refresh buttons */}
+                            {!routeDetailsLoading && isValidOrigin && isValidDestination && (
+                                <TouchableOpacity
+                                    style={styles.refreshButton}
+                                    onPress={handleRefreshRouteDetails}
+                                >
+                                    <Ionicons name="refresh" size={wp(4)} color={accent} />
+                                </TouchableOpacity>
+                            )}
+                            {!routeDetails && !routeDetailsLoading && isValidOrigin && isValidDestination && (
+                                <TouchableOpacity
+                                    style={[styles.getDetailsButton, { backgroundColor: accent }]}
+                                    onPress={handleRefreshRouteDetails}
+                                >
+                                    <ThemedText style={styles.getDetailsButtonText}>Get Route Details</ThemedText>
+                                </TouchableOpacity>
+                            )}
                         </View>
                     </View>
                 )}
+
+                {/* Zoom Controls */}
+                <View style={styles.zoomControls}>
+                    <TouchableOpacity
+                        style={[styles.zoomButton, { backgroundColor: background }]}
+                        onPress={() => {
+                            if (mapRef.current) {
+                                mapRef.current.animateToRegion({
+                                    ...mapRef.current.props.initialRegion!,
+                                    latitudeDelta: mapRef.current.props.initialRegion!.latitudeDelta * 0.5,
+                                    longitudeDelta: mapRef.current.props.initialRegion!.longitudeDelta * 0.5,
+                                }, 1000);
+                            }
+                        }}
+                    >
+                        <Ionicons name="add" size={wp(5)} color={accent} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.zoomButton, { backgroundColor: background }]}
+                        onPress={() => {
+                            if (mapRef.current) {
+                                mapRef.current.animateToRegion({
+                                    ...mapRef.current.props.initialRegion!,
+                                    latitudeDelta: mapRef.current.props.initialRegion!.latitudeDelta * 2,
+                                    longitudeDelta: mapRef.current.props.initialRegion!.longitudeDelta * 2,
+                                }, 1000);
+                            }
+                        }}
+                    >
+                        <Ionicons name="remove" size={wp(5)} color={accent} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.zoomButton, { backgroundColor: background }]}
+                        onPress={() => {
+                            if (mapRef.current && (routeCoords.length > 0 || returnRouteCoords.length > 0)) {
+                                const allCoords = [...routeCoords, ...returnRouteCoords];
+                                if (isValidOrigin) allCoords.unshift(originCoords!);
+                                if (isValidDestination) allCoords.push(destinationCoords!);
+
+                                if (allCoords.length > 0) {
+                                    mapRef.current.fitToCoordinates(allCoords, {
+                                        edgePadding: { top: 100, right: 50, bottom: 200, left: 50 },
+                                        animated: true,
+                                    });
+                                }
+                            }
+                        }}
+                    >
+                        <Ionicons name="locate" size={wp(5)} color={accent} />
+                    </TouchableOpacity>
+                </View>
 
                 {/* Toggle Details Button when hidden */}
                 {!showDetails && (
@@ -667,6 +835,11 @@ const styles = StyleSheet.create({
         fontSize: wp(3.5),
         fontWeight: '500',
     },
+    routeTitle: {
+        fontSize: wp(4),
+        fontWeight: 'bold',
+        marginBottom: wp(1),
+    },
     routeDetailItem: {
         alignItems: 'center',
         flex: 1,
@@ -731,5 +904,24 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 3,
+    },
+    zoomControls: {
+        position: 'absolute',
+        right: wp(4),
+        top: wp(20),
+        flexDirection: 'column',
+        gap: wp(2),
+    },
+    zoomButton: {
+        width: wp(12),
+        height: wp(12),
+        borderRadius: wp(6),
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
     },
 });

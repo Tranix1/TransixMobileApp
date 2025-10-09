@@ -141,6 +141,8 @@ export default function AddTruckStop() {
             const truckStopData = {
                 name: formData.name,
                 location: location.city || location.description,
+                city: location.city,
+                country: location.country,
                 address: location.description, // Use Google location description as address
                 coordinates: {
                     latitude: location.latitude,
@@ -212,7 +214,7 @@ export default function AddTruckStop() {
 
     return (
         <ScreenWrapper>
-            <Heading page='Add Truck Stop'  />
+            <Heading page='Add Truck Stop' />
 
             <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
                 {/* Basic Information */}
@@ -558,10 +560,9 @@ export default function AddTruckStop() {
                 <LocationPicker
                     pickOriginLocation={location}
                     setPickOriginLocation={setLocation}
-                    pickDestinationLoc={null}
-                    setPickDestinationLoc={() => { }}
                     setShowMap={setPickLocationOnMap}
                     dspShowMap={locationPicKERdSP}
+                    mode="single"
                 />
             )}
         </ScreenWrapper>

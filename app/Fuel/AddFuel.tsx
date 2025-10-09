@@ -349,10 +349,9 @@ export default function AddFuel() {
                 <LocationPicker
                     pickOriginLocation={location}
                     setPickOriginLocation={setLocation}
-                    pickDestinationLoc={null}
-                    setPickDestinationLoc={() => { }}
                     setShowMap={setPickLocationOnMap}
                     dspShowMap={locationPicKERdSP}
+                    mode="single"
                 />
             )}
         </ScreenWrapper>

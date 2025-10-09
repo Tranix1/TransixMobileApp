@@ -399,3 +399,24 @@ export const addTrackingAgent = async (salesmanId: string, agentId: string) => {
         throw error;
     }
 };
+
+export const isServiceStationOwner = async (userId: string) => {
+    try {
+        const q = query(collection(db, "serviceStationOwners"), where("userId", "==", userId));
+        const querySnapshot = await getDocs(q);
+        return !querySnapshot.empty;
+    } catch (error) {
+        console.error("Error checking service station owner existence:", error);
+        throw error;
+    }
+};
+
+export const addServiceStationOwner = async (adminId: string, ownerId: string) => {
+    try {
+        const ownerRef = doc(db, "serviceStationOwners", ownerId);
+        await setDoc(ownerRef, { userId: ownerId, adminId: adminId, createdAt: serverTimestamp() });
+    } catch (error) {
+        console.error("Error adding service station owner:", error);
+        throw error;
+    }
+};

@@ -101,6 +101,8 @@ export interface TruckStop {
     id?: string;
     name: string;
     location: string;
+    city?: string;
+    country?: string;
     address: string;
     coordinates: {
         latitude: number;

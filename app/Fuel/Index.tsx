@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { View, FlatList, TouchableOpacity, TouchableNativeFeedback, ActivityIndicator, RefreshControl, StyleSheet, Alert } from "react-native";
+import { View, FlatList, TouchableOpacity, TouchableNativeFeedback, ActivityIndicator, RefreshControl, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { useRouter } from "expo-router";
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
-import { fetchDocuments } from '@/db/operations';
+import { fetchDocuments, isServiceStationOwner as checkServiceStationOwner, addServiceStationOwner } from '@/db/operations';
 import Heading from "@/components/Heading";
 import { hp, wp } from "@/constants/common";
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -13,6 +13,8 @@ import { openWhatsApp, getContactMessage } from '@/Utilities/whatsappUtils';
 import { FuelPaymentModal } from "@/payments";
 import { getCurrentLocation } from '@/Utilities/utils';
 import { calculateDistance, Coordinate } from '@/Utilities/coordinateUtils';
+import AccentRingLoader from '@/components/AccentRingLoader';
+import { useAuth } from "@/context/AuthContext";
 
 interface FuelStation {
     id: string;
@@ -41,10 +43,11 @@ export default function Index() {
     const accent = useThemeColor('accent')
     const icon = useThemeColor('icon')
     const backgroundLight = useThemeColor('backgroundLight')
-
+    const { user } = useAuth();
 
     const [fuelStations, setFuelStations] = useState<FuelStation[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isServiceStationOwner, setIsServiceStationOwner] = useState(false);
     const router = useRouter();
 
     const [refreshing, setRefreshing] = useState(false)
@@ -55,11 +58,23 @@ export default function Index() {
     const [selectedFuelStation, setSelectedFuelStation] = useState<FuelStation | null>(null);
     const [currentLocation, setCurrentLocation] = useState<Coordinate | null>(null);
     const [sortByDistance, setSortByDistance] = useState(false);
+    const [isCalculatingDistances, setIsCalculatingDistances] = useState(false);
 
     const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
 
+    useEffect(() => {
+        const checkServiceStationOwnerStatus = async () => {
+            if (user) {
+                const owner = await checkServiceStationOwner(user.uid);
+                setIsServiceStationOwner(owner);
+            }
+        };
+        checkServiceStationOwnerStatus();
+    }, [user]);
+
     const getCurrentUserLocation = async () => {
         try {
+            setIsCalculatingDistances(true);
             const location = await getCurrentLocation();
             if (location) {
                 setCurrentLocation({
@@ -69,6 +84,8 @@ export default function Index() {
             }
         } catch (error) {
             console.error('Error getting current location:', error);
+        } finally {
+            setIsCalculatingDistances(false);
         }
     };
 
@@ -140,6 +157,7 @@ export default function Index() {
         router.push('/Fuel/AddFuel');
     };
 
+
     const toggleExpand = (id: string) => {
         setExpandedId(expandedId === id ? '' : id);
     };
@@ -191,11 +209,24 @@ export default function Index() {
                             </View>
                         </TouchableNativeFeedback>
                     )}
-                    <TouchableNativeFeedback onPress={handleAddFuel}>
-                        <ThemedText style={{ marginRight: wp(3) }} type='defaultSemiBold'>Add Fuel</ThemedText>
-                    </TouchableNativeFeedback>
+                    {isServiceStationOwner && (
+                        <TouchableNativeFeedback onPress={handleAddFuel}>
+                            <ThemedText style={{ marginRight: wp(3) }} type='defaultSemiBold'>Add Fuel</ThemedText>
+                        </TouchableNativeFeedback>
+                    )}
                 </View>
             } />
+
+            {/* Distance Loading Indicator */}
+            {isCalculatingDistances && (
+                <View style={[styles.distanceLoadingContainer, { backgroundColor: accent + '10' }]}>
+                    <AccentRingLoader color={accent} size={24} dotSize={6} />
+                    <ThemedText type="tiny" style={[styles.distanceLoadingText, { color: accent }]}>
+                        Calculating distances...
+                    </ThemedText>
+                </View>
+            )}
+
             <FlatList
                 keyExtractor={(item) => item.id.toString()}
                 contentContainerStyle={{}}
@@ -226,12 +257,23 @@ export default function Index() {
                                                     : item.location.description
                                                 }
                                             </ThemedText>
-                                            {currentLocation && distance > 0 && (
+                                            {currentLocation && (
                                                 <View style={[styles.distanceContainer, { backgroundColor: accent + '15' }]}>
-                                                    <Ionicons name="navigate" size={wp(3.5)} color={accent} />
-                                                    <ThemedText type="tiny" style={[styles.distanceText, { color: accent }]}>
-                                                        {distance.toFixed(1)} km
-                                                    </ThemedText>
+                                                    {isCalculatingDistances ? (
+                                                        <>
+                                                            <AccentRingLoader color={accent} size={20} dotSize={4} />
+                                                            <ThemedText type="tiny" style={[styles.distanceText, { color: accent }]}>
+                                                                Loading...
+                                                            </ThemedText>
+                                                        </>
+                                                    ) : distance > 0 ? (
+                                                        <>
+                                                            <Ionicons name="navigate" size={wp(3.5)} color={accent} />
+                                                            <ThemedText type="tiny" style={[styles.distanceText, { color: accent }]}>
+                                                                {distance.toFixed(1)} km
+                                                            </ThemedText>
+                                                        </>
+                                                    ) : null}
                                                 </View>
                                             )}
                                         </View>
@@ -866,5 +908,21 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: wp(3.2),
         fontWeight: '600',
+    },
+    // Distance loading styles
+    distanceLoadingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: wp(3),
+        paddingHorizontal: wp(4),
+        marginHorizontal: wp(4),
+        marginVertical: wp(2),
+        borderRadius: wp(2),
+        gap: wp(2),
+    },
+    distanceLoadingText: {
+        fontSize: wp(3.2),
+        fontWeight: '500',
     },
 })

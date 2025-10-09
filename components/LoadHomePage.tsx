@@ -16,6 +16,7 @@ import { router } from 'expo-router';
 import { parseCoordinateString, isValidCoordinate, DEFAULT_COORDINATES } from '@/Utilities/coordinateUtils';
 import { deleteDocument } from '@/db/operations';
 import { Share, Alert } from 'react-native';
+import AccentRingLoader from '@/components/AccentRingLoader';
 
 interface LoadsComponentProps {
     Loads: Load[];
@@ -41,6 +42,8 @@ interface LoadsComponentProps {
     bottomMode: any
 
     filteredPNotAavaialble: boolean
+    isLoading?: boolean
+    error?: string | null
 }
 
 
@@ -63,7 +66,9 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     bottomMode,
     userId,
     organisationName,
-    filteredPNotAavaialble
+    filteredPNotAavaialble,
+    isLoading = false,
+    error = null
 }) => {
     // Component implementation
     const { user } = useAuth();
@@ -214,19 +219,46 @@ Contact: ${selectedLoad.contact}`;
                 onEndReachedThreshold={.5}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        {!filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
-                            Loads Loading…
-                        </ThemedText>}
-
-                        {!filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
-                            Please Wait
-                        </ThemedText>}
-                        {filteredPNotAavaialble && <ThemedText type='defaultSemiBold' style={styles.emptyText}>
-                            Specified Load Not Available!
-                        </ThemedText>}
-                        {filteredPNotAavaialble && <ThemedText type='tiny' style={styles.emptySubtext}>
-                            pull to refresh
-                        </ThemedText>}
+                        {isLoading ? (
+                            <>
+                                <AccentRingLoader color={accent} size={32} dotSize={6} />
+                                <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                                    Loading Loads…
+                                </ThemedText>
+                                <ThemedText type='tiny' style={styles.emptySubtext}>
+                                    Please Wait
+                                </ThemedText>
+                            </>
+                        ) : error ? (
+                            <>
+                                <Ionicons name="alert-circle-outline" size={wp(8)} color="#ef4444" />
+                                <ThemedText type='defaultSemiBold' style={[styles.emptyText, { color: '#ef4444' }]}>
+                                    {error}
+                                </ThemedText>
+                                <ThemedText type='tiny' style={styles.emptySubtext}>
+                                    Pull to refresh
+                                </ThemedText>
+                            </>
+                        ) : filteredPNotAavaialble ? (
+                            <>
+                                <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                                    Specified Load Not Available!
+                                </ThemedText>
+                                <ThemedText type='tiny' style={styles.emptySubtext}>
+                                    Pull to refresh
+                                </ThemedText>
+                            </>
+                        ) : (
+                            <>
+                                <Ionicons name="cube-outline" size={wp(8)} color={icon} />
+                                <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                                    No Loads Available
+                                </ThemedText>
+                                <ThemedText type='tiny' style={styles.emptySubtext}>
+                                    Check back later
+                                </ThemedText>
+                            </>
+                        )}
                     </View>
                 }
                 ListFooterComponent={
@@ -235,7 +267,7 @@ Contact: ${selectedLoad.contact}`;
                             loadingMore ?
                                 <View style={{ flexDirection: "row", gap: wp(4), alignItems: 'center', justifyContent: 'center' }}>
                                     <ThemedText type='tiny' style={{ color: icon }}>Loading More</ThemedText>
-                                    <ActivityIndicator size="small" color={accent} />
+                                    <AccentRingLoader color={accent} size={20} dotSize={4} />
                                 </View>
                                 :
                                 (!lastVisible && Loads.length > 0) ?
@@ -685,7 +717,8 @@ const styles = StyleSheet.create({
         textAlign: 'center'
     }, emptyContainer: {
         minHeight: hp(80),
-        justifyContent: 'center'
+        justifyContent: 'center',
+        alignItems: 'center'
     },
 })
 

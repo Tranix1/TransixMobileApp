@@ -13,6 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import SubscriptionPaymentModal from "@/components/SubscriptionPaymentModal";
 import AccentRingLoader from "@/components/AccentRingLoader";
 import { VehicleLifecycleService, startVehicleLifecycleMonitoring } from '@/services/vehicleLifecycleService';
+import { openWhatsApp, getContactMessage } from '@/Utilities/whatsappUtils';
 
 interface Device {
   id: string;
@@ -185,6 +186,11 @@ export default function Index() {
     }
   };
 
+  const handleContactUs = () => {
+    const message = getContactMessage('tracking');
+    openWhatsApp('+263716325160', message);
+  };
+
   if (loading) {
     return (
       <ScreenWrapper>
@@ -215,6 +221,12 @@ export default function Index() {
                 </TouchableNativeFeedback>
               </View>
             )}
+          </View>
+        ) : !isAgent && user?.uid !== 'QOC9krp5BOR7NhFXRuX5f32u17e2' ? (
+          <View style={{ marginRight: wp(3) }}>
+            <TouchableNativeFeedback onPress={handleContactUs}>
+              <ThemedText style={{ alignSelf: 'flex-start' }}>Contact Us</ThemedText>
+            </TouchableNativeFeedback>
           </View>
         ) : undefined
       } />
