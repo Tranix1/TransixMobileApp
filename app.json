@@ -20,7 +20,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/TrnaixxNewBG.jpg",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0f0e11"
       },
       "package": "com.yayapana.TransixNewVersion",
       "googleServicesFile": "./google-services.json",
@@ -56,6 +56,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-navigation-bar",
       "expo-notifications",
       [
         "expo-splash-screen",
@@ -63,7 +64,13 @@
           "image": "./assets/images/TransixxLogoN.jpg",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#0f0e11",
+          "dark": {
+            "image": "./assets/images/TransixxLogoN.jpg",
+            "imageWidth": 200,
+            "resizeMode": "contain",
+            "backgroundColor": "#0f0e11"
+          }
         }
       ],
       "expo-font",

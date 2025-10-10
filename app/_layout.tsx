@@ -3,17 +3,22 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useFonts } from 'expo-font';
 import { useEffect, useState } from "react";
 import * as SplashScreen from 'expo-splash-screen';
+import { useColorScheme } from 'react-native';
+
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Linking } from "react-native";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { auth } from "@/db/fireBaseConfig";
 
 import { useNotificationRouting } from "@/Utilities/pushNotification";
+import { configureNavigationBar } from "@/Utilities/navigationBarUtils";
 
 export default function RootLayout() {
     const router = useRouter();
     const [appIsReady, setAppIsReady] = useState(false);
-
+    const colorScheme = useColorScheme();
 
     const [loaded] = useFonts({
         SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -21,6 +26,11 @@ export default function RootLayout() {
         sfregular: require('../assets/fonts/SFPRODISPLAYREGULAR.ttf'),
         sfmedium: require('../assets/fonts/SFPRODISPLAYMEDIUM.ttf'),
     });
+
+    // Configure navigation bar based on theme
+    useEffect(() => {
+        configureNavigationBar(colorScheme);
+    }, [colorScheme]);
 
     useEffect(() => {
         const checkFirstTime = async () => {
@@ -34,15 +44,16 @@ export default function RootLayout() {
                 console.error("Error checking first time:", error);
             }
         };
-        if (true) {
+
+        if (loaded) {
             console.log('loaded Fonts ✅');
             checkFirstTime();
 
-            SplashScreen.hideAsync();
+            // Hide splash screen after fonts are loaded
+            SplashScreen.hideAsync().catch(() => {
+                // Ignore errors if splash screen is already hidden
+            });
         }
-
-
-
     }, [loaded]);
 
     useNotificationRouting();

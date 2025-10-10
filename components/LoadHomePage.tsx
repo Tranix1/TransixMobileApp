@@ -506,9 +506,9 @@ Contact: ${selectedLoad.contact}`;
                                             <TouchableOpacity
                                                 style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: '#2563eb', padding: wp(3), borderRadius: wp(4) }}
                                                 onPress={() => {
-                                                    // Extract coordinates from origin and destination strings using utility functions
-                                                    const originCoords = parseCoordinateString(selectedLoad.origin || '');
-                                                    const destinationCoords = parseCoordinateString(selectedLoad.destination || '');
+                                                    // Use stored coordinates if available, otherwise try to parse from strings
+                                                    const originCoords = selectedLoad.originCoordinates || parseCoordinateString(selectedLoad.origin || '');
+                                                    const destinationCoords = selectedLoad.destinationCoordinates || parseCoordinateString(selectedLoad.destination || '');
 
                                                     if (isValidCoordinate(originCoords) && isValidCoordinate(destinationCoords)) {
                                                         router.push({

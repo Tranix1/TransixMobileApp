@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const ScreenWrapper = ({ children, fh = true, ishome = false, showError = () => { } }) => {
-    const { top } = useSafeAreaInsets();
+    const { top, bottom } = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const background = useThemeColor('background');
     const icon = useThemeColor('icon');
@@ -93,7 +93,7 @@ const ScreenWrapper = ({ children, fh = true, ishome = false, showError = () => 
                     flexDirection: 'row',
                     gap: wp(2),
                     backgroundColor: backgroundLight,
-                    bottom: hp(8), width: wp(90),
+                    bottom: hp(8) + bottom, width: wp(90),
                     marginHorizontal: wp(5), elevation: 3,
                     shadowOpacity: .3, shadowRadius: 7,
                     shadowColor: icon + '4c',

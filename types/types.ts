@@ -190,6 +190,17 @@ export type Load = {
     trucksRequired: TruckNeededType[]
     proofOfOrder: string;
     proofOfOrderType: string
+    // Coordinate fields for map display
+    originCoordinates?: {
+        latitude: number;
+        longitude: number;
+        address: string;
+    };
+    destinationCoordinates?: {
+        latitude: number;
+        longitude: number;
+        address: string;
+    };
 
 } & LoadFormData;
 

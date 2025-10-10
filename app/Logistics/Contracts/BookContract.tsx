@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth, db } from "@/db/fireBaseConfig";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Feather, Ionicons } from "@expo/vector-icons";
@@ -15,6 +16,7 @@ import Heading from "@/components/Heading";
 import ScreenWrapper from "@/components/ScreenWrapper";
 
 function BookLContract({ }) {
+  const { bottom } = useSafeAreaInsets();
   const accent = useThemeColor("accent");
   const coolGray = useThemeColor("coolGray");
   const icon = useThemeColor("icon");
@@ -390,7 +392,7 @@ function BookLContract({ }) {
       {/* Add Button */}
       <TouchableOpacity style={{
         position: 'absolute',
-        bottom: hp(4),
+        bottom: hp(4) + bottom,
         right: wp(4),
         padding: wp(2),
         backgroundColor: accent,

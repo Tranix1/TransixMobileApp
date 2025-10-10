@@ -2,6 +2,7 @@ import { useCallback, useRef, useState, useEffect } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { StyleSheet, TouchableNativeFeedback, View, LogBox } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Home from "./Home/Index";
 import Loads from "./Logistics/Loads/Index";
 import Store from "./Transport/Store/Index";
@@ -26,6 +27,7 @@ export default function Index() {
   const icon = useThemeColor("icon");
   const background = useThemeColor("background");
   const backgroundColor = useThemeColor("background");
+  const { bottom } = useSafeAreaInsets();
 
   const [isAppReady, setIsAppReady] = useState(false);
   const [isConnectedInternet, setIsConnectedInternet] = useState(true);
@@ -185,7 +187,8 @@ export default function Index() {
             tabBarStyle: {
               backgroundColor: useThemeColor("background"),
               borderTopWidth: 0,
-              height: hp(8),
+              height: hp(8) + bottom,
+              paddingBottom: bottom,
               justifyContent: 'center'
             },
             sceneStyle: {

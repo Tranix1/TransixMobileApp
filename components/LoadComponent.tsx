@@ -414,9 +414,9 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
                 <TouchableOpacity
                   style={[styles.actionButton, { backgroundColor: '#2563eb' }]}
                   onPress={() => {
-                    // Extract coordinates from origin and destination strings using utility functions
-                    const originCoords = parseCoordinateString(item.origin || '');
-                    const destinationCoords = parseCoordinateString(item.destination || '');
+                    // Use stored coordinates if available, otherwise try to parse from strings
+                    const originCoords = item.originCoordinates || parseCoordinateString(item.origin || '');
+                    const destinationCoords = item.destinationCoordinates || parseCoordinateString(item.destination || '');
 
                     if (isValidCoordinate(originCoords) && isValidCoordinate(destinationCoords)) {
                       router.push({

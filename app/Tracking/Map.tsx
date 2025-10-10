@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AccentRingLoader from "@/components/AccentRingLoader";
 import MapView, { Marker, Polyline, LatLng } from "react-native-maps";
 import ScreenWrapper from "@/components/ScreenWrapper";
@@ -78,6 +79,7 @@ const GOOGLE_MAPS_API_KEY = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
 
 export default function Tracking() {
   const params = useLocalSearchParams();
+  const { bottom } = useSafeAreaInsets();
 
   const icon = useThemeColor("icon");
   const accent = useThemeColor("accent");
@@ -837,6 +839,7 @@ export default function Tracking() {
             flexDirection: "row",
             justifyContent: "space-around",
             paddingVertical: 12,
+            paddingBottom: 12 + bottom,
             borderTopWidth: 1, borderColor: accent
           }}>
             <TouchableOpacity

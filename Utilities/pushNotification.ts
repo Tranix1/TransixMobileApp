@@ -4,17 +4,22 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 
+// Check if running in Expo Go (where push notifications are not supported in SDK 53+)
+const isExpoGo = Constants.appOwnership === 'expo';
+
 // Set notification handler for both development and production
-Notifications.setNotificationHandler({
-  handleNotification: async (notification) => {
-    console.log('📱 Notification received:', notification);
-    return {
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-    };
-  },
-});
+if (!isExpoGo) {
+  Notifications.setNotificationHandler({
+    handleNotification: async (notification) => {
+      console.log('📱 Notification received:', notification);
+      return {
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      };
+    },
+  });
+}
 
 // Main hook to u   se in any screen/component
 export function usePushNotifications() {
@@ -94,6 +99,12 @@ export function usePushNotifications() {
 
 // Internal function
 async function registerForPushNotificationsAsync() {
+  // Skip push notification registration in Expo Go
+  if (isExpoGo) {
+    console.log('⚠️ Push notifications not supported in Expo Go with SDK 53+. Use a development build for testing.');
+    return null;
+  }
+
   let token;
 
   if (Platform.OS === 'android') {

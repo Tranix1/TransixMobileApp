@@ -65,6 +65,13 @@ export default function ViewLoadRoutes() {
     const destinationName = params.destinationName as string;
     const hasReturnLoad = params.hasReturnLoad === 'true';
 
+    // Debug logging
+    console.log('ViewLoadRoutes - Load Data:', loadData);
+    console.log('ViewLoadRoutes - Origin Coords:', originCoords);
+    console.log('ViewLoadRoutes - Destination Coords:', destinationCoords);
+    console.log('ViewLoadRoutes - Route Polyline:', routePolyline);
+    console.log('ViewLoadRoutes - Bounds:', bounds);
+
     // Validate coordinates using utility functions
     const isValidOrigin = isValidCoordinate(originCoords);
     const isValidDestination = isValidCoordinate(destinationCoords);
@@ -100,7 +107,9 @@ export default function ViewLoadRoutes() {
         try {
             // If route polyline is provided, decode it
             if (routePolyline) {
+                console.log('Processing route polyline:', routePolyline);
                 const points = decodePolyline(routePolyline);
+                console.log('Decoded polyline points:', points.length);
                 setRouteCoords(points);
 
                 // Set route details from load data if available, otherwise fetch from API
@@ -122,6 +131,7 @@ export default function ViewLoadRoutes() {
 
                 // Fit map to route
                 if (mapRef.current && points.length > 0 && !hasFitted) {
+                    console.log('Fitting map to route with', points.length, 'points');
                     await fitMapToRoute(points);
                 }
                 return;
@@ -464,6 +474,8 @@ export default function ViewLoadRoutes() {
                             />
                         </>
                     )}
+                    {/* Debug: Show route coords count */}
+                    {console.log('Rendering map - routeCoords length:', routeCoords.length)}
 
                     {/* Return Route Polyline */}
                     {returnRouteCoords.length > 0 && (
