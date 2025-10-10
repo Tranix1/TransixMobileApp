@@ -31,7 +31,7 @@ export const useAppUpdate = (): UseAppUpdateReturn => {
 
     // Get current app version
     useEffect(() => {
-        const version = Constants.expoConfig?.version || '1.0.0';
+        const version = Constants.expoConfig?.version || '1.0.1';
         setCurrentVersion(version);
     }, []);
 
