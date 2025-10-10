@@ -90,7 +90,8 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     const handleContact = (method: 'whatsapp' | 'call' | 'message') => {
         if (!selectedLoad?.contact) return
 
-        const message = `${selectedLoad.companyName}\nIs this Load Still available\n${selectedLoad.typeofLoad}\nrOUTE: ${selectedLoad.fromLocation} TO ${selectedLoad.toLocation}1nRate ${selectedLoad.model} : ${selectedLoad.currency} ${formatCurrency(selectedLoad.rate)}`
+        
+        const message = `${selectedLoad.companyName}\nIs this load still available\n${selectedLoad.typeofLoad}\nrOUTE: ${selectedLoad.origin} TO ${selectedLoad.destination}\nRate : ${selectedLoad.currency} ${selectedLoad.rate} ${selectedLoad.model}`
 
         switch (method) {
             case 'whatsapp':
@@ -374,7 +375,7 @@ Contact: ${selectedLoad.contact}`;
                                         </View>
 
                                         <ThemedText style={{ alignSelf: 'center', margin: 8, color: accent, fontWeight: "bold" }}>
-                                            Rate : {selectedLoad.currency} {selectedLoad.rate}  </ThemedText>
+                                            Rate : {selectedLoad.currency} {selectedLoad.rate} {selectedLoad.model}  </ThemedText>
 
                                     </View>
                                 }
@@ -503,46 +504,7 @@ Contact: ${selectedLoad.contact}`;
 
                                         </View>
                                         <View>
-                                            <TouchableOpacity
-                                                style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: '#2563eb', padding: wp(3), borderRadius: wp(4) }}
-                                                onPress={() => {
-                                                    // Use stored coordinates if available, otherwise try to parse from strings
-                                                    const originCoords = selectedLoad.originCoordinates || parseCoordinateString(selectedLoad.origin || '');
-                                                    const destinationCoords = selectedLoad.destinationCoordinates || parseCoordinateString(selectedLoad.destination || '');
-
-                                                    if (isValidCoordinate(originCoords) && isValidCoordinate(destinationCoords)) {
-                                                        router.push({
-                                                            pathname: "/Map/ViewLoadRoutes",
-                                                            params: {
-                                                                loadData: JSON.stringify(selectedLoad),
-                                                                originCoords: JSON.stringify(originCoords),
-                                                                destinationCoords: JSON.stringify(destinationCoords),
-                                                                destinationType: "Load Destination",
-                                                                destinationName: selectedLoad.toLocation || "Load Destination",
-                                                                ...(selectedLoad.routePolyline && { routePolyline: selectedLoad.routePolyline }),
-                                                                ...(selectedLoad.bounds && { bounds: JSON.stringify(selectedLoad.bounds) }),
-                                                                ...(selectedLoad.distance && { distance: selectedLoad.distance }),
-                                                                ...(selectedLoad.duration && { duration: selectedLoad.duration }),
-                                                                ...(selectedLoad.durationInTraffic && { durationInTraffic: selectedLoad.durationInTraffic }),
-                                                            }
-                                                        });
-                                                    } else {
-                                                        // Fallback to basic map view if coordinates are not available
-                                                        router.push({
-                                                            pathname: "/Map/ViewLoadRoutes",
-                                                            params: {
-                                                                loadData: JSON.stringify(selectedLoad),
-                                                                destinationCoords: JSON.stringify(DEFAULT_COORDINATES),
-                                                                destinationType: "Load Destination",
-                                                                destinationName: selectedLoad.toLocation || "Load Destination",
-                                                            }
-                                                        });
-                                                    }
-                                                }}
-                                            >
-                                                <Ionicons name="map" size={wp(4)} color="white" />
-                                                <ThemedText color='white'>View On Map</ThemedText>
-                                            </TouchableOpacity>
+                                           
                                         </View>
                                     </>
                                 }

@@ -22,7 +22,7 @@ import Heading from '@/components/Heading';
 import { router } from 'expo-router';
 import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplete';
 import { LocationPicker } from '@/components/LocationPicker';
-import { addDocument } from '@/db/operations';
+import { addDocument, uploadImage } from '@/db/operations';
 
 const AMENITIES = [
     'Parking', 'Fuel Station', 'Restaurant', 'Rest Area', 'Shower', 'WiFi',
@@ -61,6 +61,7 @@ export default function AddTruckStop() {
     const [entertainmentImages, setEntertainmentImages] = useState<ImagePickerAsset[]>([]);
     const [selectedDays, setSelectedDays] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState('');
 
     // Location picker states
     const [dspLocation, setDspLocation] = useState(false);
@@ -120,13 +121,37 @@ export default function AddTruckStop() {
         );
     };
 
+    const uploadAllImages = async (images: ImagePickerAsset[], type: string): Promise<string[]> => {
+        const uploadedUrls: string[] = [];
+
+        for (let i = 0; i < images.length; i++) {
+            setUploadProgress(`Uploading ${type} image ${i + 1} of ${images.length}...`);
+
+            const imageUrl = await uploadImage(
+                images[i],
+                'TruckStops',
+                setUploadProgress,
+                `${type} ${i + 1}`
+            );
+
+            if (imageUrl) {
+                uploadedUrls.push(imageUrl);
+            } else {
+                console.error(`Failed to upload ${type} image ${i + 1}`);
+                // Continue with other images even if one fails
+            }
+        }
+
+        return uploadedUrls;
+    };
+
     const handleSubmit = async () => {
         if (!formData.name.trim()) {
             Alert.alert('Required Fields', 'Please enter truck stop name');
             return;
         }
-        if (!location) {
-            Alert.alert('Required Fields', 'Please select a location');
+        if (!location || !location.latitude || !location.longitude) {
+            Alert.alert('Required Fields', 'Please select a valid location');
             return;
         }
 
@@ -136,8 +161,27 @@ export default function AddTruckStop() {
         }
 
         setLoading(true);
+        setUploadProgress('Starting upload...');
 
         try {
+            // Upload truck stop facility images
+            setUploadProgress('Uploading facility images...');
+            const facilityImageUrls = await uploadAllImages(truckStopImages, 'facility');
+
+            // Upload entertainment images
+            setUploadProgress('Uploading entertainment images...');
+            const entertainmentImageUrls = await uploadAllImages(entertainmentImages, 'entertainment');
+
+            // Combine all uploaded image URLs
+            const allImageUrls = [...facilityImageUrls, ...entertainmentImageUrls];
+
+            if (allImageUrls.length === 0) {
+                Alert.alert('Upload Error', 'Failed to upload any images. Please try again.');
+                return;
+            }
+
+            setUploadProgress('Saving truck stop data...');
+
             const truckStopData = {
                 name: formData.name,
                 location: location.city || location.description,
@@ -156,7 +200,7 @@ export default function AddTruckStop() {
                 },
                 amenities: selectedAmenities,
                 entertainment: selectedEntertainment,
-                images: [...truckStopImages.map(img => img.uri), ...entertainmentImages.map(img => img.uri)],
+                images: allImageUrls, // Use uploaded URLs instead of local URIs
                 contact: {
                     phone: formData.phone,
                     email: formData.email,
@@ -188,6 +232,7 @@ export default function AddTruckStop() {
             Alert.alert('Error', 'Failed to save truck stop. Please try again.');
         } finally {
             setLoading(false);
+            setUploadProgress('');
         }
     };
 
@@ -243,11 +288,11 @@ export default function AddTruckStop() {
                         <MaterialIcons name="location-on" size={wp(5)} color={location ? accent : icon + '60'} />
                         <View style={styles.locationTextContainer}>
                             <ThemedText style={[styles.locationText, { color: location ? icon : icon + '80' }]}>
-                                {location ? location.description : 'Select Location'}
+                                {location ? (location.description || 'Selected Location') : 'Select Location'}
                             </ThemedText>
-                            {location && (
+                            {location && (location.city || location.country) && (
                                 <ThemedText style={[styles.locationSubText, { color: icon + '60' }]}>
-                                    {location.city}, {location.country}
+                                    {location.city || ''}{location.city && location.country ? ', ' : ''}{location.country || ''}
                                 </ThemedText>
                             )}
                         </View>
@@ -535,11 +580,20 @@ export default function AddTruckStop() {
                     />
                 </View>
 
+                {/* Upload Progress */}
+                {uploadProgress && (
+                    <View style={styles.progressContainer}>
+                        <ThemedText style={[styles.progressText, { color: accent }]}>
+                            {uploadProgress}
+                        </ThemedText>
+                    </View>
+                )}
+
                 {/* Submit Button */}
                 <View style={styles.submitButtonContainer}>
                     <Button
                         onPress={handleSubmit}
-                        title={loading ? "Adding Truck Stop..." : "Add Truck Stop"}
+                        title={loading ? (uploadProgress || "Adding Truck Stop...") : "Add Truck Stop"}
                         colors={{ bg: accent, text: '#fff' }}
                         style={styles.bigSubmitButton}
                         disabled={loading}
@@ -708,5 +762,18 @@ const styles = StyleSheet.create({
     bigSubmitButton: {
         height: wp(12),
         borderRadius: wp(2),
+    },
+    progressContainer: {
+        marginBottom: wp(3),
+        paddingHorizontal: wp(4),
+        paddingVertical: wp(2),
+        backgroundColor: '#f0f0f0',
+        borderRadius: wp(2),
+        alignItems: 'center',
+    },
+    progressText: {
+        fontSize: wp(3.5),
+        fontWeight: '500',
+        textAlign: 'center',
     },
 });

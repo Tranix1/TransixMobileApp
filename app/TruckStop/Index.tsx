@@ -86,9 +86,22 @@ export default function Index() {
                 const truckStopsData = result.data.map((doc: any) => ({
                     id: doc.id,
                     ...doc,
+                    images: doc.images || [], // Ensure images array is always present
                     createdAt: doc.timeStamp?.toDate() || new Date(),
                     updatedAt: null
                 })) as TruckStop[]
+
+                // Log the data to debug image issues
+                console.log('Loaded truck stops:', truckStopsData.length);
+                truckStopsData.forEach((stop, index) => {
+                    console.log(`Truck stop ${index}:`, {
+                        id: stop.id,
+                        name: stop.name,
+                        imagesCount: stop.images?.length || 0,
+                        images: stop.images
+                    });
+                });
+
                 setTruckStops(truckStopsData)
                 setLastVisible(result.lastVisible)
             }
@@ -109,6 +122,7 @@ export default function Index() {
                 const newTruckStops = result.data.map((doc: any) => ({
                     id: doc.id,
                     ...doc,
+                    images: doc.images || [], // Ensure images array is always present
                     createdAt: doc.timeStamp?.toDate() || new Date(),
                     updatedAt: null
                 })) as TruckStop[]
@@ -147,6 +161,7 @@ export default function Index() {
         setSelectedTruckStop(truckStop);
         setIsPaymentModalVisible(true);
     };
+
 
     const calculateTruckStopDistance = (truckStop: TruckStop): number => {
         if (!currentLocation || !truckStop.coordinates) return 0;
@@ -216,6 +231,7 @@ export default function Index() {
                     </ThemedText>
                 </View>
             )}
+
 
             {/* Truck Stops List */}
             <FlatList

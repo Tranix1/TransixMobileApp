@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import {
     View,
     TouchableOpacity,
     StyleSheet,
     Image,
     ScrollView,
+    ActivityIndicator,
 } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
@@ -22,7 +23,7 @@ interface TruckStopCardProps {
     onPaymentPress?: (truckStop: TruckStop) => void;
 }
 
-export const TruckStopCard: React.FC<TruckStopCardProps> = ({
+export const TruckStopCard: React.FC<TruckStopCardProps> = memo(({
     truckStop,
     distance = 0,
     isCalculatingDistance = false,
@@ -31,10 +32,24 @@ export const TruckStopCard: React.FC<TruckStopCardProps> = ({
     onPaymentPress,
 }) => {
     const [showAllDetails, setShowAllDetails] = useState(false);
+    const [imageLoadingStates, setImageLoadingStates] = useState<{ [key: string]: boolean }>({});
+    const [imageErrorStates, setImageErrorStates] = useState<{ [key: string]: boolean }>({});
     const accent = useThemeColor('accent');
     const background = useThemeColor('background');
     const icon = useThemeColor('icon');
     const backgroundLight = useThemeColor('backgroundLight');
+
+    // Reset image states when truck stop data changes
+    useEffect(() => {
+        setImageLoadingStates({});
+        setImageErrorStates({});
+    }, [truckStop.id, truckStop.images]);
+
+    // Memoize the images to prevent unnecessary re-renders
+    const memoizedImages = React.useMemo(() => {
+        return truckStop.images?.slice(0, 3) || [];
+    }, [truckStop.images]);
+
 
     const renderStars = (rating: number) => {
         const stars = [];
@@ -65,19 +80,64 @@ export const TruckStopCard: React.FC<TruckStopCardProps> = ({
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={styles.imageScrollContent}
                     >
-                        {truckStop.images.slice(0, 3).map((imageUri, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                onPress={() => onImagePress?.(truckStop.images, index)}
-                                activeOpacity={0.8}
-                            >
-                                <Image
-                                    source={{ uri: imageUri }}
-                                    style={styles.image}
-                                    resizeMode="cover"
-                                />
-                            </TouchableOpacity>
-                        ))}
+                        {memoizedImages.map((imageUri, index) => {
+                            const imageKey = `${truckStop.id}-${index}-${imageUri}`;
+                            const isLoading = imageLoadingStates[imageKey];
+                            const hasError = imageErrorStates[imageKey];
+
+                            return (
+                                <TouchableOpacity
+                                    key={imageKey}
+                                    onPress={() => onImagePress?.(memoizedImages, index)}
+                                    activeOpacity={0.8}
+                                >
+                                    <View style={styles.imageWrapper}>
+                                        {isLoading && (
+                                            <View style={[styles.image, styles.imageLoadingContainer]}>
+                                                <ActivityIndicator color={accent} size="small" />
+                                            </View>
+                                        )}
+                                        {!hasError && (
+                                            <Image
+                                                key={`${truckStop.id}-img-${index}-${imageUri}`}
+                                                source={{ uri: imageUri }}
+                                                style={[styles.image, isLoading ? styles.imageHidden : styles.imageVisible]}
+                                                resizeMode="cover"
+                                                onLoadStart={() => {
+                                                    setImageLoadingStates(prev => ({ ...prev, [imageKey]: true }));
+                                                    setImageErrorStates(prev => ({ ...prev, [imageKey]: false }));
+                                                }}
+                                                onLoad={() => {
+                                                    console.log('Image loaded successfully for truck stop:', truckStop.id, 'image:', index);
+                                                    setImageLoadingStates(prev => ({ ...prev, [imageKey]: false }));
+                                                }}
+                                                onError={(error) => {
+                                                    console.log('Image load error for truck stop:', truckStop.id, 'image:', index, error);
+                                                    setImageLoadingStates(prev => ({ ...prev, [imageKey]: false }));
+                                                    setImageErrorStates(prev => ({ ...prev, [imageKey]: true }));
+                                                }}
+                                            />
+                                        )}
+                                        {hasError && (
+                                            <TouchableOpacity
+                                                style={[styles.image, styles.imageErrorContainer]}
+                                                onPress={() => {
+                                                    // Reset error state to retry loading
+                                                    setImageErrorStates(prev => ({ ...prev, [imageKey]: false }));
+                                                    setImageLoadingStates(prev => ({ ...prev, [imageKey]: true }));
+                                                }}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Ionicons name="image-outline" size={wp(8)} color={icon + '60'} />
+                                                <ThemedText style={[styles.imageErrorText, { color: icon + '60' }]}>
+                                                    Tap to retry
+                                                </ThemedText>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
+                                </TouchableOpacity>
+                            );
+                        })}
                     </ScrollView>
                 </View>
             )}
@@ -301,7 +361,9 @@ export const TruckStopCard: React.FC<TruckStopCardProps> = ({
             </View>
         </TouchableOpacity>
     );
-};
+});
+
+TruckStopCard.displayName = 'TruckStopCard';
 
 const styles = StyleSheet.create({
     card: {
@@ -325,6 +387,31 @@ const styles = StyleSheet.create({
         width: wp(25),
         height: wp(20),
         borderRadius: wp(2),
+    },
+    imageWrapper: {
+        position: 'relative',
+    },
+    imageVisible: {
+        opacity: 1,
+    },
+    imageHidden: {
+        opacity: 0,
+        position: 'absolute',
+    },
+    imageLoadingContainer: {
+        backgroundColor: '#f0f0f0',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    imageErrorContainer: {
+        backgroundColor: '#f0f0f0',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    imageErrorText: {
+        fontSize: wp(2.5),
+        marginTop: wp(1),
+        textAlign: 'center',
     },
     header: {
         flexDirection: 'row',

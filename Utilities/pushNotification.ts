@@ -9,44 +9,67 @@ const isExpoGo = Constants.appOwnership === 'expo';
 
 // Set notification handler for both development and production
 if (!isExpoGo) {
-  Notifications.setNotificationHandler({
-    handleNotification: async (notification) => {
-      console.log('📱 Notification received:', notification);
-      return {
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-      };
-    },
-  });
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async (notification) => {
+        console.log('📱 Notification received:', notification);
+        return {
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+        };
+      },
+    });
+  } catch (error) {
+    console.warn('⚠️ Could not set notification handler:', error);
+  }
+} else {
+  console.log('ℹ️ Running in Expo Go - push notifications disabled for development');
 }
 
-// Main hook to u   se in any screen/component
+// Main hook to use in any screen/component
 export function usePushNotifications() {
   const [expoPushToken, setExpoPushToken] = useState('');
   const [notification, setNotification] = useState<Notifications.Notification | undefined>();
 
   useEffect(() => {
+    // Skip notification setup in Expo Go
+    if (isExpoGo) {
+      console.log('ℹ️ Push notifications disabled in Expo Go - use development build for testing');
+      return;
+    }
+
     registerForPushNotificationsAsync().then(token => token && setExpoPushToken(token));
 
-    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-      setNotification(notification);
-    });
+    let notificationListener: any;
+    let responseListener: any;
 
-    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('Notification response received:', response);
+    try {
+      notificationListener = Notifications.addNotificationReceivedListener(notification => {
+        setNotification(notification);
+      });
 
-      // Handle routing if route data is provided
-      if (response.notification.request.content.data?.route) {
-        const route = response.notification.request.content.data.route;
-        console.log('Navigating to route:', route);
-        // You can add navigation logic here if needed
-      }
-    });
+      responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+        console.log('Notification response received:', response);
+
+        // Handle routing if route data is provided
+        if (response.notification.request.content.data?.route) {
+          const route = response.notification.request.content.data.route;
+          console.log('Navigating to route:', route);
+          // You can add navigation logic here if needed
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error setting up notification listeners:', error);
+    }
 
     return () => {
-      notificationListener.remove();
-      responseListener.remove();
+      try {
+        notificationListener?.remove();
+        responseListener?.remove();
+      } catch (error) {
+        console.warn('⚠️ Error removing notification listeners:', error);
+      }
     };
   }, []);
 
@@ -357,33 +380,53 @@ import { router, } from "expo-router";
 
 export function useNotificationRouting() {
   useEffect(() => {
+    // Skip notification routing in Expo Go
+    if (isExpoGo) {
+      console.log('ℹ️ Notification routing disabled in Expo Go');
+      return;
+    }
+
     console.log('🔔 Notification listener mounted');
 
-    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('🔔 Notification tapped:', response);
+    try {
+      const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+        console.log('🔔 Notification tapped:', response);
 
-      const data = response.notification.request.content.data;
+        const data = response.notification.request.content.data;
 
-      // Delay execution by 1 second
-      setTimeout(() => {
-        if (data?.route) {
-          console.log('➡️ Navigating to route:', data.route);
+        // Delay execution by 1 second
+        setTimeout(() => {
+          try {
+            if (data?.route) {
+              console.log('➡️ Navigating to route:', data.route);
 
-          // Handle both string routes and object routes
-          if (typeof data.route === 'string') {
-            router.push(data.route);
-          } else if (typeof data.route === 'object' && data.route.pathname) {
-            router.push(data.route);
-          } else {
-            console.log('❌ Invalid route format:', data.route);
+              // Handle both string routes and object routes
+              if (typeof data.route === 'string') {
+                router.push(data.route);
+              } else if (typeof data.route === 'object' && data.route.pathname) {
+                router.push(data.route);
+              } else {
+                console.log('❌ Invalid route format:', data.route);
+              }
+            } else {
+              console.log('❌ No route in notification data');
+            }
+          } catch (error) {
+            console.error('❌ Error handling notification navigation:', error);
           }
-        } else {
-          console.log('❌ No route in notification data');
-        }
-      }, 1000);
-    });
+        }, 1000);
+      });
 
-    return () => subscription.remove();
+      return () => {
+        try {
+          subscription.remove();
+        } catch (error) {
+          console.warn('⚠️ Error removing notification listener:', error);
+        }
+      };
+    } catch (error) {
+      console.error('❌ Error setting up notification routing:', error);
+    }
   }, []);
 }
 

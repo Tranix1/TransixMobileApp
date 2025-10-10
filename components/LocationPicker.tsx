@@ -1,7 +1,8 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TouchableHighlight, Animated, Alert, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MapView, { Marker, MapPressEvent, Region } from "react-native-maps";
+import * as Location from "expo-location";
 import { ThemedText } from "./ThemedText";
 import { darkMapStyle } from "@/Utilities/MapDarkMode";
 import ScreenWrapper from "./ScreenWrapper";
@@ -55,8 +56,69 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     longitudeDelta: 5,
   });
   const [loading, setLoading] = useState(false);
+  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ latitude: number, longitude: number } | null>(null);
   const mapRef = useRef<MapView>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  // Helper: Get user's current location
+  const getUserCurrentLocation = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      // Request location permissions
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== 'granted') {
+        console.log('Location permission denied');
+        setLocationPermissionGranted(false);
+        // Keep default map region if permission denied
+        return;
+      }
+
+      setLocationPermissionGranted(true);
+
+      // Get current position
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const { latitude, longitude } = location.coords;
+      console.log('User location:', { latitude, longitude });
+
+      setUserLocation({ latitude, longitude });
+
+      // Update map region to zoom to user location
+      const newRegion = {
+        latitude,
+        longitude,
+        latitudeDelta: 0.01, // Zoomed in view
+        longitudeDelta: 0.01,
+      };
+
+      setMapRegion(newRegion);
+      setSelectedCoordinate({ latitude, longitude });
+
+      // Animate map to user location
+      if (mapRef.current) {
+        mapRef.current.animateToRegion(newRegion, 1000);
+      }
+
+    } catch (error) {
+      console.error('Error getting user location:', error);
+      setLocationPermissionGranted(false);
+      // Keep default map region if error occurs
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Get user's current location when map opens
+  useEffect(() => {
+    if (dspShowMap) {
+      getUserCurrentLocation();
+    }
+  }, [dspShowMap, getUserCurrentLocation]);
 
   // Helper: fetch address from lat/lng with better error handling
   const getAddressFromCoords = async (latitude: number, longitude: number) => {
@@ -197,32 +259,42 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const handleConfirmSelection = async () => {
     if (!selectedCoordinate) return;
 
-    const { latitude, longitude } = selectedCoordinate;
-    const { formattedAddress, city, country } = await getAddressFromCoords(latitude, longitude);
+    try {
+      console.log('LocationPicker - confirming selection:', selectedCoordinate);
+      const { latitude, longitude } = selectedCoordinate;
+      const { formattedAddress, city, country } = await getAddressFromCoords(latitude, longitude);
 
-    const locationData = {
-      description: formattedAddress,
-      placeId: Date.now().toString(),
-      latitude,
-      longitude,
-      country,
-      city,
-    };
+      console.log('LocationPicker - geocoding result:', { formattedAddress, city, country });
 
-    if (mode === 'single') {
-      // Single mode: always update the origin location
-      setPickLocation(locationData);
-    } else {
-      // Dual mode: check which location to update
-      if (!pickLocation) {
+      const locationData = {
+        description: formattedAddress,
+        placeId: Date.now().toString(),
+        latitude,
+        longitude,
+        country,
+        city,
+      };
+
+      console.log('LocationPicker - setting location data:', locationData);
+
+      if (mode === 'single') {
+        // Single mode: always update the origin location
         setPickLocation(locationData);
-      } else if (!pickSecLoc) {
-        setPickSecLoc?.(locationData);
+      } else {
+        // Dual mode: check which location to update
+        if (!pickLocation) {
+          setPickLocation(locationData);
+        } else if (!pickSecLoc) {
+          setPickSecLoc?.(locationData);
+        }
       }
-    }
 
-    // Reset selection state
-    setSelectedCoordinate(null);
+      // Reset selection state
+      setSelectedCoordinate(null);
+    } catch (error) {
+      console.error('LocationPicker - error in confirm selection:', error);
+      Alert.alert('Error', 'Failed to process location selection. Please try again.');
+    }
   };
 
   // Handle region change to update selected coordinate
@@ -327,6 +399,29 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                 </View>
               </Animated.View>
             </View>
+
+            {/* My Location Button */}
+            {locationPermissionGranted && userLocation && (
+              <View style={styles.myLocationButtonContainer}>
+                <TouchableOpacity
+                  style={[styles.myLocationButton, { backgroundColor: background }]}
+                  onPress={() => {
+                    if (mapRef.current && userLocation) {
+                      const region = {
+                        latitude: userLocation.latitude,
+                        longitude: userLocation.longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01,
+                      };
+                      mapRef.current.animateToRegion(region, 1000);
+                      setSelectedCoordinate(userLocation);
+                    }
+                  }}
+                >
+                  <Ionicons name="locate" size={wp(5)} color={accent} />
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Confirm Button */}
             <View style={styles.confirmButtonContainer}>
@@ -489,5 +584,22 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: wp(4),
     fontWeight: 'bold',
+  },
+  myLocationButtonContainer: {
+    position: 'absolute',
+    top: wp(4),
+    right: wp(4),
+  },
+  myLocationButton: {
+    width: wp(12),
+    height: wp(12),
+    borderRadius: wp(6),
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });

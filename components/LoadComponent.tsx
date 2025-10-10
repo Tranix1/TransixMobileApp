@@ -432,7 +432,6 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
                           ...(item.distance && { distance: item.distance }),
                           ...(item.duration && { duration: item.duration }),
                           ...(item.durationInTraffic && { durationInTraffic: item.durationInTraffic }),
-                          ...(item.returnLoad && { hasReturnLoad: 'true' }),
                         }
                       });
                     } else {
@@ -443,7 +442,6 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
                           destinationCoords: JSON.stringify(DEFAULT_COORDINATES),
                           destinationType: "Load Destination",
                           destinationName: item.toLocation || "Load Destination",
-                          ...(item.returnLoad && { hasReturnLoad: 'true' }),
                         }
                       });
                     }
@@ -705,11 +703,11 @@ const styles = StyleSheet.create({
   },
   distanceInfo: {
     fontSize: wp(2.7),
-    color: '#6b7280',
+    color: '#9ca3af',
     textAlign: 'left',
-    fontWeight: '500',
     flexShrink: 1,
     minWidth: 0,
+    fontWeight: 'bold',
   },
 
 });

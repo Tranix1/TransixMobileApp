@@ -301,7 +301,7 @@ export default function HomeContent({ onAuthCheck }: HomeContentProps) {
                             buttonTitle={item.btnTitle}
                             btnBackground="#fb927424"
                             isAvaialble={true}
-                            btnPressValue={() => router.push("/Fuel/Index")}
+                            btnPressValue={() => onAuthCheck(() => router.push("/Fuel/Index"))}
                         />
                     )}
 
@@ -315,7 +315,7 @@ export default function HomeContent({ onAuthCheck }: HomeContentProps) {
                             buttonTitle={item.btnTitle}
                             btnBackground="#bada5f24"
                             isAvaialble={true}
-                            btnPressValue={() => router.push("/TruckStop/Index")}
+                            btnPressValue={() => onAuthCheck(() => router.push("/TruckStop/Index"))}
                         />
                     )}
 

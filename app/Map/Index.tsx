@@ -123,13 +123,23 @@ export default function Map() {
               // Use provided bounds if available
               const boundsData = JSON.parse(bounds as string);
               if (boundsData.southwest && boundsData.northeast) {
+                // Add padding to provided bounds
+                const latPadding = (boundsData.northeast.lat - boundsData.southwest.lat) * 0.1;
+                const lngPadding = (boundsData.northeast.lng - boundsData.southwest.lng) * 0.1;
+
                 mapRef.current.fitToCoordinates(
                   [
-                    { latitude: boundsData.southwest.lat, longitude: boundsData.southwest.lng },
-                    { latitude: boundsData.northeast.lat, longitude: boundsData.northeast.lng }
+                    {
+                      latitude: boundsData.southwest.lat - latPadding,
+                      longitude: boundsData.southwest.lng - lngPadding
+                    },
+                    {
+                      latitude: boundsData.northeast.lat + latPadding,
+                      longitude: boundsData.northeast.lng + lngPadding
+                    }
                   ],
                   {
-                    edgePadding: { top: 100, right: 100, bottom: 100, left: 100 },
+                    edgePadding: { top: 120, right: 60, bottom: 200, left: 60 },
                     animated: true,
                   }
                 );
@@ -137,13 +147,31 @@ export default function Map() {
                 throw new Error('Invalid bounds data');
               }
             } else {
-              // Fallback to using route coordinates
+              // Fallback to using route coordinates with better padding
               const coordsToFit = [destinationCoords, ...points];
               if (originCoords) {
                 coordsToFit.unshift(originCoords);
               }
-              mapRef.current.fitToCoordinates(coordsToFit, {
-                edgePadding: { top: 100, right: 100, bottom: 100, left: 100 },
+
+              // Calculate bounds with padding
+              const lats = coordsToFit.map(coord => coord.latitude);
+              const lngs = coordsToFit.map(coord => coord.longitude);
+
+              const minLat = Math.min(...lats);
+              const maxLat = Math.max(...lats);
+              const minLng = Math.min(...lngs);
+              const maxLng = Math.max(...lngs);
+
+              const latPadding = (maxLat - minLat) * 0.2;
+              const lngPadding = (maxLng - minLng) * 0.2;
+
+              const bounds = [
+                { latitude: minLat - latPadding, longitude: minLng - lngPadding },
+                { latitude: maxLat + latPadding, longitude: maxLng + lngPadding }
+              ];
+
+              mapRef.current.fitToCoordinates(bounds, {
+                edgePadding: { top: 120, right: 60, bottom: 200, left: 60 },
                 animated: true,
               });
             }
@@ -189,15 +217,32 @@ export default function Map() {
             durationInTraffic: leg.duration_in_traffic?.text
           });
 
-          // ✅ Fit map only once
+          // ✅ Fit map only once with better padding
           if (mapRef.current && points.length > 0 && !hasFitted) {
-            mapRef.current.fitToCoordinates(
-              [originCoords!, destinationCoords, ...points],
-              {
-                edgePadding: { top: 100, right: 100, bottom: 100, left: 100 },
-                animated: true,
-              }
-            );
+            const allCoords = [originCoords!, destinationCoords, ...points];
+
+            // Calculate bounds with better padding
+            const lats = allCoords.map(coord => coord.latitude);
+            const lngs = allCoords.map(coord => coord.longitude);
+
+            const minLat = Math.min(...lats);
+            const maxLat = Math.max(...lats);
+            const minLng = Math.min(...lngs);
+            const maxLng = Math.max(...lngs);
+
+            // Add extra padding to ensure full route is visible
+            const latPadding = (maxLat - minLat) * 0.2; // 20% padding
+            const lngPadding = (maxLng - minLng) * 0.2; // 20% padding
+
+            const bounds = [
+              { latitude: minLat - latPadding, longitude: minLng - lngPadding },
+              { latitude: maxLat + latPadding, longitude: maxLng + lngPadding }
+            ];
+
+            mapRef.current.fitToCoordinates(bounds, {
+              edgePadding: { top: 120, right: 60, bottom: 200, left: 60 },
+              animated: true,
+            });
             setHasFitted(true);
           }
         } else {
@@ -320,28 +365,28 @@ export default function Map() {
       </MapView>
 
       {/* Route Details Overlay */}
-      {routeDetails && (
+      {(routeDetails || (distance && duration)) && (
         <View style={[styles.detailsOverlay, { backgroundColor: background }]}>
           <View style={styles.detailsContent}>
             <ThemedText type="subtitle" style={styles.routeTitle}>Route Details</ThemedText>
             <View style={styles.routeInfo}>
               <View style={styles.routeDetailItem}>
-                <FontAwesome5 name="route" size={wp(5)} color={accent} />
+                <FontAwesome5 name="route" size={wp(4)} color={accent} />
                 <ThemedText type="tiny" style={styles.routeDetailText}>
-                  {routeDetails.distance}
+                  {routeDetails?.distance || distance || 'N/A'}
                 </ThemedText>
               </View>
               <View style={styles.routeDetailItem}>
-                <FontAwesome5 name="clock" size={wp(5)} color={accent} />
+                <FontAwesome5 name="clock" size={wp(4)} color={accent} />
                 <ThemedText type="tiny" style={styles.routeDetailText}>
-                  {routeDetails.duration}
+                  {routeDetails?.duration || duration || 'N/A'}
                 </ThemedText>
               </View>
-              {routeDetails.durationInTraffic && (
+              {(routeDetails?.durationInTraffic || durationInTraffic) && (
                 <View style={styles.routeDetailItem}>
-                  <FontAwesome5 name="traffic-light" size={wp(5)} color={accent} />
+                  <FontAwesome5 name="traffic-light" size={wp(4)} color={accent} />
                   <ThemedText type="tiny" style={styles.routeDetailText}>
-                    {routeDetails.durationInTraffic}
+                    {routeDetails?.durationInTraffic || durationInTraffic}
                   </ThemedText>
                 </View>
               )}

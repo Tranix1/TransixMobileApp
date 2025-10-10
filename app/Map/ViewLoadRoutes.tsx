@@ -28,8 +28,9 @@ const { width, height } = Dimensions.get('window');
 interface RouteDetails {
     distance: string;
     duration: string;
-    durationInTraffic?: string;
 }
+
+// Removed AlternativeRoute interface - no longer needed
 
 export default function ViewLoadRoutes() {
     const params = useLocalSearchParams();
@@ -39,21 +40,19 @@ export default function ViewLoadRoutes() {
     // Theme colors
     const accent = useThemeColor('accent');
     const background = useThemeColor('background');
+    const backgroundLight = useThemeColor('background');
     const textColor = useThemeColor('text');
     const icon = useThemeColor('icon');
     const coolGray = useThemeColor('coolGray');
 
     // State management
     const [routeCoords, setRouteCoords] = useState<LatLng[]>([]);
-    const [returnRouteCoords, setReturnRouteCoords] = useState<LatLng[]>([]);
     const [hasFitted, setHasFitted] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [routeDetails, setRouteDetails] = useState<RouteDetails | null>(null);
-    const [returnRouteDetails, setReturnRouteDetails] = useState<RouteDetails | null>(null);
     const [showDetails, setShowDetails] = useState(true);
     const [routeDetailsLoading, setRouteDetailsLoading] = useState(false);
-    const [returnRouteDetailsLoading, setReturnRouteDetailsLoading] = useState(false);
 
     // Load data from params
     const loadData = params.loadData ? JSON.parse(params.loadData as string) as Load : null;
@@ -63,7 +62,6 @@ export default function ViewLoadRoutes() {
     const bounds = params.bounds as string;
     const destinationType = params.destinationType as string;
     const destinationName = params.destinationName as string;
-    const hasReturnLoad = params.hasReturnLoad === 'true';
 
     // Debug logging
     console.log('ViewLoadRoutes - Load Data:', loadData);
@@ -79,6 +77,20 @@ export default function ViewLoadRoutes() {
     useEffect(() => {
         initializeMap();
     }, []);
+
+    // Ensure map fits when routeCoords change
+    useEffect(() => {
+        if (mapRef.current && routeCoords.length > 0 && !hasFitted) {
+            console.log('Auto-fitting map to route with', routeCoords.length, 'points');
+            // Add a longer delay to ensure map is fully loaded
+            setTimeout(() => {
+                if (mapRef.current) {
+                    fitMapToRoute(routeCoords);
+                    setHasFitted(true);
+                }
+            }, 1000);
+        }
+    }, [routeCoords, hasFitted]);
 
     // Always try to fetch route details if we have valid coordinates
     useEffect(() => {
@@ -117,49 +129,41 @@ export default function ViewLoadRoutes() {
                     setRouteDetails({
                         distance: loadData.distance,
                         duration: loadData.duration,
-                        durationInTraffic: loadData.durationInTraffic
                     });
                 } else if (isValidOrigin && isValidDestination) {
                     // Fetch fresh route details from API even if we have polyline
                     await fetchRouteDetailsOnly();
                 }
 
-                // If there's a return load, fetch return route
-                if (hasReturnLoad && isValidOrigin && isValidDestination) {
-                    await fetchReturnRouteFromAPI();
-                }
 
-                // Fit map to route
-                if (mapRef.current && points.length > 0 && !hasFitted) {
-                    console.log('Fitting map to route with', points.length, 'points');
-                    await fitMapToRoute(points);
-                }
+                // Don't fit map here - let the useEffect handle it after map is ready
+                console.log('Route polyline processed with', points.length, 'points - will auto-fit when map is ready');
                 return;
             }
 
             // If no polyline but we have coordinates, fetch route from API
             if (isValidOrigin && isValidDestination) {
                 await fetchRouteFromAPI();
-
-                // If there's a return load, fetch return route
-                if (hasReturnLoad) {
-                    await fetchReturnRouteFromAPI();
-                }
                 return;
             }
 
             // Fallback: show basic markers without route
             if (isValidDestination) {
-                if (mapRef.current && !hasFitted) {
-                    const region = {
-                        latitude: destinationCoords!.latitude,
-                        longitude: destinationCoords!.longitude,
-                        latitudeDelta: 0.1,
-                        longitudeDelta: 0.1,
-                    };
-                    mapRef.current.animateToRegion(region, 1000);
-                    setHasFitted(true);
-                }
+                // Set a basic region for the destination
+                const region = {
+                    latitude: destinationCoords!.latitude,
+                    longitude: destinationCoords!.longitude,
+                    latitudeDelta: 0.1,
+                    longitudeDelta: 0.1,
+                };
+
+                // Use setTimeout to ensure map is ready
+                setTimeout(() => {
+                    if (mapRef.current && !hasFitted) {
+                        mapRef.current.animateToRegion(region, 1000);
+                        setHasFitted(true);
+                    }
+                }, 1000);
 
                 // Try to fetch route details even without polyline
                 if (isValidOrigin && isValidDestination) {
@@ -223,23 +227,20 @@ export default function ViewLoadRoutes() {
             const json = await response.json();
 
             if (json.status === "OK" && json.routes.length > 0) {
+                // Process main route only
                 const route = json.routes[0];
                 const polyline = route.overview_polyline.points;
                 const points = decodePolyline(polyline);
-                setRouteCoords(points);
-
-                // Extract route details
                 const leg = route.legs[0];
+
+                setRouteCoords(points);
                 setRouteDetails({
                     distance: leg.distance?.text || 'N/A',
                     duration: leg.duration?.text || 'N/A',
-                    durationInTraffic: leg.duration_in_traffic?.text
                 });
 
-                // Fit map to route
-                if (mapRef.current && points.length > 0 && !hasFitted) {
-                    await fitMapToRoute(points);
-                }
+                // Don't fit map here - let the useEffect handle it after map is ready
+                console.log('Route fetched from API with', points.length, 'points - will auto-fit when map is ready');
             } else {
                 console.error("Directions API error:", json.status);
                 setError("Could not find route");
@@ -250,82 +251,49 @@ export default function ViewLoadRoutes() {
         }
     };
 
-    const fetchReturnRouteFromAPI = async () => {
-        try {
-            setReturnRouteDetailsLoading(true);
-            const GOOGLE_MAPS_API_KEY = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
-            // Return route: destination to origin (reverse)
-            const origin = `${destinationCoords!.latitude},${destinationCoords!.longitude}`;
-            const destination = `${originCoords!.latitude},${originCoords!.longitude}`;
-
-            const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${GOOGLE_MAPS_API_KEY}`;
-
-            const response = await fetch(url);
-            const json = await response.json();
-
-            if (json.status === "OK" && json.routes.length > 0) {
-                const route = json.routes[0];
-                const polyline = route.overview_polyline.points;
-                const points = decodePolyline(polyline);
-                setReturnRouteCoords(points);
-
-                // Extract route details
-                const leg = route.legs[0];
-                setReturnRouteDetails({
-                    distance: leg.distance?.text || 'N/A',
-                    duration: leg.duration?.text || 'N/A',
-                    durationInTraffic: leg.duration_in_traffic?.text
-                });
-
-                // Fit map to both routes
-                if (mapRef.current && !hasFitted) {
-                    await fitMapToBothRoutes();
-                }
-            } else {
-                console.error("Return route API error:", json.status);
-            }
-        } catch (err) {
-            console.error('Error fetching return route from API:', err);
-        } finally {
-            setReturnRouteDetailsLoading(false);
-        }
-    };
-
     const fitMapToRoute = async (points: LatLng[]) => {
         try {
-            if (!mapRef.current || points.length === 0) return;
+            if (!mapRef.current || points.length === 0) {
+                console.log('Cannot fit map: mapRef or points not available');
+                return;
+            }
 
             const allCoords = [...points];
             if (isValidOrigin) allCoords.unshift(originCoords!);
             if (isValidDestination) allCoords.push(destinationCoords!);
 
-            mapRef.current.fitToCoordinates(allCoords, {
-                edgePadding: { top: 100, right: 50, bottom: 200, left: 50 },
-                animated: true,
-            });
-            setHasFitted(true);
-        } catch (err) {
-            console.error('Error fitting map to route:', err);
-        }
-    };
+            console.log('Fitting map to', allCoords.length, 'coordinates');
 
-    const fitMapToBothRoutes = async () => {
-        try {
-            if (!mapRef.current) return;
+            // Calculate bounds with better padding
+            const lats = allCoords.map(coord => coord.latitude);
+            const lngs = allCoords.map(coord => coord.longitude);
 
-            const allCoords = [...routeCoords, ...returnRouteCoords];
-            if (isValidOrigin) allCoords.unshift(originCoords!);
-            if (isValidDestination) allCoords.push(destinationCoords!);
+            const minLat = Math.min(...lats);
+            const maxLat = Math.max(...lats);
+            const minLng = Math.min(...lngs);
+            const maxLng = Math.max(...lngs);
 
-            if (allCoords.length > 0) {
-                mapRef.current.fitToCoordinates(allCoords, {
+            // Add generous padding to ensure full route is visible
+            const latPadding = Math.max((maxLat - minLat) * 0.3, 0.01); // 30% padding, minimum 0.01
+            const lngPadding = Math.max((maxLng - minLng) * 0.3, 0.01); // 30% padding, minimum 0.01
+
+            const bounds = [
+                { latitude: minLat - latPadding, longitude: minLng - lngPadding },
+                { latitude: maxLat + latPadding, longitude: maxLng + lngPadding }
+            ];
+
+            console.log('Map bounds calculated:', bounds);
+
+            // Use fitToCoordinates directly without setTimeout
+            if (mapRef.current) {
+                mapRef.current.fitToCoordinates(bounds, {
                     edgePadding: { top: 100, right: 50, bottom: 200, left: 50 },
                     animated: true,
                 });
-                setHasFitted(true);
+                console.log('✅ Map fitted to route successfully');
             }
         } catch (err) {
-            console.error('Error fitting map to both routes:', err);
+            console.error('Error fitting map to route:', err);
         }
     };
 
@@ -426,13 +394,26 @@ export default function ViewLoadRoutes() {
                     customMapStyle={theme === "dark" ? darkMapStyle : undefined}
                     showsCompass={true}
                     showsScale={true}
+                    onMapReady={() => {
+                        console.log('🗺️ Map is ready!');
+                        // Trigger fitting if we have route coords but haven't fitted yet
+                        if (routeCoords.length > 0 && !hasFitted) {
+                            setTimeout(() => {
+                                if (mapRef.current) {
+                                    console.log('Auto-fitting map after map ready');
+                                    fitMapToRoute(routeCoords);
+                                    setHasFitted(true);
+                                }
+                            }, 500);
+                        }
+                    }}
                 >
                     {/* Origin Marker */}
                     {isValidOrigin && (
                         <Marker
                             coordinate={originCoords!}
-                            title="Origin"
-                            description={loadData?.fromLocation || "Load Origin"}
+                            title={loadData?.originCoordinates?.address || loadData?.fromLocation || loadData?.origin || "Origin"}
+                            description="Load Origin"
                         >
                             <LinearGradient
                                 colors={[accent, accent + 'CC']}
@@ -447,8 +428,8 @@ export default function ViewLoadRoutes() {
                     {isValidDestination && (
                         <Marker
                             coordinate={destinationCoords!}
-                            title={destinationName || "Destination"}
-                            description={destinationType || "Destination"}
+                            title={loadData?.destinationCoordinates?.address || loadData?.toLocation || loadData?.destination || destinationName || "Destination"}
+                            description="Load Destination"
                         >
                             <LinearGradient
                                 colors={[accent, accent + 'CC']}
@@ -474,24 +455,10 @@ export default function ViewLoadRoutes() {
                             />
                         </>
                     )}
-                    {/* Debug: Show route coords count */}
-                    {console.log('Rendering map - routeCoords length:', routeCoords.length)}
 
-                    {/* Return Route Polyline */}
-                    {returnRouteCoords.length > 0 && (
-                        <>
-                            <Polyline
-                                coordinates={returnRouteCoords}
-                                strokeColor="#FF6B6B"
-                                strokeWidth={6}
-                            />
-                            <Polyline
-                                coordinates={returnRouteCoords}
-                                strokeColor="#FF6B6B80"
-                                strokeWidth={3}
-                            />
-                        </>
-                    )}
+                    {/* Debug: Show route coords count */}
+                    {/* {console.log('Rendering map - routeCoords length:', routeCoords.length)} */}
+
                 </MapView>
 
                 {/* Header */}
@@ -535,7 +502,7 @@ export default function ViewLoadRoutes() {
                                         {loadData.typeofLoad}
                                     </ThemedText>
                                     <ThemedText type="tiny" style={styles.loadRoute}>
-                                        {loadData.fromLocation} → {loadData.toLocation}
+                                        {loadData?.originCoordinates?.address || loadData?.fromLocation || loadData?.origin || "Origin"} → {loadData?.destinationCoordinates?.address || loadData?.toLocation || loadData?.destination || "Destination"}
                                     </ThemedText>
                                     <ThemedText type="tiny" style={styles.loadRate}>
                                         Rate: {loadData.currency} {loadData.rate} {loadData.model}
@@ -543,48 +510,29 @@ export default function ViewLoadRoutes() {
                                 </View>
                             )}
 
-                            {/* Main Route Details */}
+                            {/* Route Details */}
                             <View style={styles.routeInfoContainer}>
                                 <ThemedText type="defaultSemiBold" style={[styles.routeTitle, { color: accent }]}>
-                                    Main Route
+                                    Route
                                 </ThemedText>
 
-                                {loadData?.distance && (
-                                    <ThemedText type="tiny" style={styles.distanceInfo}>
-                                        Distance: {loadData.distance}
-                                    </ThemedText>
-                                )}
-                                {loadData?.duration && (
-                                    <ThemedText type="tiny" style={styles.distanceInfo}>
-                                        Duration: {loadData.duration}
-                                    </ThemedText>
-                                )}
-                                {loadData?.durationInTraffic && (
-                                    <ThemedText type="tiny" style={styles.distanceInfo}>
-                                        In Traffic: {loadData.durationInTraffic}
-                                    </ThemedText>
-                                )}
+                                <View style={styles.routeInfo}>
+                                    {/* Distance */}
+                                    <View style={styles.routeDetailItem}>
+                                        <FontAwesome5 name="route" size={wp(4)} color={accent} />
+                                        <ThemedText type="tiny" style={styles.routeDetailText}>
+                                            {routeDetails?.distance || loadData?.distance || 'N/A'}
+                                        </ThemedText>
+                                    </View>
 
-                                {/* Show API fetched details if available */}
-                                {routeDetails && (
-                                    <>
-                                        {routeDetails.distance && (
-                                            <ThemedText type="tiny" style={styles.distanceInfo}>
-                                                Distance: {routeDetails.distance}
-                                            </ThemedText>
-                                        )}
-                                        {routeDetails.duration && (
-                                            <ThemedText type="tiny" style={styles.distanceInfo}>
-                                                Duration: {routeDetails.duration}
-                                            </ThemedText>
-                                        )}
-                                        {routeDetails.durationInTraffic && (
-                                            <ThemedText type="tiny" style={styles.distanceInfo}>
-                                                In Traffic: {routeDetails.durationInTraffic}
-                                            </ThemedText>
-                                        )}
-                                    </>
-                                )}
+                                    {/* Duration */}
+                                    <View style={styles.routeDetailItem}>
+                                        <FontAwesome5 name="clock" size={wp(4)} color={accent} />
+                                        <ThemedText type="tiny" style={styles.routeDetailText}>
+                                            {routeDetails?.duration || loadData?.duration || 'N/A'}
+                                        </ThemedText>
+                                    </View>
+                                </View>
 
                                 {/* Loading state */}
                                 {routeDetailsLoading && (
@@ -594,41 +542,7 @@ export default function ViewLoadRoutes() {
                                 )}
                             </View>
 
-                            {/* Return Route Details */}
-                            {hasReturnLoad && (
-                                <View style={styles.routeInfoContainer}>
-                                    <ThemedText type="defaultSemiBold" style={[styles.routeTitle, { color: "#FF6B6B" }]}>
-                                        Return Route
-                                    </ThemedText>
-
-                                    {returnRouteDetails && (
-                                        <>
-                                            {returnRouteDetails.distance && (
-                                                <ThemedText type="tiny" style={styles.distanceInfo}>
-                                                    Distance: {returnRouteDetails.distance}
-                                                </ThemedText>
-                                            )}
-                                            {returnRouteDetails.duration && (
-                                                <ThemedText type="tiny" style={styles.distanceInfo}>
-                                                    Duration: {returnRouteDetails.duration}
-                                                </ThemedText>
-                                            )}
-                                            {returnRouteDetails.durationInTraffic && (
-                                                <ThemedText type="tiny" style={styles.distanceInfo}>
-                                                    In Traffic: {returnRouteDetails.durationInTraffic}
-                                                </ThemedText>
-                                            )}
-                                        </>
-                                    )}
-
-                                    {/* Return route loading state */}
-                                    {returnRouteDetailsLoading && (
-                                        <ThemedText type="tiny" style={styles.distanceInfo}>
-                                            Loading return route details...
-                                        </ThemedText>
-                                    )}
-                                </View>
-                            )}
+                            {/* Alternative routes section removed - simplified UI */}
 
                             {/* Manual refresh buttons */}
                             {!routeDetailsLoading && isValidOrigin && isValidDestination && (
@@ -684,17 +598,8 @@ export default function ViewLoadRoutes() {
                     <TouchableOpacity
                         style={[styles.zoomButton, { backgroundColor: background }]}
                         onPress={() => {
-                            if (mapRef.current && (routeCoords.length > 0 || returnRouteCoords.length > 0)) {
-                                const allCoords = [...routeCoords, ...returnRouteCoords];
-                                if (isValidOrigin) allCoords.unshift(originCoords!);
-                                if (isValidDestination) allCoords.push(destinationCoords!);
-
-                                if (allCoords.length > 0) {
-                                    mapRef.current.fitToCoordinates(allCoords, {
-                                        edgePadding: { top: 100, right: 50, bottom: 200, left: 50 },
-                                        animated: true,
-                                    });
-                                }
+                            if (mapRef.current && routeCoords.length > 0) {
+                                fitMapToRoute(routeCoords);
                             }
                         }}
                     >
@@ -936,4 +841,5 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 5,
     },
+    // Alternative route styles removed - no longer needed
 });

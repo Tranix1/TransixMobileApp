@@ -3,7 +3,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useFonts } from 'expo-font';
 import { useEffect, useState } from "react";
 import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, AppState } from 'react-native';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -13,7 +13,8 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { auth } from "@/db/fireBaseConfig";
 
 import { useNotificationRouting } from "@/Utilities/pushNotification";
-import { configureNavigationBar } from "@/Utilities/navigationBarUtils";
+import { configureNavigationBar, refreshNavigationBar, configureNavigationBarAlternative, debugNavigationBar } from "@/Utilities/navigationBarUtils";
+import { configureNativeNavigationBar, forceNavigationBarConfig } from "@/Utilities/nativeNavigationBarUtils";
 
 export default function RootLayout() {
     const router = useRouter();
@@ -29,8 +30,43 @@ export default function RootLayout() {
 
     // Configure navigation bar based on theme
     useEffect(() => {
-        configureNavigationBar(colorScheme);
-    }, [colorScheme]);
+        if (loaded) {
+            // Debug first
+            debugNavigationBar();
+
+            // Try all methods
+            configureNavigationBar(colorScheme);
+            configureNativeNavigationBar(colorScheme);
+            forceNavigationBarConfig(colorScheme);
+
+            // Also try the alternative method
+            setTimeout(() => {
+                configureNavigationBarAlternative(colorScheme);
+                // Debug after configuration
+                setTimeout(() => {
+                    debugNavigationBar();
+                }, 1000);
+            }, 500);
+        }
+    }, [colorScheme, loaded]);
+
+    // Additional effect to refresh navigation bar when app becomes active
+    useEffect(() => {
+        const handleAppStateChange = () => {
+            if (loaded) {
+                refreshNavigationBar(colorScheme);
+            }
+        };
+
+        // Refresh navigation bar when app becomes active
+        const subscription = AppState.addEventListener('change', (nextAppState) => {
+            if (nextAppState === 'active') {
+                handleAppStateChange();
+            }
+        });
+
+        return () => subscription?.remove();
+    }, [colorScheme, loaded]);
 
     useEffect(() => {
         const checkFirstTime = async () => {
