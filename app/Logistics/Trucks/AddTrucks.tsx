@@ -437,7 +437,7 @@ function AddTrucks() {
         // Simplified owner/broker data - just reference the document
         personDetailsDocId: getOwnerDetails?.docId || getBrokerDetails?.docId || null,
         accTypeIsApproved: getOwnerDetails?.isApproved || getBrokerDetails?.isApproved || false,
-        
+
         accType: getOwnerDetails?.accType || getBrokerDetails?.accType || null,
 
         locations: operationCountries,
@@ -448,9 +448,12 @@ function AddTrucks() {
         ...formData,
         expoPushToken: expoPushToken || null,
 
+        // Referral system
+        referrerId: user?.referrerId || null,
+
         // Approval system
         approvalStatus: 'pending', // pending, approved, rejected
-        isApproved: false ,
+        isApproved: false,
         submittedAt: Date.now().toString(),
         userType: truckOwnerOBroker, // Owner or Broker
 

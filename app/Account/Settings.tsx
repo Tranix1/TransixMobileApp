@@ -12,6 +12,7 @@ import { AntDesign, Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import Divider from '@/components/Divider'
 import Button from '@/components/Button'
+import AdminReferralCode from '@/components/AdminReferralCode'
 
 const Settings = () => {
 
@@ -104,6 +105,10 @@ const Settings = () => {
                     <>
                         <ThemedText style={{ margin: wp(4) }} type='subtitle'>Admin</ThemedText>
                         <View style={{ gap: wp(1), padding: wp(2), marginBottom: wp(4), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
+                            {/* Admin Referral Code - For All Admins */}
+                            <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                <AdminReferralCode userEmail={user.email} adminName={user.displayName} />
+                            </View>
                             <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
                                 <TouchableNativeFeedback onPress={() => router.push('/Account/Admin')}>
                                     <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
@@ -149,6 +154,24 @@ const Settings = () => {
                                                 </ThemedText>
                                                 <ThemedText type='tiny' color={coolgray}>
                                                     Update app version and force updates
+                                                </ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
+                            {isSuperAdmin() && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/ActionLogs')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='list-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>
+                                                    Admin Action Logs
+                                                </ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>
+                                                    View admin actions and email tracking
                                                 </ThemedText>
                                             </View>
                                             <Ionicons name='chevron-forward' size={wp(4)} color={icon} />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import { View, TouchableOpacity, StyleSheet, ScrollView, TouchableNativeFeedback,ToastAndroid } from "react-native";
+import { View, TouchableOpacity, StyleSheet, ScrollView, TouchableNativeFeedback, ToastAndroid } from "react-native";
 
 import { handleMakePayment } from "@/payments/operations";
 
@@ -15,7 +15,7 @@ import Heading from '@/components/Heading';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { hp, wp } from "@/constants/common";
 import Divider from "@/components/Divider";
-import { EvilIcons, FontAwesome, Ionicons,Feather } from "@expo/vector-icons";
+import { EvilIcons, FontAwesome, Ionicons, Feather } from "@expo/vector-icons";
 import Button from "@/components/Button";
 import { useAuth } from "@/context/AuthContext";
 
@@ -38,7 +38,7 @@ const NewContract = () => {
         trckRequired: { frst: "", scnd: "", third: "", forth: "", fifth: "" },
         otherRequirements: { frst: "", scnd: "", third: "", forth: "" },
         rate: { frst: "", scnd: "", thrd: "", forth: "", },
-        returnRate: { frst: "", scnd: "", thrd: "", forth: "",  },
+        returnRate: { frst: "", scnd: "", thrd: "", forth: "", },
         returnCommodity: { frst: "", scnd: "", third: "", forth: "" }
     });
 
@@ -62,7 +62,7 @@ const NewContract = () => {
     const [formDataScnd, setFormDataScnd] = React.useState<ContractsFormDataScndType>({
         paymentTerms: "",
         returnPaymentTerms: "",
-        trucksLeft : "",
+        trucksLeft: "",
         contractDuration: "",
         startingDate: "",
         bookingClosingD: "",
@@ -72,7 +72,7 @@ const NewContract = () => {
         alertMsg: "",
         fuelAvai: "",
         additionalInfo: "",
-       trucksRequiredNum: "" ,
+        trucksRequiredNum: "",
     });
 
     const handleTypedTextScnd = (
@@ -192,19 +192,19 @@ const NewContract = () => {
             capacity: selectedTruckCapacity,
             operationCountries: operationCountriesTruck,
         };
-        if(selectedCargoArea && selectedTruckType && selectedTruckCapacity && operationCountriesTruck.length > 0 ){
+        if (selectedCargoArea && selectedTruckType && selectedTruckCapacity && operationCountriesTruck.length > 0) {
 
-            setTrucksNeeded(prev => [...prev, newTruck]);   
-       
-        // Reset all selections to defaults
-        setSelectedCargoArea(null);
-        setSelectedTruckType(null);
-        setSelectedTankerType(null);
-        setSelectedTruckCapacity(null);
-        setOperationCountriesTruck([]);
-        }else{
+            setTrucksNeeded(prev => [...prev, newTruck]);
 
-           ToastAndroid.show('Select All Truck Details', ToastAndroid.SHORT)
+            // Reset all selections to defaults
+            setSelectedCargoArea(null);
+            setSelectedTruckType(null);
+            setSelectedTankerType(null);
+            setSelectedTruckCapacity(null);
+            setOperationCountriesTruck([]);
+        } else {
+
+            ToastAndroid.show('Select All Truck Details', ToastAndroid.SHORT)
         }
     }
     function removeTruck(indexToRemove: number) {
@@ -214,7 +214,7 @@ const NewContract = () => {
 
     const { user, alertBox } = useAuth();
 
-      // Function to clear all form fields
+    // Function to clear all form fields
     const clearFormFields = () => {
         setFormData({
             commodity: { frst: "", scnd: "", third: "", forth: "" },
@@ -238,7 +238,7 @@ const NewContract = () => {
             alertMsg: "",
             fuelAvai: "",
             additionalInfo: "",
-            trucksRequiredNum:""
+            trucksRequiredNum: ""
         });
         setManyRoutesOperation("");
         setLoadsPerWeek("");
@@ -276,39 +276,39 @@ const NewContract = () => {
 
         setIsSubmitting(true);
 
-        try{
+        try {
 
-        const missingLoadDetails = [
-            !formData.commodity.frst && "Enter at least one commodity",
-            !formData.location.frst && "Enter the first location",
-            !formData.location.scnd && "Enter the second location",
-            !formData.otherRequirements.frst && "Enter at least one requirement",
-            !formData.rate.frst && "Enter the solid rate",
-        ].filter(Boolean);
+            const missingLoadDetails = [
+                !formData.commodity.frst && "Enter at least one commodity",
+                !formData.location.frst && "Enter the first location",
+                !formData.location.scnd && "Enter the second location",
+                !formData.otherRequirements.frst && "Enter at least one requirement",
+                !formData.rate.frst && "Enter the solid rate",
+            ].filter(Boolean);
 
-        if (missingLoadDetails.length > 0) {alertBox("Missing Load Details", missingLoadDetails.join("\n"), [], "error");return;}
+            if (missingLoadDetails.length > 0) { alertBox("Missing Load Details", missingLoadDetails.join("\n"), [], "error"); return; }
 
-           const missingContractDetails = [
-            !formDataScnd.paymentTerms && "Enter the payment terms",
-            !formDataScnd.loadsPerWeek && "Enter loads per week",
-            !formDataScnd.contractDuration && "Enter contract duration",
-            !formDataScnd.startingDate && "Enter the starting date",
-            !formDataScnd.fuelAvai && "Enter fuel availability details",
-            !formDataScnd.bookingClosingD && "Enter the booking closing date",
-             contractLocation.length === 0 && "Select the country the loads will operate in",
-             
-        ].filter(Boolean);
+            const missingContractDetails = [
+                !formDataScnd.paymentTerms && "Enter the payment terms",
+                !formDataScnd.loadsPerWeek && "Enter loads per week",
+                !formDataScnd.contractDuration && "Enter contract duration",
+                !formDataScnd.startingDate && "Enter the starting date",
+                !formDataScnd.fuelAvai && "Enter fuel availability details",
+                !formDataScnd.bookingClosingD && "Enter the booking closing date",
+                contractLocation.length === 0 && "Select the country the loads will operate in",
 
-        if (missingContractDetails.length > 0) {alertBox("Missing Contract Details", missingContractDetails.join("\n"), [], "error");return;}
+            ].filter(Boolean);
 
-        const missingTrucks =[trucksNeeded.length === 0 && 'Choose at least 1 Truck Required'].filter(Boolean);
-            if (missingTrucks.length > 0) {alertBox("Missing Truck Details", missingTrucks.join("\n"), [], "error");return;}
-        
-        setDspCheckout(true);
+            if (missingContractDetails.length > 0) { alertBox("Missing Contract Details", missingContractDetails.join("\n"), [], "error"); return; }
 
-        }catch(error){
+            const missingTrucks = [trucksNeeded.length === 0 && 'Choose at least 1 Truck Required'].filter(Boolean);
+            if (missingTrucks.length > 0) { alertBox("Missing Truck Details", missingTrucks.join("\n"), [], "error"); return; }
+
+            setDspCheckout(true);
+
+        } catch (error) {
             console.error(error)
-        }finally{
+        } finally {
 
             setIsSubmitting(false);
         }
@@ -325,7 +325,9 @@ const NewContract = () => {
         formData: formData,
         formDataScnd: formDataScnd,
         contractId: `co${Math.floor(100000000000 + Math.random() * 900000000000).toString()}ct`,
-        truckDetails: trucksNeeded
+        truckDetails: trucksNeeded,
+        // Referral system
+        referrerId: user?.referrerId || null
     }
 
     const [paymentUpdate, setPaymentUpdate] = React.useState<string>("");
@@ -335,15 +337,15 @@ const NewContract = () => {
     const justConsole = async () => {
         setIsSubmitting(true);
         setDspCheckout(false);
-       await handleMakePayment(3, "yaya", setPaymentUpdate, "loadsContracts", contractData);
+        await handleMakePayment(3, "yaya", setPaymentUpdate, "loadsContracts", contractData);
     };
 
-       if(paymentUpdate === "Done Adding Contract"  ){
-           setIsSubmitting(false);
-           clearFormFields()
-           setPaymentUpdate("")
-           ToastAndroid.show('Contract Added successfully', ToastAndroid.SHORT)
-       }
+    if (paymentUpdate === "Done Adding Contract") {
+        setIsSubmitting(false);
+        clearFormFields()
+        setPaymentUpdate("")
+        ToastAndroid.show('Contract Added successfully', ToastAndroid.SHORT)
+    }
 
 
     return (
@@ -363,105 +365,105 @@ const NewContract = () => {
 
 
 
-              {paymentUpdate && <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: "center", borderRadius: wp(4), alignItems: 'center', }} >
-          <ThemedText style={{ textAlign: 'center' }} > {paymentUpdate} </ThemedText>
-        </View>}
+            {paymentUpdate && <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: "center", borderRadius: wp(4), alignItems: 'center', }} >
+                <ThemedText style={{ textAlign: 'center' }} > {paymentUpdate} </ThemedText>
+            </View>}
 
 
 
 
-   {dspCheckOutP &&
-          <CheckOutMakePayments jsxProp={<View
-  style={{
-    backgroundColor: backgroundLight,
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-  }}
->
-  <ThemedText
-    style={{
-      fontSize: 16,
-      marginBottom: 10,
-      fontWeight: 'bold',
-    }}
-  >
-    Platform Fees
-  </ThemedText>
+            {dspCheckOutP &&
+                <CheckOutMakePayments jsxProp={<View
+                    style={{
+                        backgroundColor: backgroundLight,
+                        borderRadius: 10,
+                        padding: 15,
+                        marginBottom: 20,
+                    }}
+                >
+                    <ThemedText
+                        style={{
+                            fontSize: 16,
+                            marginBottom: 10,
+                            fontWeight: 'bold',
+                        }}
+                    >
+                        Platform Fees
+                    </ThemedText>
 
-  <View
-    style={{
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 8,
-    }}
-  >
-    <ThemedText style={{  fontSize: 14 }}>
-      Add Contract
-    </ThemedText>
-    <ThemedText
-      style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
-    >
-      $5
-    </ThemedText>
-  </View>
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            marginBottom: 8,
+                        }}
+                    >
+                        <ThemedText style={{ fontSize: 14 }}>
+                            Add Contract
+                        </ThemedText>
+                        <ThemedText
+                            style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
+                        >
+                            $5
+                        </ThemedText>
+                    </View>
 
-  <View
-    style={{
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 8,
-    }}
-  >
-    <ThemedText style={{  fontSize: 14 }}>
-      Add Load
-    </ThemedText>
-    <ThemedText
-      style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
-    >
-      $2
-    </ThemedText>
-  </View>
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            marginBottom: 8,
+                        }}
+                    >
+                        <ThemedText style={{ fontSize: 14 }}>
+                            Add Load
+                        </ThemedText>
+                        <ThemedText
+                            style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
+                        >
+                            $2
+                        </ThemedText>
+                    </View>
 
-  <View
-    style={{
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 10,
-    }}
-  >
-    <ThemedText style={{  fontSize: 14 }}>
-      Add Truck
-    </ThemedText>
-    <ThemedText
-      style={{ color: '#4CAF50',  fontSize: 14, fontWeight: 'bold' }}
-    >
-      $8
-    </ThemedText>
-  </View>
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            marginBottom: 10,
+                        }}
+                    >
+                        <ThemedText style={{ fontSize: 14 }}>
+                            Add Truck
+                        </ThemedText>
+                        <ThemedText
+                            style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}
+                        >
+                            $8
+                        </ThemedText>
+                    </View>
 
-  <View
-    style={{
-      borderTopWidth: 1,
-      borderTopColor: '#555',
-      paddingTop: 10,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-    }}
-  >
-    <ThemedText style={{  fontSize: 16, fontWeight: 'bold' }}>
-      Total
-    </ThemedText>
-    <ThemedText
-      style={{ color: '#4CAF50', fontSize: 16, fontWeight: 'bold' }}
-    >
-      $15
-    </ThemedText>
-  </View>
-</View>  } 
-          confirmButon={justConsole} 
-          cancelBTN={() => setDspCheckout(false) }
-          />}
+                    <View
+                        style={{
+                            borderTopWidth: 1,
+                            borderTopColor: '#555',
+                            paddingTop: 10,
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                        }}
+                    >
+                        <ThemedText style={{ fontSize: 16, fontWeight: 'bold' }}>
+                            Total
+                        </ThemedText>
+                        <ThemedText
+                            style={{ color: '#4CAF50', fontSize: 16, fontWeight: 'bold' }}
+                        >
+                            $15
+                        </ThemedText>
+                    </View>
+                </View>}
+                    confirmButon={justConsole}
+                    cancelBTN={() => setDspCheckout(false)}
+                />}
 
 
 
@@ -635,7 +637,7 @@ const NewContract = () => {
                                         onChangeText={(text) => handleTypedText(text, 'location.fifth')}
                                         style={{}}
                                     />
-                                   
+
 
 
                                 </View>
@@ -1094,7 +1096,7 @@ const NewContract = () => {
 
                         <View style={styles.viewMainDsp}>
                             <ThemedText type="defaultSemiBold" >
-                              Contract  Payment Terms
+                                Contract  Payment Terms
                             </ThemedText>
                             <Input
                                 value={formDataScnd.paymentTerms}
@@ -1192,40 +1194,40 @@ const NewContract = () => {
                                     Is the contract International or Local for one country</ThemedText>
 
                                 <Divider />
-                               
 
-                                
-                                    <View style={[styles.viewSubMainDsp, { backgroundColor: backgroundLight, borderWidth: 0, borderRadius: wp(2), elevation: 0, gap: wp(3) }]}>
-                                       
-                                        
-                                            <>
-                                                <ThemedText type="defaultSemiBold" style={{ textAlign: 'center' }}>
-                                                    Select International Countries
+
+
+                                <View style={[styles.viewSubMainDsp, { backgroundColor: backgroundLight, borderWidth: 0, borderRadius: wp(2), elevation: 0, gap: wp(3) }]}>
+
+
+                                    <>
+                                        <ThemedText type="defaultSemiBold" style={{ textAlign: 'center' }}>
+                                            Select International Countries
+                                        </ThemedText>
+                                        <Divider />
+
+                                        {Countries.map((country) => (
+                                            <TouchableOpacity
+                                                key={country}
+                                                onPress={() => toggleInternationalCountry(country)}
+                                                style={{
+                                                    justifyContent: 'space-between', padding: 3, alignContent: 'center', flexDirection: 'row'
+                                                }}
+                                            >
+                                                <ThemedText>
+                                                    {country}
                                                 </ThemedText>
-                                                <Divider />
+                                                {contractLocation.includes(country) ?
+                                                    <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />
+                                                    :
+                                                    <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />
+                                                }
+                                            </TouchableOpacity>
+                                        ))}
+                                    </>
 
-                                                { Countries.map((country) => (
-                                                    <TouchableOpacity
-                                                        key={country}
-                                                        onPress={() => toggleInternationalCountry(country)}
-                                                        style={{
-                                                            justifyContent: 'space-between', padding: 3, alignContent: 'center', flexDirection: 'row'
-                                                        }}
-                                                    >
-                                                        <ThemedText>
-                                                            {country}
-                                                        </ThemedText>
-                                                        {contractLocation.includes(country) ?
-                                                            <EvilIcons name="check" size={30} style={{ textAlign: 'center', width: wp(6) }} color={iconcolor} />
-                                                            :
-                                                            <Ionicons name="ellipse-outline" style={{ textAlign: 'center', width: wp(6) }} size={24} color={iconcolor} />
-                                                        }
-                                                    </TouchableOpacity>
-                                                ))}
-                                            </>
-                                        
-                                    </View>
-                                
+                                </View>
+
 
 
                             </View>
@@ -1246,42 +1248,42 @@ const NewContract = () => {
                                 Truck Required
                             </ThemedText>
 
-                             {trucksNeeded.map((truck, index) => (
-                            <View
-                                key={index}
-                                style={{
-                                    position: 'relative',
-                                    marginBottom: 10,
-                                    padding: 14,
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    borderRadius: 8,
-                                    backgroundColor: backgroundLight
-                                }}
-                            >
-     
-
-                                {/* Truck Info */}
-                                <ThemedText >
-                                    Truck {index + 1}:    {truck.truckType?.name} 
-                                </ThemedText>
-                                <ThemedText></ThemedText>
-                                <ThemedText>{truck.cargoArea?.name}  </ThemedText>
-                                <ThemedText>{truck.capacity?.name} </ThemedText>
-
-                                <TouchableOpacity
-                                    onPress={() => removeTruck(index)}
+                            {trucksNeeded.map((truck, index) => (
+                                <View
+                                    key={index}
                                     style={{
-                                        padding: 5,
-                                        zIndex: 1
+                                        position: 'relative',
+                                        marginBottom: 10,
+                                        padding: 14,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        borderRadius: 8,
+                                        backgroundColor: backgroundLight
                                     }}
                                 >
-                                    <Feather name="x" color={'red'} size={wp(4)} />
-                                </TouchableOpacity>
-                            </View>
-                        ))}
-                          <ThemedText type="defaultSemiBold">
+
+
+                                    {/* Truck Info */}
+                                    <ThemedText >
+                                        Truck {index + 1}:    {truck.truckType?.name}
+                                    </ThemedText>
+                                    <ThemedText></ThemedText>
+                                    <ThemedText>{truck.cargoArea?.name}  </ThemedText>
+                                    <ThemedText>{truck.capacity?.name} </ThemedText>
+
+                                    <TouchableOpacity
+                                        onPress={() => removeTruck(index)}
+                                        style={{
+                                            padding: 5,
+                                            zIndex: 1
+                                        }}
+                                    >
+                                        <Feather name="x" color={'red'} size={wp(4)} />
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+                            <ThemedText type="defaultSemiBold">
                                 Number Trucks Required
                             </ThemedText>
                             <Input
@@ -1329,8 +1331,8 @@ const NewContract = () => {
 
                         <Divider />
                         <View style={styles.viewMainDsp}>
-                            <Button onPress={toggleDspCheckout} title={isSubmitting ? "Submiting..." : "Submit Contract"}   loading={isSubmitting} disabled={isSubmitting}
-                            colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{borderWidth:1 , borderColor:accent}} />
+                            <Button onPress={toggleDspCheckout} title={isSubmitting ? "Submiting..." : "Submit Contract"} loading={isSubmitting} disabled={isSubmitting}
+                                colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{ borderWidth: 1, borderColor: accent }} />
                         </View>
                     </ScrollView>
                 }

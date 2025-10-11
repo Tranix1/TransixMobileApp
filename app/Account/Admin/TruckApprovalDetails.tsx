@@ -5,7 +5,8 @@ import Heading from '@/components/Heading';
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { wp } from '@/constants/common';
-import { readById, updateDocument } from '@/db/operations';
+import { readById, updateDocument, updateDocumentWithAdminTracking } from '@/db/operations';
+import { ADMIN_ACTIONS } from '@/Utilities/adminActionTracker';
 import { Truck } from '@/types/types';
 import { Image } from 'expo-image';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
@@ -69,13 +70,20 @@ const TruckApprovalDetails = () => {
         try {
             setProcessing(true);
 
-            // Update truck status
-            await updateDocument('Trucks', truck!.id, {
-                isApproved: true,
-                approvalStatus: 'approved',
-                approvedAt: new Date().toISOString(),
-                approvedBy: 'admin' // You can get this from auth context
-            });
+            // Update truck status with admin tracking
+            await updateDocumentWithAdminTracking(
+                'Trucks',
+                truck!.id,
+                {
+                    isApproved: true,
+                    approvalStatus: 'approved',
+                    approvedAt: new Date().toISOString()
+                },
+                ADMIN_ACTIONS.APPROVE_TRUCK,
+                'truck',
+                `${truck!.truckType} - ${truck!.truckCapacity}`,
+                'Truck approved by admin'
+            );
 
             // Send notification to truck owner
             if (truck!.expoPushToken) {
@@ -112,14 +120,21 @@ const TruckApprovalDetails = () => {
         try {
             setProcessing(true);
 
-            // Update truck status
-            await updateDocument('Trucks', truck!.id, {
-                isApproved: false,
-                approvalStatus: 'rejected',
-                rejectedAt: new Date().toISOString(),
-                rejectedBy: 'admin', // You can get this from auth context
-                rejectionReason: declineReason.trim()
-            });
+            // Update truck status with admin tracking
+            await updateDocumentWithAdminTracking(
+                'Trucks',
+                truck!.id,
+                {
+                    isApproved: false,
+                    approvalStatus: 'rejected',
+                    rejectedAt: new Date().toISOString(),
+                    rejectionReason: declineReason.trim()
+                },
+                ADMIN_ACTIONS.DECLINE_TRUCK,
+                'truck',
+                `${truck!.truckType} - ${truck!.truckCapacity}`,
+                `Truck declined: ${declineReason.trim()}`
+            );
 
             // Send notification to truck owner
             if (truck!.expoPushToken) {

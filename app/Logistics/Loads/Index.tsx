@@ -40,10 +40,11 @@ const Index = () => {
         try {
             setIsLoading(true)
             setError(null)
-            // Filter for verified loads only
+            // Filter for approved loads from approved accounts only
             const filters = [
-                where("isVerified", "==", true),
-                where("approvalStatus", "in", ["approved", "pending"])
+                where("approvalStatus", "==", "approved"),
+                where("isApproved", "==", true),
+                where("personalAccTypeIsApproved", "==", true)
             ];
             const maLoads = await fetchDocuments("Cargo", 50, undefined, filters);
 
@@ -87,10 +88,11 @@ const Index = () => {
         try {
             setLoadingMore(true);
             setError(null);
-            // Apply same verification filters for pagination
+            // Apply same approval filters for pagination
             const filters = [
-                where("isVerified", "==", true),
-                where("approvalStatus", "in", ["approved", "pending"])
+                where("approvalStatus", "==", "approved"),
+                where("isApproved", "==", true),
+                where("personalAccTypeIsApproved", "==", true)
             ];
             const result = await fetchDocuments('Cargo', 10, lastVisible, filters);
             if (result) {

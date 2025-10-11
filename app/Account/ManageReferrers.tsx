@@ -87,7 +87,7 @@ const ManageReferrers = () => {
             const code = await generateUniqueReferrerCode();
 
             const referrerData = {
-                userId: foundUser.id,
+                userId: foundUser.uid, // Use Firebase Auth UID instead of document ID
                 userEmail: foundUser.email,
                 userName: foundUser.displayName || foundUser.email,
                 referrerCode: code,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Button, Alert, StyleSheet, FlatList, TouchableOpacity,ScrollView } from "react-native";
+import { View, Button, Alert, StyleSheet, FlatList, TouchableOpacity, ScrollView } from "react-native";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 import Input from "@/components/Input";
@@ -51,21 +51,21 @@ export default function AddTrackedVehicle() {
   ];
 
   // Fetch user's trucks when a user is selected
- // Fetch user's trucks when a user is selected
-const fetchUserTrucks = async (userId: string) => {
-  try {
-    const trucks = await fetchDocuments("Trucks", 50, undefined, [
-      where("userId", "==", userId),
-      where("isApproved", "==", true),
-      where("hasTracker", "==", false) // fetch only trucks without tracker
-    ]);
-    setUserTrucks(trucks.data || []);
-    setShowUserTrucks(true);
-  } catch (error) {
-    console.error("Error fetching user trucks:", error);
-    Alert.alert("Error", "Failed to fetch user trucks");
-  }
-};
+  // Fetch user's trucks when a user is selected
+  const fetchUserTrucks = async (userId: string) => {
+    try {
+      const trucks = await fetchDocuments("Trucks", 50, undefined, [
+        where("userId", "==", userId),
+        where("isApproved", "==", true),
+        where("hasTracker", "==", false) // fetch only trucks without tracker
+      ]);
+      setUserTrucks(trucks.data || []);
+      setShowUserTrucks(true);
+    } catch (error) {
+      console.error("Error fetching user trucks:", error);
+      Alert.alert("Error", "Failed to fetch user trucks");
+    }
+  };
 
 
   useEffect(() => {
@@ -148,7 +148,7 @@ const fetchUserTrucks = async (userId: string) => {
         const trialStartAt = new Date();
         const trialEndAt = new Date(trialStartAt);
         trialEndAt.setDate(trialEndAt.getDate() + 30);
-        
+
         subscriptionData = {
           status: "trial",
           trialDays: 30,
@@ -163,7 +163,7 @@ const fetchUserTrucks = async (userId: string) => {
         const accessStartAt = new Date();
         const accessEndAt = new Date(accessStartAt);
         accessEndAt.setHours(accessEndAt.getHours() + 4); // 4 hours access time
-        
+
         subscriptionData = {
           status: "once_off",
           accessStartAt: accessStartAt.toISOString(),
@@ -194,25 +194,27 @@ const fetchUserTrucks = async (userId: string) => {
           cargoArea: selectedTruck.cargoArea,
           truckCapacity: selectedTruck.truckCapacity,
           numberPlate: selectedTruck.truckNumberPlate
-        } : null
+        } : null,
+        // Referral system
+        referrerId: selectedUser?.referrerId || null
       };
 
       const docRef = await addDocument("TrackedVehicles", vehicleData);
-      
+
       // Update truck tracker status if linked
       if (selectedTruck) {
         await updateDocument("Trucks", selectedTruck.id, {
           hasTracker: true,
           trackerStatus: 'active',
           trackingDeviceId: deviceId,
-           trackerImei: imei,
+          trackerImei: imei,
           trackerId: `TRK${Date.now()}`,
           trackerAddedAt: Date.now().toString()
         });
       }
-      
+
       Alert.alert("Success", "Vehicle added successfully!");
-      
+
       // Reset form
       setVehicleName("");
       setImei("");
@@ -235,170 +237,170 @@ const fetchUserTrucks = async (userId: string) => {
     user.email && typeof user.email === 'string' && user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-return (
-  <ScreenWrapper>
-    <Heading page="Add Tracked Vehicle" />
+  return (
+    <ScreenWrapper>
+      <Heading page="Add Tracked Vehicle" />
 
-    <ScrollView
-      contentContainerStyle={{ paddingBottom: 350 }}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.form}>
-        <Input
-          placeholder="Vehicle Name"
-          value={vehicleName}
-          onChangeText={setVehicleName}
-        />
-
-        <Input
-          placeholder="IMEI ID"
-          value={imei}
-          onChangeText={setImei}
-          keyboardType="number-pad"
-        />
-
-        <DropDownItem
-          allData={vehicleCategories}
-          selectedItem={vehicleCategory}
-          setSelectedItem={setVehicleCategory}
-          placeholder="Select Vehicle Category"
-        />
-
-        {vehicleCategory?.name === "Commercial" && (
-          <DropDownItem
-            allData={commercialSubTypes}
-            selectedItem={vehicleSubType}
-            setSelectedItem={setVehicleSubType}
-            placeholder="Select Vehicle Type"
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 350 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.form}>
+          <Input
+            placeholder="Vehicle Name"
+            value={vehicleName}
+            onChangeText={setVehicleName}
           />
-        )}
 
-        {(vehicleCategory?.name === "Personal" || vehicleCategory?.name === "Car Dealer") && (
-          <DropDownItem
-            allData={paymentTypes}
-            selectedItem={paymentType}
-            setSelectedItem={setPaymentType}
-            placeholder="Select Payment Type"
+          <Input
+            placeholder="IMEI ID"
+            value={imei}
+            onChangeText={setImei}
+            keyboardType="number-pad"
           />
-        )}
 
-        {paymentType?.name === "Once-off Payment" && (
-          <View style={styles.infoBox}>
-            <ThemedText type="defaultSemiBold" style={styles.infoTitle}>
-              Once-off Payment Info:
-            </ThemedText>
-            <ThemedText type="tiny" style={styles.infoText}>• Current location tracking only (no history)</ThemedText>
-            <ThemedText type="tiny" style={styles.infoText}>• 4 hours access time</ThemedText>
-            <ThemedText type="tiny" style={styles.infoText}>• Vehicle automatically removed from Server after access period</ThemedText>
-            <ThemedText type="tiny" style={styles.infoText}>• Can be re-added later</ThemedText>
-          </View>
-        )}
+          <DropDownItem
+            allData={vehicleCategories}
+            selectedItem={vehicleCategory}
+            setSelectedItem={setVehicleCategory}
+            placeholder="Select Vehicle Category"
+          />
 
-        <Input
-          placeholder="Search users by email"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+          {vehicleCategory?.name === "Commercial" && (
+            <DropDownItem
+              allData={commercialSubTypes}
+              selectedItem={vehicleSubType}
+              setSelectedItem={setVehicleSubType}
+              placeholder="Select Vehicle Type"
+            />
+          )}
 
-        {searchQuery && (
-          <View style={styles.userList}>
-            {filteredUsers.map((item) => (
-              <TouchableOpacity
-                key={item.uid}
-                style={styles.userItem}
-                onPress={() => {
-                  setSelectedUser(item);
-                  setSearchQuery(item.email);
-                  vehicleCategory?.name === "Commercial" &&
-                    vehicleSubType?.name === "Truck" &&
-                    fetchUserTrucks(item.uid);
-                }}
-              >
-                <ThemedText>{item.email}</ThemedText>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+          {(vehicleCategory?.name === "Personal" || vehicleCategory?.name === "Car Dealer") && (
+            <DropDownItem
+              allData={paymentTypes}
+              selectedItem={paymentType}
+              setSelectedItem={setPaymentType}
+              placeholder="Select Payment Type"
+            />
+          )}
 
-        {selectedUser && (
-          <View style={{ marginTop: wp(3) }}>
-            <ThemedText style={{ fontWeight: 'bold', marginBottom: wp(2) }}>
-              Selected User: {selectedUser.email}
-            </ThemedText>
+          {paymentType?.name === "Once-off Payment" && (
+            <View style={styles.infoBox}>
+              <ThemedText type="defaultSemiBold" style={styles.infoTitle}>
+                Once-off Payment Info:
+              </ThemedText>
+              <ThemedText type="tiny" style={styles.infoText}>• Current location tracking only (no history)</ThemedText>
+              <ThemedText type="tiny" style={styles.infoText}>• 4 hours access time</ThemedText>
+              <ThemedText type="tiny" style={styles.infoText}>• Vehicle automatically removed from Server after access period</ThemedText>
+              <ThemedText type="tiny" style={styles.infoText}>• Can be re-added later</ThemedText>
+            </View>
+          )}
 
-            {vehicleCategory?.name === "Commercial" && vehicleSubType?.name === "Truck" && (
-              <View>
+          <Input
+            placeholder="Search users by email"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+
+          {searchQuery && (
+            <View style={styles.userList}>
+              {filteredUsers.map((item) => (
                 <TouchableOpacity
-                  style={[styles.truckButton, { backgroundColor: backgroundLight }]}
-                  onPress={() => setShowUserTrucks(!showUserTrucks)}
+                  key={item.uid}
+                  style={styles.userItem}
+                  onPress={() => {
+                    setSelectedUser(item);
+                    setSearchQuery(item.email);
+                    vehicleCategory?.name === "Commercial" &&
+                      vehicleSubType?.name === "Truck" &&
+                      fetchUserTrucks(item.uid);
+                  }}
                 >
-                  <ThemedText style={{ color: accent }}>
-                    {showUserTrucks ? 'Hide' : 'Show'} User's Trucks ({userTrucks.length})
-                  </ThemedText>
+                  <ThemedText>{item.email}</ThemedText>
                 </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
-                {showUserTrucks && userTrucks.length > 0 && (
-                  <View style={{ maxHeight: 200 }}>
-                    <ThemedText style={{ marginBottom: wp(1), marginTop: wp(2) }}>
-                      Select Truck:
+          {selectedUser && (
+            <View style={{ marginTop: wp(3) }}>
+              <ThemedText style={{ fontWeight: 'bold', marginBottom: wp(2) }}>
+                Selected User: {selectedUser.email}
+              </ThemedText>
+
+              {vehicleCategory?.name === "Commercial" && vehicleSubType?.name === "Truck" && (
+                <View>
+                  <TouchableOpacity
+                    style={[styles.truckButton, { backgroundColor: backgroundLight }]}
+                    onPress={() => setShowUserTrucks(!showUserTrucks)}
+                  >
+                    <ThemedText style={{ color: accent }}>
+                      {showUserTrucks ? 'Hide' : 'Show'} User's Trucks ({userTrucks.length})
                     </ThemedText>
+                  </TouchableOpacity>
 
-                    {userTrucks.map((item) => (
-                      <TouchableOpacity
-                        key={item.id}
-                        style={[
-                          styles.truckItem,
-                          selectedTruck?.id === item.id && { backgroundColor: `${accent}20` },
-                        ]}
-                         onPress={() => {
-                setSelectedTruck(selectedTruck?.id === item.id ? null : item);
-                setShowUserTrucks(false); // hide trucks list after selection
-              }}
-                      >
-                        <View>
-                          <ThemedText style={{ fontWeight: 'bold' }}>
-                            {item.truckType} - {item.cargoArea}
-                          </ThemedText>
-                          <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
-                            Capacity: {item.truckCapacity} | ID: {item.truckId}
-                          </ThemedText>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: wp(1) }}>
-                            <View
-                              style={[
-                                styles.statusDot,
-                                { backgroundColor: item.hasTracker ? '#51cf66' : '#ff6b6b' },
-                              ]}
-                            />
-                            <ThemedText style={{ fontSize: 11 }}>
-                              {item.hasTracker ? 'Has Tracker' : 'No Tracker'}
+                  {showUserTrucks && userTrucks.length > 0 && (
+                    <View style={{ maxHeight: 200 }}>
+                      <ThemedText style={{ marginBottom: wp(1), marginTop: wp(2) }}>
+                        Select Truck:
+                      </ThemedText>
+
+                      {userTrucks.map((item) => (
+                        <TouchableOpacity
+                          key={item.id}
+                          style={[
+                            styles.truckItem,
+                            selectedTruck?.id === item.id && { backgroundColor: `${accent}20` },
+                          ]}
+                          onPress={() => {
+                            setSelectedTruck(selectedTruck?.id === item.id ? null : item);
+                            setShowUserTrucks(false); // hide trucks list after selection
+                          }}
+                        >
+                          <View>
+                            <ThemedText style={{ fontWeight: 'bold' }}>
+                              {item.truckType} - {item.cargoArea}
                             </ThemedText>
+                            <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+                              Capacity: {item.truckCapacity} | ID: {item.truckId}
+                            </ThemedText>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: wp(1) }}>
+                              <View
+                                style={[
+                                  styles.statusDot,
+                                  { backgroundColor: item.hasTracker ? '#51cf66' : '#ff6b6b' },
+                                ]}
+                              />
+                              <ThemedText style={{ fontSize: 11 }}>
+                                {item.hasTracker ? 'Has Tracker' : 'No Tracker'}
+                              </ThemedText>
+                            </View>
                           </View>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
 
-                {showUserTrucks && userTrucks.length === 0 && (
-                  <ThemedText style={{ textAlign: 'center', opacity: 0.7, marginTop: wp(2) }}>
-                    No approved trucks found for this user
-                  </ThemedText>
-                )}
-              </View>
-            )}
-          </View>
-        )}
+                  {showUserTrucks && userTrucks.length === 0 && (
+                    <ThemedText style={{ textAlign: 'center', opacity: 0.7, marginTop: wp(2) }}>
+                      No approved trucks found for this user
+                    </ThemedText>
+                  )}
+                </View>
+              )}
+            </View>
+          )}
 
-        <Button
-          title={loading ? "Adding..." : "Add Vehicle"}
-          onPress={handleAddVehicle}
-          disabled={loading}
-        />
-      </View>
-    </ScrollView>
-  </ScreenWrapper>
-);
+          <Button
+            title={loading ? "Adding..." : "Add Vehicle"}
+            onPress={handleAddVehicle}
+            disabled={loading}
+          />
+        </View>
+      </ScrollView>
+    </ScreenWrapper>
+  );
 
 }
 
@@ -436,13 +438,13 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginRight: wp(1),
   },
- infoBox: {
-  backgroundColor: "#e3f2fd", 
-  padding: 12,
-  borderRadius: 8,
-  borderLeftWidth: 4,
-  borderLeftColor: "#2196f3", 
-},
+  infoBox: {
+    backgroundColor: "#e3f2fd",
+    padding: 12,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: "#2196f3",
+  },
   infoTitle: {
     marginBottom: 4,
     color: "#1565c0", // deep blue for title (strong emphasis, readable)

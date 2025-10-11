@@ -217,40 +217,40 @@ const CreateProduct = () => {
 
         setIsSubmitting(true);
 
-        if(!storeDetails){
+        if (!storeDetails) {
             alert("Set store details to add to store")
             setIsSubmitting(false);
             return
         }
 
-        if(images.length <=0){
-        ToastAndroid.show("Select at least 1 image max 4", ToastAndroid.SHORT);
-        setIsSubmitting(false);
-        return
+        if (images.length <= 0) {
+            ToastAndroid.show("Select at least 1 image max 4", ToastAndroid.SHORT);
+            setIsSubmitting(false);
+            return
         }
 
 
 
-   const missingProductDetails = [
-        !selectedCategory?.name && "Enter Category Name ", // Added ? for safety
-        !LookingOSelling && "Select Buy or Sell Option", // More descriptive message
-        !selectedType?.name && "Select Product Type", // Added ? for safety
-        !selectedMake?.name && "Select Make", // Added ? for safety
-        !selectedTransaction?.name && "Select Transaction Type", // Added ? for safety and descriptive message
-        !formData.price && "Enter Price", // More descriptive message
-        !formData.productModel && "Enter Product Model", // More descriptive message
-        !formData.productLocation && "Enter Product Location", // More descriptive message
-    ].filter(Boolean)
+        const missingProductDetails = [
+            !selectedCategory?.name && "Enter Category Name ", // Added ? for safety
+            !LookingOSelling && "Select Buy or Sell Option", // More descriptive message
+            !selectedType?.name && "Select Product Type", // Added ? for safety
+            !selectedMake?.name && "Select Make", // Added ? for safety
+            !selectedTransaction?.name && "Select Transaction Type", // Added ? for safety and descriptive message
+            !formData.price && "Enter Price", // More descriptive message
+            !formData.productModel && "Enter Product Model", // More descriptive message
+            !formData.productLocation && "Enter Product Location", // More descriptive message
+        ].filter(Boolean)
 
-      
+
         if (missingProductDetails.length > 0) {
             alertBox("Missing Product Details", missingProductDetails.join("\n"), [], "error");
-             setIsSubmitting(false);
+            setIsSubmitting(false);
             return;
         }
 
 
-       let imageUrls = [];
+        let imageUrls = [];
 
         for (const [index, asset] of images.entries()) {
             setUploadProgress(`Uploading image ${index + 1} of ${images.length}`);
@@ -267,7 +267,7 @@ const CreateProduct = () => {
 
             imageUrls.push(imageUrl);
         }
-setUploadProgress("Adding Product")
+        setUploadProgress("Adding Product")
 
 
         try {
@@ -355,6 +355,8 @@ setUploadProgress("Adding Product")
                     saves: 0,
                     status: "active"
                 },
+                // Referral system
+                referrerId: user?.referrerId || null,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
 
@@ -881,9 +883,9 @@ setUploadProgress("Adding Product")
 
 
 
-              { uploadProgress&& <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: "center", borderRadius: wp(4), alignItems: 'center', }} >
-          <ThemedText style={{ textAlign: 'center' }} > {uploadProgress} </ThemedText>
-        </View>}
+            {uploadProgress && <View style={{ flexDirection: 'row', backgroundColor: backgroundLight, padding: wp(2), alignSelf: "center", borderRadius: wp(4), alignItems: 'center', }} >
+                <ThemedText style={{ textAlign: 'center' }} > {uploadProgress} </ThemedText>
+            </View>}
 
 
             <Modal visible={storedetails} statusBarTranslucent animationType="slide">
@@ -963,10 +965,10 @@ setUploadProgress("Adding Product")
 
             <ScrollView contentContainerStyle={styles.container}>
 
-                {!storeDetails &&  <TouchableOpacity onPress={() => setStoredetails(true)}  style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
+                {!storeDetails && <TouchableOpacity onPress={() => setStoredetails(true)} style={{ backgroundColor: background, paddingHorizontal: wp(4), padding: wp(2), borderRadius: wp(3), marginBottom: wp(2), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
                     <View>
                         <ThemedText type="defaultSemiBold">
-                             Set Store Details!
+                            Set Store Details!
                         </ThemedText>
                         <ThemedText type="tiny">
                             {user?.email || 'No Organisation Name!'}
@@ -1009,8 +1011,8 @@ setUploadProgress("Adding Product")
                         )}
                     </View>
 
-                    {images.length > 0 && <TouchableOpacity onPress={() => selectManyImages(setImages, true, true)} style={{backgroundColor:backgroundLight,width:125,justifyContent:"center",alignItems:"center",borderRadius:5}} >
-                        <ThemedText color="white" style={{fontSize:13,fontWeight:"bold"}}>Add Images {4 - images.length} left </ThemedText>
+                    {images.length > 0 && <TouchableOpacity onPress={() => selectManyImages(setImages, true, true)} style={{ backgroundColor: backgroundLight, width: 125, justifyContent: "center", alignItems: "center", borderRadius: 5 }} >
+                        <ThemedText color="white" style={{ fontSize: 13, fontWeight: "bold" }}>Add Images {4 - images.length} left </ThemedText>
                     </TouchableOpacity>}
                 </View>
 
@@ -1219,7 +1221,7 @@ setUploadProgress("Adding Product")
                         disabled={isSubmitting}
                         loading={isSubmitting}
                     />
-                  
+
                 </View>
             </ScrollView>
 

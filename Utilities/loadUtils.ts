@@ -258,6 +258,9 @@ export const prepareLoadData = (
         personalAccTypeIsApproved: formData.personalAccTypeIsApproved || false,
         personalAccType: formData.personalAccType || null,
 
+        // Referral system
+        referrerId: user?.referrerId || null,
+
         // Approval system
         approvalStatus: 'pending',
         isApproved: false,

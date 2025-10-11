@@ -215,6 +215,8 @@ export default function AddTruckStop() {
                 userId: user?.uid || '',
                 addedBy: user?.uid || 'anonymous',
                 addedAt: new Date(),
+                // Referral system
+                referrerId: user?.referrerId || null,
             };
 
             // Save to Firebase

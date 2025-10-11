@@ -10,7 +10,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { hp, wp } from '@/constants/common';
 import { useAuth } from '@/context/AuthContext';
 import { formatDate } from '@/services/services';
-import { updateDocument, fetchDocuments } from '@/db/operations';
+import { updateDocument, fetchDocuments, updateUserLoadsAccountApproval, updateDocumentWithAdminTracking } from '@/db/operations';
+import { ADMIN_ACTIONS } from '@/Utilities/adminActionTracker';
 import { where } from 'firebase/firestore';
 import ImageViewing from 'react-native-image-viewing';
 import { BlurView } from 'expo-blur';
@@ -91,16 +92,23 @@ const TruckAccountDetailsView = () => {
                     try {
                         setProcessing(true);
 
-                        // First, approve the account
-                        await updateDocument('truckPersonDetails', accountDetails.id, {
-                            isApproved: true,
-                            approvalStatus: 'approved',
-                            approvedAt: new Date().toISOString(),
-                            approvedBy: user?.uid || 'admin',
-                        });
+                        // First, approve the account with admin tracking
+                        await updateDocumentWithAdminTracking(
+                            'truckPersonDetails',
+                            accountDetails.id,
+                            {
+                                isApproved: true,
+                                approvalStatus: 'approved',
+                                approvedAt: new Date().toISOString()
+                            },
+                            ADMIN_ACTIONS.APPROVE_USER,
+                            'account',
+                            accountDetails.accType === 'owner' ? accountDetails.ownerName : accountDetails.brokerName,
+                            'Truck account approved by admin'
+                        );
 
                         // Check if the account type was not approved before
-                        // If so, update all trucks belonging to this user to set accTypeIsApproved to true
+                        // If so, update all trucks and loads belonging to this user to set accTypeIsApproved to true
                         if (!accountDetails.isApproved) {
                             try {
                                 // Query all trucks belonging to this user
@@ -110,16 +118,19 @@ const TruckAccountDetailsView = () => {
 
                                 if (trucksResult.data && trucksResult.data.length > 0) {
                                     // Update all trucks to set accTypeIsApproved to true
-                                    const updatePromises = trucksResult.data.map((truck: Truck) =>
+                                    const truckUpdatePromises = trucksResult.data.map((truck: Truck) =>
                                         updateDocument('Trucks', truck.id, {
                                             accTypeIsApproved: true
                                         })
                                     );
 
-                                    await Promise.all(updatePromises);
+                                    await Promise.all(truckUpdatePromises);
                                 }
-                            } catch (truckUpdateError) {
-                                console.error('Error updating trucks:', truckUpdateError);
+
+                                // Update all loads belonging to this user
+                                await updateUserLoadsAccountApproval(accountDetails.userId);
+                            } catch (updateError) {
+                                console.error('Error updating trucks and loads:', updateError);
                             }
                         }
 

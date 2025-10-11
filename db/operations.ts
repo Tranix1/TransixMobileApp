@@ -3,6 +3,7 @@ import { db, auth } from "./fireBaseConfig";
 import { getDownloadURL, ref, uploadBytes, } from "firebase/storage";
 import { storage } from "./fireBaseConfig";
 import { usePushNotifications, sendPushNotification } from "@/Utilities/pushNotification";
+import { logAdminAction, getCurrentAdminInfo, ADMIN_ACTIONS } from "@/Utilities/adminActionTracker";
 /**
  * Add a document to a Firestore collection.
  * @param collectionName - The name of the Firestore collection.
@@ -40,6 +41,55 @@ export const updateDocument = async (collectionName: string, docId: string, data
         await updateDoc(docRef, data);
     } catch (error) {
         console.error("Error updating document:", error);
+        throw error;
+    }
+};
+
+/**
+ * Update a document with admin tracking
+ * @param collectionName - The name of the Firestore collection.
+ * @param docId - The ID of the document to update.
+ * @param data - The data to update in the document.
+ * @param action - The admin action being performed.
+ * @param targetType - The type of target being modified.
+ * @param targetName - Optional name of the target.
+ * @param details - Optional details about the action.
+ */
+export const updateDocumentWithAdminTracking = async (
+    collectionName: string,
+    docId: string,
+    data: object,
+    action: string,
+    targetType: 'truck' | 'user' | 'load' | 'account' | 'admin',
+    targetName?: string,
+    details?: string
+) => {
+    try {
+        // Get current admin info
+        const adminInfo = getCurrentAdminInfo();
+
+        // Update the document with admin tracking
+        const docRef = doc(db, collectionName, docId);
+        await updateDoc(docRef, {
+            ...data,
+            lastModifiedBy: adminInfo.adminId,
+            lastModifiedByEmail: adminInfo.adminEmail,
+            lastModifiedAt: new Date().toISOString()
+        });
+
+        // Log the admin action
+        await logAdminAction({
+            action,
+            targetType,
+            targetId: docId,
+            targetName,
+            details,
+            newData: data
+        });
+
+        return true;
+    } catch (error) {
+        console.error("Error updating document with admin tracking:", error);
         throw error;
     }
 };
@@ -394,7 +444,11 @@ export const searchUsersByEmail = async (email: string) => {
     try {
         const q = query(collection(db, "personalData"), where("email", "==", email));
         const querySnapshot = await getDocs(q);
-        const users = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const users = querySnapshot.docs.map((doc) => ({
+            id: doc.id, // Document ID
+            uid: doc.data().uid, // Firebase Auth UID
+            ...doc.data()
+        }));
         return users;
     } catch (error) {
         console.error("Error searching users by email:", error);
@@ -495,6 +549,32 @@ export const getReferrerByCode = async (referrerCode: string) => {
     }
 };
 
+/**
+ * Get referral code for a specific user
+ * @param userId - The ID of the user (can be either document ID or Firebase UID)
+ */
+export const getReferralCodeByUserId = async (userEmail: string) => {
+    try {
+        // Direct search for referral using email
+        const q = query(collection(db, "referrers"), where("userEmail", "==", userEmail));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return { exists: false, referrerData: null };
+        }
+
+        const referrerDoc = querySnapshot.docs[0];
+        const data = referrerDoc.data();
+        return {
+            exists: true,
+            referrerData: { id: referrerDoc.id, ...data }
+        };
+    } catch (error) {
+        console.error("Error getting referral code:", error);
+        throw error;
+    }
+};
+
 export const getAllReferrers = async () => {
     try {
         const q = query(collection(db, "referrers"), orderBy("createdAt", "desc"));
@@ -578,13 +658,27 @@ export const generateUniqueUserId = async (): Promise<string> => {
  */
 export const approveLoad = async (loadId: string, approvedBy: string) => {
     try {
+        const adminInfo = getCurrentAdminInfo();
         const loadRef = doc(db, 'Cargo', loadId);
         await updateDoc(loadRef, {
             approvalStatus: 'approved',
             isApproved: true,
             approvedAt: Date.now().toString(),
-            approvedBy: approvedBy
+            approvedBy: approvedBy,
+            approvedByEmail: adminInfo.adminEmail,
+            lastModifiedBy: adminInfo.adminId,
+            lastModifiedByEmail: adminInfo.adminEmail,
+            lastModifiedAt: new Date().toISOString()
         });
+
+        // Log the admin action
+        await logAdminAction({
+            action: ADMIN_ACTIONS.APPROVE_LOAD,
+            targetType: 'load',
+            targetId: loadId,
+            details: 'Load approved by admin'
+        });
+
         return true;
     } catch (error) {
         console.error("Error approving load:", error);
@@ -600,14 +694,28 @@ export const approveLoad = async (loadId: string, approvedBy: string) => {
  */
 export const rejectLoad = async (loadId: string, rejectedBy: string, rejectionReason: string) => {
     try {
+        const adminInfo = getCurrentAdminInfo();
         const loadRef = doc(db, 'Cargo', loadId);
         await updateDoc(loadRef, {
             approvalStatus: 'rejected',
             isApproved: false,
             rejectedAt: Date.now().toString(),
             rejectedBy: rejectedBy,
-            rejectionReason: rejectionReason
+            rejectedByEmail: adminInfo.adminEmail,
+            rejectionReason: rejectionReason,
+            lastModifiedBy: adminInfo.adminId,
+            lastModifiedByEmail: adminInfo.adminEmail,
+            lastModifiedAt: new Date().toISOString()
         });
+
+        // Log the admin action
+        await logAdminAction({
+            action: ADMIN_ACTIONS.DECLINE_LOAD,
+            targetType: 'load',
+            targetId: loadId,
+            details: `Load rejected: ${rejectionReason}`
+        });
+
         return true;
     } catch (error) {
         console.error("Error rejecting load:", error);
@@ -622,16 +730,71 @@ export const rejectLoad = async (loadId: string, rejectedBy: string, rejectionRe
  */
 export const approveLoadAccount = async (accountId: string, approvedBy: string) => {
     try {
+        const adminInfo = getCurrentAdminInfo();
         const accountRef = doc(db, 'cargoPersonalDetails', accountId);
         await updateDoc(accountRef, {
             approvalStatus: 'approved',
             isApproved: true,
             approvedAt: Date.now().toString(),
-            approvedBy: approvedBy
+            approvedBy: approvedBy,
+            approvedByEmail: adminInfo.adminEmail,
+            lastModifiedBy: adminInfo.adminId,
+            lastModifiedByEmail: adminInfo.adminEmail,
+            lastModifiedAt: new Date().toISOString()
         });
+
+        // Get the account details to find the userId and update all user loads
+        const accountDoc = await getDoc(accountRef);
+        if (accountDoc.exists()) {
+            const accountData = accountDoc.data();
+            const userId = accountData.userId;
+
+            if (userId) {
+                // Update all loads belonging to this user
+                await updateUserLoadsAccountApproval(userId);
+            }
+        }
+
+        // Log the admin action
+        await logAdminAction({
+            action: ADMIN_ACTIONS.APPROVE_USER,
+            targetType: 'account',
+            targetId: accountId,
+            details: 'Load account approved by admin'
+        });
+
         return true;
     } catch (error) {
         console.error("Error approving load account:", error);
+        throw error;
+    }
+};
+
+/**
+ * Update all loads for a user to set personalAccTypeIsApproved to true
+ * @param userId - The ID of the user whose loads should be updated
+ */
+export const updateUserLoadsAccountApproval = async (userId: string) => {
+    try {
+        // Update all loads belonging to this user to set personalAccTypeIsApproved to true
+        const loadsQuery = query(
+            collection(db, 'Cargo'),
+            where('userId', '==', userId)
+        );
+        const loadsSnapshot = await getDocs(loadsQuery);
+
+        if (!loadsSnapshot.empty) {
+            const loadUpdatePromises = loadsSnapshot.docs.map(loadDoc =>
+                updateDoc(doc(db, 'Cargo', loadDoc.id), {
+                    personalAccTypeIsApproved: true
+                })
+            );
+            await Promise.all(loadUpdatePromises);
+            console.log(`Updated ${loadsSnapshot.docs.length} loads for user ${userId}`);
+        }
+        return true;
+    } catch (error) {
+        console.error("Error updating user loads account approval:", error);
         throw error;
     }
 };

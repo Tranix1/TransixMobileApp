@@ -12,7 +12,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 import { BlurView } from 'expo-blur';
 import { Truck, User } from "@/types/types";
-import { deleteDocument, readById, updateDocument } from "@/db/operations";
+import { deleteDocument, readById, updateDocument, updateDocumentWithAdminTracking } from "@/db/operations";
+import { ADMIN_ACTIONS } from "@/Utilities/adminActionTracker";
 import { TruckTrackerManager } from "@/components/TruckTrackerManager";
 import { Image } from 'expo-image'
 import { useAuth } from "@/context/AuthContext";
@@ -274,13 +275,20 @@ const TruckDetails = () => {
         try {
             setProcessing(true);
 
-            // Update truck status
-            await updateDocument('Trucks', truckData.id, {
-                isApproved: true,
-                approvalStatus: 'approved',
-                approvedAt: new Date().toISOString(),
-                approvedBy: 'admin'
-            });
+            // Update truck status with admin tracking
+            await updateDocumentWithAdminTracking(
+                'Trucks',
+                truckData.id,
+                {
+                    isApproved: true,
+                    approvalStatus: 'approved',
+                    approvedAt: new Date().toISOString()
+                },
+                ADMIN_ACTIONS.APPROVE_TRUCK,
+                'truck',
+                `${truckData.truckType} - ${truckData.truckCapacity}`,
+                'Truck approved by admin'
+            );
 
             // Send notification to truck owner
             if (truckData.expoPushToken) {
@@ -313,14 +321,21 @@ const TruckDetails = () => {
         try {
             setProcessing(true);
 
-            // Update truck status
-            await updateDocument('Trucks', truckData.id, {
-                isApproved: false,
-                approvalStatus: 'rejected',
-                rejectedAt: new Date().toISOString(),
-                rejectedBy: 'admin',
-                rejectionReason: declineReason.trim()
-            });
+            // Update truck status with admin tracking
+            await updateDocumentWithAdminTracking(
+                'Trucks',
+                truckData.id,
+                {
+                    isApproved: false,
+                    approvalStatus: 'rejected',
+                    rejectedAt: new Date().toISOString(),
+                    rejectionReason: declineReason.trim()
+                },
+                ADMIN_ACTIONS.DECLINE_TRUCK,
+                'truck',
+                `${truckData.truckType} - ${truckData.truckCapacity}`,
+                `Truck declined: ${declineReason.trim()}`
+            );
 
             // Send notification to truck owner
             if (truckData.expoPushToken) {

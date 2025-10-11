@@ -30,6 +30,7 @@ interface FuelStationData {
     description: string;
     addedBy: string;
     addedAt: Date;
+    referrerId: string | null;
 }
 
 export default function AddFuel() {
@@ -104,7 +105,9 @@ export default function AddFuel() {
                 amenities,
                 description: description.trim(),
                 addedBy: user?.uid || 'anonymous',
-                addedAt: new Date()
+                addedAt: new Date(),
+                // Referral system
+                referrerId: user?.referrerId || null
             };
 
             await addDocument('FuelStations', fuelStationData);

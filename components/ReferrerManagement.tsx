@@ -98,7 +98,7 @@ export default function ReferrerManagement({ visible }: ReferrerManagementProps)
 
             // Create referrer document
             const referrerData = {
-                userId: foundUser.id,
+                userId: foundUser.uid, // Use Firebase Auth UID instead of document ID
                 userEmail: foundUser.email,
                 userName: foundUser.displayName || foundUser.email,
                 referrerCode: code,

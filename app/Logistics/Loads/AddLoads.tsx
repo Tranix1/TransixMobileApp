@@ -44,6 +44,7 @@ import { uploadImage } from "@/db/operations";
 import { pickDocument, selectManyImages, pickDocumentsOnly } from "@/Utilities/utils";
 import { DocumentAsset } from "@/types/types";
 import { ImagePickerAsset } from "expo-image-picker";
+import { ErrorModal } from "@/components/ErrorModal";
 
 import { notifyTrucksByFilters } from "@/Utilities/notifyTruckByFilters";
 import { TruckNeededType } from "@/types/types";
@@ -151,10 +152,17 @@ const AddLoadDB = () => {
           // ✅ Bounds for auto-zoom
           setBounds(route.bounds);
         } else {
-          console.warn("No route found:", data.status);
+          // No route found
         }
       } catch (err) {
         console.error("Directions API error:", err);
+        const errorMessage = err instanceof Error ? err.message : "Failed to get directions";
+        showError(
+          "Directions Error", 
+          "Unable to calculate route between locations. Please check your internet connection and try again.", 
+          err instanceof Error ? err.stack : String(err), 
+          false
+        );
       }
     }
 
@@ -186,22 +194,46 @@ const AddLoadDB = () => {
   const [selectedAfricanTrucks, setSelectedAfricanTrucks] = useState<TruckTypeProps[]>([]);
 
   const askVertex = async () => {
-    await askVertexAI(aiQuestion, setAiLoading, setAiAnswer);
+    try {
+      await askVertexAI(aiQuestion, setAiLoading, setAiAnswer);
+    } catch (error) {
+      console.error("Error asking Vertex AI:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      const errorDetails = error instanceof Error ? error.stack : String(error);
+      showError(
+        "AI Question Error", 
+        "Failed to get AI response. Please try again.", 
+        errorDetails, 
+        true
+      );
+    }
   };
 
   // AI-powered truck type detection from images
   const handleAnalyzeLoadImages = async () => {
-    await analyzeLoadImages(
-      loadImages,
-      setAiLoading,
-      setAiAnalysisError,
-      setAiAnalysisComplete,
-      setAiDetectedCargoArea,
-      setAiDetectedTruckType,
-      setAiDetectedCapacity,
-      setAiDetectedTankerType,
-      setAiAnswer
-    );
+    try {
+      await analyzeLoadImages(
+        loadImages,
+        setAiLoading,
+        setAiAnalysisError,
+        setAiAnalysisComplete,
+        setAiDetectedCargoArea,
+        setAiDetectedTruckType,
+        setAiDetectedCapacity,
+        setAiDetectedTankerType,
+        setAiAnswer
+      );
+    } catch (error) {
+      console.error("Error analyzing load images:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      const errorDetails = error instanceof Error ? error.stack : String(error);
+      showError(
+        "AI Analysis Error", 
+        "Failed to analyze your load images. Please try again.", 
+        errorDetails, 
+        true
+      );
+    }
   };
 
   function pushTruck() {
@@ -254,6 +286,31 @@ const AddLoadDB = () => {
   const { user, alertBox } = useAuth();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Error modal state
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorTitle, setErrorTitle] = useState("Error");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [errorDetails, setErrorDetails] = useState("");
+  const [showErrorDetails, setShowErrorDetails] = useState(false);
+
+  // Helper function to show error modal
+  const showError = (title: string, message: string, details?: string, showDetails: boolean = false) => {
+    setErrorTitle(title);
+    setErrorMessage(message);
+    setErrorDetails(details || "");
+    setShowErrorDetails(showDetails);
+    setShowErrorModal(true);
+  };
+
+  // Helper function to close error modal
+  const closeError = () => {
+    setShowErrorModal(false);
+    setErrorTitle("Error");
+    setErrorMessage("");
+    setErrorDetails("");
+    setShowErrorDetails(false);
+  };
 
 
 
@@ -510,7 +567,6 @@ const AddLoadDB = () => {
   // Validation functions that don't trigger state updates (for use in useMemo)
   const validateName = (name: string) => {
     const isValid = name && name.trim() !== '' && name.trim().length >= 2;
-    console.log('validateName:', { name, trimmed: name?.trim(), length: name?.trim()?.length, isValid });
     return isValid;
   };
 
@@ -518,47 +574,27 @@ const AddLoadDB = () => {
     const trimmed = phone?.trim() || '';
     // More lenient phone validation - allow letters for international formats
     const isValid = phone && trimmed !== '' && trimmed.length >= 7;
-    console.log('validatePhone:', { phone, trimmed, length: trimmed.length, isValid });
     return isValid;
   };
 
   const validateEmail = (email: string) => {
     const trimmed = email?.trim() || '';
     const isValid = email && trimmed !== '' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
-    console.log('validateEmail:', { email, trimmed, isValid });
     return isValid;
   };
 
   const validateCountryCode = (countryCode: any) => {
     const isValid = !!(countryCode && countryCode.name);
-    console.log('validateCountryCode:', { countryCode, isValid });
     return isValid;
   };
 
   const validateDocument = (documents: DocumentAsset[], fileTypes: any[]) => {
     const isValid = documents[0] && fileTypes[0];
-    console.log('validateDocument:', {
-      documentsLength: documents.length,
-      fileTypesLength: fileTypes.length,
-      hasFirstDoc: !!documents[0],
-      hasFirstFileType: !!fileTypes[0],
-      isValid
-    });
     return isValid;
   };
 
   // Memoized validation results to prevent infinite re-renders
   const isGeneralPersonalDetailsValid = useMemo(() => {
-    console.log('=== General Personal Details Validation ===');
-    console.log('Current values:', {
-      personalName,
-      personalPhone,
-      personalEmail,
-      personalCountryCode,
-      selectedPersonalDocuments: selectedPersonalDocuments.length,
-      personalFileType: personalFileType.length
-    });
-
     const nameValid = validateName(personalName);
     const phoneValid = validatePhone(personalPhone);
     const emailValid = validateEmail(personalEmail);
@@ -566,24 +602,10 @@ const AddLoadDB = () => {
     const documentValid = validateDocument(selectedPersonalDocuments, personalFileType);
 
     const isValid = nameValid && phoneValid && emailValid && countryCodeValid && documentValid;
-    console.log('General validation result:', { nameValid, phoneValid, emailValid, countryCodeValid, documentValid, isValid });
-    console.log('=== End General Validation ===');
-
     return isValid;
   }, [personalName, personalPhone, personalEmail, personalCountryCode, selectedPersonalDocuments, personalFileType]);
 
   const isProfessionalPersonalDetailsValid = useMemo(() => {
-    console.log('=== Professional Personal Details Validation ===');
-    console.log('Current values:', {
-      personalName,
-      personalPhone,
-      personalEmail,
-      personalCountryCode,
-      typeOfBrokerPersonal,
-      selectedBrokerPersonalDocuments: selectedBrokerPersonalDocuments.length,
-      brokerPersonalFileType: brokerPersonalFileType.length
-    });
-
     const nameValid = validateName(personalName);
     const phoneValid = validatePhone(personalPhone);
     const emailValid = validateEmail(personalEmail);
@@ -591,7 +613,6 @@ const AddLoadDB = () => {
 
     // Check broker type selection
     if (!typeOfBrokerPersonal || typeOfBrokerPersonal.trim() === '') {
-      console.log('Professional validation failed: No broker type selected');
       return false;
     }
 
@@ -606,26 +627,6 @@ const AddLoadDB = () => {
     }
 
     const isValid = nameValid && phoneValid && emailValid && countryCodeValid && idDocValid && residenceDocValid && companyDocsValid;
-
-    // Debug logging
-    console.log('Professional validation result:', {
-      typeOfBrokerPersonal,
-      nameValid,
-      phoneValid,
-      emailValid,
-      countryCodeValid,
-      idDocValid,
-      residenceDocValid,
-      companyDocsValid,
-      isValid,
-      documents: selectedBrokerPersonalDocuments.map((doc, i) => ({
-        index: i,
-        hasDoc: !!doc,
-        hasFileType: !!brokerPersonalFileType[i]
-      }))
-    });
-    console.log('=== End Professional Validation ===');
-
     return isValid;
   }, [personalName, personalPhone, personalEmail, personalCountryCode, typeOfBrokerPersonal, selectedBrokerPersonalDocuments, brokerPersonalFileType]);
 
@@ -743,7 +744,6 @@ const AddLoadDB = () => {
         approvalStatus: 'pending'
       };
 
-      console.log('Saving general personal details:', personalDetailsData);
       await setDocuments("cargoPersonalDetails", personalDetailsData);
 
       setShowPersonalDetailsModal(false);
@@ -761,7 +761,14 @@ const AddLoadDB = () => {
       });
     } catch (error) {
       console.error("Error saving personal details:", error);
-      alertBox("Error", "Failed to save personal details", [], "error");
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      const errorDetails = error instanceof Error ? error.stack : String(error);
+      showError(
+        "Failed to Save Personal Details", 
+        "There was an error saving your personal details. Please try again.", 
+        errorDetails, 
+        true
+      );
     } finally {
       setIsSubmittingPersonal(false);
     }
@@ -770,6 +777,8 @@ const AddLoadDB = () => {
   // Handle professional user personal details submission
   const handleUpdateProfessionalDetails = async () => {
     setUploadingPersonalD(true);
+    
+    try {
 
     // Use comprehensive validation function with error state updates
     const nameValid = validatePersonalName(personalName);
@@ -843,7 +852,6 @@ const AddLoadDB = () => {
       approvalStatus: 'pending'
     };
 
-    console.log('Saving professional personal details:', professionalDetailsData);
     await setDocuments("cargoPersonalDetails", professionalDetailsData);
 
     setShowPersonalDetailsModal(false);
@@ -859,6 +867,19 @@ const AddLoadDB = () => {
         });
       }
     });
+    } catch (error) {
+      console.error("Error saving professional details:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      const errorDetails = error instanceof Error ? error.stack : String(error);
+      showError(
+        "Failed to Save Professional Details", 
+        "There was an error saving your professional details. Please try again.", 
+        errorDetails, 
+        true
+      );
+    } finally {
+      setUploadingPersonalD(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -880,12 +901,10 @@ const AddLoadDB = () => {
     // Additional validation: Check if personal details are approved (optional - can be removed if not needed)
     if (userType === 'general' && getGeneralDetails && !getGeneralDetails.isApproved) {
       // Allow submission but show warning
-      console.log("General user personal details pending approval");
     }
 
     if (userType === 'professional' && getProfessionalDetails && !getProfessionalDetails.isApproved) {
       // Allow submission but show warning
-      console.log("Professional user personal details pending approval");
     }
 
     // Use utility function for validation
@@ -1005,16 +1024,6 @@ const AddLoadDB = () => {
       personalAccType: getGeneralDetails?.accType || getProfessionalDetails?.accType || null,
     }, user, expoPushToken);
 
-    console.log('Load data with personal details:', {
-      personalDetailsDocId: loadData.personalDetailsDocId,
-      personalAccType: loadData.personalAccType,
-      personalAccTypeIsApproved: loadData.personalAccTypeIsApproved,
-      returnLoad: loadData.returnLoad,
-      returnRate: loadData.returnRate,
-      returnTerms: loadData.returnTerms,
-      returnCurrency: loadData.returnCurrency,
-      returnModel: loadData.returnModel
-    });
 
     try {
       // Ensure addDocument is not a React hook or using hooks internally.
@@ -1042,7 +1051,14 @@ const AddLoadDB = () => {
 
     } catch (error) {
       console.error("Error submitting load:", error);
-      // alert("Failed to submit load. Please try again."); 
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      const errorDetails = error instanceof Error ? error.stack : String(error);
+      showError(
+        "Failed to Submit Load", 
+        "There was an error submitting your load. Please try again.", 
+        errorDetails, 
+        true
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -1057,7 +1073,7 @@ const AddLoadDB = () => {
       <Heading page='Create Load' rightComponent={
         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: wp(3) }}>
           <View>
-            <TouchableNativeFeedback onPress={() => console.log('add to draft')}>
+            <TouchableNativeFeedback onPress={() => {}}>
               <ThemedText style={{ alignSelf: 'flex-start' }}>Add Draft</ThemedText>
             </TouchableNativeFeedback>
           </View>
@@ -1964,7 +1980,6 @@ const AddLoadDB = () => {
                   ]}
                   condition={typeOfBrokerPersonal}
                   onSelect={(value: string) => {
-                    console.log('Broker type selected:', value);
                     setTypeOfBrokerPersonal(value);
                   }}
                 />
@@ -2034,7 +2049,6 @@ const AddLoadDB = () => {
                   subtitle="Upload your ID or Passport (PDF or Image)"
                   buttonTiitle="National ID / Passport"
                   onPickDocument={() => {
-                    console.log('Picking National ID document');
                     pickDocument(setSelectedBrokerPersonalDocuments, setBrokerPersonalFileType);
                   }}
                 />
@@ -2045,7 +2059,6 @@ const AddLoadDB = () => {
                   subtitle="Upload utility bill, lease, or bank statement (PDF or Image)"
                   buttonTiitle="Proof of Address"
                   onPickDocument={() => {
-                    console.log('Picking Proof of Residence document');
                     pickDocument(setSelectedBrokerPersonalDocuments, setBrokerPersonalFileType);
                   }}
                   disabled={!selectedBrokerPersonalDocuments[0]}
@@ -2091,6 +2104,16 @@ const AddLoadDB = () => {
           </View>
         </ScreenWrapper>
       </Modal>
+
+      {/* Error Modal */}
+      <ErrorModal
+        visible={showErrorModal}
+        onClose={closeError}
+        title={errorTitle}
+        message={errorMessage}
+        details={errorDetails}
+        showDetails={showErrorDetails}
+      />
     </ScreenWrapper>
   );
 };
