@@ -1,4 +1,4 @@
-import { StyleSheet, TouchableOpacity, View, TouchableHighlight, Linking } from 'react-native'
+import { StyleSheet, TouchableOpacity, View, TouchableHighlight, Linking, Modal } from 'react-native'
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { Load } from '@/types/types'
 import { wp } from '@/constants/common'
@@ -14,6 +14,7 @@ import { AntDesign } from '@expo/vector-icons'; // or any close icon
 import { WebView } from 'react-native-webview';
 import { router } from 'expo-router';
 import { parseCoordinateString, isValidCoordinate, DEFAULT_COORDINATES } from '@/Utilities/coordinateUtils';
+import DocumentSelectionModal from './DocumentSelectionModal';
 
 interface DspAllLoadsProps {
   item: Load;
@@ -35,16 +36,71 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
 
 
   const [dspProofImage, setDspProofImage] = useState(false);
-  function dspProofOfOrder(proofOfOrderType: string) {
-    console.log(proofOfOrderType)
-    if (proofOfOrderType === "pdf") {
-      Linking.openURL(item.proofOfOrder)
+  const [showProofSelectionModal, setShowProofSelectionModal] = useState(false);
+  const [selectedProofType, setSelectedProofType] = useState<'images' | 'documents' | null>(null);
+  const [showDocumentSelectionModal, setShowDocumentSelectionModal] = useState(false);
+  const [availableDocuments, setAvailableDocuments] = useState<Array<{ url: string, type: string }>>([]);
 
-    } else if (proofOfOrderType === "image") {
-      setDspProofImage(true)
-    } else {
+  // Check what proof types are available
+  const hasProofImages = item.proofOfOrder && Array.isArray(item.proofOfOrder) && item.proofOfOrderType && Array.isArray(item.proofOfOrderType) &&
+    item.proofOfOrder.some((_, index) => item.proofOfOrderType[index] === 'image');
+  const hasProofDocuments = item.proofOfOrder && Array.isArray(item.proofOfOrder) && item.proofOfOrderType && Array.isArray(item.proofOfOrderType) &&
+    item.proofOfOrder.some((_, index) => ['pdf', 'doc', 'docx'].includes(item.proofOfOrderType[index] as any));
 
+  function handleProofPress() {
+    if (hasProofImages && hasProofDocuments) {
+      // Both available - show selection modal
+      setShowProofSelectionModal(true);
+    } else if (hasProofImages) {
+      // Only images available
+      setSelectedProofType('images');
+      setDspProofImage(true);
+    } else if (hasProofDocuments) {
+      // Only documents available
+      setSelectedProofType('documents');
+      showDocumentList();
     }
+  }
+
+  function showDocumentList() {
+    if (item.proofOfOrder && Array.isArray(item.proofOfOrder) && item.proofOfOrderType && Array.isArray(item.proofOfOrderType)) {
+      const documents = item.proofOfOrder
+        .map((url, index) => ({ url, type: item.proofOfOrderType[index] as any }))
+        .filter(doc => ['pdf', 'doc', 'docx'].includes(doc.type));
+
+
+      if (documents.length === 1) {
+        // Only one document, open it directly
+        Linking.openURL(documents[0].url);
+      } else if (documents.length > 1) {
+        // Multiple documents, show custom modal
+        setAvailableDocuments(documents);
+        setShowDocumentSelectionModal(true);
+      } else {
+        // No documents found, still show modal with empty state
+        setAvailableDocuments([]);
+        setShowDocumentSelectionModal(true);
+      }
+    } else {
+      // No proof data available, show modal with empty state
+      setAvailableDocuments([]);
+      setShowDocumentSelectionModal(true);
+    }
+  }
+
+  function handleProofTypeSelection(type: 'images' | 'documents') {
+    setSelectedProofType(type);
+    setShowProofSelectionModal(false);
+
+    if (type === 'images') {
+      setDspProofImage(true);
+    } else {
+      showDocumentList();
+    }
+  }
+
+  function handleDocumentSelect(document: { url: string, type: string }) {
+    Linking.openURL(document.url);
   }
 
 
@@ -165,7 +221,7 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
               </View>
             )}
 
-            {item.proofOfOrderType && (
+            {(hasProofImages || hasProofDocuments) && (
               <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
                 <ThemedText type='tiny' style={{}}>Proof Attached</ThemedText>
               </View>
@@ -393,12 +449,12 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
 
               {/* Action Buttons */}
               <View style={styles.actionButtonsContainer}>
-                {(item.proofOfOrder || (item.loadImages && item.loadImages.length > 0)) && (
+                {(hasProofImages || hasProofDocuments || (item.loadImages && item.loadImages.length > 0)) && (
                   <TouchableOpacity
                     style={[styles.actionButton, { backgroundColor: '#4eb37a' }]}
                     onPress={() => {
-                      if (item.proofOfOrder) {
-                        dspProofOfOrder(item.proofOfOrderType);
+                      if (hasProofImages || hasProofDocuments) {
+                        handleProofPress();
                       } else if (item.loadImages && item.loadImages.length > 0) {
                         setDspProofImage(true);
                       }
@@ -406,7 +462,7 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
                   >
                     <Ionicons name="document-text" size={wp(4)} color="white" />
                     <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(1) }}>
-                      {item.proofOfOrder ? 'Proof' : 'Images'}
+                      {(hasProofImages || hasProofDocuments) ? 'Proof' : 'Images'}
                     </ThemedText>
                   </TouchableOpacity>
                 )}
@@ -453,32 +509,13 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
                   </ThemedText>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.actionButton, { backgroundColor: '#f59e0b' }]}
-                  onPress={() => {
-                    const url = `https://transix.net/selectedUserLoads/${item.userId}/${item.companyName}/${item.deletionTime}`;
-                    const updatedUrl = replaceSpacesWithPercent(url);
-                    const message = `${item.companyName}
-        Is this Load still available
-        ${item.typeofLoad} from ${item.origin} to ${item.destination}
-        ${item.rate}
-
-        From: ${updatedUrl}`;
-
-                    // You can implement sharing functionality here
-                    console.log('Share load:', message);
-                  }}
-                >
-                  <Ionicons name="share" size={wp(4)} color="white" />
-                  <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(1) }}>
-                    Share
-                  </ThemedText>
-                </TouchableOpacity>
               </View>
 
               <ImageViewing
-                images={item.proofOfOrder
-                  ? [{ uri: item.proofOfOrder }]
+                images={selectedProofType === 'images' && item.proofOfOrder && Array.isArray(item.proofOfOrder) && item.proofOfOrderType && Array.isArray(item.proofOfOrderType)
+                  ? item.proofOfOrder
+                    .map((url, index) => ({ uri: url }))
+                    .filter((_, index) => item.proofOfOrderType[index] as any === 'image')
                   : (item.loadImages || []).map((img: any) => ({ uri: typeof img === 'string' ? img : img.uri || '' }))
                 }
                 imageIndex={0}
@@ -503,12 +540,68 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
                       <AntDesign name="close" size={15} color="#fff" />
                     </TouchableOpacity>
                     <ThemedText style={{ fontWeight: 'bold', fontSize: 14 }}>
-                      {item.proofOfOrder ? 'Proof of Order' : 'Load Images'}
+                      {selectedProofType === 'images' ? 'Proof Images' : 'Load Images'}
                     </ThemedText>
                   </View>
                 )}
               />
 
+              {/* Proof Selection Modal */}
+              <Modal
+                visible={showProofSelectionModal}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowProofSelectionModal(false)}
+              >
+                <View style={styles.modalOverlay}>
+                  <View style={[styles.modalContent, { backgroundColor: background }]}>
+                    <ThemedText type="subtitle" style={{ marginBottom: wp(4), textAlign: 'center' }}>
+                      Choose Proof Type
+                    </ThemedText>
+
+                    <TouchableOpacity
+                      style={[styles.modalButton, { backgroundColor: '#4eb37a' }]}
+                      onPress={() => handleProofTypeSelection('images')}
+                    >
+                      <Ionicons name="images" size={wp(5)} color="white" />
+                      <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(2) }}>
+                        View Images ({item.proofOfOrder && Array.isArray(item.proofOfOrder) && item.proofOfOrderType && Array.isArray(item.proofOfOrderType) ?
+                          item.proofOfOrder.filter((_, index) => item.proofOfOrderType[index] as any === 'image').length : 0})
+                      </ThemedText>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.modalButton, { backgroundColor: '#2563eb' }]}
+                      onPress={() => handleProofTypeSelection('documents')}
+                    >
+                      <Ionicons name="document-text" size={wp(5)} color="white" />
+                      <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(2) }}>
+                        View Documents ({item.proofOfOrder && Array.isArray(item.proofOfOrder) && item.proofOfOrderType && Array.isArray(item.proofOfOrderType) ?
+                          item.proofOfOrder.filter((_, index) => ['pdf', 'doc', 'docx'].includes(item.proofOfOrderType[index] as any)).length : 0})
+                      </ThemedText>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.modalButton, { backgroundColor: coolGray, marginTop: wp(2) }]}
+                      onPress={() => setShowProofSelectionModal(false)}
+                    >
+                      <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>
+                        Cancel
+                      </ThemedText>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
+
+              {/* Document Selection Modal */}
+              <DocumentSelectionModal
+                visible={showDocumentSelectionModal}
+                onClose={() => setShowDocumentSelectionModal(false)}
+                documents={availableDocuments}
+                onDocumentSelect={handleDocumentSelect}
+                title="Select Document"
+                subtitle="Choose a document to view:"
+              />
 
             </View>
           )}
@@ -708,6 +801,38 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     minWidth: 0,
     fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: wp(5),
+  },
+  modalContent: {
+    borderRadius: wp(4),
+    padding: wp(5),
+    width: '100%',
+    maxWidth: wp(80),
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: wp(3),
+    paddingHorizontal: wp(4),
+    borderRadius: wp(2),
+    marginBottom: wp(2),
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
 
 });

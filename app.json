@@ -29,9 +29,6 @@
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE",
         "android.permission.WAKE_LOCK",
-        "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.VIBRATE",
-        "android.permission.WAKE_LOCK",
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE",
         "android.permission.POST_NOTIFICATIONS",
@@ -42,15 +39,6 @@
         "googleMaps": {
           "apiKey": "AIzaSyACiyh-wyKUcTXP0w9FU_N00l7L1ahZP8w"
         }
-      },
-      "notification": {
-        "icon": "./assets/images/TrnaixxNewBG.jpg",
-        "color": "#6a0c0c",
-        "defaultChannel": "myNotificationChannel"
-      },
-      "navigationBar": {
-        "visible": "leanback",
-        "color": "#0f0e11"
       }
     },
     "web": {
@@ -100,7 +88,9 @@
               "android.enableJetifier": "true",
               "android.enable16kbPageSizeSupport": "true",
               "android.enablePageSizeCompatMode": "true",
-              "android.bundle.enableUncompressedNativeLibs": "false"
+              "android.bundle.enableUncompressedNativeLibs": "false",
+              "android.enableProguardInReleaseBuilds": "true",
+              "android.enableR8": "true"
             },
             "packagingOptions": {
               "pickFirst": [

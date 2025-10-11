@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TouchableOpacity, Modal, Pressable, Alert, StyleSheet, TextInput } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Modal, Pressable, Alert, StyleSheet, TextInput, ActivityIndicator } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import ScreenWrapper from '@/components/ScreenWrapper';
@@ -14,7 +14,6 @@ import { updateDocument, fetchDocuments } from '@/db/operations';
 import { where } from 'firebase/firestore';
 import ImageViewing from 'react-native-image-viewing';
 import { BlurView } from 'expo-blur';
-import Button from '@/components/Button';
 import PDFViewer from '@/components/PDFViewer';
 import { fixFirebaseUrl } from '@/Utilities/utils';
 import { Truck } from '@/types/types';
@@ -421,20 +420,35 @@ const TruckAccountDetailsView = () => {
             {/* Action Buttons - Only show for pending/edited accounts */}
             {accountDetails.approvalStatus === 'pending' || accountDetails.approvalStatus === 'edited' ? (
                 <View style={styles.actionButtonsContainer}>
-                    <Button
-                        title="Reject"
+                    <TouchableOpacity
+                        style={[styles.actionButton, styles.rejectButton, processing && styles.disabledButton]}
                         onPress={() => setShowRejectModal(true)}
-                        style={[styles.actionButton, styles.rejectButton]}
-                        textStyle={styles.rejectButtonText}
                         disabled={processing}
-                    />
-                    <Button
-                        title="Approve"
+                        activeOpacity={0.7}
+                    >
+                        <ThemedText style={styles.rejectButtonText}>
+                            Reject
+                        </ThemedText>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.actionButton, styles.approveButton, processing && styles.disabledButton]}
                         onPress={handleApprove}
-                        style={[styles.actionButton, styles.approveButton]}
-                        textStyle={styles.approveButtonText}
                         disabled={processing}
-                    />
+                        activeOpacity={0.7}
+                    >
+                        {processing ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="small" color="#FFFFFF" />
+                                <ThemedText style={[styles.approveButtonText, { marginLeft: wp(2) }]}>
+                                    Processing...
+                                </ThemedText>
+                            </View>
+                        ) : (
+                            <ThemedText style={styles.approveButtonText}>
+                                Approve
+                            </ThemedText>
+                        )}
+                    </TouchableOpacity>
                 </View>
             ) : null}
 
@@ -467,23 +481,29 @@ const TruckAccountDetailsView = () => {
                         </View>
 
                         <View style={styles.modalButtons}>
-                            <Button
-                                title="Cancel"
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.cancelButton, processing && styles.disabledButton]}
                                 onPress={() => {
                                     setShowRejectModal(false);
                                     setRejectionReason('');
                                 }}
-                                style={[styles.modalButton, styles.cancelButton]}
-                                textStyle={styles.cancelButtonText}
                                 disabled={processing}
-                            />
-                            <Button
-                                title="Reject"
+                                activeOpacity={0.7}
+                            >
+                                <ThemedText style={styles.cancelButtonText}>
+                                    Cancel
+                                </ThemedText>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.confirmRejectButton, (processing || !rejectionReason.trim()) && styles.disabledButton]}
                                 onPress={handleReject}
-                                style={[styles.modalButton, styles.confirmRejectButton]}
-                                textStyle={styles.confirmRejectButtonText}
                                 disabled={processing || !rejectionReason.trim()}
-                            />
+                                activeOpacity={0.7}
+                            >
+                                <ThemedText style={styles.confirmRejectButtonText}>
+                                    Reject
+                                </ThemedText>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </BlurView>
@@ -502,7 +522,12 @@ const TruckAccountDetailsView = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: wp(4) },
-    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
+    },
     statusHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -550,6 +575,8 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: wp(3),
         borderRadius: wp(2),
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     rejectButton: {
         backgroundColor: '#F44336',
@@ -611,6 +638,11 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: wp(3),
         borderRadius: wp(2),
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    disabledButton: {
+        opacity: 0.6,
     },
     cancelButton: {
         backgroundColor: '#f0f0f0',

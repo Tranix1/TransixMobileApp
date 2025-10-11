@@ -43,8 +43,8 @@ const AlertComponent = ({ title, message, buttons, type = 'default', visible, on
 
     useFocusEffect(
         React.useCallback(() => {
-            BackHandler.addEventListener('hardwareBackPress', hide);
-            return () => BackHandler.removeEventListener('hardwareBackPress', hide);
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', hide);
+            return () => backHandler.remove();
         }, [])
     );
     return (

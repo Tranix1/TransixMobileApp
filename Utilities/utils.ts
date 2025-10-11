@@ -74,14 +74,14 @@ type ImageAsset = {
 
 export const selectManyImages = async (
   setImages: React.Dispatch<React.SetStateAction<ImagePickerAsset[]>>,
-  enableEditing: boolean,
-  AddToStore?: boolean // optional for multiple selection
+  enableEditing: boolean = false,
+  maxImages: number = 6
 ) => {
   // No permission check - uses Android Photo Picker automatically
   const pickerResult = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
     allowsEditing: enableEditing,
-    allowsMultipleSelection: AddToStore ?? false,
+    allowsMultipleSelection: true,
     aspect: [1, 1],
     quality: 0.7,
   });
@@ -89,6 +89,15 @@ export const selectManyImages = async (
   if (pickerResult.canceled || !pickerResult.assets?.length) {
     return;
   }
+
+  // Check if adding these images would exceed the maximum
+  setImages((prevImages) => {
+    if (prevImages.length + pickerResult.assets!.length > maxImages) {
+      alert(`Maximum ${maxImages} images allowed. You can add ${maxImages - prevImages.length} more images.`);
+      return prevImages;
+    }
+    return prevImages;
+  });
 
   const validAssets: ImagePickerAsset[] = [];
   let skippedTooLarge = false;
@@ -107,7 +116,7 @@ export const selectManyImages = async (
       }
     }
 
-    if (fileSize > 1.5 * 1024 * 1024) {
+    if (fileSize > 2 * 1024 * 1024) {
       skippedTooLarge = true;
       continue; // skip large images
     }
@@ -116,7 +125,7 @@ export const selectManyImages = async (
   }
 
   if (skippedTooLarge) {
-    alert('Some images were skipped because they were larger than 1.5MB.');
+    alert('Some images were skipped because they were larger than 2MB.');
   }
 
   if (validAssets.length > 0) {
@@ -130,12 +139,14 @@ export const selectManyImages = async (
 
 export const pickDocument = async (
   setDocuments: React.Dispatch<React.SetStateAction<DocumentAsset[]>>,
-  setMakeType: React.Dispatch<React.SetStateAction<('pdf' | 'image')[]>>
+  setMakeType: React.Dispatch<React.SetStateAction<('pdf' | 'image' | 'doc' | 'docx')[]>>,
+  maxFiles: number = 6
 ) => {
   try {
     const result = await DocumentPicker.getDocumentAsync({
-      type: ['application/pdf', 'image/*'],
+      type: ['application/pdf', 'image/*', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
       copyToCacheDirectory: true,
+      multiple: true,
     });
 
     if (result.canceled) return;
@@ -146,33 +157,128 @@ export const pickDocument = async (
       return;
     }
 
-    const selectedFile = assets[0];
+    // Check if adding these files would exceed the maximum
+    setDocuments((prevDocs) => {
+      if (prevDocs.length + assets.length > maxFiles) {
+        alert(`Maximum ${maxFiles} files allowed. You can add ${maxFiles - prevDocs.length} more files.`);
+        return prevDocs;
+      }
+      return prevDocs;
+    });
 
-    if (!selectedFile.uri) {
-      alert('Selected document URI is undefined.');
+    const validFiles: DocumentAsset[] = [];
+    const validTypes: ('pdf' | 'image' | 'doc' | 'docx')[] = [];
+
+    for (const selectedFile of assets) {
+      if (!selectedFile.uri) {
+        alert('Selected document URI is undefined.');
+        continue;
+      }
+
+      if (selectedFile.size !== undefined && selectedFile.size > 2 * 1024 * 1024) {
+        alert(`File ${selectedFile.name} is too large. Maximum size is 2MB.`);
+        continue;
+      }
+
+      const mimeType = selectedFile.mimeType || '';
+      const fileName = selectedFile.name || '';
+      let type: 'pdf' | 'image' | 'doc' | 'docx';
+
+      if (mimeType.startsWith('image/')) {
+        type = 'image';
+      } else if (mimeType === 'application/pdf') {
+        type = 'pdf';
+      } else if (mimeType === 'application/msword' || fileName.toLowerCase().endsWith('.doc')) {
+        type = 'doc';
+      } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || fileName.toLowerCase().endsWith('.docx')) {
+        type = 'docx';
+      } else {
+        alert(`Unsupported file type: ${selectedFile.name}`);
+        continue;
+      }
+
+      validFiles.push(selectedFile);
+      validTypes.push(type);
+    }
+
+    if (validFiles.length > 0) {
+      setDocuments((prevDocs) => [...prevDocs, ...validFiles]);
+      setMakeType((prevTypes) => [...prevTypes, ...validTypes]);
+    }
+
+  } catch (error) {
+    console.error('Error picking document:', error);
+    alert('An error occurred while picking the document.');
+  }
+};
+
+// Separate function for selecting only documents (PDF, Word)
+export const pickDocumentsOnly = async (
+  setDocuments: React.Dispatch<React.SetStateAction<DocumentAsset[]>>,
+  setMakeType: React.Dispatch<React.SetStateAction<('pdf' | 'doc' | 'docx')[]>>,
+  maxFiles: number = 6
+) => {
+  try {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+      copyToCacheDirectory: true,
+      multiple: true,
+    });
+
+    if (result.canceled) return;
+
+    const assets = result.assets;
+    if (!assets || assets.length === 0) {
+      alert('No file selected.');
       return;
     }
 
-    if (selectedFile.size !== undefined && selectedFile.size > 0.5 * 1024 * 1024) {
-      alert('The selected document must not be more than 0.5MB.');
-      return;
+    // Check if adding these files would exceed the maximum
+    setDocuments((prevDocs) => {
+      if (prevDocs.length + assets.length > maxFiles) {
+        alert(`Maximum ${maxFiles} files allowed. You can add ${maxFiles - prevDocs.length} more files.`);
+        return prevDocs;
+      }
+      return prevDocs;
+    });
+
+    const validFiles: DocumentAsset[] = [];
+    const validTypes: ('pdf' | 'doc' | 'docx')[] = [];
+
+    for (const selectedFile of assets) {
+      if (!selectedFile.uri) {
+        alert('Selected document URI is undefined.');
+        continue;
+      }
+
+      if (selectedFile.size !== undefined && selectedFile.size > 2 * 1024 * 1024) {
+        alert(`File ${selectedFile.name} is too large. Maximum size is 2MB.`);
+        continue;
+      }
+
+      const mimeType = selectedFile.mimeType || '';
+      const fileName = selectedFile.name || '';
+      let type: 'pdf' | 'doc' | 'docx';
+
+      if (mimeType === 'application/pdf') {
+        type = 'pdf';
+      } else if (mimeType === 'application/msword' || fileName.toLowerCase().endsWith('.doc')) {
+        type = 'doc';
+      } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || fileName.toLowerCase().endsWith('.docx')) {
+        type = 'docx';
+      } else {
+        alert(`Unsupported file type: ${selectedFile.name}`);
+        continue;
+      }
+
+      validFiles.push(selectedFile);
+      validTypes.push(type);
     }
 
-    const mimeType = selectedFile.mimeType || '';
-    let type: 'pdf' | 'image';
-
-    if (mimeType.startsWith('image/')) {
-      type = 'image';
-    } else if (mimeType === 'application/pdf') {
-      type = 'pdf';
-    } else {
-      alert('Unsupported file type selected.');
-      return;
+    if (validFiles.length > 0) {
+      setDocuments((prevDocs) => [...prevDocs, ...validFiles]);
+      setMakeType((prevTypes) => [...prevTypes, ...validTypes]);
     }
-
-    // Add to documents and types
-    setDocuments((prevDocs) => [...prevDocs, selectedFile] as DocumentAsset[]);
-    setMakeType((prevTypes) => [...prevTypes, type]);
 
   } catch (error) {
     console.error('Error picking document:', error);

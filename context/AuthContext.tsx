@@ -19,7 +19,7 @@ const AuthContext = createContext({
 });
 
 import { ReactNode } from "react";
-import { addDocument, setDocuments, readById } from "@/db/operations";
+import { addDocument, setDocuments, readById, validateReferrer, validateReferrerCode } from "@/db/operations";
 import { User } from "@/types/types";
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 
@@ -144,12 +144,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     interface SignUpCredentials {
         email: string;
         password: string;
+        displayName: string;
+        referrerCode?: string;
         // displayName: string;
         // organisation: string;
     }
 
     const signUp = async (credentials: SignUpCredentials): Promise<void> => {
         try {
+            // Validate referrer code if provided
+            let referrerId = null;
+            if (credentials.referrerCode && credentials.referrerCode.trim() !== '') {
+                const referrerValidation = await validateReferrerCode(credentials.referrerCode);
+                if (!referrerValidation.exists) {
+                    ToastAndroid.show('Invalid referrer code. Please check the code or leave it blank.', ToastAndroid.LONG);
+                    return;
+                }
+                referrerId = referrerValidation.referrerId;
+            }
+
             const userCredential = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
             console.log("")
             setIsSignedIN(true);
@@ -160,13 +173,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const newUser = await setDocuments("personalData", {
                 uid: user.uid,
                 email: user.email,
+                displayName: credentials.displayName,
+                referrerId: referrerId,
                 createdAt: Date.now().toString()
             });
 
             setIsSignedIN(true);
             await AsyncStorage.setItem('user', JSON.stringify({
                 ...user,
-
+                displayName: credentials.displayName,
+                referrerId: referrerId,
             }));
             ToastAndroid.show('Account created successfully!', ToastAndroid.SHORT);
 

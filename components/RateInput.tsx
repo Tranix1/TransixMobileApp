@@ -60,12 +60,40 @@ export const RateInput: React.FC<RateInputProps> = ({
     const rateLabel = isReturnRate ? "Return Rate" : "Rate";
     const explanationLabel = isReturnRate ? "Return Terms" : "Explain rate";
 
+    // Ensure currency and model have valid defaults
+    const safeCurrency = currency && currency.id && currency.name ? currency : { id: 1, name: 'USD' };
+    const safeModel = model && model.id && model.name ? model : { id: 1, name: 'Solid' };
+
+    // Debug logging for return rate
+    if (isReturnRate) {
+        console.log('RateInput Return Rate Debug:', {
+            currency: currency,
+            safeCurrency: safeCurrency,
+            model: model,
+            safeModel: safeModel,
+            selectedReturnCurrency: selectedReturnCurrency,
+            selectedReturnModelType: selectedReturnModelType
+        });
+    }
+
     // Auto-sync return currency with main currency when main currency changes
     useEffect(() => {
         if (isReturnRate && selectedCurrency && safeSetCurrency) {
             safeSetCurrency(selectedCurrency);
         }
     }, [selectedCurrency, isReturnRate, safeSetCurrency]);
+
+    // Ensure return currency and model are properly initialized
+    useEffect(() => {
+        if (isReturnRate) {
+            if (!currency || !currency.id || !currency.name) {
+                safeSetCurrency({ id: 1, name: 'USD' });
+            }
+            if (!model || !model.id || !model.name) {
+                safeSetModel({ id: 1, name: 'Solid' });
+            }
+        }
+    }, [isReturnRate, currency, model, safeSetCurrency, safeSetModel]);
 
     return (
         <View>
@@ -78,7 +106,7 @@ export const RateInput: React.FC<RateInputProps> = ({
                     <ThemedText type="defaultSemiBold">Currency</ThemedText>
                     <DropDownItem
                         allData={CURRENCY_OPTIONS}
-                        selectedItem={currency || { id: 0, name: '' }}
+                        selectedItem={safeCurrency}
                         setSelectedItem={safeSetCurrency}
                         placeholder=""
                     />
@@ -97,7 +125,7 @@ export const RateInput: React.FC<RateInputProps> = ({
                     <ThemedText type="defaultSemiBold">Model</ThemedText>
                     <DropDownItem
                         allData={MODEL_OPTIONS}
-                        selectedItem={model || { id: 0, name: '' }}
+                        selectedItem={safeModel}
                         setSelectedItem={safeSetModel}
                         placeholder=""
                     />

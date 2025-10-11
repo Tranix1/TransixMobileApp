@@ -40,8 +40,12 @@ const Index = () => {
         try {
             setIsLoading(true)
             setError(null)
-            let filters: any[] = [];
-            const maLoads = await fetchDocuments("Cargo");
+            // Filter for verified loads only
+            const filters = [
+                where("isVerified", "==", true),
+                where("approvalStatus", "in", ["approved", "pending"])
+            ];
+            const maLoads = await fetchDocuments("Cargo", 50, undefined, filters);
 
             if (maLoads.data.length) {
                 if (filters.length > 0 && maLoads.data.length < 0) setFilteredPNotAavaialble(true)
@@ -83,7 +87,12 @@ const Index = () => {
         try {
             setLoadingMore(true);
             setError(null);
-            const result = await fetchDocuments('Cargo', 10, lastVisible);
+            // Apply same verification filters for pagination
+            const filters = [
+                where("isVerified", "==", true),
+                where("approvalStatus", "in", ["approved", "pending"])
+            ];
+            const result = await fetchDocuments('Cargo', 10, lastVisible, filters);
             if (result) {
                 setLoads([...Loads, ...result.data as Load[]]);
                 setLastVisible(result.lastVisible);
@@ -96,11 +105,6 @@ const Index = () => {
             setLoadingMore(false);
         }
     };
-
-
-
-
-
 
 
     return (

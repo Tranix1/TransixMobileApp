@@ -18,6 +18,11 @@
         "gradleCommand": ":app:bundleRelease",
         "env": {
           "EXPO_USE_FCM": "0"
+        },
+        "extraGradleProperties": {
+          "android.enable16kbPageSizeSupport": "true",
+          "android.enablePageSizeCompatMode": "true",
+          "android.bundle.enableUncompressedNativeLibs": "false"
         }
       },
       "ios": {

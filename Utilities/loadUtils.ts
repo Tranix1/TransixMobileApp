@@ -1,4 +1,4 @@
-import { SelectLocationProp } from '@/types/types';
+import { SelectLocationProp, ProofFileType } from '@/types/types';
 import { ImagePickerAsset } from 'expo-image-picker';
 import { DocumentAsset } from '@/types/types';
 
@@ -22,7 +22,8 @@ export const validateLoadForm = (
         returnLoad?: string;
         returnRate?: string;
         returnTerms?: string;
-        proofOfOrder?: any[];
+        proofOfOrder?: DocumentAsset[];
+        proofOfOrderFileType?: ProofFileType[];
     },
     currentStep?: number
 ): string[] => {
@@ -79,17 +80,18 @@ export const validateLoadForm = (
             if (formData.fuelAvai !== undefined && (!formData.fuelAvai || formData.fuelAvai.trim() === '')) {
                 errors.push('Enter Fuel & Tolls Information');
             }
-            if (formData.returnLoad !== undefined && (!formData.returnLoad || formData.returnLoad.trim() === '')) {
+            // Only validate return load fields if they are explicitly provided and not empty
+            if (formData.returnLoad !== undefined && formData.returnLoad !== '' && formData.returnLoad.trim() === '') {
                 errors.push('Enter Return Load details');
             }
-            if (formData.returnRate !== undefined && (!formData.returnRate || formData.returnRate.trim() === '')) {
+            if (formData.returnRate !== undefined && formData.returnRate !== '' && formData.returnRate.trim() === '') {
                 errors.push('Enter Return Load Rate');
             }
-            if (formData.returnTerms !== undefined && (!formData.returnTerms || formData.returnTerms.trim() === '')) {
+            if (formData.returnTerms !== undefined && formData.returnTerms !== '' && formData.returnTerms.trim() === '') {
                 errors.push('Enter Return Load Terms');
             }
             if (formData.proofOfOrder !== undefined && (!formData.proofOfOrder || formData.proofOfOrder.length === 0)) {
-                errors.push('Upload proof of order document');
+                errors.push('Upload at least one proof of order document or image');
             }
         }
     }
@@ -221,11 +223,11 @@ export const prepareLoadData = (
         additionalInfo: userType === 'professional' ? (formData.additionalInfo || '') : 'Load posted by general user with AI assistance',
         alertMsg: userType === 'professional' ? (formData.alertMsg || '') : '',
         fuelAvai: userType === 'professional' ? (formData.fuelAvai || '') : '',
-        returnLoad: userType === 'professional' ? (formData.returnLoad || '') : '',
-        returnRate: userType === 'professional' ? (formData.returnRate || '') : '',
-        returnModel: userType === 'professional' ? (formData.selectedReturnModelType?.name || '') : '',
-        returnCurrency: userType === 'professional' ? (formData.selectedReturnCurrency?.name || '') : '',
-        returnTerms: userType === 'professional' ? (formData.returnTerms || '') : '',
+        returnLoad: userType === 'professional' ? (formData.returnLoad || 'No return load') : '',
+        returnRate: userType === 'professional' ? (formData.returnRate || '0') : '',
+        returnModel: userType === 'professional' ? (formData.selectedReturnModelType?.name || 'Solid') : '',
+        returnCurrency: userType === 'professional' ? (formData.selectedReturnCurrency?.name || 'USD') : '',
+        returnTerms: userType === 'professional' ? (formData.returnTerms || 'Standard terms') : '',
         trucksRequired: userType === 'general'
             ? (formData.selectedAfricanTrucks?.length > 0
                 ? formData.selectedAfricanTrucks.map((truck: any) => ({
@@ -241,8 +243,8 @@ export const prepareLoadData = (
         expoPushToken: expoPushToken || null,
 
         // Different proof handling
-        proofOfOrder: userType === 'professional' ? (formData.proofOfOerSub || null) : null,
-        proofOfOrderType: userType === 'professional' ? (formData.proofOfOrderFileType?.[0] || null) : null,
+        proofOfOrder: userType === 'professional' ? (formData.proofOfOerSub || []) : [],
+        proofOfOrderType: userType === 'professional' ? (formData.proofOfOrderFileType || []) : [],
         loadImages: userType === 'general' ? (formData.loadImagesUrls || []) : [],
 
         distance: formData.distance || 0,
@@ -250,6 +252,16 @@ export const prepareLoadData = (
         durationInTraffic: formData.durationInTraffic || 0,
         routePolyline: formData.routePolyline || '',
         bounds: formData.bounds || null,
+
+        // Personal details reference
+        personalDetailsDocId: formData.personalDetailsDocId || null,
+        personalAccTypeIsApproved: formData.personalAccTypeIsApproved || false,
+        personalAccType: formData.personalAccType || null,
+
+        // Approval system
+        approvalStatus: 'pending',
+        isApproved: false,
+        submittedAt: Date.now().toString(),
     };
 };
 
@@ -265,11 +277,11 @@ export const getDefaultFormState = () => ({
     additionalInfo: "",
     alertMsg: "",
     fuelAvai: "",
-    returnLoad: "",
-    returnRate: "",
-    returnTerms: "",
+    returnLoad: "No return load",
+    returnRate: "0",
+    returnTerms: "Standard terms",
     selectedCurrency: { id: 1, name: "USD" },
-    selectedRetrunCurrency: { id: 1, name: "USD" },
+    selectedReturnCurrency: { id: 1, name: "USD" },
     selectedModelType: { id: 1, name: "Solid" },
     selectedReturnModelType: { id: 1, name: "Solid" },
     formDataTruck: {

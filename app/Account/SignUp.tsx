@@ -17,6 +17,7 @@ const Index = () => {
     const [fullname, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [referrerCode, setReferrerCode] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [acceptTerms, setAcceptTerms] = useState(false);
 
@@ -45,12 +46,13 @@ const Index = () => {
             return;
         }
 
-        signUp({ displayName: fullname, email, password, })
+        signUp({ displayName: fullname, email, password, referrerCode })
             .then(() => {
                 setLoading(false)
             })
             .catch((error) => {
                 alert(`Sign up failed: ${error.message}`);
+                setLoading(false)
             });
     }
     return (
@@ -61,7 +63,7 @@ const Index = () => {
                 {loading && <ActivityIndicator color={accent} />}
 
                 <ThemedText type='title' style={styles.header}>Create Account</ThemedText>
-               
+
                 <ThemedText style={styles.label}>Email</ThemedText>
                 <Input
                     containerStyles={styles.input}
@@ -79,6 +81,14 @@ const Index = () => {
                     onChangeText={setPassword}
                 />
 
+                <ThemedText style={styles.label}>Referrer Code (Optional)</ThemedText>
+                <Input
+                    containerStyles={styles.input}
+                    placeholder="Enter referrer code (optional)"
+                    value={referrerCode}
+                    onChangeText={setReferrerCode}
+                    autoCapitalize="characters"
+                />
 
                 <View style={styles.checkboxContainer}>
                     <TouchableOpacity onPress={() => setAcceptTerms(!acceptTerms)}>

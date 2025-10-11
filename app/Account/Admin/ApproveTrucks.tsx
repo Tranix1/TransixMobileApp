@@ -14,7 +14,6 @@ import { Image } from 'expo-image';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { fixFirebaseUrl } from '@/Utilities/utils';
-import Button from '@/components/Button';
 
 const ApproveTrucks = () => {
     const [trucks, setTrucks] = useState<Truck[]>([]);
@@ -130,11 +129,15 @@ const ApproveTrucks = () => {
             <ThemedText type="default" style={styles.emptySubtitle}>
                 All trucks have been reviewed or there are no pending approvals.
             </ThemedText>
-            <Button
-                title="Refresh"
+            <TouchableOpacity
+                style={[styles.refreshButton, { borderColor: accent }]}
                 onPress={loadUnapprovedTrucks}
-                style={styles.refreshButton}
-            />
+                activeOpacity={0.7}
+            >
+                <ThemedText type="defaultSemiBold" style={{ color: accent }}>
+                    Refresh
+                </ThemedText>
+            </TouchableOpacity>
         </View>
     );
 
@@ -157,11 +160,15 @@ const ApproveTrucks = () => {
                     <ThemedText type="subtitle">
                         {trucks.length} truck{trucks.length !== 1 ? 's' : ''} pending review
                     </ThemedText>
-                    <Button
-                        title="Refresh"
+                    <TouchableOpacity
+                        style={[styles.refreshButton, { borderColor: accent }]}
                         onPress={loadUnapprovedTrucks}
-                        style={styles.refreshButton}
-                    />
+                        activeOpacity={0.7}
+                    >
+                        <ThemedText type="defaultSemiBold" style={{ color: accent }}>
+                            Refresh
+                        </ThemedText>
+                    </TouchableOpacity>
                 </View>
 
                 <FlatList
@@ -197,6 +204,10 @@ const styles = StyleSheet.create({
     refreshButton: {
         paddingHorizontal: wp(4),
         paddingVertical: wp(2),
+        borderRadius: wp(2),
+        borderWidth: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     listContainer: {
         flexGrow: 1,

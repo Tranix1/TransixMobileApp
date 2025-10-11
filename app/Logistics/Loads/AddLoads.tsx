@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
-import React, { useState } from "react";
-import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal, ToastAndroid, Image, Pressable } from "react-native";
+import React, { useState, useEffect, useMemo } from "react";
+import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal, ToastAndroid, Image, Pressable, ActivityIndicator } from "react-native";
 import { BlurView } from 'expo-blur';
 
 import { ThemedText } from "@/components/ThemedText";
@@ -11,9 +11,13 @@ import { Ionicons, AntDesign, Feather } from "@expo/vector-icons";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 import { router } from "expo-router";
-import { addDocument, setDocuments } from "@/db/operations";
+import { addDocument, setDocuments, getDocById } from "@/db/operations";
 import { useAuth } from "@/context/AuthContext";
 import { DropDownItem } from "@/components/DropDown";
+import { countryCodes } from "@/data/appConstants";
+import { Dropdown } from "react-native-element-dropdown";
+import { HorizontalTickComponent } from "@/components/SlctHorizonzalTick";
+import { DocumentUploader } from "@/components/DocumentUploader";
 
 import { hp, wp } from "@/constants/common";
 
@@ -37,7 +41,7 @@ import { LoadSummary } from '@/components/LoadSummary';
 import { usePushNotifications, } from "@/Utilities/pushNotification";
 
 import { uploadImage } from "@/db/operations";
-import { pickDocument, selectManyImages } from "@/Utilities/utils";
+import { pickDocument, selectManyImages, pickDocumentsOnly } from "@/Utilities/utils";
 import { DocumentAsset } from "@/types/types";
 import { ImagePickerAsset } from "expo-image-picker";
 
@@ -67,6 +71,7 @@ const AddLoadDB = () => {
   const accent = useThemeColor('accent')
   const background = useThemeColor('background')
   const backgroundLight = useThemeColor('backgroundLight')
+  const coolGray = useThemeColor('coolGray')
 
   // Initialize form state using utility function
   const defaultState = getDefaultFormState();
@@ -88,14 +93,14 @@ const AddLoadDB = () => {
   const [additionalInfo, setAdditionalInfo] = useState(defaultState.additionalInfo);
   const [alertMsg, setAlertMsg] = useState(defaultState.alertMsg);
   const [fuelAvai, setFuelAvai] = useState(defaultState.fuelAvai);
-  const [returnLoad, setReturnLoad] = useState(defaultState.returnLoad);
-  const [returnRate, setReturnRate] = useState(defaultState.returnRate);
-  const [returnTerms, setReturnTerms] = useState(defaultState.returnTerms);
+  const [returnLoad, setReturnLoad] = useState(defaultState.returnLoad || "");
+  const [returnRate, setReturnRate] = useState(defaultState.returnRate || "");
+  const [returnTerms, setReturnTerms] = useState(defaultState.returnTerms || "");
 
   const [selectedCurrency, setSelectedCurrency] = React.useState(defaultState.selectedCurrency);
-  const [selectedReturnCurrency, setSelectedRetrunCurrency] = React.useState(defaultState.selectedRetrunCurrency);
-  const [selectedModelType, setSelectedModelType] = React.useState(defaultState.selectedModelType);
-  const [selectedReturnModelType, setSelectedReturnModelType] = React.useState(defaultState.selectedReturnModelType);
+  const [selectedReturnCurrency, setSelectedReturnCurrency] = React.useState(defaultState.selectedReturnCurrency || { id: 1, name: "USD" });
+  const [selectedModelType, setSelectedModelType] = React.useState(defaultState.selectedModelType || { id: 1, name: "Solid" });
+  const [selectedReturnModelType, setSelectedReturnModelType] = React.useState(defaultState.selectedReturnModelType || { id: 1, name: "Solid" });
 
   // Truck Form Data
   const [formDataTruck, setFormDataTruck] = useState<TruckFormData>(defaultState.formDataTruck);
@@ -272,7 +277,7 @@ const AddLoadDB = () => {
     setReturnRate(defaultState.returnRate);
     setReturnTerms(defaultState.returnTerms);
     setSelectedCurrency(defaultState.selectedCurrency);
-    setSelectedRetrunCurrency(defaultState.selectedRetrunCurrency);
+    setSelectedReturnCurrency(defaultState.selectedReturnCurrency);
     setSelectedModelType(defaultState.selectedModelType);
     setSelectedReturnModelType(defaultState.selectedReturnModelType);
     setFormDataTruck(defaultState.formDataTruck);
@@ -318,19 +323,570 @@ const AddLoadDB = () => {
     setAiAnalysisError(null);
 
     // Reset proof of order fields
-    setProofOfOrder([]);
-    setProofOfOrderFileType([]);
+    setProofImages([]);
+    setProofDocuments([]);
+    setProofDocumentTypes([]);
+
+    // Reset verification document fields
+    setIdDocument(null);
+    setIdDocumentType(null);
+    setProofOfResidence(null);
+    setProofOfResidenceType(null);
+    setBrokerCertificate(null);
+    setBrokerCertificateType(null);
+
+    // Reset load user type and references
+    setLoadUserType('general');
+    setBrokerId('');
+    setBrokerName('');
+    setBrokerPhone('');
+    setBrokerEmail('');
+    setOwnerId('');
+    setOwnerName('');
+    setOwnerPhone('');
+    setOwnerEmail('');
+
+    // Reset personal details fields
+    setPersonalName('');
+    setPersonalPhone('');
+    setPersonalEmail('');
+    setPersonalCountryCode({ id: 0, name: '+263' });
+    setSelectedPersonalDocuments([]);
+    setPersonalFileType([]);
+    setSelectedBrokerPersonalDocuments([]);
+    setBrokerPersonalFileType([]);
+    setTypeOfBrokerPersonal('');
+    setShowPersonalDetailsModal(false);
+    setSelectedPersonalType(null);
+
+    // Clear validation errors
+    clearPersonalValidationErrors();
   };
 
 
-  const [proofOfOrder, setProofOfOrder] = useState<DocumentAsset[]>([]);
-  const [proofOfOrderFileType, setProofOfOrderFileType] = React.useState<('pdf' | 'image')[]>([])
+  // Separate state for proof images and documents
+  const [proofImages, setProofImages] = useState<ImagePickerAsset[]>([]);
+  const [proofDocuments, setProofDocuments] = useState<DocumentAsset[]>([]);
+  const [proofDocumentTypes, setProofDocumentTypes] = React.useState<('pdf' | 'doc' | 'docx')[]>([]);
+
+  // Verification document state
+  const [idDocument, setIdDocument] = useState<DocumentAsset | null>(null);
+  const [idDocumentType, setIdDocumentType] = useState<'pdf' | 'image' | 'doc' | 'docx' | null>(null);
+  const [proofOfResidence, setProofOfResidence] = useState<DocumentAsset | null>(null);
+  const [proofOfResidenceType, setProofOfResidenceType] = useState<'pdf' | 'image' | 'doc' | 'docx' | null>(null);
+  const [brokerCertificate, setBrokerCertificate] = useState<DocumentAsset | null>(null);
+  const [brokerCertificateType, setBrokerCertificateType] = useState<'pdf' | 'image' | 'doc' | 'docx' | null>(null);
+
+  // Load user type and references
+  const [loadUserType, setLoadUserType] = useState<'general' | 'confinee' | 'broker'>('general');
+  const [brokerId, setBrokerId] = useState('');
+  const [brokerName, setBrokerName] = useState('');
+  const [brokerPhone, setBrokerPhone] = useState('');
+  const [brokerEmail, setBrokerEmail] = useState('');
+  const [ownerId, setOwnerId] = useState('');
+  const [ownerName, setOwnerName] = useState('');
+  const [ownerPhone, setOwnerPhone] = useState('');
+  const [ownerEmail, setOwnerEmail] = useState('');
+
+  // Cargo Personal Details State (similar to truckPersonDetails)
+  interface CargoGeneralUser {
+    docId: string;
+    isApproved: boolean;
+    accType: 'general';
+  }
+
+  interface CargoProfessionalUser {
+    docId: string;
+    isApproved: boolean;
+    accType: 'professional';
+  }
+
+  const [getGeneralDetails, setGeneralDetails] = useState<CargoGeneralUser | null>(null);
+  const [getProfessionalDetails, setProfessionalDetails] = useState<CargoProfessionalUser | null>(null);
+  const [cargoDataChecked, setCargoDataChecked] = useState(false);
+  const [cargoLoading, setCargoLoading] = useState(true);
+
+  // Modal states for document submission
+  const [showPersonalDetailsModal, setShowPersonalDetailsModal] = useState(false);
+  const [selectedPersonalType, setSelectedPersonalType] = useState<'general' | 'professional' | null>(null);
+
+  // Personal details form state
+  const [personalName, setPersonalName] = useState('');
+  const [personalPhone, setPersonalPhone] = useState('');
+  const [personalEmail, setPersonalEmail] = useState('');
+  const [personalCountryCode, setPersonalCountryCode] = useState({ id: 0, name: '+263' });
+
+  // Validation states for real-time feedback
+  const [personalNameError, setPersonalNameError] = useState('');
+  const [personalPhoneError, setPersonalPhoneError] = useState('');
+  const [personalEmailError, setPersonalEmailError] = useState('');
+  const [personalCountryCodeError, setPersonalCountryCodeError] = useState('');
+  const [personalDocumentError, setPersonalDocumentError] = useState('');
+
+  // Document states for personal details
+  const [selectedPersonalDocuments, setSelectedPersonalDocuments] = useState<DocumentAsset[]>([]);
+  const [personalFileType, setPersonalFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([]);
+  const [selectedBrokerPersonalDocuments, setSelectedBrokerPersonalDocuments] = useState<DocumentAsset[]>([]);
+  const [brokerPersonalFileType, setBrokerPersonalFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([]);
+  const [typeOfBrokerPersonal, setTypeOfBrokerPersonal] = React.useState("");
+
+  const [uploadingPersonalD, setUploadingPersonalD] = React.useState(false);
+  const [isSubmittingPersonal, setIsSubmittingPersonal] = React.useState(false);
 
   const [imageUpdate, setUploadImageUpdate] = React.useState("")
 
+  // Real-time validation functions
+  const validatePersonalName = (name: string) => {
+    if (!name || name.trim() === '') {
+      setPersonalNameError('Enter valid full name');
+      return false;
+    } else if (name.trim().length < 2) {
+      setPersonalNameError('Enter valid full name (minimum 2 characters)');
+      return false;
+    } else {
+      setPersonalNameError('');
+      return true;
+    }
+  };
+
+  const validatePersonalPhone = (phone: string) => {
+    if (!phone || phone.trim() === '') {
+      setPersonalPhoneError('Enter valid phone number');
+      return false;
+    } else if (phone.trim().length < 7) {
+      setPersonalPhoneError('Enter valid phone number (minimum 7 characters)');
+      return false;
+    } else {
+      setPersonalPhoneError('');
+      return true;
+    }
+  };
+
+  const validatePersonalEmail = (email: string) => {
+    if (!email || email.trim() === '') {
+      setPersonalEmailError('Enter valid email address');
+      return false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setPersonalEmailError('Enter valid email address (must contain @ and domain)');
+      return false;
+    } else {
+      setPersonalEmailError('');
+      return true;
+    }
+  };
+
+  const validatePersonalCountryCode = (countryCode: any) => {
+    if (!countryCode || !countryCode.name) {
+      setPersonalCountryCodeError('Select country code');
+      return false;
+    } else {
+      setPersonalCountryCodeError('');
+      return true;
+    }
+  };
+
+  const validatePersonalDocument = (documents: DocumentAsset[], fileTypes: any[]) => {
+    if (!documents[0]) {
+      setPersonalDocumentError('Upload ID Document');
+      return false;
+    } else if (!fileTypes[0]) {
+      setPersonalDocumentError('Upload ID Document');
+      return false;
+    } else {
+      setPersonalDocumentError('');
+      return true;
+    }
+  };
+
+  // Clear validation errors when modal opens/closes
+  const clearPersonalValidationErrors = () => {
+    setPersonalNameError('');
+    setPersonalPhoneError('');
+    setPersonalEmailError('');
+    setPersonalCountryCodeError('');
+    setPersonalDocumentError('');
+  };
+
+  // Validation functions that don't trigger state updates (for use in useMemo)
+  const validateName = (name: string) => {
+    const isValid = name && name.trim() !== '' && name.trim().length >= 2;
+    console.log('validateName:', { name, trimmed: name?.trim(), length: name?.trim()?.length, isValid });
+    return isValid;
+  };
+
+  const validatePhone = (phone: string) => {
+    const trimmed = phone?.trim() || '';
+    // More lenient phone validation - allow letters for international formats
+    const isValid = phone && trimmed !== '' && trimmed.length >= 7;
+    console.log('validatePhone:', { phone, trimmed, length: trimmed.length, isValid });
+    return isValid;
+  };
+
+  const validateEmail = (email: string) => {
+    const trimmed = email?.trim() || '';
+    const isValid = email && trimmed !== '' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+    console.log('validateEmail:', { email, trimmed, isValid });
+    return isValid;
+  };
+
+  const validateCountryCode = (countryCode: any) => {
+    const isValid = !!(countryCode && countryCode.name);
+    console.log('validateCountryCode:', { countryCode, isValid });
+    return isValid;
+  };
+
+  const validateDocument = (documents: DocumentAsset[], fileTypes: any[]) => {
+    const isValid = documents[0] && fileTypes[0];
+    console.log('validateDocument:', {
+      documentsLength: documents.length,
+      fileTypesLength: fileTypes.length,
+      hasFirstDoc: !!documents[0],
+      hasFirstFileType: !!fileTypes[0],
+      isValid
+    });
+    return isValid;
+  };
+
+  // Memoized validation results to prevent infinite re-renders
+  const isGeneralPersonalDetailsValid = useMemo(() => {
+    console.log('=== General Personal Details Validation ===');
+    console.log('Current values:', {
+      personalName,
+      personalPhone,
+      personalEmail,
+      personalCountryCode,
+      selectedPersonalDocuments: selectedPersonalDocuments.length,
+      personalFileType: personalFileType.length
+    });
+
+    const nameValid = validateName(personalName);
+    const phoneValid = validatePhone(personalPhone);
+    const emailValid = validateEmail(personalEmail);
+    const countryCodeValid = validateCountryCode(personalCountryCode);
+    const documentValid = validateDocument(selectedPersonalDocuments, personalFileType);
+
+    const isValid = nameValid && phoneValid && emailValid && countryCodeValid && documentValid;
+    console.log('General validation result:', { nameValid, phoneValid, emailValid, countryCodeValid, documentValid, isValid });
+    console.log('=== End General Validation ===');
+
+    return isValid;
+  }, [personalName, personalPhone, personalEmail, personalCountryCode, selectedPersonalDocuments, personalFileType]);
+
+  const isProfessionalPersonalDetailsValid = useMemo(() => {
+    console.log('=== Professional Personal Details Validation ===');
+    console.log('Current values:', {
+      personalName,
+      personalPhone,
+      personalEmail,
+      personalCountryCode,
+      typeOfBrokerPersonal,
+      selectedBrokerPersonalDocuments: selectedBrokerPersonalDocuments.length,
+      brokerPersonalFileType: brokerPersonalFileType.length
+    });
+
+    const nameValid = validateName(personalName);
+    const phoneValid = validatePhone(personalPhone);
+    const emailValid = validateEmail(personalEmail);
+    const countryCodeValid = validateCountryCode(personalCountryCode);
+
+    // Check broker type selection
+    if (!typeOfBrokerPersonal || typeOfBrokerPersonal.trim() === '') {
+      console.log('Professional validation failed: No broker type selected');
+      return false;
+    }
+
+    // Check required documents
+    const idDocValid = !!(selectedBrokerPersonalDocuments[0] && brokerPersonalFileType[0]);
+    const residenceDocValid = !!(selectedBrokerPersonalDocuments[1] && brokerPersonalFileType[1]);
+
+    let companyDocsValid = true;
+    if (typeOfBrokerPersonal === "Company Broker") {
+      companyDocsValid = !!(selectedBrokerPersonalDocuments[2] && brokerPersonalFileType[2]) &&
+        !!(selectedBrokerPersonalDocuments[3] && brokerPersonalFileType[3]);
+    }
+
+    const isValid = nameValid && phoneValid && emailValid && countryCodeValid && idDocValid && residenceDocValid && companyDocsValid;
+
+    // Debug logging
+    console.log('Professional validation result:', {
+      typeOfBrokerPersonal,
+      nameValid,
+      phoneValid,
+      emailValid,
+      countryCodeValid,
+      idDocValid,
+      residenceDocValid,
+      companyDocsValid,
+      isValid,
+      documents: selectedBrokerPersonalDocuments.map((doc, i) => ({
+        index: i,
+        hasDoc: !!doc,
+        hasFileType: !!brokerPersonalFileType[i]
+      }))
+    });
+    console.log('=== End Professional Validation ===');
+
+    return isValid;
+  }, [personalName, personalPhone, personalEmail, personalCountryCode, typeOfBrokerPersonal, selectedBrokerPersonalDocuments, brokerPersonalFileType]);
+
+
+  // Check for personal details on component mount
+  useEffect(() => {
+    const fetchPersonalDetails = async () => {
+      // Check for both general and professional in the unified collection
+      const personDetails = await getDocById('cargoPersonalDetails', (data) => {
+        if (data) {
+          if (data.accType === 'general') {
+            setGeneralDetails({
+              docId: data.id || '',
+              isApproved: data.isApproved || false,
+              accType: 'general'
+            });
+          } else if (data.accType === 'professional') {
+            setProfessionalDetails({
+              docId: data.id || '',
+              isApproved: data.isApproved || false,
+              accType: 'professional'
+            });
+          }
+        }
+      });
+
+      setCargoLoading(false);
+
+      // Add a short delay before rendering UI to prevent flicker
+      setTimeout(() => {
+        setCargoDataChecked(true);
+      }, 300);
+    };
+
+    fetchPersonalDetails();
+  }, []);
+
+  // Show modal immediately when user selects type but doesn't have details
+  useEffect(() => {
+    if (cargoDataChecked && userType) {
+      if ((userType === 'general' && !getGeneralDetails) ||
+        (userType === 'professional' && !getProfessionalDetails)) {
+        // Small delay to ensure UI is ready
+        setTimeout(() => {
+          setSelectedPersonalType(userType);
+          setShowPersonalDetailsModal(true);
+        }, 500);
+      }
+    }
+  }, [cargoDataChecked, userType, getGeneralDetails, getProfessionalDetails]);
+
+  // Ensure return currency and model are properly initialized
+  useEffect(() => {
+    if (!selectedReturnCurrency || !selectedReturnCurrency.name) {
+      setSelectedReturnCurrency({ id: 1, name: "USD" });
+    }
+    if (!selectedReturnModelType || !selectedReturnModelType.name) {
+      setSelectedReturnModelType({ id: 1, name: "Solid" });
+    }
+  }, []);
+
+  // Ensure return load fields are properly initialized
+  useEffect(() => {
+    if (returnLoad === undefined || returnLoad === null) {
+      setReturnLoad("");
+    }
+    if (returnRate === undefined || returnRate === null) {
+      setReturnRate("");
+    }
+    if (returnTerms === undefined || returnTerms === null) {
+      setReturnTerms("");
+    }
+  }, []);
+
+  // Handle general user personal details submission
+  const handleUpdateGeneralDetails = async () => {
+    setIsSubmittingPersonal(true);
+    try {
+      // Use comprehensive validation function with error state updates
+      const nameValid = validatePersonalName(personalName);
+      const phoneValid = validatePersonalPhone(personalPhone);
+      const emailValid = validatePersonalEmail(personalEmail);
+      const countryCodeValid = validatePersonalCountryCode(personalCountryCode);
+      const documentValid = validatePersonalDocument(selectedPersonalDocuments, personalFileType);
+
+      // Create specific error messages for general user
+      const missingFields = [];
+      if (!nameValid) missingFields.push("Enter valid full name (minimum 2 characters)");
+      if (!phoneValid) missingFields.push("Enter valid phone number (minimum 7 characters)");
+      if (!emailValid) missingFields.push("Enter valid email address (must contain @ and domain)");
+      if (!countryCodeValid) missingFields.push("Select country code");
+      if (!documentValid) missingFields.push("Upload ID Document");
+
+      if (missingFields.length > 0) {
+        alertBox("Missing Personal Details", `Please complete: ${missingFields.join(", ")}`, [], "error");
+        setIsSubmittingPersonal(false);
+        return;
+      }
+
+      let idDocument;
+
+      idDocument = await uploadImage(selectedPersonalDocuments[0], "CargoPersonal", setUploadImageUpdate, "ID uploading");
+
+      const personalDetailsData = {
+        userId: user?.uid,
+        accType: 'general',
+        fullName: personalName,
+        phoneNumber: personalPhone,
+        email: personalEmail,
+        countryCode: personalCountryCode.name,
+        idDocument: idDocument || null,
+        idDocumentType: personalFileType[0] || null,
+        createdAt: Date.now().toString(),
+        isApproved: false,
+        approvalStatus: 'pending'
+      };
+
+      console.log('Saving general personal details:', personalDetailsData);
+      await setDocuments("cargoPersonalDetails", personalDetailsData);
+
+      setShowPersonalDetailsModal(false);
+      ToastAndroid.show("Personal Details created successfully!", ToastAndroid.SHORT);
+
+      // Refresh the personal details check
+      const updatedDetails = await getDocById('cargoPersonalDetails', (data) => {
+        if (data && data.accType === 'general') {
+          setGeneralDetails({
+            docId: data.id || '',
+            isApproved: data.isApproved || false,
+            accType: 'general'
+          });
+        }
+      });
+    } catch (error) {
+      console.error("Error saving personal details:", error);
+      alertBox("Error", "Failed to save personal details", [], "error");
+    } finally {
+      setIsSubmittingPersonal(false);
+    }
+  };
+
+  // Handle professional user personal details submission
+  const handleUpdateProfessionalDetails = async () => {
+    setUploadingPersonalD(true);
+
+    // Use comprehensive validation function with error state updates
+    const nameValid = validatePersonalName(personalName);
+    const phoneValid = validatePersonalPhone(personalPhone);
+    const emailValid = validatePersonalEmail(personalEmail);
+    const countryCodeValid = validatePersonalCountryCode(personalCountryCode);
+
+    // Check broker type selection
+    if (!typeOfBrokerPersonal || typeOfBrokerPersonal.trim() === '') {
+      alertBox("Missing or Invalid Professional Details", "Please select broker type and complete all required fields before submitting.", [], "error");
+      setUploadingPersonalD(false);
+      return;
+    }
+
+    // Check required documents
+    const idDocValid = !!(selectedBrokerPersonalDocuments[0] && brokerPersonalFileType[0]);
+    const residenceDocValid = !!(selectedBrokerPersonalDocuments[1] && brokerPersonalFileType[1]);
+
+    let companyDocsValid = true;
+    if (typeOfBrokerPersonal === "Company Broker") {
+      companyDocsValid = !!(selectedBrokerPersonalDocuments[2] && brokerPersonalFileType[2]) &&
+        !!(selectedBrokerPersonalDocuments[3] && brokerPersonalFileType[3]);
+    }
+
+    // Create specific error messages for debugging
+    const missingFields = [];
+    if (!nameValid) missingFields.push("Enter valid full name (minimum 2 characters)");
+    if (!phoneValid) missingFields.push("Enter valid phone number (minimum 7 characters)");
+    if (!emailValid) missingFields.push("Enter valid email address (must contain @ and domain)");
+    if (!countryCodeValid) missingFields.push("Select country code");
+    if (!idDocValid) missingFields.push("Upload National ID Document");
+    if (!residenceDocValid) missingFields.push("Upload Proof of Residence Document");
+    if (!companyDocsValid && typeOfBrokerPersonal === "Company Broker") {
+      missingFields.push("Upload Company Registration Certificate and Letter Head");
+    }
+
+    if (missingFields.length > 0) {
+      alertBox("Missing Professional Details", `Please complete: ${missingFields.join(", ")}`, [], "error");
+      setUploadingPersonalD(false);
+      return;
+    }
+
+    let brokerId, proofOfResidence, companyRegCertificate, companyLetterHead;
+
+    brokerId = await uploadImage(selectedBrokerPersonalDocuments[0], "CargoPersonal", setUploadImageUpdate, "National ID");
+    proofOfResidence = await uploadImage(selectedBrokerPersonalDocuments[1], "CargoPersonal", setUploadImageUpdate, "Proof Of Residence");
+
+    if (typeOfBrokerPersonal === "Company Broker") {
+      companyRegCertificate = await uploadImage(selectedBrokerPersonalDocuments[2], "CargoPersonal", setUploadImageUpdate, "Company Registration Certificate");
+      companyLetterHead = await uploadImage(selectedBrokerPersonalDocuments[3], "CargoPersonal", setUploadImageUpdate, "Company Letter Head");
+    }
+
+    const professionalDetailsData = {
+      userId: user?.uid,
+      accType: 'professional',
+      typeOfBroker: typeOfBrokerPersonal,
+      fullName: personalName,
+      phoneNumber: personalPhone,
+      email: personalEmail,
+      countryCode: personalCountryCode.name,
+      brokerId: brokerId || null,
+      proofOfResidence: proofOfResidence || null,
+      companyRegCertificate: companyRegCertificate || null,
+      companyLetterHead: companyLetterHead || null,
+      brokerIdType: brokerPersonalFileType[0] || null,
+      proofOfResidenceType: brokerPersonalFileType[1] || null,
+      companyRegCertificateType: brokerPersonalFileType[2] || null,
+      companyLetterHeadType: brokerPersonalFileType[3] || null,
+      createdAt: Date.now().toString(),
+      isApproved: false,
+      approvalStatus: 'pending'
+    };
+
+    console.log('Saving professional personal details:', professionalDetailsData);
+    await setDocuments("cargoPersonalDetails", professionalDetailsData);
+
+    setShowPersonalDetailsModal(false);
+    ToastAndroid.show("Professional Details submitted successfully!", ToastAndroid.SHORT);
+
+    // Refresh the personal details check
+    const updatedDetails = await getDocById('cargoPersonalDetails', (data) => {
+      if (data && data.accType === 'professional') {
+        setProfessionalDetails({
+          docId: data.id || '',
+          isApproved: data.isApproved || false,
+          accType: 'professional'
+        });
+      }
+    });
+  };
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
+
+    // Comprehensive check if user has submitted personal details
+    if (userType === 'general' && !getGeneralDetails) {
+      setIsSubmitting(false);
+      alertBox("Personal Details Required", "Please submit your personal details first before creating a load. All required fields must be completed.", [], "error");
+      return;
+    }
+
+    if (userType === 'professional' && !getProfessionalDetails) {
+      setIsSubmitting(false);
+      alertBox("Professional Details Required", "Please submit your professional details first before creating a load. All required documents must be uploaded.", [], "error");
+      return;
+    }
+
+    // Additional validation: Check if personal details are approved (optional - can be removed if not needed)
+    if (userType === 'general' && getGeneralDetails && !getGeneralDetails.isApproved) {
+      // Allow submission but show warning
+      console.log("General user personal details pending approval");
+    }
+
+    if (userType === 'professional' && getProfessionalDetails && !getProfessionalDetails.isApproved) {
+      // Allow submission but show warning
+      console.log("Professional user personal details pending approval");
+    }
 
     // Use utility function for validation
     const validationErrors = validateLoadForm(userType, {
@@ -344,7 +900,14 @@ const AddLoadDB = () => {
       selectedAfricanTrucks,
       trucksNeeded,
       requirements,
+      proofOfOrder: [...proofDocuments],
+      proofOfOrderFileType: [...proofDocumentTypes],
     }, step);
+
+    // Additional validation for professional users - check if they have at least one proof file
+    if (userType === 'professional' && proofImages.length === 0 && proofDocuments.length === 0) {
+      validationErrors.push('Upload at least one proof of order document or image');
+    }
 
     if (validationErrors.length > 0) {
       alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
@@ -366,8 +929,8 @@ const AddLoadDB = () => {
       return;
     }
 
-    let proofOfOerSub
-    let loadImagesUrls = []
+    let proofOfOerSub: string[] = []
+    let loadImagesUrls: string[] = []
 
     // Handle different proof types based on user type
     if (userType === 'general') {
@@ -377,9 +940,16 @@ const AddLoadDB = () => {
         if (imageUrl) loadImagesUrls.push(imageUrl);
       }
     } else {
-      // Upload proof of order for professional users
-      if (proofOfOrder.length > 0) {
-        proofOfOerSub = await uploadImage(proofOfOrder[0], "CargoProof", setUploadImageUpdate, "Company Registration Certificate");
+      // Upload all proof images for professional users
+      for (let i = 0; i < proofImages.length; i++) {
+        const imageUrl = await uploadImage(proofImages[i], "CargoProof", setUploadImageUpdate, `Proof Image ${i + 1}`);
+        if (imageUrl) proofOfOerSub.push(imageUrl);
+      }
+
+      // Upload all proof documents for professional users
+      for (let i = 0; i < proofDocuments.length; i++) {
+        const docUrl = await uploadImage(proofDocuments[i], "CargoProof", setUploadImageUpdate, `Proof Document ${i + 1}`);
+        if (docUrl) proofOfOerSub.push(docUrl);
       }
     }
 
@@ -407,13 +977,13 @@ const AddLoadDB = () => {
       additionalInfo,
       alertMsg,
       fuelAvai,
-      returnLoad,
-      returnRate,
-      returnTerms,
+      returnLoad: returnLoad || "",
+      returnRate: returnRate || "",
+      returnTerms: returnTerms || "",
       selectedCurrency,
       selectedModelType,
-      selectedReturnCurrency,
-      selectedReturnModelType,
+      selectedReturnCurrency: selectedReturnCurrency || { id: 1, name: "USD" },
+      selectedReturnModelType: selectedReturnModelType || { id: 1, name: "Solid" },
       budget,
       budgetCurrency,
       selectedLoadingDate,
@@ -422,14 +992,29 @@ const AddLoadDB = () => {
       selectedAfricanTrucks,
       trucksNeeded,
       proofOfOerSub,
-      proofOfOrderFileType,
+      proofOfOrderFileType: [...proofImages.map(() => 'image' as const), ...proofDocumentTypes],
       loadImagesUrls,
       distance,
       duration,
       durationInTraffic,
       routePolyline,
-      bounds
+      bounds,
+      // Personal details reference
+      personalDetailsDocId: getGeneralDetails?.docId || getProfessionalDetails?.docId || null,
+      personalAccTypeIsApproved: getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved || false,
+      personalAccType: getGeneralDetails?.accType || getProfessionalDetails?.accType || null,
     }, user, expoPushToken);
+
+    console.log('Load data with personal details:', {
+      personalDetailsDocId: loadData.personalDetailsDocId,
+      personalAccType: loadData.personalAccType,
+      personalAccTypeIsApproved: loadData.personalAccTypeIsApproved,
+      returnLoad: loadData.returnLoad,
+      returnRate: loadData.returnRate,
+      returnTerms: loadData.returnTerms,
+      returnCurrency: loadData.returnCurrency,
+      returnModel: loadData.returnModel
+    });
 
     try {
       // Ensure addDocument is not a React hook or using hooks internally.
@@ -453,11 +1038,11 @@ const AddLoadDB = () => {
       // Clear form and reset to initial state
       clearFormFields();
 
-    
+
 
     } catch (error) {
       console.error("Error submitting load:", error);
-      alert("Failed to submit load. Please try again.");
+      // alert("Failed to submit load. Please try again."); 
     } finally {
       setIsSubmitting(false);
     }
@@ -484,6 +1069,43 @@ const AddLoadDB = () => {
         userType={userType}
         setUserType={setUserType}
       />
+
+      {/* Personal Details Status */}
+      {cargoLoading && (
+        <View style={{ padding: wp(4), alignItems: 'center' }}>
+          <ActivityIndicator size="small" color={accent} />
+        </View>
+      )}
+
+      {!cargoLoading && cargoDataChecked && userType && (
+        (userType === 'general' && !getGeneralDetails) ||
+        (userType === 'professional' && !getProfessionalDetails)
+      ) && (
+          <View style={{ padding: wp(4) }}>
+            <ThemedText style={{ textAlign: 'center', marginBottom: wp(2) }}>
+              Please submit your personal details to continue
+            </ThemedText>
+            <Button
+              onPress={() => {
+                setSelectedPersonalType(userType);
+                setShowPersonalDetailsModal(true);
+              }}
+              title={`Submit ${userType === 'general' ? 'Personal' : 'Professional'} Details`}
+              colors={{ text: '#0f9d58', bg: '#0f9d5824' }}
+            />
+          </View>
+        )}
+
+      {!cargoLoading && cargoDataChecked && userType && (getGeneralDetails || getProfessionalDetails) && (
+        <View style={{ padding: wp(4) }}>
+          <ThemedText style={{ textAlign: "center", color: accent }}>
+            Creating load as {getGeneralDetails ? "General" : "Professional"} User
+          </ThemedText>
+          <ThemedText style={{ textAlign: "center", fontSize: 12, color: coolGray }}>
+            Status: {(getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "Approved" : "Pending Approval"}
+          </ThemedText>
+        </View>
+      )}
 
       {userType && (
         <StepIndicator
@@ -703,7 +1325,7 @@ const AddLoadDB = () => {
               />
 
               {
-                (userType === 'general' ? loadImages.length > 0 : proofOfOrder[0]) ? (
+                (userType === 'general' ? loadImages.length > 0 : (proofImages.length > 0 || proofDocuments.length > 0)) ? (
                   <View>
                     <ThemedText style={{ marginBottom: wp(2), fontWeight: 'bold' }}>
                       {userType === 'general' ? 'Load Images' : 'Proof of Order'}
@@ -722,120 +1344,282 @@ const AddLoadDB = () => {
                         ))}
                       </ScrollView>
                     ) : (
-                      // Show proof of order for professional users
-                      <View
-                        style={{
-                          width: wp(45),
-                          alignSelf: 'center',
-                          backgroundColor: '#f9f9f9',
-                          borderRadius: 8,
-                          padding: 10,
-                          shadowColor: '#000',
-                          shadowOffset: { width: 0, height: 2 },
-                          shadowOpacity: 0.1,
-                          shadowRadius: 2,
-                          elevation: 2,
-                          marginBottom: 10,
-                        }}
-                      >
-                        {proofOfOrder[0].name.toLowerCase().endsWith('.pdf') ? (
-                          <>
-                            <View
+                      // Show proof files for professional users
+                      <View>
+                        <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
+                          {(proofImages.length + proofDocuments.length)}/6 files uploaded
+                        </ThemedText>
+
+                        {/* Proof Images Section */}
+                        {proofImages.length > 0 && (
+                          <View style={{ marginBottom: wp(3) }}>
+                            <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2), color: '#004d40' }}>
+                              Images ({proofImages.length})
+                            </ThemedText>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                              {proofImages.map((image, index) => (
+                                <View
+                                  key={`img-${index}`}
+                                  style={{
+                                    width: wp(45),
+                                    marginRight: wp(2),
+                                    backgroundColor: '#f9f9f9',
+                                    borderRadius: 8,
+                                    padding: 10,
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 2 },
+                                    shadowOpacity: 0.1,
+                                    shadowRadius: 2,
+                                    elevation: 2,
+                                    position: 'relative',
+                                  }}
+                                >
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      setProofImages(prev => prev.filter((_, i) => i !== index));
+                                    }}
+                                    style={{
+                                      position: 'absolute',
+                                      top: -5,
+                                      right: -5,
+                                      backgroundColor: 'white',
+                                      borderRadius: 10,
+                                      zIndex: 1,
+                                    }}
+                                  >
+                                    <Ionicons name="close-circle" size={20} color="red" />
+                                  </TouchableOpacity>
+
+                                  <Image
+                                    source={{ uri: image.uri }}
+                                    style={{
+                                      width: '100%',
+                                      height: wp(20),
+                                      borderRadius: 8,
+                                    }}
+                                    resizeMode="cover"
+                                  />
+                                  <ThemedText
+                                    style={{
+                                      marginTop: 8,
+                                      textAlign: 'center',
+                                      fontSize: 13,
+                                      color: '#004d40',
+                                      fontWeight: '600',
+                                    }}
+                                  >
+                                    Image {index + 1}
+                                  </ThemedText>
+                                </View>
+                              ))}
+                            </ScrollView>
+                          </View>
+                        )}
+
+                        {/* Proof Documents Section */}
+                        {proofDocuments.length > 0 && (
+                          <View style={{ marginBottom: wp(3) }}>
+                            <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2), color: '#004d40' }}>
+                              Documents ({proofDocuments.length})
+                            </ThemedText>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                              {proofDocuments.map((file, index) => (
+                                <View
+                                  key={`doc-${index}`}
+                                  style={{
+                                    width: wp(45),
+                                    marginRight: wp(2),
+                                    backgroundColor: '#f9f9f9',
+                                    borderRadius: 8,
+                                    padding: 10,
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 2 },
+                                    shadowOpacity: 0.1,
+                                    shadowRadius: 2,
+                                    elevation: 2,
+                                    position: 'relative',
+                                  }}
+                                >
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      setProofDocuments(prev => prev.filter((_, i) => i !== index));
+                                      setProofDocumentTypes(prev => prev.filter((_, i) => i !== index));
+                                    }}
+                                    style={{
+                                      position: 'absolute',
+                                      top: -5,
+                                      right: -5,
+                                      backgroundColor: 'white',
+                                      borderRadius: 10,
+                                      zIndex: 1,
+                                    }}
+                                  >
+                                    <Ionicons name="close-circle" size={20} color="red" />
+                                  </TouchableOpacity>
+
+                                  <View
+                                    style={{
+                                      justifyContent: 'center',
+                                      alignItems: 'center',
+                                      height: wp(20),
+                                      backgroundColor: '#e0f2f1',
+                                      borderRadius: 8,
+                                    }}
+                                  >
+                                    <Ionicons
+                                      name={proofDocumentTypes[index] === 'pdf' ? 'document-text' : 'document'}
+                                      size={40}
+                                      color="#004d40"
+                                    />
+                                  </View>
+                                  <ThemedText
+                                    style={{
+                                      marginTop: 8,
+                                      textAlign: 'center',
+                                      fontSize: 13,
+                                      color: '#004d40',
+                                      fontWeight: '600',
+                                    }}
+                                  >
+                                    {file.name}
+                                  </ThemedText>
+                                </View>
+                              ))}
+                            </ScrollView>
+                          </View>
+                        )}
+
+                        {/* Add More Files Buttons */}
+                        {(proofImages.length + proofDocuments.length) < 6 && (
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: wp(2) }}>
+                            <TouchableOpacity
+                              onPress={() => selectManyImages(setProofImages, false, 6 - proofDocuments.length)}
                               style={{
+                                backgroundColor: '#1E90FF',
+                                height: 45,
                                 justifyContent: 'center',
-                                alignItems: 'center',
-                                height: wp(10),
-                                backgroundColor: '#e0f2f1',
+                                paddingHorizontal: 20,
                                 borderRadius: 8,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.25,
+                                shadowRadius: 3.84,
+                                elevation: 5,
                               }}
                             >
                               <ThemedText
                                 style={{
-                                  fontSize: 50,
-                                  color: '#004d40',
+                                  textAlign: 'center',
+                                  color: 'white',
+                                  fontWeight: '600',
+                                  fontSize: 12,
                                 }}
                               >
-                                📄
+                                Add Images
                               </ThemedText>
-                            </View>
-                            <ThemedText
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6 - proofImages.length)}
                               style={{
-                                marginTop: 8,
-                                textAlign: 'center',
-                                fontSize: 13,
-                                color: '#004d40',
-                                fontWeight: '600',
-                              }}
-                            >
-                              {proofOfOrder[0].name}
-                            </ThemedText>
-                          </>
-                        ) : (
-                          <>
-                            <Image
-                              source={{ uri: proofOfOrder[0].uri }}
-                              style={{
-                                width: '100%',
-                                height: wp(20),
+                                backgroundColor: '#004d40',
+                                height: 45,
+                                justifyContent: 'center',
+                                paddingHorizontal: 20,
                                 borderRadius: 8,
-                              }}
-                              resizeMode="cover"
-                            />
-                            <ThemedText
-                              style={{
-                                marginTop: 8,
-                                textAlign: 'center',
-                                fontSize: 13,
-                                color: '#004d40',
-                                fontWeight: '600',
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.25,
+                                shadowRadius: 3.84,
+                                elevation: 5,
                               }}
                             >
-                              {proofOfOrder[0].name}
-                            </ThemedText>
-                          </>
+                              <ThemedText
+                                style={{
+                                  textAlign: 'center',
+                                  color: 'white',
+                                  fontWeight: '600',
+                                  fontSize: 12,
+                                }}
+                              >
+                                Add Documents
+                              </ThemedText>
+                            </TouchableOpacity>
+                          </View>
                         )}
                       </View>
                     )}
                   </View>
                 ) : (
                   <View>
-
                     <ThemedText style={{ fontSize: 13.6, fontWeight: 'bold', textAlign: "center", color: "#1E90FF", }}>
                       Upload: Proof of Load Request
                     </ThemedText>
                     <ThemedText type="tiny">
-                      Upload an image or PDF proving this load is real and needs a truck.
+                      Upload images, PDFs, or Word documents proving this load is real and needs a truck. (Max 6 files)
                     </ThemedText>
 
-
-                    <TouchableOpacity
-                      onPress={() => pickDocument(setProofOfOrder, setProofOfOrderFileType)}
-                      style={{
-                        backgroundColor: '#004d40',
-                        height: 45,
-                        justifyContent: 'center',
-                        alignSelf: 'center',
-                        marginVertical: 10,
-                        width: 280,
-                        borderRadius: 8,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 3.84,
-                        elevation: 5,
-                      }}
-                    >
-                      <ThemedText
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: wp(3) }}>
+                      <TouchableOpacity
+                        onPress={() => selectManyImages(setProofImages, false, 6)}
                         style={{
-                          textAlign: 'center',
-                          color: 'white',
-                          fontWeight: '600',
-                          fontSize: 14,
+                          backgroundColor: '#1E90FF',
+                          height: 45,
+                          justifyContent: 'center',
+                          paddingHorizontal: 20,
+                          borderRadius: 8,
+                          shadowColor: '#000',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.25,
+                          shadowRadius: 3.84,
+                          elevation: 5,
                         }}
                       >
-                        Upload Proof of Order
-                      </ThemedText>
-                    </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                          <Ionicons name="camera" size={16} color="white" style={{ marginRight: 8 }} />
+                          <ThemedText
+                            style={{
+                              textAlign: 'center',
+                              color: 'white',
+                              fontWeight: '600',
+                              fontSize: 14,
+                            }}
+                          >
+                            Add Images
+                          </ThemedText>
+                        </View>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6)}
+                        style={{
+                          backgroundColor: '#004d40',
+                          height: 45,
+                          justifyContent: 'center',
+                          paddingHorizontal: 20,
+                          borderRadius: 8,
+                          shadowColor: '#000',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.25,
+                          shadowRadius: 3.84,
+                          elevation: 5,
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                          <Ionicons name="document-text" size={16} color="white" style={{ marginRight: 8 }} />
+                          <ThemedText
+                            style={{
+                              textAlign: 'center',
+                              color: 'white',
+                              fontWeight: '600',
+                              fontSize: 14,
+                            }}
+                          >
+                            Add Documents
+                          </ThemedText>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 )
               }
@@ -906,18 +1690,19 @@ const AddLoadDB = () => {
                 Return Load<ThemedText color="red">*</ThemedText>
               </ThemedText>
               <Input
-                value={returnLoad}
-                onChangeText={setReturnLoad}
+                value={returnLoad || ""}
+                onChangeText={(text) => setReturnLoad(text || "")}
+                placeholder="Enter return load details"
               />
               <RateInput
-                rate={returnRate}
-                setRate={setReturnRate}
-                selectedCurrency={selectedReturnCurrency}
-                setSelectedCurrency={setSelectedRetrunCurrency}
-                selectedModelType={selectedReturnModelType}
+                rate={returnRate || ""}
+                setRate={(rate) => setReturnRate(rate || "")}
+                selectedCurrency={selectedReturnCurrency || { id: 1, name: "USD" }}
+                setSelectedCurrency={setSelectedReturnCurrency}
+                selectedModelType={selectedReturnModelType || { id: 1, name: "Solid" }}
                 setSelectedModelType={setSelectedReturnModelType}
-                rateExplanation={returnTerms}
-                setRateExplanation={setReturnTerms}
+                rateExplanation={returnTerms || ""}
+                setRateExplanation={(terms) => setReturnTerms(terms || "")}
                 isReturnRate={true}
               />
 
@@ -931,8 +1716,9 @@ const AddLoadDB = () => {
                 Return Terms<ThemedText color="red">*</ThemedText>
               </ThemedText>
               <Input
-                value={returnTerms}
-                onChangeText={setReturnTerms}
+                value={returnTerms || ""}
+                onChangeText={(text) => setReturnTerms(text || "")}
+                placeholder="Enter return load terms"
               />
             </View>
             <Divider />
@@ -1045,6 +1831,266 @@ const AddLoadDB = () => {
 
         </ScrollView>)}
       </View>
+
+      {/* General User Personal Details Modal */}
+      <Modal visible={showPersonalDetailsModal && selectedPersonalType === 'general'} statusBarTranslucent animationType="slide">
+        <ScreenWrapper>
+          <View style={{ margin: wp(4), marginTop: hp(6) }}>
+            <View style={{ gap: wp(2) }}>
+              <ScrollView>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
+                  <TouchableOpacity onPress={() => {
+                    setShowPersonalDetailsModal(false);
+                    setSelectedPersonalType(null);
+                    clearPersonalValidationErrors();
+                  }}>
+                    <AntDesign name="close" color={icon} size={wp(4)} />
+                  </TouchableOpacity>
+                  <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }}>PERSONAL DETAILS</ThemedText>
+                </View>
+
+                <ThemedText>Full Name<ThemedText color="red">*</ThemedText></ThemedText>
+                <Input
+                  placeholder="Enter your full name"
+                  value={personalName}
+                  onChangeText={(text) => {
+                    setPersonalName(text);
+                    validatePersonalName(text);
+                  }}
+                  style={personalNameError ? { borderColor: 'red', borderWidth: 1 } : {}}
+                />
+                {personalNameError ? (
+                  <ThemedText style={{ color: 'red', fontSize: 12, marginTop: 4 }}>
+                    {personalNameError}
+                  </ThemedText>
+                ) : null}
+
+                <ThemedText>Phone Number</ThemedText>
+                <Input
+                  Icon={<>
+                    <Dropdown
+                      style={[{ width: wp(15) }]}
+                      selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
+                      data={countryCodes}
+                      maxHeight={hp(60)}
+                      labelField="name"
+                      valueField="name"
+                      placeholder="+00"
+                      value={personalCountryCode?.name}
+                      itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
+                      activeColor={background}
+                      containerStyle={{
+                        borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
+                        width: wp(45),
+                        shadowOffset: { width: 0, height: 9 },
+                        shadowOpacity: 0.50,
+                        shadowRadius: 12.35,
+                        elevation: 19,
+                        paddingVertical: wp(1)
+                      }}
+                      onChange={item => setPersonalCountryCode(item)}
+                      renderLeftIcon={() => <></>}
+                      renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
+                      renderItem={((item, selected) =>
+                        <>
+                          <View style={[styles.item, selected && {}]}>
+                            <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
+                            {selected && (
+                              <Ionicons color={icon} name='checkmark-outline' size={wp(5)} />
+                            )}
+                          </View>
+                          <Divider />
+                        </>
+                      )}
+                    />
+                    <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
+                  </>}
+                  value={personalPhone}
+                  placeholder="700 000 000"
+                  onChangeText={setPersonalPhone}
+                />
+
+                <ThemedText>Email Address</ThemedText>
+                <Input
+                  placeholder="Enter your email"
+                  value={personalEmail}
+                  onChangeText={setPersonalEmail}
+                />
+
+                <DocumentUploader
+                  documents={selectedPersonalDocuments[0]}
+                  title="ID Document"
+                  subtitle="Upload your National ID or Passport (PDF or Image)"
+                  buttonTiitle="Upload ID Document"
+                  onPickDocument={() => pickDocument(setSelectedPersonalDocuments, setPersonalFileType)}
+                />
+
+                <Button
+                  onPress={handleUpdateGeneralDetails}
+                  loading={isSubmittingPersonal}
+                  disabled={isSubmittingPersonal || !isGeneralPersonalDetailsValid}
+                  title={isSubmittingPersonal ? "Saving..." : "Save"}
+                  colors={{ text: '#0f9d58', bg: '#0f9d5824' }}
+                  style={{ height: 44 }}
+                />
+                <View style={{ height: 100 }} />
+              </ScrollView>
+            </View>
+          </View>
+        </ScreenWrapper>
+      </Modal>
+
+      {/* Professional User Personal Details Modal */}
+      <Modal visible={showPersonalDetailsModal && selectedPersonalType === 'professional'} statusBarTranslucent animationType="slide">
+        <ScreenWrapper>
+          <View style={{ margin: wp(4), marginTop: hp(6) }}>
+            <View style={{ gap: wp(2) }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
+                <TouchableOpacity onPress={() => {
+                  setShowPersonalDetailsModal(false);
+                  setSelectedPersonalType(null);
+                  clearPersonalValidationErrors();
+                }}>
+                  <AntDesign name="close" color={icon} size={wp(4)} />
+                </TouchableOpacity>
+                <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }}>PROFESSIONAL DETAILS</ThemedText>
+              </View>
+
+              <ScrollView>
+                <HorizontalTickComponent
+                  data={[
+                    { topic: "Company Broker", value: "Company Broker" },
+                    { topic: "Independent Broker", value: "Independent Broker" }
+                  ]}
+                  condition={typeOfBrokerPersonal}
+                  onSelect={(value: string) => {
+                    console.log('Broker type selected:', value);
+                    setTypeOfBrokerPersonal(value);
+                  }}
+                />
+
+                <ThemedText>Full Name</ThemedText>
+                <Input
+                  placeholder="Enter your full name"
+                  value={personalName}
+                  onChangeText={setPersonalName}
+                />
+
+                <ThemedText>Phone Number</ThemedText>
+                <Input
+                  Icon={<>
+                    <Dropdown
+                      style={[{ width: wp(15) }]}
+                      selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
+                      data={countryCodes}
+                      maxHeight={hp(60)}
+                      labelField="name"
+                      valueField="name"
+                      placeholder="+00"
+                      value={personalCountryCode?.name}
+                      itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
+                      activeColor={background}
+                      containerStyle={{
+                        borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
+                        width: wp(45),
+                        shadowOffset: { width: 0, height: 9 },
+                        shadowOpacity: 0.50,
+                        shadowRadius: 12.35,
+                        elevation: 19,
+                        paddingVertical: wp(1)
+                      }}
+                      onChange={item => setPersonalCountryCode(item)}
+                      renderLeftIcon={() => <></>}
+                      renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
+                      renderItem={((item, selected) =>
+                        <>
+                          <View style={[styles.item, selected && {}]}>
+                            <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
+                            {selected && (
+                              <Ionicons color={icon} name='checkmark-outline' size={wp(5)} />
+                            )}
+                          </View>
+                          <Divider />
+                        </>
+                      )}
+                    />
+                    <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
+                  </>}
+                  value={personalPhone}
+                  placeholder="700 000 000"
+                  onChangeText={setPersonalPhone}
+                />
+
+                <ThemedText>Email Address</ThemedText>
+                <Input
+                  placeholder="Enter your email"
+                  value={personalEmail}
+                  onChangeText={setPersonalEmail}
+                />
+
+                <DocumentUploader
+                  documents={selectedBrokerPersonalDocuments[0]}
+                  title="National ID / Passport"
+                  subtitle="Upload your ID or Passport (PDF or Image)"
+                  buttonTiitle="National ID / Passport"
+                  onPickDocument={() => {
+                    console.log('Picking National ID document');
+                    pickDocument(setSelectedBrokerPersonalDocuments, setBrokerPersonalFileType);
+                  }}
+                />
+
+                <DocumentUploader
+                  documents={selectedBrokerPersonalDocuments[1]}
+                  title="Proof of Residence"
+                  subtitle="Upload utility bill, lease, or bank statement (PDF or Image)"
+                  buttonTiitle="Proof of Address"
+                  onPickDocument={() => {
+                    console.log('Picking Proof of Residence document');
+                    pickDocument(setSelectedBrokerPersonalDocuments, setBrokerPersonalFileType);
+                  }}
+                  disabled={!selectedBrokerPersonalDocuments[0]}
+                  toastMessage="Please upload ID first"
+                />
+
+                {typeOfBrokerPersonal === "Company Broker" && (
+                  <DocumentUploader
+                    documents={selectedBrokerPersonalDocuments[2]}
+                    title="Company Certificate"
+                    subtitle="Upload registration certificate (PDF or Image)"
+                    buttonTiitle="Company Registration"
+                    onPickDocument={() => pickDocument(setSelectedBrokerPersonalDocuments, setBrokerPersonalFileType)}
+                    disabled={!selectedBrokerPersonalDocuments[1]}
+                    toastMessage="Upload address proof first"
+                  />
+                )}
+
+                {typeOfBrokerPersonal === "Company Broker" && (
+                  <DocumentUploader
+                    documents={selectedBrokerPersonalDocuments[3]}
+                    title="Company Letter"
+                    subtitle="Upload signed letterhead or authorization (PDF or Image)"
+                    buttonTiitle="Letter Head"
+                    onPickDocument={() => pickDocument(setSelectedBrokerPersonalDocuments, setBrokerPersonalFileType)}
+                    disabled={!selectedBrokerPersonalDocuments[2]}
+                    toastMessage="Upload certificate first"
+                  />
+                )}
+
+                <Button
+                  onPress={handleUpdateProfessionalDetails}
+                  loading={uploadingPersonalD}
+                  disabled={uploadingPersonalD || !isProfessionalPersonalDetailsValid}
+                  title={uploadingPersonalD ? "Saving..." : "Save"}
+                  colors={{ text: '#0f9d58', bg: '#0f9d5824' }}
+                  style={{ height: 44 }}
+                />
+
+                <View style={{ height: 140 }} />
+              </ScrollView>
+            </View>
+          </View>
+        </ScreenWrapper>
+      </Modal>
     </ScreenWrapper>
   );
 };
@@ -1119,6 +2165,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginVertical: wp(2),
   },
+  item: {
+    padding: 17,
+    gap: wp(2),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderRadius: wp(1),
+    marginBottom: 5
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+  }
 });
 
 

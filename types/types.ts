@@ -188,8 +188,41 @@ export type Load = {
     roundTrip: boolean
     isVerified: boolean
     trucksRequired: TruckNeededType[]
-    proofOfOrder: string;
-    proofOfOrderType: string
+    proofOfOrder: string[];
+    proofOfOrderType: string[]
+
+    // Load verification system
+    loadUserType: 'general' | 'confinee' | 'broker';
+    verificationStatus: 'pending' | 'approved' | 'rejected';
+    submittedAt?: string;
+    approvedAt?: string;
+    rejectedAt?: string;
+    approvedBy?: string;
+    rejectedBy?: string;
+    rejectionReason?: string;
+
+    // Approval system (for admin approval)
+    approvalStatus?: 'pending' | 'approved' | 'rejected' | 'edited';
+    isApproved?: boolean;
+
+    // Verification documents
+    idDocument?: string;
+    idDocumentType?: 'pdf' | 'image' | 'doc' | 'docx';
+    proofOfResidence?: string;
+    proofOfResidenceType?: 'pdf' | 'image' | 'doc' | 'docx';
+    brokerCertificate?: string;
+    brokerCertificateType?: 'pdf' | 'image' | 'doc' | 'docx';
+
+    // Load references (like truck references)
+    brokerId?: string;
+    brokerName?: string;
+    brokerPhone?: string;
+    brokerEmail?: string;
+    ownerId?: string;
+    ownerName?: string;
+    ownerPhone?: string;
+    ownerEmail?: string;
+
     // Coordinate fields for map display
     originCoordinates?: {
         latitude: number;
@@ -227,6 +260,7 @@ export type User = {
     organisation?: string,
     country?: string,
     address?: string,
+    referrerId?: string, // ID of the user who referred this user
     [key: string]: any; // To allow additional properties
 }
 
@@ -337,6 +371,8 @@ export type DocumentAsset = {
 
     // Add any other properties here
 }
+
+export type ProofFileType = 'pdf' | 'image' | 'doc' | 'docx';
 
 export type SelectLocationProp = {
 

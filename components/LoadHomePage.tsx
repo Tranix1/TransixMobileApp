@@ -90,7 +90,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     const handleContact = (method: 'whatsapp' | 'call' | 'message') => {
         if (!selectedLoad?.contact) return
 
-        
+
         const message = `${selectedLoad.companyName}\nIs this load still available\n${selectedLoad.typeofLoad}\nrOUTE: ${selectedLoad.origin} TO ${selectedLoad.destination}\nRate : ${selectedLoad.currency} ${selectedLoad.rate} ${selectedLoad.model}`
 
         switch (method) {
@@ -142,7 +142,9 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
 Load: ${selectedLoad.typeofLoad}
 Route: ${selectedLoad.origin} → ${selectedLoad.destination}
 Rate: ${selectedLoad.currency} ${selectedLoad.rate} ${selectedLoad.model}
-Contact: ${selectedLoad.contact}`;
+Contact: ${selectedLoad.contact}
+
+From Transix - Download the app for more loads: https://play.google.com/store/apps/details?id=com.yayapana.TransixNewVersion`;
 
             await Share.share({
                 message: shareMessage,
@@ -504,7 +506,7 @@ Contact: ${selectedLoad.contact}`;
 
                                         </View>
                                         <View>
-                                           
+
                                         </View>
                                     </>
                                 }

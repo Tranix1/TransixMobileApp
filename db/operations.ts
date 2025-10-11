@@ -378,6 +378,18 @@ export const getUsers = async () => {
     }
 };
 
+export const getUsersByReferrerId = async (referrerId: string) => {
+    try {
+        const q = query(collection(db, "personalData"), where("referrerId", "==", referrerId));
+        const querySnapshot = await getDocs(q);
+        const users = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        return users;
+    } catch (error) {
+        console.error("Error fetching users by referrer ID:", error);
+        throw error;
+    }
+};
+
 export const searchUsersByEmail = async (email: string) => {
     try {
         const q = query(collection(db, "personalData"), where("email", "==", email));
@@ -417,6 +429,232 @@ export const addServiceStationOwner = async (adminId: string, ownerId: string) =
         await setDoc(ownerRef, { userId: ownerId, adminId: adminId, createdAt: serverTimestamp() });
     } catch (error) {
         console.error("Error adding service station owner:", error);
+        throw error;
+    }
+};
+
+export const validateReferrer = async (referrerEmail: string) => {
+    try {
+        const q = query(collection(db, "personalData"), where("email", "==", referrerEmail));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return { exists: false, referrerId: null };
+        }
+
+        const referrerDoc = querySnapshot.docs[0];
+        return {
+            exists: true,
+            referrerId: referrerDoc.id,
+            referrerData: referrerDoc.data()
+        };
+    } catch (error) {
+        console.error("Error validating referrer:", error);
+        throw error;
+    }
+};
+
+export const validateReferrerCode = async (referrerCode: string) => {
+    try {
+        const q = query(collection(db, "referrers"), where("referrerCode", "==", referrerCode));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return { exists: false, referrerId: null, referrerData: null };
+        }
+
+        const referrerDoc = querySnapshot.docs[0];
+        return {
+            exists: true,
+            referrerId: referrerDoc.id,
+            referrerData: { id: referrerDoc.id, ...referrerDoc.data() }
+        };
+    } catch (error) {
+        console.error("Error validating referrer code:", error);
+        throw error;
+    }
+};
+
+export const getReferrerByCode = async (referrerCode: string) => {
+    try {
+        const q = query(collection(db, "referrers"), where("referrerCode", "==", referrerCode));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return { exists: false, referrerData: null };
+        }
+
+        const referrerDoc = querySnapshot.docs[0];
+        return {
+            exists: true,
+            referrerData: { id: referrerDoc.id, ...referrerDoc.data() }
+        };
+    } catch (error) {
+        console.error("Error getting referrer by code:", error);
+        throw error;
+    }
+};
+
+export const getAllReferrers = async () => {
+    try {
+        const q = query(collection(db, "referrers"), orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        const referrers = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        return referrers;
+    } catch (error) {
+        console.error("Error getting all referrers:", error);
+        throw error;
+    }
+};
+
+export const generateUniqueReferrerCode = async (): Promise<string> => {
+    let code: string;
+    let isUnique = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (!isUnique && attempts < maxAttempts) {
+        // Generate a 6-character alphanumeric code
+        code = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+        try {
+            const validation = await validateReferrerCode(code);
+            if (!validation.exists) {
+                isUnique = true;
+            }
+        } catch (error) {
+            console.error("Error checking code uniqueness:", error);
+            // If there's an error checking, assume it's unique to avoid infinite loop
+            isUnique = true;
+        }
+
+        attempts++;
+    }
+
+    if (!isUnique) {
+        // Fallback: add timestamp to ensure uniqueness
+        code = Math.random().toString(36).substring(2, 6).toUpperCase() + Date.now().toString().slice(-2);
+    }
+
+    return code!;
+};
+
+export const generateUniqueUserId = async (): Promise<string> => {
+    let userId: string;
+    let isUnique = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (!isUnique && attempts < maxAttempts) {
+        // Generate a unique user ID (you can customize this format)
+        userId = 'user_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+
+        try {
+            const q = query(collection(db, "personalData"), where("uid", "==", userId));
+            const querySnapshot = await getDocs(q);
+            if (querySnapshot.empty) {
+                isUnique = true;
+            }
+        } catch (error) {
+            console.error("Error checking user ID uniqueness:", error);
+            isUnique = true;
+        }
+
+        attempts++;
+    }
+
+    if (!isUnique) {
+        // Fallback: use timestamp + random string
+        userId = 'user_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 10);
+    }
+
+    return userId!;
+};
+
+/**
+ * Approve a load
+ * @param loadId - The ID of the load to approve
+ * @param approvedBy - The ID of the user who approved the load
+ */
+export const approveLoad = async (loadId: string, approvedBy: string) => {
+    try {
+        const loadRef = doc(db, 'Cargo', loadId);
+        await updateDoc(loadRef, {
+            approvalStatus: 'approved',
+            isApproved: true,
+            approvedAt: Date.now().toString(),
+            approvedBy: approvedBy
+        });
+        return true;
+    } catch (error) {
+        console.error("Error approving load:", error);
+        throw error;
+    }
+};
+
+/**
+ * Reject a load
+ * @param loadId - The ID of the load to reject
+ * @param rejectedBy - The ID of the user who rejected the load
+ * @param rejectionReason - The reason for rejection
+ */
+export const rejectLoad = async (loadId: string, rejectedBy: string, rejectionReason: string) => {
+    try {
+        const loadRef = doc(db, 'Cargo', loadId);
+        await updateDoc(loadRef, {
+            approvalStatus: 'rejected',
+            isApproved: false,
+            rejectedAt: Date.now().toString(),
+            rejectedBy: rejectedBy,
+            rejectionReason: rejectionReason
+        });
+        return true;
+    } catch (error) {
+        console.error("Error rejecting load:", error);
+        throw error;
+    }
+};
+
+/**
+ * Approve a load account
+ * @param accountId - The ID of the account to approve
+ * @param approvedBy - The ID of the user who approved the account
+ */
+export const approveLoadAccount = async (accountId: string, approvedBy: string) => {
+    try {
+        const accountRef = doc(db, 'cargoPersonalDetails', accountId);
+        await updateDoc(accountRef, {
+            approvalStatus: 'approved',
+            isApproved: true,
+            approvedAt: Date.now().toString(),
+            approvedBy: approvedBy
+        });
+        return true;
+    } catch (error) {
+        console.error("Error approving load account:", error);
+        throw error;
+    }
+};
+
+/**
+ * Reject a load account
+ * @param accountId - The ID of the account to reject
+ * @param rejectedBy - The ID of the user who rejected the account
+ * @param rejectionReason - The reason for rejection
+ */
+export const rejectLoadAccount = async (accountId: string, rejectedBy: string, rejectionReason: string) => {
+    try {
+        const accountRef = doc(db, 'cargoPersonalDetails', accountId);
+        await updateDoc(accountRef, {
+            approvalStatus: 'rejected',
+            isApproved: false,
+            rejectedAt: Date.now().toString(),
+            rejectedBy: rejectedBy,
+            rejectionReason: rejectionReason
+        });
+        return true;
+    } catch (error) {
+        console.error("Error rejecting load account:", error);
         throw error;
     }
 };

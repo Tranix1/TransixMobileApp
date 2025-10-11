@@ -47,7 +47,7 @@ export const TruckStopCard: React.FC<TruckStopCardProps> = memo(({
 
     // Memoize the images to prevent unnecessary re-renders
     const memoizedImages = React.useMemo(() => {
-        return truckStop.images?.slice(0, 3) || [];
+        return truckStop.images || [];
     }, [truckStop.images]);
 
 

@@ -6,6 +6,7 @@ import { Image } from 'expo-image'
 import { ThemedText } from '@/components/ThemedText'
 import { useAuth } from '@/context/AuthContext'
 import { useThemeColor } from '@/hooks/useThemeColor'
+import { useAdminPermissions } from '@/hooks/useAdminPermissions'
 import { wp } from '@/constants/common'
 import { AntDesign, Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
@@ -15,6 +16,7 @@ import Button from '@/components/Button'
 const Settings = () => {
 
     const { user, Logout } = useAuth()
+    const { isAdmin, hasPermissionSync, isSuperAdmin } = useAdminPermissions()
 
     const icon = useThemeColor('icon');
     const coolgray = useThemeColor('coolGray');
@@ -98,122 +100,224 @@ const Settings = () => {
                 }
 
                 {/* Admin Section */}
-                {user && user?.uid === 'QOC9krp5BOR7NhFXRuX5f32u17e2' && (
+                {user && isAdmin && (
                     <>
                         <ThemedText style={{ margin: wp(4) }} type='subtitle'>Admin</ThemedText>
                         <View style={{ gap: wp(1), padding: wp(2), marginBottom: wp(4), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
                             <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
                                 <TouchableNativeFeedback onPress={() => router.push('/Account/Admin')}>
                                     <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                                        <Ionicons name='settings-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                        <Ionicons name='people-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
                                         <View style={{ flex: 1 }}>
                                             <ThemedText type='default'>
                                                 Admin Panel
                                             </ThemedText>
                                             <ThemedText type='tiny' color={coolgray}>
-                                                Manage app versions and updates
+                                                View all users on the platform
                                             </ThemedText>
                                         </View>
                                         <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
                                     </View>
                                 </TouchableNativeFeedback>
                             </View>
-                            <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
-                                <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/UpdateVersion')}>
-                                    <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                                        <Ionicons name='refresh-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                                        <View style={{ flex: 1 }}>
-                                            <ThemedText type='default'>
-                                                Update Version
-                                            </ThemedText>
-                                            <ThemedText type='tiny' color={coolgray}>
-                                                Update app version and force updates
-                                            </ThemedText>
+                            {isSuperAdmin() && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/AddAdmin')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='person-add-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>
+                                                    Add Admin
+                                                </ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>
+                                                    Assign admin roles to users
+                                                </ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
                                         </View>
-                                        <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
-                                    </View>
-                                </TouchableNativeFeedback>
-                            </View>
-                            <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
-                                <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/ApproveTrucks')}>
-                                    <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                                        <Ionicons name='checkmark-circle-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                                        <View style={{ flex: 1 }}>
-                                            <ThemedText type='default'>
-                                                Approve Trucks
-                                            </ThemedText>
-                                            <ThemedText type='tiny' color={coolgray}>
-                                                Review and approve pending trucks
-                                            </ThemedText>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
+                            {isSuperAdmin() && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/UpdateVersion')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='refresh-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>
+                                                    Update Version
+                                                </ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>
+                                                    Update app version and force updates
+                                                </ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
                                         </View>
-                                        <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
-                                    </View>
-                                </TouchableNativeFeedback>
-                            </View>
-                            <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
-                                <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/ApproveTruckAccounts')}>
-                                    <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                                        <Ionicons name='people-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                                        <View style={{ flex: 1 }}>
-                                            <ThemedText type='default'>
-                                                Approve Truck Accounts
-                                            </ThemedText>
-                                            <ThemedText type='tiny' color={coolgray}>
-                                                Review and approve truck account verifications
-                                            </ThemedText>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
+                            {hasPermissionSync('approve_trucks') && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/ApproveTrucks')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='checkmark-circle-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>
+                                                    Approve Trucks
+                                                </ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>
+                                                    Review and approve pending trucks
+                                                </ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
                                         </View>
-                                        <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
-                                    </View>
-                                </TouchableNativeFeedback>
-                            </View>
-                            <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
-                                <TouchableNativeFeedback onPress={() => router.push('/Tracking/AddAgent')}>
-                                    <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                                        <Ionicons name='person-add-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                                        <View style={{ flex: 1 }}>
-                                            <ThemedText type='default'>
-                                                Add Tracking Agent
-                                            </ThemedText>
-                                            <ThemedText type='tiny' color={coolgray}>
-                                                Add users as tracking agents
-                                            </ThemedText>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
+                            {hasPermissionSync('approve_truck_accounts') && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/ApproveTruckAccounts')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='person-check-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>
+                                                    Approve Truck Accounts
+                                                </ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>
+                                                    Review and approve truck personal details
+                                                </ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
                                         </View>
-                                        <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
-                                    </View>
-                                </TouchableNativeFeedback>
-                            </View>
-                            <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
-                                <TouchableNativeFeedback onPress={() => router.push('/Fuel/AddServiceStationOwner')}>
-                                    <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                                        <Ionicons name='business-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                                        <View style={{ flex: 1 }}>
-                                            <ThemedText type='default'>
-                                                Add Service Station Owner
-                                            </ThemedText>
-                                            <ThemedText type='tiny' color={coolgray}>
-                                                Add users as service station owners
-                                            </ThemedText>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
+                            {hasPermissionSync('approve_loads') && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/ApproveLoads')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='cube-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>
+                                                    Approve Loads
+                                                </ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>
+                                                    Review and approve pending load requests
+                                                </ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
                                         </View>
-                                        <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
-                                    </View>
-                                </TouchableNativeFeedback>
-                            </View>
-                            <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
-                                <TouchableNativeFeedback onPress={() => router.push('/TruckStop/AddTruckStopOwner')}>
-                                    <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                                        <Ionicons name='car-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                                        <View style={{ flex: 1 }}>
-                                            <ThemedText type='default'>
-                                                Add Truck Stop Owner
-                                            </ThemedText>
-                                            <ThemedText type='tiny' color={coolgray}>
-                                                Add users as truck stop owners
-                                            </ThemedText>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
+                            {hasPermissionSync('approve_loads_accounts') && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/ApproveLoadsAccounts')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='business-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>
+                                                    Approve Loads Accounts
+                                                </ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>
+                                                    Review and approve load account details
+                                                </ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
                                         </View>
-                                        <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
-                                    </View>
-                                </TouchableNativeFeedback>
-                            </View>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
+                            {hasPermissionSync('manage_referrers') && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Account/ManageReferrers')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='person-add-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>
+                                                    Manage Referrers
+                                                </ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>
+                                                    Add and manage referrer codes
+                                                </ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
+                            {hasPermissionSync('version_management') && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Account/VersionManagement')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='settings-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>
+                                                    Version Management
+                                                </ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>
+                                                    Manage app versions and updates
+                                                </ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
+                            {hasPermissionSync('add_tracking_agent') && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Tracking/AddAgent')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='person-add-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>
+                                                    Add Tracking Agent
+                                                </ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>
+                                                    Add users as tracking agents
+                                                </ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
+                            {hasPermissionSync('add_service_station_owner') && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Fuel/AddServiceStationOwner')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='business-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>
+                                                    Add Service Station Owner
+                                                </ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>
+                                                    Add users as service station owners
+                                                </ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
+                            {hasPermissionSync('add_truck_stop_owner') && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/TruckStop/AddTruckStopOwner')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='car-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>
+                                                    Add Truck Stop Owner
+                                                </ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>
+                                                    Add users as truck stop owners
+                                                </ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
                         </View>
                     </>
                 )}
