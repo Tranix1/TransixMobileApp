@@ -58,7 +58,7 @@
           "resizeMode": "contain",
           "backgroundColor": "#0f0e11",
           "dark": {
-            "image": "./assets/images/TransixxLogoN.jpg",
+            "image": "./assets/images/blackBgWhiteLogo.png",
             "imageWidth": 200,
             "resizeMode": "contain",
             "backgroundColor": "#0f0e11"
@@ -86,8 +86,8 @@
               "android.enableDexingArtifactTransform.desugaring": "false",
               "android.useAndroidX": "true",
               "android.enableJetifier": "true",
-              "android.enable16kbPageSizeSupport": "true",
-              "android.enablePageSizeCompatMode": "true",
+              "android.enable16kbPageSizeSupport": "false",
+              "android.enablePageSizeCompatMode": "false",
               "android.bundle.enableUncompressedNativeLibs": "false",
               "android.enableProguardInReleaseBuilds": "true",
               "android.enableR8": "true"

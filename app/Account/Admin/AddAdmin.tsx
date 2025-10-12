@@ -12,6 +12,7 @@ import { getUsers, getUsersByReferrerId } from '@/db/operations';
 import { doc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import Button from '@/components/Button';
+import { usePushNotifications } from '@/Utilities/pushNotification';
 
 interface User {
     id: string;
@@ -85,6 +86,7 @@ const AddAdmin = () => {
 
     const { user } = useAuth();
     const { isSuperAdmin } = useAdminPermissions();
+    const { expoPushToken } = usePushNotifications();
     const background = useThemeColor('background');
     const backgroundLight = useThemeColor('backgroundLight');
     const icon = useThemeColor('icon');
@@ -110,7 +112,7 @@ const AddAdmin = () => {
     const loadUsers = async () => {
         setLoading(true);
         try {
-            let usersData;
+            let usersData: any[];
 
             if (isSuperAdmin()) {
                 // Super admin can see all users
@@ -171,7 +173,8 @@ const AddAdmin = () => {
                     .filter(role => selectedRoles.includes(role.id))
                     .flatMap(role => role.permissions),
                 createdAt: new Date().toISOString(),
-                isActive: true
+                isActive: true,
+                expoPushToken: expoPushToken || null
             };
 
             await setDoc(doc(db, 'adminRoles', selectedUser.id), adminData);

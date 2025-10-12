@@ -1,4 +1,4 @@
-import React, { FC,useEffect } from "react";
+import React, { FC, useEffect } from "react";
 import { View, TouchableOpacity } from "react-native"
 
 import { ThemedText } from "./ThemedText";
@@ -21,7 +21,7 @@ import type { ImagePickerAsset } from 'expo-image-picker';
 
 interface SlctTruckCapacityProps {
     selectedTruckType: { id: number, name: string } | null;
-    setSelectedTruckType: React.Dispatch<React.SetStateAction<{ id: number, name: string } | null>> ;
+    setSelectedTruckType: React.Dispatch<React.SetStateAction<{ id: number, name: string } | null>>;
     selectedCargoArea: { id: number, name: string } | null;
     setSelectedCargoArea: React.Dispatch<React.SetStateAction<TruckTypeProps | null>>;
     selectedTankerType: { id: number, name: string } | null;
@@ -66,11 +66,11 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
 
 }) => {
     useEffect(() => {
-  if (images && images.length > 2) {
-    // setImages?.(prev => prev.slice(0, 2));
+        if (images && images.length > 2) {
+            // setImages?.(prev => prev.slice(0, 2));
 
-  }
-}, [images]);
+        }
+    }, [images]);
 
 
     const icon = useThemeColor('icon')
@@ -84,12 +84,12 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
 
 
 
-<DropDownItem
-  allData={truckType}
-  selectedItem={selectedTruckType}
-  setSelectedItem={setSelectedTruckType}
-  placeholder="Select Truck Type"
-/>
+            <DropDownItem
+                allData={truckType}
+                selectedItem={selectedTruckType}
+                setSelectedItem={setSelectedTruckType}
+                placeholder="Select Truck Type"
+            />
 
 
             <ThemedText>
@@ -172,8 +172,8 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
                 paddingHorizontal: 16,
                 marginBottom: 16,
             }}>
-                <TouchableOpacity 
-                onPress={() => { images && images.length > 0 ? (setImages?.(prev => prev.slice(0, 2)), setShowCountries(!showCountries)) : setShowCountries(!showCountries); }}
+                <TouchableOpacity
+                    onPress={() => { images && images.length > 0 ? (setImages?.(prev => prev.slice(0, 2)), setShowCountries(!showCountries)) : setShowCountries(!showCountries); }}
 
                     style={{
                         flexDirection: 'row',
@@ -210,7 +210,7 @@ export const AddTruckDetails: FC<SlctTruckCapacityProps> = ({
 
             </View>
 
-         
+
 
         </View>
     );

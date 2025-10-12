@@ -1,4 +1,4 @@
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 
 export interface AdminRole {
@@ -16,6 +16,7 @@ export interface AdminUser {
     permissions: string[];
     createdAt: string;
     isActive: boolean;
+    expoPushToken?: string;
 }
 
 export const ADMIN_ROLES: AdminRole[] = [
@@ -176,4 +177,23 @@ export const canAccessAdminPanel = async (userId: string): Promise<boolean> => {
         'manage_referrers',
         'version_management'
     ]);
+};
+
+/**
+ * Update admin expoPushToken
+ * @param userId - The admin user ID
+ * @param expoPushToken - The new expo push token
+ */
+export const updateAdminExpoPushToken = async (userId: string, expoPushToken: string): Promise<boolean> => {
+    try {
+        const adminDocRef = doc(db, 'adminRoles', userId);
+        await updateDoc(adminDocRef, {
+            expoPushToken: expoPushToken,
+            lastModifiedAt: new Date().toISOString()
+        });
+        return true;
+    } catch (error) {
+        console.error('Error updating admin expoPushToken:', error);
+        return false;
+    }
 };

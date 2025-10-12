@@ -12,20 +12,22 @@ import { Entypo, Ionicons } from '@expo/vector-icons';
 import { Dropdown, SelectCountry } from 'react-native-element-dropdown';
 import { Countries } from '@/types/types';
 import type { ImagePickerAsset } from 'expo-image-picker';
-import { selectManyImages } from '@/Utilities/utils';
+import * as ImagePicker from 'expo-image-picker';
 import { uploadImage } from "@/db/operations";
 import Divider from "@/components/Divider";
 import { countryCodes, } from "@/data/appConstants";
+import { usePushNotifications } from '@/Utilities/pushNotification';
 
 
 const Edit = () => {
 
-  const { operation } = useLocalSearchParams();
+    const { operation } = useLocalSearchParams();
 
-    const { user, updateAccount , alertBox } = useAuth();
+    const { user, updateAccount, alertBox } = useAuth();
+    const { expoPushToken } = usePushNotifications();
 
 
-    const [imagelogo, setLogo] = useState<ImagePickerAsset[]>([]);
+    const [imagelogo, setLogo] = useState<ImagePickerAsset | null>(null);
     const [imageUpdate, setUploadImageUpdate] = React.useState("")
 
     const [organisation, setOrganisation] = useState('');
@@ -48,7 +50,7 @@ const Edit = () => {
         else {
             setOrganisation(user?.organisation || '')
             setPhoneNumber(user?.number || '')
-            setCountryCode(user.countryCode ||{id: 0, name: '+263' } )
+            setCountryCode(user.countryCode || { id: 0, name: '+263' })
             setAddress(user?.address || '')
             setSelectedValue({ value: user.country || '', label: user.country || '' })
         }
@@ -57,9 +59,30 @@ const Edit = () => {
 
     const [loading, setLoading] = React.useState(false)
 
+    const selectSingleImage = async () => {
+        const pickerResult = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.5,
+        });
+
+        if (pickerResult.canceled || !pickerResult.assets?.length) {
+            return;
+        }
+
+        const asset = pickerResult.assets[0];
+        if (asset.fileSize && asset.fileSize > 2 * 1024 * 1024) {
+            alert('Image size must be less than 2MB');
+            return;
+        }
+
+        setLogo(asset);
+    };
+
     const Submit = async () => {
 
-    const MissingDriverDetails = [
+        const MissingDriverDetails = [
             !organisation && "Enter Organisation Name",
             !selectedValue.value && "Select Country Of Operation",
             !address && "Enter Physical Adress ",
@@ -67,7 +90,7 @@ const Edit = () => {
             !phoneNumber && "Enter Phone Number",
         ].filter(Boolean);
 
-        if (MissingDriverDetails.length > 0 && operation ==="create") {
+        if (MissingDriverDetails.length > 0 && operation === "create") {
             // setContractDErr(true);
             alertBox("Missing Profile Details", MissingDriverDetails.join("\n"), [], "error");
             setLoading(false)
@@ -75,22 +98,23 @@ const Edit = () => {
         }
 
 
-setLoading(true)
+        setLoading(true)
 
-        const logoImage =  imagelogo[0]  ? await uploadImage(imagelogo[0] , "Profiles", setUploadImageUpdate, "Logo") :null;
+        const logoImage = imagelogo ? await uploadImage(imagelogo, "Profiles", setUploadImageUpdate, "Logo") : null;
         const data = {
             country: selectedValue.value,
             address: address,
             phoneNumber: `${countryCode.name}${phoneNumber}`,
-            number: phoneNumber ,
-            countryCode : countryCode,
-            organisation: organisation,   
+            number: phoneNumber,
+            countryCode: countryCode,
+            organisation: organisation,
             displayName: organisation,
-            photoURL: imagelogo[0]  ?logoImage : user?.photoURL ,
+            photoURL: imagelogo ? logoImage : user?.photoURL,
             uid: user?.uid,
             email: user?.email,
+            expoPushToken: expoPushToken || null,
             // createdAt: user?.createdAt
-            
+
         }
 
         try {
@@ -99,41 +123,41 @@ setLoading(true)
                 router.dismissAll()
             }
         } catch (error) {
-        setLoading(false)
+            setLoading(false)
             console.error("errror", error)
         }
 
     }
 
 
-    const headerTitle= operation==="create"? "Create Profile": "Edit Profile"
+    const headerTitle = operation === "create" ? "Create Profile" : "Edit Profile"
 
     return (
         <ScreenWrapper>
-                <Heading page={headerTitle} />
+            <Heading page={headerTitle} />
 
             <View style={styles.container}>
 
                 <ScrollView>
 
-                    {imagelogo[0] && <Image source={{ uri: imagelogo[0].uri }} style={{ width: wp(40), height: wp(40), margin: 'auto', marginBottom: 9, borderRadius: wp(4) }} />}
-                    {!imagelogo[0] && !user?.photoURL &&  <TouchableOpacity
+                    {imagelogo && <Image source={{ uri: imagelogo.uri }} style={{ width: wp(40), height: wp(40), margin: 'auto', marginBottom: 9, borderRadius: wp(4) }} />}
+                    {!imagelogo && !user?.photoURL && <TouchableOpacity
                         style={[styles.input, { height: hp(14), justifyContent: 'center', alignItems: 'center' }]}
-                        onPress={() => selectManyImages(setLogo, true)}
+                        onPress={selectSingleImage}
                     >
                         <Ionicons name='image-outline' size={wp(8)} color={icon} />
                         <ThemedText style={styles.label}>Click To Add Logo</ThemedText>
 
                     </TouchableOpacity>}
 
-                           {user?.photoURL &&!imagelogo[0] &&<TouchableOpacity style={styles.header} onPress={() => selectManyImages(setLogo, true)}>
-                    <Image
-                        style={styles.avatar}
-                        source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
-                    />
-                    <ThemedText type='subtitle' color={accent}>Edit</ThemedText>
-                </TouchableOpacity>}
-                        
+                    {user?.photoURL && !imagelogo && <TouchableOpacity style={styles.header} onPress={selectSingleImage}>
+                        <Image
+                            style={styles.avatar}
+                            source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
+                        />
+                        <ThemedText type='subtitle' color={accent}>Edit</ThemedText>
+                    </TouchableOpacity>}
+
 
                     <ThemedText style={styles.label}>Organisation Name</ThemedText>
                     <Input
@@ -197,79 +221,79 @@ setLoading(true)
                         onChangeText={setAddress}
                     />
                     <ThemedText style={styles.label}>Phone Number</ThemedText>
-                   
 
 
-  <Input
-                    Icon={<>
-                      <Dropdown
-                        style={[{ width: wp(15) }]}
-                        selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
-                        data={countryCodes}
-                        maxHeight={hp(60)}
-                        labelField="name"
-                        valueField="name"
-                        placeholder="+00"
-                        value={countryCode?.name}
-                        itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-                        activeColor={background}
 
-                        containerStyle={{
-                          borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                          width: wp(45),
-                          shadowOffset: {
-                            width: 0,
-                            height: 9,
-                          },
-                          shadowOpacity: 0.50,
-                          shadowRadius: 12.35,
+                    <Input
+                        Icon={<>
+                            <Dropdown
+                                style={[{ width: wp(15) }]}
+                                selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
+                                data={countryCodes}
+                                maxHeight={hp(60)}
+                                labelField="name"
+                                valueField="name"
+                                placeholder="+00"
+                                value={countryCode?.name}
+                                itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
+                                activeColor={background}
 
-                          elevation: 19,
-                          paddingVertical: wp(1)
-                        }}
-                        onChange={item => {
-                          console.log(item);
-                          setCountryCode(item);
-                        }}
+                                containerStyle={{
+                                    borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
+                                    width: wp(45),
+                                    shadowOffset: {
+                                        width: 0,
+                                        height: 9,
+                                    },
+                                    shadowOpacity: 0.50,
+                                    shadowRadius: 12.35,
 
-                        renderLeftIcon={() => <></>}
-                        renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
-                        renderItem={((item, selected) =>
-                          <>
-                            <View style={[styles.item, selected && {}]}>
-                              <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
-                              {selected && (
-                                <Ionicons
-                                  color={icon}
-                                  name='checkmark-outline'
-                                  size={wp(5)}
-                                />
-                              )}
-                            </View>
-                            <Divider />
-                          </>
-                        )}
+                                    elevation: 19,
+                                    paddingVertical: wp(1)
+                                }}
+                                onChange={item => {
+                                    console.log(item);
+                                    setCountryCode(item);
+                                }}
 
-                      />
-                      <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
-                    </>}
-                    value={phoneNumber}
-                    placeholder="700 000 000"
-                    onChangeText={(text) => setPhoneNumber(text)}
-                    keyboardType="numeric"
-                  />
+                                renderLeftIcon={() => <></>}
+                                renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
+                                renderItem={((item, selected) =>
+                                    <>
+                                        <View style={[styles.item, selected && {}]}>
+                                            <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
+                                            {selected && (
+                                                <Ionicons
+                                                    color={icon}
+                                                    name='checkmark-outline'
+                                                    size={wp(5)}
+                                                />
+                                            )}
+                                        </View>
+                                        <Divider />
+                                    </>
+                                )}
+
+                            />
+                            <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
+                        </>}
+                        value={phoneNumber}
+                        placeholder="700 000 000"
+                        onChangeText={(text) => setPhoneNumber(text)}
+                        keyboardType="numeric"
+                    />
 
 
 
 
 
                     <TouchableOpacity onPress={() => Submit()} style={[styles.signUpButton, { backgroundColor: accent }]} disabled={loading}>
-                    <ThemedText color='#fff' type='subtitle'>{loading ? "Saving..." : "Save"} </ThemedText>
+                        <ThemedText color='#fff' type='subtitle'>{loading ? "Saving..." : "Save"} </ThemedText>
                     </TouchableOpacity>
 
-                        <View style={{height:300}}>
+                    <View style={{ height: 300 }}>
 
-                        </View>
+                    </View>
                 </ScrollView>
 
             </View>
@@ -300,9 +324,9 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         textAlign: 'left',
         marginBottom: 20,
-        alignSelf:"center",
-        justifyContent:"center",
-        alignItems:"center"
+        alignSelf: "center",
+        justifyContent: "center",
+        alignItems: "center"
     },
     label: {
         fontSize: 14,

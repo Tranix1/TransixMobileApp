@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
-import React, { useState, useEffect, useMemo } from "react";
-import { View, ScrollView, TouchableOpacity, StyleSheet, TouchableNativeFeedback, Modal, ToastAndroid, Image, Pressable, ActivityIndicator } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, ScrollView, TouchableOpacity, StyleSheet, Modal, ToastAndroid, Image, ActivityIndicator } from "react-native";
 import { BlurView } from 'expo-blur';
 
 import { ThemedText } from "@/components/ThemedText";
@@ -25,20 +25,18 @@ import { AddTruckDetails } from "@/components/AddTruckDetails";
 import { TruckFormData } from "@/types/types";
 import { TruckTypeProps } from "@/types/types";
 import { useThemeColor } from '@/hooks/useThemeColor';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { LoadImageUpload } from '@/components/LoadImageUpload';
 import { AIRecommendations } from '@/components/AIRecommendations';
 import { LoadingDateSelector } from '@/components/LoadingDateSelector';
 import { AfricanTruckSelector } from '@/components/AfricanTruckSelector';
 
 // New extracted components
-import { UserTypeSelector } from '@/components/UserTypeSelector';
 import { StepIndicator } from '@/components/StepIndicator';
 import { LocationSelector } from '@/components/LocationSelector';
 import { RateInput } from '@/components/RateInput';
 import { LoadSummary } from '@/components/LoadSummary';
 
-import { usePushNotifications, } from "@/Utilities/pushNotification";
+import { usePushNotifications, notifyLoadApprovalAdmins } from "@/Utilities/pushNotification";
 
 import { uploadImage } from "@/db/operations";
 import { pickDocument, selectManyImages, pickDocumentsOnly } from "@/Utilities/utils";
@@ -49,21 +47,17 @@ import { ErrorModal } from "@/components/ErrorModal";
 import { notifyTrucksByFilters } from "@/Utilities/notifyTruckByFilters";
 import { TruckNeededType } from "@/types/types";
 
-import Constants from 'expo-constants';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+
 import { SelectLocationProp } from '@/types/types';
-import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplete';
-import { LocationPicker } from '@/components/LocationPicker';
+
 
 // New utilities
 import {
   validateLoadForm,
   prepareLoadData,
   getDefaultFormState,
-  CURRENCY_OPTIONS,
-  MODEL_OPTIONS
 } from '@/Utilities/loadUtils';
-import { analyzeLoadImages, askVertexAI } from '@/Utilities/aiAnalysisUtils';
+import { analyzeLoadImages } from '@/Utilities/aiAnalysisUtils';
 const AddLoadDB = () => {
 
 
@@ -158,9 +152,9 @@ const AddLoadDB = () => {
         console.error("Directions API error:", err);
         const errorMessage = err instanceof Error ? err.message : "Failed to get directions";
         showError(
-          "Directions Error", 
-          "Unable to calculate route between locations. Please check your internet connection and try again.", 
-          err instanceof Error ? err.stack : String(err), 
+          "Directions Error",
+          "Unable to calculate route between locations. Please check your internet connection and try again.",
+          err instanceof Error ? err.stack : String(err),
           false
         );
       }
@@ -173,9 +167,7 @@ const AddLoadDB = () => {
 
 
 
-  // Vertex AI quick Q&A state
-  const [aiQuestion, setAiQuestion] = useState("");
-  const [aiAnswer, setAiAnswer] = useState("");
+  // AI loading state
   const [aiLoading, setAiLoading] = useState(false);
 
   // AI-powered truck detection for general users
@@ -193,21 +185,6 @@ const AddLoadDB = () => {
   const [selectedLoadingDate, setSelectedLoadingDate] = useState<{ id: number, name: string } | null>(null);
   const [selectedAfricanTrucks, setSelectedAfricanTrucks] = useState<TruckTypeProps[]>([]);
 
-  const askVertex = async () => {
-    try {
-      await askVertexAI(aiQuestion, setAiLoading, setAiAnswer);
-    } catch (error) {
-      console.error("Error asking Vertex AI:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      const errorDetails = error instanceof Error ? error.stack : String(error);
-      showError(
-        "AI Question Error", 
-        "Failed to get AI response. Please try again.", 
-        errorDetails, 
-        true
-      );
-    }
-  };
 
   // AI-powered truck type detection from images
   const handleAnalyzeLoadImages = async () => {
@@ -221,16 +198,16 @@ const AddLoadDB = () => {
         setAiDetectedTruckType,
         setAiDetectedCapacity,
         setAiDetectedTankerType,
-        setAiAnswer
+        () => { } // setAiAnswer - not used anymore
       );
     } catch (error) {
       console.error("Error analyzing load images:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       const errorDetails = error instanceof Error ? error.stack : String(error);
       showError(
-        "AI Analysis Error", 
-        "Failed to analyze your load images. Please try again.", 
-        errorDetails, 
+        "AI Analysis Error",
+        "Failed to analyze your load images. Please try again.",
+        errorDetails,
         true
       );
     }
@@ -369,8 +346,6 @@ const AddLoadDB = () => {
     setSelectedAfricanTrucks([]);
 
     // Reset AI analysis fields
-    setAiQuestion("");
-    setAiAnswer("");
     setAiLoading(false);
     setAiDetectedTruckType(null);
     setAiDetectedCargoArea(null);
@@ -384,25 +359,6 @@ const AddLoadDB = () => {
     setProofDocuments([]);
     setProofDocumentTypes([]);
 
-    // Reset verification document fields
-    setIdDocument(null);
-    setIdDocumentType(null);
-    setProofOfResidence(null);
-    setProofOfResidenceType(null);
-    setBrokerCertificate(null);
-    setBrokerCertificateType(null);
-
-    // Reset load user type and references
-    setLoadUserType('general');
-    setBrokerId('');
-    setBrokerName('');
-    setBrokerPhone('');
-    setBrokerEmail('');
-    setOwnerId('');
-    setOwnerName('');
-    setOwnerPhone('');
-    setOwnerEmail('');
-
     // Reset personal details fields
     setPersonalName('');
     setPersonalPhone('');
@@ -415,9 +371,6 @@ const AddLoadDB = () => {
     setTypeOfBrokerPersonal('');
     setShowPersonalDetailsModal(false);
     setSelectedPersonalType(null);
-
-    // Clear validation errors
-    clearPersonalValidationErrors();
   };
 
 
@@ -426,24 +379,7 @@ const AddLoadDB = () => {
   const [proofDocuments, setProofDocuments] = useState<DocumentAsset[]>([]);
   const [proofDocumentTypes, setProofDocumentTypes] = React.useState<('pdf' | 'doc' | 'docx')[]>([]);
 
-  // Verification document state
-  const [idDocument, setIdDocument] = useState<DocumentAsset | null>(null);
-  const [idDocumentType, setIdDocumentType] = useState<'pdf' | 'image' | 'doc' | 'docx' | null>(null);
-  const [proofOfResidence, setProofOfResidence] = useState<DocumentAsset | null>(null);
-  const [proofOfResidenceType, setProofOfResidenceType] = useState<'pdf' | 'image' | 'doc' | 'docx' | null>(null);
-  const [brokerCertificate, setBrokerCertificate] = useState<DocumentAsset | null>(null);
-  const [brokerCertificateType, setBrokerCertificateType] = useState<'pdf' | 'image' | 'doc' | 'docx' | null>(null);
 
-  // Load user type and references
-  const [loadUserType, setLoadUserType] = useState<'general' | 'confinee' | 'broker'>('general');
-  const [brokerId, setBrokerId] = useState('');
-  const [brokerName, setBrokerName] = useState('');
-  const [brokerPhone, setBrokerPhone] = useState('');
-  const [brokerEmail, setBrokerEmail] = useState('');
-  const [ownerId, setOwnerId] = useState('');
-  const [ownerName, setOwnerName] = useState('');
-  const [ownerPhone, setOwnerPhone] = useState('');
-  const [ownerEmail, setOwnerEmail] = useState('');
 
   // Cargo Personal Details State (similar to truckPersonDetails)
   interface CargoGeneralUser {
@@ -466,6 +402,7 @@ const AddLoadDB = () => {
   // Modal states for document submission
   const [showPersonalDetailsModal, setShowPersonalDetailsModal] = useState(false);
   const [selectedPersonalType, setSelectedPersonalType] = useState<'general' | 'professional' | null>(null);
+  const [showUserTypeDropdown, setShowUserTypeDropdown] = useState(false);
 
   // Personal details form state
   const [personalName, setPersonalName] = useState('');
@@ -473,12 +410,6 @@ const AddLoadDB = () => {
   const [personalEmail, setPersonalEmail] = useState('');
   const [personalCountryCode, setPersonalCountryCode] = useState({ id: 0, name: '+263' });
 
-  // Validation states for real-time feedback
-  const [personalNameError, setPersonalNameError] = useState('');
-  const [personalPhoneError, setPersonalPhoneError] = useState('');
-  const [personalEmailError, setPersonalEmailError] = useState('');
-  const [personalCountryCodeError, setPersonalCountryCodeError] = useState('');
-  const [personalDocumentError, setPersonalDocumentError] = useState('');
 
   // Document states for personal details
   const [selectedPersonalDocuments, setSelectedPersonalDocuments] = useState<DocumentAsset[]>([]);
@@ -492,143 +423,7 @@ const AddLoadDB = () => {
 
   const [imageUpdate, setUploadImageUpdate] = React.useState("")
 
-  // Real-time validation functions
-  const validatePersonalName = (name: string) => {
-    if (!name || name.trim() === '') {
-      setPersonalNameError('Enter valid full name');
-      return false;
-    } else if (name.trim().length < 2) {
-      setPersonalNameError('Enter valid full name (minimum 2 characters)');
-      return false;
-    } else {
-      setPersonalNameError('');
-      return true;
-    }
-  };
 
-  const validatePersonalPhone = (phone: string) => {
-    if (!phone || phone.trim() === '') {
-      setPersonalPhoneError('Enter valid phone number');
-      return false;
-    } else if (phone.trim().length < 7) {
-      setPersonalPhoneError('Enter valid phone number (minimum 7 characters)');
-      return false;
-    } else {
-      setPersonalPhoneError('');
-      return true;
-    }
-  };
-
-  const validatePersonalEmail = (email: string) => {
-    if (!email || email.trim() === '') {
-      setPersonalEmailError('Enter valid email address');
-      return false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setPersonalEmailError('Enter valid email address (must contain @ and domain)');
-      return false;
-    } else {
-      setPersonalEmailError('');
-      return true;
-    }
-  };
-
-  const validatePersonalCountryCode = (countryCode: any) => {
-    if (!countryCode || !countryCode.name) {
-      setPersonalCountryCodeError('Select country code');
-      return false;
-    } else {
-      setPersonalCountryCodeError('');
-      return true;
-    }
-  };
-
-  const validatePersonalDocument = (documents: DocumentAsset[], fileTypes: any[]) => {
-    if (!documents[0]) {
-      setPersonalDocumentError('Upload ID Document');
-      return false;
-    } else if (!fileTypes[0]) {
-      setPersonalDocumentError('Upload ID Document');
-      return false;
-    } else {
-      setPersonalDocumentError('');
-      return true;
-    }
-  };
-
-  // Clear validation errors when modal opens/closes
-  const clearPersonalValidationErrors = () => {
-    setPersonalNameError('');
-    setPersonalPhoneError('');
-    setPersonalEmailError('');
-    setPersonalCountryCodeError('');
-    setPersonalDocumentError('');
-  };
-
-  // Validation functions that don't trigger state updates (for use in useMemo)
-  const validateName = (name: string) => {
-    const isValid = name && name.trim() !== '' && name.trim().length >= 2;
-    return isValid;
-  };
-
-  const validatePhone = (phone: string) => {
-    const trimmed = phone?.trim() || '';
-    // More lenient phone validation - allow letters for international formats
-    const isValid = phone && trimmed !== '' && trimmed.length >= 7;
-    return isValid;
-  };
-
-  const validateEmail = (email: string) => {
-    const trimmed = email?.trim() || '';
-    const isValid = email && trimmed !== '' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
-    return isValid;
-  };
-
-  const validateCountryCode = (countryCode: any) => {
-    const isValid = !!(countryCode && countryCode.name);
-    return isValid;
-  };
-
-  const validateDocument = (documents: DocumentAsset[], fileTypes: any[]) => {
-    const isValid = documents[0] && fileTypes[0];
-    return isValid;
-  };
-
-  // Memoized validation results to prevent infinite re-renders
-  const isGeneralPersonalDetailsValid = useMemo(() => {
-    const nameValid = validateName(personalName);
-    const phoneValid = validatePhone(personalPhone);
-    const emailValid = validateEmail(personalEmail);
-    const countryCodeValid = validateCountryCode(personalCountryCode);
-    const documentValid = validateDocument(selectedPersonalDocuments, personalFileType);
-
-    const isValid = nameValid && phoneValid && emailValid && countryCodeValid && documentValid;
-    return isValid;
-  }, [personalName, personalPhone, personalEmail, personalCountryCode, selectedPersonalDocuments, personalFileType]);
-
-  const isProfessionalPersonalDetailsValid = useMemo(() => {
-    const nameValid = validateName(personalName);
-    const phoneValid = validatePhone(personalPhone);
-    const emailValid = validateEmail(personalEmail);
-    const countryCodeValid = validateCountryCode(personalCountryCode);
-
-    // Check broker type selection
-    if (!typeOfBrokerPersonal || typeOfBrokerPersonal.trim() === '') {
-      return false;
-    }
-
-    // Check required documents
-    const idDocValid = !!(selectedBrokerPersonalDocuments[0] && brokerPersonalFileType[0]);
-    const residenceDocValid = !!(selectedBrokerPersonalDocuments[1] && brokerPersonalFileType[1]);
-
-    let companyDocsValid = true;
-    if (typeOfBrokerPersonal === "Company Broker") {
-      companyDocsValid = !!(selectedBrokerPersonalDocuments[2] && brokerPersonalFileType[2]) &&
-        !!(selectedBrokerPersonalDocuments[3] && brokerPersonalFileType[3]);
-    }
-
-    const isValid = nameValid && phoneValid && emailValid && countryCodeValid && idDocValid && residenceDocValid && companyDocsValid;
-    return isValid;
-  }, [personalName, personalPhone, personalEmail, personalCountryCode, typeOfBrokerPersonal, selectedBrokerPersonalDocuments, brokerPersonalFileType]);
 
 
   // Check for personal details on component mount
@@ -705,23 +500,29 @@ const AddLoadDB = () => {
   const handleUpdateGeneralDetails = async () => {
     setIsSubmittingPersonal(true);
     try {
-      // Use comprehensive validation function with error state updates
-      const nameValid = validatePersonalName(personalName);
-      const phoneValid = validatePersonalPhone(personalPhone);
-      const emailValid = validatePersonalEmail(personalEmail);
-      const countryCodeValid = validatePersonalCountryCode(personalCountryCode);
-      const documentValid = validatePersonalDocument(selectedPersonalDocuments, personalFileType);
-
-      // Create specific error messages for general user
-      const missingFields = [];
-      if (!nameValid) missingFields.push("Enter valid full name (minimum 2 characters)");
-      if (!phoneValid) missingFields.push("Enter valid phone number (minimum 7 characters)");
-      if (!emailValid) missingFields.push("Enter valid email address (must contain @ and domain)");
-      if (!countryCodeValid) missingFields.push("Select country code");
-      if (!documentValid) missingFields.push("Upload ID Document");
-
-      if (missingFields.length > 0) {
-        alertBox("Missing Personal Details", `Please complete: ${missingFields.join(", ")}`, [], "error");
+      // Basic validation
+      if (!personalName || personalName.trim().length < 2) {
+        alertBox("Missing Personal Details", "Please enter a valid full name (minimum 2 characters)", [], "error");
+        setIsSubmittingPersonal(false);
+        return;
+      }
+      if (!personalPhone || personalPhone.trim().length < 7) {
+        alertBox("Missing Personal Details", "Please enter a valid phone number (minimum 7 characters)", [], "error");
+        setIsSubmittingPersonal(false);
+        return;
+      }
+      if (!personalEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalEmail.trim())) {
+        alertBox("Missing Personal Details", "Please enter a valid email address", [], "error");
+        setIsSubmittingPersonal(false);
+        return;
+      }
+      if (!personalCountryCode || !personalCountryCode.name) {
+        alertBox("Missing Personal Details", "Please select a country code", [], "error");
+        setIsSubmittingPersonal(false);
+        return;
+      }
+      if (!selectedPersonalDocuments[0] || !personalFileType[0]) {
+        alertBox("Missing Personal Details", "Please upload an ID document", [], "error");
         setIsSubmittingPersonal(false);
         return;
       }
@@ -764,9 +565,9 @@ const AddLoadDB = () => {
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       const errorDetails = error instanceof Error ? error.stack : String(error);
       showError(
-        "Failed to Save Personal Details", 
-        "There was an error saving your personal details. Please try again.", 
-        errorDetails, 
+        "Failed to Save Personal Details",
+        "There was an error saving your personal details. Please try again.",
+        errorDetails,
         true
       );
     } finally {
@@ -777,104 +578,107 @@ const AddLoadDB = () => {
   // Handle professional user personal details submission
   const handleUpdateProfessionalDetails = async () => {
     setUploadingPersonalD(true);
-    
+
     try {
-
-    // Use comprehensive validation function with error state updates
-    const nameValid = validatePersonalName(personalName);
-    const phoneValid = validatePersonalPhone(personalPhone);
-    const emailValid = validatePersonalEmail(personalEmail);
-    const countryCodeValid = validatePersonalCountryCode(personalCountryCode);
-
-    // Check broker type selection
-    if (!typeOfBrokerPersonal || typeOfBrokerPersonal.trim() === '') {
-      alertBox("Missing or Invalid Professional Details", "Please select broker type and complete all required fields before submitting.", [], "error");
-      setUploadingPersonalD(false);
-      return;
-    }
-
-    // Check required documents
-    const idDocValid = !!(selectedBrokerPersonalDocuments[0] && brokerPersonalFileType[0]);
-    const residenceDocValid = !!(selectedBrokerPersonalDocuments[1] && brokerPersonalFileType[1]);
-
-    let companyDocsValid = true;
-    if (typeOfBrokerPersonal === "Company Broker") {
-      companyDocsValid = !!(selectedBrokerPersonalDocuments[2] && brokerPersonalFileType[2]) &&
-        !!(selectedBrokerPersonalDocuments[3] && brokerPersonalFileType[3]);
-    }
-
-    // Create specific error messages for debugging
-    const missingFields = [];
-    if (!nameValid) missingFields.push("Enter valid full name (minimum 2 characters)");
-    if (!phoneValid) missingFields.push("Enter valid phone number (minimum 7 characters)");
-    if (!emailValid) missingFields.push("Enter valid email address (must contain @ and domain)");
-    if (!countryCodeValid) missingFields.push("Select country code");
-    if (!idDocValid) missingFields.push("Upload National ID Document");
-    if (!residenceDocValid) missingFields.push("Upload Proof of Residence Document");
-    if (!companyDocsValid && typeOfBrokerPersonal === "Company Broker") {
-      missingFields.push("Upload Company Registration Certificate and Letter Head");
-    }
-
-    if (missingFields.length > 0) {
-      alertBox("Missing Professional Details", `Please complete: ${missingFields.join(", ")}`, [], "error");
-      setUploadingPersonalD(false);
-      return;
-    }
-
-    let brokerId, proofOfResidence, companyRegCertificate, companyLetterHead;
-
-    brokerId = await uploadImage(selectedBrokerPersonalDocuments[0], "CargoPersonal", setUploadImageUpdate, "National ID");
-    proofOfResidence = await uploadImage(selectedBrokerPersonalDocuments[1], "CargoPersonal", setUploadImageUpdate, "Proof Of Residence");
-
-    if (typeOfBrokerPersonal === "Company Broker") {
-      companyRegCertificate = await uploadImage(selectedBrokerPersonalDocuments[2], "CargoPersonal", setUploadImageUpdate, "Company Registration Certificate");
-      companyLetterHead = await uploadImage(selectedBrokerPersonalDocuments[3], "CargoPersonal", setUploadImageUpdate, "Company Letter Head");
-    }
-
-    const professionalDetailsData = {
-      userId: user?.uid,
-      accType: 'professional',
-      typeOfBroker: typeOfBrokerPersonal,
-      fullName: personalName,
-      phoneNumber: personalPhone,
-      email: personalEmail,
-      countryCode: personalCountryCode.name,
-      brokerId: brokerId || null,
-      proofOfResidence: proofOfResidence || null,
-      companyRegCertificate: companyRegCertificate || null,
-      companyLetterHead: companyLetterHead || null,
-      brokerIdType: brokerPersonalFileType[0] || null,
-      proofOfResidenceType: brokerPersonalFileType[1] || null,
-      companyRegCertificateType: brokerPersonalFileType[2] || null,
-      companyLetterHeadType: brokerPersonalFileType[3] || null,
-      createdAt: Date.now().toString(),
-      isApproved: false,
-      approvalStatus: 'pending'
-    };
-
-    await setDocuments("cargoPersonalDetails", professionalDetailsData);
-
-    setShowPersonalDetailsModal(false);
-    ToastAndroid.show("Professional Details submitted successfully!", ToastAndroid.SHORT);
-
-    // Refresh the personal details check
-    const updatedDetails = await getDocById('cargoPersonalDetails', (data) => {
-      if (data && data.accType === 'professional') {
-        setProfessionalDetails({
-          docId: data.id || '',
-          isApproved: data.isApproved || false,
-          accType: 'professional'
-        });
+      // Basic validation
+      if (!personalName || personalName.trim().length < 2) {
+        alertBox("Missing Professional Details", "Please enter a valid full name (minimum 2 characters)", [], "error");
+        setUploadingPersonalD(false);
+        return;
       }
-    });
+      if (!personalPhone || personalPhone.trim().length < 7) {
+        alertBox("Missing Professional Details", "Please enter a valid phone number (minimum 7 characters)", [], "error");
+        setUploadingPersonalD(false);
+        return;
+      }
+      if (!personalEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalEmail.trim())) {
+        alertBox("Missing Professional Details", "Please enter a valid email address", [], "error");
+        setUploadingPersonalD(false);
+        return;
+      }
+      if (!personalCountryCode || !personalCountryCode.name) {
+        alertBox("Missing Professional Details", "Please select a country code", [], "error");
+        setUploadingPersonalD(false);
+        return;
+      }
+      if (!typeOfBrokerPersonal || typeOfBrokerPersonal.trim() === '') {
+        alertBox("Missing Professional Details", "Please select broker type", [], "error");
+        setUploadingPersonalD(false);
+        return;
+      }
+      if (!selectedBrokerPersonalDocuments[0] || !brokerPersonalFileType[0]) {
+        alertBox("Missing Professional Details", "Please upload National ID Document", [], "error");
+        setUploadingPersonalD(false);
+        return;
+      }
+      if (!selectedBrokerPersonalDocuments[1] || !brokerPersonalFileType[1]) {
+        alertBox("Missing Professional Details", "Please upload Proof of Residence Document", [], "error");
+        setUploadingPersonalD(false);
+        return;
+      }
+      if (typeOfBrokerPersonal === "Company Broker") {
+        if (!selectedBrokerPersonalDocuments[2] || !brokerPersonalFileType[2] ||
+          !selectedBrokerPersonalDocuments[3] || !brokerPersonalFileType[3]) {
+          alertBox("Missing Professional Details", "Please upload Company Registration Certificate and Letter Head", [], "error");
+          setUploadingPersonalD(false);
+          return;
+        }
+      }
+
+      let brokerId, proofOfResidence, companyRegCertificate, companyLetterHead;
+
+      brokerId = await uploadImage(selectedBrokerPersonalDocuments[0], "CargoPersonal", setUploadImageUpdate, "National ID");
+      proofOfResidence = await uploadImage(selectedBrokerPersonalDocuments[1], "CargoPersonal", setUploadImageUpdate, "Proof Of Residence");
+
+      if (typeOfBrokerPersonal === "Company Broker") {
+        companyRegCertificate = await uploadImage(selectedBrokerPersonalDocuments[2], "CargoPersonal", setUploadImageUpdate, "Company Registration Certificate");
+        companyLetterHead = await uploadImage(selectedBrokerPersonalDocuments[3], "CargoPersonal", setUploadImageUpdate, "Company Letter Head");
+      }
+
+      const professionalDetailsData = {
+        userId: user?.uid,
+        accType: 'professional',
+        typeOfBroker: typeOfBrokerPersonal,
+        fullName: personalName,
+        phoneNumber: personalPhone,
+        email: personalEmail,
+        countryCode: personalCountryCode.name,
+        brokerId: brokerId || null,
+        proofOfResidence: proofOfResidence || null,
+        companyRegCertificate: companyRegCertificate || null,
+        companyLetterHead: companyLetterHead || null,
+        brokerIdType: brokerPersonalFileType[0] || null,
+        proofOfResidenceType: brokerPersonalFileType[1] || null,
+        companyRegCertificateType: brokerPersonalFileType[2] || null,
+        companyLetterHeadType: brokerPersonalFileType[3] || null,
+        createdAt: Date.now().toString(),
+        isApproved: false,
+        approvalStatus: 'pending'
+      };
+
+      await setDocuments("cargoPersonalDetails", professionalDetailsData);
+
+      setShowPersonalDetailsModal(false);
+      ToastAndroid.show("Professional Details submitted successfully!", ToastAndroid.SHORT);
+
+      // Refresh the personal details check
+      const updatedDetails = await getDocById('cargoPersonalDetails', (data) => {
+        if (data && data.accType === 'professional') {
+          setProfessionalDetails({
+            docId: data.id || '',
+            isApproved: data.isApproved || false,
+            accType: 'professional'
+          });
+        }
+      });
     } catch (error) {
       console.error("Error saving professional details:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       const errorDetails = error instanceof Error ? error.stack : String(error);
       showError(
-        "Failed to Save Professional Details", 
-        "There was an error saving your professional details. Please try again.", 
-        errorDetails, 
+        "Failed to Save Professional Details",
+        "There was an error saving your professional details. Please try again.",
+        errorDetails,
         true
       );
     } finally {
@@ -936,127 +740,134 @@ const AddLoadDB = () => {
 
 
 
-    if (!user) {
-      alert("Please Login first");
-      setIsSubmitting(false)
-      router.push('/Account/Login')
-      return;
-    }
-    if (!user.organisation) {
-      setIsSubmitting(false)
-      alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
-      return;
-    }
-
-    let proofOfOerSub: string[] = []
-    let loadImagesUrls: string[] = []
-
-    // Handle different proof types based on user type
-    if (userType === 'general') {
-      // Upload all load images for general users
-      for (let i = 0; i < loadImages.length; i++) {
-        const imageUrl = await uploadImage(loadImages[i], "LoadImages", setUploadImageUpdate, `Load Image ${i + 1}`);
-        if (imageUrl) loadImagesUrls.push(imageUrl);
-      }
-    } else {
-      // Upload all proof images for professional users
-      for (let i = 0; i < proofImages.length; i++) {
-        const imageUrl = await uploadImage(proofImages[i], "CargoProof", setUploadImageUpdate, `Proof Image ${i + 1}`);
-        if (imageUrl) proofOfOerSub.push(imageUrl);
-      }
-
-      // Upload all proof documents for professional users
-      for (let i = 0; i < proofDocuments.length; i++) {
-        const docUrl = await uploadImage(proofDocuments[i], "CargoProof", setUploadImageUpdate, `Proof Document ${i + 1}`);
-        if (docUrl) proofOfOerSub.push(docUrl);
-      }
-    }
-
-    // Convert selected African trucks to trucksNeeded format for general users
-    if (userType === 'general' && selectedAfricanTrucks.length > 0) {
-      const generalTrucksNeeded = selectedAfricanTrucks.map(truck => ({
-        cargoArea: truck,
-        truckType: { id: 2, name: "Medium Truck" }, // Default for African trucks
-        tankerType: null,
-        capacity: { id: 2, name: "5-15 tons" }, // Default capacity
-        operationCountries: [origin?.country || 'South Africa', destination?.country || 'South Africa'].filter((v, i, a) => a.indexOf(v) === i),
-      }));
-      setTrucksNeeded(generalTrucksNeeded);
-    }
-
-    // Use utility function to prepare load data
-    const loadData = prepareLoadData(userType!, {
-      typeofLoad,
-      origin,
-      destination,
-      rate,
-      rateexplantion,
-      paymentTerms,
-      requirements,
-      additionalInfo,
-      alertMsg,
-      fuelAvai,
-      returnLoad: returnLoad || "",
-      returnRate: returnRate || "",
-      returnTerms: returnTerms || "",
-      selectedCurrency,
-      selectedModelType,
-      selectedReturnCurrency: selectedReturnCurrency || { id: 1, name: "USD" },
-      selectedReturnModelType: selectedReturnModelType || { id: 1, name: "Solid" },
-      budget,
-      budgetCurrency,
-      selectedLoadingDate,
-      loadingDate,
-      loadImages,
-      selectedAfricanTrucks,
-      trucksNeeded,
-      proofOfOerSub,
-      proofOfOrderFileType: [...proofImages.map(() => 'image' as const), ...proofDocumentTypes],
-      loadImagesUrls,
-      distance,
-      duration,
-      durationInTraffic,
-      routePolyline,
-      bounds,
-      // Personal details reference
-      personalDetailsDocId: getGeneralDetails?.docId || getProfessionalDetails?.docId || null,
-      personalAccTypeIsApproved: getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved || false,
-      personalAccType: getGeneralDetails?.accType || getProfessionalDetails?.accType || null,
-    }, user, expoPushToken);
-
-
     try {
+      if (!user) {
+        alert("Please Login first");
+        setIsSubmitting(false)
+        router.push('/Account/Login')
+        return;
+      }
+      if (!user.organisation) {
+        setIsSubmitting(false)
+        alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
+        return;
+      }
+
+      let proofOfOerSub: string[] = []
+      let loadImagesUrls: string[] = []
+
+      // Handle different proof types based on user type
+      if (userType === 'general') {
+        // Upload all load images for general users
+        if (loadImages && loadImages.length > 0) {
+          for (let i = 0; i < loadImages.length; i++) {
+            const imageUrl = await uploadImage(loadImages[i], "LoadImages", setUploadImageUpdate, `Load Image ${i + 1}`);
+            if (imageUrl) loadImagesUrls.push(imageUrl);
+          }
+        }
+      } else {
+        // Upload all proof images for professional users
+        if (proofImages && proofImages.length > 0) {
+          for (let i = 0; i < proofImages.length; i++) {
+            const imageUrl = await uploadImage(proofImages[i], "CargoProof", setUploadImageUpdate, `Proof Image ${i + 1}`);
+            if (imageUrl) proofOfOerSub.push(imageUrl);
+          }
+        }
+
+        // Upload all proof documents for professional users
+        if (proofDocuments && proofDocuments.length > 0) {
+          for (let i = 0; i < proofDocuments.length; i++) {
+            const docUrl = await uploadImage(proofDocuments[i], "CargoProof", setUploadImageUpdate, `Proof Document ${i + 1}`);
+            if (docUrl) proofOfOerSub.push(docUrl);
+          }
+        }
+      }
+
+      // Convert selected African trucks to trucksNeeded format for general users
+      if (userType === 'general' && selectedAfricanTrucks && selectedAfricanTrucks.length > 0) {
+        const generalTrucksNeeded = selectedAfricanTrucks.map(truck => ({
+          cargoArea: truck,
+          truckType: { id: 2, name: "Medium Truck" }, // Default for African trucks
+          tankerType: null,
+          capacity: { id: 2, name: "5-15 tons" }, // Default capacity
+          operationCountries: [origin?.country || 'South Africa', destination?.country || 'South Africa'].filter((v, i, a) => a.indexOf(v) === i),
+        }));
+        setTrucksNeeded(generalTrucksNeeded);
+      }
+
+      // Use utility function to prepare load data
+      const loadData = prepareLoadData(userType!, {
+        typeofLoad,
+        origin,
+        destination,
+        rate,
+        rateexplantion,
+        paymentTerms,
+        requirements,
+        additionalInfo,
+        alertMsg,
+        fuelAvai,
+        returnLoad: returnLoad || "",
+        returnRate: returnRate || "",
+        returnTerms: returnTerms || "",
+        selectedCurrency,
+        selectedModelType,
+        selectedReturnCurrency: selectedReturnCurrency || { id: 1, name: "USD" },
+        selectedReturnModelType: selectedReturnModelType || { id: 1, name: "Solid" },
+        budget,
+        budgetCurrency,
+        selectedLoadingDate,
+        loadingDate,
+        loadImages,
+        selectedAfricanTrucks,
+        trucksNeeded,
+        proofOfOerSub,
+        proofOfOrderFileType: [...(proofImages || []).map(() => 'image' as const), ...(proofDocumentTypes || [])],
+        loadImagesUrls,
+        distance,
+        duration,
+        durationInTraffic,
+        routePolyline,
+        bounds,
+        // Personal details reference
+        personalDetailsDocId: getGeneralDetails?.docId || getProfessionalDetails?.docId || null,
+        personalAccTypeIsApproved: getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved || false,
+        personalAccType: getGeneralDetails?.accType || getProfessionalDetails?.accType || null,
+      }, user, expoPushToken);
+
       // Ensure addDocument is not a React hook or using hooks internally.
       await addDocument("Cargo", loadData);
 
-      await notifyTrucksByFilters({
-        trucksNeeded,
-        loadItem: {
-          typeofLoad: typeofLoad,
-          origin: origin!.description,
-          destination: destination!.description,
-          rate: (userType as string) === 'professional' ? rate : (budget || 'Budget to be discussed'),
-          model: (userType as string) === 'professional' ? selectedModelType.name : 'Solid',
-          currency: (userType as string) === 'professional' ? selectedCurrency.name : budgetCurrency.name,
-        },
-      });
+      // Notify admins who can approve loads
+      await notifyLoadApprovalAdmins(loadData);
 
+      if (trucksNeeded && trucksNeeded.length > 0) {
+        await notifyTrucksByFilters({
+          trucksNeeded,
+          loadItem: {
+            typeofLoad: typeofLoad,
+            origin: origin!.description,
+            destination: destination!.description,
+            rate: (userType as string) === 'professional' ? rate : (budget || 'Budget to be discussed'),
+            model: (userType as string) === 'professional' ? (selectedModelType?.name || 'Solid') : 'Solid',
+            currency: (userType as string) === 'professional' ? (selectedCurrency?.name || 'USD') : (budgetCurrency?.name || 'USD'),
+          },
+        });
+      }
 
       ToastAndroid.show('Trucks notified and load added successfully.', ToastAndroid.SHORT);
 
       // Clear form and reset to initial state
       clearFormFields();
 
-
-
     } catch (error) {
       console.error("Error submitting load:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       const errorDetails = error instanceof Error ? error.stack : String(error);
       showError(
-        "Failed to Submit Load", 
-        "There was an error submitting your load. Please try again.", 
-        errorDetails, 
+        "Failed to Submit Load",
+        "There was an error submitting your load. Please try again.",
+        errorDetails,
         true
       );
     } finally {
@@ -1070,21 +881,158 @@ const AddLoadDB = () => {
     <ScreenWrapper fh={false}>
 
 
-      <Heading page='Create Load' rightComponent={
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: wp(3) }}>
-          <View>
-            <TouchableNativeFeedback onPress={() => {}}>
-              <ThemedText style={{ alignSelf: 'flex-start' }}>Add Draft</ThemedText>
-            </TouchableNativeFeedback>
-          </View>
-        </View>
-      } />
+      <Heading
+        page='Create Load'
+        rightComponent={
+          <View style={{ position: 'relative' }}>
+            <TouchableOpacity
+              onPress={() => setShowUserTypeDropdown(!showUserTypeDropdown)}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: userType === 'general' ? '#E3F2FD' : userType === 'professional' ? '#E8F5E8' : '#F5F5F5',
+                paddingHorizontal: wp(3),
+                paddingVertical: wp(1.5),
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: userType === 'general' ? '#2196F3' : userType === 'professional' ? '#4CAF50' : '#CCCCCC',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3,
+              }}
+            >
+              <Ionicons
+                name={userType === 'general' ? "person" : userType === 'professional' ? "business" : "person-add"}
+                size={14}
+                color={userType === 'general' ? '#2196F3' : userType === 'professional' ? '#4CAF50' : '#666666'}
+                style={{ marginRight: wp(1.5) }}
+              />
+              <ThemedText style={{
+                fontSize: 12,
+                fontWeight: '600',
+                color: userType === 'general' ? '#2196F3' : userType === 'professional' ? '#4CAF50' : '#666666'
+              }}>
+                {userType === 'general' ? 'General' : userType === 'professional' ? 'Professional' : 'Select Type'}
+              </ThemedText>
+              <Ionicons
+                name={showUserTypeDropdown ? "chevron-up" : "chevron-down"}
+                size={12}
+                color={userType === 'general' ? '#2196F3' : userType === 'professional' ? '#4CAF50' : '#666666'}
+                style={{ marginLeft: wp(1) }}
+              />
+            </TouchableOpacity>
 
-      {/* User Type Selection */}
-      <UserTypeSelector
-        userType={userType}
-        setUserType={setUserType}
+            {/* Dropdown Menu */}
+            {showUserTypeDropdown && (
+              <View style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: wp(2),
+                backgroundColor: background,
+                borderWidth: 1,
+                borderColor: '#E0E0E0',
+                borderRadius: 16,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.15,
+                shadowRadius: 12,
+                elevation: 8,
+                zIndex: 1000,
+                minWidth: wp(45),
+                overflow: 'hidden'
+              }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setUserType('general');
+                    setShowUserTypeDropdown(false);
+                  }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingHorizontal: wp(4),
+                    paddingVertical: wp(3.5),
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#F0F0F0',
+                    backgroundColor: userType === 'general' ? '#E3F2FD' : 'transparent'
+                  }}
+                >
+                  <View style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: '#2196F3',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginRight: wp(3)
+                  }}>
+                    <Ionicons name="person" size={18} color="white" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <ThemedText style={{ fontSize: 16, color: '#2196F3', fontWeight: '600' }}>
+                      General User
+                    </ThemedText>
+                    <ThemedText style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
+                      Use AI to help with truck selection
+                    </ThemedText>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    setUserType('professional');
+                    setShowUserTypeDropdown(false);
+                  }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingHorizontal: wp(4),
+                    paddingVertical: wp(3.5),
+                    backgroundColor: userType === 'professional' ? '#E8F5E8' : 'transparent'
+                  }}
+                >
+                  <View style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: '#4CAF50',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginRight: wp(3)
+                  }}>
+                    <Ionicons name="business" size={18} color="white" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <ThemedText style={{ fontSize: 16, color: '#4CAF50', fontWeight: '600' }}>
+                      Professional User
+                    </ThemedText>
+                    <ThemedText style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
+                      I know the truck details and requirements
+                    </ThemedText>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        }
       />
+
+      {/* Overlay to close dropdown when clicking outside */}
+      {showUserTypeDropdown && (
+        <TouchableOpacity
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999
+          }}
+          onPress={() => setShowUserTypeDropdown(false)}
+        />
+      )}
 
       {/* Personal Details Status */}
       {cargoLoading && (
@@ -1097,30 +1045,62 @@ const AddLoadDB = () => {
         (userType === 'general' && !getGeneralDetails) ||
         (userType === 'professional' && !getProfessionalDetails)
       ) && (
-          <View style={{ padding: wp(4) }}>
-            <ThemedText style={{ textAlign: 'center', marginBottom: wp(2) }}>
-              Please submit your personal details to continue
-            </ThemedText>
-            <Button
+          <View style={{ paddingHorizontal: wp(4), paddingVertical: wp(2) }}>
+            <TouchableOpacity
               onPress={() => {
                 setSelectedPersonalType(userType);
                 setShowPersonalDetailsModal(true);
               }}
-              title={`Submit ${userType === 'general' ? 'Personal' : 'Professional'} Details`}
-              colors={{ text: '#0f9d58', bg: '#0f9d5824' }}
-            />
+              style={{
+                backgroundColor: '#0f9d5824',
+                paddingVertical: wp(3),
+                paddingHorizontal: wp(4),
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: '#0f9d58',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Ionicons name="person-add" size={16} color="#0f9d58" style={{ marginRight: wp(2) }} />
+              <ThemedText style={{ color: '#0f9d58', fontWeight: '600' }}>
+                Submit {userType === 'general' ? 'Personal' : 'Professional'} Details
+              </ThemedText>
+            </TouchableOpacity>
           </View>
         )}
 
       {!cargoLoading && cargoDataChecked && userType && (getGeneralDetails || getProfessionalDetails) && (
-        <View style={{ padding: wp(4) }}>
-          <ThemedText style={{ textAlign: "center", color: accent }}>
-            Creating load as {getGeneralDetails ? "General" : "Professional"} User
-          </ThemedText>
-          <ThemedText style={{ textAlign: "center", fontSize: 12, color: coolGray }}>
-            Status: {(getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "Approved" : "Pending Approval"}
+        <View style={{ paddingHorizontal: wp(4), paddingVertical: wp(1) }}>
+          <ThemedText style={{ textAlign: "center", color: accent, fontSize: 14 }}>
+            {getGeneralDetails ? "General" : "Professional"} User • {(getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "Approved" : "Pending"}
           </ThemedText>
         </View>
+      )}
+
+      {/* Blur overlay when no user type is selected - only covers content area */}
+      {!userType && (
+        <TouchableOpacity
+          onPress={() => setShowUserTypeDropdown(true)}
+          style={{
+            position: 'absolute',
+            top: 58, // Start below the header
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 50,
+          }}
+        >
+          <BlurView
+            intensity={15}
+            tint="dark"
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0, 0, 0, 0.4)', // Darker overlay for smooth dark effect
+            }}
+          />
+        </TouchableOpacity>
       )}
 
       {userType && (
@@ -1134,11 +1114,8 @@ const AddLoadDB = () => {
         />
       )}
 
-
-
-
-      <View style={{ flex: 1 }}>
-        {step === 0 && userType && (
+      <View style={{ flex: 1, position: 'relative' }}>
+        {step === 0 && (
           <ScrollView keyboardShouldPersistTaps="always" >
             <View style={styles.viewMainDsp}>
               {userType === 'general' ? (
@@ -1268,7 +1245,7 @@ const AddLoadDB = () => {
                   aiDetectedTruckType={aiDetectedTruckType}
                   aiDetectedCapacity={aiDetectedCapacity}
                   aiDetectedTankerType={aiDetectedTankerType}
-                  aiAnswer={aiAnswer}
+                  aiAnswer=""
                   onUseRecommendations={() => {
                     setSelectedCargoArea(aiDetectedCargoArea);
                     setSelectedTruckType(aiDetectedTruckType);
@@ -1377,7 +1354,7 @@ const AddLoadDB = () => {
                                 <View
                                   key={`img-${index}`}
                                   style={{
-                                    width: wp(45),
+                                    width: wp(30),
                                     marginRight: wp(2),
                                     backgroundColor: '#f9f9f9',
                                     borderRadius: 8,
@@ -1443,7 +1420,7 @@ const AddLoadDB = () => {
                                 <View
                                   key={`doc-${index}`}
                                   style={{
-                                    width: wp(45),
+                                    width: wp(30),
                                     marginRight: wp(2),
                                     backgroundColor: '#f9f9f9',
                                     borderRadius: 8,
@@ -1509,7 +1486,7 @@ const AddLoadDB = () => {
                         {(proofImages.length + proofDocuments.length) < 6 && (
                           <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: wp(2) }}>
                             <TouchableOpacity
-                              onPress={() => selectManyImages(setProofImages, false, 6 - proofDocuments.length)}
+                              onPress={() => selectManyImages(setProofImages, false, 6 - proofDocuments.length, proofImages.length)}
                               style={{
                                 backgroundColor: '#1E90FF',
                                 height: 45,
@@ -1536,7 +1513,7 @@ const AddLoadDB = () => {
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                              onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6 - proofImages.length)}
+                              onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6 - proofImages.length, proofDocuments.length)}
                               style={{
                                 backgroundColor: '#004d40',
                                 height: 45,
@@ -1577,7 +1554,7 @@ const AddLoadDB = () => {
 
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: wp(3) }}>
                       <TouchableOpacity
-                        onPress={() => selectManyImages(setProofImages, false, 6)}
+                        onPress={() => selectManyImages(setProofImages, false, 6, proofImages.length)}
                         style={{
                           backgroundColor: '#1E90FF',
                           height: 45,
@@ -1607,7 +1584,7 @@ const AddLoadDB = () => {
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6)}
+                        onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6, proofDocuments.length)}
                         style={{
                           backgroundColor: '#004d40',
                           height: 45,
@@ -1848,6 +1825,7 @@ const AddLoadDB = () => {
         </ScrollView>)}
       </View>
 
+
       {/* General User Personal Details Modal */}
       <Modal visible={showPersonalDetailsModal && selectedPersonalType === 'general'} statusBarTranslucent animationType="slide">
         <ScreenWrapper>
@@ -1858,7 +1836,6 @@ const AddLoadDB = () => {
                   <TouchableOpacity onPress={() => {
                     setShowPersonalDetailsModal(false);
                     setSelectedPersonalType(null);
-                    clearPersonalValidationErrors();
                   }}>
                     <AntDesign name="close" color={icon} size={wp(4)} />
                   </TouchableOpacity>
@@ -1869,17 +1846,8 @@ const AddLoadDB = () => {
                 <Input
                   placeholder="Enter your full name"
                   value={personalName}
-                  onChangeText={(text) => {
-                    setPersonalName(text);
-                    validatePersonalName(text);
-                  }}
-                  style={personalNameError ? { borderColor: 'red', borderWidth: 1 } : {}}
+                  onChangeText={setPersonalName}
                 />
-                {personalNameError ? (
-                  <ThemedText style={{ color: 'red', fontSize: 12, marginTop: 4 }}>
-                    {personalNameError}
-                  </ThemedText>
-                ) : null}
 
                 <ThemedText>Phone Number</ThemedText>
                 <Input
@@ -1897,7 +1865,7 @@ const AddLoadDB = () => {
                       activeColor={background}
                       containerStyle={{
                         borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                        width: wp(45),
+                        width: wp(30),
                         shadowOffset: { width: 0, height: 9 },
                         shadowOpacity: 0.50,
                         shadowRadius: 12.35,
@@ -1944,7 +1912,7 @@ const AddLoadDB = () => {
                 <Button
                   onPress={handleUpdateGeneralDetails}
                   loading={isSubmittingPersonal}
-                  disabled={isSubmittingPersonal || !isGeneralPersonalDetailsValid}
+                  disabled={isSubmittingPersonal}
                   title={isSubmittingPersonal ? "Saving..." : "Save"}
                   colors={{ text: '#0f9d58', bg: '#0f9d5824' }}
                   style={{ height: 44 }}
@@ -1965,7 +1933,6 @@ const AddLoadDB = () => {
                 <TouchableOpacity onPress={() => {
                   setShowPersonalDetailsModal(false);
                   setSelectedPersonalType(null);
-                  clearPersonalValidationErrors();
                 }}>
                   <AntDesign name="close" color={icon} size={wp(4)} />
                 </TouchableOpacity>
@@ -2007,7 +1974,7 @@ const AddLoadDB = () => {
                       activeColor={background}
                       containerStyle={{
                         borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                        width: wp(45),
+                        width: wp(30),
                         shadowOffset: { width: 0, height: 9 },
                         shadowOpacity: 0.50,
                         shadowRadius: 12.35,
@@ -2092,7 +2059,7 @@ const AddLoadDB = () => {
                 <Button
                   onPress={handleUpdateProfessionalDetails}
                   loading={uploadingPersonalD}
-                  disabled={uploadingPersonalD || !isProfessionalPersonalDetailsValid}
+                  disabled={uploadingPersonalD}
                   title={uploadingPersonalD ? "Saving..." : "Save"}
                   colors={{ text: '#0f9d58', bg: '#0f9d5824' }}
                   style={{ height: 44 }}
@@ -2141,24 +2108,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     marginBottom: 6,
-  },
-  userTypeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: wp(4),
-    marginVertical: wp(2),
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  imageUploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: wp(4),
-    borderRadius: 12,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    justifyContent: 'center',
   },
   loadImagePreview: {
     width: 80,

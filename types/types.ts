@@ -261,6 +261,7 @@ export type User = {
     country?: string,
     address?: string,
     referrerId?: string, // ID of the user who referred this user
+    expoPushToken?: string, // Push notification token
     [key: string]: any; // To allow additional properties
 }
 

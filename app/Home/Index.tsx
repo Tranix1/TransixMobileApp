@@ -69,7 +69,21 @@ function Index() {
             return;
         }
 
+        // Add debug logging to help diagnose the issue
+        console.log('Home checkAuth:', {
+            isAuthenticated,
+            needsProfileSetup,
+            needsEmailVerification,
+            user: user ? {
+                uid: user.uid,
+                email: user.email,
+                organisation: user.organisation,
+                displayName: user.displayName
+            } : null
+        });
+
         if (needsProfileSetup) {
+            console.log('Redirecting to profile setup because needsProfileSetup is true');
             router.push({ pathname: '/Account/Profile', params: { operation: 'create' } });
             return;
         }

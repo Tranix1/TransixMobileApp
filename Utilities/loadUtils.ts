@@ -90,9 +90,7 @@ export const validateLoadForm = (
             if (formData.returnTerms !== undefined && formData.returnTerms !== '' && formData.returnTerms.trim() === '') {
                 errors.push('Enter Return Load Terms');
             }
-            if (formData.proofOfOrder !== undefined && (!formData.proofOfOrder || formData.proofOfOrder.length === 0)) {
-                errors.push('Upload at least one proof of order document or image');
-            }
+            // Proof of order validation is handled in the component
         }
     }
 
@@ -240,7 +238,7 @@ export const prepareLoadData = (
                 : [])
             : (formData.trucksNeeded || []),
         loadId: `Lo${Math.floor(100000000000 + Math.random() * 900000000000).toString()}ad`,
-        expoPushToken: expoPushToken || null,
+        expoPushToken: expoPushToken || user?.expoPushToken || null,
 
         // Different proof handling
         proofOfOrder: userType === 'professional' ? (formData.proofOfOerSub || []) : [],
@@ -280,9 +278,9 @@ export const getDefaultFormState = () => ({
     additionalInfo: "",
     alertMsg: "",
     fuelAvai: "",
-    returnLoad: "No return load",
+    returnLoad: "",
     returnRate: "0",
-    returnTerms: "Standard terms",
+    returnTerms: "",
     selectedCurrency: { id: 1, name: "USD" },
     selectedReturnCurrency: { id: 1, name: "USD" },
     selectedModelType: { id: 1, name: "Solid" },

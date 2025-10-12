@@ -93,5 +93,4 @@ const message = `${truckType?.name}, ${capacity?.name} , ${cargoArea?.name}  mat
     }
   }
 
-  showToast('✅ Done sending notifications to all matching trucks.');
 };

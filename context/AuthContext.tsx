@@ -22,6 +22,7 @@ import { ReactNode } from "react";
 import { addDocument, setDocuments, readById, validateReferrer, validateReferrerCode } from "@/db/operations";
 import { User } from "@/types/types";
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
+import { updateUserTokenInAllCollections } from "@/Utilities/pushNotification";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
@@ -52,6 +53,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(fullUser)
             setIsSignedIN(true);
             await AsyncStorage.setItem('user', JSON.stringify(fullUser))
+
+            // Update expoPushToken in ALL collections for this user
+            if (fullUser.expoPushToken) {
+                await updateUserTokenInAllCollections(fullUser.uid, fullUser.expoPushToken);
+            }
+
             return;
         } else {
             console.log("here")
@@ -242,6 +249,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const fullUser: User = {
                 ...credentials,
                 displayName: credentials.organisation,
+                expoPushToken: credentials.expoPushToken || undefined,
             };
 
             // 4. Save to Firestore (or your DB)
@@ -259,6 +267,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // 7. Verify the data was saved by reading it back
             const savedData = await readById('personalData', fullUser.uid);
             console.log('Data saved to database:', savedData);
+
+            // 8. Force a small delay to ensure state propagation
+            await new Promise(resolve => setTimeout(resolve, 100));
 
             return { success: true };
         } catch (error) {

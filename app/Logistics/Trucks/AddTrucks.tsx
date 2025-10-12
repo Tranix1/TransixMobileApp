@@ -8,6 +8,7 @@ import type { ImagePickerAsset } from 'expo-image-picker';
 import { addDocument, getDocById, setDocuments } from "@/db/operations";
 import { uploadImage } from "@/db/operations";
 import { selectManyImages, handleChange } from "@/Utilities/utils";
+import { selectImage, selectImageNoCrop, selectImageWithCrop } from "@/Utilities/imageUtils";
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
 import { ErrorOverlay } from "@/components/ErrorOverLay";
@@ -30,7 +31,7 @@ import { AddTruckDetails } from "@/components/AddTruckDetails";
 import { HorizontalTickComponent } from "@/components/SlctHorizonzalTick";
 import { DocumentUploader } from "@/components/DocumentUploader";
 
-import { usePushNotifications, } from "@/Utilities/pushNotification";
+import { usePushNotifications, notifyTruckApprovalAdmins } from "@/Utilities/pushNotification";
 import { pickDocument } from "@/Utilities/utils";
 import { DocumentAsset } from "@/types/types";
 
@@ -65,9 +66,9 @@ function AddTrucks() {
   const [ownerPhonNumAddDb, setOwnerPhoneNum] = useState('');
 
   const [selectedOwnerDocuments, setSelectedOwnerDocumentS] = useState<DocumentAsset[]>([]);
-  const [ownerFileType, setOwnerFileType] = React.useState<('pdf' | 'image')[]>([])
+  const [ownerFileType, setOwnerFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([])
   const [selectedBrokerDocuments, setSelectedBrokerDocumentS] = useState<DocumentAsset[]>([]);
-  const [brokerFileType, setBrokerFileType] = React.useState<('pdf' | 'image')[]>([])
+  const [brokerFileType, setBrokerFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([])
 
 
 
@@ -446,7 +447,7 @@ function AddTrucks() {
         tankerType: selectedTankerType ? selectedTankerType?.name : null,
         truckCapacity: selectedTruckCapacity?.name,
         ...formData,
-        expoPushToken: expoPushToken || null,
+        expoPushToken: expoPushToken || user?.expoPushToken || null,
 
         // Referral system
         referrerId: user?.referrerId || null,
@@ -468,7 +469,11 @@ function AddTrucks() {
         truckId: `TR${Math.floor(100000 + Math.random() * 900000)}`
       }
 
-      addDocument("Trucks", submitData)
+      await addDocument("Trucks", submitData)
+
+      // Notify admins who can approve trucks
+      await notifyTruckApprovalAdmins(submitData)
+
       clearFormFields()
       ToastAndroid.show('Truck Added successfully', ToastAndroid.SHORT)
 
@@ -567,7 +572,7 @@ function AddTrucks() {
 
                           containerStyle={{
                             borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                            width: wp(45),
+                            width: wp(30),
                             shadowOffset: {
                               width: 0,
                               height: 9,
@@ -722,7 +727,7 @@ function AddTrucks() {
 
                           containerStyle={{
                             borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                            width: wp(45),
+                            width: wp(30),
                             shadowOffset: {
                               width: 0,
                               height: 9,
@@ -830,7 +835,7 @@ function AddTrucks() {
           <View style={{ alignItems: 'center' }}>
             {images[0] && <Image source={{ uri: images[0].uri }} style={{ width: wp(90), height: wp(90), marginBottom: 9, borderRadius: wp(4) }} />}
             {!images[0] &&
-              <TouchableOpacity onPress={() => selectManyImages(setImages, true)} style={{ marginBottom: 9, width: wp(90), height: wp(90), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+              <TouchableOpacity onPress={() => selectImageWithCrop((image) => setImages([image]))} style={{ marginBottom: 9, width: wp(90), height: wp(90), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                 <Ionicons name="camera" size={wp(40)} color={icon + "4c"} />
                 <ThemedText color={icon + "4c"}>Add Truck Image<ThemedText color="red">*</ThemedText></ThemedText>
               </TouchableOpacity>}
@@ -901,7 +906,7 @@ function AddTrucks() {
 
                   containerStyle={{
                     borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                    width: wp(45),
+                    width: wp(30),
                     shadowOffset: {
                       width: 0,
                       height: 9,
@@ -951,7 +956,7 @@ function AddTrucks() {
             {images[1] ?
               <Image source={{ uri: images[1]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
               :
-              <TouchableOpacity onPress={() => { operationCountries.length > 0 ? (images[0]) ? selectManyImages(setImages, true) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT) : alert("Select operating Countires.") }
+              <TouchableOpacity onPress={() => { operationCountries.length > 0 ? (images[0]) ? selectImageWithCrop((image) => setImages(prev => [prev[0], image, ...prev.slice(2)])) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT) : alert("Select operating Countires.") }
               }
                 style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                 <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
@@ -969,7 +974,7 @@ function AddTrucks() {
               {images[2] ?
                 <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
                 :
-                <TouchableOpacity onPress={() => (images[1]) ? selectManyImages(setImages, true) : ToastAndroid.show('Please add yaya image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <TouchableOpacity onPress={() => (images[1]) ? selectImageWithCrop((image) => setImages(prev => [prev[0], prev[1], image, ...prev.slice(3)])) : ToastAndroid.show('Please add yaya image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                   <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                   <ThemedText color={icon + "4c"}>Add Drivers Passport<ThemedText color="red">*</ThemedText></ThemedText>
                 </TouchableOpacity>
@@ -982,7 +987,7 @@ function AddTrucks() {
               {images[3] ?
                 <Image source={{ uri: images[3]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
                 :
-                <TouchableOpacity onPress={() => (images[2]) ? selectManyImages(setImages, true) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                <TouchableOpacity onPress={() => (images[2]) ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], prev[2], image, ...prev.slice(4)])) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                   <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
                   <ThemedText color={icon + "4c"}>Add International Driver Permit<ThemedText color="red">*</ThemedText></ThemedText>
                 </TouchableOpacity>
@@ -1014,8 +1019,8 @@ function AddTrucks() {
 
 
                 onPress={() => {
-                  operationCountries.length <= 1 ? images[1] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
-                    : operationCountries.length > 1 ? images[3] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
+                  operationCountries.length <= 1 ? images[1] ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], image, ...prev.slice(3)])) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
+                    : operationCountries.length > 1 ? images[3] ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], prev[2], prev[3], image, ...prev.slice(5)])) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
                       : alert("yaya");
 
                 }}
@@ -1043,8 +1048,8 @@ function AddTrucks() {
 
 
                   onPress={() => {
-                    operationCountries.length === 1 ? images[2] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
-                      : operationCountries.length > 1 ? images[4] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
+                    operationCountries.length === 1 ? images[2] ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], prev[2], image, ...prev.slice(4)])) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
+                      : operationCountries.length > 1 ? images[4] ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], prev[2], prev[3], prev[4], image, ...prev.slice(6)])) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
                         : alert("yaya");
 
                   }}
@@ -1069,8 +1074,8 @@ function AddTrucks() {
 
 
                   onPress={() => {
-                    operationCountries.length === 1 ? images[3] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
-                      : operationCountries.length > 1 ? images[5] ? selectManyImages(setImages, false) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
+                    operationCountries.length === 1 ? images[3] ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], prev[2], prev[3], image, ...prev.slice(5)])) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
+                      : operationCountries.length > 1 ? images[5] ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], prev[2], prev[3], prev[4], prev[5], image, ...prev.slice(7)])) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
                         : alert("yaya");
 
                   }}
@@ -1124,7 +1129,7 @@ function AddTrucks() {
                   {!truckNumberPlate[0] && <TouchableOpacity
 
 
-                    onPress={() => selectManyImages(setTruckNumberPlate, true)}
+                    onPress={() => selectImageWithCrop((image) => setTruckNumberPlate([image]))}
 
                     style={{ height: wp(27), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                     <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
@@ -1147,7 +1152,7 @@ function AddTrucks() {
 
                   {!gitImage[0] && <ThemedText style={{ fontSize: 14.5, textAlign: "center" }}>GIT Insurance</ThemedText>}
                   {!gitImage[0] && <TouchableOpacity
-                    onPress={() => selectManyImages(setGitImage, false)}
+                    onPress={() => selectImageNoCrop((image) => setGitImage([image]))}
                     style={{ height: wp(27), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                     <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
                     <ThemedText style={{ fontSize: 13.5, fontWeight: "bold" }} color={icon + "4c"}>GIT Insuarance<ThemedText color="red">*</ThemedText></ThemedText>
@@ -1166,7 +1171,7 @@ function AddTrucks() {
 
                   {truckThirdPlate[0] && (
                     <Image
-                      source={{ uri: truckNumberPlate[0].uri }}
+                      source={{ uri: truckThirdPlate[0].uri }}
                       style={{
                         width: "100%",
                         height: "100%",
@@ -1178,7 +1183,7 @@ function AddTrucks() {
                   {!truckThirdPlate[0] && <ThemedText style={{ fontSize: 14.5, textAlign: "center" }}>Third Plate</ThemedText>}
                   {!truckThirdPlate[0] && <TouchableOpacity
 
-                    onPress={() => selectManyImages(setTruckThirdPlate, true)}
+                    onPress={() => selectImageWithCrop((image) => setTruckThirdPlate([image]))}
                     style={{ height: wp(27), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                     <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
                     <ThemedText style={{ fontSize: 13.5, fontWeight: "bold" }} color={icon + "4c"}>Third Plate<ThemedText color="red">*</ThemedText></ThemedText>
@@ -1198,7 +1203,7 @@ function AddTrucks() {
             <ThemedText type="tiny" style={{ textAlign: 'center' }} color={coolGray}>{spinnerItem && ''} </ThemedText>
             <Button loading={spinnerItem} disabled={spinnerItem} title={spinnerItem ? "Submiting..." : "Submit"} onPress={handleSubmit} />
           </View>
-          <View style={{ height: 10 }} />
+          <View style={{ height: hp(8) }} />
         </ScrollView>
       </View>
 

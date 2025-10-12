@@ -128,6 +128,30 @@ export function useAuthState() {
         };
     }, []);
 
+    // Listen for changes in AuthContext user to sync profile completion status
+    useEffect(() => {
+        if (contextUser && authState.isAuthenticated) {
+            // Update the auth state when context user changes (e.g., after profile update)
+            const needsProfileSetup = !contextUser?.organisation;
+
+            console.log('Syncing with context user:', {
+                contextUser: {
+                    uid: contextUser.uid,
+                    email: contextUser.email,
+                    organisation: contextUser.organisation,
+                    displayName: contextUser.displayName
+                },
+                needsProfileSetup
+            });
+
+            setAuthState(prev => ({
+                ...prev,
+                user: contextUser,
+                needsProfileSetup,
+            }));
+        }
+    }, [contextUser, authState.isAuthenticated]);
+
     const updateUserProfile = async (updatedProfile: any) => {
         if (!authState.user?.uid) return;
 

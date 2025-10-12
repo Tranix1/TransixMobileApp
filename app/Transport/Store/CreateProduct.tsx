@@ -1003,7 +1003,7 @@ const CreateProduct = () => {
                         ) : (
                             <TouchableOpacity
                                 style={styles.addImageButton}
-                                onPress={() => selectManyImages(setImages, true, true)}
+                                onPress={() => selectManyImages(setImages, true, 6, images.length)}
                             >
                                 <Ionicons name="camera" size={wp(10)} color={iconColor} />
                                 <ThemedText>Add Images</ThemedText>
@@ -1011,7 +1011,7 @@ const CreateProduct = () => {
                         )}
                     </View>
 
-                    {images.length > 0 && <TouchableOpacity onPress={() => selectManyImages(setImages, true, true)} style={{ backgroundColor: backgroundLight, width: 125, justifyContent: "center", alignItems: "center", borderRadius: 5 }} >
+                    {images.length > 0 && <TouchableOpacity onPress={() => selectManyImages(setImages, true, 6, images.length)} style={{ backgroundColor: backgroundLight, width: 125, justifyContent: "center", alignItems: "center", borderRadius: 5 }} >
                         <ThemedText color="white" style={{ fontSize: 13, fontWeight: "bold" }}>Add Images {4 - images.length} left </ThemedText>
                     </TouchableOpacity>}
                 </View>

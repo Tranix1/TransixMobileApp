@@ -2,7 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { ImagePickerAsset } from 'expo-image-picker';
 
-const MAX_FILE_SIZE_MB = 1.5; // Max file size in MB
+const MAX_FILE_SIZE_MB = 2; // Max file size in MB
 
 // Helper to validate file size
 const validateFileSize = async (asset: ImagePickerAsset, maxMB: number): Promise<boolean> => {
@@ -28,7 +28,7 @@ export const selectImage = (callback: (image: ImagePickerAsset) => void) => {
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
                 aspect: [4, 3],
-                quality: 0.8,
+                quality: 0.5, // Reduced quality to help with file size
                 // This is the key: we don't request permissions, letting the system handle it
                 // Android 13+ will use the Photo Picker automatically
             });
@@ -36,7 +36,7 @@ export const selectImage = (callback: (image: ImagePickerAsset) => void) => {
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 const asset = result.assets[0];
                 if (!(await validateFileSize(asset, MAX_FILE_SIZE_MB))) {
-                    alert(`Selected image exceeds ${MAX_FILE_SIZE_MB}MB. Please choose a smaller image.`);
+                    alert(`It's more than 2MB, add quality screenshot or resize`);
                     return;
                 }
                 callback(asset);
@@ -57,7 +57,7 @@ export const selectMultipleImages = (callback: (images: ImagePickerAsset[]) => v
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: false,
-                quality: 0.8,
+                quality: 0.5, // Reduced quality to help with file size
                 allowsMultipleSelection: true,
                 // No permission requests - uses Android Photo Picker
             });
@@ -74,7 +74,7 @@ export const selectMultipleImages = (callback: (images: ImagePickerAsset[]) => v
                     }
                 }
 
-                if (skipped) alert(`Some images were skipped because they exceed ${MAX_FILE_SIZE_MB}MB.`);
+                if (skipped) alert(`Some images were skipped because they exceed 2MB, add quality screenshot or resize`);
                 if (validAssets.length > 0) callback(validAssets);
             }
         } catch (error) {
@@ -107,7 +107,7 @@ export const takePhoto = (callback: (image: ImagePickerAsset) => void) => {
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 const asset = result.assets[0];
                 if (!(await validateFileSize(asset, MAX_FILE_SIZE_MB))) {
-                    alert(`Selected image exceeds ${MAX_FILE_SIZE_MB}MB. Please choose a smaller image.`);
+                    alert(`It's more than 2MB, add quality screenshot or resize`);
                     return;
                 }
                 callback(asset);

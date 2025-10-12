@@ -10,6 +10,7 @@ import { auth } from '@/db/fireBaseConfig';
 import { signOut, sendEmailVerification } from 'firebase/auth';
 import { ToastAndroid } from 'react-native';
 import * as Updates from 'expo-updates';
+import { AppState } from 'react-native';
 
 interface AuthStatusModalProps {
     visible: boolean;
@@ -27,12 +28,10 @@ export default function AuthStatusModal({ visible, onClose, user, type }: AuthSt
 
     const handleSendVerification = async () => {
         try {
-            console.log("Sending verification email...");
             await sendEmailVerification(auth.currentUser as any);
             ToastAndroid.show('Verification email sent!', ToastAndroid.SHORT);
             onClose();
         } catch (error) {
-            console.log("Error sending verification email:", error);
             ToastAndroid.show("Failed to send verification email. Try again.", ToastAndroid.SHORT);
         }
     };
@@ -43,13 +42,31 @@ export default function AuthStatusModal({ visible, onClose, user, type }: AuthSt
             ToastAndroid.show('Signed out successfully.', ToastAndroid.SHORT);
             onClose();
         } catch (error) {
-            console.log("Error signing out:", error);
             ToastAndroid.show('Failed to sign out.', ToastAndroid.SHORT);
         }
     };
 
-    const handleRefresh = () => {
-        Updates.reloadAsync();
+    const handleRefresh = async () => {
+        try {
+            // Force reload the app by restarting the entire app
+            if (Updates.isEnabled) {
+                await Updates.reloadAsync();
+            } else {
+                // For development mode, we'll use a different approach
+                // Close the modal first
+                onClose();
+                // Then restart the app by reloading the current screen
+                setTimeout(() => {
+                    router.replace('/');
+                }, 100);
+            }
+        } catch (error) {
+            // If Updates fails, try alternative approach
+            onClose();
+            setTimeout(() => {
+                router.replace('/');
+            }, 100);
+        }
     };
 
     if (type === 'create') {

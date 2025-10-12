@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet,ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import Input from '@/components/Input'
 import Button from '@/components/Button'
 import CheckBox from '@react-native-community/checkbox';
@@ -13,7 +13,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 
-import { getAuth,sendPasswordResetEmail} from 'firebase/auth';
+import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -48,29 +48,29 @@ const Login = () => {
     }
 
     const [resetPasswprd, setResetPassword] = React.useState(false)
-  const auth = getAuth();
+    const auth = getAuth();
 
-const sendPasswordReset = async () => {
+    const sendPasswordReset = async () => {
 
-  if(email){
-    setLoading(true)
- await sendPasswordResetEmail(auth, email)
-    .then(() => {
-      // Password reset email sent successfully
-      setLoading(false)
-      setResetPassword(false)
-      alert('A password reset link has been sent to your email. Please check your inbox and follow the instructions.');
+        if (email) {
+            setLoading(true)
+            await sendPasswordResetEmail(auth, email)
+                .then(() => {
+                    // Password reset email sent successfully
+                    setLoading(false)
+                    setResetPassword(false)
+                    alert('A password reset link has been sent to your email. Please check your inbox and follow the instructions.');
 
-    })
-    .catch((error) => {
-      // An error occurred
-      setLoading(false)
-      setError(`${error.message}`);
-    });
-  }else{
-    alert("Enter Email that need to be reset")
-  }
-};
+                })
+                .catch((error) => {
+                    // An error occurred
+                    setLoading(false)
+                    setError(`${error.message}`);
+                });
+        } else {
+            alert("Enter Email that need to be reset")
+        }
+    };
 
 
     return (
@@ -78,7 +78,7 @@ const sendPasswordReset = async () => {
             <View style={styles.container}>
                 <Image contentFit='contain' source={require('@/assets/trialogo.svg')} style={styles.logo} />
 
-                {loading &&<ActivityIndicator color={accent} />}
+                {loading && <ActivityIndicator color={accent} />}
                 <ThemedText type='title' style={styles.header}>Login</ThemedText>
 
                 {error && (
@@ -123,9 +123,9 @@ const sendPasswordReset = async () => {
                 </View>}
 
                 {resetPasswprd && <View>
-                    <ThemedText style={{marginBottom:15}}>
+                    <ThemedText style={{ marginBottom: 15 }}>
                         Enter a valid email and submit to receive a reset link in your inbox.
-                        
+
                     </ThemedText>
 
                     <ThemedText style={styles.label} color={coolGray}>Email</ThemedText>
@@ -157,12 +157,12 @@ const sendPasswordReset = async () => {
                     </TouchableOpacity>
                 </View>
 
-                    <TouchableOpacity onPress={() => router.replace('/Account/SignUp')}>
-                <ThemedText style={styles.footerText}>
-                    Do not have an Account?{' '}
+                <TouchableOpacity onPress={() => router.replace('/Account/SignUp')}>
+                    <ThemedText style={styles.footerText}>
+                        Do not have an Account?{' '}
                         <ThemedText style={styles.loginLink}>Sign in</ThemedText>
-                </ThemedText>
-                    </TouchableOpacity>
+                    </ThemedText>
+                </TouchableOpacity>
             </View>
         </ScreenWrapper>
     )

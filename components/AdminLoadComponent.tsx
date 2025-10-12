@@ -239,16 +239,16 @@ const AdminLoadComponent = ({ item, expandID = '', expandId = (id: string) => { 
                 {/* Distance and Time horizontal row */}
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: wp(1) }}>
                     <View style={{ flexDirection: 'row', flex: 1, gap: wp(4) }}>
-                        {item.distance && (
+                        {item.distance ? (
                             <ThemedText type="tiny" style={styles.distanceInfo}>
                                 Distance: {item.distance}
                             </ThemedText>
-                        )}
-                        {item.duration && (
+                        ) : null}
+                        {item.duration ? (
                             <ThemedText type="tiny" style={styles.distanceInfo}>
                                 Time: {item.duration}
                             </ThemedText>
-                        )}
+                        ) : null}
                     </View>
 
                     {/* Status Badge */}

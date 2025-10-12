@@ -54,7 +54,7 @@ const ApproveTruckAccounts = () => {
         try {
             setLoading(true);
 
-       
+
 
             // Now try with filters - using direct Firestore query
             const filters = [
@@ -101,46 +101,21 @@ const ApproveTruckAccounts = () => {
         <TouchableOpacity
             style={[styles.accountItem, { backgroundColor: backgroundLight }]}
             onPress={() => handleAccountPress(account)}
+            activeOpacity={0.7}
         >
-            <View style={styles.accountIconContainer}>
+            <View style={[styles.accountIconContainer, { backgroundColor: accent + '20' }]}>
                 <Ionicons
                     name={account.accType === 'owner' ? 'person' : 'business'}
-                    size={wp(6)}
+                    size={wp(5)}
                     color={accent}
                 />
             </View>
 
             <View style={styles.accountInfo}>
-                <ThemedText type="subtitle" numberOfLines={1}>
-                    {account.accType === 'owner' ? account.ownerName : account.brokerName || 'Unknown'}
-                </ThemedText>
-
-                <View style={styles.accountDetails}>
-                    <View style={styles.detailRow}>
-                        <Ionicons name="mail" size={wp(3)} color={icon} style={{ width: wp(6) }} />
-                        <ThemedText type="tiny" numberOfLines={1}>
-                            {account.accType === 'owner' ? account.ownerEmail : account.brokerEmail || 'N/A'}
-                        </ThemedText>
-                    </View>
-
-                    <View style={styles.detailRow}>
-                        <Ionicons name="call" size={wp(3)} color={icon} style={{ width: wp(6) }} />
-                        <ThemedText type="tiny" numberOfLines={1}>
-                            {account.accType === 'owner' ? account.ownerPhoneNum : account.brokerPhoneNum || 'N/A'}
-                        </ThemedText>
-                    </View>
-
-                    {account.companyName && (
-                        <View style={styles.detailRow}>
-                            <Ionicons name="business" size={wp(3)} color={icon} style={{ width: wp(6) }} />
-                            <ThemedText type="tiny" numberOfLines={1}>
-                                {account.companyName}
-                            </ThemedText>
-                        </View>
-                    )}
-                </View>
-
-                <View style={styles.statusContainer}>
+                <View style={styles.accountHeader}>
+                    <ThemedText type="subtitle" numberOfLines={1} style={styles.accountName}>
+                        {account.accType === 'owner' ? account.ownerName : account.brokerName || 'Unknown'}
+                    </ThemedText>
                     <View style={[
                         styles.statusBadge,
                         {
@@ -162,13 +137,37 @@ const ApproveTruckAccounts = () => {
                                     account.approvalStatus === 'approved' ? 'Approved' : 'Rejected'}
                         </ThemedText>
                     </View>
+                </View>
 
-                    <View style={styles.dateContainer}>
-                        <ThemedText type="tiny" style={{ color: icon }}>
-                            {account.submittedAt ? formatDate(account.submittedAt) : formatDate(account.createdAt)}
+                <View style={styles.accountDetails}>
+                    <View style={styles.detailRow}>
+                        <Ionicons name="mail" size={wp(3.5)} color={icon} style={{ width: wp(6) }} />
+                        <ThemedText type="tiny" numberOfLines={1} style={styles.detailText}>
+                            {account.accType === 'owner' ? account.ownerEmail : account.brokerEmail || 'N/A'}
                         </ThemedText>
                     </View>
 
+                    <View style={styles.detailRow}>
+                        <Ionicons name="call" size={wp(3.5)} color={icon} style={{ width: wp(6) }} />
+                        <ThemedText type="tiny" numberOfLines={1} style={styles.detailText}>
+                            {account.accType === 'owner' ? account.ownerPhoneNum : account.brokerPhoneNum || 'N/A'}
+                        </ThemedText>
+                    </View>
+
+                    {account.companyName && (
+                        <View style={styles.detailRow}>
+                            <Ionicons name="business" size={wp(3.5)} color={icon} style={{ width: wp(6) }} />
+                            <ThemedText type="tiny" numberOfLines={1} style={styles.detailText}>
+                                {account.companyName}
+                            </ThemedText>
+                        </View>
+                    )}
+                </View>
+
+                <View style={styles.accountFooter}>
+                    <ThemedText type="tiny" style={styles.dateText}>
+                        {account.submittedAt ? formatDate(account.submittedAt) : formatDate(account.createdAt)}
+                    </ThemedText>
                     <Ionicons name="chevron-forward" size={wp(4)} color={icon} />
                 </View>
             </View>
@@ -177,18 +176,15 @@ const ApproveTruckAccounts = () => {
 
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
-            <Ionicons name="checkmark-circle-outline" size={wp(20)} color={icon} />
+            <View style={[styles.emptyIconContainer, { backgroundColor: accent + '20' }]}>
+                <Ionicons name="checkmark-circle-outline" size={wp(12)} color={accent} />
+            </View>
             <ThemedText type="title" style={styles.emptyTitle}>
-                No Accounts to Review
+                All Caught Up!
             </ThemedText>
             <ThemedText type="default" style={styles.emptySubtitle}>
-                All truck account verifications have been reviewed or there are no pending approvals.
+                No truck account approvals pending at the moment. Pull down to refresh.
             </ThemedText>
-            <Button
-                title="Refresh"
-                onPress={loadPendingTruckAccounts}
-                style={styles.refreshButton}
-            />
         </View>
     );
 
@@ -208,14 +204,19 @@ const ApproveTruckAccounts = () => {
             <Heading page='Approve Truck Accounts' />
             <View style={styles.container}>
                 <View style={styles.header}>
-                    <ThemedText type="subtitle">
-                        {truckAccounts.length} account{truckAccounts.length !== 1 ? 's' : ''} pending review
-                    </ThemedText>
-                    <Button
-                        title="Refresh"
-                        onPress={loadPendingTruckAccounts}
-                        style={styles.refreshButton}
-                    />
+                    <View style={styles.headerContent}>
+                        <ThemedText type="title" style={styles.headerTitle}>
+                            Truck Account Approvals
+                        </ThemedText>
+                        <ThemedText type="default" style={styles.headerSubtitle}>
+                            {truckAccounts.length} account{truckAccounts.length !== 1 ? 's' : ''} pending review
+                        </ThemedText>
+                    </View>
+                    <View style={[styles.statusIndicator, { backgroundColor: truckAccounts.length > 0 ? accent : icon }]}>
+                        <ThemedText type="tiny" style={styles.statusText}>
+                            {truckAccounts.length}
+                        </ThemedText>
+                    </View>
                 </View>
 
                 <FlatList
@@ -246,11 +247,30 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: wp(4),
+        marginBottom: wp(6),
+        paddingBottom: wp(4),
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(0,0,0,0.1)',
     },
-    refreshButton: {
-        paddingHorizontal: wp(4),
-        paddingVertical: wp(2),
+    headerContent: {
+        flex: 1,
+    },
+    headerTitle: {
+        marginBottom: wp(1),
+    },
+    headerSubtitle: {
+        opacity: 0.7,
+    },
+    statusIndicator: {
+        width: wp(8),
+        height: wp(8),
+        borderRadius: wp(4),
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    statusText: {
+        color: 'white',
+        fontWeight: 'bold',
     },
     listContainer: {
         flexGrow: 1,
@@ -259,46 +279,66 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         padding: wp(4),
         marginBottom: wp(3),
-        borderRadius: wp(3),
-        alignItems: 'center',
+        borderRadius: wp(4),
+        alignItems: 'flex-start',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
     },
     accountIconContainer: {
         marginRight: wp(4),
-        width: wp(12),
-        height: wp(12),
-        borderRadius: wp(6),
-        backgroundColor: '#f0f0f0',
+        width: wp(10),
+        height: wp(10),
+        borderRadius: wp(5),
         justifyContent: 'center',
         alignItems: 'center',
     },
     accountInfo: {
         flex: 1,
     },
+    accountHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: wp(2),
+    },
+    accountName: {
+        flex: 1,
+        marginRight: wp(2),
+    },
     accountDetails: {
-        marginVertical: wp(2),
+        marginBottom: wp(3),
     },
     detailRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: wp(1),
+        marginBottom: wp(1.5),
     },
-    statusContainer: {
+    detailText: {
+        flex: 1,
+        marginLeft: wp(1),
+    },
+    accountFooter: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
+    dateText: {
+        opacity: 0.7,
+    },
     statusBadge: {
-        paddingHorizontal: wp(3),
+        paddingHorizontal: wp(2.5),
         paddingVertical: wp(1),
-        borderRadius: wp(2),
+        borderRadius: wp(3),
     },
     statusText: {
-        fontWeight: 'bold',
-        fontSize: wp(3),
-    },
-    dateContainer: {
-        flex: 1,
-        marginLeft: wp(2),
+        fontWeight: '600',
+        fontSize: wp(2.8),
     },
     loadingContainer: {
         flex: 1,
@@ -310,17 +350,24 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: wp(8),
+        paddingHorizontal: wp(8),
+    },
+    emptyIconContainer: {
+        width: wp(20),
+        height: wp(20),
+        borderRadius: wp(10),
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: wp(4),
     },
     emptyTitle: {
-        marginTop: wp(4),
         marginBottom: wp(2),
         textAlign: 'center',
     },
     emptySubtitle: {
         textAlign: 'center',
-        marginBottom: wp(6),
         opacity: 0.7,
+        lineHeight: wp(5),
     },
 });
 

@@ -22,35 +22,25 @@ export const UserTypeSelector: React.FC<UserTypeSelectorProps> = ({
     if (!userType) {
         return (
             <View style={[styles.container, { backgroundColor: backgroundLight }]}>
-                <ThemedText style={styles.title}>
-                    How would you like to add your load?
-                </ThemedText>
+                <ThemedText style={styles.title}>Select User Type</ThemedText>
 
-                <TouchableOpacity
-                    style={[styles.userTypeButton, { backgroundColor: background }]}
-                    onPress={() => setUserType('general')}
-                >
-                    <Ionicons name="person-outline" size={24} color={accent} />
-                    <View style={styles.buttonContent}>
-                        <ThemedText style={styles.buttonTitle}>General User</ThemedText>
-                        <ThemedText style={styles.buttonSubtitle}>
-                            I don't know much about trucks - use AI to help me
-                        </ThemedText>
-                    </View>
-                </TouchableOpacity>
+                <View style={styles.buttonRow}>
+                    <TouchableOpacity
+                        style={[styles.userTypeButton, { backgroundColor: background }]}
+                        onPress={() => setUserType('general')}
+                    >
+                        <Ionicons name="person-outline" size={20} color={accent} />
+                        <ThemedText style={styles.buttonTitle}>General</ThemedText>
+                    </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={[styles.userTypeButton, { backgroundColor: background }]}
-                    onPress={() => setUserType('professional')}
-                >
-                    <Ionicons name="business-outline" size={24} color={accent} />
-                    <View style={styles.buttonContent}>
+                    <TouchableOpacity
+                        style={[styles.userTypeButton, { backgroundColor: background }]}
+                        onPress={() => setUserType('professional')}
+                    >
+                        <Ionicons name="business-outline" size={20} color={accent} />
                         <ThemedText style={styles.buttonTitle}>Professional</ThemedText>
-                        <ThemedText style={styles.buttonSubtitle}>
-                            I'm a load broker/consignee - I know the details
-                        </ThemedText>
-                    </View>
-                </TouchableOpacity>
+                    </TouchableOpacity>
+                </View>
             </View>
         );
     }
@@ -76,41 +66,43 @@ export const UserTypeSelector: React.FC<UserTypeSelectorProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        padding: wp(4),
-        margin: wp(4),
-        borderRadius: 12,
+        padding: wp(3),
+        marginHorizontal: wp(4),
+        marginVertical: wp(2),
+        borderRadius: 8,
     },
     title: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginBottom: wp(4),
+        marginBottom: wp(3),
+    },
+    buttonRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: wp(2),
     },
     userTypeButton: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        padding: wp(4),
-        marginVertical: wp(2),
-        borderRadius: 12,
+        justifyContent: 'center',
+        paddingVertical: wp(3),
+        paddingHorizontal: wp(2),
+        borderRadius: 8,
         borderWidth: 1,
         borderColor: '#e0e0e0',
     },
-    buttonContent: {
-        marginLeft: wp(3),
-    },
     buttonTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    buttonSubtitle: {
-        fontSize: 12,
-        opacity: 0.7,
-        marginTop: 2,
+        fontSize: 14,
+        fontWeight: '600',
+        marginLeft: wp(2),
     },
     selectedContainer: {
-        padding: wp(4),
-        margin: wp(4),
-        borderRadius: 12,
+        padding: wp(3),
+        marginHorizontal: wp(4),
+        marginVertical: wp(1),
+        borderRadius: 8,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -122,5 +114,6 @@ const styles = StyleSheet.create({
     selectedText: {
         marginLeft: wp(2),
         fontWeight: 'bold',
+        fontSize: 14,
     },
 });

@@ -75,7 +75,8 @@ type ImageAsset = {
 export const selectManyImages = async (
   setImages: React.Dispatch<React.SetStateAction<ImagePickerAsset[]>>,
   enableEditing: boolean = false,
-  maxImages: number = 6
+  maxImages: number = 6,
+  currentCount: number = 0
 ) => {
   // No permission check - uses Android Photo Picker automatically
   const pickerResult = await ImagePicker.launchImageLibraryAsync({
@@ -83,7 +84,7 @@ export const selectManyImages = async (
     allowsEditing: enableEditing,
     allowsMultipleSelection: true,
     aspect: [1, 1],
-    quality: 0.7,
+    quality: 0.5, // Reduced quality to help with file size
   });
 
   if (pickerResult.canceled || !pickerResult.assets?.length) {
@@ -91,13 +92,10 @@ export const selectManyImages = async (
   }
 
   // Check if adding these images would exceed the maximum
-  setImages((prevImages) => {
-    if (prevImages.length + pickerResult.assets!.length > maxImages) {
-      alert(`Maximum ${maxImages} images allowed. You can add ${maxImages - prevImages.length} more images.`);
-      return prevImages;
-    }
-    return prevImages;
-  });
+  if (currentCount + pickerResult.assets!.length > maxImages) {
+    alert(`Maximum ${maxImages} images allowed. You can add ${maxImages - currentCount} more images.`);
+    return;
+  }
 
   const validAssets: ImagePickerAsset[] = [];
   let skippedTooLarge = false;
@@ -125,7 +123,7 @@ export const selectManyImages = async (
   }
 
   if (skippedTooLarge) {
-    alert('Some images were skipped because they were larger than 2MB.');
+    alert('Some images were skipped because they exceed 2MB, add quality screenshot or resize');
   }
 
   if (validAssets.length > 0) {
@@ -140,7 +138,8 @@ export const selectManyImages = async (
 export const pickDocument = async (
   setDocuments: React.Dispatch<React.SetStateAction<DocumentAsset[]>>,
   setMakeType: React.Dispatch<React.SetStateAction<('pdf' | 'image' | 'doc' | 'docx')[]>>,
-  maxFiles: number = 6
+  maxFiles: number = 6,
+  currentCount: number = 0
 ) => {
   try {
     const result = await DocumentPicker.getDocumentAsync({
@@ -158,13 +157,10 @@ export const pickDocument = async (
     }
 
     // Check if adding these files would exceed the maximum
-    setDocuments((prevDocs) => {
-      if (prevDocs.length + assets.length > maxFiles) {
-        alert(`Maximum ${maxFiles} files allowed. You can add ${maxFiles - prevDocs.length} more files.`);
-        return prevDocs;
-      }
-      return prevDocs;
-    });
+    if (currentCount + assets.length > maxFiles) {
+      alert(`Maximum ${maxFiles} files allowed. You can add ${maxFiles - currentCount} more files.`);
+      return;
+    }
 
     const validFiles: DocumentAsset[] = [];
     const validTypes: ('pdf' | 'image' | 'doc' | 'docx')[] = [];
@@ -216,7 +212,8 @@ export const pickDocument = async (
 export const pickDocumentsOnly = async (
   setDocuments: React.Dispatch<React.SetStateAction<DocumentAsset[]>>,
   setMakeType: React.Dispatch<React.SetStateAction<('pdf' | 'doc' | 'docx')[]>>,
-  maxFiles: number = 6
+  maxFiles: number = 6,
+  currentCount: number = 0
 ) => {
   try {
     const result = await DocumentPicker.getDocumentAsync({
@@ -234,13 +231,10 @@ export const pickDocumentsOnly = async (
     }
 
     // Check if adding these files would exceed the maximum
-    setDocuments((prevDocs) => {
-      if (prevDocs.length + assets.length > maxFiles) {
-        alert(`Maximum ${maxFiles} files allowed. You can add ${maxFiles - prevDocs.length} more files.`);
-        return prevDocs;
-      }
-      return prevDocs;
-    });
+    if (currentCount + assets.length > maxFiles) {
+      alert(`Maximum ${maxFiles} files allowed. You can add ${maxFiles - currentCount} more files.`);
+      return;
+    }
 
     const validFiles: DocumentAsset[] = [];
     const validTypes: ('pdf' | 'doc' | 'docx')[] = [];

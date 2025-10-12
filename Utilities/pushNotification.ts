@@ -17,6 +17,8 @@ if (!isExpoGo) {
           shouldShowAlert: true,
           shouldPlaySound: true,
           shouldSetBadge: true,
+          shouldShowBanner: true,
+          shouldShowList: true,
         };
       },
     });
@@ -39,7 +41,13 @@ export function usePushNotifications() {
       return;
     }
 
-    registerForPushNotificationsAsync().then(token => token && setExpoPushToken(token));
+    registerForPushNotificationsAsync().then(token => {
+      if (token) {
+        setExpoPushToken(token);
+        // Auto-update all collections when token changes
+        updateAllCollectionsWithNewToken(token);
+      }
+    });
 
     let notificationListener: any;
     let responseListener: any;
@@ -99,7 +107,7 @@ export function usePushNotifications() {
         data: { test: true },
       },
       trigger: {
-        type: 'timeInterval',
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
         seconds: 2,
         repeats: false,
       },
@@ -159,7 +167,6 @@ async function registerForPushNotificationsAsync() {
           allowAlert: true,
           allowBadge: true,
           allowSound: true,
-          allowAnnouncements: true,
           allowCriticalAlerts: false,
           provideAppNotificationSettings: true,
         },
@@ -373,6 +380,10 @@ export const sendBookingWithTrackerNotification = async (
 
 
 import { router, } from "expo-router";
+import { getAdminUser, updateAdminExpoPushToken } from './adminPermissions';
+import { collection, getDocs, query, where, updateDoc } from 'firebase/firestore';
+import { db } from '@/db/fireBaseConfig';
+import { updateDocument } from '@/db/operations';
 // hooks/useNotificationRouting.ts
 
 
@@ -402,11 +413,15 @@ export function useNotificationRouting() {
 
               // Handle both string routes and object routes
               if (typeof data.route === 'string') {
-                router.push(data.route);
-              } else if (typeof data.route === 'object' && data.route.pathname) {
-                router.push(data.route);
+                console.log('➡️ Navigating to string route:', data.route);
+                router.push(data.route as any);
+              } else if (typeof data.route === 'object' && (data.route as any).pathname) {
+                console.log('➡️ Navigating to object route:', data.route);
+                router.push(data.route as any);
               } else {
                 console.log('❌ Invalid route format:', data.route);
+                // Fallback to admin panel if route is invalid
+                router.push('/Account/Admin' as any);
               }
             } else {
               console.log('❌ No route in notification data');
@@ -429,4 +444,498 @@ export function useNotificationRouting() {
     }
   }, []);
 }
+
+/**
+ * Send notification to all active admins
+ * @param title - Notification title
+ * @param body - Notification body
+ * @param route - Route to navigate to
+ * @param extraData - Additional data
+ */
+export const sendNotificationToAllAdmins = async (
+  title: string,
+  body: string,
+  route: any,
+  extraData: Record<string, any> = {}
+) => {
+  try {
+    console.log('🔔 Sending notification to all admins...');
+
+    // Get all active admins
+    const adminsQuery = query(
+      collection(db, 'adminRoles'),
+      where('isActive', '==', true)
+    );
+
+    const adminsSnapshot = await getDocs(adminsQuery);
+    const adminTokens: string[] = [];
+
+    adminsSnapshot.forEach((doc) => {
+      const adminData = doc.data();
+      if (adminData.expoPushToken) {
+        adminTokens.push(adminData.expoPushToken);
+      }
+    });
+
+    console.log(`📊 Found ${adminTokens.length} active admins with tokens`);
+
+    // Send notification to each admin
+    const notificationPromises = adminTokens.map(token =>
+      sendPushNotification(token, title, body, route, extraData)
+    );
+
+    await Promise.all(notificationPromises);
+    console.log('✅ Notifications sent to all admins successfully');
+
+  } catch (error) {
+    console.error('❌ Error sending notifications to admins:', error);
+  }
+};
+
+/**
+ * Send notification to admins with specific permission
+ * @param permission - The specific permission required (e.g., 'approve_trucks', 'approve_loads')
+ * @param title - Notification title
+ * @param body - Notification body
+ * @param route - Route to navigate to
+ * @param extraData - Additional data
+ */
+export const sendNotificationToAdminsWithPermission = async (
+  permission: string,
+  title: string,
+  body: string,
+  route: any,
+  extraData: Record<string, any> = {}
+) => {
+  try {
+    console.log(`🔔 Sending notification to admins with permission: ${permission}`);
+
+    // Get all active admins
+    const adminsQuery = query(
+      collection(db, 'adminRoles'),
+      where('isActive', '==', true)
+    );
+
+    const adminsSnapshot = await getDocs(adminsQuery);
+    const adminTokens: string[] = [];
+
+    adminsSnapshot.forEach((doc) => {
+      const adminData = doc.data();
+      // Check if admin has the specific permission
+      if (adminData.expoPushToken && adminData.permissions && adminData.permissions.includes(permission)) {
+        adminTokens.push(adminData.expoPushToken);
+        console.log(`✅ Admin ${adminData.email} has permission: ${permission}`);
+      }
+    });
+
+    console.log(`📊 Found ${adminTokens.length} admins with permission '${permission}' and tokens`);
+
+    if (adminTokens.length === 0) {
+      console.log(`⚠️ No admins found with permission: ${permission}`);
+      return;
+    }
+
+    // Send notification to each admin with the permission
+    const notificationPromises = adminTokens.map(token =>
+      sendPushNotification(token, title, body, route, extraData)
+    );
+
+    await Promise.all(notificationPromises);
+    console.log(`✅ Notifications sent to ${adminTokens.length} admins with permission '${permission}'`);
+
+  } catch (error) {
+    console.error('❌ Error sending notifications to admins with permission:', error);
+  }
+};
+
+/**
+ * Send notification to admins with multiple permissions (any of them)
+ * @param permissions - Array of permissions (admin needs ANY of these)
+ * @param title - Notification title
+ * @param body - Notification body
+ * @param route - Route to navigate to
+ * @param extraData - Additional data
+ */
+export const sendNotificationToAdminsWithAnyPermission = async (
+  permissions: string[],
+  title: string,
+  body: string,
+  route: any,
+  extraData: Record<string, any> = {}
+) => {
+  try {
+    console.log(`🔔 Sending notification to admins with any of permissions: ${permissions.join(', ')}`);
+
+    // Get all active admins
+    const adminsQuery = query(
+      collection(db, 'adminRoles'),
+      where('isActive', '==', true)
+    );
+
+    const adminsSnapshot = await getDocs(adminsQuery);
+    const adminTokens: string[] = [];
+
+    adminsSnapshot.forEach((doc) => {
+      const adminData = doc.data();
+      // Check if admin has ANY of the specified permissions
+      if (adminData.expoPushToken && adminData.permissions) {
+        const hasAnyPermission = permissions.some(permission =>
+          adminData.permissions.includes(permission)
+        );
+
+        if (hasAnyPermission) {
+          adminTokens.push(adminData.expoPushToken);
+          const adminPermissions = permissions.filter(p => adminData.permissions.includes(p));
+          console.log(`✅ Admin ${adminData.email} has permissions: ${adminPermissions.join(', ')}`);
+        }
+      }
+    });
+
+    console.log(`📊 Found ${adminTokens.length} admins with any of the specified permissions`);
+
+    if (adminTokens.length === 0) {
+      console.log(`⚠️ No admins found with any of the permissions: ${permissions.join(', ')}`);
+      return;
+    }
+
+    // Send notification to each admin with the permissions
+    const notificationPromises = adminTokens.map(token =>
+      sendPushNotification(token, title, body, route, extraData)
+    );
+
+    await Promise.all(notificationPromises);
+    console.log(`✅ Notifications sent to ${adminTokens.length} admins with specified permissions`);
+
+  } catch (error) {
+    console.error('❌ Error sending notifications to admins with permissions:', error);
+  }
+};
+
+/**
+ * Update admin expoPushToken when they log in
+ * @param userId - Admin user ID
+ * @param expoPushToken - Current expo push token
+ */
+export const updateAdminTokenOnLogin = async (userId: string, expoPushToken: string) => {
+  try {
+    // Check if user is an admin
+    const adminUser = await getAdminUser(userId);
+    if (adminUser && adminUser.isActive) {
+      await updateAdminExpoPushToken(userId, expoPushToken);
+      console.log('✅ Admin expoPushToken updated successfully');
+    }
+  } catch (error) {
+    console.error('❌ Error updating admin expoPushToken:', error);
+  }
+};
+
+/**
+ * Update expoPushToken in ALL collections for a user
+ * This ensures tokens are updated everywhere when they change
+ * @param userId - User ID
+ * @param expoPushToken - New expo push token
+ */
+export const updateUserTokenInAllCollections = async (userId: string, expoPushToken: string) => {
+  try {
+    console.log('🔄 Updating expoPushToken in all collections for user:', userId);
+
+    const updatePromises = [];
+
+    // 1. Update personalData collection (user profile)
+    updatePromises.push(
+      updateDocument('personalData', userId, { expoPushToken })
+        .then(() => console.log('✅ Updated personalData collection'))
+        .catch(err => console.error('❌ Error updating personalData:', err))
+    );
+
+    // 2. Update adminRoles collection (if user is admin)
+    updatePromises.push(
+      updateAdminTokenOnLogin(userId, expoPushToken)
+        .then(() => console.log('✅ Updated adminRoles collection'))
+        .catch(err => console.error('❌ Error updating adminRoles:', err))
+    );
+
+    // 3. Update all user's trucks
+    updatePromises.push(
+      updateUserTrucksToken(userId, expoPushToken)
+        .then(() => console.log('✅ Updated user trucks'))
+        .catch(err => console.error('❌ Error updating trucks:', err))
+    );
+
+    // 4. Update all user's loads
+    updatePromises.push(
+      updateUserLoadsToken(userId, expoPushToken)
+        .then(() => console.log('✅ Updated user loads'))
+        .catch(err => console.error('❌ Error updating loads:', err))
+    );
+
+    // Wait for all updates to complete
+    await Promise.all(updatePromises);
+    console.log('✅ All collections updated successfully');
+
+  } catch (error) {
+    console.error('❌ Error updating user token in all collections:', error);
+  }
+};
+
+/**
+ * Update expoPushToken for all trucks owned by a user
+ * @param userId - User ID
+ * @param expoPushToken - New expo push token
+ */
+const updateUserTrucksToken = async (userId: string, expoPushToken: string) => {
+  try {
+    const trucksQuery = query(
+      collection(db, 'Trucks'),
+      where('userId', '==', userId)
+    );
+
+    const trucksSnapshot = await getDocs(trucksQuery);
+    const updatePromises = trucksSnapshot.docs.map(doc =>
+      updateDoc(doc.ref, { expoPushToken })
+    );
+
+    await Promise.all(updatePromises);
+    console.log(`✅ Updated ${trucksSnapshot.docs.length} trucks`);
+  } catch (error) {
+    console.error('❌ Error updating trucks token:', error);
+  }
+};
+
+/**
+ * Update expoPushToken for all loads owned by a user
+ * @param userId - User ID
+ * @param expoPushToken - New expo push token
+ */
+const updateUserLoadsToken = async (userId: string, expoPushToken: string) => {
+  try {
+    const loadsQuery = query(
+      collection(db, 'Cargo'),
+      where('userId', '==', userId)
+    );
+
+    const loadsSnapshot = await getDocs(loadsQuery);
+    const updatePromises = loadsSnapshot.docs.map(doc =>
+      updateDoc(doc.ref, { expoPushToken })
+    );
+
+    await Promise.all(updatePromises);
+    console.log(`✅ Updated ${loadsSnapshot.docs.length} loads`);
+  } catch (error) {
+    console.error('❌ Error updating loads token:', error);
+  }
+};
+
+/**
+ * Update all collections with new token when it changes
+ * This is called automatically when the expoPushToken changes
+ * @param newToken - The new expo push token
+ */
+const updateAllCollectionsWithNewToken = async (newToken: string) => {
+  try {
+    // Get current user from AsyncStorage
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    const storedUser = await AsyncStorage.getItem('user');
+
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      if (user.uid) {
+        console.log('🔄 Token changed, updating all collections for user:', user.uid);
+        await updateUserTokenInAllCollections(user.uid, newToken);
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error updating collections with new token:', error);
+  }
+};
+
+// ========================================
+// SPECIFIC ADMIN NOTIFICATION FUNCTIONS
+// ========================================
+
+/**
+ * Notify admins who can approve trucks about new truck registration
+ */
+export const notifyTruckApprovalAdmins = async (truckData: any) => {
+  await sendNotificationToAdminsWithPermission(
+    'approve_trucks',
+    'New Truck Registration 🚛',
+    `New truck "${truckData.truckType} - ${truckData.truckCapacity}" registered by ${truckData.CompanyName}. Requires approval.`,
+    {
+      pathname: '/Account/Admin/ApproveTrucks',
+      params: {
+        highlightTruckId: truckData.id,
+        source: 'notification'
+      }
+    },
+    {
+      type: 'truck_approval',
+      truckId: truckData.id,
+      truckOwner: truckData.CompanyName,
+      priority: 'high'
+    }
+  );
+};
+
+/**
+ * Notify admins who can approve loads about new load submission
+ */
+export const notifyLoadApprovalAdmins = async (loadData: any) => {
+  await sendNotificationToAdminsWithPermission(
+    'approve_loads',
+    'New Load Submission 📦',
+    `New load "${loadData.typeofLoad}" from ${loadData.origin} to ${loadData.destination} by ${loadData.companyName}. Requires approval.`,
+    {
+      pathname: '/Account/Admin/ApproveLoads',
+      params: {
+        highlightLoadId: loadData.id,
+        source: 'notification'
+      }
+    },
+    {
+      type: 'load_approval',
+      loadId: loadData.id,
+      loadOwner: loadData.companyName,
+      priority: 'high'
+    }
+  );
+};
+
+/**
+ * Notify admins who can approve truck accounts about new account submission
+ */
+export const notifyTruckAccountApprovalAdmins = async (accountData: any) => {
+  await sendNotificationToAdminsWithPermission(
+    'approve_truck_accounts',
+    'New Truck Account Submission 👤',
+    `New truck account details submitted by ${accountData.CompanyName}. Requires approval.`,
+    {
+      pathname: '/Account/Admin/ApproveTruckAccounts',
+      params: {
+        highlightAccountId: accountData.id,
+        source: 'notification'
+      }
+    },
+    {
+      type: 'truck_account_approval',
+      accountId: accountData.id,
+      accountOwner: accountData.CompanyName,
+      priority: 'medium'
+    }
+  );
+};
+
+/**
+ * Notify admins who can approve load accounts about new account submission
+ */
+export const notifyLoadAccountApprovalAdmins = async (accountData: any) => {
+  await sendNotificationToAdminsWithPermission(
+    'approve_loads_accounts',
+    'New Load Account Submission 👤',
+    `New load account details submitted by ${accountData.companyName}. Requires approval.`,
+    {
+      pathname: '/Account/Admin/ApproveLoadsAccounts',
+      params: {
+        highlightAccountId: accountData.id,
+        source: 'notification'
+      }
+    },
+    {
+      type: 'load_account_approval',
+      accountId: accountData.id,
+      accountOwner: accountData.companyName,
+      priority: 'medium'
+    }
+  );
+};
+
+/**
+ * Notify admins who can manage referrers about new referrer code usage
+ */
+export const notifyReferrerManagementAdmins = async (referrerData: any) => {
+  await sendNotificationToAdminsWithPermission(
+    'manage_referrers',
+    'New Referrer Code Usage 🎯',
+    `Referrer code "${referrerData.referrerCode}" was used by a new user. Check referrer activity.`,
+    '/Account/Admin/ManageReferrers',
+    {
+      type: 'referrer_activity',
+      referrerCode: referrerData.referrerCode,
+      newUser: referrerData.newUserEmail,
+      priority: 'low'
+    }
+  );
+};
+
+/**
+ * Notify admins who can manage versions about app update requests
+ */
+export const notifyVersionManagementAdmins = async (versionData: any) => {
+  await sendNotificationToAdminsWithPermission(
+    'version_management',
+    'App Version Update Request 📱',
+    `New app version ${versionData.version} submitted for review. Requires admin approval.`,
+    '/Account/Admin/VersionManagement',
+    {
+      type: 'version_update',
+      version: versionData.version,
+      submittedBy: versionData.submittedBy,
+      priority: 'high'
+    }
+  );
+};
+
+/**
+ * Notify admins who can add tracking agents about tracking requests
+ */
+export const notifyTrackingAgentAdmins = async (trackingData: any) => {
+  await sendNotificationToAdminsWithPermission(
+    'add_tracking_agent',
+    'New Tracking Agent Request 📍',
+    `User ${trackingData.userName} requests to become a tracking agent. Requires admin approval.`,
+    '/Account/Admin/ManageTrackingAgents',
+    {
+      type: 'tracking_agent_request',
+      userId: trackingData.userId,
+      userName: trackingData.userName,
+      priority: 'medium'
+    }
+  );
+};
+
+/**
+ * Notify admins who can add service station owners about new requests
+ */
+export const notifyServiceStationAdmins = async (stationData: any) => {
+  await sendNotificationToAdminsWithPermission(
+    'add_service_station_owner',
+    'New Service Station Request ⛽',
+    `User ${stationData.userName} requests to become a service station owner. Requires admin approval.`,
+    '/Account/Admin/ManageServiceStations',
+    {
+      type: 'service_station_request',
+      userId: stationData.userId,
+      userName: stationData.userName,
+      priority: 'medium'
+    }
+  );
+};
+
+/**
+ * Notify admins who can add truck stop owners about new requests
+ */
+export const notifyTruckStopAdmins = async (stopData: any) => {
+  await sendNotificationToAdminsWithPermission(
+    'add_truck_stop_owner',
+    'New Truck Stop Request 🛑',
+    `User ${stopData.userName} requests to become a truck stop owner. Requires admin approval.`,
+    '/Account/Admin/ManageTruckStops',
+    {
+      type: 'truck_stop_request',
+      userId: stopData.userId,
+      userName: stopData.userName,
+      priority: 'medium'
+    }
+  );
+};
 
