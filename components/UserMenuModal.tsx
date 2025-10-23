@@ -68,7 +68,7 @@ export default function UserMenuModal({ visible, onClose, user, onProfileUpdate 
             icon: 'work-history',
             iconFamily: MaterialIcons,
             onPress: () => {
-                router.push('/Payments/Index');
+                router.push('/Wallet/Index');
                 onClose();
             },
         },

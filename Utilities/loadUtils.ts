@@ -22,6 +22,8 @@ export const validateLoadForm = (
         returnLoad?: string;
         returnRate?: string;
         returnTerms?: string;
+        returnOrigin?: SelectLocationProp | null;
+        returnDestination?: SelectLocationProp | null;
         proofOfOrder?: DocumentAsset[];
         proofOfOrderFileType?: ProofFileType[];
     },
@@ -89,6 +91,15 @@ export const validateLoadForm = (
             }
             if (formData.returnTerms !== undefined && formData.returnTerms !== '' && formData.returnTerms.trim() === '') {
                 errors.push('Enter Return Load Terms');
+            }
+            // Return load location validation - only if return load is specified
+            if (formData.returnLoad && formData.returnLoad.trim() !== '' && formData.returnLoad !== 'No return load') {
+                if (formData.returnOrigin && !formData.returnDestination) {
+                    errors.push('Select return load destination if origin is selected');
+                }
+                if (formData.returnDestination && !formData.returnOrigin) {
+                    errors.push('Select return load origin if destination is selected');
+                }
             }
             // Proof of order validation is handled in the component
         }
@@ -226,6 +237,27 @@ export const prepareLoadData = (
         returnModel: userType === 'professional' ? (formData.selectedReturnModelType?.name || 'Solid') : '',
         returnCurrency: userType === 'professional' ? (formData.selectedReturnCurrency?.name || 'USD') : '',
         returnTerms: userType === 'professional' ? (formData.returnTerms || 'Standard terms') : '',
+
+        // Return load locations
+        returnOrigin: userType === 'professional' ? (formData.returnOrigin?.description || '') : '',
+        returnOriginFull: userType === 'professional' ? formData.returnOrigin : null,
+        returnOriginCoordinates: userType === 'professional' && formData.returnOrigin ? {
+            latitude: formData.returnOrigin.latitude,
+            longitude: formData.returnOrigin.longitude,
+            address: formData.returnOrigin.description
+        } : null,
+        returnDestination: userType === 'professional' ? (formData.returnDestination?.description || '') : '',
+        returnDestinationFull: userType === 'professional' ? formData.returnDestination : null,
+        returnDestinationCoordinates: userType === 'professional' && formData.returnDestination ? {
+            latitude: formData.returnDestination.latitude,
+            longitude: formData.returnDestination.longitude,
+            address: formData.returnDestination.description
+        } : null,
+        returnDistance: formData.returnDistance || '',
+        returnDuration: formData.returnDuration || '',
+        returnDurationInTraffic: formData.returnDurationInTraffic || '',
+        returnRoutePolyline: formData.returnRoutePolyline || '',
+        returnBounds: formData.returnBounds || null,
         trucksRequired: userType === 'general'
             ? (formData.selectedAfricanTrucks?.length > 0
                 ? formData.selectedAfricanTrucks.map((truck: any) => ({

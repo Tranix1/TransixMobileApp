@@ -1,62 +1,93 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Keep all React Native classes
+-keep class com.facebook.react.** { *; }
+-keep class com.facebook.hermes.** { *; }
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Keep all Expo classes
+-keep class expo.modules.** { *; }
+-keep class com.expo.** { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Keep all async/await related classes
+-keep class kotlinx.coroutines.** { *; }
+-keep class kotlin.coroutines.** { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Keep all JavaScript engine classes
+-keep class com.facebook.jni.** { *; }
+-keep class com.facebook.jsc.** { *; }
 
-# Keep native methods
+# Keep all Firebase classes
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+
+# Keep all navigation classes
+-keep class expo.router.** { *; }
+
+# Keep all form submission classes
+-keep class * extends java.lang.Exception { *; }
+
+# Don't obfuscate method names that might be called from JavaScript
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+# Keep all classes with @Keep annotation
+-keep @androidx.annotation.Keep class * { *; }
+-keepclassmembers class * {
+    @androidx.annotation.Keep *;
+}
+
+# Keep all native methods
 -keepclasseswithmembernames class * {
     native <methods>;
 }
 
-# Keep React Native classes
--keep class com.facebook.react.** { *; }
--keep class com.facebook.jni.** { *; }
+# Keep all classes that might be used by reflection
+-keep class * implements java.io.Serializable { *; }
+-keep class * implements android.os.Parcelable { *; }
 
-# Keep Expo classes
--keep class expo.modules.** { *; }
+# Keep all classes in your app package
+-keep class com.yayapana.TransixNewVersion.** { *; }
 
-# Keep Firebase classes
--keep class com.google.firebase.** { *; }
--keep class com.google.android.gms.** { *; }
-
-# Keep Google Maps classes
--keep class com.google.android.gms.maps.** { *; }
-
-# 16KB Page Size Support
--keep class android.app.Activity { *; }
--keep class android.app.Application { *; }
--keep class android.app.Service { *; }
--keep class android.content.BroadcastReceiver { *; }
--keep class android.content.ContentProvider { *; }
-
-# Keep all native libraries for 16KB alignment
+# Keep all classes that might be called from JavaScript
 -keep class * {
-    native <methods>;
+    public <init>(...);
+    public <methods>;
 }
 
-# Optimize for 16KB page size
--optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
--optimizationpasses 5
--allowaccessmodification
--dontpreverify
+# Don't optimize async operations
+-keep class * {
+    public * await*(...);
+    public * async*(...);
+}
 
-# Keep line numbers for debugging
--keepattributes SourceFile,LineNumberTable
--renamesourcefileattribute SourceFile
+# Keep all Promise-related classes
+-keep class java.util.concurrent.** { *; }
+-keep class java.util.function.** { *; }
+
+# Keep all classes that might be used by async/await
+-keep class * implements java.util.concurrent.CompletableFuture { *; }
+-keep class * implements java.util.concurrent.Future { *; }
+
+# Keep all classes that might be used by JavaScript async operations
+-keep class * {
+    public * then*(...);
+    public * catch*(...);
+    public * finally*(...);
+}
+
+# Keep all error handling classes
+-keep class * extends java.lang.Throwable { *; }
+
+# New Architecture (Fabric/TurboModules) support
+-keep class com.facebook.react.turbomodule.** { *; }
+-keep class com.facebook.react.fabric.** { *; }
+-keep class com.facebook.react.uimanager.** { *; }
+-keep class com.facebook.react.bridge.** { *; }
+
+# React Native Reanimated support for new architecture
+-keep class com.swmansion.reanimated.** { *; }
+-keep class com.swmansion.gesturehandler.** { *; }
+
+# Keep all classes that might be used by the new architecture
+-keep class * implements com.facebook.react.bridge.NativeModule { *; }
+-keep class * implements com.facebook.react.bridge.JavaScriptModule { *; }
+-keep class * implements com.facebook.react.bridge.ReactContextBaseJavaModule { *; }

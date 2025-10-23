@@ -34,7 +34,7 @@ npx expo prebuild --platform android --clean
 
 REM Step 7: Build with EAS (Production)
 echo 📱 Building for production with 16KB support...
-eas build --platform android --profile production --non-interactive
+eas build --platform android --profile production
 
 echo ✅ Build completed! Your app now supports 16KB page sizes.
 echo 📤 Upload the generated APK to Google Play Console.

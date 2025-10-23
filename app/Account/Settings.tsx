@@ -107,7 +107,7 @@ const Settings = () => {
                         <View style={{ gap: wp(1), padding: wp(2), marginBottom: wp(4), backgroundColor: backgroundLight, borderRadius: wp(4) }}>
                             {/* Admin Referral Code - For All Admins */}
                             <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
-                                <AdminReferralCode userEmail={user.email} adminName={user.displayName} />
+                                <AdminReferralCode userEmail={user.email || ""} adminName={user.displayName} />
                             </View>
                             <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
                                 <TouchableNativeFeedback onPress={() => router.push('/Account/Admin')}>
@@ -334,6 +334,24 @@ const Settings = () => {
                                                 </ThemedText>
                                                 <ThemedText type='tiny' color={coolgray}>
                                                     Add users as truck stop owners
+                                                </ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
+                                  {hasPermissionSync('add_truck_stop_owner') && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Insurance/ManageFirms')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='car-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>
+                                                    Manage Insurance Firms
+                                                </ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>
+                                                    Manage insurance companies on the platform
                                                 </ThemedText>
                                             </View>
                                             <Ionicons name='chevron-forward' size={wp(4)} color={icon} />

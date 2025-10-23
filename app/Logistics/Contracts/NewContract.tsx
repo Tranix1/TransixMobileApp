@@ -1,8 +1,11 @@
+import 'react-native-get-random-values';
 import React, { useState, useEffect } from "react";
 
 import { View, TouchableOpacity, StyleSheet, ScrollView, TouchableNativeFeedback, ToastAndroid } from "react-native";
 
 import { handleMakePayment } from "@/payments/operations";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "@/db/fireBaseConfig";
 
 import { ContractsFormDataScndType, Countries, TruckFormData } from "@/types/types";
 import { ContractsFormDataType } from "@/types/types";

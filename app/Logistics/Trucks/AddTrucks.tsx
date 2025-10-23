@@ -1,3 +1,4 @@
+import 'react-native-get-random-values';
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, ToastAndroid, ActivityIndicator } from "react-native"
 
@@ -7,6 +8,8 @@ import { countryCodes, } from "@/data/appConstants";
 import type { ImagePickerAsset } from 'expo-image-picker';
 import { addDocument, getDocById, setDocuments } from "@/db/operations";
 import { uploadImage } from "@/db/operations";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "@/db/fireBaseConfig";
 import { selectManyImages, handleChange } from "@/Utilities/utils";
 import { selectImage, selectImageNoCrop, selectImageWithCrop } from "@/Utilities/imageUtils";
 import { ThemedText } from "@/components/ThemedText";

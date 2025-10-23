@@ -329,7 +329,7 @@ export default function HomeContent({ onAuthCheck }: HomeContentProps) {
                             buttonTitle={item.btnTitle}
                             btnBackground="#f4c54224"
                             isAvaialble={true}
-                            btnPressValue={() => router.push("/Compliances/GITInsuarance/Index")}
+                            btnPressValue={() => router.push("/Insurance/Index")}
                         />
                     )}
 

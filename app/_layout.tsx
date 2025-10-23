@@ -4,6 +4,7 @@ import { useFonts } from 'expo-font';
 import { useEffect, useState } from "react";
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme, AppState } from 'react-native';
+import { setupGlobalErrorHandler } from '@/Utilities/globalErrorHandler';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -20,6 +21,11 @@ export default function RootLayout() {
     const router = useRouter();
     const [appIsReady, setAppIsReady] = useState(false);
     const colorScheme = useColorScheme();
+
+    // Setup global error handler
+    useEffect(() => {
+        setupGlobalErrorHandler();
+    }, []);
 
     const [loaded] = useFonts({
         SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),

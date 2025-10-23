@@ -39,6 +39,8 @@ import { LoadSummary } from '@/components/LoadSummary';
 import { usePushNotifications, notifyLoadApprovalAdmins } from "@/Utilities/pushNotification";
 
 import { uploadImage } from "@/db/operations";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "@/db/fireBaseConfig";
 import { pickDocument, selectManyImages, pickDocumentsOnly } from "@/Utilities/utils";
 import { DocumentAsset } from "@/types/types";
 import { ImagePickerAsset } from "expo-image-picker";
@@ -91,6 +93,20 @@ const AddLoadDB = () => {
   const [returnLoad, setReturnLoad] = useState(defaultState.returnLoad || "");
   const [returnRate, setReturnRate] = useState(defaultState.returnRate || "");
   const [returnTerms, setReturnTerms] = useState(defaultState.returnTerms || "");
+
+  // Return load location states
+  const [returnOrigin, setReturnOrigin] = useState<SelectLocationProp | null>(null);
+  const [returnDestination, setReturnDestination] = useState<SelectLocationProp | null>(null);
+  const [returnDspFromLocation, setReturnDspFromLocation] = useState(false);
+  const [returnDspToLocation, setReturnDspToLocation] = useState(false);
+  const [returnLocationPicKERdSP, setReturnPickLocationOnMap] = useState(false);
+  const [returnDistance, setReturnDistance] = useState("");
+  const [returnDuration, setReturnDuration] = useState("");
+  const [returnDurationInTraffic, setReturnDurationInTraffic] = useState("");
+  const [returnRoutePolyline, setReturnRoutePolyline] = useState("");
+  const [returnBounds, setReturnBounds] = useState(null);
+  const [hasReturnLoad, setHasReturnLoad] = useState(false);
+  const [useDifferentReturnLocation, setUseDifferentReturnLocation] = useState(false);
 
   const [selectedCurrency, setSelectedCurrency] = React.useState(defaultState.selectedCurrency);
   const [selectedReturnCurrency, setSelectedReturnCurrency] = React.useState(defaultState.selectedReturnCurrency || { id: 1, name: "USD" });
@@ -162,6 +178,55 @@ const AddLoadDB = () => {
 
     fetchDirections();
   }, [origin, destination]);
+
+  // Return load directions calculation
+  React.useEffect(() => {
+    if (!returnOrigin || !returnDestination) return;
+
+    async function fetchReturnDirections() {
+      try {
+        const fromLocation = `${returnOrigin?.latitude},${returnOrigin?.longitude}`;
+        const toLocation = `${returnDestination?.latitude},${returnDestination?.longitude}`;
+
+        const res = await fetch(
+          `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLocation}&destination=${toLocation}&departure_time=now&key=${apiKey}`
+        );
+        const data = await res.json();
+
+        if (data.status === "OK" && data.routes.length > 0) {
+          const route = data.routes[0];
+          const leg = route.legs[0];
+
+          setReturnDistance(leg.distance.text);
+          setReturnDuration(leg.duration.text);
+
+          // ✅ ETA with traffic
+          if (leg.duration_in_traffic) {
+            setReturnDurationInTraffic(leg.duration_in_traffic.text);
+          }
+
+          // ✅ Encoded polyline
+          setReturnRoutePolyline(route.overview_polyline.points);
+
+          // ✅ Bounds for auto-zoom
+          setReturnBounds(route.bounds);
+        } else {
+          // No route found
+        }
+      } catch (err) {
+        console.error("Return Directions API error:", err);
+        const errorMessage = err instanceof Error ? err.message : "Failed to get return directions";
+        showError(
+          "Return Directions Error",
+          "Unable to calculate return route between locations. Please check your internet connection and try again.",
+          err instanceof Error ? err.stack : String(err),
+          false
+        );
+      }
+    }
+
+    fetchReturnDirections();
+  }, [returnOrigin, returnDestination]);
 
 
 
@@ -336,6 +401,20 @@ const AddLoadDB = () => {
     setDurationInTraffic("");
     setRoutePolyline("");
     setBounds(null);
+
+    // Reset return load location fields
+    setReturnOrigin(null);
+    setReturnDestination(null);
+    setReturnDspFromLocation(false);
+    setReturnDspToLocation(false);
+    setReturnPickLocationOnMap(false);
+    setReturnDistance("");
+    setReturnDuration("");
+    setReturnDurationInTraffic("");
+    setReturnRoutePolyline("");
+    setReturnBounds(null);
+    setHasReturnLoad(false);
+    setUseDifferentReturnLocation(false);
 
     // Reset user type and general user specific fields
     setUserType(null);
@@ -689,6 +768,14 @@ const AddLoadDB = () => {
   const handleSubmit = async () => {
     setIsSubmitting(true)
 
+    // Guard: require user type selection before any further validation
+    if (!userType) {
+      alertBox("Select User Type", "Please select whether you are a General or Professional user first.", [], "error");
+      setShowUserTypeDropdown(true);
+      setIsSubmitting(false);
+      return;
+    }
+
     // Comprehensive check if user has submitted personal details
     if (userType === 'general' && !getGeneralDetails) {
       setIsSubmitting(false);
@@ -846,8 +933,8 @@ const AddLoadDB = () => {
           trucksNeeded,
           loadItem: {
             typeofLoad: typeofLoad,
-            origin: origin!.description,
-            destination: destination!.description,
+            origin: origin?.description || "",
+            destination: destination?.description || "",
             rate: (userType as string) === 'professional' ? rate : (budget || 'Budget to be discussed'),
             model: (userType as string) === 'professional' ? (selectedModelType?.name || 'Solid') : 'Solid',
             currency: (userType as string) === 'professional' ? (selectedCurrency?.name || 'USD') : (budgetCurrency?.name || 'USD'),
@@ -1713,6 +1800,55 @@ const AddLoadDB = () => {
                 onChangeText={(text) => setReturnTerms(text || "")}
                 placeholder="Enter return load terms"
               />
+
+              {/* Return Load Location Selection */}
+              <View style={{ marginTop: wp(3) }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: wp(2) }}>
+                  <TouchableOpacity
+                    onPress={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderWidth: 2,
+                      borderColor: useDifferentReturnLocation ? accent : coolGray,
+                      borderRadius: 4,
+                      backgroundColor: useDifferentReturnLocation ? accent : 'transparent',
+                      marginRight: wp(2),
+                      justifyContent: 'center',
+                      alignItems: 'center'
+                    }}
+                  >
+                    {useDifferentReturnLocation && (
+                      <Ionicons name="checkmark" size={12} color="white" />
+                    )}
+                  </TouchableOpacity>
+                  <ThemedText style={{ flex: 1, fontSize: 14, fontWeight: '600' }}>
+                    Use different return load locations
+                  </ThemedText>
+                </View>
+
+                <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
+                  Check this if the return load pickup and delivery locations are different from the main load
+                </ThemedText>
+
+                {useDifferentReturnLocation && (
+                  <LocationSelector
+                    origin={returnOrigin}
+                    destination={returnOrigin}
+                    setOrigin={setReturnOrigin}
+                    setDestination={setReturnDestination}
+                    dspFromLocation={returnDspFromLocation}
+                    setDspFromLocation={setReturnDspFromLocation}
+                    dspToLocation={returnDspToLocation}
+                    setDspToLocation={setReturnDspToLocation}
+                    locationPicKERdSP={returnLocationPicKERdSP}
+                    setPickLocationOnMap={setReturnPickLocationOnMap}
+                    distance={returnDistance}
+                    duration={returnDuration}
+                    durationInTraffic={returnDurationInTraffic}
+                  />
+                )}
+              </View>
             </View>
             <Divider />
             <View style={styles.viewMainDsp}>

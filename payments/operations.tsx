@@ -33,33 +33,45 @@ export async function handleMakePayment(
     return await new Promise((resolve) => {
       let pollInterval = setInterval(async () => {
         try {
-          let status = await paynow.pollTransaction(pollUrl);
-          console.log("PAYNOW POLL STATUS:", status); // 🔎 debug log
-          setPaymentUpdate(`Payment Status: ${status.status}`);
+          // Add timeout to prevent hanging
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => {
+              reject(new Error('Payment polling timed out after 15 seconds'));
+            }, 15000);
+          });
 
-          if (status.status === "paid") {
-            clearInterval(pollInterval);
-            setPaymentUpdate("✅ Payment Successful");
-            ToastAndroid.show("Payment Complete!", ToastAndroid.SHORT);
-            resolve({ success: true, message: "Payment complete" });
+          const pollPromise = async () => {
+            let status = await paynow.pollTransaction(pollUrl);
+            console.log("PAYNOW POLL STATUS:", status); // 🔎 debug log
+            setPaymentUpdate(`Payment Status: ${status.status}`);
 
-          } else if (status.status === "cancelled") {
-            clearInterval(pollInterval);
-            setPaymentUpdate("❌ User Cancelled Payment");
-            resolve({ success: false, message: "User cancelled payment" });
+            if (status.status === "paid") {
+              clearInterval(pollInterval);
+              setPaymentUpdate("✅ Payment Successful");
+              ToastAndroid.show("Payment Complete!", ToastAndroid.SHORT);
+              resolve({ success: true, message: "Payment complete" });
 
-          } else if (status.status === "failed") {
-            clearInterval(pollInterval);
-            setPaymentUpdate("❌ Payment Failed (e.g. insufficient balance)");
-            resolve({ success: false, message: "Payment failed (e.g. insufficient balance)" });
+            } else if (status.status === "cancelled") {
+              clearInterval(pollInterval);
+              setPaymentUpdate("❌ User Cancelled Payment");
+              resolve({ success: false, message: "User cancelled payment" });
 
-          } 
-          // Delayed success → keep polling until resolved
-          else if (status.status === "awaiting delivery" || status.status === "sent") {
-            setPaymentUpdate("⌛ Waiting for Ecocash confirmation...");
-          }
+            } else if (status.status === "failed") {
+              clearInterval(pollInterval);
+              setPaymentUpdate("❌ Payment Failed (e.g. insufficient balance)");
+              resolve({ success: false, message: "Payment failed (e.g. insufficient balance)" });
+
+            }
+            // Delayed success → keep polling until resolved
+            else if (status.status === "awaiting delivery" || status.status === "sent") {
+              setPaymentUpdate("⌛ Waiting for Ecocash confirmation...");
+            }
+          };
+
+          await Promise.race([pollPromise(), timeoutPromise]);
 
         } catch (pollError) {
+          console.error('Payment polling error:', pollError);
           clearInterval(pollInterval);
           setPaymentUpdate("⚠️ Polling Error.");
           resolve({ success: false, message: "Polling error" });

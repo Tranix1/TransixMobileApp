@@ -71,3 +71,4 @@ echo.
 echo 🎉 Your app is now ready for Google Play Store submission!
 echo.
 pause
+

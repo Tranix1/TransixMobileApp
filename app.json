@@ -7,7 +7,7 @@
     "icon": "./assets/images/TrnaixxNewBG.jpg",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yayapana.TransixNewVersion",
@@ -82,15 +82,16 @@
             "buildToolsVersion": "35.0.0",
             "ndkVersion": "26.1.10909125",
             "extraGradleProperties": {
-              "android.enableR8.fullMode": "true",
+              "android.enableR8.fullMode": "false",
               "android.enableDexingArtifactTransform.desugaring": "false",
               "android.useAndroidX": "true",
               "android.enableJetifier": "true",
-              "android.enable16kbPageSizeSupport": "false",
-              "android.enablePageSizeCompatMode": "false",
+              "android.enable16kbPageSizeSupport": "true",
+              "android.enablePageSizeCompatMode": "true",
               "android.bundle.enableUncompressedNativeLibs": "false",
               "android.enableProguardInReleaseBuilds": "true",
-              "android.enableR8": "true"
+              "android.enableR8": "true",
+              "android.enableR8.fullMode": "false"
             },
             "packagingOptions": {
               "pickFirst": [
