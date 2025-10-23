@@ -9,6 +9,8 @@ import { hp, wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor';
 import Input from './Input';
 import { useAuth } from '@/context/AuthContext';
+import { hasSufficientBalance, deductFromWallet } from '@/Utilities/walletUtils';
+import { useRouter } from 'expo-router';
 
 interface SubscriptionPaymentModalProps {
   isVisible: boolean;
@@ -20,13 +22,15 @@ interface SubscriptionPaymentModalProps {
 
 const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({ isVisible, onClose, vehicleId, vehicleName }) => {
 
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [paymentUpdate, setPaymentUpdate] = useState('');
-  const [isLoadingPayment, setIsLoadingPayment] = useState(false);
+   const [phoneNumber, setPhoneNumber] = useState('');
+   const [paymentUpdate, setPaymentUpdate] = useState('');
+   const [isLoadingPayment, setIsLoadingPayment] = useState(false);
+   const [useWallet, setUseWallet] = useState(true);
 
-  const { user } = useAuth();
-  const accent = useThemeColor("accent");
-  const background = useThemeColor('background')
+   const { user } = useAuth();
+   const router = useRouter();
+   const accent = useThemeColor("accent");
+   const background = useThemeColor('background')
 
   // Generate secure random ID for tracking payment
   const generateSecureId = () => {
@@ -66,52 +70,113 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({ isV
   };
 
   const handlePayment = async () => {
-    if (!phoneNumber) {
-      setPaymentUpdate("Please enter your phone number.");
-      return;
-    }
+    if (useWallet) {
+      // Use wallet balance
+      if (!user?.uid) {
+        setPaymentUpdate("User not authenticated.");
+        return;
+      }
 
-    setIsLoadingPayment(true);
-    setPaymentUpdate("");
+      setIsLoadingPayment(true);
+      setPaymentUpdate("");
 
-    try {
-      const result = await handleMakePayment(
-        10, // Subscription amount: $10
-        "Vehicle Tracking Subscription",
-        setPaymentUpdate,
-        phoneNumber
-      );
+      try {
+        // Check if user has sufficient balance
+        const hasBalance = await hasSufficientBalance(user.uid, 10);
 
-      if (result.success) {
-        // ✅ Only update DB if payment is successful
+        if (!hasBalance) {
+          setPaymentUpdate("❌ Insufficient wallet balance. Redirecting to deposit page...");
+          setTimeout(() => {
+            onClose();
+            router.push('/Wallet/DepositAndWithdraw');
+          }, 2000);
+          return;
+        }
+
+        // Deduct from wallet
+        const deductionSuccess = await deductFromWallet(
+          user.uid,
+          10,
+          `Vehicle Tracking Subscription for ${vehicleName}`,
+          'wallet'
+        );
+
+        if (!deductionSuccess) {
+          setPaymentUpdate("❌ Failed to process wallet payment.");
+          return;
+        }
+
+        // Update vehicle subscription
         const expiryDate = new Date();
         expiryDate.setMonth(expiryDate.getMonth() + 1);
 
-        try {
-          await updateDocument("TrackedVehicles", vehicleId, {
-            subscription: {
-              status: "active",
-              expiryDate: expiryDate.toISOString(),
-            },
-            paymentType: "Subscription",
-          });
+        await updateDocument("TrackedVehicles", vehicleId, {
+          subscription: {
+            status: "active",
+            expiryDate: expiryDate.toISOString(),
+          },
+          paymentType: "Subscription",
+        });
 
-          // Save payment to Payments collection
-          await saveTrackingPaymentToDatabase();
+        // Save payment to Payments collection
+        await saveTrackingPaymentToDatabase();
 
-          setPaymentUpdate("✅ Payment successful! Vehicle upgraded to subscription.");
-          setTimeout(() => onClose(), 2000);
-        } catch (updateError: any) {
-          console.error("Error updating vehicle subscription:", updateError);
-          setPaymentUpdate("⚠️ Payment successful but failed to update vehicle. Please contact support.");
-        }
-      } else {
-        setPaymentUpdate(`❌ ${result.message}`);
+        setPaymentUpdate("✅ Payment successful! Vehicle upgraded to subscription.");
+        setTimeout(() => onClose(), 2000);
+      } catch (error: any) {
+        setPaymentUpdate(error.message || "Failed to process payment.");
+      } finally {
+        setIsLoadingPayment(false);
       }
-    } catch (error: any) {
-      setPaymentUpdate(error.message || "Failed to process payment.");
-    } finally {
-      setIsLoadingPayment(false);
+    } else {
+      // Use PayNow (original logic)
+      if (!phoneNumber) {
+        setPaymentUpdate("Please enter your phone number.");
+        return;
+      }
+
+      setIsLoadingPayment(true);
+      setPaymentUpdate("");
+
+      try {
+        const result = await handleMakePayment(
+          10, // Subscription amount: $10
+          "Vehicle Tracking Subscription",
+          setPaymentUpdate,
+          phoneNumber
+        );
+
+        if (result.success) {
+          // ✅ Only update DB if payment is successful
+          const expiryDate = new Date();
+          expiryDate.setMonth(expiryDate.getMonth() + 1);
+
+          try {
+            await updateDocument("TrackedVehicles", vehicleId, {
+              subscription: {
+                status: "active",
+                expiryDate: expiryDate.toISOString(),
+              },
+              paymentType: "Subscription",
+            });
+
+            // Save payment to Payments collection
+            await saveTrackingPaymentToDatabase();
+
+            setPaymentUpdate("✅ Payment successful! Vehicle upgraded to subscription.");
+            setTimeout(() => onClose(), 2000);
+          } catch (updateError: any) {
+            console.error("Error updating vehicle subscription:", updateError);
+            setPaymentUpdate("⚠️ Payment successful but failed to update vehicle. Please contact support.");
+          }
+        } else {
+          setPaymentUpdate(`❌ ${result.message}`);
+        }
+      } catch (error: any) {
+        setPaymentUpdate(error.message || "Failed to process payment.");
+      } finally {
+        setIsLoadingPayment(false);
+      }
     }
   };
 
@@ -129,15 +194,36 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({ isV
           }}>
             <ThemedText type="subtitle">Subscribe for $10/month</ThemedText>
             <ThemedText type='italic' style={{ marginTop: wp(0.5), alignSelf: "center" }} >{vehicleName}</ThemedText>
-            <Input
-              // style={{ marginVertical: 10, borderColor: '#ccc', borderWidth: 1, borderRadius: 5, padding: 10 }}
-              placeholder="Enter your Ecocash number"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              keyboardType="phone-pad"
-              editable={!isLoadingPayment} // ✅ replaces disabled
 
-            />
+            {/* Payment Method Selection */}
+            <View style={styles.paymentMethodContainer}>
+              <TouchableOpacity
+                style={[styles.paymentMethodButton, useWallet && styles.paymentMethodSelected]}
+                onPress={() => setUseWallet(true)}
+              >
+                <ThemedText style={[styles.paymentMethodText, useWallet && styles.paymentMethodTextSelected]}>
+                  Pay with Wallet
+                </ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.paymentMethodButton, !useWallet && styles.paymentMethodSelected]}
+                onPress={() => setUseWallet(false)}
+              >
+                <ThemedText style={[styles.paymentMethodText, !useWallet && styles.paymentMethodTextSelected]}>
+                  Pay with PayNow
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
+
+            {!useWallet && (
+              <Input
+                placeholder="Enter your Ecocash number"
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                keyboardType="phone-pad"
+                editable={!isLoadingPayment}
+              />
+            )}
             <TouchableOpacity style={{
               backgroundColor: accent,
               padding: 10,
@@ -190,6 +276,31 @@ const styles = StyleSheet.create({
   closeButton: {
     marginTop: 10,
     alignItems: 'center',
+  },
+  paymentMethodContainer: {
+    flexDirection: 'row',
+    marginVertical: wp(3),
+    gap: wp(2),
+  },
+  paymentMethodButton: {
+    flex: 1,
+    padding: wp(3),
+    borderRadius: wp(2),
+    borderWidth: 2,
+    borderColor: '#ddd',
+    alignItems: 'center',
+  },
+  paymentMethodSelected: {
+    borderColor: '#007AFF',
+    backgroundColor: '#007AFF',
+  },
+  paymentMethodText: {
+    fontSize: wp(3.5),
+    fontWeight: '600',
+    color: '#666',
+  },
+  paymentMethodTextSelected: {
+    color: 'white',
   },
 
 });

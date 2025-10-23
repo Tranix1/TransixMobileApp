@@ -10,7 +10,6 @@ import { hp, wp } from "@/constants/common";
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from "@/context/AuthContext";
-import SubscriptionPaymentModal from "@/components/SubscriptionPaymentModal";
 import AccentRingLoader from "@/components/AccentRingLoader";
 import { VehicleLifecycleService, startVehicleLifecycleMonitoring } from '@/services/vehicleLifecycleService';
 import { openWhatsApp, getContactMessage } from '@/Utilities/whatsappUtils';
@@ -55,9 +54,6 @@ export default function Index() {
   const [refreshing, setRefreshing] = useState(false)
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedVehicleId, setSelectedVehicleId] = useState('');
-  const [selectedVehicleName, setSelectedVehicleName] = useState('');
 
 
   const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
@@ -109,10 +105,111 @@ export default function Index() {
     }
   };
 
-  const handleSubscription = (vehicleId: string, vehicleName: string) => {
-    setSelectedVehicleId(vehicleId);
-    setSelectedVehicleName(vehicleName);
-    setIsModalVisible(true);
+  const [processingVehicleId, setProcessingVehicleId] = useState<string | null>(null);
+  const [showInsufficientBalanceModal, setShowInsufficientBalanceModal] = useState(false);
+
+  const handleSubscription = async (vehicleId: string, vehicleName: string) => {
+    if (!user?.uid) {
+      Alert.alert('Error', 'You must be logged in to subscribe.');
+      return;
+    }
+
+    setProcessingVehicleId(vehicleId);
+
+    try {
+      // Check wallet balance
+      const { hasSufficientBalance, deductFromWallet } = await import('@/Utilities/walletUtils');
+      const hasBalance = await hasSufficientBalance(user.uid, 10);
+
+      if (!hasBalance) {
+        setShowInsufficientBalanceModal(true);
+        setProcessingVehicleId(null);
+        return;
+      }
+
+      // Confirm subscription
+      Alert.alert(
+        'Confirm Subscription',
+        `Subscribe to vehicle tracking for "${vehicleName}" for $10/month?`,
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+            onPress: () => setProcessingVehicleId(null)
+          },
+          {
+            text: 'Subscribe',
+            onPress: async () => {
+              try {
+                // Deduct from wallet
+                const deductionSuccess = await deductFromWallet(
+                  user.uid,
+                  10,
+                  `Vehicle Tracking Subscription for ${vehicleName}`,
+                  'wallet'
+                );
+
+                if (!deductionSuccess) {
+                  Alert.alert('Error', 'Failed to process payment. Please try again.');
+                  setProcessingVehicleId(null);
+                  return;
+                }
+
+                // Update vehicle subscription
+                const expiryDate = new Date();
+                expiryDate.setMonth(expiryDate.getMonth() + 1);
+
+                const { updateDocument, addDocument } = await import('@/db/operations');
+
+                await updateDocument("TrackedVehicles", vehicleId, {
+                  subscription: {
+                    status: "active",
+                    expiryDate: expiryDate.toISOString(),
+                  },
+                  paymentType: "Subscription",
+                });
+
+                // Save payment to Payments collection
+                const paymentId = `TRACKING_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                const paymentData = {
+                  id: paymentId,
+                  serviceType: 'Vehicle Tracking Subscription',
+                  price: 10,
+                  quantity: 1,
+                  totalAmount: 10,
+                  stationName: 'Transix Tracking Service',
+                  stationId: 'tracking-service',
+                  purchaseDate: new Date().toISOString(),
+                  qrCode: `TRACKING_PAYMENT:${paymentId}:${vehicleId}:subscription:1:10`,
+                  status: 'completed',
+                  serviceCategory: 'tracking',
+                  userId: user.uid,
+                  userEmail: user.email,
+                  paymentMethod: 'wallet',
+                  phoneNumber: '',
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                };
+
+                await addDocument('Payments', paymentData);
+
+                Alert.alert('Success', 'Vehicle successfully subscribed to tracking!');
+                LoadTructs(); // Refresh the list
+              } catch (error: any) {
+                console.error('Error processing subscription:', error);
+                Alert.alert('Error', 'Failed to process subscription. Please try again.');
+              } finally {
+                setProcessingVehicleId(null);
+              }
+            }
+          }
+        ]
+      );
+    } catch (error: any) {
+      console.error('Error checking balance:', error);
+      Alert.alert('Error', 'Failed to check wallet balance. Please try again.');
+      setProcessingVehicleId(null);
+    }
   };
 
   const handleReAddVehicle = async (vehicleId: string, vehicleName: string) => {
@@ -297,6 +394,7 @@ export default function Index() {
                   handleSubscription(item.id, item.vehicleName);
                 }
               }}
+              disabled={processingVehicleId === item.id}
             >
               <View style={{ flexDirection: "column" }}>
                 <ThemedText
@@ -316,19 +414,23 @@ export default function Index() {
                     color: subscriptionColor,
                   }}
                 >
-                  {isActivePaid
-                    ? `Subscribed until ${item.subscription?.expiryDate ? new Date(item.subscription.expiryDate).toLocaleDateString() : ''}`
-                    : isActiveTrial
-                      ? `Free trial until ${item.subscription?.trialEndAt ? new Date(item.subscription.trialEndAt).toLocaleDateString() : ''}`
-                      : isOnceOffActive
-                        ? `Once-off access: ${remainingTime}`
-                        : isDeletedFromTraccar
-                          ? "Tap to start a new 4-hour session"
-                          : isOnceOff
-                            ? (cooldownRemainingMin > 0
-                              ? `Session regenerating: ${cooldownRemainingMin}m left`
-                              : "Tap to start a new 4-hour session")
-                            : "Subscription expired"}
+                  {processingVehicleId === item.id ? (
+                    <ActivityIndicator size="small" color={accent} />
+                  ) : (
+                    isActivePaid
+                      ? `Subscribed until ${item.subscription?.expiryDate ? new Date(item.subscription.expiryDate).toLocaleDateString() : ''}`
+                      : isActiveTrial
+                        ? `Free trial until ${item.subscription?.trialEndAt ? new Date(item.subscription.trialEndAt).toLocaleDateString() : ''}`
+                        : isOnceOffActive
+                          ? `Once-off access: ${remainingTime}`
+                          : isDeletedFromTraccar
+                            ? "Tap to start a new 4-hour session"
+                            : isOnceOff
+                              ? (cooldownRemainingMin > 0
+                                ? `Session regenerating: ${cooldownRemainingMin}m left`
+                                : "Tap to start a new 4-hour session")
+                              : "Subscription expired"
+                  )}
                 </ThemedText>
 
                 {/* Show vehicle category and payment type */}
@@ -403,13 +505,43 @@ export default function Index() {
         }
       />
 
-      <SubscriptionPaymentModal
-        isVisible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-        vehicleId={selectedVehicleId}
-        vehicleName={selectedVehicleName}
-      />
+      {/* Insufficient Balance Modal */}
+      {showInsufficientBalanceModal && (
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: backgroundLight }]}>
+            <View style={styles.modalHeader}>
+              <Ionicons name="wallet-outline" size={wp(12)} color={accent} />
+              <ThemedText type="title" style={styles.modalTitle}>Insufficient Balance</ThemedText>
+            </View>
 
+            <View style={styles.modalBody}>
+              <ThemedText style={styles.modalMessage}>
+                You need $10 to subscribe to vehicle tracking.
+              </ThemedText>
+            </View>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setShowInsufficientBalanceModal(false)}
+              >
+                <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.depositButton, { backgroundColor: accent }]}
+                onPress={() => {
+                  setShowInsufficientBalanceModal(false);
+                  router.push('/Wallet/DepositAndWithdraw');
+                }}
+              >
+                <Ionicons name="add-circle" size={wp(5)} color="white" />
+                <ThemedText style={styles.depositButtonText}>Add Funds</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </ScreenWrapper>
   );
 }
@@ -461,5 +593,99 @@ const styles = StyleSheet.create({
   }, emptyContainer: {
     minHeight: hp(80),
     justifyContent: 'center'
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  modalContent: {
+    margin: wp(6),
+    borderRadius: wp(4),
+    padding: wp(6),
+    minWidth: wp(80),
+    maxWidth: wp(90),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: wp(4),
+  },
+  modalTitle: {
+    fontSize: wp(5),
+    fontWeight: 'bold',
+    color: 'grey',
+    marginTop: wp(2),
+    textAlign: 'center',
+  },
+  modalBody: {
+    marginBottom: wp(3),
+  },
+  modalMessage: {
+    fontSize: wp(4),
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: wp(6),
+    marginBottom: wp(4),
+  },
+  balanceInfo: {
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    padding: wp(4),
+    borderRadius: wp(2),
+    alignItems: 'center',
+  },
+  requiredAmount: {
+    fontSize: wp(5),
+    fontWeight: 'bold',
+    color: '#FF6B35',
+    marginBottom: wp(1),
+  },
+  suggestionText: {
+    fontSize: wp(3.5),
+    color: '#666',
+    textAlign: 'center',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: wp(3),
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: wp(3),
+    paddingHorizontal: wp(4),
+    borderRadius: wp(2),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  cancelButtonText: {
+    fontSize: wp(4),
+    fontWeight: '600',
+    color: '#666',
+  },
+  depositButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: wp(2),
+  },
+  depositButtonText: {
+    fontSize: wp(4),
+    fontWeight: '600',
+    color: 'white',
   },
 })

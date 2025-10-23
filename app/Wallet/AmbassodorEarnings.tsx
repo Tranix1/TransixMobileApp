@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore';
 import { fetchDocuments } from '@/db/operations';
 import Heading from '@/components/Heading';
+import BalanceDisplay from '@/components/BalanceDisplay';
 import { hp, wp } from '@/constants/common';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
@@ -236,7 +237,7 @@ export default function AmbassodorEarnings() {
 
   return (
     <ScreenWrapper>
-      <Heading page='Ambassador Earnings' />
+      <Heading page='Ambassador Earnings' rightComponent={<BalanceDisplay />} />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statsContainer}>
         <View style={[styles.statCard, { backgroundColor: accent }]}>

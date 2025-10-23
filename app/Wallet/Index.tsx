@@ -62,12 +62,8 @@ const Wallet = () => {
     router.push('/Wallet/DepositAndWithdraw');
   };
 
-  const handlePaymentHistory = () => {
-    router.push('/Wallet/PaymentHistory');
-  };
-
-  const handleNewPaymentHistory = () => {
-    router.push('/Wallet/NewPaymentHistory');
+  const handleWalletHistory = () => {
+    router.push('/Wallet/WalletHistory');
   };
 
   const handleRewardsBonuses = () => {
@@ -101,18 +97,10 @@ const Wallet = () => {
 
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: backgroundLight }]}
-            onPress={handlePaymentHistory}
-          >
-            <Ionicons name="receipt" size={wp(8)} color={accent} />
-            <Text style={[styles.actionText, { color: accent }]}>Payment History</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: backgroundLight }]}
-            onPress={handleNewPaymentHistory}
+            onPress={handleWalletHistory}
           >
             <Ionicons name="time" size={wp(8)} color={accent} />
-            <Text style={[styles.actionText, { color: accent }]}>Transaction History</Text>
+            <Text style={[styles.actionText, { color: accent }]}>Wallet History</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

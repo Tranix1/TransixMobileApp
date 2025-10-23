@@ -1,23 +1,31 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ScrollView } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import ScreenWrapper from '@/components/ScreenWrapper';
+import Heading from '@/components/Heading';
+import BalanceDisplay from '@/components/BalanceDisplay';
+import Input from '@/components/Input';
+import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { hp, wp } from '@/constants/common';
 import { useAuth } from '@/context/AuthContext';
 import { addDocument } from '@/db/operations';
+import { handleMakePayment } from '@/payments/operations';
+import { addToWallet } from '@/Utilities/walletUtils';
 
 const DepositAndWithdraw = () => {
   const router = useRouter();
   const accent = useThemeColor('accent') || '#007AFF';
-  const backgroundLight = useThemeColor('backgroundLight') || '#f5f5f5';
+  const backgroundLight = useThemeColor('backgroundLight') ;
+  const background = useThemeColor('background') ;
   const { user } = useAuth();
 
   const [amount, setAmount] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
+  const [paymentUpdate, setPaymentUpdate] = useState('');
 
   const handleDeposit = async () => {
     if (!amount || !phoneNumber) {
@@ -32,33 +40,37 @@ const DepositAndWithdraw = () => {
     }
 
     setLoading(true);
+    setPaymentUpdate('');
+
     try {
-      // Create PayNow deposit transaction
-      const transactionData = {
-        userId: user?.uid,
-        type: 'deposit',
-        amount: depositAmount,
-        paymentMethod: 'PayNow',
-        phoneNumber: phoneNumber,
-        status: 'pending',
-        description: `PayNow deposit of $${depositAmount.toFixed(2)}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      await addDocument('WalletTransactions', transactionData);
-
-      Alert.alert(
-        'Deposit Initiated',
-        'Your PayNow deposit request has been submitted. You will receive a confirmation once processed.',
-        [{ text: 'OK', onPress: () => router.back() }]
+      const result = await handleMakePayment(
+        depositAmount,
+        `Wallet Deposit - $${depositAmount.toFixed(2)}`,
+        setPaymentUpdate,
+        phoneNumber
       );
 
-      setAmount('');
-      setPhoneNumber('');
+      if (result.success) {
+        // Add funds to wallet
+        if (user?.uid) {
+          await addToWallet(user.uid, depositAmount, `PayNow deposit of $${depositAmount.toFixed(2)}`);
+        }
+
+        Alert.alert(
+          'Deposit Successful',
+          `$${depositAmount.toFixed(2)} has been added to your wallet.`,
+          [{ text: 'OK', onPress: () => {} }]
+        );
+
+        setAmount('');
+        setPhoneNumber('');
+        setPaymentUpdate('');
+      } else {
+        Alert.alert('Deposit Failed', result.message);
+      }
     } catch (error) {
-      console.error('Error initiating deposit:', error);
-      Alert.alert('Error', 'Failed to initiate deposit. Please try again.');
+      console.error('Error processing deposit:', error);
+      Alert.alert('Error', 'Failed to process deposit. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -109,54 +121,49 @@ const DepositAndWithdraw = () => {
     }
   };
 
-  const renderTab = (tab: 'deposit' | 'withdraw') => (
-    <TouchableOpacity
-      style={[styles.tab, activeTab === tab && { backgroundColor: accent }]}
-      onPress={() => setActiveTab(tab)}
-    >
-      <Text style={[styles.tabText, activeTab === tab && { color: 'white' }]}>
-        {tab === 'deposit' ? 'Deposit' : 'Withdraw'}
-      </Text>
-    </TouchableOpacity>
-  );
 
   return (
     <ScreenWrapper>
+      <Heading page="Deposit & Withdraw" rightComponent={<BalanceDisplay />} />
       <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={wp(6)} color="#333" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Deposit & Withdraw</Text>
-        </View>
 
-        <View style={styles.tabContainer}>
-          {renderTab('deposit')}
-          {renderTab('withdraw')}
+        <View style={[styles.tabContainer, { backgroundColor: backgroundLight }]}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'deposit' && { backgroundColor: accent }]}
+            onPress={() => setActiveTab('deposit')}
+          >
+            <ThemedText style={[styles.tabText, activeTab === 'deposit' && { color: 'white' }]}>
+              Deposit
+            </ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'withdraw' && { backgroundColor: accent }]}
+            onPress={() => setActiveTab('withdraw')}
+          >
+            <ThemedText style={[styles.tabText, activeTab === 'withdraw' && { color: 'white' }]}>
+              Withdraw
+            </ThemedText>
+          </TouchableOpacity>
         </View>
 
         <View style={[styles.formContainer, { backgroundColor: backgroundLight }]}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Amount (USD)</Text>
-            <TextInput
-              style={styles.input}
+            <ThemedText style={styles.label}>Amount (USD)</ThemedText>
+            <Input
               value={amount}
               onChangeText={setAmount}
               placeholder="Enter amount"
               keyboardType="numeric"
-              placeholderTextColor="#999"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone Number</Text>
-            <TextInput
-              style={styles.input}
+            <ThemedText style={styles.label}>Phone Number</ThemedText>
+            <Input
               value={phoneNumber}
               onChangeText={setPhoneNumber}
               placeholder="Enter PayNow phone number"
               keyboardType="phone-pad"
-              placeholderTextColor="#999"
             />
           </View>
 
@@ -165,21 +172,27 @@ const DepositAndWithdraw = () => {
             onPress={activeTab === 'deposit' ? handleDeposit : handleWithdraw}
             disabled={loading}
           >
-            <Text style={styles.submitButtonText}>
+            <ThemedText style={styles.submitButtonText}>
               {loading ? 'Processing...' : activeTab === 'deposit' ? 'Deposit with PayNow' : 'Request Withdrawal'}
-            </Text>
+            </ThemedText>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.infoContainer}>
+        {paymentUpdate ? (
+          <View style={[styles.paymentStatusContainer, { backgroundColor: backgroundLight }]}>
+            <ThemedText style={styles.paymentStatusText}>{paymentUpdate}</ThemedText>
+          </View>
+        ) : null}
+
+        <View style={[styles.infoContainer, { backgroundColor: backgroundLight }]}>
           <View style={styles.infoItem}>
             <Ionicons name="information-circle" size={wp(5)} color={accent} />
-            <Text style={styles.infoText}>
+            <ThemedText style={styles.infoText}>
               {activeTab === 'deposit'
                 ? 'Deposits are processed instantly via PayNow. Funds will be available immediately after confirmation.'
                 : 'Withdrawals are processed within 1-3 business days. You will receive a confirmation SMS once processed.'
               }
-            </Text>
+            </ThemedText>
           </View>
         </View>
       </ScrollView>
@@ -190,27 +203,11 @@ const DepositAndWithdraw = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: wp(4),
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  backButton: {
-    marginRight: wp(3),
-  },
-  title: {
-    fontSize: wp(5),
-    fontWeight: 'bold',
-    color: '#333',
   },
   tabContainer: {
     flexDirection: 'row',
     margin: wp(4),
-    backgroundColor: '#f0f0f0',
+    // backgroundColor: '#f0f0f0',
     borderRadius: wp(2),
     padding: wp(1),
   },
@@ -239,9 +236,10 @@ const styles = StyleSheet.create({
     marginBottom: wp(4),
   },
   label: {
-    fontSize: wp(4),
-    fontWeight: '600',
-    color: '#333',
+    fontSize: wp(3.5),
+    fontWeight: 'bold',
+    color: '#666',
+    // color: '#333',
     marginBottom: wp(2),
   },
   input: {
@@ -250,7 +248,8 @@ const styles = StyleSheet.create({
     borderRadius: wp(2),
     padding: wp(3),
     fontSize: wp(4),
-    backgroundColor: 'white',
+    // backgroundColor: background,
+    color: '#333',
   },
   submitButton: {
     padding: wp(4),
@@ -266,7 +265,7 @@ const styles = StyleSheet.create({
   infoContainer: {
     margin: wp(4),
     padding: wp(4),
-    backgroundColor: '#f8f9fa',
+    // backgroundColor: '#f8f9fa',
     borderRadius: wp(3),
     borderLeftWidth: 4,
     borderLeftColor: '#007AFF',
@@ -281,6 +280,22 @@ const styles = StyleSheet.create({
     color: '#666',
     marginLeft: wp(2),
     lineHeight: wp(5),
+  },
+  paymentStatusContainer: {
+    margin: wp(4),
+    padding: wp(4),
+    // backgroundColor: '#f8f9fa',
+    borderRadius: wp(3),
+    borderLeftWidth: 4,
+    borderLeftColor: '#007AFF',
+  },
+  paymentStatusText: {
+    fontSize: wp(4),
+    // color: '#333',
+    color: '#666',
+
+    textAlign: 'center',
+    fontWeight: '500',
   },
 });
 

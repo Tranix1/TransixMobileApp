@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore';
 import { fetchDocuments } from '@/db/operations';
 import Heading from '@/components/Heading';
+import BalanceDisplay from '@/components/BalanceDisplay';
 import { hp, wp } from '@/constants/common';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
@@ -204,7 +205,7 @@ export default function RewardsAndBonuses() {
   if (loading) {
     return (
       <ScreenWrapper>
-        <Heading page='Rewards & Bonuses' />
+        <Heading page='Rewards & Bonuses' rightComponent={<BalanceDisplay />} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={accent} />
           <ThemedText style={styles.loadingText}>Loading rewards and bonuses...</ThemedText>
@@ -215,7 +216,7 @@ export default function RewardsAndBonuses() {
 
   return (
     <ScreenWrapper>
-      <Heading page='Rewards & Bonuses' />
+      <Heading page='Rewards & Bonuses' rightComponent={<BalanceDisplay />} />
 
       <View style={[styles.summaryCard, { backgroundColor: accent }]}>
         <ThemedText type="defaultSemiBold" style={styles.summaryLabel}>Total Earned</ThemedText>
