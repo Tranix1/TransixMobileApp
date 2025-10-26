@@ -240,14 +240,14 @@ export const prepareLoadData = (
 
         // Return load locations
         returnOrigin: userType === 'professional' ? (formData.returnOrigin?.description || '') : '',
-        returnOriginFull: userType === 'professional' ? formData.returnOrigin : null,
+        returnOriginFull: userType === 'professional' && formData.returnOrigin ? formData.returnOrigin : null,
         returnOriginCoordinates: userType === 'professional' && formData.returnOrigin ? {
             latitude: formData.returnOrigin.latitude,
             longitude: formData.returnOrigin.longitude,
             address: formData.returnOrigin.description
         } : null,
         returnDestination: userType === 'professional' ? (formData.returnDestination?.description || '') : '',
-        returnDestinationFull: userType === 'professional' ? formData.returnDestination : null,
+        returnDestinationFull: userType === 'professional' && formData.returnDestination ? formData.returnDestination : null,
         returnDestinationCoordinates: userType === 'professional' && formData.returnDestination ? {
             latitude: formData.returnDestination.latitude,
             longitude: formData.returnDestination.longitude,

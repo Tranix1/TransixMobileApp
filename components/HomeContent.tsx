@@ -28,7 +28,10 @@ export default function HomeContent({ onAuthCheck }: HomeContentProps) {
     const screenWidth = Dimensions.get('window').width;
     const [loadsCount, setLoadsCount] = useState(0);
 
-    // Quick Links data (8 items total)
+    // Section titles
+    const sectionTitles = ['Add & Create', 'Manage & Status', 'Wallet'];
+
+    // Quick Links data (12 items total)
     const quickLinksData = [
         {
             id: 1,
@@ -96,6 +99,38 @@ export default function HomeContent({ onAuthCheck }: HomeContentProps) {
             bgColor: '#e06eb524',
             underlayColor: '#e06eb55a',
             onPress: () => onAuthCheck(() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dspRoute: "Requested Loads" } }))
+        },
+        {
+            id: 9,
+            title: 'Funds',
+            icon: <Ionicons name="add-circle" size={wp(5)} color="#F1C40F" />,
+            bgColor: '#F1C40F24',
+            underlayColor: '#F1C40F5a',
+            onPress: () => onAuthCheck(() => router.push('/Wallet/DepositAndWithdraw'))
+        },
+        {
+            id: 10,
+            title: 'History',
+            icon: <Ionicons name="time" size={wp(5)} color="#1ABC9C" />,
+            bgColor: '#1ABC9C24',
+            underlayColor: '#1ABC9C5a',
+            onPress: () => onAuthCheck(() => router.push('/Wallet/WalletHistory'))
+        },
+        {
+            id: 11,
+            title: 'Rewards ',
+            icon: <Ionicons name="gift" size={wp(5)} color="#E67E22" />,
+            bgColor: '#E67E2224',
+            underlayColor: '#E67E225a',
+            onPress: () => onAuthCheck(() => router.push('/Wallet/RewardsAndBonuses'))
+        },
+        {
+            id: 12,
+            title: 'Ambassador',
+            icon: <Ionicons name="people" size={wp(5)} color="#2ECC71" />,
+            bgColor: '#2ECC7124',
+            underlayColor: '#2ECC715a',
+            onPress: () => onAuthCheck(() => router.push('/Wallet/AmbassodorEarnings'))
         }
     ];
 
@@ -167,7 +202,7 @@ export default function HomeContent({ onAuthCheck }: HomeContentProps) {
                 <View style={styles.quickLinksHeader}>
                     <MaterialCommunityIcons name="lightning-bolt-circle" size={wp(4)} color={icon} />
                     <ThemedText type='subtitle' style={styles.quickLinksTitle}>
-                        Quick Links
+                        {sectionTitles[currentQuickLinkIndex] || 'Quick Links'}
                     </ThemedText>
                 </View>
 
@@ -236,6 +271,28 @@ export default function HomeContent({ onAuthCheck }: HomeContentProps) {
                                                 </ThemedText>
                                             </View>
                                         )}
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
+                    </View>
+
+                    {/* Page 3 - Wallet 4 items */}
+                    <View style={[styles.quickLinksPage, { width: screenWidth - wp(10) }]}>
+                        <View style={styles.quickLinksGrid}>
+                            {quickLinksData.slice(8, 12).map((item) => (
+                                <View key={item.id} style={styles.quickLinkItem}>
+                                    <TouchableHighlight
+                                        onPress={item.onPress}
+                                        underlayColor={item.underlayColor}
+                                        style={[styles.quickLinkButton, { backgroundColor: item.bgColor }]}
+                                    >
+                                        {item.icon}
+                                    </TouchableHighlight>
+                                    <View style={styles.labelContainer}>
+                                        <ThemedText type='tiny' style={styles.quickLinkLabel} numberOfLines={2}>
+                                            {item.title}
+                                        </ThemedText>
                                     </View>
                                 </View>
                             ))}

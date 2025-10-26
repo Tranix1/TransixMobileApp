@@ -49,6 +49,14 @@ import { ErrorModal } from "@/components/ErrorModal";
 import { notifyTrucksByFilters } from "@/Utilities/notifyTruckByFilters";
 import { TruckNeededType } from "@/types/types";
 
+// Payment related imports
+import { getWalletBalance, hasSufficientBalance, deductFromWallet, addToWallet } from '@/Utilities/walletUtils';
+import { processReferralCommission, getUserReferrer } from '@/Utilities/referralUtils';
+import ConfirmationModal from '@/components/ConfirmationModal';
+import InsufficientFundsModal from '@/components/InsufficientFundsModal';
+import { fetchDocuments } from '@/db/operations';
+import { where } from 'firebase/firestore';
+
 
 import { SelectLocationProp } from '@/types/types';
 
@@ -335,6 +343,11 @@ const AddLoadDB = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [errorDetails, setErrorDetails] = useState("");
   const [showErrorDetails, setShowErrorDetails] = useState(false);
+
+  // Payment state
+  const [showInsufficientFundsModal, setShowInsufficientFundsModal] = useState(false);
+  const [showLoadPaymentModal, setShowLoadPaymentModal] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   // Helper function to show error modal
   const showError = (title: string, message: string, details?: string, showDetails: boolean = false) => {
@@ -765,6 +778,95 @@ const AddLoadDB = () => {
     }
   };
 
+  // Function to check if user has available rewards
+  const checkUserRewards = async (userId: string): Promise<number> => {
+    try {
+      const filters = [
+        where("userId", "==", userId),
+        where("type", "in", ["reward", "bonus"]),
+        where("status", "==", "completed")
+      ];
+      const result = await fetchDocuments("WalletTransactions", 50, undefined, filters);
+
+      let totalRewards = 0;
+      result.data.forEach((transaction: any) => {
+        totalRewards += transaction.amount;
+      });
+
+      return totalRewards;
+    } catch (error) {
+      console.error('Error checking user rewards:', error);
+      return 0;
+    }
+  };
+
+  // Function to process load payment
+  const processLoadPayment = async (): Promise<boolean> => {
+    if (!user?.uid) return false;
+
+    try {
+      setProcessingPayment(true);
+
+      // Check for available rewards first
+      const availableRewards = await checkUserRewards(user.uid);
+
+      if (availableRewards >= 2) {
+        // Use rewards to pay
+        const deductionSuccess = await deductFromWallet(
+          user.uid,
+          2,
+          'Load posting fee (paid with rewards)',
+          'wallet'
+        );
+
+        if (!deductionSuccess) {
+          alertBox("Payment Failed", "Failed to process payment with rewards. Please try again.", [], "error");
+          return false;
+        }
+      } else {
+        // Check wallet balance for $2 payment
+        const hasBalance = await hasSufficientBalance(user.uid, 2);
+
+        if (!hasBalance) {
+          setShowInsufficientFundsModal(true);
+          return false;
+        }
+
+        // Deduct $2 from wallet
+        const deductionSuccess = await deductFromWallet(
+          user.uid,
+          2,
+          'Load posting fee',
+          'wallet'
+        );
+
+        if (!deductionSuccess) {
+          alertBox("Payment Failed", "Failed to process payment. Please try again.", [], "error");
+          return false;
+        }
+      }
+
+      // Process referral commission (1 to referrer, 1 to company)
+      const referrerId = await getUserReferrer(user.uid);
+      if (referrerId) {
+        // Add $1 to referrer
+        await addToWallet(referrerId, 1, 'Referral commission from load posting', 'bonus');
+      }
+
+      // Add $1 to company (assuming company has a special wallet ID)
+      // For now, we'll log this - you might want to create a special company wallet
+      console.log('Company revenue: $1 from load posting');
+
+      return true;
+    } catch (error) {
+      console.error('Error processing load payment:', error);
+      alertBox("Payment Error", "An error occurred while processing payment. Please try again.", [], "error");
+      return false;
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true)
 
@@ -825,7 +927,24 @@ const AddLoadDB = () => {
       return;
     }
 
+    // Show payment confirmation modal
+    console.log("Showing payment modal...");
+    setShowLoadPaymentModal(true);
+    setIsSubmitting(false);
+    return;
+  };
 
+  // Function to handle payment confirmation and proceed with load submission
+  const confirmLoadPaymentAndSubmit = async () => {
+    setShowLoadPaymentModal(false);
+    setIsSubmitting(true);
+
+    // Process payment first
+    const paymentSuccess = await processLoadPayment();
+    if (!paymentSuccess) {
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       if (!user) {
@@ -922,8 +1041,46 @@ const AddLoadDB = () => {
         personalAccType: getGeneralDetails?.accType || getProfessionalDetails?.accType || null,
       }, user, expoPushToken);
 
+      // Save payment to Payments collection and WalletHistory
+      const paymentId = `LOAD_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const currentDate = new Date();
+      const formattedDate = currentDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZoneName: 'short'
+      });
+
+      const paymentData = {
+        id: paymentId,
+        serviceType: 'Load Posting Fee',
+        price: 2,
+        quantity: 1,
+        totalAmount: 2,
+        stationName: 'Transix Load Service',
+        stationId: 'load-service',
+        purchaseDate: currentDate.toISOString(),
+        qrCode: `LOAD_PAYMENT:${paymentId}:${user.uid}:load:1:2`,
+        status: 'completed',
+        serviceCategory: 'load',
+        userId: user.uid,
+        userEmail: user.email,
+        paymentMethod: 'wallet',
+        phoneNumber: '',
+        createdAt: formattedDate,
+        updatedAt: formattedDate,
+        timeStamp: formattedDate,
+        historyType: 'payment', // Add for WalletHistory
+      };
+
+      await addDocument('Payments', paymentData);
+      await addDocument('WalletHistory', paymentData); // Also save to WalletHistory
+
       // Ensure addDocument is not a React hook or using hooks internally.
-      await addDocument("Cargo", loadData);
+      // await addDocument("Cargo", loadData);
 
       // Notify admins who can approve loads
       await notifyLoadApprovalAdmins(loadData);
@@ -1278,6 +1435,7 @@ const AddLoadDB = () => {
                 distance={distance}
                 duration={duration}
                 durationInTraffic={durationInTraffic}
+                iconColor={accent}
               />
 
               {userType !== 'general' && <RateInput
@@ -1760,12 +1918,66 @@ const AddLoadDB = () => {
           </ScrollView>
         )}
         {step === 2 && (userType as string) === 'professional' && (
-          <ScrollView>
+          <ScrollView keyboardShouldPersistTaps="always">
             <View style={styles.viewMainDsp}>
               <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
                 Return Load
               </ThemedText>
               <Divider />
+
+
+ {/* Return Load Location Selection */}
+              <TouchableOpacity style={{ marginTop: wp(3) }} onPress={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: wp(2) }}  onTouchEnd={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}>
+                  
+                  <View
+                   
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderWidth: 2,
+                      borderColor: useDifferentReturnLocation ? accent : coolGray,
+                      borderRadius: 4,
+                      backgroundColor: useDifferentReturnLocation ? accent : 'transparent',
+                      marginRight: wp(2),
+                      justifyContent: 'center',
+                      alignItems: 'center'
+                    }}
+                  >
+                    {useDifferentReturnLocation && (
+                      <Ionicons name="checkmark" size={12} color="white" />
+                    )}
+                  </View>
+                  <ThemedText style={{ flex: 1, fontSize: 14, fontWeight: '600' }}>
+                    Use different return load locations
+                  </ThemedText>
+                </View>
+
+                <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
+                  Check this if the return load pickup and delivery locations are different from the main load
+                </ThemedText>
+
+                {useDifferentReturnLocation && (
+                  <LocationSelector
+                    origin={returnOrigin}
+                    destination={returnDestination}
+                    setOrigin={setReturnOrigin}
+                    setDestination={setReturnDestination}
+                    dspFromLocation={returnDspFromLocation}
+                    setDspFromLocation={setReturnDspFromLocation}
+                    dspToLocation={returnDspToLocation}
+                    setDspToLocation={setReturnDspToLocation}
+                    locationPicKERdSP={returnLocationPicKERdSP}
+                    setPickLocationOnMap={setReturnPickLocationOnMap}
+                    distance={returnDistance}
+                    duration={returnDuration}
+                    durationInTraffic={returnDurationInTraffic}
+                    iconColor="#2196F3"
+                  />
+                )}
+              </TouchableOpacity>
+
+
               <ThemedText>
                 Return Load<ThemedText color="red">*</ThemedText>
               </ThemedText>
@@ -1801,54 +2013,7 @@ const AddLoadDB = () => {
                 placeholder="Enter return load terms"
               />
 
-              {/* Return Load Location Selection */}
-              <View style={{ marginTop: wp(3) }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: wp(2) }}>
-                  <TouchableOpacity
-                    onPress={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}
-                    style={{
-                      width: 20,
-                      height: 20,
-                      borderWidth: 2,
-                      borderColor: useDifferentReturnLocation ? accent : coolGray,
-                      borderRadius: 4,
-                      backgroundColor: useDifferentReturnLocation ? accent : 'transparent',
-                      marginRight: wp(2),
-                      justifyContent: 'center',
-                      alignItems: 'center'
-                    }}
-                  >
-                    {useDifferentReturnLocation && (
-                      <Ionicons name="checkmark" size={12} color="white" />
-                    )}
-                  </TouchableOpacity>
-                  <ThemedText style={{ flex: 1, fontSize: 14, fontWeight: '600' }}>
-                    Use different return load locations
-                  </ThemedText>
-                </View>
-
-                <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
-                  Check this if the return load pickup and delivery locations are different from the main load
-                </ThemedText>
-
-                {useDifferentReturnLocation && (
-                  <LocationSelector
-                    origin={returnOrigin}
-                    destination={returnOrigin}
-                    setOrigin={setReturnOrigin}
-                    setDestination={setReturnDestination}
-                    dspFromLocation={returnDspFromLocation}
-                    setDspFromLocation={setReturnDspFromLocation}
-                    dspToLocation={returnDspToLocation}
-                    setDspToLocation={setReturnDspToLocation}
-                    locationPicKERdSP={returnLocationPicKERdSP}
-                    setPickLocationOnMap={setReturnPickLocationOnMap}
-                    distance={returnDistance}
-                    duration={returnDuration}
-                    durationInTraffic={returnDurationInTraffic}
-                  />
-                )}
-              </View>
+             
             </View>
             <Divider />
             <View style={styles.viewMainDsp}>
@@ -2216,6 +2381,32 @@ const AddLoadDB = () => {
         message={errorMessage}
         details={errorDetails}
         showDetails={showErrorDetails}
+      />
+
+      {/* Load Payment Confirmation Modal */}
+      <ConfirmationModal
+        isVisible={showLoadPaymentModal}
+        onClose={() => {
+          setShowLoadPaymentModal(false);
+          setIsSubmitting(false);
+        }}
+        title="Confirm Load Posting"
+        message={`Post this load for $2? ${user ? 'If you have a referrer, they will receive $1 commission.' : ''}`}
+        confirmText="Pay & Post Load"
+        cancelText="Cancel"
+        onConfirm={confirmLoadPaymentAndSubmit}
+        icon="cash"
+        iconColor={accent}
+        isLoading={processingPayment}
+      />
+
+      {/* Insufficient Funds Modal */}
+      <InsufficientFundsModal
+        isVisible={showInsufficientFundsModal}
+        onClose={() => setShowInsufficientFundsModal(false)}
+        requiredAmount={2}
+        itemType="load"
+        itemName="Load Posting Fee"
       />
     </ScreenWrapper>
   );

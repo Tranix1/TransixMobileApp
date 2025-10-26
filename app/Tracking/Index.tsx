@@ -13,6 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import AccentRingLoader from "@/components/AccentRingLoader";
 import { VehicleLifecycleService, startVehicleLifecycleMonitoring } from '@/services/vehicleLifecycleService';
 import { openWhatsApp, getContactMessage } from '@/Utilities/whatsappUtils';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 interface Device {
   id: string;
@@ -107,6 +108,8 @@ export default function Index() {
 
   const [processingVehicleId, setProcessingVehicleId] = useState<string | null>(null);
   const [showInsufficientBalanceModal, setShowInsufficientBalanceModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<{ id: string; name: string } | null>(null);
 
   const handleSubscription = async (vehicleId: string, vehicleName: string) => {
     if (!user?.uid) {
@@ -118,7 +121,7 @@ export default function Index() {
 
     try {
       // Check wallet balance
-      const { hasSufficientBalance, deductFromWallet } = await import('@/Utilities/walletUtils');
+      const { hasSufficientBalance } = await import('@/Utilities/walletUtils');
       const hasBalance = await hasSufficientBalance(user.uid, 10);
 
       if (!hasBalance) {
@@ -127,88 +130,96 @@ export default function Index() {
         return;
       }
 
-      // Confirm subscription
-      Alert.alert(
-        'Confirm Subscription',
-        `Subscribe to vehicle tracking for "${vehicleName}" for $10/month?`,
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-            onPress: () => setProcessingVehicleId(null)
-          },
-          {
-            text: 'Subscribe',
-            onPress: async () => {
-              try {
-                // Deduct from wallet
-                const deductionSuccess = await deductFromWallet(
-                  user.uid,
-                  10,
-                  `Vehicle Tracking Subscription for ${vehicleName}`,
-                  'wallet'
-                );
-
-                if (!deductionSuccess) {
-                  Alert.alert('Error', 'Failed to process payment. Please try again.');
-                  setProcessingVehicleId(null);
-                  return;
-                }
-
-                // Update vehicle subscription
-                const expiryDate = new Date();
-                expiryDate.setMonth(expiryDate.getMonth() + 1);
-
-                const { updateDocument, addDocument } = await import('@/db/operations');
-
-                await updateDocument("TrackedVehicles", vehicleId, {
-                  subscription: {
-                    status: "active",
-                    expiryDate: expiryDate.toISOString(),
-                  },
-                  paymentType: "Subscription",
-                });
-
-                // Save payment to Payments collection
-                const paymentId = `TRACKING_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                const paymentData = {
-                  id: paymentId,
-                  serviceType: 'Vehicle Tracking Subscription',
-                  price: 10,
-                  quantity: 1,
-                  totalAmount: 10,
-                  stationName: 'Transix Tracking Service',
-                  stationId: 'tracking-service',
-                  purchaseDate: new Date().toISOString(),
-                  qrCode: `TRACKING_PAYMENT:${paymentId}:${vehicleId}:subscription:1:10`,
-                  status: 'completed',
-                  serviceCategory: 'tracking',
-                  userId: user.uid,
-                  userEmail: user.email,
-                  paymentMethod: 'wallet',
-                  phoneNumber: '',
-                  createdAt: new Date(),
-                  updatedAt: new Date(),
-                };
-
-                await addDocument('Payments', paymentData);
-
-                Alert.alert('Success', 'Vehicle successfully subscribed to tracking!');
-                LoadTructs(); // Refresh the list
-              } catch (error: any) {
-                console.error('Error processing subscription:', error);
-                Alert.alert('Error', 'Failed to process subscription. Please try again.');
-              } finally {
-                setProcessingVehicleId(null);
-              }
-            }
-          }
-        ]
-      );
+      // Show confirmation modal
+      setSelectedVehicle({ id: vehicleId, name: vehicleName });
+      setShowSubscriptionModal(true);
+      setProcessingVehicleId(null);
     } catch (error: any) {
       console.error('Error checking balance:', error);
       Alert.alert('Error', 'Failed to check wallet balance. Please try again.');
       setProcessingVehicleId(null);
+    }
+  };
+
+  const confirmSubscription = async () => {
+    if (!selectedVehicle || !user?.uid) return;
+
+    setProcessingVehicleId(selectedVehicle.id);
+
+    try {
+      // Deduct from wallet
+      const { deductFromWallet } = await import('@/Utilities/walletUtils');
+      const deductionSuccess = await deductFromWallet(
+        user.uid,
+        10,
+        `Vehicle Tracking Subscription for ${selectedVehicle.name}`,
+        'wallet'
+      );
+
+      if (!deductionSuccess) {
+        Alert.alert('Error', 'Failed to process payment. Please try again.');
+        setProcessingVehicleId(null);
+        return;
+      }
+
+      // Process referral commission
+      const { processReferralCommission } = await import('@/Utilities/referralUtils');
+      await processReferralCommission(
+        user.uid,
+        10,
+        'subscription',
+        `Vehicle Tracking Subscription for ${selectedVehicle.name}`
+      );
+
+      // Update vehicle subscription
+      const expiryDate = new Date();
+      expiryDate.setMonth(expiryDate.getMonth() + 1);
+
+      const { updateDocument, addDocument } = await import('@/db/operations');
+
+      await updateDocument("TrackedVehicles", selectedVehicle.id, {
+        subscription: {
+          status: "active",
+          expiryDate: expiryDate.toISOString(),
+        },
+        paymentType: "Subscription",
+      });
+
+      // Save payment to Payments collection and WalletHistory
+      const paymentId = `TRACKING_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const paymentData = {
+        id: paymentId,
+        serviceType: 'Vehicle Tracking Subscription',
+        price: 10,
+        quantity: 1,
+        totalAmount: 10,
+        stationName: 'Transix Tracking Service',
+        stationId: 'tracking-service',
+        purchaseDate: new Date().toISOString(),
+        qrCode: `TRACKING_PAYMENT:${paymentId}:${selectedVehicle.id}:subscription:1:10`,
+        status: 'completed',
+        serviceCategory: 'tracking',
+        userId: user.uid,
+        userEmail: user.email,
+        paymentMethod: 'wallet',
+        phoneNumber: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        historyType: 'payment', // Add for WalletHistory
+      };
+
+      await addDocument('Payments', paymentData);
+      await addDocument('WalletHistory', paymentData); // Also save to WalletHistory
+
+      Alert.alert('Success', 'Vehicle successfully subscribed to tracking!');
+      LoadTructs(); // Refresh the list
+    } catch (error: any) {
+      console.error('Error processing subscription:', error);
+      Alert.alert('Error', 'Failed to process subscription. Please try again.');
+    } finally {
+      setProcessingVehicleId(null);
+      setShowSubscriptionModal(false);
+      setSelectedVehicle(null);
     }
   };
 
@@ -522,7 +533,7 @@ export default function Index() {
 
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
+                style={[styles.modalButton, styles.cancelButton ,{backgroundColor:backgroundLight}]}
                 onPress={() => setShowInsufficientBalanceModal(false)}
               >
                 <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
@@ -542,6 +553,22 @@ export default function Index() {
           </View>
         </View>
       )}
+
+      {/* Subscription Confirmation Modal */}
+      <ConfirmationModal
+        isVisible={showSubscriptionModal}
+        onClose={() => {
+          setShowSubscriptionModal(false);
+          setSelectedVehicle(null);
+        }}
+        title="Confirm Subscription"
+        message={`Subscribe to vehicle tracking for "${selectedVehicle?.name}" for $10/month?`}
+        confirmText="Subscribe"
+        cancelText="Cancel"
+        onConfirm={confirmSubscription}
+        icon="car-sport"
+        iconColor={accent}
+      />
     </ScreenWrapper>
   );
 }

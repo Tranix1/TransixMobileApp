@@ -10,7 +10,9 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import Input from './Input';
 import { useAuth } from '@/context/AuthContext';
 import { hasSufficientBalance, deductFromWallet } from '@/Utilities/walletUtils';
+import { processReferralCommission } from '@/Utilities/referralUtils';
 import { useRouter } from 'expo-router';
+import InsufficientFundsModal from './InsufficientFundsModal';
 
 interface SubscriptionPaymentModalProps {
   isVisible: boolean;
@@ -26,6 +28,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({ isV
    const [paymentUpdate, setPaymentUpdate] = useState('');
    const [isLoadingPayment, setIsLoadingPayment] = useState(false);
    const [useWallet, setUseWallet] = useState(true);
+   const [showInsufficientFunds, setShowInsufficientFunds] = useState(false);
 
    const { user } = useAuth();
    const router = useRouter();
@@ -60,9 +63,11 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({ isV
         phoneNumber: phoneNumber,
         createdAt: new Date(),
         updatedAt: new Date(),
+        historyType: 'payment', // Add historyType for WalletHistory
       };
 
       await addDocument('Payments', paymentData);
+      await addDocument('WalletHistory', paymentData); // Also save to WalletHistory
       console.log('Tracking payment saved to database successfully');
     } catch (error) {
       console.error('Error saving tracking payment to database:', error);
@@ -85,13 +90,9 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({ isV
         const hasBalance = await hasSufficientBalance(user.uid, 10);
 
         if (!hasBalance) {
-          setPaymentUpdate("❌ Insufficient wallet balance. Redirecting to deposit page...");
-          setTimeout(() => {
-            onClose();
-            router.push('/Wallet/DepositAndWithdraw');
-          }, 2000);
-          return;
-        }
+           setShowInsufficientFunds(true);
+           return;
+         }
 
         // Deduct from wallet
         const deductionSuccess = await deductFromWallet(
@@ -104,6 +105,18 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({ isV
         if (!deductionSuccess) {
           setPaymentUpdate("❌ Failed to process wallet payment.");
           return;
+        }
+
+        // Process referral commission (20% to referrer, 80% to app)
+        const commissionSuccess = await processReferralCommission(
+          user.uid,
+          10,
+          'subscription',
+          `Vehicle Tracking Subscription for ${vehicleName}`
+        );
+
+        if (!commissionSuccess) {
+          console.warn('Referral commission processing failed, but payment succeeded');
         }
 
         // Update vehicle subscription
@@ -160,6 +173,18 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({ isV
               paymentType: "Subscription",
             });
 
+            // Process referral commission (20% to referrer, 80% to app)
+            if (user?.uid) {
+              await processReferralCommission(
+                user.uid,
+                10,
+                'subscription',
+                `Vehicle Tracking Subscription for ${vehicleName}`
+              );
+            }
+
+            // Commission processing handled above
+
             // Save payment to Payments collection
             await saveTrackingPaymentToDatabase();
 
@@ -182,64 +207,74 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({ isV
 
 
   return (
-    <Modal visible={isVisible} transparent animationType="slide" >
+    <>
+      <Modal visible={isVisible} transparent animationType="slide" >
 
-      <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-start', flex: 1, padding: wp(4), }}>
-        <View style={styles.container}>
-          <View style={{
-            backgroundColor: background,
-            padding: 20,
-            borderRadius: 10,
-            width: '80%',
-          }}>
-            <ThemedText type="subtitle">Subscribe for $10/month</ThemedText>
-            <ThemedText type='italic' style={{ marginTop: wp(0.5), alignSelf: "center" }} >{vehicleName}</ThemedText>
+        <BlurView intensity={10} experimentalBlurMethod='dimezisBlurView' tint='regular' style={{ backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-start', flex: 1, padding: wp(4), }}>
+          <View style={styles.container}>
+            <View style={{
+              backgroundColor: background,
+              padding: 20,
+              borderRadius: 10,
+              width: '80%',
+            }}>
+              <ThemedText type="subtitle">Subscribe for $10/month</ThemedText>
+              <ThemedText type='italic' style={{ marginTop: wp(0.5), alignSelf: "center" }} >{vehicleName}</ThemedText>
 
-            {/* Payment Method Selection */}
-            <View style={styles.paymentMethodContainer}>
-              <TouchableOpacity
-                style={[styles.paymentMethodButton, useWallet && styles.paymentMethodSelected]}
-                onPress={() => setUseWallet(true)}
-              >
-                <ThemedText style={[styles.paymentMethodText, useWallet && styles.paymentMethodTextSelected]}>
-                  Pay with Wallet
-                </ThemedText>
+              {/* Payment Method Selection */}
+              <View style={styles.paymentMethodContainer}>
+                <TouchableOpacity
+                  style={[styles.paymentMethodButton, useWallet && styles.paymentMethodSelected]}
+                  onPress={() => setUseWallet(true)}
+                >
+                  <ThemedText style={[styles.paymentMethodText, useWallet && styles.paymentMethodTextSelected]}>
+                    Pay with Wallet
+                  </ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.paymentMethodButton, !useWallet && styles.paymentMethodSelected]}
+                  onPress={() => setUseWallet(false)}
+                >
+                  <ThemedText style={[styles.paymentMethodText, !useWallet && styles.paymentMethodTextSelected]}>
+                    Pay with PayNow
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+
+              {!useWallet && (
+                <Input
+                  placeholder="Enter your Ecocash number"
+                  value={phoneNumber}
+                  onChangeText={setPhoneNumber}
+                  keyboardType="phone-pad"
+                  editable={!isLoadingPayment}
+                />
+              )}
+              <TouchableOpacity style={{
+                backgroundColor: accent,
+                padding: 10,
+                borderRadius: 5,
+                alignItems: 'center',
+              }} onPress={handlePayment} disabled={isLoadingPayment}>
+                <Text style={styles.buttonText}>Pay Now</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.paymentMethodButton, !useWallet && styles.paymentMethodSelected]}
-                onPress={() => setUseWallet(false)}
-              >
-                <ThemedText style={[styles.paymentMethodText, !useWallet && styles.paymentMethodTextSelected]}>
-                  Pay with PayNow
-                </ThemedText>
+              <TouchableOpacity style={styles.closeButton} onPress={onClose} >
+                <Text style={{ color: accent }}>Close</Text>
               </TouchableOpacity>
+              {paymentUpdate && <ThemedText style={{ marginTop: 10, textAlign: 'center' }}>{paymentUpdate}</ThemedText>}
             </View>
-
-            {!useWallet && (
-              <Input
-                placeholder="Enter your Ecocash number"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
-                editable={!isLoadingPayment}
-              />
-            )}
-            <TouchableOpacity style={{
-              backgroundColor: accent,
-              padding: 10,
-              borderRadius: 5,
-              alignItems: 'center',
-            }} onPress={handlePayment} disabled={isLoadingPayment}>
-              <Text style={styles.buttonText}>Pay Now</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.closeButton} onPress={onClose} >
-              <Text style={{ color: accent }}>Close</Text>
-            </TouchableOpacity>
-            {paymentUpdate && <ThemedText style={{ marginTop: 10, textAlign: 'center' }}>{paymentUpdate}</ThemedText>}
           </View>
-        </View>
-      </BlurView>
-    </Modal>
+        </BlurView>
+      </Modal>
+
+      <InsufficientFundsModal
+        isVisible={showInsufficientFunds}
+        onClose={() => setShowInsufficientFunds(false)}
+        requiredAmount={10}
+        itemType="tracking"
+        itemName={vehicleName}
+      />
+    </>
   );
 };
 

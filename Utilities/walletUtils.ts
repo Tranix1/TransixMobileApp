@@ -74,16 +74,18 @@ export const deductFromWallet = async (
 
     const transactionData = {
       userId: userId,
-      type: 'withdrawal',
+      type: 'payment', // Changed from 'withdrawal' to 'payment' for load payments
       amount: amount,
       paymentMethod: paymentMethod,
       status: 'completed',
       description: description,
       createdAt: new Date(),
       updatedAt: new Date(),
+      historyType: 'payment', // Add for WalletHistory
     };
 
     await addDocument('WalletTransactions', transactionData);
+    await addDocument('WalletHistory', transactionData); // Also save to WalletHistory
     return true;
   } catch (error) {
     console.error('Error deducting from wallet:', error);
@@ -116,9 +118,11 @@ export const addToWallet = async (
       description: description,
       createdAt: new Date(),
       updatedAt: new Date(),
+      historyType: 'transaction', // Add for WalletHistory
     };
 
     await addDocument('WalletTransactions', transactionData);
+    await addDocument('WalletHistory', transactionData); // Also save to WalletHistory
     return true;
   } catch (error) {
     console.error('Error adding to wallet:', error);

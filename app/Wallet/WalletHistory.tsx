@@ -84,16 +84,37 @@ export default function WalletHistory() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
-  const [payments, setPayments] = useState<Payment[]>([]);
+  // StyleSheet needs access to theme colors, so we create styles inline
+  const dynamicStyles = {
+    filterButton: {
+      paddingHorizontal: wp(3),
+      paddingVertical: wp(0.4),
+      borderRadius: wp(2),
+      borderWidth: 1,
+      borderColor: '#666',
+    },
+    
+    filterButtonText: {
+      fontSize: wp(3),
+      // color: icon,
+      fontWeight: '500' as const,
+    },
+    selectedFilterText: {
+      color: accent,
+      fontWeight: '800' as const,
+    },
+  };
+
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [lastVisibleTransaction, setLastVisibleTransaction] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-  const [lastVisiblePayment, setLastVisiblePayment] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'transactions' | 'payments'>('all');
+  // Removed unused filter state
+  const [selectedType, setSelectedType] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const loadData = async () => {
     if (!user) return;
@@ -101,20 +122,37 @@ export default function WalletHistory() {
     try {
       setLoading(true);
 
-      // Load all wallet history from a single collection
-      const filters = [where("userId", "==", user.uid)];
+      // Build filters based on user selections
+      let filters: any[] = [where("userId", "==", user.uid)];
+
+      // Add type filter
+      if (selectedType !== 'all') {
+        if (selectedType === 'transactions') {
+          filters.push(where("historyType", "==", "transaction"));
+        } else if (selectedType === 'payments') {
+          filters.push(where("historyType", "==", "payment"));
+        }
+      }
+
+      // Add category filter for payments
+      if (selectedCategory !== 'all' && selectedType === 'payments') {
+        filters.push(where("serviceCategory", "==", selectedCategory));
+      }
+
       const result = await fetchDocuments("WalletHistory", 20, undefined, filters);
 
       if (result.data.length) {
-        // Separate transactions and payments based on type field
-        const allItems = result.data as any[];
-        const transactionItems = allItems.filter(item => item.historyType === 'transaction');
-        const paymentItems = allItems.filter(item => item.historyType === 'payment');
+        // Convert all items to HistoryItem format with proper typing
+        const allItems = result.data.map((item: any) => ({
+          ...item,
+          historyType: item.historyType as 'transaction' | 'payment'
+        })) as HistoryItem[];
 
-        setTransactions(transactionItems as WalletTransaction[]);
-        setPayments(paymentItems as Payment[]);
-        setLastVisibleTransaction(result.lastVisible);
-        setLastVisiblePayment(result.lastVisible);
+        setHistoryItems(allItems);
+        setLastVisible(result.lastVisible);
+      } else {
+        setHistoryItems([]);
+        setLastVisible(null);
       }
     } catch (error) {
       console.error('Error loading wallet history:', error);
@@ -126,7 +164,7 @@ export default function WalletHistory() {
 
   useEffect(() => {
     loadData();
-  }, [user]);
+  }, [user, selectedType, selectedCategory]);
 
   const onRefresh = async () => {
     try {
@@ -140,23 +178,35 @@ export default function WalletHistory() {
   };
 
   const loadMoreData = async () => {
-    if (loadingMore || !lastVisibleTransaction || !user) return;
+    if (loadingMore || !lastVisible || !user) return;
 
     setLoadingMore(true);
     try {
-      // Load more from single collection
-      const filters = [where("userId", "==", user.uid)];
-      const result = await fetchDocuments('WalletHistory', 20, lastVisibleTransaction, filters);
-      if (result) {
-        // Separate and add to respective arrays
-        const allItems = result.data as any[];
-        const transactionItems = allItems.filter(item => item.historyType === 'transaction');
-        const paymentItems = allItems.filter(item => item.historyType === 'payment');
+      // Build filters based on current selections
+      let filters: any[] = [where("userId", "==", user.uid)];
 
-        setTransactions([...transactions, ...transactionItems as WalletTransaction[]]);
-        setPayments([...payments, ...paymentItems as Payment[]]);
-        setLastVisibleTransaction(result.lastVisible);
-        setLastVisiblePayment(result.lastVisible);
+      if (selectedType !== 'all') {
+        if (selectedType === 'transactions') {
+          filters.push(where("historyType", "==", "transaction"));
+        } else if (selectedType === 'payments') {
+          filters.push(where("historyType", "==", "payment"));
+        }
+      }
+
+      if (selectedCategory !== 'all' && selectedType === 'payments') {
+        filters.push(where("serviceCategory", "==", selectedCategory));
+      }
+
+      const result = await fetchDocuments('WalletHistory', 20, lastVisible, filters);
+      if (result) {
+        // Convert and add to history items
+        const newItems = result.data.map((item: any) => ({
+          ...item,
+          historyType: item.historyType as 'transaction' | 'payment'
+        })) as HistoryItem[];
+
+        setHistoryItems([...historyItems, ...newItems]);
+        setLastVisible(result.lastVisible);
       }
     } catch (error) {
       console.error('Error loading more wallet history:', error);
@@ -165,41 +215,51 @@ export default function WalletHistory() {
     }
   };
 
-  const formatDate = (date: Date | string) => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    if (!dateObj || isNaN(dateObj.getTime())) {
+  const formatDate = (date: Date | string | undefined | null) => {
+    if (!date) return 'No Date';
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      if (!dateObj || isNaN(dateObj.getTime())) {
+        return 'Invalid Date';
+      }
+      return dateObj.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.warn('Error formatting date:', date, error);
       return 'Invalid Date';
     }
-    return dateObj.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
-  // Combine and sort all items by date
-  const getCombinedHistory = (): HistoryItem[] => {
-    const transactionItems: HistoryItem[] = transactions.map(t => ({ ...t, historyType: 'transaction' as const }));
-    const paymentItems: HistoryItem[] = payments.map(p => ({ ...p, historyType: 'payment' as const }));
+  // Sort history items by date (newest first)
+  const getSortedHistory = (): HistoryItem[] => {
+    return historyItems.sort((a, b) => {
+      const getDateValue = (item: any) => {
+        try {
+          if (item.createdAt instanceof Date) return item.createdAt;
+          if (item.createdAt) return new Date(item.createdAt);
+          if (item.updatedAt instanceof Date) return item.updatedAt;
+          if (item.updatedAt) return new Date(item.updatedAt);
+          if (item.purchaseDate instanceof Date) return item.purchaseDate;
+          if (item.purchaseDate) return new Date(item.purchaseDate);
+          return new Date(0);
+        } catch (error) {
+          console.warn('Error parsing date for item:', item.id, error);
+          return new Date(0);
+        }
+      };
 
-    const allItems = [...transactionItems, ...paymentItems];
-
-    // Sort by createdAt date (newest first)
-    return allItems.sort((a, b) => {
-      const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
-      const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+      const dateA = getDateValue(a);
+      const dateB = getDateValue(b);
       return dateB.getTime() - dateA.getTime();
     });
   };
 
-  const filteredHistory = getCombinedHistory().filter(item => {
-    if (filter === 'all') return true;
-    if (filter === 'transactions') return item.historyType === 'transaction';
-    if (filter === 'payments') return item.historyType === 'payment';
-    return true;
-  });
+  const filteredHistory = getSortedHistory();
 
   const handleNavigateToMap = (payment: Payment) => {
     console.log('WalletHistory: Navigation button pressed for payment:', payment.id);
@@ -255,7 +315,7 @@ export default function WalletHistory() {
       case 'truckstop':
         return '#4ECDC4';
       case 'tracking':
-        return '#9C27B0';
+        return '#4CAF50'; // Changed from purple to green for tracking payments
       case 'git':
         return '#FF9800';
       case 'warehouse':
@@ -319,18 +379,19 @@ export default function WalletHistory() {
     setShowQRModal(true);
   };
 
-  const renderFilterButton = (filterType: 'all' | 'transactions' | 'payments', label: string) => (
-    <TouchableOpacity
-      style={[styles.filterButton, filter === filterType && { backgroundColor: accent }]}
-      onPress={() => setFilter(filterType)}
-    >
-      <ThemedText style={[styles.filterButtonText, filter === filterType && { color: 'white' }]}>
-        {label}
-      </ThemedText>
-    </TouchableOpacity>
-  );
+  // Removed unused renderFilterButton function
 
   const renderHistoryItem = ({ item }: { item: HistoryItem }) => {
+    // Skip wallet transactions that are actually service payments (duplicates)
+    if (item.historyType === 'transaction' && (item as any).serviceCategory) {
+      return null;
+    }
+
+    // Skip payment records that are actually wallet transactions (should only show in transactions)
+    if (item.historyType === 'payment' && !(item as any).serviceCategory) {
+      return null;
+    }
+
     if (item.historyType === 'transaction') {
       const transaction = item as WalletTransaction & { historyType: 'transaction' };
       const transactionColor = transaction.type === 'deposit' ? '#4CAF50' :
@@ -360,7 +421,7 @@ export default function WalletHistory() {
                 {transaction.description}
               </ThemedText>
               <ThemedText type="tiny" style={[styles.historyDate, { color: icon }]}>
-                {formatDate(transaction.createdAt)}
+                {formatDate(transaction.createdAt || transaction.updatedAt)}
               </ThemedText>
             </View>
             <View style={styles.historyAmount}>
@@ -404,7 +465,7 @@ export default function WalletHistory() {
                 {getServiceName(payment)}
               </ThemedText>
               <ThemedText type="tiny" style={[styles.historyDate, { color: icon }]}>
-                {formatDate(payment.purchaseDate)}
+                {formatDate(payment.purchaseDate || payment.createdAt || payment.updatedAt)}
               </ThemedText>
             </View>
             <View style={styles.historyAmount}>
@@ -477,11 +538,60 @@ export default function WalletHistory() {
       <Heading page='Wallet History' rightComponent={<BalanceDisplay />} />
 
       <View style={styles.filterContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-          {renderFilterButton('all', 'All')}
-          {renderFilterButton('transactions', 'Transactions')}
-          {renderFilterButton('payments', 'Payments')}
-        </ScrollView>
+        {/* Type and Category Filters */}
+        <View style={styles.advancedFilters}>
+          <View style={styles.filterRow}>
+            <ThemedText style={styles.filterLabel}>Type:</ThemedText>
+            <TouchableOpacity
+              style={[dynamicStyles.filterButton, selectedType === 'all' && {backgroundColor: accent + '20',borderWidth: 0,}]}
+              onPress={() => setSelectedType('all')}
+            >
+              <ThemedText style={[dynamicStyles.filterButtonText, selectedType === 'all' && dynamicStyles.selectedFilterText]}>All</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[dynamicStyles.filterButton, selectedType === 'transactions' && {backgroundColor: accent + '20',borderWidth: 0,}]}
+              onPress={() => setSelectedType('transactions')}
+            >
+              <ThemedText style={[dynamicStyles.filterButtonText, selectedType === 'transactions' && dynamicStyles.selectedFilterText]}>Transactions</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[dynamicStyles.filterButton, selectedType === 'payments' && {backgroundColor: accent + '20',borderWidth: 0,}]}
+              onPress={() => setSelectedType('payments')}
+            >
+              <ThemedText style={[dynamicStyles.filterButtonText, selectedType === 'payments' && dynamicStyles.selectedFilterText]}>Payments</ThemedText>
+            </TouchableOpacity>
+          </View>
+
+          {selectedType === 'payments' && (
+            <View style={styles.filterRow}>
+              <ThemedText style={styles.filterLabel}>Category:</ThemedText>
+              <TouchableOpacity
+                style={[dynamicStyles.filterButton, selectedCategory === 'all' && {backgroundColor: accent + '20',borderWidth: 0,}]}
+                onPress={() => setSelectedCategory('all')}
+              >
+                <ThemedText style={[dynamicStyles.filterButtonText, selectedCategory === 'all' && dynamicStyles.selectedFilterText]}>All</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[dynamicStyles.filterButton, selectedCategory === 'fuel' && {backgroundColor: accent + '20',borderWidth: 0,}]}
+                onPress={() => setSelectedCategory('fuel')}
+              >
+                <ThemedText style={[dynamicStyles.filterButtonText, selectedCategory === 'fuel' && dynamicStyles.selectedFilterText]}>Fuel</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[dynamicStyles.filterButton, selectedCategory === 'tracking' && {backgroundColor: accent + '20',borderWidth: 0,}]}
+                onPress={() => setSelectedCategory('tracking')}
+              >
+                <ThemedText style={[dynamicStyles.filterButtonText, selectedCategory === 'tracking' && dynamicStyles.selectedFilterText]}>Tracking</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[dynamicStyles.filterButton, selectedCategory === 'load' && {backgroundColor: accent + '20',borderWidth: 0,}]}
+                onPress={() => setSelectedCategory('load')}
+              >
+                <ThemedText style={[dynamicStyles.filterButtonText, selectedCategory === 'load' && dynamicStyles.selectedFilterText]}>Loads</ThemedText>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
       </View>
 
       <FlatList
@@ -501,10 +611,10 @@ export default function WalletHistory() {
           <View style={styles.emptyContainer}>
             <Ionicons name="receipt-outline" size={wp(15)} color={icon} />
             <ThemedText type="defaultSemiBold" style={styles.emptyText}>
-              No {filter === 'all' ? '' : filter === 'transactions' ? 'Transaction' : 'Payment'} History
+              No History Found
             </ThemedText>
             <ThemedText type="tiny" style={styles.emptySubtext}>
-              Your wallet history will appear here
+              {selectedType !== 'all' || selectedCategory !== 'all' ? 'Try adjusting your filters' : 'Your wallet history will appear here'}
             </ThemedText>
           </View>
         }
@@ -585,18 +695,7 @@ const styles = StyleSheet.create({
   filterScroll: {
     marginVertical: wp(2),
   },
-  filterButton: {
-    paddingHorizontal: wp(4),
-    paddingVertical: wp(2),
-    marginRight: wp(2),
-    borderRadius: wp(5),
-    backgroundColor: '#f0f0f0',
-  },
-  filterButtonText: {
-    fontSize: wp(3.5),
-    fontWeight: '600',
-    color: '#666',
-  },
+  // Removed unused filter button styles
   historyCard: {
     marginVertical: wp(2),
     marginHorizontal: wp(4),
@@ -783,6 +882,22 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  advancedFilters: {
+    marginTop: wp(2),
+    gap: wp(2),
+  },
+  filterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: wp(2),
+  },
+  filterLabel: {
+    fontSize: wp(3.5),
+    fontWeight: '600',
+    color: '#666',
+    minWidth: wp(15),
+  },
+  // Removed static filter button styles - now using dynamic styles
 });
 
 function getServiceBackgroundColor(selectedPayment: Payment) {

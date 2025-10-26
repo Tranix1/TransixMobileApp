@@ -6,6 +6,7 @@ import { wp } from "@/constants/common";
 import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplete';
 import { LocationPicker } from '@/components/LocationPicker';
 import { SelectLocationProp } from '@/types/types';
+import { Ionicons } from "@expo/vector-icons";
 
 interface LocationSelectorProps {
     origin: SelectLocationProp | null;
@@ -21,6 +22,7 @@ interface LocationSelectorProps {
     distance?: string;
     duration?: string;
     durationInTraffic?: string;
+    iconColor?: string;
 }
 
 export const LocationSelector: React.FC<LocationSelectorProps> = ({
@@ -36,10 +38,12 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
     setPickLocationOnMap,
     distance,
     duration,
-    durationInTraffic
+    durationInTraffic,
+    iconColor
 }) => {
     const icon = useThemeColor('icon');
     const backgroundLight = useThemeColor('backgroundLight');
+    const accent = useThemeColor('accent');
 
     return (
         <View>
@@ -61,14 +65,22 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                 onPress={() => setDspFromLocation(true)}
                 style={[styles.locationButton, { borderColor: icon, backgroundColor: backgroundLight }]}
             >
-                <ThemedText
-                    style={[
-                        styles.locationButtonText,
-                        { color: origin ? icon : '#888' }
-                    ]}
-                >
-                    {origin ? origin?.description : "Select Origin"}
-                </ThemedText>
+                <View style={styles.locationButtonContent}>
+                    <Ionicons
+                        name="location"
+                        size={20}
+                        color={iconColor || accent}
+                        style={styles.locationIcon}
+                    />
+                    <ThemedText
+                        style={[
+                            styles.locationButtonText,
+                            { color: origin ? icon : '#888' }
+                        ]}
+                    >
+                        {origin ? origin?.description : "Select Origin"}
+                    </ThemedText>
+                </View>
             </TouchableOpacity>
 
             <GooglePlaceAutoCompleteComp
@@ -87,14 +99,22 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                 onPress={() => setDspToLocation(true)}
                 style={[styles.locationButton, { borderColor: icon, backgroundColor: backgroundLight }]}
             >
-                <ThemedText
-                    style={[
-                        styles.locationButtonText,
-                        { color: destination ? icon : '#888' }
-                    ]}
-                >
-                    {destination ? destination?.description : "Select Destination"}
-                </ThemedText>
+                <View style={styles.locationButtonContent}>
+                    <Ionicons
+                        name="location"
+                        size={20}
+                        color={iconColor || accent}
+                        style={styles.locationIcon}
+                    />
+                    <ThemedText
+                        style={[
+                            styles.locationButtonText,
+                            { color: destination ? icon : '#888' }
+                        ]}
+                    >
+                        {destination ? destination?.description : "Select Destination"}
+                    </ThemedText>
+                </View>
             </TouchableOpacity>
 
             <GooglePlaceAutoCompleteComp
@@ -128,10 +148,22 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
-        marginHorizontal: wp(5),
+        marginHorizontal: 0,
+        width: '100%',
+    },
+    locationButtonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        width: '100%',
+    },
+    locationIcon: {
+        marginRight: 10,
     },
     locationButtonText: {
         fontSize: 16,
+        flex: 1,
+        textAlign: 'left',
     },
     routeInfo: {
         padding: 16,

@@ -27,6 +27,7 @@ const DepositAndWithdraw = () => {
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
   const [paymentUpdate, setPaymentUpdate] = useState('');
 
+
   const handleDeposit = async () => {
     if (!amount || !phoneNumber) {
       Alert.alert('Error', 'Please fill in all fields');
@@ -38,6 +39,7 @@ const DepositAndWithdraw = () => {
       Alert.alert('Error', 'Please enter a valid amount');
       return;
     }
+
 
     setLoading(true);
     setPaymentUpdate('');
@@ -54,6 +56,7 @@ const DepositAndWithdraw = () => {
         // Add funds to wallet
         if (user?.uid) {
           await addToWallet(user.uid, depositAmount, `PayNow deposit of $${depositAmount.toFixed(2)}`);
+
         }
 
         Alert.alert(
@@ -101,9 +104,11 @@ const DepositAndWithdraw = () => {
         description: `PayNow withdrawal of $${withdrawAmount.toFixed(2)}`,
         createdAt: new Date(),
         updatedAt: new Date(),
+        historyType: 'transaction', // Add for WalletHistory
       };
 
       await addDocument('WalletTransactions', transactionData);
+      await addDocument('WalletHistory', transactionData); // Also save to WalletHistory
 
       Alert.alert(
         'Withdrawal Requested',
@@ -166,6 +171,7 @@ const DepositAndWithdraw = () => {
               keyboardType="phone-pad"
             />
           </View>
+
 
           <TouchableOpacity
             style={[styles.submitButton, { backgroundColor: accent }]}

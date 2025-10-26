@@ -340,22 +340,22 @@ export default function AddFuel() {
             </ScrollView>
 
             {/* Location Selection Modals */}
-            <GooglePlaceAutoCompleteComp
-                dspRoute={dspLocation}
-                setDspRoute={setDspLocation}
-                setRoute={setLocation}
-                topic="Select Fuel Station Location"
-                setPickLocationOnMap={setPickLocationOnMap}
-            />
+                <GooglePlaceAutoCompleteComp
+                    dspRoute={dspLocation}
+                    setDspRoute={setDspLocation}
+                    setRoute={setLocation}
+                    topic="Select Fuel Station Location"
+                    setPickLocationOnMap={setPickLocationOnMap}
+                />
 
             {locationPicKERdSP && (
-                <LocationPicker
-                    pickOriginLocation={location}
-                    setPickOriginLocation={setLocation}
-                    setShowMap={setPickLocationOnMap}
-                    dspShowMap={locationPicKERdSP}
-                    mode="single"
-                />
+                    <LocationPicker
+                        pickOriginLocation={location}
+                        setPickOriginLocation={setLocation}
+                        setShowMap={setPickLocationOnMap}
+                        dspShowMap={locationPicKERdSP}
+                        mode="single"
+                    />
             )}
         </ScreenWrapper>
     );
