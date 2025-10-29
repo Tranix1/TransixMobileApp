@@ -42,9 +42,11 @@ import { uploadImage } from "@/db/operations";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "@/db/fireBaseConfig";
 import { pickDocument, selectManyImages, pickDocumentsOnly } from "@/Utilities/utils";
+import { selectImage, selectImageNoCrop, selectImageWithCrop, takePhoto } from "@/Utilities/imageUtils";
 import { DocumentAsset } from "@/types/types";
 import { ImagePickerAsset } from "expo-image-picker";
 import { ErrorModal } from "@/components/ErrorModal";
+import KYCVerificationModal from "@/components/KYCVerificationModal";
 
 import { notifyTrucksByFilters } from "@/Utilities/notifyTruckByFilters";
 import { TruckNeededType } from "@/types/types";
@@ -522,7 +524,7 @@ const AddLoadDB = () => {
   useEffect(() => {
     const fetchPersonalDetails = async () => {
       // Check for both general and professional in the unified collection
-      const personDetails = await getDocById('cargoPersonalDetails', (data) => {
+      const personDetails = await getDocById('verifiedUsers', (data) => {
         if (data) {
           if (data.accType === 'general') {
             setGeneralDetails({
@@ -564,6 +566,31 @@ const AddLoadDB = () => {
       }
     }
   }, [cargoDataChecked, userType, getGeneralDetails, getProfessionalDetails]);
+
+  // Autofill fields for professional users with existing verified details
+  useEffect(() => {
+    if (userType === 'professional' && getProfessionalDetails) {
+      // In a real implementation, fetch and autofill from verifiedUsers collection
+      // For now, show confirmation that verified details will be used
+      // Future: setPersonalName(fetchedData.fullName);
+      // Future: setPersonalPhone(fetchedData.phoneNumber);
+      // Future: setPersonalEmail(fetchedData.email);
+      // Future: setPersonalCountryCode({ id: 0, name: fetchedData.countryCode });
+      // Future: setTypeOfBrokerPersonal(fetchedData.typeOfBroker);
+      // Disable editing of autofilled fields
+      ToastAndroid.show('Your verified professional details will be used', ToastAndroid.SHORT);
+    }
+  }, [userType, getProfessionalDetails]);
+
+  // Handle general user ID + selfie verification
+  useEffect(() => {
+    if (userType === 'general' && getGeneralDetails) {
+      // Show confirmation that verified ID will be used
+      ToastAndroid.show('Your verified ID and live selfie will be used', ToastAndroid.SHORT);
+      // In a real implementation, show confirmation modal: "Your verified ID will be used"
+      // Future: Display confirmation and disable ID upload fields
+    }
+  }, [userType, getGeneralDetails]);
 
   // Ensure return currency and model are properly initialized
   useEffect(() => {
@@ -618,10 +645,16 @@ const AddLoadDB = () => {
         setIsSubmittingPersonal(false);
         return;
       }
+      if (!selectedPersonalDocuments[1] || !personalFileType[1]) {
+        alertBox("Missing Personal Details", "Please take a live selfie holding your ID using the camera", [], "error");
+        setIsSubmittingPersonal(false);
+        return;
+      }
 
-      let idDocument;
+      let idDocument, selfieDocument;
 
       idDocument = await uploadImage(selectedPersonalDocuments[0], "CargoPersonal", setUploadImageUpdate, "ID uploading");
+      selfieDocument = await uploadImage(selectedPersonalDocuments[1], "CargoPersonal", setUploadImageUpdate, "Selfie uploading");
 
       const personalDetailsData = {
         userId: user?.uid,
@@ -632,18 +665,24 @@ const AddLoadDB = () => {
         countryCode: personalCountryCode.name,
         idDocument: idDocument || null,
         idDocumentType: personalFileType[0] || null,
+        selfieDocument: selfieDocument || null,
+        selfieDocumentType: personalFileType[1] || null,
         createdAt: Date.now().toString(),
         isApproved: false,
-        approvalStatus: 'pending'
+        approvalStatus: 'pending',
+        // Placeholders for future AI/photo verification
+        aiVerificationScore: null,
+        photoVerificationStatus: null,
+        biometricData: null
       };
 
-      await setDocuments("cargoPersonalDetails", personalDetailsData);
+      await setDocuments("verifiedUsers", personalDetailsData);
 
       setShowPersonalDetailsModal(false);
       ToastAndroid.show("Personal Details created successfully!", ToastAndroid.SHORT);
 
       // Refresh the personal details check
-      const updatedDetails = await getDocById('cargoPersonalDetails', (data) => {
+      const updatedDetails = await getDocById('verifiedUsers', (data) => {
         if (data && data.accType === 'general') {
           setGeneralDetails({
             docId: data.id || '',
@@ -745,16 +784,20 @@ const AddLoadDB = () => {
         companyLetterHeadType: brokerPersonalFileType[3] || null,
         createdAt: Date.now().toString(),
         isApproved: false,
-        approvalStatus: 'pending'
+        approvalStatus: 'pending',
+        // Placeholders for future AI/photo verification
+        aiVerificationScore: null,
+        photoVerificationStatus: null,
+        biometricData: null
       };
 
-      await setDocuments("cargoPersonalDetails", professionalDetailsData);
+      await setDocuments("verifiedUsers", professionalDetailsData);
 
       setShowPersonalDetailsModal(false);
       ToastAndroid.show("Professional Details submitted successfully!", ToastAndroid.SHORT);
 
       // Refresh the personal details check
-      const updatedDetails = await getDocById('cargoPersonalDetails', (data) => {
+      const updatedDetails = await getDocById('verifiedUsers', (data) => {
         if (data && data.accType === 'professional') {
           setProfessionalDetails({
             docId: data.id || '',
@@ -1035,7 +1078,7 @@ const AddLoadDB = () => {
         durationInTraffic,
         routePolyline,
         bounds,
-        // Personal details reference
+        // Personal details reference from verifiedUsers
         personalDetailsDocId: getGeneralDetails?.docId || getProfessionalDetails?.docId || null,
         personalAccTypeIsApproved: getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved || false,
         personalAccType: getGeneralDetails?.accType || getProfessionalDetails?.accType || null,
@@ -1317,9 +1360,16 @@ const AddLoadDB = () => {
 
       {!cargoLoading && cargoDataChecked && userType && (getGeneralDetails || getProfessionalDetails) && (
         <View style={{ paddingHorizontal: wp(4), paddingVertical: wp(1) }}>
-          <ThemedText style={{ textAlign: "center", color: accent, fontSize: 14 }}>
-            {getGeneralDetails ? "General" : "Professional"} User • {(getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "Approved" : "Pending"}
-          </ThemedText>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            {(getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? (
+              <Ionicons name="checkmark-circle" size={wp(4)} color="#0f9d58" />
+            ) : (
+              <Ionicons name="time" size={wp(4)} color="#ff9800" />
+            )}
+            <ThemedText style={{ marginLeft: wp(2), color: (getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "#0f9d58" : "#ff9800", fontSize: 14 }}>
+              {getGeneralDetails ? "General" : "Professional"} User • {(getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "Verified" : "Pending Verification"}
+            </ThemedText>
+          </View>
         </View>
       )}
 
@@ -2210,6 +2260,24 @@ const AddLoadDB = () => {
                   onPickDocument={() => pickDocument(setSelectedPersonalDocuments, setPersonalFileType)}
                 />
 
+                <DocumentUploader
+                  documents={selectedPersonalDocuments[1]}
+                  title="Live Selfie with ID"
+                  subtitle="Take a live photo holding your ID (Camera required)"
+                  buttonTiitle="Take Live Selfie"
+                  onPickDocument={() => takePhoto((image) => {
+                    setSelectedPersonalDocuments(prev => [prev[0], {
+                      name: 'selfie.jpg',
+                      uri: image.uri,
+                      size: image.fileSize || 0,
+                      mimeType: image.mimeType || 'image/jpeg'
+                    }, ...prev.slice(2)]);
+                    setPersonalFileType(prev => ['image', ...prev.slice(1)]);
+                  })}
+                  disabled={!selectedPersonalDocuments[0]}
+                  toastMessage="Upload ID document first"
+                />
+
                 <Button
                   onPress={handleUpdateGeneralDetails}
                   loading={isSubmittingPersonal}
@@ -2226,152 +2294,29 @@ const AddLoadDB = () => {
       </Modal>
 
       {/* Professional User Personal Details Modal */}
-      <Modal visible={showPersonalDetailsModal && selectedPersonalType === 'professional'} statusBarTranslucent animationType="slide">
-        <ScreenWrapper>
-          <View style={{ margin: wp(4), marginTop: hp(6) }}>
-            <View style={{ gap: wp(2) }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
-                <TouchableOpacity onPress={() => {
-                  setShowPersonalDetailsModal(false);
-                  setSelectedPersonalType(null);
-                }}>
-                  <AntDesign name="close" color={icon} size={wp(4)} />
-                </TouchableOpacity>
-                <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }}>PROFESSIONAL DETAILS</ThemedText>
-              </View>
-
-              <ScrollView>
-                <HorizontalTickComponent
-                  data={[
-                    { topic: "Company Broker", value: "Company Broker" },
-                    { topic: "Independent Broker", value: "Independent Broker" }
-                  ]}
-                  condition={typeOfBrokerPersonal}
-                  onSelect={(value: string) => {
-                    setTypeOfBrokerPersonal(value);
-                  }}
-                />
-
-                <ThemedText>Full Name</ThemedText>
-                <Input
-                  placeholder="Enter your full name"
-                  value={personalName}
-                  onChangeText={setPersonalName}
-                />
-
-                <ThemedText>Phone Number</ThemedText>
-                <Input
-                  Icon={<>
-                    <Dropdown
-                      style={[{ width: wp(15) }]}
-                      selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
-                      data={countryCodes}
-                      maxHeight={hp(60)}
-                      labelField="name"
-                      valueField="name"
-                      placeholder="+00"
-                      value={personalCountryCode?.name}
-                      itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-                      activeColor={background}
-                      containerStyle={{
-                        borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                        width: wp(30),
-                        shadowOffset: { width: 0, height: 9 },
-                        shadowOpacity: 0.50,
-                        shadowRadius: 12.35,
-                        elevation: 19,
-                        paddingVertical: wp(1)
-                      }}
-                      onChange={item => setPersonalCountryCode(item)}
-                      renderLeftIcon={() => <></>}
-                      renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
-                      renderItem={((item, selected) =>
-                        <>
-                          <View style={[styles.item, selected && {}]}>
-                            <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
-                            {selected && (
-                              <Ionicons color={icon} name='checkmark-outline' size={wp(5)} />
-                            )}
-                          </View>
-                          <Divider />
-                        </>
-                      )}
-                    />
-                    <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
-                  </>}
-                  value={personalPhone}
-                  placeholder="700 000 000"
-                  onChangeText={setPersonalPhone}
-                />
-
-                <ThemedText>Email Address</ThemedText>
-                <Input
-                  placeholder="Enter your email"
-                  value={personalEmail}
-                  onChangeText={setPersonalEmail}
-                />
-
-                <DocumentUploader
-                  documents={selectedBrokerPersonalDocuments[0]}
-                  title="National ID / Passport"
-                  subtitle="Upload your ID or Passport (PDF or Image)"
-                  buttonTiitle="National ID / Passport"
-                  onPickDocument={() => {
-                    pickDocument(setSelectedBrokerPersonalDocuments, setBrokerPersonalFileType);
-                  }}
-                />
-
-                <DocumentUploader
-                  documents={selectedBrokerPersonalDocuments[1]}
-                  title="Proof of Residence"
-                  subtitle="Upload utility bill, lease, or bank statement (PDF or Image)"
-                  buttonTiitle="Proof of Address"
-                  onPickDocument={() => {
-                    pickDocument(setSelectedBrokerPersonalDocuments, setBrokerPersonalFileType);
-                  }}
-                  disabled={!selectedBrokerPersonalDocuments[0]}
-                  toastMessage="Please upload ID first"
-                />
-
-                {typeOfBrokerPersonal === "Company Broker" && (
-                  <DocumentUploader
-                    documents={selectedBrokerPersonalDocuments[2]}
-                    title="Company Certificate"
-                    subtitle="Upload registration certificate (PDF or Image)"
-                    buttonTiitle="Company Registration"
-                    onPickDocument={() => pickDocument(setSelectedBrokerPersonalDocuments, setBrokerPersonalFileType)}
-                    disabled={!selectedBrokerPersonalDocuments[1]}
-                    toastMessage="Upload address proof first"
-                  />
-                )}
-
-                {typeOfBrokerPersonal === "Company Broker" && (
-                  <DocumentUploader
-                    documents={selectedBrokerPersonalDocuments[3]}
-                    title="Company Letter"
-                    subtitle="Upload signed letterhead or authorization (PDF or Image)"
-                    buttonTiitle="Letter Head"
-                    onPickDocument={() => pickDocument(setSelectedBrokerPersonalDocuments, setBrokerPersonalFileType)}
-                    disabled={!selectedBrokerPersonalDocuments[2]}
-                    toastMessage="Upload certificate first"
-                  />
-                )}
-
-                <Button
-                  onPress={handleUpdateProfessionalDetails}
-                  loading={uploadingPersonalD}
-                  disabled={uploadingPersonalD}
-                  title={uploadingPersonalD ? "Saving..." : "Save"}
-                  colors={{ text: '#0f9d58', bg: '#0f9d5824' }}
-                  style={{ height: 44 }}
-                />
-
-                <View style={{ height: 140 }} />
-              </ScrollView>
-            </View>
-          </View>
-        </ScreenWrapper>
-      </Modal>
+      <KYCVerificationModal
+        visible={showPersonalDetailsModal && selectedPersonalType === 'professional'}
+        onClose={() => {
+          setShowPersonalDetailsModal(false);
+          setSelectedPersonalType(null);
+        }}
+        typeOfBrokerPersonal={typeOfBrokerPersonal}
+        setTypeOfBrokerPersonal={setTypeOfBrokerPersonal}
+        personalName={personalName}
+        setPersonalName={setPersonalName}
+        personalPhone={personalPhone}
+        setPersonalPhone={setPersonalPhone}
+        personalEmail={personalEmail}
+        setPersonalEmail={setPersonalEmail}
+        personalCountryCode={personalCountryCode}
+        setPersonalCountryCode={setPersonalCountryCode}
+        selectedBrokerPersonalDocuments={selectedBrokerPersonalDocuments}
+        setSelectedBrokerPersonalDocuments={setSelectedBrokerPersonalDocuments}
+        brokerPersonalFileType={brokerPersonalFileType}
+        setBrokerPersonalFileType={setBrokerPersonalFileType}
+        uploadingPersonalD={uploadingPersonalD}
+        onSave={handleUpdateProfessionalDetails}
+      />
 
       {/* Error Modal */}
       <ErrorModal

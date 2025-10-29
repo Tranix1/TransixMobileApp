@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ToastAndroid, Animated } from 'react-native';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useAuth } from '@/context/AuthContext';
 import CustomHeader from '@/components/CustomHeader';
 import AuthStatusModal from '@/components/AuthStatusModal';
 import UserMenuModal from '@/components/UserMenuModal';
 import UpdateModal from '@/components/UpdateModal';
-import HomeContent from '@/components/HomeContent';
+import GeneralUserContent from '@/components/GeneralUserContent';
+import BrokerContent from '@/components/BrokerContent';
+import FleetContent from '@/components/FleetContent';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
 import NetInfo from '@react-native-community/netinfo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function Index() {
-    const { user: contextUser } = useAuth();
     const {
         isAuthenticated,
         user,
@@ -37,6 +39,14 @@ function Index() {
     const [dspMenu, setDspMenu] = useState(false);
     const [isConnectedInternet, setIsConnectedInternet] = useState(true);
     const [fadeAnim] = useState(new Animated.Value(0));
+    const [currentRole, setCurrentRole] = useState<'general' | 'fleet' | 'broker' | {
+        role: 'fleet';
+        fleetId: string;
+        companyName: string;
+        userRole: string;
+        accType: string;
+    }>('general');
+
 
     useEffect(() => {
         const unsubscribe = NetInfo.addEventListener(state => {
@@ -56,6 +66,29 @@ function Index() {
             useNativeDriver: true,
         }).start();
     }, []);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            // Load the current role from AsyncStorage when screen comes into focus
+            const loadRole = async () => {
+                const roleData = await AsyncStorage.getItem('currentRole');
+                if (roleData) {
+                    try {
+                        const parsedRole = JSON.parse(roleData);
+                        if (typeof parsedRole === 'object' && parsedRole.role === 'fleet') {
+                            setCurrentRole(parsedRole);
+                        } else {
+                            setCurrentRole(parsedRole as 'general' | 'fleet' | 'broker');
+                        }
+                    } catch (error) {
+                        // If parsing fails, treat as string
+                        setCurrentRole(roleData as 'general' | 'fleet' | 'broker');
+                    }
+                }
+            };
+            loadRole();
+        }, [])
+    );
 
 
     const checkAuth = (theAction?: () => void) => {
@@ -104,12 +137,18 @@ function Index() {
 
     return (
         <View style={styles.container}>
-            <CustomHeader onPressMenu={() => checkAuth()} />
+            <CustomHeader onPressMenu={() => checkAuth()} currentRole={currentRole} />
 
             <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-                <HomeContent
-                    onAuthCheck={checkAuth}
-                />
+                {currentRole === 'general' && (
+                    <GeneralUserContent onAuthCheck={checkAuth} />
+                )}
+                {(currentRole === 'fleet' || (typeof currentRole === 'object' && currentRole.role === 'fleet')) && (
+                    <FleetContent onAuthCheck={checkAuth} />
+                )}
+                {currentRole === 'broker' && (
+                    <BrokerContent onAuthCheck={checkAuth} />
+                )}
             </Animated.View>
 
             {/* Authentication Modals */}

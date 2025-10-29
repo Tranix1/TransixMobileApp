@@ -27,16 +27,9 @@ import { sendPushNotification } from "@/Utilities/pushNotification";
 import Input from "@/components/Input";
 import TruckAvailabilityModal, { TruckAvailabilityData } from "@/components/TruckAvailabilityModal";
 
-
-
 import ImageViewing from 'react-native-image-viewing';
 
-const screenWidth = Dimensions.get('window').width;
-
 const TruckDetails = () => {
-
-
-
 
     const icon = useThemeColor("icon");
     const accent = useThemeColor("accent");
@@ -44,7 +37,9 @@ const TruckDetails = () => {
     const background = useThemeColor("background");
     const coolGray = useThemeColor("coolGray");
     const backgroundLight = useThemeColor("backgroundLight");
-    const { truckid, updateReuestDoc, dspDetails, truckBeingReuested, productName, origin, destination, model, rate, currency, expoPushToken } = useLocalSearchParams();
+    const textColor = useThemeColor("text");
+
+    const { truckid, updateReuestDoc, dspDetails, truckBeingReuested, productName, origin, destination, model, rate, currency, expoPushToken, fleetId } = useLocalSearchParams();
     const [truckData, setTruckData] = useState<Truck>({} as Truck)
     const [modalVisible, setModalVisible] = useState(false);
     const [availabilityModalVisible, setAvailabilityModalVisible] = useState(false);
@@ -61,7 +56,9 @@ const TruckDetails = () => {
         try {
             setRefreshing(true)
             if (!truckid) return;
-            const truck = await readById('Trucks', truckid as string)
+            // If fleetId is provided, fetch from fleet subcollection, otherwise from main Trucks collection
+            const collectionName = fleetId ? `fleets/${fleetId}/Trucks` : 'Trucks';
+            const truck = await readById(collectionName, truckid as string)
             if (truck) {
                 setTruckData(truck as Truck)
                 if (truckData) {
@@ -740,6 +737,99 @@ const TruckDetails = () => {
                         </View>
 
                     </View>
+
+                    {/* Assignment Information Section */}
+                    {(truckData.brokers && truckData.brokers.length > 0) ||
+                     (truckData.drivers && truckData.drivers.length > 0) ||
+                     (truckData.loadTypes && truckData.loadTypes.length > 0) ? (
+                        <View style={{
+                            backgroundColor: backgroundLight,
+                            padding: wp(4),
+                            borderRadius: wp(3),
+                            marginBottom: wp(4),
+                            borderWidth: 1,
+                            borderColor: coolGray
+                        }}>
+                            <ThemedText type="subtitle" style={{ color: accent, marginBottom: wp(3) }}>
+                                Assignment Information
+                            </ThemedText>
+
+                            {/* Broker Information */}
+                            {truckData.brokers && truckData.brokers.length > 0 && (
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: wp(2) }}>
+                                    <ThemedText style={{ color: textColor }}>Assigned Brokers:</ThemedText>
+                                    <ThemedText style={{ color: textColor, fontWeight: 'bold' }}>
+                                        {truckData.brokers.length} broker{truckData.brokers.length > 1 ? 's' : ''}
+                                    </ThemedText>
+                                </View>
+                            )}
+
+                            {/* Driver Information */}
+                            {truckData.drivers && truckData.drivers.length > 0 && (
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: wp(2) }}>
+                                    <ThemedText style={{ color: textColor }}>Assigned Drivers:</ThemedText>
+                                    <ThemedText style={{ color: textColor, fontWeight: 'bold' }}>
+                                        {truckData.drivers.length} driver{truckData.drivers.length > 1 ? 's' : ''}
+                                    </ThemedText>
+                                </View>
+                            )}
+
+                            {/* Load Types Information */}
+                            {truckData.loadTypes && truckData.loadTypes.length > 0 && (
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: wp(2) }}>
+                                    <ThemedText style={{ color: textColor }}>Supported Load Types:</ThemedText>
+                                    <ThemedText style={{ color: textColor, fontWeight: 'bold' }}>
+                                        {truckData.loadTypes.length} type{truckData.loadTypes.length !== 1 ? 's' : ''}
+                                    </ThemedText>
+                                </View>
+                            )}
+
+                            {/* Show actual lists if available */}
+                            {truckData.brokers && truckData.brokers.length > 0 && (
+                                <View style={{ marginTop: wp(2) }}>
+                                    <ThemedText type="tiny" style={{ color: icon, marginBottom: wp(1) }}>Brokers:</ThemedText>
+                                    {truckData.brokers.map((broker, index) => (
+                                        <ThemedText key={index} type="tiny" style={{ color: textColor, marginBottom: wp(0.5) }}>
+                                            • {broker}
+                                        </ThemedText>
+                                    ))}
+                                </View>
+                            )}
+
+                            {truckData.drivers && truckData.drivers.length > 0 && (
+                                <View style={{ marginTop: wp(2) }}>
+                                    <ThemedText type="tiny" style={{ color: icon, marginBottom: wp(1) }}>Drivers:</ThemedText>
+                                    {truckData.drivers.map((driver, index) => (
+                                        <ThemedText key={index} type="tiny" style={{ color: textColor, marginBottom: wp(0.5) }}>
+                                            • {driver}
+                                        </ThemedText>
+                                    ))}
+                                </View>
+                            )}
+
+                            {truckData.loadTypes && truckData.loadTypes.length > 0 && (
+                                <View style={{ marginTop: wp(2) }}>
+                                    <ThemedText type="tiny" style={{ color: icon, marginBottom: wp(1) }}>Load Types:</ThemedText>
+                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                                        {truckData.loadTypes.map((type, index) => (
+                                            <View key={index} style={{
+                                                backgroundColor: accent + '20',
+                                                paddingHorizontal: wp(2),
+                                                paddingVertical: wp(1),
+                                                borderRadius: wp(2),
+                                                marginRight: wp(1),
+                                                marginBottom: wp(1)
+                                            }}>
+                                                <ThemedText type="tiny" style={{ color: accent, fontWeight: 'bold' }}>
+                                                    {type}
+                                                </ThemedText>
+                                            </View>
+                                        ))}
+                                    </View>
+                                </View>
+                            )}
+                        </View>
+                    ) : null}
 
 
 

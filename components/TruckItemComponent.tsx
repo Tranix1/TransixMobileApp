@@ -7,10 +7,9 @@ import { ThemedText } from './ThemedText'
 import { Image } from 'expo-image'
 import { FontAwesome5, FontAwesome6, Fontisto, Octicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
-import { collection, serverTimestamp, addDoc, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 import { auth, db } from '@/db/fireBaseConfig'
 
-const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contracts }) => {
+const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contracts, fleetId }: { truck?: Truck, truckContract?: Contracts, fleetId?: string }) => {
     const backgroundLight = useThemeColor('backgroundLight')
     const background = useThemeColor('background')
     const coolGray = useThemeColor('coolGray')
@@ -21,25 +20,8 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
     const placeholder = require('@/assets/images/failedimage.jpg')
 
 
-    const checkExistixtBBDoc = async (trckContractId: string) => {
-        console.log("Checking truck is booked")
-        const chatsRef = collection(db, 'OngoingContracts'); // Reference to the 'ppleInTouch' collection
-        const chatQuery = query(chatsRef, where('trckContractId', '==', trckContractId), where('alreadyInContract', '==', true)); // Query for matching chat ID
-
-        const querySnapshot = await getDocs(chatQuery);
-        // Check if any documents exist with the chat ID
-        console.log("Truck Booked")
-        return !querySnapshot.empty; // Returns true if a document exists, false otherwise
-    };
-
-    //
-
-
-
-
-
     return (
-        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id, dspDetails: "false", } })} style={[styles.container, { backgroundColor: background, borderColor: backgroundLight }]}>
+        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id, dspDetails: "false", fleetId: fleetId || undefined } })} style={[styles.container, { backgroundColor: background, borderColor: backgroundLight }]}>
             <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truck.imageUrl }} style={styles.image} />
             <View style={styles.detailsContainer}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -61,10 +43,7 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
 
                         <FontAwesome5 name="user-alt" size={wp(3.5)} style={{ width: wp(5) }} color={icon} />
                         <ThemedText numberOfLines={1} type='tiny' style={[{ fontSize: 13 }]}>
-                            {/* {truck.truckType || 'N/A'} */}
-
-                            {truck.accType === 'owner' && "Owner"}
-                            {truck.accType === 'broker' && "Broker"}
+                                    {truck.accType }
                         </ThemedText>
 
                     </View>

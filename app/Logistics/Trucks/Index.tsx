@@ -12,6 +12,8 @@ import ScreenWrapper from '@/components/ScreenWrapper'
 import { FinalReturnComponent } from '@/components/TrucksHomePage'
 import AccentRingLoader from '@/components/AccentRingLoader';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { HorizontalTickComponent } from '@/components/SlctHorizonzalTick';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const Index = () => {
 
     const { userId, organisationName, contractName, contractId, capacityG, cargoAreaG, truckTypeG, operationCountriesG } = useLocalSearchParams();
@@ -42,6 +44,24 @@ const Index = () => {
     });
 
     const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
+    const [truckVisibility, setTruckVisibility] = useState<'All' | 'Private' | 'Public'>('Private');
+    const [currentRole, setCurrentRole] = useState<any>(null);
+
+    useEffect(() => {
+        const getCurrentRole = async () => {
+            try {
+                const roleData = await AsyncStorage.getItem('currentRole');
+                if (roleData) {
+                    const parsedRole = JSON.parse(roleData);
+                    setCurrentRole(parsedRole);
+                }
+            } catch (error) {
+                console.error('Error getting current role:', error);
+            }
+        };
+        getCurrentRole();
+    }, []);
+
     const LoadTructs = async () => {
         try {
             setIsLoading(true);
@@ -50,20 +70,35 @@ const Index = () => {
             // Apply filters for truck properties first
             if (userId) filters.push(where("userId", "==", userId));
             if (truckCapacity) filters.push(where("truckCapacity", "==", truckCapacity));
+            if (truckConfig) filters.push(where("truckConfig", "==", truckConfig));
+            if (truckSuspension) filters.push(where("truckSuspension", "==", truckSuspension));
             if (selectedCargoArea) filters.push(where("cargoArea", "==", selectedCargoArea?.name));
             if (tankerType && selectedCargoArea) filters.push(where("tankerType", "==", tankerType))
             // Conditionally add the country filter
-            if (operationCountries.length > 0) filters.push(where("locations", "array-contains-any", operationCountries));
+            if (operationCountries.length > 0) filters.push(where("locations", "array-contains-any", operationCountries.slice(0, 10)));
+
+                if (truckVisibility === 'Public') {
+                    filters.push(where("truckVisibility", "==", "Public"));
+                }
+
 
             // Only show approved trucks to users (except truck owners viewing their own)
-            if (!userId) {
+            if (userId) {
                 filters.push(where("isApproved", "==", true));
                 filters.push(where("approvalStatus", "==", "approved"));
-                filters.push(where("accTypeIsApproved", "==", true));
             }
 
+            console.log("Filters applied:", filters);
+
             // Fetch data from Firestore with the initially applied filters
-            const maTrucks = await fetchDocuments(contractId ? "ContractRequests" : "Trucks", 10, undefined, filters);
+            let collectionName = contractId ? "ContractRequests" : "Trucks";
+
+            // If user is in fleet mode and viewing private trucks, fetch from fleet subcollection
+            if ( currentRole?.accType === 'fleet' && truckVisibility === 'Private') {
+                collectionName = `fleets/${currentRole.fleetId}/Trucks`;
+            }
+
+            const maTrucks = await fetchDocuments(collectionName, 10, undefined, filters);
 
             let trucksToSet: Truck[] = [];
 
@@ -78,6 +113,11 @@ const Index = () => {
                 } else {
                     // Otherwise, use the data as fetched (which would be filtered only by truck properties)
                     trucksToSet = maTrucks.data as Truck[];
+                }
+
+                // Apply truck visibility filter
+                if (truckVisibility !== 'All') {
+                    trucksToSet = trucksToSet.filter((truck: any) => truck.truckVisibility === truckVisibility);
                 }
 
                 setTrucks(trucksToSet);
@@ -97,7 +137,7 @@ const Index = () => {
 
     useEffect(() => {
         LoadTructs();
-    }, [truckCapacity, truckConfig, truckSuspension, operationCountries, selectedCargoArea, userId])
+    }, [truckCapacity, truckConfig, truckSuspension, operationCountries, selectedCargoArea, userId, truckVisibility])
 
     const onRefresh = async () => {
         try {
@@ -123,7 +163,7 @@ const Index = () => {
         if (userId) filters.push(where("userId", "==", userId));
         if (truckCapacity) filters.push(where("truckCapacity", "==", truckCapacity));
         if (truckConfig) filters.push(where("truckConfig", "==", truckConfig));
-        if (truckSuspension) filters.push(where("truckSuspensions", "==", truckSuspension));
+        if (truckSuspension) filters.push(where("truckSuspension", "==", truckSuspension));
         if (selectedCargoArea) filters.push(where("cargoArea", "==", selectedCargoArea?.name));
         if (tankerType && selectedCargoArea) filters.push(where("tankerType", "==", tankerType));
         if (operationCountries.length > 0) {
@@ -131,8 +171,26 @@ const Index = () => {
             filters.push(where("locations", "array-contains-any", operationCountries.slice(0, 10)));
         }
 
+        if (truckVisibility === 'Public') {
+            filters.push(where("truckVisibility", "==", "Public"));
+        }
+
+        // Only show approved trucks to users (except truck owners viewing their own)
+        if (!userId) {
+            filters.push(where("isApproved", "==", true));
+            filters.push(where("approvalStatus", "==", "approved"));
+        }
+
+        // Fetch data from Firestore with the initially applied filters
+        let collectionName = contractId ? "ContractRequests" : "Trucks";
+
+        // If user is in fleet mode and viewing private trucks, fetch from fleet subcollection
+        if ( currentRole?.accType === 'fleet' && truckVisibility === 'Private') {
+            collectionName = `fleets/${currentRole.fleetId}/Trucks`;
+        }
+
         // Fetch with pagination
-        const result = await fetchDocuments('Trucks', 10, lastVisible, filters);
+        const result = await fetchDocuments(collectionName, 10, lastVisible, filters);
 
         if (result && result.data) {
             let newTrucks = result.data as Truck[];
@@ -142,6 +200,11 @@ const Index = () => {
                 newTrucks = newTrucks.filter(truck =>
                     operationCountries.every(country => truck.locations?.includes(country))
                 );
+            }
+
+            // Apply truck visibility filter
+            if (truckVisibility !== 'All') {
+                newTrucks = newTrucks.filter((truck: any) => truck.truckVisibility === truckVisibility);
             }
 
             setTrucks(prev => [...prev, ...newTrucks]);
@@ -161,6 +224,17 @@ const Index = () => {
 
     return (
         <View style={{ flex: 1 }}>
+            {/* Truck Visibility Selector */}
+            {currentRole?.role === 'fleet' && currentRole?.accType === 'fleet' && (
+                    <HorizontalTickComponent
+                        data={[
+                            { topic: "Private", value: "Private" },
+                            { topic: "Public", value: "Public" }
+                        ]}
+                        condition={truckVisibility}
+                        onSelect={setTruckVisibility}
+                    />
+            )}
 
             {(!contractId || !userId || !capacityG) && <View style={{ flex: 1 }}>
                 <FinalReturnComponent
@@ -182,7 +256,7 @@ const Index = () => {
                     lastVisible={lastVisible}
                     loadingMore={loadingMore}
                     clearFilter={clearFilter}
-
+                    fleetId={currentRole?.accType === 'fleet' ? currentRole.fleetId : undefined}
                     filteredPNotAavaialble={filteredPNotAavaialble}
                 />
             </View>}
@@ -220,4 +294,5 @@ const Index = () => {
 }
 
 export default Index
+
 

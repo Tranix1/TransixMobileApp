@@ -105,7 +105,7 @@ export default function UserMenuModal({ visible, onClose, user, onProfileUpdate 
                         </View>
 
                         <View style={styles.content}>
-                            <ProfileManager user={user} onProfileUpdate={onProfileUpdate} />
+                            <ProfileManager user={user} onProfileUpdate={onProfileUpdate} onClose={onClose} />
 
                             <View style={styles.menuItems}>
                                 {menuItems.map((item, index) => (

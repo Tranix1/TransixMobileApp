@@ -51,6 +51,7 @@ type FinalReturnComponentProps = {
   filteredPNotAavaialble: boolean;
   isLoading?: boolean;
   hasLoaded?: boolean;
+  fleetId?: string;
 
 }
 
@@ -78,7 +79,8 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
   contractId,
   filteredPNotAavaialble,
   isLoading = false,
-  hasLoaded = false
+  hasLoaded = false,
+  fleetId
 
 }) => {
 
@@ -144,7 +146,7 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
         </View>
 
         <FlatList
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.id || Math.random().toString()}
           ListHeaderComponent={() => (
             <>
 
@@ -227,7 +229,7 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
             </>
           )}
           data={trucks}
-          renderItem={({ item }) => <TruckItemComponent truck={contractId !== "undefined" && contractId ? item.truckInfo : item} truckContract={contractId ? item : null} />}
+          renderItem={({ item }) => <TruckItemComponent truck={contractId !== "undefined" && contractId ? item.truckInfo : item} truckContract={contractId ? item : null} fleetId={fleetId} />}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[accent]} />
           }

@@ -68,6 +68,11 @@ export type Truck = {
     // Tracker system
     hasTracker?: boolean;
     expoPushToken?: string;
+
+    // Broker and Driver assignments
+    brokers?: string[];
+    drivers?: string[];
+    loadTypes?: string[];
 } & TruckFormData;
 
 

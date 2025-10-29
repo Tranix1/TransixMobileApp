@@ -1,12 +1,13 @@
 import 'react-native-get-random-values';
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, ToastAndroid, ActivityIndicator } from "react-native"
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { countryCodes, } from "@/data/appConstants";
 
 
 import type { ImagePickerAsset } from 'expo-image-picker';
-import { addDocument, getDocById, setDocuments } from "@/db/operations";
+import { addDocument, getDocById, setDocuments, getUsers } from "@/db/operations";
 import { uploadImage } from "@/db/operations";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "@/db/fireBaseConfig";
@@ -37,13 +38,10 @@ import { DocumentUploader } from "@/components/DocumentUploader";
 import { usePushNotifications, notifyTruckApprovalAdmins } from "@/Utilities/pushNotification";
 import { pickDocument } from "@/Utilities/utils";
 import { DocumentAsset } from "@/types/types";
+import KYCVerificationModal from "@/components/KYCVerificationModal";
 
 
 function AddTrucks() {
-
-
-
-
 
   const { expoPushToken } = usePushNotifications();
   // Theme colors
@@ -68,65 +66,21 @@ function AddTrucks() {
   const [ownerEmailAddDb, setOwnerEmailAddDb] = useState('');
   const [ownerPhonNumAddDb, setOwnerPhoneNum] = useState('');
 
+ 
+
   const [selectedOwnerDocuments, setSelectedOwnerDocumentS] = useState<DocumentAsset[]>([]);
   const [ownerFileType, setOwnerFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([])
+  const [ownershipFileType, setOwnerShipFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([])
+  const [selectedTruckLease, setSelectedTruckLease] = useState<DocumentAsset[]>([]);
+  const [truckLeaseFileType, setTruckLeaseFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([])
+
   const [selectedBrokerDocuments, setSelectedBrokerDocumentS] = useState<DocumentAsset[]>([]);
   const [brokerFileType, setBrokerFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([])
 
 
 
   const [uploadingOwnerD, setUploadingOwerD] = React.useState(false)
-  const [isSubmittingOwner, setIsSubmittingOwner] = React.useState(false)
-  const handleUpdateTOwnerDetails = async () => {
-    setIsSubmittingOwner(true);
-    try {
-      const missingTruckDetails = [
-        !ownerNameAddDb && "Enter Owner Name ",
-        !ownerPhonNumAddDb && "Enter Phone Number",
-        !ownerEmailAddDb && "Enter Email Address",
-        !selectedOwnerDocuments[0] && "Pick Proof of ownership document or image ",
-        !selectedOwnerDocuments[1] && "Pick Id document or image",
-        !selectedOwnerDocuments[2] && "Pick Proof Of Residence",
-      ].filter(Boolean);
 
-      if (missingTruckDetails.length > 0) {
-        alertBox("Missing Ownership Details", missingTruckDetails.join("\n"), [], "error");
-        return;
-      }
-
-      let proofOfTruckOwnerhip, directorOwnerId, ownerProofOfRes;
-
-      proofOfTruckOwnerhip = await uploadImage(selectedOwnerDocuments[0], "TruckOwnership", setUploadImageUpdate, "Ownership uploading");
-      directorOwnerId = await uploadImage(selectedOwnerDocuments[1], "TruckOwnership", setUploadImageUpdate, "ID uploading");
-      ownerProofOfRes = await uploadImage(selectedOwnerDocuments[2], "TruckOwnership", setUploadImageUpdate, "Proof Of Res uploading");
-
-
-      await setDocuments("truckPersonDetails", {
-        userId: user?.uid,
-        accType: 'owner',
-        ownerName: ownerNameAddDb,
-        ownerPhoneNum: ownerPhonNumAddDb,
-        ownerEmail: ownerEmailAddDb,
-        ownershipProof: proofOfTruckOwnerhip || null,
-        directorOwnerId: directorOwnerId || null,
-        ownerProofOfRes: ownerProofOfRes || null,
-
-        proofOfTruckOwnerhipType: ownerFileType[0] || null,
-        directorOwnerIdType: ownerFileType[1] || null,
-        ownerProofOfResType: ownerFileType[2] || null,
-        createdAt: Date.now().toString(),
-        isApproved: false,
-        approvalStatus: 'pending'
-      })
-      setOwnerdetailsDsp(false)
-      ToastAndroid.show("Store Details created successfully!", ToastAndroid.SHORT);
-    } catch (error) {
-      console.error("Error saving owner details:", error);
-      alertBox("Error", "Failed to save owner details", [], "error");
-    } finally {
-      setIsSubmittingOwner(false);
-    }
-  };
 
 
   const [typeOfBroker, setTypeOfBroker] = React.useState("")
@@ -161,7 +115,7 @@ function AddTrucks() {
       companyLtterHead = await uploadImage(selectedBrokerDocuments[3], "TruckBroker", setUploadImageUpdate, "Company Letter Head");
 
     }
-    await setDocuments("truckPersonDetails", {
+    await setDocuments("verifiedUsers", {
       userId: user?.uid,
       accType: 'broker',
       typeOfBroker: typeOfBroker,
@@ -178,9 +132,13 @@ function AddTrucks() {
       companyLtterHeadType: brokerFileType[3] || null,
       createdAt: Date.now().toString(),
       isApproved: false,
-      approvalStatus: 'pending'
+      approvalStatus: 'pending',
+      // Placeholders for future AI/photo verification
+      aiVerificationScore: null,
+      photoVerificationStatus: null,
+      biometricData: null
     })
-    setOwnerdetailsDsp(false)
+    // Modal is now controlled by visible prop
 
     ToastAndroid.show("Broker Details submitted successfully!", ToastAndroid.SHORT);
   }
@@ -191,39 +149,65 @@ function AddTrucks() {
     accType: 'owner';
   }
 
-  interface TruckBroker {
+
+  interface userIsVerifiedProps {
     docId: string;
     isApproved: boolean;
-    accType: 'broker';
+    accType: 'professional';
   }
+  const [userIsVerified , setUserIsVerified] = useState<userIsVerifiedProps| null> (null);
+  const [userIsFleetVerified, setUserIsFleetVerified] = useState<boolean>(false);
+  const [currentRole, setCurrentRole] = useState<any>(null);
 
-
-
-  const [getOwnerDetails, setOwnerDetails] = useState<TruckOwner | null>(null);
-  const [getBrokerDetails, setBrokerDetails] = useState<TruckBroker | null>(null);
+  
+  const [ownerDetailsDsp , setOwnerdetailsDsp] = useState(false);
+  const [showUserVerificationModal, setShowUserVerificationModal] = useState(false);
+  // Removed broker details - only owner verification needed
   const [loading, setLoading] = useState(true);
   const [dataChecked, setDataChecked] = useState(false); // controls UI entry
 
+
+
   useEffect(() => {
     const fetchAll = async () => {
-      // Check for both owner and broker in the unified collection
-      const personDetails = await getDocById('truckPersonDetails', (data) => {
-        if (data) {
-          if (data.accType === 'owner') {
-            setOwnerDetails({
-              docId: data.id || '',
-              isApproved: data.isApproved || false,
-              accType: 'owner'
-            });
-          } else if (data.accType === 'broker') {
-            setBrokerDetails({
-              docId: data.id || '',
-              isApproved: data.isApproved || false,
-              accType: 'broker'
-            });
+      // Check current role from AsyncStorage
+      try {
+        const storedRole = await AsyncStorage.getItem('currentRole');
+        if (storedRole) {
+          const parsedRole = JSON.parse(storedRole);
+          setCurrentRole(parsedRole);
+          if (parsedRole.role === 'fleet' && parsedRole.accType === 'fleet') {
+            setUserIsFleetVerified(true);
           }
         }
+      } catch (error) {
+        console.error("Error fetching current role:", error);
+      }
+
+      // Check for owner verification in the unified verifiedUsers collection
+      const personDetails = await getDocById('verifiedUsers', (data) => {
+
+         if (data && data.accType === 'professional') {
+            setUserIsVerified({
+              docId: data.id || '',
+              isApproved: data.isApproved || false,
+              accType: 'professional'
+            });
+          }
+
+         // Check for fleet verification
+         if (data && data.accType === 'fleet' && data.verificationStatus === 'approved') {
+            setUserIsFleetVerified(true);
+          }
       });
+
+      // Fetch all users for search functionality
+      try {
+        const fetchedUsers = await getUsers();
+        setAllUsers(fetchedUsers);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
 
       setLoading(false);
 
@@ -235,6 +219,8 @@ function AddTrucks() {
 
     fetchAll();
   }, []);
+
+  
 
 
 
@@ -251,16 +237,46 @@ function AddTrucks() {
   const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(null)
   const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string } | null>(null)
   const [selectedTankerType, setSelectedTankerType] = useState<{ id: number, name: string } | null>(null)
-  const [selectedTruckCapacity, setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>(selectedTruckType?.name === "Super Link" && setSelectedCargoArea?.name !== "Tanker" ? { id: 7, name: '34T' } : selectedTruckType?.name === "Triaxle" && setSelectedCargoArea?.name !== "Tanker" ? { id: 5, name: '30T' } : null)
+  const [selectedTruckCapacity, setSelectedTruckCapacity] = useState<{ id: number, name: string } | null>(selectedTruckType?.name === "Super Link" && selectedCargoArea?.name !== "Tanker" ? { id: 7, name: '34T' } : selectedTruckType?.name === "Triaxle" && selectedCargoArea?.name !== "Tanker" ? { id: 5, name: '30T' } : null)
+
+  useEffect(() => {
+    if (selectedTruckType?.name === "Super Link" && selectedCargoArea?.name !== "Tanker") {
+      setSelectedTruckCapacity({ id: 7, name: '34T' });
+    } else if (selectedTruckType?.name === "Triaxle" && selectedCargoArea?.name !== "Tanker") {
+      setSelectedTruckCapacity({ id: 5, name: '30T' });
+    }
+  }, [selectedTruckType, selectedCargoArea]);
 
   const [showCountries, setShowCountries] = useState(false);
   const [operationCountries, setOperationCountries] = useState<string[]>([]);
 
   const [countryCode, setCountryCode] = useState<{ id: number, name: string }>({ id: 0, name: '+263' })
+const [selectedProofOfOwnerShip, setLease] = useState('');
+const [truckType, setTruckType] = useState<'Private' | 'Public'>('Private');
+const [loadTypes, setLoadTypes] = useState<string[]>([]);
+const [selectedBrokers, setSelectedBrokers] = useState<string[]>([]);
+const [selectedDrivers, setSelectedDrivers] = useState<string[]>([]);
+const [brokerSearchText, setBrokerSearchText] = useState('');
+const [driverSearchText, setDriverSearchText] = useState('');
+const [allUsers, setAllUsers] = useState<any[]>([]);
+const [searchedUsers, setSearchedUsers] = useState<any[]>([]);
+const [isSearching, setIsSearching] = useState(false);
+const generalLoadOptions = [
+ 'Food',
+ 'Electronics',
+ 'Construction Materials',
+ 'Furniture',
+ 'Agricultural Products',
+ 'Livestock',
+ 'Textiles',
+ 'Pharmaceuticals',
+ 'Machinery',
+ 'Minerals',
+ 'Bagged Products',
+ 'Any'
+];
 
-  const [ownerdetailsDsp, setOwnerdetailsDsp] = useState(true)
-
-  const [truckOwnerOBroker, setTuckOwnerOBroker] = React.useState("")
+  // Removed broker selection - only Owner allowed
 
 
   const [spinnerItem, setSpinnerItem] = useState(false);
@@ -268,6 +284,43 @@ function AddTrucks() {
 
   const { user, alertBox } = useAuth();
 
+
+  // Function to search users by email with immediate effect
+  const searchUsers = (email: string, type: 'broker' | 'driver') => {
+    if (!email.trim()) {
+      setSearchedUsers([]);
+      return;
+    }
+
+    try {
+      const filteredUsers = allUsers.filter((user) =>
+        user.email && typeof user.email === 'string' &&
+        (user.email.toLowerCase().includes(email.toLowerCase()) ||
+         (user.firstName && user.firstName.toLowerCase().includes(email.toLowerCase())) ||
+         (user.lastName && user.lastName.toLowerCase().includes(email.toLowerCase())))
+      ).slice(0, 10); // Limit to 10 results for performance
+      setSearchedUsers(filteredUsers);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      alertBox('Error', 'Failed to search users', [], 'error');
+    }
+  };
+
+  // Function to select a user
+  const selectUser = (user: any, type: 'broker' | 'driver') => {
+    if (type === 'broker') {
+      if (!selectedBrokers.includes(user.email)) {
+        setSelectedBrokers([...selectedBrokers, user.email]);
+      }
+      setBrokerSearchText('');
+    } else {
+      if (!selectedDrivers.includes(user.email)) {
+        setSelectedDrivers([...selectedDrivers, user.email]);
+      }
+      setDriverSearchText('');
+    }
+    setSearchedUsers([]);
+  };
 
   // Function to clear all form fields
   const clearFormFields = () => {
@@ -293,16 +346,28 @@ function AddTrucks() {
     setShowCountries(false);
     setOperationCountries([]);
     setCountryCode({ id: 0, name: '+263' });
-    setOwnerdetailsDsp(true); // Assuming you want this to reset to true
-    setTuckOwnerOBroker("");
+    // New fields
+    setLease('');
+    setTruckType('Private');
+    setLoadTypes([]);
+    setSelectedBrokers([]);
+    setSelectedDrivers([]);
+    setBrokerSearchText('');
+    setDriverSearchText('');
+    setSearchedUsers([]);
+    // Clear truck lease document
+    setSelectedTruckLease([]);
+    setTruckLeaseFileType([]);
+    // Modal is now controlled by visible prop
+    // Removed broker selection
     setSpinnerItem(false);
   };
 
   const handleSubmit = async () => {
 
     setSpinnerItem(true)
-    if (!getOwnerDetails && !getBrokerDetails) {
-      alert("Are you a Truck Owner or Broker\nSelect Broker owner and submit required Details")
+    if ((!userIsVerified || !userIsVerified.isApproved) && !userIsFleetVerified) {
+      alert("You must be verified as a professional or fleet owner to add a truck. Please complete the verification process first.")
       setSpinnerItem(false)
       return
     }
@@ -316,7 +381,12 @@ function AddTrucks() {
       operationCountries.length <= 0 && "Select the countries where the truck has permits.",
       (!gitImage || gitImage.length === 0) && "Upload GIT Certificate",
       (!truckNumberPlate || truckNumberPlate.length === 0) && "Upload Number Plate image",
-      !dataChecked && "Select if you are Owner or Broker",
+      !dataChecked && "Verification status not loaded",
+      (!selectedProofOfOwnerShip || selectedProofOfOwnerShip.trim() === '') && (!selectedTruckLease || selectedTruckLease.length === 0) && "Enter Ownership details or upload Ownership document",
+      !truckType && "Select Truck Type (Private/Public)",
+      loadTypes.length === 0 && "Select at least one load type",
+      selectedDrivers.length === 0 && "Assign at least one driver",
+      (!selectedTruckLease || selectedTruckLease.length === 0) && "Upload Lease/Ownership Document",
     ].filter(Boolean);
 
     if (missingTruckDetails.length > 0) {
@@ -325,78 +395,40 @@ function AddTrucks() {
       setSpinnerItem(false)
       return;
     }
-    const MissingDriverDetails = [
-      !formData.driverPhone && "",
-    ]
-    if (missingTruckDetails.length > 0) {
-      // setContractDErr(true);
-      alertBox("Missing Driver Details", MissingDriverDetails.join("\n"), [], "error");
-      setSpinnerItem(false)
-      return;
+
+
+
+
+
+
+    let truckImage, truckBookImage, trailerBookF, trailerBookSc;
+
+
+    if (selectedTruckType?.name === "Rigid") {
+      if (images.length < 2) { alert("Please select truck image and horse reg book for Rigid."); return; }
+      truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
+      truckBookImage = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Truck Book Image");
+
+    } else if (selectedTruckType?.name === "Triaxle") {
+      if (images.length < 3) { alert("Please select truck image, horse reg book, and trailer book for Triaxle."); return; }
+      truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
+      truckBookImage = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Truck Book Image");
+      trailerBookF = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Trailer Book First");
+
+    } else if (selectedTruckType?.name === "Super Link") {
+      if (images.length < 4) { alert("Please select truck image, horse reg book, trailer book, and second trailer book for Super Link."); return; }
+      truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
+      truckBookImage = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Truck Book Image");
+      trailerBookF = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Trailer Book First");
+      trailerBookSc = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "Trailer Book Second");
     }
 
+    let subTrckGIT, subTrckNumberPlate, subTrckThrdPlate, subTrckLease
 
-
-
-
-
-    let truckImage, truckBookImage, trailerBookF, trailerBookSc, driverLicense, driverPassport, driverIntPermit;
-
-
-    if (selectedTruckType?.name === "Rigid" && operationCountries.length > 1) {
-      if (images.length < 5) { alert("Please select all images for Rigid with multiple countries."); return; }
-      truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
-      driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
-      driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Driver Passport");
-      driverIntPermit = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "Driver International Permit");
-      truckBookImage = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Truck Book Image");
-
-    } else if (selectedTruckType?.name === "Rigid" && operationCountries.length === 1) {
-      if (images.length < 3) { alert("Please select all images for Rigid with one country."); return; }
-      truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
-      driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
-      truckBookImage = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Truck Book Image");
-
-    } else if (selectedTruckType?.name === "Triaxle" && operationCountries.length > 1) {
-      if (images.length < 6) { alert("Please select all images for Triaxle with multiple countries."); return; }
-      truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
-      driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
-      driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Driver Passport");
-      driverIntPermit = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "Driver International Permit");
-      truckBookImage = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Truck Book Image");
-      trailerBookF = await uploadImage(images[5], "Trucks", setUploadImageUpdate, "Trailer Book First");
-
-    } else if (selectedTruckType?.name === "Triaxle" && operationCountries.length === 1) {
-      if (images.length < 4) { alert("Please select all images for Triaxle with one country."); return; }
-      truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
-      driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
-      truckBookImage = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Truck Book Image");
-      trailerBookF = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "Trailer Book First");
-
-    } else if (selectedTruckType?.name === "Super Link" && operationCountries.length > 1) {
-      if (images.length < 7) { alert("Please select all images for Super Link with multiple countries."); return; }
-      truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
-      driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
-      driverPassport = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Driver Passport");
-      driverIntPermit = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "Driver International Permit");
-      truckBookImage = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Truck Book Image");
-      trailerBookF = await uploadImage(images[5], "Trucks", setUploadImageUpdate, "Trailer Book First");
-      trailerBookSc = await uploadImage(images[6], "Trucks", setUploadImageUpdate, "Trailer Book Second");
-
-    } else if (selectedTruckType?.name === "Super Link" && operationCountries.length === 1) {
-      if (images.length < 5) { alert("Please select all images for Super Link with one country."); return; }
-      truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
-      driverLicense = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Driver License");
-      truckBookImage = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Truck Book Image");
-      trailerBookF = await uploadImage(images[3], "Trucks", setUploadImageUpdate, "Trailer Book First");
-      trailerBookSc = await uploadImage(images[4], "Trucks", setUploadImageUpdate, "Trailer Book Second");
-    }
-
-    let subTrckGIT, subTrckNumberPlate, subTrckThrdPlate
-
-    if (gitImage && gitImage.length > 0) subTrckGIT = await uploadImage(gitImage[0], "Trucks", setUploadImageUpdate, "GIT Certificate");
-    if (truckNumberPlate && truckNumberPlate.length > 0) subTrckNumberPlate = await uploadImage(truckNumberPlate[0], "Trucks", setUploadImageUpdate, "Number Plate");
-    if (truckThirdPlate && truckThirdPlate.length > 0) subTrckThrdPlate = await uploadImage(truckThirdPlate[0], "Trucks", setUploadImageUpdate, "Third Party Insurance");
+     if (gitImage && gitImage.length > 0) subTrckGIT = await uploadImage(gitImage[0], "Trucks", setUploadImageUpdate, "GIT Certificate");
+     if (truckNumberPlate && truckNumberPlate.length > 0) subTrckNumberPlate = await uploadImage(truckNumberPlate[0], "Trucks", setUploadImageUpdate, "Number Plate");
+     if (truckThirdPlate && truckThirdPlate.length > 0) subTrckThrdPlate = await uploadImage(truckThirdPlate[0], "Trucks", setUploadImageUpdate, "Third Party Insurance");
+     if (selectedTruckLease && selectedTruckLease.length > 0) subTrckLease = await uploadImage(selectedTruckLease[0], "Trucks", setUploadImageUpdate, "Lease/Ownership Document");
 
 
     setUploadImageUpdate("")
@@ -421,6 +453,8 @@ function AddTrucks() {
     }
 
     try {
+      // Generate unique truck ID
+      const truckId = `TR${Math.floor(100000 + Math.random() * 900000)}`;
 
       const submitData = {
         userId: user.uid,
@@ -430,19 +464,15 @@ function AddTrucks() {
         truckBookImage: truckBookImage || null,
         trailerBookF: trailerBookF || null,
         trailerBookSc: trailerBookSc || null,
-        driverLicense: driverLicense || null,
-        driverIntPermit: driverIntPermit || null,
-        driverPassport: driverPassport || null,
 
         gitImage: subTrckGIT || null,
         truckNumberPlate: subTrckNumberPlate || null,
         truckThirdPlate: subTrckThrdPlate || null,
+        truckLease: subTrckLease || null,
+        truckLeaseFileType: truckLeaseFileType[0] || null,
 
-        // Simplified owner/broker data - just reference the document
-        personDetailsDocId: getOwnerDetails?.docId || getBrokerDetails?.docId || null,
-        accTypeIsApproved: getOwnerDetails?.isApproved || getBrokerDetails?.isApproved || false,
+        // Owner verification data - reference the verified user document
 
-        accType: getOwnerDetails?.accType || getBrokerDetails?.accType || null,
 
         locations: operationCountries,
         truckType: selectedTruckType?.name,
@@ -452,6 +482,13 @@ function AddTrucks() {
         ...formData,
         expoPushToken: expoPushToken || user?.expoPushToken || null,
 
+        // New fields
+        selectedProofOfOwnerShip: selectedProofOfOwnerShip,
+        truckVisibility: truckType, // Private or Public
+        loadTypes: loadTypes,
+        brokers: selectedBrokers,
+        drivers: selectedDrivers,
+
         // Referral system
         referrerId: user?.referrerId || null,
 
@@ -459,7 +496,7 @@ function AddTrucks() {
         approvalStatus: 'pending', // pending, approved, rejected
         isApproved: false,
         submittedAt: Date.now().toString(),
-        userType: truckOwnerOBroker, // Owner or Broker
+        userType: "Owner", // Only Owner allowed
 
         // Tracker system
         hasTracker: false,
@@ -469,10 +506,32 @@ function AddTrucks() {
         trackerName: null,
 
         // Generate unique truck ID
-        truckId: `TR${Math.floor(100000 + Math.random() * 900000)}`
+        truckId: truckId ,
+
+        // Associate with fleet if user is a fleet
+        fleetId: currentRole?.accType === 'fleet' ? currentRole.fleetId : null,
+
+        accType: currentRole?.accType || 'Individual', // owner, broker, driver, fleet
       }
 
-      await addDocument("Trucks", submitData)
+      let truckDocRef;
+
+      // If user is a fleet and truck is private, add to fleet subcollection only
+      if (currentRole?.accType === 'fleet' && truckType === 'Private') {
+        truckDocRef = await addDocument(`fleets/${currentRole.fleetId}/Trucks`, submitData);
+      }
+      // If user is a fleet and truck is public, add to both fleet subcollection and main Trucks collection
+      else if ( currentRole?.accType === 'fleet' && truckType === 'Public') {
+        // Add to fleet subcollection
+        await addDocument(`fleets/${currentRole.fleetId}/Trucks`, submitData);
+        // Add to main Trucks collection
+        truckDocRef = await addDocument("Trucks", submitData);
+      }
+      // If not a fleet user, add to main Trucks collection
+      else {
+        truckDocRef = await addDocument("Trucks", submitData);
+      }
+
 
       // Notify admins who can approve trucks
       await notifyTruckApprovalAdmins(submitData)
@@ -504,336 +563,78 @@ function AddTrucks() {
 
         <ScrollView>
 
+
           {loading && (
             <ActivityIndicator size="small" color={accent} />
           )}
 
-          {!loading && dataChecked && !getOwnerDetails && !getBrokerDetails && (
-            <View>
-              <ThemedText>Are you the truck owner or broker?</ThemedText>
-              <HorizontalTickComponent
-                data={[
-                  { topic: "Owner", value: "Owner" },
-                  { topic: "Broker", value: "Broker" },
-                ]}
-                condition={truckOwnerOBroker}
-                onSelect={setTuckOwnerOBroker}
-              />
+          {!loading && dataChecked && (
+            <View style={{ paddingVertical: wp(2), alignItems: 'center' }}>
+              {userIsVerified || userIsFleetVerified ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {(userIsVerified?.isApproved || userIsFleetVerified) ? (
+                    <ThemedText style={{ color: "#0f9d58", fontWeight: 'bold', fontSize: 16 }}>
+                      Verified {userIsFleetVerified ? '(Fleet)' : '(Professional)'}
+                    </ThemedText>
+                  ) : (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name="time" size={wp(4)} color="#ff9800" />
+                      <ThemedText style={{ marginLeft: wp(2), color: "#ff9800", fontWeight: 'bold', fontSize: 16 }}>
+                        Verification Pending
+                      </ThemedText>
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => setShowUserVerificationModal(true)}
+                  style={{
+                    backgroundColor: '#ff4444',
+                    paddingHorizontal: wp(4),
+                    paddingVertical: wp(2),
+                    borderRadius: 8,
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Ionicons name="close-circle" size={wp(4)} color="white" style={{ marginRight: wp(2) }} />
+                  <ThemedText style={{ color: "white", fontWeight: 'bold', fontSize: 16 }}>
+                    Not Verified - Tap to Verify
+                  </ThemedText>
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
-          {!loading && dataChecked && (getOwnerDetails || getBrokerDetails) && (
-            <ThemedText style={{ textAlign: "center" }}>
-              Adding as Truck {getOwnerDetails ? "Owner" : "Broker"}
-            </ThemedText>
-          )}
+
+
+
+{/* User Verification Modal */}
+<KYCVerificationModal
+  visible={showUserVerificationModal}
+  onClose={() => setShowUserVerificationModal(false)}
+  typeOfBrokerPersonal={typeOfBroker}
+  setTypeOfBrokerPersonal={setTypeOfBroker}
+  personalName={ownerNameAddDb}
+  setPersonalName={SetOwnerNameAddDb}
+  personalPhone={ownerPhonNumAddDb}
+  setPersonalPhone={setOwnerPhoneNum}
+  personalEmail={ownerEmailAddDb}
+  setPersonalEmail={setOwnerEmailAddDb}
+  personalCountryCode={countryCode}
+  setPersonalCountryCode={setCountryCode}
+  selectedBrokerPersonalDocuments={selectedBrokerDocuments}
+  setSelectedBrokerPersonalDocuments={setSelectedBrokerDocumentS}
+  brokerPersonalFileType={brokerFileType}
+  setBrokerPersonalFileType={setBrokerFileType}
+  uploadingPersonalD={uploadingOwnerD}
+  onSave={handleUpdateTckBrokerDetails}
+/>
 
 
 
 
 
-
-
-          <Modal visible={ownerdetailsDsp && truckOwnerOBroker === "Owner"} statusBarTranslucent animationType="slide">
-            <ScreenWrapper>
-
-              <View style={{ margin: wp(4), marginTop: hp(6) }}>
-
-                <View style={{ gap: wp(2) }} >
-                  <ScrollView>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
-                      <TouchableOpacity onPress={() => { setOwnerdetailsDsp(true); setTuckOwnerOBroker("") }}>
-                        <AntDesign name="close" color={icon} size={wp(4)} />
-                      </TouchableOpacity>
-                      <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >OWNER DETAILS</ThemedText>
-                    </View>
-                    <ThemedText>
-                      Owner's Name
-                    </ThemedText>
-                    <Input
-                      placeholder="Owner's Name"
-                      value={ownerNameAddDb}
-                      onChangeText={(text) => SetOwnerNameAddDb(text)}
-                    />
-
-                    <ThemedText>
-                      Owner's Phone Number
-                    </ThemedText>
-                    <Input
-                      Icon={<>
-                        <Dropdown
-                          style={[{ width: wp(15) }]}
-                          selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
-                          data={countryCodes}
-                          maxHeight={hp(60)}
-                          labelField="name"
-                          valueField="name"
-                          placeholder="+00"
-                          value={countryCode?.name}
-                          itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-                          activeColor={background}
-
-                          containerStyle={{
-                            borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                            width: wp(30),
-                            shadowOffset: {
-                              width: 0,
-                              height: 9,
-                            },
-                            shadowOpacity: 0.50,
-                            shadowRadius: 12.35,
-
-                            elevation: 19,
-                            paddingVertical: wp(1)
-                          }}
-                          onChange={item => {
-                            console.log(item);
-                            setCountryCode(item);
-                          }}
-
-                          renderLeftIcon={() => <></>}
-                          renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
-                          renderItem={((item, selected) =>
-                            <>
-                              <View style={[styles.item, selected && {}]}>
-                                <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
-                                {selected && (
-                                  <Ionicons
-                                    color={icon}
-                                    name='checkmark-outline'
-                                    size={wp(5)}
-                                  />
-                                )}
-                              </View>
-                              <Divider />
-                            </>
-                          )}
-
-                        />
-                        <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
-                      </>}
-                      value={ownerPhonNumAddDb}
-                      placeholder="700 000 000"
-                      onChangeText={(text) => setOwnerPhoneNum(text)}
-                    />
-
-                    <ThemedText>
-                      Owner's Email
-                    </ThemedText>
-                    <Input
-                      placeholder="Owner Email"
-                      value={ownerEmailAddDb}
-                      onChangeText={(text) => setOwnerEmailAddDb(text)}
-                    />
-
-
-                    <DocumentUploader
-                      documents={selectedOwnerDocuments[0]}
-                      title="Ownership or Lease Doc"
-                      subtitle="Upload company doc showing truck ownership or lease (PDF or Image)"
-                      buttonTiitle="Upload Ownership/Lease Document"
-                      onPickDocument={() => pickDocument(setSelectedOwnerDocumentS, setOwnerFileType)}
-                    />
-
-                    <DocumentUploader
-                      documents={selectedOwnerDocuments[1]}
-                      title="Owner/Director ID"
-                      subtitle="Upload ID matching company doc name (PDF or Image)"
-                      buttonTiitle="Upload Owner/Director ID"
-                      onPickDocument={() => pickDocument(setSelectedOwnerDocumentS, setOwnerFileType)}
-                      disabled={!selectedOwnerDocuments[0]}
-                      toastMessage="Upload ownership doc first"
-                    />
-
-                    <DocumentUploader
-                      documents={selectedOwnerDocuments[2]}
-                      title="Proof of Residence"
-                      subtitle="Upload utility bill, lease, or bank statement (PDF or Image)"
-                      buttonTiitle="Proof of Address"
-                      onPickDocument={() => pickDocument(setSelectedOwnerDocumentS, setOwnerFileType)}
-                      disabled={!selectedOwnerDocuments[1]}
-                      toastMessage="Upload ID document first"
-                    />
-
-
-
-
-
-
-
-                    <Button onPress={handleUpdateTOwnerDetails} loading={uploadingOwnerD} disabled={uploadingOwnerD} title={uploadingOwnerD ? "Saving..." : "Save"} colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{ height: 44 }} />
-                    <View style={{ height: 100 }} />
-                  </ScrollView>
-                </View>
-
-              </View>
-            </ScreenWrapper>
-
-          </Modal>
-
-
-
-
-
-
-
-
-          <Modal visible={ownerdetailsDsp && truckOwnerOBroker === "Broker"} statusBarTranslucent animationType="slide">
-            <ScreenWrapper>
-
-              <View style={{ margin: wp(4), marginTop: hp(6) }}>
-
-                <View style={{ gap: wp(2) }} >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
-                    <TouchableOpacity onPress={() => { setOwnerdetailsDsp(true); setTuckOwnerOBroker("") }}>
-                      <AntDesign name="close" color={icon} size={wp(4)} />
-                    </TouchableOpacity>
-                    <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }} >BROCKER DETAILS</ThemedText>
-                  </View>
-
-
-                  <ScrollView>
-
-
-
-                    <HorizontalTickComponent
-                      data={[{ topic: "Company Broker", value: "Company Broker" }, { topic: "Independent Broker", value: "Independent Broker" }]}
-                      condition={typeOfBroker}
-                      onSelect={setTypeOfBroker}
-                    />
-
-                    <ThemedText>
-                      Full Name
-                    </ThemedText>
-                    <Input
-                      placeholder="Brokers Name"
-                      value={ownerNameAddDb}
-                      onChangeText={(text) => SetOwnerNameAddDb(text)}
-                    />
-
-                    <ThemedText>
-                      Phone Number
-                    </ThemedText>
-                    <Input
-                      Icon={<>
-                        <Dropdown
-                          style={[{ width: wp(15) }]}
-                          selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
-                          data={countryCodes}
-                          maxHeight={hp(60)}
-                          labelField="name"
-                          valueField="name"
-                          placeholder="+00"
-                          value={countryCode?.name}
-                          itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-                          activeColor={background}
-
-                          containerStyle={{
-                            borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                            width: wp(30),
-                            shadowOffset: {
-                              width: 0,
-                              height: 9,
-                            },
-                            shadowOpacity: 0.50,
-                            shadowRadius: 12.35,
-
-                            elevation: 19,
-                            paddingVertical: wp(1)
-                          }}
-                          onChange={item => {
-                            console.log(item);
-                            setCountryCode(item);
-                          }}
-
-                          renderLeftIcon={() => <></>}
-                          renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
-                          renderItem={((item, selected) =>
-                            <>
-                              <View style={[styles.item, selected && {}]}>
-                                <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
-                                {selected && (
-                                  <Ionicons
-                                    color={icon}
-                                    name='checkmark-outline'
-                                    size={wp(5)}
-                                  />
-                                )}
-                              </View>
-                              <Divider />
-                            </>
-                          )}
-
-                        />
-                        <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
-                      </>}
-                      value={ownerPhonNumAddDb}
-                      placeholder="700 000 000"
-                      onChangeText={(text) => setOwnerPhoneNum(text)}
-                    />
-
-                    <ThemedText>
-                      Email
-                    </ThemedText>
-                    <Input
-                      placeholder="Owner Email"
-                      value={ownerEmailAddDb}
-                      onChangeText={(text) => setOwnerEmailAddDb(text)}
-                    />
-
-
-                    <DocumentUploader
-                      documents={selectedBrokerDocuments[0]}
-                      title="National ID / Passport"
-                      subtitle="Upload your ID or Passport (PDF or Image)"
-                      buttonTiitle="National ID / Passport"
-                      onPickDocument={() => pickDocument(setSelectedBrokerDocumentS, setBrokerFileType)}
-                    />
-
-                    <DocumentUploader
-                      documents={selectedBrokerDocuments[1]}
-                      title="Proof of Residence"
-                      subtitle="Upload utility bill, lease, or bank statement (PDF or Image)"
-                      buttonTiitle="Proof of Address"
-                      onPickDocument={() => pickDocument(setSelectedBrokerDocumentS, setBrokerFileType)}
-                      disabled={!selectedBrokerDocuments[0]}
-                      toastMessage="Please upload ID first"
-                    />
-
-                    {typeOfBroker === "Company Broker" && (
-                      <DocumentUploader
-                        documents={selectedBrokerDocuments[2]}
-                        title="Company Certificate"
-                        subtitle="Upload registration certificate (PDF or Image)"
-                        buttonTiitle="Company Registration"
-                        onPickDocument={() => pickDocument(setSelectedBrokerDocumentS, setBrokerFileType)}
-                        disabled={!selectedBrokerDocuments[1]}
-                        toastMessage="Upload address proof first"
-                      />
-                    )}
-
-                    {typeOfBroker === "Company Broker" && (
-                      <DocumentUploader
-                        documents={selectedBrokerDocuments[3]}
-                        title="Company Letter"
-                        subtitle="Upload signed letterhead or authorization (PDF or Image)"
-                        buttonTiitle="Letter Head"
-                        onPickDocument={() => pickDocument(setSelectedBrokerDocumentS, setBrokerFileType)}
-                        disabled={!selectedBrokerDocuments[2]}
-                        toastMessage="Upload certificate first"
-                      />
-                    )}
-
-
-                    <Button onPress={handleUpdateTckBrokerDetails} loading={uploadingOwnerD} disabled={uploadingOwnerD} title={uploadingOwnerD ? "Saving..." : "Save"} colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{ height: 44 }} />
-
-                    <View style={{ height: 140 }} />
-                  </ScrollView>
-                </View>
-              </View>
-            </ScreenWrapper>
-
-          </Modal>
 
           <View style={{ alignItems: 'center' }}>
             {images[0] && <Image source={{ uri: images[0].uri }} style={{ width: wp(90), height: wp(90), marginBottom: 9, borderRadius: wp(4) }} />}
@@ -844,6 +645,125 @@ function AddTrucks() {
               </TouchableOpacity>}
 
           </View>
+
+<ThemedText style={{ marginTop: wp(4), fontSize: 16, fontWeight: 'bold',fontStyle:'italic', }}>
+  Truck Type
+</ThemedText>
+
+<HorizontalTickComponent
+  data={[{ topic: "Private", value: "Private" }, { topic: "Public", value: "Public" }]}
+  condition={truckType}
+  onSelect={setTruckType}
+/>
+  <ThemedText style={{ fontSize: 12,opacity:0.8  ,fontWeight:'bold',color:truckType==='Private'?"#1E90FF":"#32CD32"}}>
+    {truckType === 'Private'
+      ? 'Private: Visible only to truck owner and assigned brokers'
+      : 'Public: Visible to everyone'
+    }
+  </ThemedText>
+
+
+  <View style={{
+
+  borderWidth: 1,
+  borderColor: iconColor + '4c',
+  borderRadius: wp(3),
+  padding: wp(3),
+  marginVertical: wp(2),
+  backgroundColor: backgroundLight + '20'
+}}>
+  <ThemedText style={{ fontWeight: 'bold', marginBottom: wp(1) }}>
+    Lease/Ownership Document
+  </ThemedText>
+  <ThemedText style={{ fontSize: 12, opacity: 0.7, marginBottom: wp(3) }}>
+    Upload company ownership document or lease agreement (PDF or Image)
+  </ThemedText>
+
+  {selectedOwnerDocuments[3] ? (
+    <View style={{
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: accent + '15',
+      padding: wp(2),
+      borderRadius: wp(2),
+      marginBottom: wp(2)
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <Ionicons name="document" size={wp(5)} color={accent} style={{ marginRight: wp(2) }} />
+        <View>
+          <ThemedText style={{ fontWeight: 'bold' }}>Document Uploaded</ThemedText>
+          <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+            {selectedOwnerDocuments[3].name || 'Lease Document'}
+          </ThemedText>
+        </View>
+      </View>
+      <TouchableOpacity
+        onPress={() => {
+          const newDocs = [...selectedOwnerDocuments];
+          newDocs[3] = undefined as any;
+          setSelectedOwnerDocumentS(newDocs);
+          const newTypes = [...ownerFileType];
+          newTypes[3] = undefined as any;
+          setOwnerFileType(newTypes);
+        }}
+        style={{
+          padding: wp(1),
+          backgroundColor: 'rgba(255,0,0,0.1)',
+          borderRadius: wp(1)
+        }}
+      >
+        <Ionicons name="close" size={wp(4)} color="#ff4444" />
+      </TouchableOpacity> 
+    </View>
+  ) : null}
+<TouchableOpacity
+  onPress={() => pickDocument(setSelectedTruckLease, setTruckLeaseFileType)}
+  style={{
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: wp(3),
+    backgroundColor: selectedTruckLease[0] ? accent + '10' : iconColor + '20',
+    borderRadius: wp(2),
+    borderWidth: 1,
+    borderColor: selectedTruckLease[0] ? accent : iconColor + '4c',
+    borderStyle: 'dashed'
+  }}
+>
+  <Ionicons
+    name="cloud-upload"
+    size={wp(6)}
+    color={selectedTruckLease[0] ? accent : iconColor + '6c'}
+    style={{ marginRight: wp(2) }}
+  />
+  <View>
+    <ThemedText style={{
+      color: selectedTruckLease[0] ? accent : iconColor + '6c',
+      fontWeight: 'bold'
+    }}>
+      {selectedTruckLease[0] ? 'Change Document' : 'Upload Document'}
+    </ThemedText>
+    <ThemedText style={{
+      fontSize: 12,
+      color: iconColor + '6c',
+      textAlign: 'center'
+    }}>
+      PDF or Image
+    </ThemedText>
+  </View>
+</TouchableOpacity>
+
+    <ThemedText style={{
+      fontSize: 11,
+      color: '#ff9800',
+      textAlign: 'center',
+      // marginTop: wp(1)
+    }}>
+      {/* Upload proof of address first */}
+    </ThemedText>
+</View>
+
           <View style={{ gap: wp(2) }}>
 
             <ThemedText>
@@ -887,116 +807,206 @@ function AddTrucks() {
             <Divider />
 
             <View style={{ marginVertical: wp(4) }}>
-              <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold', color: "#1E90FF" }} >DRIVER DETAILS</ThemedText>
+              <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold', color: "#1E90FF" }} >LOAD TYPES</ThemedText>
             </View>
 
             <ThemedText>
-              Drivers Phone Number<ThemedText color="red">*</ThemedText>
+              Select Load Types
             </ThemedText>
-            <Input
-              Icon={<>
-                <Dropdown
-                  style={[{ width: wp(15) }]}
-                  selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
-                  data={countryCodes}
-                  maxHeight={hp(60)}
-                  labelField="name"
-                  valueField="name"
-                  placeholder="+00"
-                  value={countryCode?.name}
-                  itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-                  activeColor={background}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -wp(1) }}>
+ {generalLoadOptions.map(type => (
+   <TouchableOpacity
+     key={type}
+     style={{
+       flexDirection: 'row',
+       alignItems: 'center',
+       paddingVertical: wp(2),
+       paddingHorizontal: wp(3),
+       margin: wp(1),
+       borderWidth: 1,
+       borderColor: loadTypes.includes(type) ? accent : iconColor,
+       borderRadius: wp(2),
+       backgroundColor: loadTypes.includes(type) ? accent + '20' : 'transparent'
+     }}
+     onPress={() => {
+       if (type === 'Any') {
+         // If "Any" is selected, select all load types
+         if (loadTypes.includes('Any')) {
+           setLoadTypes([]);
+         } else {
+           setLoadTypes([...generalLoadOptions]);
+         }
+       } else {
+         // Handle individual selections
+         let newLoadTypes;
+         if (loadTypes.includes(type)) {
+           newLoadTypes = loadTypes.filter(t => t !== type);
+           // If "Any" was selected and we're deselecting something, remove "Any" too
+           if (loadTypes.includes('Any')) {
+             newLoadTypes = newLoadTypes.filter(t => t !== 'Any');
+           }
+         } else {
+           newLoadTypes = [...loadTypes, type];
+         }
+         setLoadTypes(newLoadTypes);
+       }
+     }}
+   >
+     <Ionicons
+       name={loadTypes.includes(type) ? "checkbox" : "square-outline"}
+       size={wp(4)}
+       color={loadTypes.includes(type) ? accent : iconColor}
+     />
+     <ThemedText style={{ marginLeft: wp(1) }}>{type}</ThemedText>
+   </TouchableOpacity>
+ ))}
+</View>
 
-                  containerStyle={{
-                    borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                    width: wp(30),
-                    shadowOffset: {
-                      width: 0,
-                      height: 9,
-                    },
-                    shadowOpacity: 0.50,
-                    shadowRadius: 12.35,
 
-                    elevation: 19,
-                    paddingVertical: wp(1)
-                  }}
-                  onChange={item => {
-                    console.log(item);
-                    setCountryCode(item);
-                  }}
+            <Divider />
 
-                  renderLeftIcon={() => <></>}
-                  renderRightIcon={() => <Entypo name="chevron-thin-down" size={wp(4)} color={icon} />}
-                  renderItem={((item, selected) =>
-                    <>
-                      <View style={[styles.item, selected && {}]}>
-                        <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
-                        {selected && (
-                          <Ionicons
-                            color={icon}
-                            name='checkmark-outline'
-                            size={wp(5)}
-                          />
-                        )}
-                      </View>
-                      <Divider />
-                    </>
-                  )}
-                />
-                <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
-              </>}
-              value={formData.driverPhone}
-              placeholder="700 000 000"
-              onChangeText={(text) => handleChange<TruckFormData>(text, 'driverPhone', setFormData)}
-            />
-
+            <View style={{ marginVertical: wp(4) }}>
+              <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold', color: "#1E90FF" }} >BROKER ASSIGNMENT (Optional)</ThemedText>
+            </View>
 
             <ThemedText>
-              Drivers License<ThemedText color="red">*</ThemedText>
+              Search and Select Brokers
             </ThemedText>
+            <Input
+              placeholder="Search brokers by email or name..."
+              value={brokerSearchText}
+              onChangeText={(text) => {
+                setBrokerSearchText(text);
+                searchUsers(text, 'broker');
+              }}
+            />
+            {searchedUsers.length > 0 && (
+              <View style={{
+                maxHeight: hp(25),
+                borderWidth: 1,
+                borderColor: iconColor,
+                borderRadius: wp(2),
+                marginTop: wp(1),
+                backgroundColor: background,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 5
+              }}>
+                <ScrollView keyboardShouldPersistTaps="handled">
+                  {searchedUsers.map(user => (
+                    <TouchableOpacity
+                      key={user.id}
+                      style={{
+                        padding: wp(3),
+                        borderBottomWidth: 0.5,
+                        borderBottomColor: iconColor + '30',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}
+                      onPress={() => selectUser(user, 'broker')}
+                    >
+                      <View>
+                        <ThemedText style={{ fontWeight: 'bold' }}>{user.email}</ThemedText>
+                        <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+                          {user.displayName || 'N/A'} {user.lastName || ''}
+                        </ThemedText>
+                      </View>
+                      <Ionicons name="add-circle" size={wp(5)} color={accent} />
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+            {selectedBrokers.length > 0 && (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: wp(2) }}>
+                {selectedBrokers.map(broker => (
+                  <View key={broker} style={{ backgroundColor: accent + '20', padding: wp(1), margin: wp(1), borderRadius: wp(2), flexDirection: 'row', alignItems: 'center' }}>
+                    <ThemedText style={{ marginRight: wp(1) }}>{broker}</ThemedText>
+                    <TouchableOpacity onPress={() => setSelectedBrokers(selectedBrokers.filter(b => b !== broker))}>
+                      <Ionicons name="close" size={wp(3)} color={accent} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <Divider />
+
+            <View style={{ marginVertical: wp(4) }}>
+              <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold', color: "#1E90FF" }} >DRIVER ASSIGNMENT</ThemedText>
+            </View>
+
+            <ThemedText>
+              Search and Assign Driver
+            </ThemedText>
+            <Input
+              placeholder="Search drivers by email or name..."
+              value={driverSearchText}
+              onChangeText={(text) => {
+                setDriverSearchText(text);
+                searchUsers(text, 'driver');
+              }}
+            />
+            {searchedUsers.length > 0 && (
+              <View style={{
+                maxHeight: hp(25),
+                borderWidth: 1,
+                borderColor: iconColor,
+                borderRadius: wp(2),
+                marginTop: wp(1),
+                backgroundColor: background,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 5
+              }}>
+                <ScrollView keyboardShouldPersistTaps="handled">
+                  {searchedUsers.map(user => (
+                    <TouchableOpacity
+                      key={user.id}
+                      style={{
+                        padding: wp(3),
+                        borderBottomWidth: 0.5,
+                        borderBottomColor: iconColor + '30',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}
+                      onPress={() => selectUser(user, 'driver')}
+                    >
+                      <View>
+                        <ThemedText style={{ fontWeight: 'bold' }}>{user.email}</ThemedText>
+                        <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+                          {user.firstName || 'N/A'} {user.lastName || ''}
+                        </ThemedText>
+                      </View>
+                      <Ionicons name="add-circle" size={wp(5)} color={accent} />
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+            {selectedDrivers.length > 0 && (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: wp(2) }}>
+                {selectedDrivers.map(driver => (
+                  <View key={driver} style={{ backgroundColor: accent + '20', padding: wp(1), margin: wp(1), borderRadius: wp(2), flexDirection: 'row', alignItems: 'center' }}>
+                    <ThemedText style={{ marginRight: wp(1) }}>{driver}</ThemedText>
+                    <TouchableOpacity onPress={() => setSelectedDrivers(selectedDrivers.filter(d => d !== driver))}>
+                      <Ionicons name="close" size={wp(3)} color={accent} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <Divider />
 
 
-            {images[1] ?
-              <Image source={{ uri: images[1]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
-              :
-              <TouchableOpacity onPress={() => { operationCountries.length > 0 ? (images[0]) ? selectImageWithCrop((image) => setImages(prev => [prev[0], image, ...prev.slice(2)])) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT) : alert("Select operating Countires.") }
-              }
-                style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
-                <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
-                <ThemedText color={icon + "4c"}>Add Drivers License<ThemedText color="red">*</ThemedText></ThemedText>
-              </TouchableOpacity>
-            }
 
-            {operationCountries.length > 1 && <>
-
-              <ThemedText>
-                Drivers Passport Image<ThemedText color="red">*</ThemedText>
-              </ThemedText>
-
-
-              {images[2] ?
-                <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
-                :
-                <TouchableOpacity onPress={() => (images[1]) ? selectImageWithCrop((image) => setImages(prev => [prev[0], prev[1], image, ...prev.slice(3)])) : ToastAndroid.show('Please add yaya image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
-                  <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
-                  <ThemedText color={icon + "4c"}>Add Drivers Passport<ThemedText color="red">*</ThemedText></ThemedText>
-                </TouchableOpacity>
-              }
-
-              <ThemedText>
-                International Driver Permit<ThemedText color="red">*</ThemedText>
-              </ThemedText>
-
-              {images[3] ?
-                <Image source={{ uri: images[3]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />
-                :
-                <TouchableOpacity onPress={() => (images[2]) ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], prev[2], image, ...prev.slice(4)])) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)} style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
-                  <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
-                  <ThemedText color={icon + "4c"}>Add International Driver Permit<ThemedText color="red">*</ThemedText></ThemedText>
-                </TouchableOpacity>
-              }
-
-            </>}
 
 
             <Divider />
@@ -1010,85 +1020,73 @@ function AddTrucks() {
               <ThemedText>
                 Horse Reg Book Image
               </ThemedText>
-
-
-              {images[4] && operationCountries.length > 1 && <Image source={{ uri: images[4]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
-
-              {images[2] && operationCountries.length === 1 && <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
-
-
-              {((!images[2] && operationCountries.length === 1) || (!images[4] && operationCountries.length > 1)) && <TouchableOpacity
+{images[1] && <Image source={{ uri: images[1]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
 
 
 
-                onPress={() => {
-                  operationCountries.length <= 1 ? images[1] ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], image, ...prev.slice(3)])) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
-                    : operationCountries.length > 1 ? images[3] ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], prev[2], prev[3], image, ...prev.slice(5)])) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
-                      : alert("yaya");
-
-                }}
-
-                style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
-                <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
-                <ThemedText color={icon + "4c"}>Horse Reg Book Image<ThemedText color="red">*</ThemedText></ThemedText>
-              </TouchableOpacity>}
-
-
-              {selectedTruckType?.name !== "Rigid" && <View>
-
-                {((!images[3] && operationCountries.length === 1) || (operationCountries.length > 1 && !images[5])) && <ThemedText>
-                  Trailer Book Image
-                </ThemedText>}
-
-
-                {images[5] && operationCountries.length > 1 && <Image source={{ uri: images[5]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
-
-                {images[3] && operationCountries.length === 1 && <Image source={{ uri: images[3]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
-
-
-                {((!images[3] && operationCountries.length === 1) || (operationCountries.length > 1 && !images[5])) && <TouchableOpacity
+{!images[1] && <TouchableOpacity
 
 
 
-                  onPress={() => {
-                    operationCountries.length === 1 ? images[2] ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], prev[2], image, ...prev.slice(4)])) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
-                      : operationCountries.length > 1 ? images[4] ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], prev[2], prev[3], prev[4], image, ...prev.slice(6)])) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
-                        : alert("yaya");
 
-                  }}
+  onPress={() => {
+    images[0] ? selectImageNoCrop((image) => setImages(prev => [prev[0], image, ...prev.slice(2)])) : ToastAndroid.show('Please add truck image first!', ToastAndroid.SHORT)
 
-                  style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
-                  <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
-                  <ThemedText color={icon + "4c"}>Trailer Book Image<ThemedText color="red">*</ThemedText></ThemedText>
-                </TouchableOpacity>}
+  }}
+
+  style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+  <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
+  <ThemedText color={icon + "4c"}>Horse Reg Book Image<ThemedText color="red">*</ThemedText></ThemedText>
+</TouchableOpacity>}
+{selectedTruckType?.name !== "Rigid" && <View>
+
+  {!images[2] && <ThemedText>
+    Trailer Book Image
+  </ThemedText>}
 
 
-                {selectedTruckType?.name === "Super Link" && <ThemedText>
-                  Trailer 2 Book Image (If Available)
-                </ThemedText>}
+  {images[2] && <Image source={{ uri: images[2]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
 
 
-                {images[6] && operationCountries.length > 1 && <Image source={{ uri: images[6]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
-
-                {images[4] && operationCountries.length === 1 && <Image source={{ uri: images[4]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
-
-                {selectedTruckType?.name === "Super Link" && ((!images[4] && operationCountries.length === 1) || (!images[6] && operationCountries.length > 1)) && <TouchableOpacity
+  {!images[2] && <TouchableOpacity
 
 
 
-                  onPress={() => {
-                    operationCountries.length === 1 ? images[3] ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], prev[2], prev[3], image, ...prev.slice(5)])) : ToastAndroid.show('Please add driver License image first!', ToastAndroid.SHORT)
-                      : operationCountries.length > 1 ? images[5] ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], prev[2], prev[3], prev[4], prev[5], image, ...prev.slice(7)])) : ToastAndroid.show('Please add driver License , Passport and international permit first!', ToastAndroid.SHORT)
-                        : alert("yaya");
 
-                  }}
+    onPress={() => {
+      images[1] ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], image, ...prev.slice(3)])) : ToastAndroid.show('Please add horse reg book image first!', ToastAndroid.SHORT)
 
-                  style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
-                  <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
-                  <ThemedText color={icon + "4c"}>Second Trailer Book Image<ThemedText color="red">*</ThemedText></ThemedText>
-                </TouchableOpacity>}
+    }}
 
-              </View>}
+    style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+    <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
+    <ThemedText color={icon + "4c"}>Trailer Book Image<ThemedText color="red">*</ThemedText></ThemedText>
+  </TouchableOpacity>}
+
+
+  {selectedTruckType?.name === "Super Link" && <ThemedText>
+    Trailer 2 Book Image (If Available)
+  </ThemedText>}
+
+
+  {images[3] && <Image source={{ uri: images[3]?.uri }} style={{ width: wp(92), height: wp(40), marginVertical: 7, borderRadius: wp(4) }} />}
+
+  {selectedTruckType?.name === "Super Link" && !images[3] && <TouchableOpacity
+
+
+
+
+    onPress={() => {
+      images[2] ? selectImageNoCrop((image) => setImages(prev => [prev[0], prev[1], prev[2], image, ...prev.slice(4)])) : ToastAndroid.show('Please add trailer book image first!', ToastAndroid.SHORT)
+
+    }}
+
+    style={{ marginVertical: 9, height: wp(40), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+    <Ionicons name="camera" size={wp(20)} color={icon + "4c"} />
+    <ThemedText color={icon + "4c"}>Second Trailer Book Image<ThemedText color="red">*</ThemedText></ThemedText>
+  </TouchableOpacity>}
+
+</View>}
 
             </View>
 

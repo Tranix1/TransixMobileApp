@@ -11,9 +11,10 @@ import { readById } from '@/db/operations';
 interface ProfileManagerProps {
     user: any;
     onProfileUpdate?: (updatedUser: any) => void;
+    onClose?: () => void;
 }
 
-export default function ProfileManager({ user, onProfileUpdate }: ProfileManagerProps) {
+export default function ProfileManager({ user, onProfileUpdate, onClose }: ProfileManagerProps) {
     const accent = useThemeColor('accent');
     const icon = useThemeColor('icon');
     const background = useThemeColor('background');
@@ -80,6 +81,7 @@ export default function ProfileManager({ user, onProfileUpdate }: ProfileManager
     };
 
     const handleManageAccountPress = () => {
+        onClose?.();
         router.push('/Account/Index');
     };
 
@@ -134,7 +136,7 @@ export default function ProfileManager({ user, onProfileUpdate }: ProfileManager
                     style={[styles.manageButton, { borderColor: border }]}
                     onPress={handleManageAccountPress}
                 >
-                    <Ionicons name="manage-accounts" size={wp(5)} color={accent} />
+                    <Ionicons name="settings" size={wp(5)} color={accent} />
                     <ThemedText>Manage Account</ThemedText>
                 </TouchableOpacity>
             </View>
