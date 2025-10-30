@@ -24,6 +24,8 @@ function Index() {
         updateUserProfile
     } = useAuthState();
 
+    const { currentRole, setCurrentRole } = useAuth();
+
     const {
         showUpdateModal,
         currentVersion,
@@ -39,13 +41,6 @@ function Index() {
     const [dspMenu, setDspMenu] = useState(false);
     const [isConnectedInternet, setIsConnectedInternet] = useState(true);
     const [fadeAnim] = useState(new Animated.Value(0));
-    const [currentRole, setCurrentRole] = useState<'general' | 'fleet' | 'broker' | {
-        role: 'fleet';
-        fleetId: string;
-        companyName: string;
-        userRole: string;
-        accType: string;
-    }>('general');
 
 
     useEffect(() => {
@@ -67,28 +62,7 @@ function Index() {
         }).start();
     }, []);
 
-    useFocusEffect(
-        React.useCallback(() => {
-            // Load the current role from AsyncStorage when screen comes into focus
-            const loadRole = async () => {
-                const roleData = await AsyncStorage.getItem('currentRole');
-                if (roleData) {
-                    try {
-                        const parsedRole = JSON.parse(roleData);
-                        if (typeof parsedRole === 'object' && parsedRole.role === 'fleet') {
-                            setCurrentRole(parsedRole);
-                        } else {
-                            setCurrentRole(parsedRole as 'general' | 'fleet' | 'broker');
-                        }
-                    } catch (error) {
-                        // If parsing fails, treat as string
-                        setCurrentRole(roleData as 'general' | 'fleet' | 'broker');
-                    }
-                }
-            };
-            loadRole();
-        }, [])
-    );
+    // Role is now loaded from context, no need to load from AsyncStorage here
 
 
     const checkAuth = (theAction?: () => void) => {

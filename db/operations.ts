@@ -30,6 +30,31 @@ export const addDocument = async (
 };
 
 /**
+ * Add a document to a Firestore collection with a custom ID.
+ * @param collectionName - The name of the Firestore collection.
+ * @param docId - The custom ID for the document.
+ * @param data - The data to add to the collection.
+ */
+export const addDocumentWithId = async (
+    collectionName: string,
+    docId: string,
+    data: object
+) => {
+    try {
+        const docRef = doc(db, collectionName, docId);
+        await setDoc(docRef, {
+            ...data,
+            timeStamp: serverTimestamp(),
+            userId: auth.currentUser?.uid,
+        });
+        return docId;
+    } catch (error) {
+        console.error("Error adding document with custom ID:", error);
+        throw error;
+    }
+};
+
+/**
  * Update a document in a Firestore collection.
  * @param collectionName - The name of the Firestore collection.
  * @param docId - The ID of the document to update.

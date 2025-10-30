@@ -10,7 +10,7 @@ import Input from '@/components/Input';
 import { selectImage } from '@/Utilities/imageUtils';
 import { ImagePickerAsset } from 'expo-image-picker';
 import { useAuth } from '@/context/AuthContext';
-import { addDocument, uploadImage, getUsers, updateDocument, readById } from '@/db/operations';
+import { addDocument, addDocumentWithId, uploadImage, getUsers, updateDocument, readById, fetchDocuments } from '@/db/operations';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -37,12 +37,27 @@ export default function AddDriver() {
     const [isEditMode, setIsEditMode] = useState(false);
     const [existingDriver, setExistingDriver] = useState<any>(null);
 
+    // Truck search and selection
+    const [truckSearchText, setTruckSearchText] = useState('');
+    const [searchedTrucks, setSearchedTrucks] = useState<any[]>([]);
+    const [selectedTruck, setSelectedTruck] = useState<any>(null);
+    const [allTrucks, setAllTrucks] = useState<any[]>([]);
+    const [driverRole, setDriverRole] = useState<'main' | 'second_main' | 'backup'>('backup');
+
+    // Driver search and selection
+    const [driverSearchText, setDriverSearchText] = useState('');
+    const [searchedDrivers, setSearchedDrivers] = useState<any[]>([]);
+    const [selectedDriver, setSelectedDriver] = useState<any>(null);
+    const [allDrivers, setAllDrivers] = useState<any[]>([]);
+
     useEffect(() => {
         const initializeComponent = async () => {
+            let parsedFleet: any = null;
+
             try {
                 const fleetData = await AsyncStorage.getItem('currentRole');
                 if (fleetData) {
-                    const parsedFleet = JSON.parse(fleetData);
+                    parsedFleet = JSON.parse(fleetData);
                     setCurrentFleet(parsedFleet);
 
                     // Check if we're in edit mode
@@ -61,6 +76,18 @@ export default function AddDriver() {
                 setAllUsers(fetchedUsers);
             } catch (error) {
                 console.error("Error fetching users:", error);
+            }
+
+            // Fetch all fleet trucks for search functionality
+            if (parsedFleet?.fleetId) {
+                try {
+                    const trucksResult = await fetchDocuments(`fleets/${parsedFleet.fleetId}/Trucks`, 50);
+                    if (trucksResult && trucksResult.data) {
+                        setAllTrucks(trucksResult.data);
+                    }
+                } catch (error) {
+                    console.error("Error fetching trucks:", error);
+                }
             }
         };
 
@@ -109,6 +136,31 @@ export default function AddDriver() {
         setSearchedUsers([]);
     };
 
+    // Function to search trucks by name
+    const searchTrucks = (truckName: string) => {
+        if (!truckName.trim()) {
+            setSearchedTrucks([]);
+            return;
+        }
+
+        try {
+            const filteredTrucks = allTrucks.filter((truck) =>
+                truck.truckName && typeof truck.truckName === 'string' &&
+                truck.truckName.toLowerCase().includes(truckName.toLowerCase())
+            ).slice(0, 10); // Limit to 10 results for performance
+            setSearchedTrucks(filteredTrucks);
+        } catch (error) {
+            console.error('Error searching trucks:', error);
+        }
+    };
+
+    // Function to select a truck
+    const selectTruck = (truck: any) => {
+        setSelectedTruck(truck);
+        setTruckSearchText('');
+        setSearchedTrucks([]);
+    };
+
     const handleAddDriver = async () => {
         if (isEditMode) {
             return handleUpdateDriver();
@@ -125,6 +177,47 @@ export default function AddDriver() {
 
         if (!selectedUser) {
             ToastAndroid.show('Please select a user to assign as driver', ToastAndroid.SHORT);
+            return;
+        }
+
+        if (!selectedTruck) {
+            ToastAndroid.show('Please select a truck to assign the driver to', ToastAndroid.SHORT);
+            return;
+        }
+
+        // Check if driver is already assigned as main to another truck
+        if (driverRole === 'main') {
+            const existingMainAssignment = allTrucks.find(truck =>
+                truck.mainDriver?.userId === selectedUser.uid && truck.id !== selectedTruck.id
+            );
+            if (existingMainAssignment) {
+                ToastAndroid.show('This driver is already assigned as Main Driver to another truck', ToastAndroid.SHORT);
+                return;
+            }
+        }
+
+        // Check if truck already has a main driver
+        if (driverRole === 'main' && selectedTruck.mainDriver) {
+            ToastAndroid.show('This truck already has a Main Driver assigned', ToastAndroid.SHORT);
+            return;
+        }
+
+        // Check if truck already has a second main driver
+        if (driverRole === 'second_main' && selectedTruck.secondMainDriver) {
+            ToastAndroid.show('This truck already has a Second Main Driver assigned', ToastAndroid.SHORT);
+            return;
+        }
+
+        // Check driver's truck limit (max 4 trucks)
+        const driverTruckCount = allTrucks.reduce((count, truck) => {
+            const hasDriver = truck.mainDriver?.userId === selectedUser.uid ||
+                             truck.secondMainDriver?.userId === selectedUser.uid ||
+                             (truck.backupDrivers || []).some((backup: any) => backup.userId === selectedUser.uid);
+            return hasDriver ? count + 1 : count;
+        }, 0);
+
+        if (driverTruckCount >= 4) {
+            ToastAndroid.show('This driver is already assigned to 4 trucks (maximum limit)', ToastAndroid.SHORT);
             return;
         }
 
@@ -160,6 +253,8 @@ export default function AddDriver() {
             }
 
             // Create driver data
+            const fixedDriverId = `DRV_${selectedUser.uid}_${currentFleet.fleetId}`;
+
             const driverData = {
                 fullName: fullName.trim(),
                 phoneNumber: phoneNumber.trim(),
@@ -168,13 +263,18 @@ export default function AddDriver() {
                 internationalPermitUrl: permitUrl,
                 fleetId: currentFleet.fleetId,
                 userId: selectedUser.uid,
+                truckId: selectedTruck.id,
+                truckName: selectedTruck.truckName,
+                driverRole: driverRole,
+                docId: fixedDriverId, // Will be set after document creation
                 createdAt: new Date().toISOString(),
                 status: 'active'
             };
 
-            // Add to Fleet collection under fleetId as subcollection
-            const driverId = await addDocument(`fleets/${currentFleet.fleetId}/Drivers`, driverData);
+            // Add to Fleet collection under fleetId as subcollection with fixed ID
+            const driverId = await addDocumentWithId(`fleets/${currentFleet.fleetId}/Drivers`, fixedDriverId, driverData);
 
+           
             if (driverId) {
                 // Update the selected user's personalData with fleet access
                 const existingFleets = selectedUser?.fleets || [];
@@ -189,6 +289,35 @@ export default function AddDriver() {
                     fleets: [...existingFleets, newFleetAccess],
                     updatedAt: new Date().toISOString()
                 });
+
+                // Update the selected truck's driver assignments based on role
+                const updateData: any = {
+                    updatedAt: new Date().toISOString()
+                };
+
+                const driverInfo = {
+                    driverId: driverId,
+                    fullName: fullName.trim(),
+                    userId: selectedUser.uid,
+                    email: selectedUser.email,
+                    phoneNumber: phoneNumber.trim(),
+                    truckId: selectedTruck.id,
+                    truckName: selectedTruck.truckName,
+                    docId: driverId,
+                    assignedAt: new Date().toISOString()
+                };
+
+                if (driverRole === 'main') {
+                    updateData.mainDriver = driverInfo;
+                } else if (driverRole === 'second_main') {
+                    updateData.secondMainDriver = driverInfo;
+                } else {
+                    // backup driver
+                    const existingBackupDrivers = selectedTruck.backupDrivers || [];
+                    updateData.backupDrivers = [...existingBackupDrivers, driverInfo];
+                }
+
+                await updateDocument(`fleets/${currentFleet.fleetId}/Trucks`, selectedTruck.id, updateData);
 
                 ToastAndroid.show('Driver added successfully', ToastAndroid.SHORT);
                 router.back();
@@ -266,7 +395,7 @@ export default function AddDriver() {
     return (
         <ScreenWrapper>
             <Heading page={isEditMode ? "Edit Driver" : "Add Driver"} />
-            <ScrollView contentContainerStyle={[styles.container, { backgroundColor: background }]}>
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.container, { backgroundColor: background }]}>
                
                 <ThemedText style={styles.description}>
                     {isEditMode ? "Update driver information and re-upload documents if needed." : "Enter driver details and upload required documents."}
@@ -349,6 +478,116 @@ export default function AddDriver() {
                     </>
                 )}
 
+                {/* Truck Search and Selection */}
+                <ThemedText>Search and Assign Truck<ThemedText color="red">*</ThemedText></ThemedText>
+                <Input
+                    placeholder="Search trucks by name..."
+                    value={truckSearchText}
+                    onChangeText={(text) => {
+                        setTruckSearchText(text);
+                        searchTrucks(text);
+                    }}
+                />
+                {searchedTrucks.length > 0 && (
+                    <View style={{
+                        maxHeight: hp(30), // Fixed height for truck selection
+                        width: '100%',
+                        borderWidth: 1,
+                        borderColor: icon,
+                        borderRadius: wp(2),
+                        marginTop: wp(1),
+                        backgroundColor: background,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 4,
+                        elevation: 5
+                    }}>
+                        <ScrollView keyboardShouldPersistTaps="handled">
+                            {searchedTrucks.map(truck => (
+                                <TouchableOpacity
+                                    key={truck.id}
+                                    style={{
+                                        padding: wp(3),
+                                        borderBottomWidth: 0.5,
+                                        borderBottomColor: icon + '30',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                    }}
+                                    onPress={() => selectTruck(truck)}
+                                >
+                                    <View>
+                                        <ThemedText style={{ fontWeight: 'bold' }}>{truck.truckName}</ThemedText>
+                                        <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+                                            {truck.truckType} - {truck.truckCapacity}
+                                        </ThemedText>
+                                    </View>
+                                    <Ionicons name="add-circle" size={wp(5)} color={accent} />
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+                )}
+                {selectedTruck && (
+                    <View style={{ marginTop: wp(2),width:wp(70) }}>
+                        <ThemedText>Driver Role for {selectedTruck.truckName}<ThemedText color="red">*</ThemedText></ThemedText>
+                        <View style={{ flexDirection: 'row', marginTop: wp(2), gap: wp(2) }}>
+                            {[
+                                { key: 'main', label: 'Main Driver', desc: 'Primary driver' },
+                                { key: 'second_main', label: 'Second Main', desc: 'Secondary primary' },
+                                { key: 'backup', label: 'Backup Driver', desc: 'Backup driver' }
+                            ].map((role) => (
+                                <TouchableOpacity
+                                    key={role.key}
+                                    onPress={() => setDriverRole(role.key as 'main' | 'second_main' | 'backup')}
+                                    style={{
+                                        flex: 1,
+                                        // padding: wp(3),
+                                        borderRadius: wp(2),
+                                        borderWidth: 2,
+                                        borderColor: driverRole === role.key ? accent : icon + '40',
+                                        backgroundColor: driverRole === role.key ? accent + '10' : 'transparent',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    <ThemedText style={{
+                                        fontWeight: driverRole === role.key ? 'bold' : 'normal',
+                                        color: driverRole === role.key ? accent : text,
+                                        fontSize: wp(3)
+                                    }}>
+                                        {role.label}
+                                    </ThemedText>
+                                    <ThemedText style={{
+                                        fontSize: wp(2.5),
+                                        color: icon,
+                                        marginTop: wp(0.5)
+                                    }}>
+                                        {role.desc}
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                        <View style={{ backgroundColor: accent + '20', padding: wp(2), marginTop: wp(2), borderRadius: wp(2), flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <View style={{ flex: 1 }}>
+                                <ThemedText style={{ fontWeight: 'bold' }}>{selectedTruck.truckName}</ThemedText>
+                                <ThemedText style={{ fontSize: wp(2.5), color: icon, marginTop: wp(0.5) }}>
+                                    Role: {driverRole === 'main' ? 'Main Driver' : driverRole === 'second_main' ? 'Second Main' : 'Backup Driver'}
+                                </ThemedText>
+                                <ThemedText style={{ fontSize: wp(2.5), color: icon, marginTop: wp(0.5) }}>
+                                    Type: {selectedTruck.truckType} - Capacity: {selectedTruck.truckCapacity}
+                                </ThemedText>
+                            </View>
+                            <TouchableOpacity onPress={() => {
+                                setSelectedTruck(null);
+                                setDriverRole('backup');
+                            }}>
+                                <Ionicons name="close" size={wp(4)} color={accent} />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
+
                 <View>
                     <ThemedText>Driver's License<ThemedText color="red">*</ThemedText></ThemedText>
                     <View style={{
@@ -384,6 +623,11 @@ export default function AddDriver() {
                             <ThemedText style={{ fontSize: 13.5, fontWeight: "bold" }} color={icon + "4c"}>Take Photo<ThemedText color="red">*</ThemedText></ThemedText>
                         </TouchableOpacity>}
                     </View>
+                    {driverLicense && (
+                        <ThemedText style={{ fontSize: wp(2.5), color: icon, textAlign: 'center', marginTop: wp(1) }}>
+                            License uploaded successfully
+                        </ThemedText>
+                    )}
                 </View>
 
                 <ScrollView horizontal style={{ height: 133, marginTop: wp(4) }}>
@@ -445,16 +689,27 @@ export default function AddDriver() {
                             >
                                 <Ionicons name="close-circle" size={20} color="red" />
                             </TouchableOpacity>
-                        )}
-                        {!internationalPermit && <ThemedText style={{ fontSize: 14.5, textAlign: "center" }}>International Permit</ThemedText>}
-                        {!internationalPermit && <TouchableOpacity
-                            onPress={() => selectImage((image) => setInternationalPermit(image))}
-                            style={{ height: wp(27), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
-                            <Ionicons name="camera" size={wp(15)} color={icon + "15"} />
-                            <ThemedText style={{ fontSize: 13.5, fontWeight: "bold" }} color={icon + "4c"}>Take Photo<ThemedText color="red">*</ThemedText></ThemedText>
-                        </TouchableOpacity>}
-                    </View>
-                </ScrollView>
+                       )}
+                       {!internationalPermit && <ThemedText style={{ fontSize: 14.5, textAlign: "center" }}>International Permit</ThemedText>}
+                       {!internationalPermit && <TouchableOpacity
+                           onPress={() => selectImage((image) => setInternationalPermit(image))}
+                           style={{ height: wp(27), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
+                           <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
+                           <ThemedText style={{ fontSize: 13.5, fontWeight: "bold" }} color={icon + "4c"}>Take Photo<ThemedText color="red">*</ThemedText></ThemedText>
+                       </TouchableOpacity>}
+                   </View>
+
+                   {passport && (
+                       <ThemedText style={{ fontSize: wp(2.5), color: icon, textAlign: 'center', marginTop: wp(1) }}>
+                           Passport uploaded successfully
+                       </ThemedText>
+                   )}
+                   {internationalPermit && (
+                       <ThemedText style={{ fontSize: wp(2.5), color: icon, textAlign: 'center', marginTop: wp(1) }}>
+                           International Permit uploaded successfully
+                       </ThemedText>
+                   )}
+               </ScrollView>
 
                 <TouchableOpacity
                     style={[styles.addButton, { backgroundColor: accent }]}
@@ -473,7 +728,6 @@ export default function AddDriver() {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
         padding: 20,
         justifyContent: 'center',
         alignItems: 'center',

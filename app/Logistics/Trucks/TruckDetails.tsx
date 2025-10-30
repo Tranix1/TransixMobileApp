@@ -765,11 +765,19 @@ const TruckDetails = () => {
                             )}
 
                             {/* Driver Information */}
-                            {truckData.drivers && truckData.drivers.length > 0 && (
+                            {((truckData as any).mainDriver || (truckData as any).secondMainDriver || ((truckData as any).backupDrivers && (truckData as any).backupDrivers.length > 0)) && (
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: wp(2) }}>
                                     <ThemedText style={{ color: textColor }}>Assigned Drivers:</ThemedText>
                                     <ThemedText style={{ color: textColor, fontWeight: 'bold' }}>
-                                        {truckData.drivers.length} driver{truckData.drivers.length > 1 ? 's' : ''}
+                                        {[
+                                            (truckData as any).mainDriver ? 1 : 0,
+                                            (truckData as any).secondMainDriver ? 1 : 0,
+                                            (truckData as any).backupDrivers ? (truckData as any).backupDrivers.length : 0
+                                        ].reduce((a, b) => a + b, 0)} driver{[
+                                            (truckData as any).mainDriver ? 1 : 0,
+                                            (truckData as any).secondMainDriver ? 1 : 0,
+                                            (truckData as any).backupDrivers ? (truckData as any).backupDrivers.length : 0
+                                        ].reduce((a, b) => a + b, 0) > 1 ? 's' : ''}
                                     </ThemedText>
                                 </View>
                             )}
@@ -796,14 +804,70 @@ const TruckDetails = () => {
                                 </View>
                             )}
 
-                            {truckData.drivers && truckData.drivers.length > 0 && (
+                            {/* Display drivers by role */}
+                            {((truckData as any).mainDriver || (truckData as any).secondMainDriver || ((truckData as any).backupDrivers && (truckData as any).backupDrivers.length > 0)) && (
                                 <View style={{ marginTop: wp(2) }}>
-                                    <ThemedText type="tiny" style={{ color: icon, marginBottom: wp(1) }}>Drivers:</ThemedText>
-                                    {truckData.drivers.map((driver, index) => (
-                                        <ThemedText key={index} type="tiny" style={{ color: textColor, marginBottom: wp(0.5) }}>
-                                            • {driver}
-                                        </ThemedText>
-                                    ))}
+                                    <ThemedText type="tiny" style={{ color: icon, marginBottom: wp(1) }}>Drivers by Role:</ThemedText>
+
+                                    {/* Main Driver */}
+                                    {(truckData as any).mainDriver && (
+                                        <TouchableOpacity
+                                            onPress={() => router.push({
+                                                pathname: '/Fleet/Driver/Index',
+                                                params: { driverId: (truckData as any).mainDriver.driverId }
+                                            })}
+                                            style={{ marginBottom: wp(1) }}
+                                        >
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <ThemedText type="tiny" style={{ color: textColor }}>
+                                                    • Main Driver: {(truckData as any).mainDriver.fullName}
+                                                </ThemedText>
+                                                <Ionicons name="chevron-forward" size={wp(4)} color={accent} />
+                                            </View>
+                                        </TouchableOpacity>
+                                    )}
+
+                                    {/* Second Main Driver */}
+                                    {(truckData as any).secondMainDriver && (
+                                        <TouchableOpacity
+                                            onPress={() => router.push({
+                                                pathname: '/Fleet/Driver/Index',
+                                                params: { driverId: (truckData as any).secondMainDriver.driverId }
+                                            })}
+                                            style={{ marginBottom: wp(1) }}
+                                        >
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <ThemedText type="tiny" style={{ color: textColor }}>
+                                                    • Second Main Driver: {(truckData as any).secondMainDriver.fullName}
+                                                </ThemedText>
+                                                <Ionicons name="chevron-forward" size={wp(4)} color={accent} />
+                                            </View>
+                                        </TouchableOpacity>
+                                    )}
+
+                                    {/* Backup Drivers */}
+                                    {(truckData as any).backupDrivers && (truckData as any).backupDrivers.length > 0 && (
+                                        <View>
+                                            <ThemedText type="tiny" style={{ color: icon, marginBottom: wp(1), marginTop: wp(1) }}>Backup Drivers:</ThemedText>
+                                            {(truckData as any).backupDrivers.map((driver: any, index: number) => (
+                                                <TouchableOpacity
+                                                    key={index}
+                                                    onPress={() => router.push({
+                                                        pathname: '/Fleet/Driver/Index',
+                                                        params: { driverId: driver.driverId }
+                                                    })}
+                                                    style={{ marginBottom: wp(1) }}
+                                                >
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                        <ThemedText type="tiny" style={{ color: textColor }}>
+                                                            • {driver.fullName}
+                                                        </ThemedText>
+                                                        <Ionicons name="chevron-forward" size={wp(4)} color={accent} />
+                                                    </View>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    )}
                                 </View>
                             )}
 

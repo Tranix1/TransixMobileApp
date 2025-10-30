@@ -14,9 +14,10 @@ interface CustomHeaderProps {
         userRole: string;
         accType: string;
     };
+    pageTitle?: string;
 }
 
-export default function CustomHeader({ onPressMenu, currentRole }: CustomHeaderProps) {
+export default function CustomHeader({ onPressMenu, currentRole, pageTitle }: CustomHeaderProps) {
     const background = useThemeColor("background");
     const icon = useThemeColor('icon');
 
@@ -33,7 +34,14 @@ export default function CustomHeader({ onPressMenu, currentRole }: CustomHeaderP
             }}
         >
             <View>
-                {typeof currentRole === 'object' && currentRole.role === 'fleet' ? (
+                {pageTitle ? (
+                    <>
+                        <ThemedText type="title">{pageTitle}</ThemedText>
+                        {typeof currentRole === 'object' && currentRole.role === 'fleet' && (
+                            <ThemedText type="tiny">{currentRole.companyName}</ThemedText>
+                        )}
+                    </>
+                ) : typeof currentRole === 'object' && currentRole.role === 'fleet' ? (
                     <>
                         <ThemedText type="title">{currentRole.companyName}</ThemedText>
                         <ThemedText type="tiny">{currentRole.accType}: {currentRole.userRole}</ThemedText>

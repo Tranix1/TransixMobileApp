@@ -41,13 +41,13 @@ export default function RootLayout() {
             debugNavigationBar();
 
             // Try all methods
-            configureNavigationBar(colorScheme);
-            configureNativeNavigationBar(colorScheme);
-            forceNavigationBarConfig(colorScheme);
+            configureNavigationBar(colorScheme as 'light' | 'dark' | null);
+            configureNativeNavigationBar(colorScheme as 'light' | 'dark' | null);
+            forceNavigationBarConfig(colorScheme as 'light' | 'dark' | null);
 
             // Also try the alternative method
             setTimeout(() => {
-                configureNavigationBarAlternative(colorScheme);
+                configureNavigationBarAlternative(colorScheme as 'light' | 'dark' | null);
                 // Debug after configuration
                 setTimeout(() => {
                     debugNavigationBar();
@@ -60,7 +60,7 @@ export default function RootLayout() {
     useEffect(() => {
         const handleAppStateChange = () => {
             if (loaded) {
-                refreshNavigationBar(colorScheme);
+                refreshNavigationBar(colorScheme as 'light' | 'dark' | null);
             }
         };
 
@@ -91,10 +91,7 @@ export default function RootLayout() {
             console.log('loaded Fonts ✅');
             checkFirstTime();
 
-            // Hide splash screen after fonts are loaded
-            SplashScreen.hideAsync().catch(() => {
-                // Ignore errors if splash screen is already hidden
-            });
+            // Don't hide splash screen here anymore - let MainLayout handle it
         }
     }, [loaded]);
 
@@ -110,7 +107,7 @@ export default function RootLayout() {
 
 
 const MainLayout = () => {
-    const { isSignedIn, setupUser } = useAuth();
+    const { isSignedIn, setupUser, isAppReady } = useAuth();
     const router = useRouter();
 
 
@@ -125,6 +122,19 @@ const MainLayout = () => {
             }
         });
     }, []);
+
+    useEffect(() => {
+        if (isAppReady) {
+            // Hide splash screen after app is ready (user and role loaded)
+            SplashScreen.hideAsync().catch(() => {
+                // Ignore errors if splash screen is already hidden
+            });
+        }
+    }, [isAppReady]);
+
+    if (!isAppReady) {
+        return null; // Show nothing until app is ready
+    }
 
     return (
         <Stack screenOptions={{ headerShown: false }}>

@@ -1,40 +1,26 @@
-import 'react-native-get-random-values';
 import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, ToastAndroid, ActivityIndicator } from "react-native"
+import { View, TouchableOpacity, Image, StyleSheet, ScrollView, ToastAndroid, ActivityIndicator } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import { countryCodes, } from "@/data/appConstants";
-
-
 import type { ImagePickerAsset } from 'expo-image-picker';
-import { addDocument, getDocById, setDocuments, getUsers } from "@/db/operations";
+import { addDocument, getDocById, setDocuments, getUsers, fetchDocuments, updateDocument } from "@/db/operations";
 import { uploadImage } from "@/db/operations";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { storage } from "@/db/fireBaseConfig";
 import { selectManyImages, handleChange } from "@/Utilities/utils";
 import { selectImage, selectImageNoCrop, selectImageWithCrop } from "@/Utilities/imageUtils";
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
-import { ErrorOverlay } from "@/components/ErrorOverLay";
 import Heading from "@/components/Heading";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { TruckTypeProps } from "@/types/types";
-import { AntDesign, Entypo, FontAwesome, FontAwesome6, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { hp, wp } from "@/constants/common";
-import { useThemeColor } from '@/hooks/useThemeColor'
-import { Dropdown, } from "react-native-element-dropdown";
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { useAuth } from "@/context/AuthContext";
 import { router } from "expo-router";
 import Divider from "@/components/Divider";
-import { cleanNumber } from "@/services/services";
 import Button from "@/components/Button";
-
 import { TruckFormData } from "@/types/types";
-
 import { AddTruckDetails } from "@/components/AddTruckDetails";
 import { HorizontalTickComponent } from "@/components/SlctHorizonzalTick";
-import { DocumentUploader } from "@/components/DocumentUploader";
-
 import { usePushNotifications, notifyTruckApprovalAdmins } from "@/Utilities/pushNotification";
 import { pickDocument } from "@/Utilities/utils";
 import { DocumentAsset } from "@/types/types";
@@ -65,20 +51,13 @@ function AddTrucks() {
   const [ownerNameAddDb, SetOwnerNameAddDb] = useState('');
   const [ownerEmailAddDb, setOwnerEmailAddDb] = useState('');
   const [ownerPhonNumAddDb, setOwnerPhoneNum] = useState('');
-
- 
-
   const [selectedOwnerDocuments, setSelectedOwnerDocumentS] = useState<DocumentAsset[]>([]);
   const [ownerFileType, setOwnerFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([])
   const [ownershipFileType, setOwnerShipFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([])
   const [selectedTruckLease, setSelectedTruckLease] = useState<DocumentAsset[]>([]);
   const [truckLeaseFileType, setTruckLeaseFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([])
-
   const [selectedBrokerDocuments, setSelectedBrokerDocumentS] = useState<DocumentAsset[]>([]);
   const [brokerFileType, setBrokerFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([])
-
-
-
   const [uploadingOwnerD, setUploadingOwerD] = React.useState(false)
 
 
@@ -162,63 +141,12 @@ function AddTrucks() {
   
   const [ownerDetailsDsp , setOwnerdetailsDsp] = useState(false);
   const [showUserVerificationModal, setShowUserVerificationModal] = useState(false);
-  // Removed broker details - only owner verification needed
   const [loading, setLoading] = useState(true);
-  const [dataChecked, setDataChecked] = useState(false); // controls UI entry
+  const [dataChecked, setDataChecked] = useState(false);
 
 
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      // Check current role from AsyncStorage
-      try {
-        const storedRole = await AsyncStorage.getItem('currentRole');
-        if (storedRole) {
-          const parsedRole = JSON.parse(storedRole);
-          setCurrentRole(parsedRole);
-          if (parsedRole.role === 'fleet' && parsedRole.accType === 'fleet') {
-            setUserIsFleetVerified(true);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching current role:", error);
-      }
-
-      // Check for owner verification in the unified verifiedUsers collection
-      const personDetails = await getDocById('verifiedUsers', (data) => {
-
-         if (data && data.accType === 'professional') {
-            setUserIsVerified({
-              docId: data.id || '',
-              isApproved: data.isApproved || false,
-              accType: 'professional'
-            });
-          }
-
-         // Check for fleet verification
-         if (data && data.accType === 'fleet' && data.verificationStatus === 'approved') {
-            setUserIsFleetVerified(true);
-          }
-      });
-
-      // Fetch all users for search functionality
-      try {
-        const fetchedUsers = await getUsers();
-        setAllUsers(fetchedUsers);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-
-      setLoading(false);
-
-      // Add a short delay before rendering UI to prevent flicker
-      setTimeout(() => {
-        setDataChecked(true);
-      }, 300); // 300ms feels natural
-    };
-
-    fetchAll();
-  }, []);
+ 
 
   
 
@@ -255,12 +183,15 @@ const [selectedProofOfOwnerShip, setLease] = useState('');
 const [truckType, setTruckType] = useState<'Private' | 'Public'>('Private');
 const [loadTypes, setLoadTypes] = useState<string[]>([]);
 const [selectedBrokers, setSelectedBrokers] = useState<string[]>([]);
-const [selectedDrivers, setSelectedDrivers] = useState<string[]>([]);
+const [selectedDrivers, setSelectedDrivers] = useState<any[]>([]);
 const [brokerSearchText, setBrokerSearchText] = useState('');
 const [driverSearchText, setDriverSearchText] = useState('');
 const [allUsers, setAllUsers] = useState<any[]>([]);
 const [searchedUsers, setSearchedUsers] = useState<any[]>([]);
-const [isSearching, setIsSearching] = useState(false);
+const [fleetDrivers, setFleetDrivers] = useState<any[]>([]);
+console.log("Fleet Driver `s:", fleetDrivers);
+const [searchedDrivers, setSearchedDrivers] = useState<any[]>([]);
+const [driversLoading, setDriversLoading] = useState(false);
 const generalLoadOptions = [
  'Food',
  'Electronics',
@@ -306,6 +237,118 @@ const generalLoadOptions = [
     }
   };
 
+
+
+ useEffect(() => {
+    const fetchAll = async () => {
+      // Check current role from AsyncStorage
+      try {
+        const storedRole = await AsyncStorage.getItem('currentRole');
+        if (storedRole) {
+          const parsedRole = JSON.parse(storedRole);
+          setCurrentRole(parsedRole);
+          if (parsedRole.role === 'fleet' && parsedRole.accType === 'fleet') {
+            setUserIsFleetVerified(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching current role:", error);
+      }
+
+      // Check for owner verification in the unified verifiedUsers collection
+      const personDetails = await getDocById('verifiedUsers', (data) => {
+
+         if (data && data.accType === 'professional') {
+            setUserIsVerified({
+              docId: data.id || '',
+              isApproved: data.isApproved || false,
+              accType: 'professional'
+            });
+          }
+
+         // Check for fleet verification
+         if (data && data.accType === 'fleet' && data.verificationStatus === 'approved') {
+            setUserIsFleetVerified(true);
+          }
+      });
+
+      // Fetch all users for search functionality
+      try {
+        const fetchedUsers = await getUsers();
+        setAllUsers(fetchedUsers);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+
+      // Fetch fleet drivers if user is in a fleet
+      if (currentRole?.accType === 'fleet') {
+        setDriversLoading(true);
+        console.log(driversLoading , " is drivers loading state")
+        try {
+          const driversResult = await fetchDocuments(`fleets/${currentRole.fleetId}/Drivers`, 100); // Increased limit
+          if (driversResult && driversResult.data && Array.isArray(driversResult.data)) {
+            setFleetDrivers(driversResult.data);
+          } else {
+            setFleetDrivers([]); // Ensure it's an empty array if no data
+          }
+        } catch (error) {
+          console.error("Error fetching fleet drivers:", error);
+          setFleetDrivers([]); // Set empty array on error
+        } finally {
+          setDriversLoading(false);
+        }
+      } else {
+        setFleetDrivers([]); // Ensure empty array for non-fleet users
+        setDriversLoading(false);
+      }
+
+      setLoading(false);
+
+      // Add a short delay before rendering UI to prevent flicker
+      setTimeout(() => {
+        setDataChecked(true);
+      }, 300); // 300ms feels natural
+    };
+
+    fetchAll();
+  }, [loading]);
+
+  // Function to search fleet drivers by name or email
+  const searchDrivers = (searchText: string) => {
+    if (!searchText.trim()) {
+      setSearchedDrivers([]);
+      return;
+    }
+
+    try {
+      // Ensure fleetDrivers is an array
+      if (!Array.isArray(fleetDrivers)) {
+        console.warn('fleetDrivers is not an array:', fleetDrivers);
+        setSearchedDrivers([]);
+        return;
+      }
+
+      const filteredDrivers = fleetDrivers.filter((driver) => {
+        if (!driver || typeof driver !== 'object') return false;
+
+        const searchLower = searchText.toLowerCase();
+        const fullNameMatch = driver.fullName && typeof driver.fullName === 'string' &&
+          driver.fullName.toLowerCase().includes(searchLower);
+        const userIdMatch = driver.userId && typeof driver.userId === 'string' &&
+          driver.userId.toLowerCase().includes(searchLower);
+        const emailMatch = driver.email && typeof driver.email === 'string' &&
+          driver.email.toLowerCase().includes(searchLower);
+
+        return fullNameMatch || userIdMatch || emailMatch;
+      }).slice(0, 10); // Limit to 10 results for performance
+      setSearchedDrivers(filteredDrivers);
+    } catch (error) {
+      console.error('Error searching drivers:', error);
+      alertBox('Error', 'Failed to search drivers', [], 'error');
+      setSearchedDrivers([]);
+    }
+  };
+
   // Function to select a user
   const selectUser = (user: any, type: 'broker' | 'driver') => {
     if (type === 'broker') {
@@ -314,12 +357,37 @@ const generalLoadOptions = [
       }
       setBrokerSearchText('');
     } else {
-      if (!selectedDrivers.includes(user.email)) {
-        setSelectedDrivers([...selectedDrivers, user.email]);
+      // For drivers, select from fleet drivers
+      const driver = fleetDrivers.find(d => d.userId === user.uid);
+      if (driver && !selectedDrivers.some(d => d.userId === driver.userId)) {
+        setSelectedDrivers([...selectedDrivers, { ...driver, role: 'backup' }]);
       }
       setDriverSearchText('');
     }
     setSearchedUsers([]);
+  };
+
+  // Function to select a driver from fleet drivers
+  const selectDriver = (driver: any) => {
+    if (!selectedDrivers.some(d => d.userId === driver.userId)) {
+      setSelectedDrivers([...selectedDrivers, { ...driver, role: 'backup' }]);
+    }
+    // Don't clear search text so user can continue searching for more drivers
+    setSearchedDrivers([]);
+    // Keep search text so user can search for another driver
+    // Don't clear driverSearchText here - user can continue searching
+  };
+
+  // Function to update driver role
+  const updateDriverRole = (driverUserId: string, role: 'main' | 'second_main' | 'backup') => {
+    setSelectedDrivers(selectedDrivers.map(driver =>
+      driver.userId === driverUserId ? { ...driver, role } : driver
+    ));
+  };
+
+  // Function to remove a driver
+  const removeDriver = (driverUserId: string) => {
+    setSelectedDrivers(selectedDrivers.filter(driver => driver.userId !== driverUserId));
   };
 
   // Function to clear all form fields
@@ -355,6 +423,7 @@ const generalLoadOptions = [
     setBrokerSearchText('');
     setDriverSearchText('');
     setSearchedUsers([]);
+    setSearchedDrivers([]);
     // Clear truck lease document
     setSelectedTruckLease([]);
     setTruckLeaseFileType([]);
@@ -386,7 +455,21 @@ const generalLoadOptions = [
       !truckType && "Select Truck Type (Private/Public)",
       loadTypes.length === 0 && "Select at least one load type",
       selectedDrivers.length === 0 && "Assign at least one driver",
+      selectedDrivers.length > 4 && "Maximum 4 drivers allowed per truck",
       (!selectedTruckLease || selectedTruckLease.length === 0) && "Upload Lease/Ownership Document",
+      // Validate driver roles - only one main driver allowed
+      selectedDrivers.filter(d => d.role === 'main').length > 1 && "Only one Main Driver allowed per truck",
+      selectedDrivers.filter(d => d.role === 'second_main').length > 1 && "Only one Second Main Driver allowed per truck",
+      // Temporarily disable driver limit validation for testing
+      // selectedDrivers.some(selectedDriver => {
+      //   const existingAssignments = fleetDrivers.filter(fleetDriver =>
+      //     fleetDriver.userId === selectedDriver.userId &&
+      //     fleetDriver.truckId && // Only count if truckId exists and is not empty
+      //     fleetDriver.truckId.trim() !== '' &&
+      //     fleetDriver.status === 'assigned' // Only count active assignments
+      //   ).length;
+      //   return existingAssignments >= 4; // If already assigned to 4 trucks, can't assign to more
+      // }) && "One or more selected drivers are already assigned to the maximum of 4 trucks",
     ].filter(Boolean);
 
     if (missingTruckDetails.length > 0) {
@@ -487,7 +570,48 @@ const generalLoadOptions = [
         truckVisibility: truckType, // Private or Public
         loadTypes: loadTypes,
         brokers: selectedBrokers,
-        drivers: selectedDrivers,
+        drivers: selectedDrivers.map(driver => ({
+          driverId: driver.docId,
+          fullName: driver.fullName,
+          userId: driver.userId,
+          email: driver.email || driver.userId,
+          phoneNumber: driver.phoneNumber,
+          truckId: truckId,
+          truckName: formData.truckName,
+          role: driver.role,
+          assignedAt: new Date().toISOString()
+        })),
+        // Add structured driver assignments to truck record
+        mainDriver: selectedDrivers.find(d => d.role === 'main') ? {
+          driverId: selectedDrivers.find(d => d.role === 'main')!.docId,
+          fullName: selectedDrivers.find(d => d.role === 'main')!.fullName,
+          userId: selectedDrivers.find(d => d.role === 'main')!.userId,
+          email: selectedDrivers.find(d => d.role === 'main')!.email || selectedDrivers.find(d => d.role === 'main')!.userId,
+          phoneNumber: selectedDrivers.find(d => d.role === 'main')!.phoneNumber,
+          truckId: truckId,
+          truckName: formData.truckName,
+          assignedAt: new Date().toISOString()
+        } : null,
+        secondMainDriver: selectedDrivers.find(d => d.role === 'second_main') ? {
+          driverId: selectedDrivers.find(d => d.role === 'second_main')!.docId,
+          fullName: selectedDrivers.find(d => d.role === 'second_main')!.fullName,
+          userId: selectedDrivers.find(d => d.role === 'second_main')!.userId,
+          email: selectedDrivers.find(d => d.role === 'second_main')!.email || selectedDrivers.find(d => d.role === 'second_main')!.userId,
+          phoneNumber: selectedDrivers.find(d => d.role === 'second_main')!.phoneNumber,
+          truckId: truckId,
+          truckName: formData.truckName,
+          assignedAt: new Date().toISOString()
+        } : null,
+        backupDrivers: selectedDrivers.filter(d => d.role === 'backup').map(driver => ({
+          driverId: driver.docId,
+          fullName: driver.fullName,
+          userId: driver.userId,
+          email: driver.email || driver.userId,
+          phoneNumber: driver.phoneNumber,
+          truckId: truckId,
+          truckName: formData.truckName,
+          assignedAt: new Date().toISOString()
+        })),
 
         // Referral system
         referrerId: user?.referrerId || null,
@@ -532,6 +656,41 @@ const generalLoadOptions = [
         truckDocRef = await addDocument("Trucks", submitData);
       }
 
+
+      // Update driver records with truck assignment
+      if (currentRole?.accType === 'fleet' && selectedDrivers.length > 0) {
+        for (const driver of selectedDrivers) {
+          // Get current driver data to preserve existing assignments
+          const currentDriverData = fleetDrivers.find(d => d.docId === driver.docId) || {};
+
+          // Prepare truck assignment object
+          const truckAssignment = {
+            truckId: truckId,
+            truckName: formData.truckName,
+            role: driver.role,
+            assignedAt: new Date().toISOString()
+          };
+
+          // Update driver record with new truck assignment
+          const updateData: any = {
+            status: 'assigned',
+            assignedAt: new Date().toISOString()
+          };
+
+          // Add truck assignment based on role
+          if (driver.role === 'main') {
+            updateData.mainTruck = truckAssignment;
+          } else if (driver.role === 'second_main') {
+            updateData.secondMainTruck = truckAssignment;
+          } else {
+            // For backup drivers, add to backupTrucks array
+            const existingBackupTrucks = currentDriverData.backupTrucks || [];
+            updateData.backupTrucks = [...existingBackupTrucks, truckAssignment];
+          }
+
+          await updateDocument(`fleets/${currentRole.fleetId}/Drivers`, driver.docId, updateData);
+        }
+      }
 
       // Notify admins who can approve trucks
       await notifyTruckApprovalAdmins(submitData)
@@ -940,17 +1099,22 @@ const generalLoadOptions = [
             </View>
 
             <ThemedText>
-              Search and Assign Driver
+              Search and Assign Driver {driversLoading && "(Loading...)"}
             </ThemedText>
             <Input
-              placeholder="Search drivers by email or name..."
+              placeholder="Search drivers by name or email..."
               value={driverSearchText}
               onChangeText={(text) => {
                 setDriverSearchText(text);
-                searchUsers(text, 'driver');
+                if (!driversLoading) {
+                  searchDrivers(text);
+                }
               }}
             />
-            {searchedUsers.length > 0 && (
+            <ThemedText style={{ fontSize: 12, opacity: 0.7, marginTop: wp(1) }}>
+              Select up to 4 drivers. Each driver can be assigned a role: Main, Second Main, or Backup.
+            </ThemedText>
+            {searchedDrivers.length > 0 && (
               <View style={{
                 maxHeight: hp(25),
                 borderWidth: 1,
@@ -965,9 +1129,9 @@ const generalLoadOptions = [
                 elevation: 5
               }}>
                 <ScrollView keyboardShouldPersistTaps="handled">
-                  {searchedUsers.map(user => (
+                  {searchedDrivers.map(driver => (
                     <TouchableOpacity
-                      key={user.id}
+                      key={driver.docId}
                       style={{
                         padding: wp(3),
                         borderBottomWidth: 0.5,
@@ -976,12 +1140,12 @@ const generalLoadOptions = [
                         alignItems: 'center',
                         justifyContent: 'space-between'
                       }}
-                      onPress={() => selectUser(user, 'driver')}
+                      onPress={() => selectDriver(driver)}
                     >
                       <View>
-                        <ThemedText style={{ fontWeight: 'bold' }}>{user.email}</ThemedText>
+                        <ThemedText style={{ fontWeight: 'bold' }}>{driver.fullName}</ThemedText>
                         <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
-                          {user.firstName || 'N/A'} {user.lastName || ''}
+                          {driver.email || driver.userId}
                         </ThemedText>
                       </View>
                       <Ionicons name="add-circle" size={wp(5)} color={accent} />
@@ -991,23 +1155,54 @@ const generalLoadOptions = [
               </View>
             )}
             {selectedDrivers.length > 0 && (
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: wp(2) }}>
+              <View style={{ marginTop: wp(2) }}>
                 {selectedDrivers.map(driver => (
-                  <View key={driver} style={{ backgroundColor: accent + '20', padding: wp(1), margin: wp(1), borderRadius: wp(2), flexDirection: 'row', alignItems: 'center' }}>
-                    <ThemedText style={{ marginRight: wp(1) }}>{driver}</ThemedText>
-                    <TouchableOpacity onPress={() => setSelectedDrivers(selectedDrivers.filter(d => d !== driver))}>
-                      <Ionicons name="close" size={wp(3)} color={accent} />
-                    </TouchableOpacity>
+                  <View key={driver.userId} style={{ backgroundColor: accent + '20', padding: wp(2), marginBottom: wp(2), borderRadius: wp(2) }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: wp(2) }}>
+                      <View>
+                        <ThemedText style={{ fontWeight: 'bold' }}>{driver.fullName}</ThemedText>
+                        <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>{driver.userId}</ThemedText>
+                      </View>
+                      <TouchableOpacity onPress={() => removeDriver(driver.userId)}>
+                        <Ionicons name="close" size={wp(4)} color={accent} />
+                      </TouchableOpacity>
+                    </View>
+                    <View>
+                      <ThemedText style={{ fontSize: wp(3), marginBottom: wp(1) }}>Driver Role</ThemedText>
+                      <View style={{ flexDirection: 'row', gap: wp(1) }}>
+                        {[
+                          { key: 'main', label: 'Main', desc: 'Primary driver' },
+                          { key: 'second_main', label: 'Second Main', desc: 'Secondary primary' },
+                          { key: 'backup', label: 'Backup', desc: 'Backup driver' }
+                        ].map((role) => (
+                          <TouchableOpacity
+                            key={role.key}
+                            onPress={() => updateDriverRole(driver.userId, role.key as 'main' | 'second_main' | 'backup')}
+                            style={{
+                              flex: 1,
+                              paddingVertical: wp(1),
+                              borderRadius: wp(1),
+                              borderWidth: 1,
+                              borderColor: driver.role === role.key ? accent : iconColor + '40',
+                              backgroundColor: driver.role === role.key ? accent + '10' : 'transparent',
+                              alignItems: 'center'
+                            }}
+                          >
+                            <ThemedText style={{
+                              fontWeight: driver.role === role.key ? 'bold' : 'normal',
+                              color: driver.role === role.key ? accent : iconColor,
+                              fontSize: wp(2.5)
+                            }}>
+                              {role.label}
+                            </ThemedText>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
                   </View>
                 ))}
               </View>
             )}
-
-            <Divider />
-
-
-
-
 
             <Divider />
 

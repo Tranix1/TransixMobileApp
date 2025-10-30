@@ -6,8 +6,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Home from "./Home/Index";
 import Loads from "./Logistics/Loads/Index";
 import Store from "./Transport/Store/Index";
-import Trucks from "./Logistics/Trucks/Index";
-import Account from "./Account/SignUp";
+import LogisticsTrucks from "./Logistics/Trucks/Index";
+import Account from "./Account/Index";
+import Wallet from "./Wallet/Index";
+import Jobs from "./Fleet/DriverScreens/Jobs/Index";
+import Trucks from "./Fleet/DriverScreens/Trucks/Index";
+import Earnings from "./Fleet/DriverScreens/Earnings/Index";
+import DriverProfile from "./Fleet/DriverScreens/Profile/Index";
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { FontAwesome6, Fontisto, Octicons, Entypo, } from "@expo/vector-icons";
@@ -18,6 +23,7 @@ import AppLoadingScreen from "@/components/AppLoadingScreen";
 import UpdateModal from "@/components/UpdateModal";
 import { useAuthState } from "@/hooks/useAuthState";
 import { useAppUpdate } from "@/hooks/useAppUpdate";
+import { useAuth } from '@/context/AuthContext';
 import NetInfo from '@react-native-community/netinfo';
 
 const Tab = createBottomTabNavigator();
@@ -53,6 +59,8 @@ export default function Index() {
     dismissUpdate,
     isLoading: updateLoading
   } = useAppUpdate();
+
+  const { currentRole } = useAuth();
 
   // Check internet connection
   useEffect(() => {
@@ -168,6 +176,16 @@ export default function Index() {
                   return <Fontisto name="truck" size={size} color={color} />;
                 case "Store":
                   return <Entypo name="shop" size={size} color={color} />;
+                case "Wallet":
+                  return <FontAwesome6 name="wallet" size={size} color={color} />;
+                case "Jobs":
+                  return <FontAwesome6 name="briefcase" size={size} color={color} />;
+                case "Fleet":
+                  return <Fontisto name="truck" size={size} color={color} />;
+                case "Earnings":
+                  return <FontAwesome6 name="dollar-sign" size={size} color={color} />;
+                case "Profile":
+                  return <FontAwesome6 name="user" size={size} color={color} />;
 
                 default:
                   return null;
@@ -202,10 +220,35 @@ export default function Index() {
             }
           })}
         >
-          <Tab.Screen name="Home " component={Home} />
-          <Tab.Screen name="Loads" component={Loads} />
-          <Tab.Screen name="Trucks" component={Trucks} />
-          <Tab.Screen name="Store" component={Store} />
+          {currentRole === 'general' ? (
+            <>
+              <Tab.Screen name="Home " component={Home} />
+              <Tab.Screen name="Loads" component={Loads} />
+              <Tab.Screen name="Trucks" component={LogisticsTrucks} />
+              <Tab.Screen name="Store" component={Store} />
+            </>
+          ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'owner') ? (
+            <>
+              <Tab.Screen name="Home " component={Home} />
+              <Tab.Screen name="Loads" component={Loads} />
+              <Tab.Screen name="Trucks" component={Trucks} />
+              <Tab.Screen name="Wallet" component={Wallet} />
+            </>
+          ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'driver') ? (
+            <>
+              <Tab.Screen name="Jobs" component={Jobs} />
+              <Tab.Screen name="Trucks" component={Trucks} />
+              <Tab.Screen name="Earnings" component={Earnings} />
+              <Tab.Screen name="Profile" component={DriverProfile} />
+            </>
+          ) : (
+            <>
+              <Tab.Screen name="Home " component={Home} />
+              <Tab.Screen name="Loads" component={Loads} />
+              <Tab.Screen name="Trucks" component={Trucks} />
+              <Tab.Screen name="Store" component={Store} />
+            </>
+          )}
         </Tab.Navigator>
 
         {/* Update Modal */}

@@ -161,9 +161,12 @@ const Index = () => {
         }
     };
 
+    const { setCurrentRole: setGlobalCurrentRole } = useAuth();
+
     const switchRole = async (role: 'general' | 'fleet' | 'broker') => {
-     
+
         setCurrentRole(role);
+        setGlobalCurrentRole(role);
         // Store the selected role in AsyncStorage
         await AsyncStorage.setItem('currentRole', role);
         router.back() // Role selected and stored, user can navigate to Home manually to see the update
@@ -255,14 +258,16 @@ const Index = () => {
                                     <TouchableNativeFeedback
                                         key={fleet.fleetId}
                                         onPress={() => {
-                                            setCurrentRole('fleet');
-                                            AsyncStorage.setItem('currentRole', JSON.stringify({
-                                                role: 'fleet',
+                                            const fleetRole = {
+                                                role: 'fleet' as const,
                                                 fleetId: fleet.fleetId,
                                                 companyName: fleet.companyName,
                                                 userRole: fleet.role,
-                                                accType: 'fleet'
-                                            }));
+                                                accType: 'fleet' as const
+                                            };
+                                            setCurrentRole('fleet');
+                                            setGlobalCurrentRole(fleetRole);
+                                            AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
                                             router.back();
                                         }}
                                     >
