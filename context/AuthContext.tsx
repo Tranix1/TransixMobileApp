@@ -20,6 +20,7 @@ const AuthContext = createContext({
     setCurrentRole: (role: 'general' | 'fleet' | 'broker' | { role: 'fleet'; fleetId: string; companyName: string; userRole: string; accType: string; }) => { },
     isAppReady: false,
     updateCurrentUser: async (userData: User) => { },
+    isPersonalDataLoadedFromCache: false,
 });
 
 import { ReactNode } from "react";
@@ -35,6 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isSignedIn, setIsSignedIN] = useState(false);
     const [currentRole, setCurrentRole] = useState<'general' | 'fleet' | 'broker' | { role: 'fleet'; fleetId: string; companyName: string; userRole: string; accType: string; }>('general');
     const [isAppReady, setIsAppReady] = useState(false);
+    const [isPersonalDataLoadedFromCache, setIsPersonalDataLoadedFromCache] = useState(false);
 
     useEffect(() => {
         const loadUser = async () => {
@@ -46,11 +48,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const parsedUser = JSON.parse(storedUser);
                 const cachedPersonalData = await AsyncStorage.getItem(`personalData_${parsedUser.uid}`);
                 let personalData;
+                let loadedFromCache = false;
                 if (cachedPersonalData) {
                     personalData = JSON.parse(cachedPersonalData);
+                    loadedFromCache = true;
+                    setIsPersonalDataLoadedFromCache(true);
                 } else {
-                    personalData = await readById('personalData', parsedUser.uid);
-                    await AsyncStorage.setItem(`personalData_${parsedUser.uid}`, JSON.stringify(personalData));
+                    try {
+                        personalData = await readById('personalData', parsedUser.uid);
+                        await AsyncStorage.setItem(`personalData_${parsedUser.uid}`, JSON.stringify(personalData));
+                        setIsPersonalDataLoadedFromCache(false);
+                    } catch (error) {
+                        console.log('Error loading personalData from DB:', error);
+                        // If DB fetch fails, set personalData to empty object or handle gracefully
+                        personalData = {};
+                        setIsPersonalDataLoadedFromCache(false);
+                    }
                 }
                 setUser({ ...parsedUser, ...personalData });
                 setIsSignedIN(true);
@@ -359,7 +372,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ signUp, Login, isSignedIn, user, setupUser, Logout, updateAccount, alertBox, currentRole, setCurrentRole, isAppReady, updateCurrentUser }}>
+        <AuthContext.Provider value={{ signUp, Login, isSignedIn, user, setupUser, Logout, updateAccount, alertBox, currentRole, setCurrentRole, isAppReady, updateCurrentUser, isPersonalDataLoadedFromCache }}>
             {children}
             {showAlert}
         </AuthContext.Provider>

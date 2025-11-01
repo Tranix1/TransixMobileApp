@@ -11,7 +11,9 @@ import { Ionicons, AntDesign, Feather } from "@expo/vector-icons";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 import { router } from "expo-router";
-import { addDocument, setDocuments, getDocById } from "@/db/operations";
+import { addDocument, addDocumentWithId, setDocuments, getDocById } from "@/db/operations";
+import { db } from '@/db/fireBaseConfig';
+import { collection,doc,setDoc } from 'firebase/firestore';
 import { useAuth } from "@/context/AuthContext";
 import { DropDownItem } from "@/components/DropDown";
 import { countryCodes } from "@/data/appConstants";
@@ -59,10 +61,10 @@ import InsufficientFundsModal from '@/components/InsufficientFundsModal';
 import { fetchDocuments } from '@/db/operations';
 import { where } from 'firebase/firestore';
 
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SelectLocationProp } from '@/types/types';
 
-
+import { getUsers } from '@/db/operations';
 // New utilities
 import {
   validateLoadForm,
@@ -71,6 +73,159 @@ import {
 } from '@/Utilities/loadUtils';
 import { analyzeLoadImages } from '@/Utilities/aiAnalysisUtils';
 const AddLoadDB = () => {
+
+    interface userIsVerifiedProps {
+    docId: string;
+    isApproved: boolean;
+    accType: 'professional';
+  }
+  const [currentRole, setCurrentRole] = useState<any>(null);
+  const [fleetManagerId, setFleetManagerId] = useState<string | null>(null);
+const [fleetDrivers, setFleetDrivers] = useState<any[]>([]);
+const [searchedDrivers, setSearchedDrivers] = useState<any[]>([]);
+const [driversLoading, setDriversLoading] = useState(false);
+const [fleetTrucks, setFleetTrucks] = useState<any[]>([]);
+const [searchedTrucks, setSearchedTrucks] = useState<any[]>([]);
+const [selectedFleetTrucks, setSelectedFleetTrucks] = useState<any[]>([]);
+const [selectedDrivers, setSelectedDrivers] = useState<any[]>([]);
+const [truckSearchQuery, setTruckSearchQuery] = useState('');
+const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public'>('Private');
+const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
+const [userIsVerified , setUserIsVerified] = useState<userIsVerifiedProps| null> (null);
+
+  const [userIsFleetVerified, setUserIsFleetVerified] = useState<boolean>(false);
+const [allUsers, setAllUsers] = useState<any[]>([]);
+
+  const [dataChecked, setDataChecked] = useState(false);
+
+ useEffect(() => {
+    const fetchAll = async () => {
+      // Check current role from AsyncStorage
+      try {
+        const storedRole = await AsyncStorage.getItem('currentRole');
+        if (storedRole) {
+          const parsedRole = JSON.parse(storedRole);
+          setCurrentRole(parsedRole);
+          if (parsedRole.role === 'fleet' && parsedRole.accType === 'fleet') {
+            setUserIsFleetVerified(true);
+            setFleetManagerId(parsedRole.fleetManagerId || parsedRole.userId); // Use fleetManagerId if available, fallback to userId
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching current role:", error);
+      }
+
+      // Check for owner verification in the unified verifiedUsers collection
+      const personDetails = await getDocById('verifiedUsers', (data) => {
+
+         if (data && data.accType === 'professional') {
+            setUserIsVerified({
+              docId: data.id || '',
+              isApproved: data.isApproved || false,
+              accType: 'professional'
+            });
+          }
+
+         // Check for fleet verification
+         if (data && data.accType === 'fleet' && data.verificationStatus === 'approved') {
+            setUserIsFleetVerified(true);
+          }
+      });
+
+      // Fetch all users for search functionality
+      try {
+        const fetchedUsers = await getUsers();
+        setAllUsers(fetchedUsers);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+
+      // Fetch fleet trucks if user is in a fleet
+      if (currentRole?.accType === 'fleet') {
+        setDriversLoading(true);
+        console.log(driversLoading , " is drivers loading state")
+        try {
+          const trucksResult = await fetchDocuments(`fleets/${currentRole.fleetId}/Trucks`, 100); // Fetch fleet trucks
+          if (trucksResult && trucksResult.data && Array.isArray(trucksResult.data)) {
+            setFleetTrucks(trucksResult.data);
+            setSearchedTrucks(trucksResult.data); // Initialize searched trucks
+
+            // Extract drivers from trucks
+            const driversFromTrucks: any[] = [];
+            trucksResult.data.forEach((truck: any) => {
+              // Add main driver if exists
+              if (truck.mainDriver) {
+                driversFromTrucks.push({
+                  ...truck.mainDriver,
+                  docId: truck.mainDriver.docId || truck.mainDriver.driverId,
+                  role: 'main',
+                  truckId: truck.truckId,
+                  truckName: truck.truckName || truck.formData?.truckName
+                });
+              }
+              // Add second main driver if exists
+              if (truck.secondMainDriver) {
+                driversFromTrucks.push({
+                  ...truck.secondMainDriver,
+                  docId: truck.secondMainDriver.docId || truck.secondMainDriver.driverId,
+                  role: 'second_main',
+                  truckId: truck.truckId,
+                  truckName: truck.truckName || truck.formData?.truckName
+                });
+              }
+              // Add backup drivers if exist
+              if (truck.backupDrivers && Array.isArray(truck.backupDrivers)) {
+                truck.backupDrivers.forEach((backupDriver: any) => {
+                  driversFromTrucks.push({
+                    ...backupDriver,
+                    docId: backupDriver.docId || backupDriver.driverId,
+                    role: 'backup',
+                    truckId: truck.truckId,
+                    truckName: truck.truckName || truck.formData?.truckName
+                  });
+                });
+              }
+            });
+
+            // Remove duplicates based on driverId
+            const uniqueDrivers = driversFromTrucks.filter((driver, index, self) =>
+              index === self.findIndex(d => d.driverId === driver.driverId)
+            );
+
+            setFleetDriversFromTrucks(uniqueDrivers);
+          } else {
+            setFleetTrucks([]);
+            setSearchedTrucks([]);
+            setFleetDriversFromTrucks([]);
+          }
+        } catch (error) {
+          console.error("Error fetching fleet trucks:", error);
+          setFleetTrucks([]);
+          setSearchedTrucks([]);
+          setFleetDriversFromTrucks([]);
+        } finally {
+          setDriversLoading(false);
+        }
+      } else {
+        setFleetTrucks([]);
+        setSearchedTrucks([]);
+        setFleetDriversFromTrucks([]);
+        setDriversLoading(false);
+      }
+
+
+      // Add a short delay before rendering UI to prevent flicker
+      setTimeout(() => {
+        setDataChecked(true);
+      }, 300); // 300ms feels natural
+    };
+
+    fetchAll();
+  }, [userIsFleetVerified]);
+
+
+
+
 
 
   const { expoPushToken } = usePushNotifications();
@@ -368,9 +523,6 @@ const AddLoadDB = () => {
     setErrorDetails("");
     setShowErrorDetails(false);
   };
-
-
-
 
 
   // Function to clear all form fields
@@ -921,17 +1073,20 @@ const AddLoadDB = () => {
       return;
     }
 
-    // Comprehensive check if user has submitted personal details
-    if (userType === 'general' && !getGeneralDetails) {
-      setIsSubmitting(false);
-      alertBox("Personal Details Required", "Please submit your personal details first before creating a load. All required fields must be completed.", [], "error");
-      return;
-    }
+    // Skip KYC verification for verified fleet users
+    if (!userIsFleetVerified) {
+      // Comprehensive check if user has submitted personal details
+      if (userType === 'general' && !getGeneralDetails) {
+        setIsSubmitting(false);
+        alertBox("Personal Details Required", "Please submit your personal details first before creating a load. All required fields must be completed.", [], "error");
+        return;
+      }
 
-    if (userType === 'professional' && !getProfessionalDetails) {
-      setIsSubmitting(false);
-      alertBox("Professional Details Required", "Please submit your professional details first before creating a load. All required documents must be uploaded.", [], "error");
-      return;
+      if (userType === 'professional' && !getProfessionalDetails) {
+        setIsSubmitting(false);
+        alertBox("Professional Details Required", "Please submit your professional details first before creating a load. All required documents must be uploaded.", [], "error");
+        return;
+      }
     }
 
     // Additional validation: Check if personal details are approved (optional - can be removed if not needed)
@@ -962,6 +1117,27 @@ const AddLoadDB = () => {
     // Additional validation for professional users - check if they have at least one proof file
     if (userType === 'professional' && proofImages.length === 0 && proofDocuments.length === 0) {
       validationErrors.push('Upload at least one proof of order document or image');
+    }
+
+    // Additional validation for fleet users - check if they have selected trucks for private loads
+    if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
+      if (selectedFleetTrucks.length === 0) {
+        validationErrors.push('Select at least one truck from your fleet');
+      }
+      // For private trucks, drivers are optional - fleet manager can assign later
+      // Check if selected drivers are actually assigned to selected trucks
+      const invalidDrivers = selectedDrivers.filter(driver =>
+        !selectedFleetTrucks.some(truck => truck.truckId === driver.truckId)
+      );
+      if (invalidDrivers.length > 0) {
+        validationErrors.push('Some selected drivers are not assigned to the selected trucks');
+      }
+    }
+
+    // For private trucks, remove the truck type selection requirement since it's not needed
+    if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
+      // Remove truck type validation for private loads since we're selecting specific trucks
+      // The validation will still check for selected trucks above
     }
 
     if (validationErrors.length > 0) {
@@ -1119,28 +1295,212 @@ const AddLoadDB = () => {
         historyType: 'payment', // Add for WalletHistory
       };
 
-      await addDocument('Payments', paymentData);
-      await addDocument('WalletHistory', paymentData); // Also save to WalletHistory
+      await addDocumentWithId('Payments', paymentId, paymentData);
+      await addDocumentWithId('WalletHistory', paymentId, paymentData); // Also save to WalletHistory
+
+  
+// Fleet-specific logic: If user is in a fleet and load is private, assign selected trucks and drivers
+if (currentRole?.accType === 'fleet' && loadVisibility === 'Private' && selectedFleetTrucks.length > 0) {
+
+  const trucks = selectedFleetTrucks;
+  const drivers = selectedDrivers;
+
+  // 1️⃣ Add Cargo to fleet collection and get the auto-generated cargoId
+  const cargoRefPath = `fleets/${currentRole.fleetId}/Cargo`;
+  
+   const docRef = doc(collection(db, `fleets/${currentRole.fleetId}/Cargo`));
+const cargoId = docRef.id;
+
+ await setDoc(docRef, {
+    ...loadData,
+    cargoId: cargoId,
+    loadVisibility: 'Private',
+    cargoStatus: "pending",
+    trucks: trucks.map(truck => ({
+      truckId: truck.truckId,
+      truckName : truck.truckName,
+      truckStatus: "pending",
+      drivers: drivers.filter(d => d.truckId === truck.truckId).map(driver => ({
+        driverId: driver.driverId,
+        role: driver.role,
+        fullName: driver.fullName,
+          phoneNumber: driver.phoneNumber,
+        status: "pending"
+      }))
+    }))
+  });
+
+  // 2️⃣ Cargo assignments per truck
+  for (const truck of trucks) {
+
+    const truckDrivers = drivers.filter(d => d.truckId === truck.truckId);
+    if (truckDrivers.length > 0) {
+      await addDocument(`${cargoRefPath}/${cargoId}/assignments`, {
+        truckId: truck.truckId,
+        truckName : truck.truckName,
+        cargoId: cargoId,
+        assignedDrivers: truckDrivers.map(driver => ({
+          driverId: driver.driverId,
+          role: driver.role,
+          fullName: driver.fullName,
+          phoneNumber: driver.phoneNumber,
+          status: "pending"
+
+        })),
+        mainDriver: truckDrivers.find(d => d.role === "main")?.driverId || "",
+        status: "pending",
+        acceptedBy: null
+      });
+    }
+  }
+
+  // 3️⃣ Assign cargo to drivers
+  for (const driver of drivers) {
+    alert("hii")
+    await addDocument(`fleets/${currentRole.fleetId}/Drivers/${driver.docId}/cargo`, {
+      cargoId: cargoId,
+      truckId: driver.truckId,
+      truckName : driver.truckName,
+      role: driver.role,
+      status: "pending",
+      assignedAt: new Date()
+    });
+  }
+
+  // 4️⃣ Optional: Truck cargo history
+  // for (const truck of trucks) {
+  //   console.log("adduing truck sub")
+
+  //   const truckDrivers = drivers.filter(d => d.truckId === truck.truckId);
+  //   if (truckDrivers.length > 0) {
+  //     await addDocument(`fleets/${currentRole.fleetId}/Trucks/${truck.truckId}/cargoHistory`, {
+  //       cargoId,
+  //       assignedDriverId: truckDrivers.find(d => d.role === "main")?.driverId || "",
+  //       status: "pending",
+  //       completedAt: null
+  //     });
+  //   }
+  // }
+
+  // 5️⃣ Add to fleet manager's assigned loads
+  if (currentRole.userRole === "owner" ||currentRole.userRole === "fleetManager" ) {
+
+    const fleetManagerLoadData = {
+      loadId: cargoId,
+      loadStatus: "pending",
+      loadVisibility: 'Private',
+      trucks: trucks.map(truck => ({
+        truckId: truck.truckId,
+        truckName : truck.truckName,
+        truckStatus: "pending",
+        drivers: drivers.filter(d => d.truckId === truck.truckId).map(driver => ({
+          driverId: driver.driverId,
+          role: driver.role,
+          status: "pending",
+          fullName: driver.fullName,
+          phoneNumber: driver.phoneNumber,
+        }))
+      }))
+    };
+
+    await addDocument(`fleets/${currentRole.fleetId}/fleetManagers/FLTMGR${currentRole.fleetId}/assignedLoads`, fleetManagerLoadData);
+  }
+
+} 
+
+
+
+
+// else if (currentRole?.accType === 'fleet' && loadVisibility === 'Public') {
+//   // Fleet user with public load - add to both fleet and main Cargo collection
+//   const trucks = selectedFleetTrucks.length > 0 ? selectedFleetTrucks : [];
+//   const drivers = selectedDrivers.length > 0 ? selectedDrivers : [];
+
+//   // 1️⃣ Add to fleet collection
+//   const cargoRefPath = `fleets/${currentRole.fleetId}/Cargo`;
+//   const docRef = doc(collection(db, `fleets/${currentRole.fleetId}/Cargo`));
+// const cargoId = docRef.id;
+
+//  await setDoc(docRef, {
+//     ...loadData,
+//     cargoId: cargoId,
+//     loadVisibility: 'Public',
+//     cargoStatus: "pending",
+//     trucks: trucks.map(truck => ({
+//       truckId: truck.truckId,
+//       truckStatus: "pending",
+//       drivers: drivers.filter(d => d.truckId === truck.truckId).map(driver => ({
+//         driverId: driver.driverId,
+//         role: driver.role,
+//         status: "pending"
+//       }))
+//     }))
+//   });
+
+//   // 2️⃣ Also add to main Cargo collection for public visibility
+//   await addDocument("Cargo", {
+//     ...loadData,
+//     loadVisibility: 'Public',
+//     fleetId: currentRole.fleetId,
+//     cargoId: cargoId // Reference to fleet cargo
+//   });
+
+//   // 3️⃣ Add to fleet manager's assigned loads
+//   if (fleetManagerId) {
+//     const fleetManagerLoadData = {
+//       cargoId: cargoId,
+//       loadStatus: "pending",
+//       loadVisibility: 'Public',
+//       trucks: trucks.map(truck => ({
+//         truckId: truck.truckId,
+//         truckStatus: "pending",
+//         drivers: drivers.filter(d => d.truckId === truck.truckId).map(driver => ({
+//           driverId: driver.driverId,
+//           role: driver.role,
+//           status: "pending"
+//         }))
+//       }))
+//     };
+
+//     await addDocument(`fleetManagers/${fleetManagerId}/assignedLoads`, fleetManagerLoadData);
+//   }
+
+// } else {
+//   // Regular load submission for non-fleet users
+//   await addDocument("Cargo", {
+//     ...loadData,
+//     loadVisibility: 'Public' // Non-fleet loads are always public
+//   });
+// }
+
+
+
+
+
+
+
+
+
 
       // Ensure addDocument is not a React hook or using hooks internally.
       // await addDocument("Cargo", loadData);
 
       // Notify admins who can approve loads
-      await notifyLoadApprovalAdmins(loadData);
+      // await notifyLoadApprovalAdmins(loadData);
 
-      if (trucksNeeded && trucksNeeded.length > 0) {
-        await notifyTrucksByFilters({
-          trucksNeeded,
-          loadItem: {
-            typeofLoad: typeofLoad,
-            origin: origin?.description || "",
-            destination: destination?.description || "",
-            rate: (userType as string) === 'professional' ? rate : (budget || 'Budget to be discussed'),
-            model: (userType as string) === 'professional' ? (selectedModelType?.name || 'Solid') : 'Solid',
-            currency: (userType as string) === 'professional' ? (selectedCurrency?.name || 'USD') : (budgetCurrency?.name || 'USD'),
-          },
-        });
-      }
+      // if (trucksNeeded && trucksNeeded.length > 0) {
+      //   await notifyTrucksByFilters({
+      //     trucksNeeded,
+      //     loadItem: {
+      //       typeofLoad: typeofLoad,
+      //       origin: origin?.description || "",
+      //       destination: destination?.description || "",
+      //       rate: (userType as string) === 'professional' ? rate : (budget || 'Budget to be discussed'),
+      //       model: (userType as string) === 'professional' ? (selectedModelType?.name || 'Solid') : 'Solid',
+      //       currency: (userType as string) === 'professional' ? (selectedCurrency?.name || 'USD') : (budgetCurrency?.name || 'USD'),
+      //     },
+      //   });
+      // }
 
       ToastAndroid.show('Trucks notified and load added successfully.', ToastAndroid.SHORT);
 
@@ -1328,7 +1688,7 @@ const AddLoadDB = () => {
         </View>
       )}
 
-      {!cargoLoading && cargoDataChecked && userType && (
+      {!cargoLoading && cargoDataChecked && userType && !userIsFleetVerified && (
         (userType === 'general' && !getGeneralDetails) ||
         (userType === 'professional' && !getProfessionalDetails)
       ) && (
@@ -1358,16 +1718,16 @@ const AddLoadDB = () => {
           </View>
         )}
 
-      {!cargoLoading && cargoDataChecked && userType && (getGeneralDetails || getProfessionalDetails) && (
+      {!cargoLoading && cargoDataChecked && userType && (userIsFleetVerified || getGeneralDetails || getProfessionalDetails) && (
         <View style={{ paddingHorizontal: wp(4), paddingVertical: wp(1) }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-            {(getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? (
+            {(userIsFleetVerified || getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? (
               <Ionicons name="checkmark-circle" size={wp(4)} color="#0f9d58" />
             ) : (
               <Ionicons name="time" size={wp(4)} color="#ff9800" />
             )}
-            <ThemedText style={{ marginLeft: wp(2), color: (getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "#0f9d58" : "#ff9800", fontSize: 14 }}>
-              {getGeneralDetails ? "General" : "Professional"} User • {(getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "Verified" : "Pending Verification"}
+            <ThemedText style={{ marginLeft: wp(2), color: (userIsFleetVerified || getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "#0f9d58" : "#ff9800", fontSize: 14 }}>
+              {userIsFleetVerified ? "Fleet User • Verified" : (getGeneralDetails ? "General" : "Professional") + " User • " + ((getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "Verified" : "Pending Verification")}
             </ThemedText>
           </View>
         </View>
@@ -2092,79 +2452,391 @@ const AddLoadDB = () => {
         {step === 3 && (userType as string) === 'professional' && (<ScrollView>
           <View style={styles.viewMainDsp}>
             <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-              Truck Requirements
+              {currentRole?.accType === 'fleet' ? 'Select Fleet Trucks & Drivers' : 'Truck Requirements'}
             </ThemedText>
             <Divider />
 
+            {/* Load Visibility Toggle for Fleet Users */}
+            {currentRole?.accType === 'fleet' && (
+              <View style={{ marginBottom: wp(4) }}>
+                <ThemedText style={{ fontWeight: 'bold', marginBottom: wp(2) }}>Load Visibility</ThemedText>
+                <View style={{ flexDirection: 'row', gap: wp(2) }}>
+                  <TouchableOpacity
+                    onPress={() => setLoadVisibility('Private')}
+                    style={{
+                      flex: 1,
+                      padding: wp(3),
+                      borderRadius: 8,
+                      backgroundColor: loadVisibility === 'Private' ? '#E3F2FD' : backgroundLight,
+                      borderWidth: 1,
+                      borderColor: loadVisibility === 'Private' ? '#2196F3' : '#E0E0E0',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Ionicons
+                      name="lock-closed"
+                      size={20}
+                      color={loadVisibility === 'Private' ? '#2196F3' : '#666'}
+                      style={{ marginBottom: wp(1) }}
+                    />
+                    <ThemedText style={{
+                      fontWeight: loadVisibility === 'Private' ? 'bold' : 'normal',
+                      color: loadVisibility === 'Private' ? '#2196F3' : '#666'
+                    }}>
+                      Private
+                    </ThemedText>
+                    <ThemedText style={{ fontSize: 12, color: '#666', textAlign: 'center', marginTop: wp(1) }}>
+                      Only fleet trucks
+                    </ThemedText>
+                  </TouchableOpacity>
 
-            {trucksNeeded.map((truck, index) => (
-              <View
-                key={index}
-                style={{
-                  position: 'relative',
-                  marginBottom: 10,
-                  padding: 14,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  borderRadius: 8,
-                  backgroundColor: backgroundLight
-                }}
-              >
+                  <TouchableOpacity
+                    onPress={() => setLoadVisibility('Public')}
+                    style={{
+                      flex: 1,
+                      padding: wp(3),
+                      borderRadius: 8,
+                      backgroundColor: loadVisibility === 'Public' ? '#E8F5E8' : backgroundLight,
+                      borderWidth: 1,
+                      borderColor: loadVisibility === 'Public' ? '#4CAF50' : '#E0E0E0',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Ionicons
+                      name="globe"
+                      size={20}
+                      color={loadVisibility === 'Public' ? '#4CAF50' : '#666'}
+                      style={{ marginBottom: wp(1) }}
+                    />
+                    <ThemedText style={{
+                      fontWeight: loadVisibility === 'Public' ? 'bold' : 'normal',
+                      color: loadVisibility === 'Public' ? '#4CAF50' : '#666'
+                    }}>
+                      Public
+                    </ThemedText>
+                    <ThemedText style={{ fontSize: 12, color: '#666', textAlign: 'center', marginTop: wp(1) }}>
+                      All available trucks
+                    </ThemedText>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
 
-                {/* Truck Info */}
-                <ThemedText >
-                  Truck {index + 1}:    {truck.truckType?.name}
+            {currentRole?.accType === 'fleet' && loadVisibility === 'Private' ? (
+              // Fleet User: Private load - Select trucks and display their drivers
+              <>
+                {/* Truck Search */}
+                <ThemedText>Search Trucks</ThemedText>
+                <Input
+                  value={truckSearchQuery}
+                  onChangeText={(text) => {
+                    setTruckSearchQuery(text);
+                    if (text.trim() === '') {
+                      setSearchedTrucks(fleetTrucks);
+                    } else {
+                      const filtered = fleetTrucks.filter(truck =>
+                        truck.registrationNumber?.toLowerCase().includes(text.toLowerCase()) ||
+                        truck.truckType?.toLowerCase().includes(text.toLowerCase())
+                      );
+                      setSearchedTrucks(filtered);
+                    }
+                  }}
+                  placeholder="Search by registration or type"
+                />
+
+                {/* Available Trucks with Drivers */}
+                <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Available Trucks</ThemedText>
+                {searchedTrucks.map((truck, index) => {
+                  // Get drivers for this truck
+                  const truckDrivers = fleetDriversFromTrucks.filter(driver => driver.truckId === truck.truckId);
+
+                  return (
+                    <View key={truck.truckId || index} style={{
+                      marginVertical: wp(1),
+                      borderRadius: 8,
+                      backgroundColor: backgroundLight,
+                      borderWidth: 1,
+                      borderColor: '#E0E0E0',
+                      overflow: 'hidden'
+                    }}>
+                      {/* Truck Header */}
+                      <TouchableOpacity
+                        onPress={() => {
+                          if (selectedFleetTrucks.find(t => t.truckId === truck.truckId)) {
+                            setSelectedFleetTrucks(prev => prev.filter(t => t.truckId !== truck.truckId));
+                            // Also remove all drivers for this truck
+                            setSelectedDrivers(prev => prev.filter(d => d.truckId !== truck.truckId));
+                          } else {
+                            setSelectedFleetTrucks(prev => [...prev, truck]);
+                          }
+                        }}
+                        style={{
+                          padding: wp(3),
+                          backgroundColor: selectedFleetTrucks.find(t => t.truckId === truck.truckId) ? '#E3F2FD' : 'transparent',
+                          borderBottomWidth: truckDrivers.length > 0 ? 1 : 0,
+                          borderBottomColor: '#E0E0E0'
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Ionicons
+                            name={selectedFleetTrucks.find(t => t.truckId === truck.truckId) ? "checkbox" : "square-outline"}
+                            size={20}
+                            color={selectedFleetTrucks.find(t => t.truckId === truck.truckId) ? '#2196F3' : '#666'}
+                            style={{ marginRight: wp(2) }}
+                          />
+                          <View style={{ flex: 1 }}>
+                            <ThemedText style={{ fontWeight: '600' }}>{truck.truckName}</ThemedText>
+                            <ThemedText style={{ fontSize: 12, color: '#666' }}>{truck.truckType} - {truck.capacity}</ThemedText>
+                          </View>
+                          {truckDrivers.length > 0 && (
+                            <ThemedText style={{ fontSize: 12, color: '#666' }}>
+                              {truckDrivers.length} driver{truckDrivers.length !== 1 ? 's' : ''}
+                            </ThemedText>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+
+                      {/* Drivers for this truck */}
+                      {truckDrivers.length > 0 && selectedFleetTrucks.find(t => t.truckId === truck.truckId) && (
+                        <View style={{ paddingHorizontal: wp(3), paddingBottom: wp(2) }}>
+                          <ThemedText style={{ fontSize: 14, fontWeight: '600', marginTop: wp(2), marginBottom: wp(1) }}>
+                            Select Drivers for this Truck:
+                          </ThemedText>
+                          {truckDrivers.map((driver, driverIndex) => (
+                            <TouchableOpacity
+                              key={driver.driverId || driverIndex}
+                              onPress={() => {
+                                if (selectedDrivers.find(d => d.driverId === driver.driverId)) {
+                                  setSelectedDrivers(prev => prev.filter(d => d.driverId !== driver.driverId));
+                                } else {
+                                  setSelectedDrivers(prev => [...prev, driver]);
+                                }
+                              }}
+                              style={{
+                                padding: wp(2),
+                                marginVertical: wp(0.5),
+                                borderRadius: 6,
+                                backgroundColor: selectedDrivers.find(d => d.driverId === driver.driverId) ? '#E8F5E8' : '#F9F9F9',
+                                borderWidth: 1,
+                                borderColor: selectedDrivers.find(d => d.driverId === driver.driverId) ? '#4CAF50' : '#E0E0E0'
+                              }}
+                            >
+                              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Ionicons
+                                  name={selectedDrivers.find(d => d.driverId === driver.driverId) ? "checkbox" : "square-outline"}
+                                  size={16}
+                                  color={selectedDrivers.find(d => d.driverId === driver.driverId) ? '#4CAF50' : '#666'}
+                                  style={{ marginRight: wp(2) }}
+                                />
+                                <View style={{ flex: 1 }}>
+                                  <ThemedText style={{ fontWeight: '500', fontSize: 14 }}>{driver.fullName}</ThemedText>
+                                  <ThemedText style={{ fontSize: 12, color: '#666' }}>
+                                    {driver.role === 'main' ? 'Main Driver' :
+                                     driver.role === 'second_main' ? 'Second Main Driver' :
+                                     driver.role === 'backup' ? 'Backup Driver' : driver.role}
+                                  </ThemedText>
+                                </View>
+                              </View>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
+
+                {/* Selected Trucks and Drivers Summary */}
+                {selectedFleetTrucks.length > 0 && (
+                  <View style={{ marginTop: wp(4) }}>
+                    <ThemedText style={{ fontWeight: 'bold' }}>Selected Trucks & Drivers ({selectedFleetTrucks.length} truck{selectedFleetTrucks.length !== 1 ? 's' : ''})</ThemedText>
+                    {selectedFleetTrucks.map((truck, index) => {
+                      const truckSelectedDrivers = selectedDrivers.filter(d => d.truckId === truck.truckId);
+                      return (
+                        <View key={truck.truckId || index} style={{
+                          padding: wp(2),
+                          backgroundColor: backgroundLight,
+                          borderRadius: 8,
+                          marginVertical: wp(1)
+                        }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <ThemedText style={{ fontWeight: '600' }}>{truck.registrationNumber}</ThemedText>
+                            <TouchableOpacity
+                              onPress={() => {
+                                setSelectedFleetTrucks(prev => prev.filter(t => t.truckId !== truck.truckId));
+                                setSelectedDrivers(prev => prev.filter(d => d.truckId !== truck.truckId));
+                              }}
+                            >
+                              <Ionicons name="close-circle" size={20} color="red" />
+                            </TouchableOpacity>
+                          </View>
+                          {truckSelectedDrivers.length > 0 && (
+                            <View style={{ marginTop: wp(1) }}>
+                              <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(1) }}>
+                                Drivers: {truckSelectedDrivers.map(d => d.fullName).join(', ')}
+                              </ThemedText>
+                            </View>
+                          )}
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+
+                {/* Note about drivers */}
+                <View style={{ marginTop: wp(4), padding: wp(3), backgroundColor: '#FFF3CD', borderRadius: 8, borderWidth: 1, borderColor: '#FFEAA7' }}>
+                  <ThemedText style={{ fontSize: 14, color: '#856404', textAlign: 'center' }}>
+                    💡 Fleet manager will assign drivers to jobs. You can proceed with truck selection.
+                  </ThemedText>
+                </View>
+              </>
+            ) : currentRole?.accType === 'fleet' && loadVisibility === 'Public' ? (
+              // Fleet User: Public load - Show truck requirements (will be visible to all trucks)
+              <>
+                <ThemedText style={{ fontSize: 14, color: '#666', marginBottom: wp(2) }}>
+                  This public load will be visible to all available trucks in the system.
                 </ThemedText>
-                <ThemedText></ThemedText>
-                <ThemedText>{truck.cargoArea?.name}  </ThemedText>
-                <ThemedText>{truck.capacity?.name} </ThemedText>
+                {trucksNeeded.map((truck, index) => (
+                  <View
+                    key={index}
+                    style={{
+                      position: 'relative',
+                      marginBottom: 10,
+                      padding: 14,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderRadius: 8,
+                      backgroundColor: backgroundLight
+                    }}
+                  >
+
+                    {/* Truck Info */}
+                    <ThemedText >
+                      Truck {index + 1}:    {truck.truckType?.name}
+                    </ThemedText>
+                    <ThemedText></ThemedText>
+                    <ThemedText>{truck.cargoArea?.name}  </ThemedText>
+                    <ThemedText>{truck.capacity?.name} </ThemedText>
+
+                    <TouchableOpacity
+                      onPress={() => removeTruck(index)}
+                      style={{
+                        padding: 5,
+                        zIndex: 1
+                      }}
+                    >
+                      <Feather name="x" color={'red'} size={wp(4)} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+
+                <AddTruckDetails
+                  selectedTruckType={selectedTruckType}
+                  setSelectedTruckType={setSelectedTruckType}
+                  selectedCargoArea={selectedCargoArea}
+                  setSelectedCargoArea={setSelectedCargoArea}
+                  selectedTankerType={selectedTankerType}
+                  setSelectedTankerType={setSelectedTankerType}
+                  selectedTruckCapacity={selectedTruckCapacity}
+                  setSelectedTruckCapacity={setSelectedTruckCapacity}
+                  formData={formDataTruck}
+                  setFormData={setFormDataTruck}
+                  showCountries={showCountries}
+                  setShowCountries={setShowCountries}
+                  operationCountries={operationCountries}
+                  setOperationCountries={setOperationCountries}
+                />
 
                 <TouchableOpacity
-                  onPress={() => removeTruck(index)}
+                  onPress={pushTruck}
                   style={{
-                    padding: 5,
-                    zIndex: 1
+                    borderWidth: 1,
+                    borderColor: 'gray',
+                    borderRadius: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: 29,
+                    alignSelf: 'flex-start', // makes the button only as wide as needed
+                    marginVertical: 10,
                   }}
                 >
-                  <Feather name="x" color={'red'} size={wp(4)} />
+                  <ThemedText style={{ color: 'gray', fontSize: 14 }}>
+                    Select {trucksNeeded.length <= 0 ? "Truck" : "another"}
+                  </ThemedText>
                 </TouchableOpacity>
-              </View>
-            ))}
+              </>
+            ) : (
+              // Professional User: Truck requirements
+              <>
+                {trucksNeeded.map((truck, index) => (
+                  <View
+                    key={index}
+                    style={{
+                      position: 'relative',
+                      marginBottom: 10,
+                      padding: 14,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderRadius: 8,
+                      backgroundColor: backgroundLight
+                    }}
+                  >
 
-            <AddTruckDetails
-              selectedTruckType={selectedTruckType}
-              setSelectedTruckType={setSelectedTruckType}
-              selectedCargoArea={selectedCargoArea}
-              setSelectedCargoArea={setSelectedCargoArea}
-              selectedTankerType={selectedTankerType}
-              setSelectedTankerType={setSelectedTankerType}
-              selectedTruckCapacity={selectedTruckCapacity}
-              setSelectedTruckCapacity={setSelectedTruckCapacity}
-              formData={formDataTruck}
-              setFormData={setFormDataTruck}
-              showCountries={showCountries}
-              setShowCountries={setShowCountries}
-              operationCountries={operationCountries}
-              setOperationCountries={setOperationCountries}
-            />
+                    {/* Truck Info */}
+                    <ThemedText >
+                      Truck {index + 1}:    {truck.truckType?.name}
+                    </ThemedText>
+                    <ThemedText></ThemedText>
+                    <ThemedText>{truck.cargoArea?.name}  </ThemedText>
+                    <ThemedText>{truck.capacity?.name} </ThemedText>
 
-            <TouchableOpacity
-              onPress={pushTruck}
-              style={{
-                borderWidth: 1,
-                borderColor: 'gray',
-                borderRadius: 6,
-                paddingVertical: 6,
-                paddingHorizontal: 29,
-                alignSelf: 'flex-start', // makes the button only as wide as needed
-                marginVertical: 10,
-              }}
-            >
-              <ThemedText style={{ color: 'gray', fontSize: 14 }}>
-                Select {trucksNeeded.length <= 0 ? "Truck" : "another"}
-              </ThemedText>
-            </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => removeTruck(index)}
+                      style={{
+                        padding: 5,
+                        zIndex: 1
+                      }}
+                    >
+                      <Feather name="x" color={'red'} size={wp(4)} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+
+                <AddTruckDetails
+                  selectedTruckType={selectedTruckType}
+                  setSelectedTruckType={setSelectedTruckType}
+                  selectedCargoArea={selectedCargoArea}
+                  setSelectedCargoArea={setSelectedCargoArea}
+                  selectedTankerType={selectedTankerType}
+                  setSelectedTankerType={setSelectedTankerType}
+                  selectedTruckCapacity={selectedTruckCapacity}
+                  setSelectedTruckCapacity={setSelectedTruckCapacity}
+                  formData={formDataTruck}
+                  setFormData={setFormDataTruck}
+                  showCountries={showCountries}
+                  setShowCountries={setShowCountries}
+                  operationCountries={operationCountries}
+                  setOperationCountries={setOperationCountries}
+                />
+
+                <TouchableOpacity
+                  onPress={pushTruck}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: 'gray',
+                    borderRadius: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: 29,
+                    alignSelf: 'flex-start', // makes the button only as wide as needed
+                    marginVertical: 10,
+                  }}
+                >
+                  <ThemedText style={{ color: 'gray', fontSize: 14 }}>
+                    Select {trucksNeeded.length <= 0 ? "Truck" : "another"}
+                  </ThemedText>
+                </TouchableOpacity>
+              </>
+            )}
 
             <Divider />
             <View style={styles.viewMainDsp}>
@@ -2294,7 +2966,7 @@ const AddLoadDB = () => {
       </Modal>
 
       {/* Professional User Personal Details Modal */}
-      <KYCVerificationModal
+      {/* <KYCVerificationModal
         visible={showPersonalDetailsModal && selectedPersonalType === 'professional'}
         onClose={() => {
           setShowPersonalDetailsModal(false);
@@ -2316,7 +2988,7 @@ const AddLoadDB = () => {
         setBrokerPersonalFileType={setBrokerPersonalFileType}
         uploadingPersonalD={uploadingPersonalD}
         onSave={handleUpdateProfessionalDetails}
-      />
+      /> */}
 
       {/* Error Modal */}
       <ErrorModal

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Image, StyleSheet, ScrollView, ToastAndroid, ActivityIndicator } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ImagePickerAsset } from 'expo-image-picker';
-import { addDocument, getDocById, setDocuments, getUsers, fetchDocuments, updateDocument } from "@/db/operations";
+import { addDocument, getDocById, setDocuments, getUsers, fetchDocuments, updateDocument, addDocumentWithId } from "@/db/operations";
 import { uploadImage } from "@/db/operations";
 import { selectManyImages, handleChange } from "@/Utilities/utils";
 import { selectImage, selectImageNoCrop, selectImageWithCrop } from "@/Utilities/imageUtils";
@@ -25,7 +25,8 @@ import { usePushNotifications, notifyTruckApprovalAdmins } from "@/Utilities/pus
 import { pickDocument } from "@/Utilities/utils";
 import { DocumentAsset } from "@/types/types";
 import KYCVerificationModal from "@/components/KYCVerificationModal";
-
+import { db } from "@/db/fireBaseConfig";
+import { doc, collection } from "firebase/firestore";
 
 function AddTrucks() {
 
@@ -94,7 +95,7 @@ function AddTrucks() {
       companyLtterHead = await uploadImage(selectedBrokerDocuments[3], "TruckBroker", setUploadImageUpdate, "Company Letter Head");
 
     }
-    await setDocuments("verifiedUsers", {
+    await addDocument("verifiedUsers", {
       userId: user?.uid,
       accType: 'broker',
       typeOfBroker: typeOfBroker,
@@ -537,8 +538,9 @@ const generalLoadOptions = [
 
     try {
       // Generate unique truck ID
-      const truckId = `TR${Math.floor(100000 + Math.random() * 900000)}`;
-
+  const trucksRefPath = `fleets/${currentRole.fleetId}/Trucks`;
+         const docRef = doc(collection(db, trucksRefPath));
+      const truckId = docRef.id;
       const submitData = {
         userId: user.uid,
         CompanyName: user.organisation,
@@ -555,8 +557,6 @@ const generalLoadOptions = [
         truckLeaseFileType: truckLeaseFileType[0] || null,
 
         // Owner verification data - reference the verified user document
-
-
         locations: operationCountries,
         truckType: selectedTruckType?.name,
         cargoArea: selectedCargoArea.name,
@@ -630,7 +630,6 @@ const generalLoadOptions = [
         trackerName: null,
 
         // Generate unique truck ID
-        truckId: truckId ,
 
         // Associate with fleet if user is a fleet
         fleetId: currentRole?.accType === 'fleet' ? currentRole.fleetId : null,
@@ -638,22 +637,23 @@ const generalLoadOptions = [
         accType: currentRole?.accType || 'Individual', // owner, broker, driver, fleet
       }
 
-      let truckDocRef;
-
       // If user is a fleet and truck is private, add to fleet subcollection only
       if (currentRole?.accType === 'fleet' && truckType === 'Private') {
-        truckDocRef = await addDocument(`fleets/${currentRole.fleetId}/Trucks`, submitData);
-      }
+        await addDocumentWithId(`fleets/${currentRole.fleetId}/Trucks`, truckId, submitData);
+
       // If user is a fleet and truck is public, add to both fleet subcollection and main Trucks collection
-      else if ( currentRole?.accType === 'fleet' && truckType === 'Public') {
+      } else if (currentRole?.accType === 'fleet' && truckType === 'Public') {
         // Add to fleet subcollection
-        await addDocument(`fleets/${currentRole.fleetId}/Trucks`, submitData);
+        await addDocumentWithId(`fleets/${currentRole.fleetId}/Trucks`, truckId, submitData);
+
         // Add to main Trucks collection
-        truckDocRef = await addDocument("Trucks", submitData);
+        await addDocumentWithId("Trucks", truckId, submitData);
+
       }
       // If not a fleet user, add to main Trucks collection
       else {
-        truckDocRef = await addDocument("Trucks", submitData);
+        await addDocumentWithId("Trucks", truckId, submitData);
+
       }
 
 
@@ -693,7 +693,7 @@ const generalLoadOptions = [
       }
 
       // Notify admins who can approve trucks
-      await notifyTruckApprovalAdmins(submitData)
+      // await notifyTruckApprovalAdmins(submitData)
 
       clearFormFields()
       ToastAndroid.show('Truck Added successfully', ToastAndroid.SHORT)

@@ -15,7 +15,7 @@ export interface AuthState {
 }
 
 export function useAuthState() {
-    const { user: contextUser, isSignedIn } = useAuth();
+    const { user: contextUser, isSignedIn, isPersonalDataLoadedFromCache } = useAuth();
     const [authState, setAuthState] = useState<AuthState>({
         isLoading: true,
         isAuthenticated: false,
@@ -79,7 +79,8 @@ export function useAuthState() {
                 };
 
                 // Check if profile setup is needed - only check organisation like AddLoads.tsx
-                const needsProfileSetup = !fullUser?.organisation;
+                // If personalData was loaded from cache, don't require profile setup
+                const needsProfileSetup = isPersonalDataLoadedFromCache ? false : !fullUser?.organisation;
 
                 // Debug logging
                 console.log('Profile check:', {
@@ -132,7 +133,8 @@ export function useAuthState() {
     useEffect(() => {
         if (contextUser && authState.isAuthenticated) {
             // Update the auth state when context user changes (e.g., after profile update)
-            const needsProfileSetup = !contextUser?.organisation;
+            // If personalData was loaded from cache, don't require profile setup
+            const needsProfileSetup = isPersonalDataLoadedFromCache ? false : !contextUser?.organisation;
 
             console.log('Syncing with context user:', {
                 contextUser: {
@@ -141,7 +143,8 @@ export function useAuthState() {
                     organisation: contextUser.organisation,
                     displayName: contextUser.displayName
                 },
-                needsProfileSetup
+                needsProfileSetup,
+                isPersonalDataLoadedFromCache
             });
 
             setAuthState(prev => ({
@@ -150,7 +153,7 @@ export function useAuthState() {
                 needsProfileSetup,
             }));
         }
-    }, [contextUser, authState.isAuthenticated]);
+    }, [contextUser, authState.isAuthenticated, isPersonalDataLoadedFromCache]);
 
     const updateUserProfile = async (updatedProfile: any) => {
         if (!authState.user?.uid) return;
@@ -168,7 +171,7 @@ export function useAuthState() {
             setAuthState(prev => ({
                 ...prev,
                 user: mergedProfile,
-                needsProfileSetup: !mergedProfile.organisation,
+                needsProfileSetup: isPersonalDataLoadedFromCache ? false : !mergedProfile.organisation,
             }));
 
             console.log('Profile updated:', {
