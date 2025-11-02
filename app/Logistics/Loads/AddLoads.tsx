@@ -90,6 +90,10 @@ const [selectedFleetTrucks, setSelectedFleetTrucks] = useState<any[]>([]);
 const [selectedDrivers, setSelectedDrivers] = useState<any[]>([]);
 const [truckSearchQuery, setTruckSearchQuery] = useState('');
 const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public'>('Private');
+
+// New fields for load requirements
+const [numberOfTrucks, setNumberOfTrucks] = useState('');
+const [deliveryDate, setDeliveryDate] = useState('');
 const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
 const [userIsVerified , setUserIsVerified] = useState<userIsVerifiedProps| null> (null);
 
@@ -569,6 +573,10 @@ setFleetDriversFromTrucks(uniqueDrivers);
     setTrucksNeeded(defaultState.trucksNeeded);
     setStep(defaultState.step);
     setUploadImageUpdate(defaultState.uploadImageUpdate);
+
+    // Reset new fields
+    setNumberOfTrucks('');
+    setDeliveryDate('');
 
     // Reset location fields
     setOrigin(null);
@@ -1127,6 +1135,14 @@ setFleetDriversFromTrucks(uniqueDrivers);
       proofOfOrderFileType: [...proofDocumentTypes],
     }, step);
 
+    // Additional validation for new fields
+    if (!numberOfTrucks || numberOfTrucks.trim() === '') {
+      validationErrors.push('Number of trucks needed is required');
+    }
+    if (!deliveryDate || deliveryDate.trim() === '') {
+      validationErrors.push('Delivery date is required');
+    }
+
     // Additional validation for professional users - check if they have at least one proof file
     if (userType === 'professional' && proofImages.length === 0 && proofDocuments.length === 0) {
       validationErrors.push('Upload at least one proof of order document or image');
@@ -1271,6 +1287,9 @@ setFleetDriversFromTrucks(uniqueDrivers);
         personalDetailsDocId: getGeneralDetails?.docId || getProfessionalDetails?.docId || null,
         personalAccTypeIsApproved: getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved || false,
         personalAccType: getGeneralDetails?.accType || getProfessionalDetails?.accType || null,
+        // New fields
+        numberOfTrucks,
+        deliveryDate,
       }, user, expoPushToken);
 
       // Save payment to Payments collection and WalletHistory
@@ -1347,12 +1366,14 @@ const cargoId = docRef.id;
 
   // 2️⃣ Cargo assignments per truck
   for (const truck of trucks) {
-
-    const truckDrivers = drivers.filter(d => d.truckId === truck.truckId);
+    const truckDrivers = drivers.filter(d => d.truckId === truck.id);
+    console.log("Truck:", truck.id, "has drivers:", truckDrivers.length);
     if (truckDrivers.length > 0) {
-      await addDocument(`${cargoRefPath}/${cargoId}/assignments`, {
-        truckId: truck.id||null,
-        truckName : truck.truckName,
+      const assignmentDocId = `${cargoId}_${truck.id}`;
+      console.log("Creating assignment for truck:", truck.id, "with drivers:", truckDrivers.length);
+      await addDocumentWithId(`${cargoRefPath}/${cargoId}/assignments`, assignmentDocId, {
+        truckId: truck.id,
+        truckName: truck.truckName,
         cargoId: cargoId,
         assignedDrivers: truckDrivers.map(driver => ({
           driverId: driver.driverId,
@@ -1360,21 +1381,23 @@ const cargoId = docRef.id;
           fullName: driver.fullName,
           phoneNumber: driver.phoneNumber,
           status: "pending"
-
         })),
         mainDriver: truckDrivers.find(d => d.role === "main")?.driverId || "",
         status: "pending",
-        acceptedBy: null
+        acceptedBy: null,
+        createdAt: new Date()
       });
     }
   }
 
   // 3️⃣ Assign cargo to drivers
   for (const driver of drivers) {
-    await addDocument(`fleets/${currentRole.fleetId}/Drivers/${driver.docId}/cargo`, {
+    const driverCargoDocId = `${cargoId}_${driver.driverId}_${driver.truckId}_${driver.role}`;
+    console.log("Assigning cargo to driver:", driver.docId, "for truck:", driver.truckId, "role:", driver.role);
+    await addDocumentWithId(`fleets/${currentRole.fleetId}/Drivers/${driver.docId}/cargo`, driverCargoDocId, {
       cargoId: cargoId,
-      truckId: driver.truckId || null,
-      truckName : driver.truckName,
+      truckId: driver.truckId,
+      truckName: driver.truckName,
       role: driver.role,
       status: "pending",
       assignedAt: new Date()
@@ -1397,27 +1420,31 @@ const cargoId = docRef.id;
   // }
 
   // 5️⃣ Add to fleet manager's assigned loads
-  if (currentRole.userRole === "owner" ||currentRole.userRole === "fleetManager" ) {
+  if (currentRole.userRole === "owner" || currentRole.userRole === "fleetManager") {
+    console.log("Adding to fleet manager assigned loads for fleet:", currentRole.fleetId);
 
     const fleetManagerLoadData = {
       loadId: cargoId,
       loadStatus: "pending",
       loadVisibility: 'Private',
       trucks: trucks.map(truck => ({
-        truckId: truck.truckId || null,
-        truckName : truck.truckName,
+        truckId: truck.id,
+        truckName: truck.truckName,
         truckStatus: "pending",
-        drivers: drivers.filter(d => d.truckId === truck.truckId).map(driver => ({
+        drivers: drivers.filter(d => d.truckId === truck.id).map(driver => ({
           driverId: driver.driverId,
           role: driver.role,
           status: "pending",
           fullName: driver.fullName,
           phoneNumber: driver.phoneNumber,
         }))
-      }))
+      })),
+      createdAt: new Date()
     };
 
-    await addDocument(`fleets/${currentRole.fleetId}/fleetManagers/FLTMGR${currentRole.fleetId}/assignedLoads`, fleetManagerLoadData);
+    const fleetManagerDocId = `LOAD_${cargoId}`;
+    console.log("Fleet manager path:", `fleets/${currentRole.fleetId}/fleetManagers/FLTMGR${currentRole.fleetId}/assignedLoads`);
+    await addDocumentWithId(`fleets/${currentRole.fleetId}/fleetManagers/FLTMGR${currentRole.fleetId}/assignedLoads`, fleetManagerDocId, fleetManagerLoadData);
   }
 
 } 
@@ -1425,67 +1452,11 @@ const cargoId = docRef.id;
 
 
 
-// else if (currentRole?.accType === 'fleet' && loadVisibility === 'Public') {
-//   // Fleet user with public load - add to both fleet and main Cargo collection
-//   const trucks = selectedFleetTrucks.length > 0 ? selectedFleetTrucks : [];
-//   const drivers = selectedDrivers.length > 0 ? selectedDrivers : [];
-
-//   // 1️⃣ Add to fleet collection
-//   const cargoRefPath = `fleets/${currentRole.fleetId}/Cargo`;
-//   const docRef = doc(collection(db, `fleets/${currentRole.fleetId}/Cargo`));
-// const cargoId = docRef.id;
-
-//  await setDoc(docRef, {
-//     ...loadData,
-//     cargoId: cargoId,
-//     loadVisibility: 'Public',
-//     cargoStatus: "pending",
-//     trucks: trucks.map(truck => ({
-//       truckId: truck.truckId,
-//       truckStatus: "pending",
-//       drivers: drivers.filter(d => d.truckId === truck.truckId).map(driver => ({
-//         driverId: driver.driverId,
-//         role: driver.role,
-//         status: "pending"
-//       }))
-//     }))
-//   });
-
-//   // 2️⃣ Also add to main Cargo collection for public visibility
-//   await addDocument("Cargo", {
-//     ...loadData,
-//     loadVisibility: 'Public',
-//     fleetId: currentRole.fleetId,
-//     cargoId: cargoId // Reference to fleet cargo
-//   });
-
-//   // 3️⃣ Add to fleet manager's assigned loads
-//   if (fleetManagerId) {
-//     const fleetManagerLoadData = {
-//       cargoId: cargoId,
-//       loadStatus: "pending",
-//       loadVisibility: 'Public',
-//       trucks: trucks.map(truck => ({
-//         truckId: truck.truckId,
-//         truckStatus: "pending",
-//         drivers: drivers.filter(d => d.truckId === truck.truckId).map(driver => ({
-//           driverId: driver.driverId,
-//           role: driver.role,
-//           status: "pending"
-//         }))
-//       }))
-//     };
-
-//     await addDocument(`fleetManagers/${fleetManagerId}/assignedLoads`, fleetManagerLoadData);
-//   }
-
-// } else {
-//   // Regular load submission for non-fleet users
-//   await addDocument("Cargo", {
-//     ...loadData,
-//     loadVisibility: 'Public' // Non-fleet loads are always public
-//   });
-// }
+// Regular load submission for non-fleet users or fleet users with public loads
+await addDocument("Cargo", {
+  ...loadData,
+  loadVisibility: 'Public' // All loads are public unless specified as private fleet loads
+});
 
 
 
@@ -1876,6 +1847,7 @@ const cargoId = docRef.id;
 
               <Divider />
 
+             
               <ThemedText>
                 Payment Terms<ThemedText color="red">*</ThemedText>
               </ThemedText>
@@ -1946,7 +1918,15 @@ const cargoId = docRef.id;
                 Additional Info
               </ThemedText>
               <Divider />
-
+<ThemedText>
+                Number of Trucks Needed<ThemedText color="red">*</ThemedText>
+              </ThemedText>
+              <Input
+                value={numberOfTrucks}
+                onChangeText={setNumberOfTrucks}
+                placeholder='e.g., 1, 2, 5'
+                keyboardType="numeric"
+              />
               <ThemedText>
                 Loading date <ThemedText color="red">*</ThemedText>
               </ThemedText>
@@ -1954,6 +1934,16 @@ const cargoId = docRef.id;
                 value={loadingDate}
                 onChangeText={setLoadingDate}
               />
+
+              <ThemedText>
+                Delivery Date<ThemedText color="red">*</ThemedText>
+              </ThemedText>
+              <Input
+                value={deliveryDate}
+                onChangeText={setDeliveryDate}
+                placeholder='e.g., 2024-12-25 or ASAP'
+              />
+
 
               <ThemedText>
                 Requirements<ThemedText color="red">*</ThemedText>
@@ -2636,10 +2626,17 @@ const cargoId = docRef.id;
                               return(
 
                               <TouchableOpacity
-                                key={driver.driverId || driverIndex}
+                                key={`${driver.driverId}-${driver.truckId}-${driver.role}` || driverIndex}
                                 onPress={() => {
-                                  if (selectedDrivers.find(d => d.driverId === driver.driverId)) {
-                                    setSelectedDrivers(prev => prev.filter(d => d.driverId !== driver.driverId));
+                                  const driverKey = `${driver.driverId}-${driver.truckId}-${driver.role}`;
+                                  const existingDriver = selectedDrivers.find(d =>
+                                    `${d.driverId}-${d.truckId}-${d.role}` === driverKey
+                                  );
+
+                                  if (existingDriver) {
+                                    setSelectedDrivers(prev => prev.filter(d =>
+                                      `${d.driverId}-${d.truckId}-${d.role}` !== driverKey
+                                    ));
                                   } else {
                                     setSelectedDrivers(prev => [...prev, driver]);
                                   }
@@ -2650,12 +2647,16 @@ const cargoId = docRef.id;
                                   borderRadius: 6,
                                   // backgroundColor: selectedDrivers.find(d => d.driverId === driver.driverId) ? '#E8F5E8' : '#F9F9F9',
                                   borderWidth: 1,
-                                  borderColor: selectedDrivers.find(d => d.driverId === driver.driverId) 
-      ? '#4CAF50' 
-      : '#E0E0E0',
-    backgroundColor: selectedDrivers.find(d => d.driverId === driver.driverId) 
-      ? 'rgba(76, 175, 80, 0.15)' 
-      : 'transparent',
+                                  borderColor: selectedDrivers.find(d =>
+                                    `${d.driverId}-${d.truckId}-${d.role}` === `${driver.driverId}-${driver.truckId}-${driver.role}`
+                                  )
+     ? '#4CAF50'
+     : '#E0E0E0',
+   backgroundColor: selectedDrivers.find(d =>
+                                    `${d.driverId}-${d.truckId}-${d.role}` === `${driver.driverId}-${driver.truckId}-${driver.role}`
+                                  )
+     ? 'rgba(76, 175, 80, 0.15)'
+     : 'transparent',
 
 }}
 
@@ -2664,9 +2665,13 @@ const cargoId = docRef.id;
                               >
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                   <Ionicons
-                                    name={selectedDrivers.find(d => d.driverId === driver.driverId) ? "checkbox" : "square-outline"}
+                                    name={selectedDrivers.find(d =>
+                                      `${d.driverId}-${d.truckId}-${d.role}` === `${driver.driverId}-${driver.truckId}-${driver.role}`
+                                    ) ? "checkbox" : "square-outline"}
                                     size={16}
-                                    color={selectedDrivers.find(d => d.driverId === driver.driverId) ? '#4CAF50' : '#666'}
+                                    color={selectedDrivers.find(d =>
+                                      `${d.driverId}-${d.truckId}-${d.role}` === `${driver.driverId}-${driver.truckId}-${driver.role}`
+                                    ) ? '#4CAF50' : '#666'}
                                     style={{ marginRight: wp(2) }}
                                   />
                                   <View style={{ flex: 1 }}>
@@ -2691,49 +2696,6 @@ const cargoId = docRef.id;
                   );
                 })}
 
-                {/* Selected Trucks and Drivers Summary */}
-                {selectedFleetTrucks.length > 0 && (
-                  <View style={{ marginTop: wp(4) }}>
-                    <ThemedText style={{ fontWeight: 'bold' }}>Selected Trucks & Drivers ({selectedFleetTrucks.length} truck{selectedFleetTrucks.length !== 1 ? 's' : ''})</ThemedText>
-                    {selectedFleetTrucks.map((truck, index) => {
-                      const truckSelectedDrivers = selectedDrivers.filter(d => d.truckId === truck.truckId);
-                      return (
-                        <View key={truck.truckId || index} style={{
-                          padding: wp(2),
-                          backgroundColor: backgroundLight,
-                          borderRadius: 8,
-                          marginVertical: wp(1)
-                        }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <ThemedText style={{ fontWeight: '600' }}>{truck.registrationNumber}</ThemedText>
-                            <TouchableOpacity
-                              onPress={() => {
-                                setSelectedFleetTrucks(prev => prev.filter(t => t.truckId !== truck.truckId));
-                                setSelectedDrivers(prev => prev.filter(d => d.truckId !== truck.truckId));
-                              }}
-                            >
-                              <Ionicons name="close-circle" size={20} color="red" />
-                            </TouchableOpacity>
-                          </View>
-                          {truckSelectedDrivers.length > 0 && (
-                            <View style={{ marginTop: wp(1) }}>
-                              <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(1) }}>
-                                Drivers: {truckSelectedDrivers.map(d => d.fullName).join(', ')}
-                              </ThemedText>
-                            </View>
-                          )}
-                        </View>
-                      );
-                    })}
-                  </View>
-                )}
-
-                {/* Note about drivers */}
-                <View style={{ marginTop: wp(4), padding: wp(3), backgroundColor: '#FFF3CD', borderRadius: 8, borderWidth: 1, borderColor: '#FFEAA7' }}>
-                  <ThemedText style={{ fontSize: 14, color: '#856404', textAlign: 'center' }}>
-                    💡 Fleet manager will assign drivers to jobs. You can proceed with truck selection.
-                  </ThemedText>
-                </View>
               </>
             ) : currentRole?.accType === 'fleet' && loadVisibility === 'Public' ? (
               // Fleet User: Public load - Show truck requirements (will be visible to all trucks)
