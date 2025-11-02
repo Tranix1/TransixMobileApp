@@ -143,7 +143,6 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
       // Fetch fleet trucks if user is in a fleet
       if (currentRole?.accType === 'fleet') {
         setDriversLoading(true);
-        console.log(driversLoading , " is drivers loading state")
         try {
           const trucksResult = await fetchDocuments(`fleets/${currentRole.fleetId}/Trucks`, 100); // Fetch fleet trucks
           if (trucksResult && trucksResult.data && Array.isArray(trucksResult.data)) {
@@ -151,48 +150,62 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
             setSearchedTrucks(trucksResult.data); // Initialize searched trucks
 
             // Extract drivers from trucks
-            const driversFromTrucks: any[] = [];
-            trucksResult.data.forEach((truck: any) => {
-              // Add main driver if exists
-              if (truck.mainDriver) {
-                driversFromTrucks.push({
-                  ...truck.mainDriver,
-                  docId: truck.mainDriver.docId || truck.mainDriver.driverId,
-                  role: 'main',
-                  truckId: truck.truckId,
-                  truckName: truck.truckName || truck.formData?.truckName
-                });
-              }
-              // Add second main driver if exists
-              if (truck.secondMainDriver) {
-                driversFromTrucks.push({
-                  ...truck.secondMainDriver,
-                  docId: truck.secondMainDriver.docId || truck.secondMainDriver.driverId,
-                  role: 'second_main',
-                  truckId: truck.truckId,
-                  truckName: truck.truckName || truck.formData?.truckName
-                });
-              }
-              // Add backup drivers if exist
-              if (truck.backupDrivers && Array.isArray(truck.backupDrivers)) {
-                truck.backupDrivers.forEach((backupDriver: any) => {
-                  driversFromTrucks.push({
-                    ...backupDriver,
-                    docId: backupDriver.docId || backupDriver.driverId,
-                    role: 'backup',
-                    truckId: truck.truckId,
-                    truckName: truck.truckName || truck.formData?.truckName
-                  });
-                });
-              }
-            });
+           const driversFromTrucks: any[] = [];
 
-            // Remove duplicates based on driverId
-            const uniqueDrivers = driversFromTrucks.filter((driver, index, self) =>
-              index === self.findIndex(d => d.driverId === driver.driverId)
-            );
+trucksResult.data.forEach((truck: any) => {
+  const truckId = truck.id; // always use truck.id
+  const truckName = truck.truckName || truck.formData?.truckName;
 
-            setFleetDriversFromTrucks(uniqueDrivers);
+  // Main Driver
+  if (truck.mainDriver) {
+    driversFromTrucks.push({
+      docId: truck.mainDriver.docId || truck.mainDriver.driverId,
+      role: 'main',
+      truckId,
+      truckName,
+      fullName: truck.mainDriver.fullName,
+      driverId: truck.mainDriver.driverId,
+      phoneNumber: truck.mainDriver.phoneNumber,
+    });
+  }
+
+  // Second Main Driver
+  if (truck.secondMainDriver) {
+    driversFromTrucks.push({
+      docId: truck.secondMainDriver.docId || truck.secondMainDriver.driverId,
+      role: 'second_main',
+      truckId,
+      truckName,
+      fullName: truck.secondMainDriver.fullName,
+      driverId: truck.secondMainDriver.driverId,
+      phoneNumber: truck.secondMainDriver.phoneNumber,
+    });
+  }
+
+  // Backup Drivers
+  if (truck.backupDrivers && Array.isArray(truck.backupDrivers)) {
+    truck.backupDrivers.forEach((backupDriver: any) => {
+      driversFromTrucks.push({
+        docId: backupDriver.docId || backupDriver.driverId,
+        role: 'backup',
+        truckId,
+        truckName,
+        fullName: backupDriver.fullName,
+        driverId: backupDriver.driverId,
+        phoneNumber: backupDriver.phoneNumber,
+      });
+    });
+  }
+});
+
+// Remove exact duplicates (driverId + truckId)
+const uniqueDrivers = driversFromTrucks.filter((driver, index, self) =>
+  index === self.findIndex(d => d.driverId === driver.driverId && d.truckId === driver.truckId)
+);
+
+console.log("Drivers from trucks:", uniqueDrivers);
+setFleetDriversFromTrucks(uniqueDrivers);
+
           } else {
             setFleetTrucks([]);
             setSearchedTrucks([]);
@@ -1127,7 +1140,7 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
       // For private trucks, drivers are optional - fleet manager can assign later
       // Check if selected drivers are actually assigned to selected trucks
       const invalidDrivers = selectedDrivers.filter(driver =>
-        !selectedFleetTrucks.some(truck => truck.truckId === driver.truckId)
+        !selectedFleetTrucks.some(truck => truck.id === driver.truckId)
       );
       if (invalidDrivers.length > 0) {
         validationErrors.push('Some selected drivers are not assigned to the selected trucks');
@@ -1312,21 +1325,23 @@ if (currentRole?.accType === 'fleet' && loadVisibility === 'Private' && selected
 const cargoId = docRef.id;
 
  await setDoc(docRef, {
+
     ...loadData,
     cargoId: cargoId,
     loadVisibility: 'Private',
     cargoStatus: "pending",
     trucks: trucks.map(truck => ({
-      truckId: truck.truckId,
+      truckId: truck.id,
       truckName : truck.truckName,
       truckStatus: "pending",
-      drivers: drivers.filter(d => d.truckId === truck.truckId).map(driver => ({
-        driverId: driver.driverId,
-        role: driver.role,
-        fullName: driver.fullName,
-          phoneNumber: driver.phoneNumber,
-        status: "pending"
-      }))
+     drivers: drivers.filter(d => d.truckId === truck.id).map(driver => ({
+  driverId: driver.driverId ||null,
+  role: driver.role||null,
+  fullName: driver.fullName||null,
+  phoneNumber: driver.phoneNumber||null,
+  status: "pending"
+}))
+
     }))
   });
 
@@ -1336,7 +1351,7 @@ const cargoId = docRef.id;
     const truckDrivers = drivers.filter(d => d.truckId === truck.truckId);
     if (truckDrivers.length > 0) {
       await addDocument(`${cargoRefPath}/${cargoId}/assignments`, {
-        truckId: truck.truckId,
+        truckId: truck.id||null,
         truckName : truck.truckName,
         cargoId: cargoId,
         assignedDrivers: truckDrivers.map(driver => ({
@@ -1356,10 +1371,9 @@ const cargoId = docRef.id;
 
   // 3️⃣ Assign cargo to drivers
   for (const driver of drivers) {
-    alert("hii")
     await addDocument(`fleets/${currentRole.fleetId}/Drivers/${driver.docId}/cargo`, {
       cargoId: cargoId,
-      truckId: driver.truckId,
+      truckId: driver.truckId || null,
       truckName : driver.truckName,
       role: driver.role,
       status: "pending",
@@ -1390,7 +1404,7 @@ const cargoId = docRef.id;
       loadStatus: "pending",
       loadVisibility: 'Private',
       trucks: trucks.map(truck => ({
-        truckId: truck.truckId,
+        truckId: truck.truckId || null,
         truckName : truck.truckName,
         truckStatus: "pending",
         drivers: drivers.filter(d => d.truckId === truck.truckId).map(driver => ({
@@ -1505,7 +1519,7 @@ const cargoId = docRef.id;
       ToastAndroid.show('Trucks notified and load added successfully.', ToastAndroid.SHORT);
 
       // Clear form and reset to initial state
-      clearFormFields();
+      // clearFormFields();
 
     } catch (error) {
       console.error("Error submitting load:", error);
@@ -2522,6 +2536,7 @@ const cargoId = docRef.id;
               </View>
             )}
 
+ 
             {currentRole?.accType === 'fleet' && loadVisibility === 'Private' ? (
               // Fleet User: Private load - Select trucks and display their drivers
               <>
@@ -2546,12 +2561,16 @@ const cargoId = docRef.id;
 
                 {/* Available Trucks with Drivers */}
                 <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Available Trucks</ThemedText>
+                {console.log(fleetDriversFromTrucks.length)}
+                
                 {searchedTrucks.map((truck, index) => {
                   // Get drivers for this truck
-                  const truckDrivers = fleetDriversFromTrucks.filter(driver => driver.truckId === truck.truckId);
+            const truckDrivers = fleetDriversFromTrucks.filter(driver => driver.truckId === truck.id);
 
+                  
                   return (
                     <View key={truck.truckId || index} style={{
+
                       marginVertical: wp(1),
                       borderRadius: 8,
                       backgroundColor: backgroundLight,
@@ -2562,31 +2581,36 @@ const cargoId = docRef.id;
                       {/* Truck Header */}
                       <TouchableOpacity
                         onPress={() => {
-                          if (selectedFleetTrucks.find(t => t.truckId === truck.truckId)) {
-                            setSelectedFleetTrucks(prev => prev.filter(t => t.truckId !== truck.truckId));
-                            // Also remove all drivers for this truck
-                            setSelectedDrivers(prev => prev.filter(d => d.truckId !== truck.truckId));
-                          } else {
-                            setSelectedFleetTrucks(prev => [...prev, truck]);
-                          }
+                          if (selectedFleetTrucks.find(t => t.id === truck.id)) {
+    setSelectedFleetTrucks(prev => prev.filter(t => t.id !== truck.id));
+    setSelectedDrivers(prev => prev.filter(d => d.truckId !== truck.id));
+  } else {
+    setSelectedFleetTrucks(prev => [...prev, {...truck}]);
+  }
                         }}
                         style={{
                           padding: wp(3),
-                          backgroundColor: selectedFleetTrucks.find(t => t.truckId === truck.truckId) ? '#E3F2FD' : 'transparent',
                           borderBottomWidth: truckDrivers.length > 0 ? 1 : 0,
-                          borderBottomColor: '#E0E0E0'
+                          borderBottomColor: '#E0E0E0',
+
+
+                          backgroundColor: selectedFleetTrucks.some(t => t.id === truck.id) 
+    ? 'rgba(33, 150, 243, 0.1)' // light blue highlight
+    : 'transparent',
+                          
                         }}
                       >
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <Ionicons
-                            name={selectedFleetTrucks.find(t => t.truckId === truck.truckId) ? "checkbox" : "square-outline"}
-                            size={20}
-                            color={selectedFleetTrucks.find(t => t.truckId === truck.truckId) ? '#2196F3' : '#666'}
-                            style={{ marginRight: wp(2) }}
-                          />
+                         <Ionicons
+  name={selectedFleetTrucks.some(t => t.id === truck.id) ? "checkbox" : "square-outline"}
+  size={20}
+  color={selectedFleetTrucks.some(t => t.id === truck.id) ? '#2196F3' : '#666'}
+  style={{ marginRight: wp(2) }}
+/>
+
                           <View style={{ flex: 1 }}>
                             <ThemedText style={{ fontWeight: '600' }}>{truck.truckName}</ThemedText>
-                            <ThemedText style={{ fontSize: 12, color: '#666' }}>{truck.truckType} - {truck.capacity}</ThemedText>
+                            <ThemedText style={{ fontSize: 12, color: '#666' }}>{truck.truckType} - {truck.truckCapacity}</ThemedText>
                           </View>
                           {truckDrivers.length > 0 && (
                             <ThemedText style={{ fontSize: 12, color: '#666' }}>
@@ -2597,50 +2621,72 @@ const cargoId = docRef.id;
                       </TouchableOpacity>
 
                       {/* Drivers for this truck */}
-                      {truckDrivers.length > 0 && selectedFleetTrucks.find(t => t.truckId === truck.truckId) && (
+                                 {/* {console.log(truckDrivers.length)} */}
+                                   {/* {console.log(selectedFleetTrucks.length)}       */}
+
+                     {truckDrivers.length > 0 && selectedFleetTrucks.find(t => t.id === truck.id)&& (
+
+
+
                         <View style={{ paddingHorizontal: wp(3), paddingBottom: wp(2) }}>
                           <ThemedText style={{ fontSize: 14, fontWeight: '600', marginTop: wp(2), marginBottom: wp(1) }}>
                             Select Drivers for this Truck:
                           </ThemedText>
-                          {truckDrivers.map((driver, driverIndex) => (
-                            <TouchableOpacity
-                              key={driver.driverId || driverIndex}
-                              onPress={() => {
-                                if (selectedDrivers.find(d => d.driverId === driver.driverId)) {
-                                  setSelectedDrivers(prev => prev.filter(d => d.driverId !== driver.driverId));
-                                } else {
-                                  setSelectedDrivers(prev => [...prev, driver]);
-                                }
-                              }}
-                              style={{
-                                padding: wp(2),
-                                marginVertical: wp(0.5),
-                                borderRadius: 6,
-                                backgroundColor: selectedDrivers.find(d => d.driverId === driver.driverId) ? '#E8F5E8' : '#F9F9F9',
-                                borderWidth: 1,
-                                borderColor: selectedDrivers.find(d => d.driverId === driver.driverId) ? '#4CAF50' : '#E0E0E0'
-                              }}
-                            >
-                              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Ionicons
-                                  name={selectedDrivers.find(d => d.driverId === driver.driverId) ? "checkbox" : "square-outline"}
-                                  size={16}
-                                  color={selectedDrivers.find(d => d.driverId === driver.driverId) ? '#4CAF50' : '#666'}
-                                  style={{ marginRight: wp(2) }}
-                                />
-                                <View style={{ flex: 1 }}>
-                                  <ThemedText style={{ fontWeight: '500', fontSize: 14 }}>{driver.fullName}</ThemedText>
-                                  <ThemedText style={{ fontSize: 12, color: '#666' }}>
-                                    {driver.role === 'main' ? 'Main Driver' :
-                                     driver.role === 'second_main' ? 'Second Main Driver' :
-                                     driver.role === 'backup' ? 'Backup Driver' : driver.role}
-                                  </ThemedText>
+                            {truckDrivers.map((driver, driverIndex) => {
+                              return(
+
+                              <TouchableOpacity
+                                key={driver.driverId || driverIndex}
+                                onPress={() => {
+                                  if (selectedDrivers.find(d => d.driverId === driver.driverId)) {
+                                    setSelectedDrivers(prev => prev.filter(d => d.driverId !== driver.driverId));
+                                  } else {
+                                    setSelectedDrivers(prev => [...prev, driver]);
+                                  }
+                                }}
+                                style={{
+                                  padding: wp(2),
+                                  marginVertical: wp(0.5),
+                                  borderRadius: 6,
+                                  // backgroundColor: selectedDrivers.find(d => d.driverId === driver.driverId) ? '#E8F5E8' : '#F9F9F9',
+                                  borderWidth: 1,
+                                  borderColor: selectedDrivers.find(d => d.driverId === driver.driverId) 
+      ? '#4CAF50' 
+      : '#E0E0E0',
+    backgroundColor: selectedDrivers.find(d => d.driverId === driver.driverId) 
+      ? 'rgba(76, 175, 80, 0.15)' 
+      : 'transparent',
+
+}}
+
+
+                                
+                              >
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                  <Ionicons
+                                    name={selectedDrivers.find(d => d.driverId === driver.driverId) ? "checkbox" : "square-outline"}
+                                    size={16}
+                                    color={selectedDrivers.find(d => d.driverId === driver.driverId) ? '#4CAF50' : '#666'}
+                                    style={{ marginRight: wp(2) }}
+                                  />
+                                  <View style={{ flex: 1 }}>
+                                    <ThemedText style={{ fontWeight: '500', fontSize: 14 }}>{driver.fullName} </ThemedText>
+                                    <ThemedText style={{ fontSize: 12, color: '#666' }}>
+                                      {driver.role === 'main' ? 'Main Driver' :
+                                      driver.role === 'second_main' ? 'Second Main Driver' :
+                                      driver.role === 'backup' ? 'Backup Driver' : driver.role}
+                                    </ThemedText>
+                                  </View>
                                 </View>
-                              </View>
-                            </TouchableOpacity>
-                          ))}
-                        </View>
-                      )}
+                              </TouchableOpacity>
+                            )}   )}
+                          </View>
+                      )  }
+
+
+
+
+
                     </View>
                   );
                 })}

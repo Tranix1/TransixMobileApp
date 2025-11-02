@@ -263,9 +263,12 @@ export default function AddDriver() {
                 internationalPermitUrl: permitUrl,
                 fleetId: currentFleet.fleetId,
                 userId: selectedUser.uid,
-                truckId: selectedTruck.id,
-                truckName: selectedTruck.truckName,
-                driverRole: driverRole,
+                mainTruck :{
+                    truckId: selectedTruck.id,
+                    truckName: selectedTruck.truckName,
+                    driverRole: driverRole,
+
+                },
                 docId: fixedDriverId, // Will be set after document creation
                 createdAt: new Date().toISOString(),
                 status: 'active'
