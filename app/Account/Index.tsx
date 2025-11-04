@@ -263,7 +263,11 @@ const Index = () => {
                                                 fleetId: fleet.fleetId,
                                                 companyName: fleet.companyName,
                                                 userRole: fleet.role,
-                                                accType: 'fleet' as const
+                                                accType: 'fleet' as const ,
+                                                driverId: fleet.driverId|| null,
+                                                fleetMainAdminId: fleet.fleetMainAdminId || null ,
+                                                fleetManagerId: fleet.fleetManagerId || null ,
+                                                fleetDispatcherId: fleet.fleetDispatcherId || null ,
                                             };
                                             setCurrentRole('fleet');
                                             setGlobalCurrentRole(fleetRole);

@@ -285,7 +285,9 @@ export default function AddDriver() {
                     fleetId: currentFleet.fleetId,
                     role: 'driver',
                     companyName: currentFleet.companyName,
-                    accepted: false // User needs to accept the role
+                    accepted: false, // User needs to accept the role
+                    updatedAt: new Date().toISOString() ,
+                    driverId: driverId ,
                 };
 
                 await updateDocument('personalData', selectedUser.uid, {

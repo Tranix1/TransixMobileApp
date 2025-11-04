@@ -207,7 +207,6 @@ const uniqueDrivers = driversFromTrucks.filter((driver, index, self) =>
   index === self.findIndex(d => d.driverId === driver.driverId && d.truckId === driver.truckId)
 );
 
-console.log("Drivers from trucks:", uniqueDrivers);
 setFleetDriversFromTrucks(uniqueDrivers);
 
           } else {
@@ -1367,10 +1366,8 @@ const cargoId = docRef.id;
   // 2️⃣ Cargo assignments per truck
   for (const truck of trucks) {
     const truckDrivers = drivers.filter(d => d.truckId === truck.id);
-    console.log("Truck:", truck.id, "has drivers:", truckDrivers.length);
     if (truckDrivers.length > 0) {
       const assignmentDocId = `${cargoId}_${truck.id}`;
-      console.log("Creating assignment for truck:", truck.id, "with drivers:", truckDrivers.length);
       await addDocumentWithId(`${cargoRefPath}/${cargoId}/assignments`, assignmentDocId, {
         truckId: truck.id,
         truckName: truck.truckName,
@@ -1385,7 +1382,8 @@ const cargoId = docRef.id;
         mainDriver: truckDrivers.find(d => d.role === "main")?.driverId || "",
         status: "pending",
         acceptedBy: null,
-        createdAt: new Date()
+        createdAt: new Date() ,
+       
       });
     }
   }
@@ -1393,14 +1391,23 @@ const cargoId = docRef.id;
   // 3️⃣ Assign cargo to drivers
   for (const driver of drivers) {
     const driverCargoDocId = `${cargoId}_${driver.driverId}_${driver.truckId}_${driver.role}`;
-    console.log("Assigning cargo to driver:", driver.docId, "for truck:", driver.truckId, "role:", driver.role);
     await addDocumentWithId(`fleets/${currentRole.fleetId}/Drivers/${driver.docId}/cargo`, driverCargoDocId, {
       cargoId: cargoId,
       truckId: driver.truckId,
       truckName: driver.truckName,
       role: driver.role,
       status: "pending",
-      assignedAt: new Date()
+      assignedAt: new Date(),
+      loadingDate ,
+      deliveryDate ,
+      origin,
+      destination,
+      loadVisibility: 'Private',
+      coordinator: {
+        id: currentRole.userId,
+        name: user.organisation || "" ,
+        phoneNumber : user.phoneNumber || ""
+      }
     });
   }
 
