@@ -27,7 +27,7 @@
     "@react-navigation/native": "^7.0.0",
     "axios": "^1.8.4",
     "debug": "^4.4.0",
-    "expo": "~54.0.0",
+    "expo": "54.0.22",
     "expo-blur": "~15.0.7",
     "expo-build-properties": "~1.0.9",
     "expo-constants": "~18.0.9",

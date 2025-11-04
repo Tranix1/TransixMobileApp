@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, TouchableNativeFeedback, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, TouchableNativeFeedback, View, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import { Image } from 'expo-image'
@@ -14,6 +14,7 @@ import Heading from '@/components/Heading'
 import AppLoadingScreen from '@/components/AppLoadingScreen'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import FleetVerificationModal from '@/components/FleetVerificationModal'
+import BrokerVerificationModal from '@/components/BrokerVerificationModal'
 import { DocumentAsset } from '@/types/types'
 import { addDocument, uploadImage, updateDocument } from '@/db/operations'
 import { setDoc,doc } from 'firebase/firestore'
@@ -24,6 +25,8 @@ const Index = () => {
 
     const [currentRole, setCurrentRole] = useState<'general' | 'fleet' | 'broker'>('general');
     const [showFleetVerification, setShowFleetVerification] = useState(false);
+    const [showBrokerVerification, setShowBrokerVerification] = useState(false);
+
 
     // Fleet verification state
     const [typeOfFleet, setTypeOfFleet] = useState('');
@@ -45,6 +48,26 @@ const Index = () => {
     ]);
     const [uploadingFleetD, setUploadingFleetD] = useState(false);
 
+    // Broker verification state
+    const [typeOfBroker, setTypeOfBroker] = useState('');
+    const [brokerName, setBrokerName] = useState(user?.displayName || '');
+    const [brokerPhone, setBrokerPhone] = useState(user?.phoneNumber || '');
+    const [brokerEmail, setBrokerEmail] = useState(user?.email || '');
+    const [brokerCountryCode, setBrokerCountryCode] = useState({ id: 0, name: '' });
+    const [selectedBrokerDocuments, setSelectedBrokerDocuments] = useState<DocumentAsset[]>([
+        user?.idDocument ? { name: 'ID Document', uri: user.idDocument, size: 0, mimeType: user.idDocumentType || 'image/jpeg' } : null,
+        user?.proofOfResidence ? { name: 'Proof of Residence', uri: user.proofOfResidence, size: 0, mimeType: user.proofOfResidenceType || 'image/jpeg' } : null,
+        user?.selfieDocument ? { name: 'Selfie', uri: user.selfieDocument, size: 0, mimeType: user.selfieDocumentType || 'image/jpeg' } : null,
+        null, null
+    ].filter(Boolean) as DocumentAsset[]);
+    const [brokerFileType, setBrokerFileType] = useState<('pdf' | 'image' | 'doc' | 'docx')[]>([
+        user?.idDocumentType || 'image',
+        user?.proofOfResidenceType || 'image',
+        user?.selfieDocumentType || 'image',
+        'pdf', 'pdf'
+    ]);
+    const [uploadingBrokerD, setUploadingBrokerD] = useState(false);
+
     const backgroundLight = useThemeColor('backgroundLight')
     const background = useThemeColor('background')
     const icon = useThemeColor('icon')
@@ -57,10 +80,11 @@ const Index = () => {
             router.push('/Account/Login')
             return
         }
-        console.log(user.photoURL);
 
 
     }, [user])
+
+  
 
     const handleFleetSave = async (fleetData: any) => {
         setUploadingFleetD(true);
@@ -131,7 +155,7 @@ const Index = () => {
                 updatedAt: new Date().toISOString(),
                 // jobs will be a subcollection, so we don't initialize it here
             };
-            
+
             await setDoc(doc(db, "fleets", fleetId), fleetCollectionData);
 
 
@@ -158,6 +182,102 @@ const Index = () => {
             console.error('Error saving fleet verification:', error);
             setUploadingFleetD(false);
             alert('Error submitting fleet verification. Please try again.');
+        }
+    };
+
+    const handleBrokerSave = async (brokerData: any) => {
+        setUploadingBrokerD(true);
+        try {
+            // Upload documents to Firebase Storage and get URLs
+            const uploadPromises = brokerData.selectedBrokerDocuments.map(async (doc: DocumentAsset, index: number) => {
+                if (!doc) return null;
+                const folderName = 'BrokerVerification';
+                const fileName = `${user?.uid}_broker_doc_${index}`;
+                return await uploadImage(doc, folderName, () => {}, fileName);
+            });
+
+            const uploadedUrls = await Promise.all(uploadPromises);
+            const brokerId = `BRK_${Date.now()}_${user?.uid}`;
+
+            // Prepare broker verification data
+            const brokerVerificationData = {
+                userId: user?.uid,
+                brokerId: brokerId,
+                accType: 'broker',
+                fullName: brokerData.brokerName,
+                phoneNumber: brokerData.brokerPhone,
+                email: brokerData.brokerEmail,
+                countryCode: brokerData.brokerCountryCode?.name,
+                typeOfBroker: brokerData.typeOfBroker,
+                documents: {
+                    nationalId: uploadedUrls[0],
+                    nationalIdType: brokerData.brokerFileType[0],
+                    proofOfResidence: uploadedUrls[1],
+                    proofOfResidenceType: brokerData.brokerFileType[1],
+                    selfieDocument: uploadedUrls[2],
+                    selfieDocumentType: brokerData.brokerFileType[2],
+                    ...(brokerData.typeOfBroker === "Company Broker" && {
+                        companyRegistrationCertificate: uploadedUrls[3],
+                        companyRegistrationCertificateType: brokerData.brokerFileType[3],
+                        companyLetterHead: uploadedUrls[4],
+                        companyLetterHeadType: brokerData.brokerFileType[4],
+                    })
+                },
+                verificationStatus: 'pending',
+                submittedAt: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                // Additional scalable fields
+                performanceMetrics: {
+                    totalLoads: 0,
+                    completedLoads: 0,
+                    revenue: 0,
+                    rating: 0
+                }
+            };
+
+              // Create fleet document in fleets collection
+            const brokerCollectionData = {
+                name: brokerData.brokerName,
+                ownerId: user?.uid, // link to verifiedUsers
+                brokerId: brokerId,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                brokerType: brokerData.typeOfBroker,
+                brokerEmail : brokerData.brokerEmail,
+                countryCode: brokerData.brokerCountryCode?.name,
+                brokerPhone : brokerData.brokerPhone,
+            };
+
+            await setDoc(doc(db, "brokers", brokerId), brokerCollectionData);
+
+            // Store in verifiedUsers collection
+            await addDocument('verifiedUsers', brokerVerificationData);
+            const existingAccs = user?.brokerDetails || [];
+
+            const newBroker = {
+                brokerId: brokerId,
+                role: 'owner', // owner for the broker creator
+                companyName: brokerData.brokerName,
+                brokerType: brokerData.typeOfBroker,
+            };
+            
+            // Update user profile to reflect broker verification status
+            await updateDocument('personalData', user?.uid!, {
+                brokerVerified: true,
+                brokerDetails: [...existingAccs, newBroker],
+                updatedAt: new Date().toISOString()
+            });
+
+            // Close modal and show success
+            setShowBrokerVerification(false);
+            setUploadingBrokerD(false);
+            alert('Broker verification submitted successfully! Your account will be reviewed.');
+
+        } catch (error) {
+            console.error('Error saving broker verification:', error);
+            setUploadingBrokerD(false);
+            alert('Error submitting broker verification. Please try again.');
         }
     };
 
@@ -311,17 +431,81 @@ const Index = () => {
                     </View>
 
                     {/* Broker Section */}
-                    <TouchableNativeFeedback onPress={() => switchRole('broker')}>
-                        <View style={[styles.sectionCard, { backgroundColor: background, borderColor: backgroundLight }]}>
-                            <View style={styles.sectionHeader}>
-                                <Ionicons name="briefcase-outline" size={wp(6)} color={accent} />
-                                <ThemedText style={styles.sectionTitle}>Broker</ThemedText>
-                            </View>
-                            <ThemedText style={styles.sectionDescription}>
-                                Switch to Broker role - Manage loads, contracts, and brokerage services
-                            </ThemedText>
+                    <View style={[styles.sectionCard, { backgroundColor: background, borderColor: backgroundLight }]}>
+                        <View style={styles.sectionHeader}>
+                            <Ionicons name="briefcase-outline" size={wp(6)} color={accent} />
+                            <ThemedText style={styles.sectionTitle}>Broker</ThemedText>
                         </View>
-                    </TouchableNativeFeedback>
+                        <ThemedText style={[styles.sectionDescription, { fontSize: 12 }]}>
+                            {user?.brokerVerified
+                                ? 'Access your broker account - Manage loads, contracts, and brokerage services'
+                                : 'Switch to Broker role - Manage loads, contracts, and brokerage services'
+                            }
+                        </ThemedText>
+
+                        {user?.brokerVerified&& user?.brokerDetails.length >0 ? (
+                            <>
+                                    <View style={{ marginTop: wp(3) }}>
+
+
+                                { user?.brokerDetails.map((broker: any, index: number) => (   <TouchableNativeFeedback
+                                
+                                            onPress={() => {
+                                                const brokerRole = {
+                                                    role: 'broker' as const,
+                                                    accType: 'broker' as const,
+                                                    brokerType: broker.brokerType,
+                                                    brokerId: broker.brokerId,
+                                                    companyName: broker.companyName,
+                                                    userRole: broker.role,
+                                                };
+                                                setCurrentRole('broker');
+                                                setGlobalCurrentRole(brokerRole);
+                                                AsyncStorage.setItem('currentRole', JSON.stringify(brokerRole));
+                                                router.back();
+                                            }}
+                                        >
+                                            <View style={{
+                                                backgroundColor: backgroundLight,
+                                                borderRadius: wp(2),
+                                                padding: wp(3),
+                                                marginBottom: wp(2),
+                                                borderWidth: 1,
+                                                borderColor: accent + '20'
+                                            }}>
+                                                <ThemedText style={{ fontWeight: 'bold', fontSize: 14, color: accent }}>
+                                                    {broker.companyName}
+                                                </ThemedText>
+                                                <ThemedText style={{ fontSize: 12, color: icon, marginTop: wp(1) }}>
+                                                    {broker.brokerType}
+                                                </ThemedText>
+                                                
+                                                <ThemedText style={{ fontSize: 12, color: icon, marginTop: wp(1) }}>
+                                                    Status: {broker.verificationStatus === 'approved' ? 'Verified' : 'Pending'}
+                                                </ThemedText>
+                                            </View>
+                                        </TouchableNativeFeedback>)) }
+
+                                      
+                                    </View>
+                                
+                            </>
+                        ) : (
+                            <TouchableNativeFeedback onPress={() => setShowBrokerVerification(true)}>
+                                <View style={{
+                                    backgroundColor: accent + '10',
+                                    borderRadius: wp(2),
+                                    padding: wp(3),
+                                    marginTop: wp(3),
+                                    alignItems: 'center'
+                                }}>
+                                    <ThemedText style={{ color: accent, fontWeight: 'bold' }}>
+                                        Verify Broker Account
+                                    </ThemedText>
+                                </View>
+                            </TouchableNativeFeedback>
+                        )}
+                    </View>
                 </View>
 
             </ScrollView>
@@ -346,6 +530,28 @@ const Index = () => {
                 setFleetFileType={setFleetFileType}
                 uploadingFleetD={uploadingFleetD}
                 onSave={handleFleetSave}
+            />
+
+            {/* Broker Verification Modal */}
+            <BrokerVerificationModal
+                visible={showBrokerVerification}
+                onClose={() => setShowBrokerVerification(false)}
+                typeOfBroker={typeOfBroker}
+                setTypeOfBroker={setTypeOfBroker}
+                brokerName={brokerName}
+                setBrokerName={setBrokerName}
+                brokerPhone={brokerPhone}
+                setBrokerPhone={setBrokerPhone}
+                brokerEmail={brokerEmail}
+                setBrokerEmail={setBrokerEmail}
+                brokerCountryCode={brokerCountryCode}
+                setBrokerCountryCode={setBrokerCountryCode}
+                selectedBrokerDocuments={selectedBrokerDocuments}
+                setSelectedBrokerDocuments={setSelectedBrokerDocuments}
+                brokerFileType={brokerFileType}
+                setBrokerFileType={setBrokerFileType}
+                uploadingBrokerD={uploadingBrokerD}
+                onSave={handleBrokerSave}
             />
         </ScreenWrapper>
     )

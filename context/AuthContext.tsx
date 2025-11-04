@@ -16,8 +16,8 @@ const AuthContext = createContext({
     Logout: async () => false,
     alertBox: (title: string, message: string, buttons?: Alertbutton[], type?: "default" | "error" | "success" | "laoding" | "destructive" | undefined) => { },
     updateAccount: async (credentials: any) => ({ success: false }),
-    currentRole: 'general' as 'general' | 'fleet' | 'broker' | { role: 'fleet'; fleetId: string; companyName: string; userRole: string; accType: string; },
-    setCurrentRole: (role: 'general' | 'fleet' | 'broker' | { role: 'fleet'; fleetId: string; companyName: string; userRole: string; accType: string; }) => { },
+    currentRole: 'general' as 'general' | 'fleet' | 'broker' | { role: 'fleet'; fleetId: string; companyName: string; userRole: string; accType: string; } | { role: 'broker'; brokerId: string; companyName: string; userRole: string; accType: string; brokerType: string;  },
+    setCurrentRole: (role: 'general' | 'fleet' | 'broker' | { role: 'fleet'; fleetId: string; companyName: string; userRole: string; accType: string; } | { role: 'broker'; brokerId: string; companyName: string; userRole: string; accType: string; brokerType: string;  }) => { },
     isAppReady: false,
     updateCurrentUser: async (userData: User) => { },
     isPersonalDataLoadedFromCache: false,
@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const [user, setUser] = useState<User | null>(null);
     const [isSignedIn, setIsSignedIN] = useState(false);
-    const [currentRole, setCurrentRole] = useState<'general' | 'fleet' | 'broker' | { role: 'fleet'; fleetId: string; companyName: string; userRole: string; accType: string; }>('general');
+    const [currentRole, setCurrentRole] = useState<'general' | 'fleet' | 'broker' | { role: 'fleet'; fleetId: string; companyName: string; userRole: string; accType: string; } | { role: 'broker'; brokerId: string; companyName: string; userRole: string; accType: string; brokerType: string;  }>('general');
     const [isAppReady, setIsAppReady] = useState(false);
     const [isPersonalDataLoadedFromCache, setIsPersonalDataLoadedFromCache] = useState(false);
 
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (storedRole) {
                 try {
                     const parsedRole = JSON.parse(storedRole);
-                    if (typeof parsedRole === 'object' && parsedRole.role === 'fleet') {
+                    if (typeof parsedRole === 'object' && (parsedRole.role === 'fleet' || parsedRole.role === 'broker')) {
                         setCurrentRole(parsedRole);
                     } else {
                         setCurrentRole(parsedRole as 'general' | 'fleet' | 'broker');

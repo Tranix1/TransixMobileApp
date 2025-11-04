@@ -13,7 +13,13 @@ interface CustomHeaderProps {
         companyName: string;
         userRole: string;
         accType: string;
-    };
+    } | {
+        role: 'broker';
+        brokerId: string;
+        companyName: string;
+        userRole: string;
+        accType: string;
+    } 
     pageTitle?: string;
 }
 
@@ -41,12 +47,14 @@ export default function CustomHeader({ onPressMenu, currentRole, pageTitle }: Cu
                             <ThemedText type="tiny">{currentRole.companyName}</ThemedText>
                         )}
                     </>
-                ) : typeof currentRole === 'object' && currentRole.role === 'fleet' ? (
+                ) : typeof currentRole === 'object' && (currentRole.role === 'fleet'||currentRole.role === 'broker' ) ? (
                     <>
                         <ThemedText type="title">{currentRole.companyName}</ThemedText>
                         <ThemedText type="tiny">{currentRole.accType}: {currentRole.userRole}</ThemedText>
                     </>
-                ) : (
+                ) 
+                
+                : (
                     <>
                         <ThemedText type="title">Transix</ThemedText>
                         <ThemedText type="tiny">The future of Transport & Logistics</ThemedText>

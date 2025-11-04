@@ -120,7 +120,7 @@ function Index() {
                 {(currentRole === 'fleet' || (typeof currentRole === 'object' && currentRole.role === 'fleet')) && (
                     <FleetContent onAuthCheck={checkAuth} />
                 )}
-                {currentRole === 'broker' && (
+                {(currentRole === 'broker' || (typeof currentRole === 'object' && currentRole.role === 'broker')) &&(
                     <BrokerContent onAuthCheck={checkAuth} />
                 )}
             </Animated.View>

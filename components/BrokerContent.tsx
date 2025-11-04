@@ -3,8 +3,9 @@ import { View, ScrollView, TouchableOpacity, TouchableHighlight, StyleSheet, Dim
 import { EvilIcons, MaterialCommunityIcons, Ionicons, FontAwesome6, Fontisto } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { wp } from '@/constants/common';
+import { hp, wp } from '@/constants/common';
 import { router } from 'expo-router';
+import HomeItemView from '@/components/HomeItemView';
 import { useAuth } from '@/context/AuthContext';
 
 interface BrokerContentProps {
@@ -27,9 +28,42 @@ export default function BrokerContent({ onAuthCheck }: BrokerContentProps) {
     const [loadsCount, setLoadsCount] = useState(0);
 
     // Section titles
-    const sectionTitles = ['Add & Create', 'Manage & Status', 'Wallet'];
+    const sectionTitles = ['Quick Links', 'Wallet'];
 
-    // Quick Links data (8 items total - removed Add Truck, Sell Products, Truck Status, Courier Requests)
+    const theData = [
+        {
+            id: 1,
+            topic: 'Long-Term Contracts',
+            description: 'Secure long-term contracts with trusted partners to ensure consistency, reduce risk, and grow your business steadily.',
+            btnTitle: 'Open Contracts',
+        },
+        {
+            id: 2,
+            topic: 'Tracking',
+            description: 'Track your trucks and cargo live on the app. Improve safety, monitor routes, and keep customers updated anytime.',
+            btnTitle: 'View Tracking',
+        },
+        {
+            id: 3,
+            topic: 'Fuel',
+            description: 'Find nearby fuel stations with the best prices. Enjoy discounts and get quick directions to save time and money.',
+            btnTitle: 'Get Fuel',
+        },
+        {
+            id: 4,
+            topic: 'Truck Stop',
+            description: 'Locate safe and comfortable truck stops on your journey. Rest, refresh, refuel, and access facilities conveniently.',
+            btnTitle: 'Visit Truck Stop',
+        },
+        {
+            id: 6,
+            topic: "Warehouse",
+            description: 'Find secure, affordable warehouses near your routes. Store your goods safely with easy directions and discounted rates for members.',
+            btnTitle: "Check Warehouses"
+        },
+    ];
+
+    // Quick Links data (8 items total - Add Load, Create Contract, Owner Status, My Loads, Funds, History, Rewards, Ambassador)
     const quickLinksData = [
         {
             id: 1,
@@ -135,39 +169,10 @@ export default function BrokerContent({ onAuthCheck }: BrokerContentProps) {
                         setCurrentQuickLinkIndex(index);
                     }}
                 >
-                    {/* Page 1 - Add & Create 2 items */}
-                    <View style={[styles.quickLinksPage, { width: 325 }]}>
-                        <View style={styles.quickLinksGrid}>
-                            {quickLinksData.slice(0, 2).map((item) => (
-                                <View key={item.id} style={styles.quickLinkItem}>
-                                    <TouchableHighlight
-                                        onPress={item.onPress}
-                                        underlayColor={item.underlayColor}
-                                        style={[styles.quickLinkButton, { backgroundColor: item.bgColor }]}
-                                    >
-                                        {item.icon}
-                                    </TouchableHighlight>
-                                    <View style={styles.labelContainer}>
-                                        <ThemedText type='tiny' style={styles.quickLinkLabel} numberOfLines={2}>
-                                            {item.title}
-                                        </ThemedText>
-                                        {item.id === 7 && loadsCount > 0 && (
-                                            <View style={[styles.badge, { backgroundColor: accent }]}>
-                                                <ThemedText type='tiny' style={styles.badgeText}>
-                                                    {loadsCount}
-                                                </ThemedText>
-                                            </View>
-                                        )}
-                                    </View>
-                                </View>
-                            ))}
-                        </View>
-                    </View>
-
-                    {/* Page 2 - Manage & Status 2 items */}
+                    {/* Page 1 - 4 items */}
                     <View style={[styles.quickLinksPage, { width: screenWidth - wp(10) }]}>
                         <View style={styles.quickLinksGrid}>
-                            {quickLinksData.slice(2, 4).map((item) => (
+                            {quickLinksData.slice(0, 4).map((item) => (
                                 <View key={item.id} style={styles.quickLinkItem}>
                                     <TouchableHighlight
                                         onPress={item.onPress}
@@ -193,7 +198,7 @@ export default function BrokerContent({ onAuthCheck }: BrokerContentProps) {
                         </View>
                     </View>
 
-                    {/* Page 3 - Wallet 4 items */}
+                    {/* Page 2 - 4 items */}
                     <View style={[styles.quickLinksPage, { width: screenWidth - wp(10) }]}>
                         <View style={styles.quickLinksGrid}>
                             {quickLinksData.slice(4, 8).map((item) => (
@@ -232,6 +237,82 @@ export default function BrokerContent({ onAuthCheck }: BrokerContentProps) {
                     ))}
                 </View>
             </View>
+
+            {/* Feature Items */}
+            {theData.map((item) => (
+                <View key={item.id}>
+                    {item.id === 1 && (
+                        <HomeItemView
+                            topic={item.topic}
+                            description={item.description}
+                            mainColor="#4285f4"
+                            icon="#333"
+                            iconElement={<FontAwesome6 name="file-contract" size={wp(4)} color={'#fff'} />}
+                            buttonTitle={item.btnTitle}
+                            btnBackground="#4285f424"
+                            isAvaialble={true}
+                            btnPressValue={() => router.push('/Logistics/Contracts/ViewMiniContracts')}
+                        />
+                    )}
+
+                    {item.id === 2 && (
+                        <HomeItemView
+                            topic={item.topic}
+                            description={item.description}
+                            mainColor="#6bacbf"
+                            icon="#333"
+                            iconElement={<MaterialCommunityIcons name="satellite-uplink" size={wp(4)} color={'#fff'} />}
+                            buttonTitle={item.btnTitle}
+                            btnBackground="#6bacbf24"
+                            isAvaialble={true}
+                            btnPressValue={() => onAuthCheck(() => router.push("/Tracking/Index"))}
+                        />
+                    )}
+
+                    {item.id === 3 && (
+                        <HomeItemView
+                            topic={item.topic}
+                            description={item.description}
+                            mainColor="#fb9274"
+                            icon="#333"
+                            iconElement={<MaterialCommunityIcons name="fuel" size={wp(4)} color={'#fff'} />}
+                            buttonTitle={item.btnTitle}
+                            btnBackground="#fb927424"
+                            isAvaialble={true}
+                            btnPressValue={() => onAuthCheck(() => router.push("/Fuel/Index"))}
+                        />
+                    )}
+
+                    {item.id === 4 && (
+                        <HomeItemView
+                            topic={item.topic}
+                            description={item.description}
+                            mainColor="#bada5f"
+                            icon="#333"
+                            iconElement={<MaterialCommunityIcons name="coffee" size={wp(4)} color={'#fff'} />}
+                            buttonTitle={item.btnTitle}
+                            btnBackground="#bada5f24"
+                            isAvaialble={true}
+                            btnPressValue={() => onAuthCheck(() => router.push("/TruckStop/Index"))}
+                        />
+                    )}
+
+                    {item.id === 6 && (
+                        <HomeItemView
+                            topic={item.topic}
+                            description={item.description}
+                            mainColor='#e06eb5'
+                            icon="#333"
+                            iconElement={<MaterialCommunityIcons name="warehouse" size={wp(4)} color={'#fff'} />}
+                            buttonTitle={item.btnTitle}
+                            btnBackground="#e06eb524"
+                            isAvaialble={true}
+                            btnPressValue={() => router.push("/Warehouse/Index")}
+                        />
+                    )}
+                </View>
+            ))}
+
         </ScrollView>
     );
 }

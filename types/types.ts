@@ -1,6 +1,26 @@
 import { ImageSourcePropType } from "react-native";
 import { ImagePickerAsset } from "expo-image-picker";
 
+export type RoleProps =
+  | 'general'
+  | 'fleet'
+  | 'broker'
+  | {
+      role: 'fleet';
+      fleetId: string;
+      companyName: string;
+      userRole: string;
+      accType: string;
+    }
+  | {
+      role: 'broker';
+      brokerId: string;
+      companyName: string;
+      userRole: string;
+      accType: string;
+    };
+
+
 export type TruckTypeProps = {
     id: number, name: string, image: ImageSourcePropType | undefined, description: string | undefined
 }
