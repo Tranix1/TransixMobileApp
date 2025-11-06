@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, TouchableNativeFeedback } from 'react-native';
 import { ThemedText } from './ThemedText';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, EvilIcons } from '@expo/vector-icons';
 import { wp } from '@/constants/common';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { router } from 'expo-router';
 
 interface CustomHeaderProps {
     onPressMenu: () => void;
@@ -66,11 +67,20 @@ export default function CustomHeader({ onPressMenu, currentRole, pageTitle }: Cu
                     </>
                 )}
             </View>
-            <View style={{ flexDirection: 'row', gap: wp(2) }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'owner' && (
+                    <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
+                        <TouchableNativeFeedback onPress={() => router.push("/Search/Index")}>
+                            <View style={{ padding: wp(2) }}>
+                                <EvilIcons name='search' size={wp(7)} color={icon} />
+                            </View>
+                        </TouchableNativeFeedback>
+                    </View>
+                )}
                 <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                     <TouchableNativeFeedback onPress={onPressMenu}>
                         <View style={{ padding: wp(2) }}>
-                            <Ionicons name='reorder-three' size={wp(6)} color={icon} />
+                            <Ionicons name='reorder-three' size={wp(7)} color={icon} />
                         </View>
                     </TouchableNativeFeedback>
                 </View>

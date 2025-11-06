@@ -26,7 +26,7 @@ import { pickDocument } from "@/Utilities/utils";
 import { DocumentAsset } from "@/types/types";
 import KYCVerificationModal from "@/components/KYCVerificationModal";
 import { db } from "@/db/fireBaseConfig";
-import { doc, collection } from "firebase/firestore";
+import { doc ,collection, getDocs, limit, query } from "firebase/firestore";
 
 function AddTrucks() {
 
@@ -189,8 +189,9 @@ const [brokerSearchText, setBrokerSearchText] = useState('');
 const [driverSearchText, setDriverSearchText] = useState('');
 const [allUsers, setAllUsers] = useState<any[]>([]);
 const [searchedUsers, setSearchedUsers] = useState<any[]>([]);
+const [allBrokers, setAllBrokers] = useState<any[]>([]);
+const [searchedBrokers, setSearchedBrokers] = useState<any[]>([]);
 const [fleetDrivers, setFleetDrivers] = useState<any[]>([]);
-console.log("Fleet Driver `s:", fleetDrivers);
 const [searchedDrivers, setSearchedDrivers] = useState<any[]>([]);
 const [driversLoading, setDriversLoading] = useState(false);
 const generalLoadOptions = [
@@ -238,6 +239,33 @@ const generalLoadOptions = [
     }
   };
 
+  // Function to search brokers by name or email
+  const searchBrokers = (searchText: string) => {
+    if (!searchText.trim()) {
+      setSearchedBrokers([]);
+      return;
+    }
+
+    try {
+      const filteredBrokers = allBrokers.filter((broker) => {
+        if (!broker || typeof broker !== 'object') return false;
+
+        const searchLower = searchText.toLowerCase();
+        const nameMatch = broker.name && typeof broker.name === 'string' &&
+          broker.name.toLowerCase().includes(searchLower);
+        const emailMatch = broker.brokerEmail && typeof broker.brokerEmail === 'string' &&
+          broker.brokerEmail.toLowerCase().includes(searchLower);
+
+        return nameMatch || emailMatch;
+      }).slice(0, 10); // Limit to 10 results for performance
+      setSearchedBrokers(filteredBrokers);
+    } catch (error) {
+      console.error('Error searching brokers:', error);
+      alertBox('Error', 'Failed to search brokers', [], 'error');
+      setSearchedBrokers([]);
+    }
+  };
+
 
 
  useEffect(() => {
@@ -279,6 +307,26 @@ const generalLoadOptions = [
         setAllUsers(fetchedUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
+      }
+
+      // Fetch all brokers for search functionality
+      try {
+        const brokersQuery = query(collection(db, "brokers"), limit(100));
+    
+    // Fetch documents
+    const snapshot = await getDocs(brokersQuery);
+
+    // Map through snapshot to get an array of broker objects
+    const brokersData = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    // Update state
+    setAllBrokers(brokersData);
+      } catch (error) {
+        console.error("Error fetching brokers:", error);
+        setAllBrokers([]);
       }
 
       // Fetch fleet drivers if user is in a fleet
@@ -366,6 +414,15 @@ const generalLoadOptions = [
       setDriverSearchText('');
     }
     setSearchedUsers([]);
+  };
+
+  // Function to select a broker from brokers collection
+  const selectBroker = (broker: any) => {
+    if (!selectedBrokers.includes(broker.brokerEmail)) {
+      setSelectedBrokers([...selectedBrokers, broker.brokerEmail]);
+    }
+    setBrokerSearchText('');
+    setSearchedBrokers([]);
   };
 
   // Function to select a driver from fleet drivers
@@ -689,6 +746,28 @@ const generalLoadOptions = [
           }
 
           await updateDocument(`fleets/${currentRole.fleetId}/Drivers`, driver.docId, updateData);
+        }
+      }
+
+      // Create subcollection under selected brokers
+      if (selectedBrokers.length > 0) {
+        for (const brokerEmail of selectedBrokers) {
+          // Find the broker document by email
+          const broker = allBrokers.find(b => b.brokerEmail === brokerEmail);
+          if (broker) {
+            const truckAssignmentData = {
+              truckId: truckId,
+              truckName: formData.truckName,
+              truckType: selectedTruckType?.name,
+              cargoArea: selectedCargoArea?.name,
+              truckCapacity: selectedTruckCapacity?.name,
+              assignedAt: new Date().toISOString(),
+              assignedBy: user.uid,
+              status: 'assigned'
+            };
+
+            await addDocumentWithId(`brokers/${broker.brokerId}/trucks`, truckId, truckAssignmentData);
+          }
         }
       }
 
@@ -1036,10 +1115,10 @@ const generalLoadOptions = [
               value={brokerSearchText}
               onChangeText={(text) => {
                 setBrokerSearchText(text);
-                searchUsers(text, 'broker');
+                searchBrokers(text);
               }}
             />
-            {searchedUsers.length > 0 && (
+            {searchedBrokers.length > 0 && (
               <View style={{
                 maxHeight: hp(25),
                 borderWidth: 1,
@@ -1054,9 +1133,9 @@ const generalLoadOptions = [
                 elevation: 5
               }}>
                 <ScrollView keyboardShouldPersistTaps="handled">
-                  {searchedUsers.map(user => (
+                  {searchedBrokers.map(broker => (
                     <TouchableOpacity
-                      key={user.id}
+                      key={broker.brokerId}
                       style={{
                         padding: wp(3),
                         borderBottomWidth: 0.5,
@@ -1065,12 +1144,15 @@ const generalLoadOptions = [
                         alignItems: 'center',
                         justifyContent: 'space-between'
                       }}
-                      onPress={() => selectUser(user, 'broker')}
+                      onPress={() => selectBroker(broker)}
                     >
                       <View>
-                        <ThemedText style={{ fontWeight: 'bold' }}>{user.email}</ThemedText>
+                        <ThemedText style={{ fontWeight: 'bold' }}>{broker.name}</ThemedText>
                         <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
-                          {user.displayName || 'N/A'} {user.lastName || ''}
+                          {broker.brokerEmail}
+                        </ThemedText>
+                        <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+                          {broker.brokerType}
                         </ThemedText>
                       </View>
                       <Ionicons name="add-circle" size={wp(5)} color={accent} />

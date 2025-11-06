@@ -91,6 +91,11 @@ const [selectedDrivers, setSelectedDrivers] = useState<any[]>([]);
 const [truckSearchQuery, setTruckSearchQuery] = useState('');
 const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public'>('Private');
 
+// Broker search states
+const [selectedBrokers, setSelectedBrokers] = useState<string[]>([]);
+const [brokerSearchText, setBrokerSearchText] = useState('');
+const [searchedBrokers, setSearchedBrokers] = useState<any[]>([]);
+
 // New fields for load requirements
 const [numberOfTrucks, setNumberOfTrucks] = useState('');
 const [deliveryDate, setDeliveryDate] = useState('');
@@ -142,6 +147,16 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
         setAllUsers(fetchedUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
+      }
+
+      // Fetch brokers for broker search functionality
+      try {
+        const brokersResult = await fetchDocuments('brokers', 100);
+        if (brokersResult && brokersResult.data && Array.isArray(brokersResult.data)) {
+          setSearchedBrokers(brokersResult.data);
+        }
+      } catch (error) {
+        console.error("Error fetching brokers:", error);
       }
 
       // Fetch fleet trucks if user is in a fleet
@@ -624,6 +639,11 @@ setFleetDriversFromTrucks(uniqueDrivers);
     setProofImages([]);
     setProofDocuments([]);
     setProofDocumentTypes([]);
+
+    // Reset broker selection fields
+    setSelectedBrokers([]);
+    setBrokerSearchText('');
+    setSearchedBrokers([]);
 
     // Reset personal details fields
     setPersonalName('');
@@ -1162,6 +1182,11 @@ setFleetDriversFromTrucks(uniqueDrivers);
       }
     }
 
+    // Additional validation for broker selection
+    if (selectedBrokers.length === 0) {
+      validationErrors.push('Select at least one broker');
+    }
+
     // For private trucks, remove the truck type selection requirement since it's not needed
     if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
       // Remove truck type validation for private loads since we're selecting specific trucks
@@ -1289,6 +1314,7 @@ setFleetDriversFromTrucks(uniqueDrivers);
         // New fields
         numberOfTrucks,
         deliveryDate,
+        selectedBrokers,
       }, user, expoPushToken);
 
       // Save payment to Payments collection and WalletHistory
@@ -1333,35 +1359,61 @@ setFleetDriversFromTrucks(uniqueDrivers);
 // Fleet-specific logic: If user is in a fleet and load is private, assign selected trucks and drivers
 if (currentRole?.accType === 'fleet' && loadVisibility === 'Private' && selectedFleetTrucks.length > 0) {
 
-  const trucks = selectedFleetTrucks;
-  const drivers = selectedDrivers;
+const trucks = selectedFleetTrucks;
+const drivers = selectedDrivers;
 
-  // 1️⃣ Add Cargo to fleet collection and get the auto-generated cargoId
-  const cargoRefPath = `fleets/${currentRole.fleetId}/Cargo`;
-  
-   const docRef = doc(collection(db, `fleets/${currentRole.fleetId}/Cargo`));
+// 1️⃣ Add Cargo to fleet collection and get the auto-generated cargoId
+const cargoRefPath = `fleets/${currentRole.fleetId}/Cargo`;
+
+ const docRef = doc(collection(db, `fleets/${currentRole.fleetId}/Cargo`));
 const cargoId = docRef.id;
 
- await setDoc(docRef, {
+await setDoc(docRef, {
 
-    ...loadData,
-    cargoId: cargoId,
-    loadVisibility: 'Private',
-    cargoStatus: "pending",
-    trucks: trucks.map(truck => ({
-      truckId: truck.id,
-      truckName : truck.truckName,
-      truckStatus: "pending",
-     drivers: drivers.filter(d => d.truckId === truck.id).map(driver => ({
-  driverId: driver.driverId ||null,
-  role: driver.role||null,
-  fullName: driver.fullName||null,
-  phoneNumber: driver.phoneNumber||null,
-  status: "pending"
+  ...loadData,
+  cargoId: cargoId,
+  loadVisibility: 'Private',
+  cargoStatus: "pending",
+  trucks: trucks.map(truck => ({
+    truckId: truck.id,
+    truckName : truck.truckName,
+    truckStatus: "pending",
+   drivers: drivers.filter(d => d.truckId === truck.id).map(driver => ({
+ driverId: driver.driverId ||null,
+ role: driver.role||null,
+ fullName: driver.fullName||null,
+ phoneNumber: driver.phoneNumber||null,
+ status: "pending"
 }))
 
-    }))
-  });
+  }))
+});
+
+// 2️⃣ Add load to selected brokers' subcollections
+for (const brokerId of selectedBrokers) {
+  const brokerLoadData = {
+    loadId: cargoId,
+    loadStatus: "pending",
+    loadVisibility: 'Private',
+    truckId: trucks[0]?.id || null, // Primary truck
+    truckName: trucks[0]?.truckName || null,
+    driverId: drivers[0]?.driverId || null,
+    driverName: drivers[0]?.fullName || null,
+    origin: origin,
+    destination: destination,
+    loadingDate: loadingDate,
+    deliveryDate: deliveryDate,
+    createdAt: new Date(),
+    coordinator: {
+      id: currentRole.userId,
+      name: user.organisation || "",
+      phoneNumber: user.phoneNumber || ""
+    }
+  };
+
+  const brokerLoadDocId = `${cargoId}_${brokerId}`;
+  await addDocumentWithId(`brokers/${brokerId}/loads`, brokerLoadDocId, brokerLoadData);
+}
 
   // 2️⃣ Cargo assignments per truck
   for (const truck of trucks) {
@@ -1464,6 +1516,28 @@ await addDocument("Cargo", {
   ...loadData,
   loadVisibility: 'Public' // All loads are public unless specified as private fleet loads
 });
+
+// Add load to selected brokers' subcollections for public loads
+for (const brokerId of selectedBrokers) {
+  const brokerLoadData = {
+    loadId: loadData.loadId,
+    loadStatus: "pending",
+    loadVisibility: 'Public',
+    origin: origin,
+    destination: destination,
+    loadingDate: loadingDate,
+    deliveryDate: deliveryDate,
+    createdAt: new Date(),
+    coordinator: {
+      id: user.uid,
+      name: user.organisation || "",
+      phoneNumber: user.phoneNumber || ""
+    }
+  };
+
+  const brokerLoadDocId = `${loadData.loadId}_${brokerId}`;
+  await addDocumentWithId(`brokers/${brokerId}/loads`, brokerLoadDocId, brokerLoadData);
+}
 
 
 
@@ -2461,11 +2535,70 @@ await addDocument("Cargo", {
           />
         )}
         {step === 3 && (userType as string) === 'professional' && (<ScrollView>
-          <View style={styles.viewMainDsp}>
-            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-              {currentRole?.accType === 'fleet' ? 'Select Fleet Trucks & Drivers' : 'Truck Requirements'}
-            </ThemedText>
-            <Divider />
+      <View style={styles.viewMainDsp}>
+        <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
+          {currentRole?.accType === 'fleet' ? 'Select Fleet Trucks & Drivers' : 'Truck Requirements'}
+        </ThemedText>
+        <Divider />
+
+        {/* Broker Selection Section */}
+        <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Select Brokers</ThemedText>
+        <Input
+          value={brokerSearchText}
+          onChangeText={(text) => {
+            setBrokerSearchText(text);
+            if (text.trim() === '') {
+              setSearchedBrokers(searchedBrokers); // Reset to all brokers
+            } else {
+              const filtered = searchedBrokers.filter(broker =>
+                broker.name?.toLowerCase().includes(text.toLowerCase()) ||
+                broker.brokerEmail?.toLowerCase().includes(text.toLowerCase())
+              );
+              setSearchedBrokers(filtered);
+            }
+          }}
+          placeholder="Search brokers by name or email"
+        />
+
+        <ThemedText style={{ fontSize: 14, color: '#666', marginTop: wp(1) }}>
+          Available Brokers:
+        </ThemedText>
+        {searchedBrokers.map((broker, index) => (
+          <TouchableOpacity
+            key={broker.brokerId || index}
+            onPress={() => {
+              if (selectedBrokers.includes(broker.brokerId)) {
+                setSelectedBrokers(prev => prev.filter(id => id !== broker.brokerId));
+              } else {
+                setSelectedBrokers(prev => [...prev, broker.brokerId]);
+              }
+            }}
+            style={{
+              padding: wp(3),
+              marginVertical: wp(1),
+              borderRadius: 8,
+              backgroundColor: backgroundLight,
+              borderWidth: 1,
+              borderColor: selectedBrokers.includes(broker.brokerId) ? accent : '#E0E0E0',
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons
+                name={selectedBrokers.includes(broker.brokerId) ? "checkbox" : "square-outline"}
+                size={20}
+                color={selectedBrokers.includes(broker.brokerId) ? accent : '#666'}
+                style={{ marginRight: wp(2) }}
+              />
+              <View style={{ flex: 1 }}>
+                <ThemedText style={{ fontWeight: '600' }}>{broker.name}</ThemedText>
+                <ThemedText style={{ fontSize: 12, color: '#666' }}>{broker.brokerEmail}</ThemedText>
+                <ThemedText style={{ fontSize: 12, color: '#666' }}>{broker.brokerType}</ThemedText>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+
+        <Divider />
 
             {/* Load Visibility Toggle for Fleet Users */}
             {currentRole?.accType === 'fleet' && (
