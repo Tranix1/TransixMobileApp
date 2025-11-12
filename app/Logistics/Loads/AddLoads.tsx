@@ -11,14 +11,13 @@ import { Ionicons, AntDesign, Feather } from "@expo/vector-icons";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 import { router } from "expo-router";
-import { addDocument, addDocumentWithId, setDocuments, getDocById } from "@/db/operations";
+import { addDocument, addDocumentWithId, setDocuments, getDocById, updateDocument } from "@/db/operations";
 import { db } from '@/db/fireBaseConfig';
-import { collection,doc,setDoc } from 'firebase/firestore';
+import { collection,doc,serverTimestamp,setDoc,query,getDocs } from 'firebase/firestore';
 import { useAuth } from "@/context/AuthContext";
 import { DropDownItem } from "@/components/DropDown";
 import { countryCodes } from "@/data/appConstants";
 import { Dropdown } from "react-native-element-dropdown";
-import { HorizontalTickComponent } from "@/components/SlctHorizonzalTick";
 import { DocumentUploader } from "@/components/DocumentUploader";
 
 import { hp, wp } from "@/constants/common";
@@ -96,6 +95,13 @@ const [selectedBrokers, setSelectedBrokers] = useState<string[]>([]);
 const [brokerSearchText, setBrokerSearchText] = useState('');
 const [searchedBrokers, setSearchedBrokers] = useState<any[]>([]);
 
+// Broker truck states
+const [brokerTrucks, setBrokerTrucks] = useState<any[]>([]);
+console.log(brokerTrucks)
+const [selectedBrokerTrucks, setSelectedBrokerTrucks] = useState<any[]>([]);
+const [brokerTruckSearchQuery, setBrokerTruckSearchQuery] = useState('');
+const [searchedBrokerTrucks, setSearchedBrokerTrucks] = useState<any[]>([]);
+
 // New fields for load requirements
 const [numberOfTrucks, setNumberOfTrucks] = useState('');
 const [deliveryDate, setDeliveryDate] = useState('');
@@ -108,151 +114,86 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
   const [dataChecked, setDataChecked] = useState(false);
 
  useEffect(() => {
-    const fetchAll = async () => {
-      // Check current role from AsyncStorage
-      try {
-        const storedRole = await AsyncStorage.getItem('currentRole');
-        if (storedRole) {
-          const parsedRole = JSON.parse(storedRole);
-          setCurrentRole(parsedRole);
-          if (parsedRole.role === 'fleet' && parsedRole.accType === 'fleet') {
-            setUserIsFleetVerified(true);
-            setFleetManagerId(parsedRole.fleetManagerId || parsedRole.userId); // Use fleetManagerId if available, fallback to userId
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching current role:", error);
-      }
+   const fetchAll = async () => {
+     // Check current role from AsyncStorage
+     try {
+       const storedRole = await AsyncStorage.getItem('currentRole');
+       if (storedRole) {
+         const parsedRole = JSON.parse(storedRole);
+         setCurrentRole(parsedRole);
+         if (parsedRole.role === 'fleet' && parsedRole.accType === 'fleet') {
+           setUserIsFleetVerified(true);
+           setFleetManagerId(parsedRole.fleetManagerId || parsedRole.userId); // Use fleetManagerId if available, fallback to userId
+         }
+       }
+     } catch (error) {
+       console.error("Error fetching current role:", error);
+     }
 
-      // Check for owner verification in the unified verifiedUsers collection
-      const personDetails = await getDocById('verifiedUsers', (data) => {
+     // Check for owner verification in the unified verifiedUsers collection
+     const personDetails = await getDocById('verifiedUsers', (data) => {
 
-         if (data && data.accType === 'professional') {
-            setUserIsVerified({
-              docId: data.id || '',
-              isApproved: data.isApproved || false,
-              accType: 'professional'
-            });
-          }
+        if (data && data.accType === 'professional') {
+           setUserIsVerified({
+             docId: data.id || '',
+             isApproved: data.isApproved || false,
+             accType: 'professional'
+           });
+         }
 
-         // Check for fleet verification
-         if (data && data.accType === 'fleet' && data.verificationStatus === 'approved') {
-            setUserIsFleetVerified(true);
-          }
-      });
+        // Check for fleet verification
+        if (data && data.accType === 'fleet' && data.verificationStatus === 'approved') {
+           setUserIsFleetVerified(true);
+         }
+     });
 
-      // Fetch all users for search functionality
-      try {
-        const fetchedUsers = await getUsers();
-        setAllUsers(fetchedUsers);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
+     // Fetch all users for search functionality
+     try {
+       const fetchedUsers = await getUsers();
+       setAllUsers(fetchedUsers);
+     } catch (error) {
+       console.error("Error fetching users:", error);
+     }
 
-      // Fetch brokers for broker search functionality
-      try {
-        const brokersResult = await fetchDocuments('brokers', 100);
-        if (brokersResult && brokersResult.data && Array.isArray(brokersResult.data)) {
-          setSearchedBrokers(brokersResult.data);
-        }
-      } catch (error) {
-        console.error("Error fetching brokers:", error);
-      }
+     // Fetch brokers for broker search functionality
+     try {
+       const brokersResult = await fetchDocuments('brokers', 100);
+       if (brokersResult && brokersResult.data && Array.isArray(brokersResult.data)) {
+         setSearchedBrokers(brokersResult.data);
+       }
+     } catch (error) {
+       console.error("Error fetching brokers:", error);
+     }
 
-      // Fetch fleet trucks if user is in a fleet
-      if (currentRole?.accType === 'fleet') {
-        setDriversLoading(true);
-        try {
-          const trucksResult = await fetchDocuments(`fleets/${currentRole.fleetId}/Trucks`, 100); // Fetch fleet trucks
-          if (trucksResult && trucksResult.data && Array.isArray(trucksResult.data)) {
-            setFleetTrucks(trucksResult.data);
-            setSearchedTrucks(trucksResult.data); // Initialize searched trucks
+     // Fetch broker assigned trucks if user is a broker
+     if (currentRole && currentRole.accType === 'broker') {
+       try {
+         // Use getDocs to fetch broker assigned trucks directly
+         const brokerTrucksQuery = query(collection(db, `brokers/${currentRole.brokerId}/trucks`));
+         const brokerTrucksSnapshot = await getDocs(brokerTrucksQuery);
 
-            // Extract drivers from trucks
-           const driversFromTrucks: any[] = [];
+         const brokerTrucksData = brokerTrucksSnapshot.docs.map(doc => ({
+           id: doc.id,
+           ...doc.data()
+         }));
 
-trucksResult.data.forEach((truck: any) => {
-  const truckId = truck.id; // always use truck.id
-  const truckName = truck.truckName || truck.formData?.truckName;
+         setBrokerTrucks(brokerTrucksData);
+         setSearchedBrokerTrucks(brokerTrucksData);
+       } catch (error) {
+         console.error("Error fetching broker trucks:", error);
+         setBrokerTrucks([]);
+         setSearchedBrokerTrucks([]);
+       }
+     }
 
-  // Main Driver
-  if (truck.mainDriver) {
-    driversFromTrucks.push({
-      docId: truck.mainDriver.docId || truck.mainDriver.driverId,
-      role: 'main',
-      truckId,
-      truckName,
-      fullName: truck.mainDriver.fullName,
-      driverId: truck.mainDriver.driverId,
-      phoneNumber: truck.mainDriver.phoneNumber,
-    });
-  }
+     // Add a short delay before rendering UI to prevent flicker
+     setTimeout(() => {
+       setDataChecked(true);
+     }, 300); // 300ms feels natural
+   };
 
-  // Second Main Driver
-  if (truck.secondMainDriver) {
-    driversFromTrucks.push({
-      docId: truck.secondMainDriver.docId || truck.secondMainDriver.driverId,
-      role: 'second_main',
-      truckId,
-      truckName,
-      fullName: truck.secondMainDriver.fullName,
-      driverId: truck.secondMainDriver.driverId,
-      phoneNumber: truck.secondMainDriver.phoneNumber,
-    });
-  }
-
-  // Backup Drivers
-  if (truck.backupDrivers && Array.isArray(truck.backupDrivers)) {
-    truck.backupDrivers.forEach((backupDriver: any) => {
-      driversFromTrucks.push({
-        docId: backupDriver.docId || backupDriver.driverId,
-        role: 'backup',
-        truckId,
-        truckName,
-        fullName: backupDriver.fullName,
-        driverId: backupDriver.driverId,
-        phoneNumber: backupDriver.phoneNumber,
-      });
-    });
-  }
-});
-
-// Remove exact duplicates (driverId + truckId)
-const uniqueDrivers = driversFromTrucks.filter((driver, index, self) =>
-  index === self.findIndex(d => d.driverId === driver.driverId && d.truckId === driver.truckId)
-);
-
-setFleetDriversFromTrucks(uniqueDrivers);
-
-          } else {
-            setFleetTrucks([]);
-            setSearchedTrucks([]);
-            setFleetDriversFromTrucks([]);
-          }
-        } catch (error) {
-          console.error("Error fetching fleet trucks:", error);
-          setFleetTrucks([]);
-          setSearchedTrucks([]);
-          setFleetDriversFromTrucks([]);
-        } finally {
-          setDriversLoading(false);
-        }
-      } else {
-        setFleetTrucks([]);
-        setSearchedTrucks([]);
-        setFleetDriversFromTrucks([]);
-        setDriversLoading(false);
-      }
-
-
-      // Add a short delay before rendering UI to prevent flicker
-      setTimeout(() => {
-        setDataChecked(true);
-      }, 300); // 300ms feels natural
-    };
-
-    fetchAll();
-  }, [userIsFleetVerified]);
+   fetchAll();
+ }, [currentRole]); // Remove userIsFleetVerified dependency to prevent infinite loops
 
 
 
@@ -536,6 +477,9 @@ setFleetDriversFromTrucks(uniqueDrivers);
   const [showInsufficientFundsModal, setShowInsufficientFundsModal] = useState(false);
   const [showLoadPaymentModal, setShowLoadPaymentModal] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentMessage, setPaymentMessage] = useState('');
+  const [paymentConfirmText, setPaymentConfirmText] = useState('');
+  const [paymentIcon, setPaymentIcon] = useState('cash');
 
   // Helper function to show error modal
   const showError = (title: string, message: string, details?: string, showDetails: boolean = false) => {
@@ -792,7 +736,7 @@ setFleetDriversFromTrucks(uniqueDrivers);
     if (!selectedReturnModelType || !selectedReturnModelType.name) {
       setSelectedReturnModelType({ id: 1, name: "Solid" });
     }
-  }, []);
+  }, [selectedReturnCurrency, selectedReturnModelType]);
 
   // Ensure return load fields are properly initialized
   useEffect(() => {
@@ -805,7 +749,7 @@ setFleetDriversFromTrucks(uniqueDrivers);
     if (returnTerms === undefined || returnTerms === null) {
       setReturnTerms("");
     }
-  }, []);
+  }, [returnLoad, returnRate, returnTerms]);
 
   // Handle general user personal details submission
   const handleUpdateGeneralDetails = async () => {
@@ -1018,17 +962,19 @@ setFleetDriversFromTrucks(uniqueDrivers);
     try {
       const filters = [
         where("userId", "==", userId),
-        where("type", "in", ["reward", "bonus"]),
-        where("status", "==", "completed")
       ];
-      const result = await fetchDocuments("WalletTransactions", 50, undefined, filters);
+      const result = await fetchDocuments( "rewards", 50, undefined, filters);
 
-      let totalRewards = 0;
-      result.data.forEach((transaction: any) => {
-        totalRewards += transaction.amount;
+      let totalAvailable = 0;
+      const now = new Date();
+      result.data.forEach((reward: any) => {
+        const expiry = new Date(reward.expiryDate);
+        if (expiry > now) {
+          totalAvailable += reward.availableTokens || 0;
+        }
       });
 
-      return totalRewards;
+      return totalAvailable;
     } catch (error) {
       console.error('Error checking user rewards:', error);
       return 0;
@@ -1042,24 +988,40 @@ setFleetDriversFromTrucks(uniqueDrivers);
     try {
       setProcessingPayment(true);
 
-      // Check for available rewards first
+      // Check for available reward tokens
       const availableRewards = await checkUserRewards(user.uid);
 
-      if (availableRewards >= 2) {
-        // Use rewards to pay
-        const deductionSuccess = await deductFromWallet(
-          user.uid,
-          2,
-          'Load posting fee (paid with rewards)',
-          'wallet'
-        );
+      if (availableRewards >= 1) {
+        // Use 1 reward token
+        // Deduct from reward tokens
+        const filters = [
+          where("userId", "==", user.uid),
+         ];
+        const result = await fetchDocuments("rewards", 50, undefined, filters);
 
-        if (!deductionSuccess) {
-          alertBox("Payment Failed", "Failed to process payment with rewards. Please try again.", [], "error");
-          return false;
+        let remainingToDeduct = 1;
+      const now = new Date();
+      for (const reward of result.data) {
+        const expiry = new Date(reward.expiryDate);
+        if (expiry > now && (reward.availableTokens || 0) > 0) {
+          const deductAmount = Math.min(remainingToDeduct, reward.availableTokens);
+          const updateData = {
+            availableTokens: reward.availableTokens - deductAmount,
+            usedTokens: (reward.usedTokens || 0) + deductAmount,
+            updatedAt: new Date().toISOString()
+          };
+          await updateDocument('rewards', reward.id, updateData);
+          remainingToDeduct -= deductAmount;
+          if (remainingToDeduct <= 0) break;
         }
+      }
+
+      if (remainingToDeduct > 0) {
+        alertBox("Payment Failed", "Insufficient reward tokens available.", [], "error");
+        return false;
+      }
       } else {
-        // Check wallet balance for $2 payment
+        // No tokens available, use wallet
         const hasBalance = await hasSufficientBalance(user.uid, 2);
 
         if (!hasBalance) {
@@ -1103,31 +1065,54 @@ setFleetDriversFromTrucks(uniqueDrivers);
   };
 
   const handleSubmit = async () => {
+    try{
+
     setIsSubmitting(true)
 
     // Guard: require user type selection before any further validation
     if (!userType) {
-      alertBox("Select User Type", "Please select whether you are a General or Professional user first.", [], "error");
+      setTimeout(() => {
+        alertBox("Select User Type", "Please select whether you are a General or Professional user first.", [], "error");
+      }, 100);
       setShowUserTypeDropdown(true);
       setIsSubmitting(false);
       return;
     }
 
-    // Skip KYC verification for verified fleet users
-    if (!userIsFleetVerified) {
-      // Comprehensive check if user has submitted personal details
-      if (userType === 'general' && !getGeneralDetails) {
-        setIsSubmitting(false);
-        alertBox("Personal Details Required", "Please submit your personal details first before creating a load. All required fields must be completed.", [], "error");
-        return;
-      }
 
-      if (userType === 'professional' && !getProfessionalDetails) {
-        setIsSubmitting(false);
-        alertBox("Professional Details Required", "Please submit your professional details first before creating a load. All required documents must be uploaded.", [], "error");
-        return;
+
+     if (!alertBox) {
+    console.error('alertBox not available');
+    setIsSubmitting(false);
+    return;
+  }
+ if (!user) {
+    alert("Please Login first");
+    setIsSubmitting(false);
+    router.push('/Account/Login')
+    return;
+  }
+
+
+    // Skip KYC verification for verified fleet users and verified brokers
+      if (!userIsFleetVerified && !userIsVerified?.isApproved) {
+        // Comprehensive check if user has submitted personal details
+        if (userType === 'general' && !getGeneralDetails) {
+          setIsSubmitting(false);
+          setTimeout(() => {
+            alertBox("Personal Details Required", "Please submit your personal details first before creating a load. All required fields must be completed.", [], "error");
+          }, 100);
+          return;
+        }
+ 
+        // if (userType === 'professional' && !getProfessionalDetails) {
+        //   setIsSubmitting(false);
+        //   setTimeout(() => {
+        //     alertBox("Professional Details Required", "Please submit your professional details first before creating a load. All required documents must be uploaded.", [], "error");
+        //   }, 100);
+        //   return;
+        // }
       }
-    }
 
     // Additional validation: Check if personal details are approved (optional - can be removed if not needed)
     if (userType === 'general' && getGeneralDetails && !getGeneralDetails.isApproved) {
@@ -1139,20 +1124,36 @@ setFleetDriversFromTrucks(uniqueDrivers);
     }
 
     // Use utility function for validation
-    const validationErrors = validateLoadForm(userType, {
-      typeofLoad,
-      origin,
-      destination,
-      rate,
-      paymentTerms,
-      selectedLoadingDate,
-      loadImages,
-      selectedAfricanTrucks,
-      trucksNeeded,
-      requirements,
-      proofOfOrder: [...proofDocuments],
-      proofOfOrderFileType: [...proofDocumentTypes],
-    }, step);
+    let validationErrors = [];
+try {
+  validationErrors = validateLoadForm(userType, {
+    typeofLoad,
+    origin,
+    destination,
+    rate,
+    paymentTerms,
+    selectedLoadingDate,
+    loadImages,
+    selectedAfricanTrucks,
+    trucksNeeded,
+    requirements,
+    proofOfOrder: [...proofDocuments],
+    proofOfOrderFileType: [...proofDocumentTypes],
+  }, step);
+} catch (e) {
+  const errorDetails = e instanceof Error ? e.stack : String(e);
+      showError(
+        "Validation Error",
+        "Failed to vallidate Form Data",
+        errorDetails,
+        true
+      );
+          setIsSubmitting(false);
+
+     
+  return;
+}
+
 
     // Additional validation for new fields
     if (!numberOfTrucks || numberOfTrucks.trim() === '') {
@@ -1182,9 +1183,16 @@ setFleetDriversFromTrucks(uniqueDrivers);
       }
     }
 
-    // Additional validation for broker selection
-    if (selectedBrokers.length === 0) {
-      validationErrors.push('Select at least one broker');
+    // Additional validation for broker selection - skip for broker users
+    // if (currentRole?.accType !== 'broker' && selectedBrokers.length === 0) {
+    //   validationErrors.push('Select at least one broker');
+    // }
+
+    // Additional validation for broker private loads
+    if (currentRole?.accType === 'broker' && loadVisibility === 'Private') {
+      if (selectedBrokerTrucks.length === 0) {
+        validationErrors.push('Select at least one assigned truck');
+      }
     }
 
     // For private trucks, remove the truck type selection requirement since it's not needed
@@ -1194,16 +1202,43 @@ setFleetDriversFromTrucks(uniqueDrivers);
     }
 
     if (validationErrors.length > 0) {
-      alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
+      setTimeout(() => {
+        alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
+      }, 100);
       setIsSubmitting(false)
       return;
     }
 
+    // Check available tokens for payment message
+    const availableTokens = await checkUserRewards(user.uid);
+    if (availableTokens >= 1) {
+      setPaymentMessage(`Post this load using 1 reward token? ${user ? 'If you have a referrer, they will receive $1 commission.' : ''}`);
+      setPaymentConfirmText('Use Token & Post Load');
+      setPaymentIcon('gift');
+    } else {
+      setPaymentMessage(`Post this load for $2? ${user ? 'If you have a referrer, they will receive $1 commission.' : ''}`);
+      setPaymentConfirmText('Pay & Post Load');
+      setPaymentIcon('cash');
+    }
+
     // Show payment confirmation modal
-    console.log("Showing payment modal...");
     setShowLoadPaymentModal(true);
     setIsSubmitting(false);
     return;
+  
+   }catch(e){
+    const errorDetails = e instanceof Error ? e.stack : String(e);
+      showError(
+        "Failed to Submit Load",
+        "There was an error submitting your load. Please try again.",
+        errorDetails,
+        true
+      );
+          setIsSubmitting(false);
+
+      console.log(e)
+    }
+  
   };
 
   // Function to handle payment confirmation and proceed with load submission
@@ -1383,7 +1418,9 @@ await setDoc(docRef, {
  role: driver.role||null,
  fullName: driver.fullName||null,
  phoneNumber: driver.phoneNumber||null,
- status: "pending"
+ status: "pending",
+  timeStamp: serverTimestamp(),
+ 
 }))
 
   }))
@@ -1480,7 +1517,6 @@ for (const brokerId of selectedBrokers) {
 
   // 5️⃣ Add to fleet manager's assigned loads
   if (currentRole.userRole === "owner" || currentRole.userRole === "fleetManager") {
-    console.log("Adding to fleet manager assigned loads for fleet:", currentRole.fleetId);
 
     const fleetManagerLoadData = {
       loadId: cargoId,
@@ -1502,13 +1538,62 @@ for (const brokerId of selectedBrokers) {
     };
 
     const fleetManagerDocId = `LOAD_${cargoId}`;
-    console.log("Fleet manager path:", `fleets/${currentRole.fleetId}/fleetManagers/FLTMGR${currentRole.fleetId}/assignedLoads`);
     await addDocumentWithId(`fleets/${currentRole.fleetId}/fleetManagers/FLTMGR${currentRole.fleetId}/assignedLoads`, fleetManagerDocId, fleetManagerLoadData);
   }
 
-} 
+}else if (currentRole?.accType === 'fleet' && loadVisibility === 'Public') {
+  // Fleet user with public load
+  // 1️⃣ Regular Cargo addition to main Cargo collection
+} else if(currentRole?.accType === 'broker' && loadVisibility === 'Private') {
+  // Broker user with private load - assign to selected trucks
+  const trucks = selectedBrokerTrucks;
 
+  // 1️⃣ Add Cargo to broker's subcollection and get the auto-generated cargoId
+  const brokerCargoRefPath = `brokers/${currentRole.userId}/loads`;
 
+  const docRef = doc(collection(db, `brokers/${currentRole.userId}/loads`));
+  const cargoId = docRef.id;
+
+  await setDoc(docRef, {
+    ...loadData,
+    cargoId: cargoId,
+    loadVisibility: 'Private',
+    cargoStatus: "pending",
+    trucks: trucks.map(truck => ({
+      truckId: truck.truckId,
+      truckName: truck.truckName,
+      truckStatus: "pending",
+      // Note: Brokers don't select drivers - fleet managers handle that
+    }))
+  });
+
+  // 2️⃣ Add load to fleet manager's brokerLoads subcollection
+  // This allows the fleet manager to see which loads brokers have assigned to their trucks
+  for (const truck of trucks) {
+    const brokerLoadData = {
+      loadId: cargoId,
+      loadStatus: "pending",
+      loadVisibility: 'Private',
+      truckId: truck.truckId,
+      truckName: truck.truckName,
+      brokerId: currentRole.userId,
+      brokerName: user.organisation || user.displayName || "Broker",
+      origin: origin,
+      destination: destination,
+      loadingDate: loadingDate,
+      deliveryDate: deliveryDate,
+      createdAt: new Date(),
+      coordinator: {
+        id: currentRole.userId,
+        name: user.organisation || user.displayName || "Broker",
+        phoneNumber: user.phoneNumber || ""
+      }
+    };
+
+    const brokerLoadDocId = `${cargoId}_${truck.truckId}`;
+    await addDocumentWithId(`fleets/${truck.fleetId}/fleetManagers/FLTMGR${truck.fleetId}/brokerLoads`, brokerLoadDocId, brokerLoadData);
+  }
+}
 
 
 // Regular load submission for non-fleet users or fleet users with public loads
@@ -2541,67 +2626,71 @@ for (const brokerId of selectedBrokers) {
         </ThemedText>
         <Divider />
 
-        {/* Broker Selection Section */}
-        <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Select Brokers</ThemedText>
-        <Input
-          value={brokerSearchText}
-          onChangeText={(text) => {
-            setBrokerSearchText(text);
-            if (text.trim() === '') {
-              setSearchedBrokers(searchedBrokers); // Reset to all brokers
-            } else {
-              const filtered = searchedBrokers.filter(broker =>
-                broker.name?.toLowerCase().includes(text.toLowerCase()) ||
-                broker.brokerEmail?.toLowerCase().includes(text.toLowerCase())
-              );
-              setSearchedBrokers(filtered);
-            }
-          }}
-          placeholder="Search brokers by name or email"
-        />
+        {/* Broker Selection Section - Hide for broker users */}
+        {currentRole?.accType !== 'broker' && (
+          <>
+            <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Select Brokers</ThemedText>
+            <Input
+              value={brokerSearchText}
+              onChangeText={(text) => {
+                setBrokerSearchText(text);
+                if (text.trim() === '') {
+                  setSearchedBrokers(searchedBrokers); // Reset to all brokers
+                } else {
+                  const filtered = searchedBrokers.filter(broker =>
+                    broker.name?.toLowerCase().includes(text.toLowerCase()) ||
+                    broker.brokerEmail?.toLowerCase().includes(text.toLowerCase())
+                  );
+                  setSearchedBrokers(filtered);
+                }
+              }}
+              placeholder="Search brokers by name or email"
+            />
 
-        <ThemedText style={{ fontSize: 14, color: '#666', marginTop: wp(1) }}>
-          Available Brokers:
-        </ThemedText>
-        {searchedBrokers.map((broker, index) => (
-          <TouchableOpacity
-            key={broker.brokerId || index}
-            onPress={() => {
-              if (selectedBrokers.includes(broker.brokerId)) {
-                setSelectedBrokers(prev => prev.filter(id => id !== broker.brokerId));
-              } else {
-                setSelectedBrokers(prev => [...prev, broker.brokerId]);
-              }
-            }}
-            style={{
-              padding: wp(3),
-              marginVertical: wp(1),
-              borderRadius: 8,
-              backgroundColor: backgroundLight,
-              borderWidth: 1,
-              borderColor: selectedBrokers.includes(broker.brokerId) ? accent : '#E0E0E0',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons
-                name={selectedBrokers.includes(broker.brokerId) ? "checkbox" : "square-outline"}
-                size={20}
-                color={selectedBrokers.includes(broker.brokerId) ? accent : '#666'}
-                style={{ marginRight: wp(2) }}
-              />
-              <View style={{ flex: 1 }}>
-                <ThemedText style={{ fontWeight: '600' }}>{broker.name}</ThemedText>
-                <ThemedText style={{ fontSize: 12, color: '#666' }}>{broker.brokerEmail}</ThemedText>
-                <ThemedText style={{ fontSize: 12, color: '#666' }}>{broker.brokerType}</ThemedText>
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))}
+            <ThemedText style={{ fontSize: 14, color: '#666', marginTop: wp(1) }}>
+              Available Brokers:
+            </ThemedText>
+            {searchedBrokers.map((broker, index) => (
+              <TouchableOpacity
+                key={broker.brokerId || index}
+                onPress={() => {
+                  if (selectedBrokers.includes(broker.brokerId)) {
+                    setSelectedBrokers(prev => prev.filter(id => id !== broker.brokerId));
+                  } else {
+                    setSelectedBrokers(prev => [...prev, broker.brokerId]);
+                  }
+                }}
+                style={{
+                  padding: wp(3),
+                  marginVertical: wp(1),
+                  borderRadius: 8,
+                  backgroundColor: backgroundLight,
+                  borderWidth: 1,
+                  borderColor: selectedBrokers.includes(broker.brokerId) ? accent : '#E0E0E0',
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Ionicons
+                    name={selectedBrokers.includes(broker.brokerId) ? "checkbox" : "square-outline"}
+                    size={20}
+                    color={selectedBrokers.includes(broker.brokerId) ? accent : '#666'}
+                    style={{ marginRight: wp(2) }}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <ThemedText style={{ fontWeight: '600' }}>{broker.name}</ThemedText>
+                    <ThemedText style={{ fontSize: 12, color: '#666' }}>{broker.brokerEmail}</ThemedText>
+                    <ThemedText style={{ fontSize: 12, color: '#666' }}>{broker.brokerType}</ThemedText>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
 
-        <Divider />
+            <Divider />
+          </>
+        )}
 
-            {/* Load Visibility Toggle for Fleet Users */}
-            {currentRole?.accType === 'fleet' && (
+            {/* Load Visibility Toggle for Fleet and Broker Users */}
+            {(currentRole?.accType === 'fleet' || currentRole?.accType === 'broker') && (
               <View style={{ marginBottom: wp(4) }}>
                 <ThemedText style={{ fontWeight: 'bold', marginBottom: wp(2) }}>Load Visibility</ThemedText>
                 <View style={{ flexDirection: 'row', gap: wp(2) }}>
@@ -2630,7 +2719,7 @@ for (const brokerId of selectedBrokers) {
                       Private
                     </ThemedText>
                     <ThemedText style={{ fontSize: 12, color: '#666', textAlign: 'center', marginTop: wp(1) }}>
-                      Only fleet trucks
+                      {currentRole?.accType === 'fleet' ? 'Only fleet trucks' : 'Only assigned trucks'}
                     </ThemedText>
                   </TouchableOpacity>
 
@@ -2691,7 +2780,6 @@ for (const brokerId of selectedBrokers) {
 
                 {/* Available Trucks with Drivers */}
                 <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Available Trucks</ThemedText>
-                {console.log(fleetDriversFromTrucks.length)}
                 
                 {searchedTrucks.map((truck, index) => {
                   // Get drivers for this truck
@@ -2911,6 +2999,64 @@ for (const brokerId of selectedBrokers) {
                     Select {trucksNeeded.length <= 0 ? "Truck" : "another"}
                   </ThemedText>
                 </TouchableOpacity>
+              </>
+            ) : currentRole?.accType === 'broker' && loadVisibility === 'Private' ? (
+              // Broker User: Private load - Select assigned trucks (no drivers)
+              <>
+                {/* Truck Search */}
+                <ThemedText>Search Assigned Trucks</ThemedText>
+                <Input
+                  value={brokerTruckSearchQuery}
+                  onChangeText={(text) => {
+                    setBrokerTruckSearchQuery(text);
+                    if (text.trim() === '') {
+                      setSearchedBrokerTrucks(brokerTrucks);
+                    } else {
+                      const filtered = brokerTrucks.filter(truck =>
+                        truck.truckName?.toLowerCase().includes(text.toLowerCase()) ||
+                        truck.truckType?.toLowerCase().includes(text.toLowerCase())
+                      );
+                      setSearchedBrokerTrucks(filtered);
+                    }
+                  }}
+                  placeholder="Search by truck name or type"
+                />
+
+                {/* Available Assigned Trucks */}
+                <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Available Assigned Trucks</ThemedText>
+                {searchedBrokerTrucks.map((truck, index) => (
+                  <TouchableOpacity
+                    key={truck.truckId || index}
+                    onPress={() => {
+                      if (selectedBrokerTrucks.find(t => t.truckId === truck.truckId)) {
+                        setSelectedBrokerTrucks(prev => prev.filter(t => t.truckId !== truck.truckId));
+                      } else {
+                        setSelectedBrokerTrucks(prev => [...prev, truck]);
+                      }
+                    }}
+                    style={{
+                      padding: wp(3),
+                      marginVertical: wp(1),
+                      borderRadius: 8,
+                      backgroundColor: backgroundLight,
+                      borderWidth: 1,
+                      borderColor: selectedBrokerTrucks.some(t => t.truckId === truck.truckId) ? accent : '#E0E0E0',
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Ionicons
+                        name={selectedBrokerTrucks.some(t => t.truckId === truck.truckId) ? "checkbox" : "square-outline"}
+                        size={20}
+                        color={selectedBrokerTrucks.some(t => t.truckId === truck.truckId) ? accent : '#666'}
+                        style={{ marginRight: wp(2) }}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <ThemedText style={{ fontWeight: '600' }}>{truck.truckName}</ThemedText>
+                        <ThemedText style={{ fontSize: 12, color: '#666' }}>{truck.truckType} - {truck.truckCapacity}</ThemedText>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
               </>
             ) : (
               // Professional User: Truck requirements
@@ -3156,11 +3302,11 @@ for (const brokerId of selectedBrokers) {
           setIsSubmitting(false);
         }}
         title="Confirm Load Posting"
-        message={`Post this load for $2? ${user ? 'If you have a referrer, they will receive $1 commission.' : ''}`}
-        confirmText="Pay & Post Load"
+        message={paymentMessage}
+        confirmText={paymentConfirmText}
         cancelText="Cancel"
         onConfirm={confirmLoadPaymentAndSubmit}
-        icon="cash"
+        icon={paymentIcon}
         iconColor={accent}
         isLoading={processingPayment}
       />

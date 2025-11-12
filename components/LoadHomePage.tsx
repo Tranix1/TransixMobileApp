@@ -44,6 +44,7 @@ interface LoadsComponentProps {
     filteredPNotAavaialble: boolean
     isLoading?: boolean
     error?: string | null
+    visibilitySelector?: React.ReactNode;
 }
 
 
@@ -68,7 +69,8 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     organisationName,
     filteredPNotAavaialble,
     isLoading = false,
-    error = null
+    error = null,
+    visibilitySelector
 }) => {
     // Component implementation
     const { user } = useAuth();
@@ -168,6 +170,8 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
     return (
 
         <View style={[styles.container, { backgroundColor: background, flex: 1 }]}>
+            {/* Visibility Selector */}
+
             <View style={{
                 backgroundColor: background,
                 paddingHorizontal: wp(2),
@@ -197,6 +201,9 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                     </View>
                 </View>
             </View>
+            {visibilitySelector}
+
+            
 
             <FlatList
                 keyExtractor={(item) => item.id.toString()}
@@ -501,7 +508,7 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                                                         {selectedLoad.companyName}
                                                     </ThemedText>
                                                 </ThemedText>
-                                                <AntDesign name='arrowright' size={wp(3)} color={'white'} style={{ marginLeft: wp(1) }} />
+                                                <AntDesign name='arrow-right' size={wp(3)} color={'white'} style={{ marginLeft: wp(1) }} />
                                             </TouchableOpacity>
 
                                         </View>

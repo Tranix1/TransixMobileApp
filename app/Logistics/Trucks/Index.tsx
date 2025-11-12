@@ -4,7 +4,7 @@ import React, { useEffect, useId, useState } from 'react'
 import { hp, wp } from '@/constants/common'
 import { fetchDocuments } from '@/db/operations'
 import { Truck } from '@/types/types'
-import { DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore'
+import { DocumentData, QueryDocumentSnapshot, where, collection, query, getDocs } from 'firebase/firestore'
 import { TruckTypeProps } from '@/types/types'
 import { useAuth } from '@/context/AuthContext'
 import { useLocalSearchParams } from 'expo-router'
@@ -14,6 +14,7 @@ import AccentRingLoader from '@/components/AccentRingLoader';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { HorizontalTickComponent } from '@/components/SlctHorizonzalTick';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { db } from '@/db/fireBaseConfig';
 const Index = () => {
 
     const { userId, organisationName, contractName, contractId, capacityG, cargoAreaG, truckTypeG, operationCountriesG } = useLocalSearchParams();
@@ -44,7 +45,7 @@ const Index = () => {
     });
 
     const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
-    const [truckVisibility, setTruckVisibility] = useState<'All' | 'Private' | 'Public'>('Private');
+    const [truckVisibility, setTruckVisibility] = useState< 'Private' | 'Public'>('Public');
     const [currentRole, setCurrentRole] = useState<any>(null);
 
     useEffect(() => {
@@ -62,6 +63,8 @@ const Index = () => {
         getCurrentRole();
     }, []);
 
+    
+
     const LoadTructs = async () => {
         try {
             setIsLoading(true);
@@ -75,11 +78,7 @@ const Index = () => {
             if (selectedCargoArea) filters.push(where("cargoArea", "==", selectedCargoArea?.name));
             if (tankerType && selectedCargoArea) filters.push(where("tankerType", "==", tankerType))
             // Conditionally add the country filter
-            if (operationCountries.length > 0) filters.push(where("locations", "array-contains-any", operationCountries.slice(0, 10)));
-
-                if (truckVisibility === 'Public') {
-                    filters.push(where("truckVisibility", "==", "Public"));
-                }
+            if (operationCountries.length > 0) filters.push(where("locations", "array-contains-any", operationCountries.slice(0, 10)))
 
 
             // Only show approved trucks to users (except truck owners viewing their own)
@@ -88,7 +87,6 @@ const Index = () => {
                 filters.push(where("approvalStatus", "==", "approved"));
             }
 
-            console.log("Filters applied:", filters);
 
             // Fetch data from Firestore with the initially applied filters
             let collectionName = contractId ? "ContractRequests" : "Trucks";
@@ -96,6 +94,8 @@ const Index = () => {
             // If user is in fleet mode and viewing private trucks, fetch from fleet subcollection
             if ( currentRole?.accType === 'fleet' && truckVisibility === 'Private') {
                 collectionName = `fleets/${currentRole.fleetId}/Trucks`;
+            }else if (currentRole?.role === 'broker' && truckVisibility === 'Private') { 
+                collectionName = `brokers/${currentRole.brokerId}/trucks`;
             }
 
             const maTrucks = await fetchDocuments(collectionName, 10, undefined, filters);
@@ -115,10 +115,7 @@ const Index = () => {
                     trucksToSet = maTrucks.data as Truck[];
                 }
 
-                // Apply truck visibility filter
-                if (truckVisibility !== 'All') {
-                    trucksToSet = trucksToSet.filter((truck: any) => truck.truckVisibility === truckVisibility);
-                }
+                
 
                 setTrucks(trucksToSet);
                 setLastVisible(maTrucks.lastVisible);
@@ -171,9 +168,7 @@ const Index = () => {
             filters.push(where("locations", "array-contains-any", operationCountries.slice(0, 10)));
         }
 
-        if (truckVisibility === 'Public') {
-            filters.push(where("truckVisibility", "==", "Public"));
-        }
+      
 
         // Only show approved trucks to users (except truck owners viewing their own)
         if (!userId) {
@@ -202,11 +197,7 @@ const Index = () => {
                 );
             }
 
-            // Apply truck visibility filter
-            if (truckVisibility !== 'All') {
-                newTrucks = newTrucks.filter((truck: any) => truck.truckVisibility === truckVisibility);
-            }
-
+            
             setTrucks(prev => [...prev, ...newTrucks]);
             setLastVisible(result.lastVisible);
         }
@@ -224,20 +215,20 @@ const Index = () => {
 
     return (
         <View style={{ flex: 1 }}>
-            {/* Truck Visibility Selector */}
-            {currentRole?.role === 'fleet' && currentRole?.accType === 'fleet' && (
-                    <HorizontalTickComponent
-                        data={[
-                            { topic: "Private", value: "Private" },
-                            { topic: "Public", value: "Public" }
-                        ]}
-                        condition={truckVisibility}
-                        onSelect={setTruckVisibility}
-                    />
-            )}
-
             {(!contractId || !userId || !capacityG) && <View style={{ flex: 1 }}>
                 <FinalReturnComponent
+                    visibilitySelector={
+                        (currentRole?.role === 'fleet'  || currentRole?.role === 'broker') ? (
+                            <HorizontalTickComponent
+                                data={[
+                                    { topic: "Private", value: "Private" },
+                                    { topic: "Public", value: "Public" }
+                                ]}
+                                condition={truckVisibility}
+                                onSelect={setTruckVisibility}
+                            />
+                        ) : null
+                    }
                     // ... pass all props
                     showfilter={showfilter}
                     setShowfilter={setShowfilter}

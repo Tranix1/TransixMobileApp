@@ -37,7 +37,7 @@ const Admin = () => {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            let usersData;
+            let usersData : any[] = [];
 
             if (isSuperAdmin()) {
                 // Super admin can see all users

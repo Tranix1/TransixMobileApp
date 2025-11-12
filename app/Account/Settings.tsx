@@ -161,6 +161,26 @@ const Settings = () => {
                                     </TouchableNativeFeedback>
                                 </View>
                             )}
+
+
+                           {isSuperAdmin() && <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                          <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/Rewards')}>
+                                              <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                                  <Ionicons name='gift-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                                  <View style={{ flex: 1 }}>
+                                                      <ThemedText type='default'>
+                                                          Manage Rewards
+                                                      </ThemedText>
+                                                      <ThemedText type='tiny' color={coolgray}>
+                                                          View rewarded users and grant rewards
+                                                      </ThemedText>
+                                                  </View>
+                                                  <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                              </View>
+                                          </TouchableNativeFeedback>
+                                      </View>}
+
+
                             {isSuperAdmin() && (
                                 <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
                                     <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/ActionLogs')}>
@@ -342,23 +362,41 @@ const Settings = () => {
                                 </View>
                             )}
                                   {hasPermissionSync('add_truck_stop_owner') && (
-                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
-                                    <TouchableNativeFeedback onPress={() => router.push('/Insurance/ManageFirms')}>
-                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
-                                            <Ionicons name='car-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
-                                            <View style={{ flex: 1 }}>
-                                                <ThemedText type='default'>
-                                                    Manage Insurance Firms
-                                                </ThemedText>
-                                                <ThemedText type='tiny' color={coolgray}>
-                                                    Manage insurance companies on the platform
-                                                </ThemedText>
-                                            </View>
-                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
-                                        </View>
-                                    </TouchableNativeFeedback>
-                                </View>
-                            )}
+                                      <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                          <TouchableNativeFeedback onPress={() => router.push('/Insurance/ManageFirms')}>
+                                              <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                                  <Ionicons name='car-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                                  <View style={{ flex: 1 }}>
+                                                      <ThemedText type='default'>
+                                                          Manage Insurance Firms
+                                                      </ThemedText>
+                                                      <ThemedText type='tiny' color={coolgray}>
+                                                          Manage insurance companies on the platform
+                                                      </ThemedText>
+                                                  </View>
+                                                  <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                              </View>
+                                          </TouchableNativeFeedback>
+                                      </View>
+                                  )}
+                                  {hasPermissionSync('manage_rewards') && (
+                                      <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                          <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/Rewards')}>
+                                              <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                                  <Ionicons name='gift-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                                  <View style={{ flex: 1 }}>
+                                                      <ThemedText type='default'>
+                                                          Manage Rewards
+                                                      </ThemedText>
+                                                      <ThemedText type='tiny' color={coolgray}>
+                                                          View rewarded users and grant rewards
+                                                      </ThemedText>
+                                                  </View>
+                                                  <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                              </View>
+                                          </TouchableNativeFeedback>
+                                      </View>
+                                  )}
                         </View>
                     </>
                 )}

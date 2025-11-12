@@ -52,6 +52,7 @@ type FinalReturnComponentProps = {
   isLoading?: boolean;
   hasLoaded?: boolean;
   fleetId?: string;
+  visibilitySelector?: React.ReactNode;
 
 }
 
@@ -80,7 +81,8 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
   filteredPNotAavaialble,
   isLoading = false,
   hasLoaded = false,
-  fleetId
+  fleetId,
+  visibilitySelector
 
 }) => {
 
@@ -107,6 +109,9 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
       />
 
       <View style={[styles.container, { backgroundColor: bg }]}>
+
+        {/* Visibility Selector */}
+
         <View
           style={{
             backgroundColor: bg,
@@ -118,6 +123,7 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
             marginBottom: wp(1),
           }}
         >
+          
           {!contractId && !userId && <View>
             <View style={{}}>
               <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
@@ -144,6 +150,8 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
             </View>
           </View>
         </View>
+        {visibilitySelector}
+
 
         <FlatList
           keyExtractor={(item) => item.id || Math.random().toString()}

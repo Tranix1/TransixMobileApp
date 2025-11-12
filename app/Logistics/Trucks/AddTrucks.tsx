@@ -4,8 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ImagePickerAsset } from 'expo-image-picker';
 import { addDocument, getDocById, setDocuments, getUsers, fetchDocuments, updateDocument, addDocumentWithId } from "@/db/operations";
 import { uploadImage } from "@/db/operations";
-import { selectManyImages, handleChange } from "@/Utilities/utils";
-import { selectImage, selectImageNoCrop, selectImageWithCrop } from "@/Utilities/imageUtils";
+import { handleChange } from "@/Utilities/utils";
+import {  selectImageNoCrop, selectImageWithCrop } from "@/Utilities/imageUtils";
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
 import Heading from "@/components/Heading";
@@ -763,7 +763,13 @@ const generalLoadOptions = [
               truckCapacity: selectedTruckCapacity?.name,
               assignedAt: new Date().toISOString(),
               assignedBy: user.uid,
-              status: 'assigned'
+              status: 'assigned',
+              fleetId: currentRole?.accType === 'fleet' ? currentRole.fleetId : null,
+              CompanyName: user.organisation,
+              imageUrl: truckImage,
+              locations: operationCountries,
+
+              
             };
 
             await addDocumentWithId(`brokers/${broker.brokerId}/trucks`, truckId, truckAssignmentData);

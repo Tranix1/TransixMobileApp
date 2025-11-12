@@ -15,12 +15,15 @@ import { useAuth } from '@/context/AuthContext';
 interface RewardBonus {
   id: string;
   type: 'reward' | 'bonus';
-  amount: number;
+  totalTokens: number;
+  availableTokens: number;
+  usedTokens: number;
   status: 'completed' | 'pending' | 'failed';
   description: string;
-  source: string; // e.g., 'referral', 'first_deposit', 'loyalty', etc.
+  source: string;
   createdAt: Date;
   updatedAt: Date;
+  expiryDate: Date;
 }
 
 export default function RewardsAndBonuses() {
@@ -35,7 +38,6 @@ export default function RewardsAndBonuses() {
   const [refreshing, setRefreshing] = useState(false);
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [totalEarned, setTotalEarned] = useState(0);
 
   const loadRewardsBonuses = async () => {
     if (!user) return;
@@ -44,21 +46,20 @@ export default function RewardsAndBonuses() {
       setLoading(true);
       const filters = [
         where("userId", "==", user.uid),
-        where("type", "in", ["reward", "bonus"])
       ];
-      const result = await fetchDocuments("WalletTransactions", 20, undefined, filters);
+      const result = await fetchDocuments("rewards", 20, undefined, filters);
 
       if (result.data.length) {
         console.log('Loaded rewards and bonuses:', result.data);
-        const rewardsData = result.data as RewardBonus[];
+        const rewardsData = (result.data as any[]).map(item => ({
+          ...item,
+          createdAt: new Date(item.createdAt),
+          updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(item.createdAt),
+          expiryDate: new Date(item.expiryDate)
+        })) as RewardBonus[];
         setRewardsBonuses(rewardsData);
         setLastVisible(result.lastVisible);
 
-        // Calculate total earned
-        const total = rewardsData
-          .filter(item => item.status === 'completed')
-          .reduce((sum, item) => sum + item.amount, 0);
-        setTotalEarned(total);
       }
     } catch (error) {
       console.error('Error loading rewards and bonuses:', error);
@@ -90,11 +91,15 @@ export default function RewardsAndBonuses() {
     try {
       const filters = [
         where("userId", "==", user.uid),
-        where("type", "in", ["reward", "bonus"])
       ];
-      const result = await fetchDocuments('WalletTransactions', 20, lastVisible, filters);
+      const result = await fetchDocuments('rewards', 20, lastVisible, filters);
       if (result) {
-        const newData = result.data as RewardBonus[];
+        const newData = (result.data as any[]).map(item => ({
+          ...item,
+          createdAt: new Date(item.createdAt),
+          updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(item.createdAt),
+          expiryDate: new Date(item.expiryDate)
+        })) as RewardBonus[];
         setRewardsBonuses([...rewardsBonuses, ...newData]);
         setLastVisible(result.lastVisible);
       }
@@ -119,11 +124,15 @@ export default function RewardsAndBonuses() {
     if (type === 'reward') {
       switch (source) {
         case 'referral':
-          return <Ionicons name="people" size={wp(6)} color="#FF9800" />;
+          return <Ionicons name="people" size={wp(6)} color="#1565C0" />;
         case 'loyalty':
-          return <Ionicons name="heart" size={wp(6)} color="#FF9800" />;
+          return <Ionicons name="heart" size={wp(6)} color="#1565C0" />;
+        case 'loadPosting':
+          return <Ionicons name="cube" size={wp(6)} color="#1565C0" />;
+        case 'tracking':
+          return <Ionicons name="location" size={wp(6)} color="#1565C0" />;
         default:
-          return <Ionicons name="gift" size={wp(6)} color="#FF9800" />;
+          return <Ionicons name="gift" size={wp(6)} color="#1565C0" />;
       }
     } else {
       switch (source) {
@@ -138,10 +147,11 @@ export default function RewardsAndBonuses() {
   };
 
   const getRewardBonusColor = (type: string) => {
-    return type === 'reward' ? '#FF9800' : '#9C27B0';
+    return type === 'reward' ? '#1565C0' : '#9C27B0';
   };
 
   const getSourceName = (source: string) => {
+    if (!source) return 'Unknown Source';
     switch (source) {
       case 'referral':
         return 'Referral Reward';
@@ -151,6 +161,10 @@ export default function RewardsAndBonuses() {
         return 'Loyalty Reward';
       case 'promotion':
         return 'Promotional Bonus';
+      case 'loadPosting':
+        return 'Load Posting Reward';
+      case 'tracking':
+        return 'Tracking Reward';
       default:
         return source.charAt(0).toUpperCase() + source.slice(1);
     }
@@ -159,70 +173,62 @@ export default function RewardsAndBonuses() {
   const renderRewardBonusItem = ({ item }: { item: RewardBonus }) => {
     const color = getRewardBonusColor(item.type);
 
-    return (
-      <View style={[styles.rewardCard, {
-        borderColor: color + '30',
-        backgroundColor: backgroundLight,
-        borderLeftWidth: 4,
-        borderLeftColor: color
-      }]}>
-        <View style={styles.rewardHeader}>
-          <View style={[styles.rewardIconContainer, { backgroundColor: color + '20' }]}>
-            {getRewardBonusIcon(item.type, item.source)}
-          </View>
-          <View style={styles.rewardInfo}>
-            <ThemedText type="defaultSemiBold" style={[styles.rewardType, { color }]}>
-              {item.type === 'reward' ? 'Reward' : 'Bonus'}
-            </ThemedText>
-            <ThemedText type="tiny" style={[styles.rewardSource, { color }]}>
-              {getSourceName(item.source)}
-            </ThemedText>
-            <ThemedText type="tiny" style={[styles.rewardDescription, { color: icon }]}>
-              {item.description}
-            </ThemedText>
-            <ThemedText type="tiny" style={[styles.rewardDate, { color: icon }]}>
-              {formatDate(item.createdAt)}
-            </ThemedText>
-          </View>
-          <View style={styles.rewardAmount}>
-            <ThemedText type="subtitle" style={[styles.amount, { color: '#4CAF50' }]}>
-              +${item.amount.toFixed(2)}
-            </ThemedText>
-            <View style={[styles.statusBadge, {
-              backgroundColor: item.status === 'completed' ? '#4CAF50' :
-                item.status === 'pending' ? '#FF9800' : '#F44336'
-            }]}>
-              <ThemedText style={styles.statusText}>
-                {item.status.toUpperCase()}
-              </ThemedText>
+      return (
+
+        <View style={[styles.rewardCard, {
+          borderColor: color + '30',
+          backgroundColor: backgroundLight,
+          borderLeftWidth: 4,
+          borderLeftColor: color
+        }]}>
+          <View style={styles.rewardHeader}>
+            <View style={[styles.rewardIconContainer, { backgroundColor: color + '20' }]}>
+              {getRewardBonusIcon(item.type, item.source)}
             </View>
+            <View style={styles.rewardInfo}>
+              <ThemedText type="defaultSemiBold" style={[styles.rewardType, { color }]}>
+                {item.description}
+              </ThemedText>
+             <View style={{ alignItems: 'flex-start', marginTop: wp(1) }}>
+  {/* Issued Date */}
+  <ThemedText type="tiny" style={[styles.rewardDate, { color: icon }]}>
+    Issued: {formatDate(item.createdAt)}
+  </ThemedText>
+
+  {/* Expiry Date */}
+  {item.expiryDate && (
+    <ThemedText type="tiny" style={[styles.rewardDate, { color: '#F44336', marginTop: wp(0.5) }]}>
+      Expires: {formatDate(item.expiryDate)}
+    </ThemedText>
+  )}
+</View>
+
+            </View>
+            <View style={styles.rewardCard}>
+    <ThemedText type="subtitle" style={styles.label}>Balance</ThemedText>
+    <ThemedText type="subtitle" style={styles.balanceText}>
+      {Math.abs(item.availableTokens || 0)} T
+    </ThemedText>
+
+    <View style={styles.separator} />
+
+    <ThemedText type="subtitle" style={styles.label}>Used</ThemedText>
+    <ThemedText type="subtitle" style={styles.usedText}>
+      {Math.abs(item.usedTokens || 0)} T
+    </ThemedText>
+  </View>
+
           </View>
         </View>
-      </View>
-    );
+      );
   };
 
-  if (loading) {
-    return (
-      <ScreenWrapper>
-        <Heading page='Rewards & Bonuses' rightComponent={<BalanceDisplay />} />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={accent} />
-          <ThemedText style={styles.loadingText}>Loading rewards and bonuses...</ThemedText>
-        </View>
-      </ScreenWrapper>
-    );
-  }
+ 
 
   return (
     <ScreenWrapper>
-      <Heading page='Rewards & Bonuses' rightComponent={<BalanceDisplay />} />
+      <Heading page='Rewards & Bonuses'  />
 
-      <View style={[styles.summaryCard, { backgroundColor: accent }]}>
-        <ThemedText type="defaultSemiBold" style={styles.summaryLabel}>Total Earned</ThemedText>
-        <ThemedText type="title" style={styles.summaryAmount}>${totalEarned.toFixed(2)}</ThemedText>
-        <ThemedText style={styles.summarySubtext}>From rewards and bonuses</ThemedText>
-      </View>
 
       <FlatList
         data={rewardsBonuses}
@@ -264,6 +270,7 @@ export default function RewardsAndBonuses() {
 }
 
 const styles = StyleSheet.create({
+  // Loading states
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -274,48 +281,57 @@ const styles = StyleSheet.create({
     fontSize: wp(4),
     color: '#666',
   },
-  summaryCard: {
-    margin: wp(4),
-    padding: wp(6),
+
+  // Reward card
+  rewardCard: {
+    backgroundColor: 'transparent',
+    marginVertical: wp(1.5),
+    paddingVertical: wp(1.5),
+    paddingHorizontal: wp(3),
     borderRadius: wp(3),
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
     alignItems: 'center',
-    shadowColor: "#000",
+    justifyContent: 'center',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.12,
     shadowRadius: 4,
     elevation: 3,
   },
-  summaryLabel: {
+
+  // Reward labels
+  label: {
+    fontSize: wp(2.8),
+    color: '#757575',
+    fontWeight: '600',
+  },
+  balanceText: {
     fontSize: wp(4),
-    color: 'white',
-    marginBottom: wp(1),
-  },
-  summaryAmount: {
-    fontSize: wp(8),
     fontWeight: 'bold',
-    color: 'white',
-    marginBottom: wp(1),
+    color: '#1565C0',
+    marginTop: wp(0.5),
   },
-  summarySubtext: {
+  usedText: {
     fontSize: wp(3.5),
-    color: 'white',
-    opacity: 0.9,
+    fontWeight: '600',
+    color: '#F44336',
+    marginTop: wp(0.5),
   },
-  rewardCard: {
-    marginVertical: wp(2),
-    marginHorizontal: wp(4),
-    padding: wp(4),
-    borderRadius: wp(3),
-    borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+
+  // Separator line
+  separator: {
+    width: '80%',
+    borderBottomWidth: 1,
+    borderColor: '#EEEEEE',
+    marginVertical: wp(1),
   },
+
+  // Reward header
   rewardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: wp(2),
   },
   rewardIconContainer: {
     width: wp(14),
@@ -329,38 +345,49 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rewardType: {
-    fontSize: wp(4.5),
-    marginBottom: wp(1),
+    fontSize: wp(4),
+    fontWeight: '600',
+    marginBottom: wp(0.5),
   },
   rewardSource: {
     fontSize: wp(3.5),
+    color: '#555',
     marginBottom: wp(0.5),
   },
   rewardDescription: {
     fontSize: wp(3.2),
+    color: '#666',
     marginBottom: wp(0.5),
   },
   rewardDate: {
     fontSize: wp(3),
+    color: '#999',
   },
+
+  // Reward amount section
   rewardAmount: {
     alignItems: 'flex-end',
   },
   amount: {
-    fontSize: wp(5),
+    fontSize: wp(4.5),
     fontWeight: 'bold',
-    marginBottom: wp(1),
+    marginBottom: wp(0.5),
   },
+
+  // Status badge
   statusBadge: {
     paddingHorizontal: wp(2),
     paddingVertical: wp(1),
     borderRadius: wp(1.5),
+    alignSelf: 'flex-start',
   },
   statusText: {
     color: 'white',
     fontSize: wp(2.5),
     fontWeight: 'bold',
   },
+
+  // Empty states
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -377,11 +404,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#666',
   },
+
+  // Loading more
   loadingMoreContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: wp(4),
+    paddingVertical: wp(3),
     gap: wp(2),
   },
   loadingMoreText: {

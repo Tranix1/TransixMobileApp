@@ -8,6 +8,8 @@ import { LoadsComponent } from '@/components/LoadHomePage';
 import { router, useLocalSearchParams } from 'expo-router'
 import { auth } from '@/db/fireBaseConfig';
 import { where, serverTimestamp } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { HorizontalTickComponent } from '@/components/SlctHorizonzalTick';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -36,21 +38,73 @@ const Index = () => {
     const [bottomMode, setBottomMode] = useState<'Bid' | 'Book' | ''>('');
 
     const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
+    const [loadVisibility, setLoadVisibility] = useState< 'Private' | 'Public'>('Public');
+    const [currentRole, setCurrentRole] = useState<any>(null);
+
+    useEffect(() => {
+        const getCurrentRole = async () => {
+            try {
+                const roleData = await AsyncStorage.getItem('currentRole');
+                if (roleData) {
+                    const parsedRole = JSON.parse(roleData);
+                    setCurrentRole(parsedRole);
+                }
+            } catch (error) {
+                console.error('Error getting current role:', error);
+            }
+        };
+        getCurrentRole();
+    }, []);
+
     const LoadTructs = async () => {
         try {
             setIsLoading(true)
             setError(null)
-            // Filter for approved loads from approved accounts only
-            const filters = [
-                where("approvalStatus", "==", "approved"),
-                where("isApproved", "==", true),
-                where("personalAccTypeIsApproved", "==", true)
-            ];
-            const maLoads = await fetchDocuments("Cargo", 50, undefined, filters);
 
+            let filters: any[] = [];
+            let collectionName = "Cargo";
+            console.log(1)
+            // Apply filters based on load visibility and user role
+            if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
+                // Fetch private loads from fleet subcollection
+                collectionName = `fleets/${currentRole.fleetId}/Cargo`;
+            console.log(1)
+                    
+            }else       if (currentRole?.accType === "broker" && loadVisibility === 'Private') { 
+                console.log(2)
+                collectionName = `brokers/${currentRole.brokerId}/Cargo`;
+            }else      if (currentRole?.accType === 'general' && loadVisibility === 'Private') { 
+                console.log(3)
+                    filters = [
+                    where("approvalStatus", "==", "approved"),
+                    where("isApproved", "==", true),
+                    where("personalAccTypeIsApproved", "==", true) ,
+                    where("loadVisibility", "==", "Private"),
+                    where("cargoStatus", "==", "pending")
+                ];
+            }else {
+                // Fetch public loads from main collection
+                console.log(4)
+                filters = [
+                    where("approvalStatus", "==", "approved"),
+                    where("isApproved", "==", true),
+                    where("personalAccTypeIsApproved", "==", true)
+                ];
+
+                
+              
+            }
+
+            console.log("Filters applied for loads:", filters);
+
+
+            const maLoads = await fetchDocuments(collectionName, 50, undefined, filters);
+
+            
             if (maLoads.data.length) {
                 if (filters.length > 0 && maLoads.data.length < 0) setFilteredPNotAavaialble(true)
                 setLoads(maLoads.data as Load[])
+                console.log('Loads fetched:', maLoads.data);
                 setLastVisible(maLoads.lastVisible)
             } else {
                 setLoads([])
@@ -66,7 +120,7 @@ const Index = () => {
     }
     useEffect(() => {
         LoadTructs();
-    }, [])
+    }, [loadVisibility, currentRole])
 
     const onRefresh = async () => {
         try {
@@ -88,13 +142,30 @@ const Index = () => {
         try {
             setLoadingMore(true);
             setError(null);
-            // Apply same approval filters for pagination
-            const filters = [
-                where("approvalStatus", "==", "approved"),
-                where("isApproved", "==", true),
-                where("personalAccTypeIsApproved", "==", true)
-            ];
-            const result = await fetchDocuments('Cargo', 10, lastVisible, filters);
+
+            let filters: any[] = [];
+            let collectionName = "Cargo";
+
+            // Apply same filters as in LoadTructs for pagination
+            if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
+                collectionName = `fleets/${currentRole.fleetId}/Cargo`;
+                filters = [
+                    where("loadVisibility", "==", "Private"),
+                    where("cargoStatus", "==", "pending")
+                ];
+            } else {
+                filters = [
+                    where("approvalStatus", "==", "approved"),
+                    where("isApproved", "==", true),
+                    where("personalAccTypeIsApproved", "==", true)
+                ];
+
+                if (loadVisibility === 'Public') {
+                    filters.push(where("loadVisibility", "==", "Public"));
+                }
+            }
+
+            const result = await fetchDocuments(collectionName, 10, lastVisible, filters);
             if (result) {
                 setLoads([...Loads, ...result.data as Load[]]);
                 setLastVisible(result.lastVisible);
@@ -136,6 +207,16 @@ const Index = () => {
                     filteredPNotAavaialble={filteredPNotAavaialble}
                     isLoading={isLoading}
                     error={error}
+                    visibilitySelector={
+                            <HorizontalTickComponent
+                                data={[
+                                    { topic: "Public", value: "Public" },
+                                    { topic: "Private", value: "Private" },
+                                ]}
+                                condition={loadVisibility}
+                                onSelect={setLoadVisibility}
+                            />
+                    }
                 />
             </View>
         </GestureHandlerRootView>

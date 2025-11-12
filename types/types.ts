@@ -93,6 +93,8 @@ export type Truck = {
     brokers?: string[];
     drivers?: string[];
     loadTypes?: string[];
+
+    fleetId?: string;
 } & TruckFormData;
 
 

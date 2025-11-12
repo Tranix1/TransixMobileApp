@@ -231,7 +231,7 @@ export default function Index() {
             <>
               <Tab.Screen name="Home " component={Home} />
               <Tab.Screen name="Loads" component={Loads} />
-              <Tab.Screen name="Trucks" component={Trucks} />
+              <Tab.Screen name="Trucks" component={LogisticsTrucks} />
               <Tab.Screen name="Wallet" component={Wallet} />
             </>
           ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'driver') ? (
@@ -240,6 +240,13 @@ export default function Index() {
               <Tab.Screen name="Trucks" component={Trucks} />
               <Tab.Screen name="Earnings" component={Earnings} />
               <Tab.Screen name="Profile" component={DriverProfile} />
+            </>
+          ) : (typeof currentRole === 'object' && currentRole.role === 'broker') ? (
+            <>
+              <Tab.Screen name="Home " component={Home} />
+              <Tab.Screen name="Loads" component={Loads} />
+              <Tab.Screen name="Trucks" component={LogisticsTrucks} />
+              <Tab.Screen name="Wallet" component={Wallet} />
             </>
           ) : (
             <>

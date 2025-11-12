@@ -16,6 +16,8 @@ import { auth } from "@/db/fireBaseConfig";
 import { useNotificationRouting } from "@/Utilities/pushNotification";
 import { configureNavigationBar, refreshNavigationBar, configureNavigationBarAlternative, debugNavigationBar } from "@/Utilities/navigationBarUtils";
 import { configureNativeNavigationBar, forceNavigationBarConfig } from "@/Utilities/nativeNavigationBarUtils";
+import 'react-native-get-random-values';
+
 
 export default function RootLayout() {
     const router = useRouter();
