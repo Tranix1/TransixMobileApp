@@ -31,6 +31,7 @@ const Settings = () => {
         <ScreenWrapper>
             <Heading page='Settings' />
             <ScrollView contentContainerStyle={{ padding: wp(4), }}>
+                
                 <TouchableNativeFeedback onPress={() => router.push('/Account/Index')}>
                     <View style={{ flexDirection: 'row', gap: wp(4), marginBottom: wp(4) }}>
                         <Image

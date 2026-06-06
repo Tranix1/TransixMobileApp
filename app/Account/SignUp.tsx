@@ -44,18 +44,18 @@ const Index = () => {
     // Function to handle account selection logic
   
   const handleAccountSelect = (type: string) => {
-      if (type === 'fleet' || type === 'broker') {
-          // Trigger the smooth native Android toast
-          ToastAndroid.show(
-              'This account type is currently under improvement.', 
-              ToastAndroid.SHORT
-          );
+    //   if (type === 'fleet' || type === 'broker') {
+    //       // Trigger the smooth native Android toast
+    //       ToastAndroid.show(
+    //           'This account type is currently under improvement.', 
+    //           ToastAndroid.SHORT
+    //       );
           
-          // Force the selection back to tracking
-          setSelectedAccount('tracking');
-      } else {
-          setSelectedAccount(type);
-      }
+    //       // Force the selection back to tracking
+    //       setSelectedAccount('tracking');
+    //   } else {
+    // }
+    setSelectedAccount(type);
   };
     const onsubmit = async () => {
         if (!email || !password || !fullname) {
@@ -210,7 +210,9 @@ const Index = () => {
                         onChangeText={setPassword}
                     />
 
-                    <ThemedText style={styles.label}>Referrer Code (Optional)</ThemedText>
+                   {selectedAccount === 'fleet' || selectedAccount === 'broker' ? (
+                    <View > 
+                        <ThemedText style={styles.label}>Referrer Code (Optional)</ThemedText>
                     <Input
                         containerStyles={styles.input}
                         placeholder="Enter referrer code"
@@ -218,6 +220,9 @@ const Index = () => {
                         onChangeText={setReferrerCode}
                         autoCapitalize="characters"
                     />
+
+                    </View>  ) : null}
+
 
                     {/* TERMS */}
                     <View style={styles.checkboxContainer}>

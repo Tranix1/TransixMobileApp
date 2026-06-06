@@ -662,13 +662,8 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
       // Check for both general and professional in the unified collection
       const personDetails = await getDocById('verifiedUsers', (data) => {
         if (data) {
-          if (data.accType === 'general') {
-            setGeneralDetails({
-              docId: data.id || '',
-              isApproved: data.isApproved || false,
-              accType: 'general'
-            });
-          } else if (data.accType === 'professional') {
+         
+            if (data.accType === 'professional') {
             setProfessionalDetails({
               docId: data.id || '',
               isApproved: data.isApproved || false,
@@ -689,19 +684,7 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
     fetchPersonalDetails();
   }, []);
 
-  // Show modal immediately when user selects type but doesn't have details
-  useEffect(() => {
-    if (cargoDataChecked && userType) {
-      if ((userType === 'general' && !getGeneralDetails) ||
-        (userType === 'professional' && !getProfessionalDetails)) {
-        // Small delay to ensure UI is ready
-        setTimeout(() => {
-          setSelectedPersonalType(userType);
-          setShowPersonalDetailsModal(true);
-        }, 500);
-      }
-    }
-  }, [cargoDataChecked, userType, getGeneralDetails, getProfessionalDetails]);
+  
 
   // Autofill fields for professional users with existing verified details
   useEffect(() => {
@@ -718,15 +701,7 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
     }
   }, [userType, getProfessionalDetails]);
 
-  // Handle general user ID + selfie verification
-  useEffect(() => {
-    if (userType === 'general' && getGeneralDetails) {
-      // Show confirmation that verified ID will be used
-      ToastAndroid.show('Your verified ID and live selfie will be used', ToastAndroid.SHORT);
-      // In a real implementation, show confirmation modal: "Your verified ID will be used"
-      // Future: Display confirmation and disable ID upload fields
-    }
-  }, [userType, getGeneralDetails]);
+ 
 
   // Ensure return currency and model are properly initialized
   useEffect(() => {
@@ -817,16 +792,6 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
       setShowPersonalDetailsModal(false);
       ToastAndroid.show("Personal Details created successfully!", ToastAndroid.SHORT);
 
-      // Refresh the personal details check
-      const updatedDetails = await getDocById('verifiedUsers', (data) => {
-        if (data && data.accType === 'general') {
-          setGeneralDetails({
-            docId: data.id || '',
-            isApproved: data.isApproved || false,
-            accType: 'general'
-          });
-        }
-      });
     } catch (error) {
       console.error("Error saving personal details:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
@@ -1155,30 +1120,7 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
     }
 
 
-      // Skip KYC verification for verified fleet users and verified brokers
-        if (!userIsFleetVerified && !userIsVerified?.isApproved) {
-          // Comprehensive check if user has submitted personal details
-          if (userType === 'general' && !getGeneralDetails) {
-            setIsSubmitting(false);
-            setTimeout(() => {
-              alertBox("Personal Details Required", "Please submit your personal details first before creating a load. All required fields must be completed.", [], "error");
-            }, 100);
-            return;
-          }
-  
-          // if (userType === 'professional' && !getProfessionalDetails) {
-          //   setIsSubmitting(false);
-          //   setTimeout(() => {
-          //     alertBox("Professional Details Required", "Please submit your professional details first before creating a load. All required documents must be uploaded.", [], "error");
-          //   }, 100);
-          //   return;
-          // }
-        }
-
-      // Additional validation: Check if personal details are approved (optional - can be removed if not needed)
-      if (userType === 'general' && getGeneralDetails && !getGeneralDetails.isApproved) {
-        // Allow submission but show warning
-      }
+   
 
       if (userType === 'professional' && getProfessionalDetails && !getProfessionalDetails.isApproved) {
         // Allow submission but show warning
@@ -1338,15 +1280,7 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
       let loadImagesUrls: string[] = []
 
       // Handle different proof types based on user type
-      if (userType === 'general') {
-        // Upload all load images for general users
-        if (loadImages && loadImages.length > 0) {
-          for (let i = 0; i < loadImages.length; i++) {
-            const imageUrl = await uploadImage(loadImages[i], "LoadImages", setUploadImageUpdate, `Load Image ${i + 1}`);
-            if (imageUrl) loadImagesUrls.push(imageUrl);
-          }
-        }
-      } else {
+     if (userType === 'professional') {
         // Upload all proof images for professional users
         if (proofImages && proofImages.length > 0) {
           for (let i = 0; i < proofImages.length; i++) {
@@ -1364,17 +1298,7 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
         }
       }
 
-      // Convert selected African trucks to trucksNeeded format for general users
-      if (userType === 'general' && selectedAfricanTrucks && selectedAfricanTrucks.length > 0) {
-        const generalTrucksNeeded = selectedAfricanTrucks.map(truck => ({
-          cargoArea: truck,
-          truckType: { id: 2, name: "Medium Truck" }, // Default for African trucks
-          tankerType: null,
-          capacity: { id: 2, name: "5-15 tons" }, // Default capacity
-          operationCountries: [origin?.country || 'South Africa', destination?.country || 'South Africa'].filter((v, i, a) => a.indexOf(v) === i),
-        }));
-        setTrucksNeeded(generalTrucksNeeded);
-      }
+     
 
       // Use utility function to prepare load data
       const loadData = prepareLoadData(userType!, {
@@ -1749,140 +1673,7 @@ for (const brokerId of selectedBrokers) {
 
       <Heading
         page='Create Load'
-        rightComponent={
-          <View style={{ position: 'relative' }}>
-            <TouchableOpacity
-              onPress={() => setShowUserTypeDropdown(!showUserTypeDropdown)}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: userType === 'general' ? '#E3F2FD' : userType === 'professional' ? '#E8F5E8' : '#F5F5F5',
-                paddingHorizontal: wp(3),
-                paddingVertical: wp(1.5),
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: userType === 'general' ? '#2196F3' : userType === 'professional' ? '#4CAF50' : '#CCCCCC',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 3,
-              }}
-            >
-              <Ionicons
-                name={userType === 'general' ? "person" : userType === 'professional' ? "business" : "person-add"}
-                size={14}
-                color={userType === 'general' ? '#2196F3' : userType === 'professional' ? '#4CAF50' : '#666666'}
-                style={{ marginRight: wp(1.5) }}
-              />
-              <ThemedText style={{
-                fontSize: 12,
-                fontWeight: '600',
-                color: userType === 'general' ? '#2196F3' : userType === 'professional' ? '#4CAF50' : '#666666'
-              }}>
-                {userType === 'general' ? 'General' : userType === 'professional' ? 'Professional' : 'Select Type'}
-              </ThemedText>
-              <Ionicons
-                name={showUserTypeDropdown ? "chevron-up" : "chevron-down"}
-                size={12}
-                color={userType === 'general' ? '#2196F3' : userType === 'professional' ? '#4CAF50' : '#666666'}
-                style={{ marginLeft: wp(1) }}
-              />
-            </TouchableOpacity>
-
-            {/* Dropdown Menu */}
-            {showUserTypeDropdown && (
-              <View style={{
-                position: 'absolute',
-                top: '100%',
-                right: 0,
-                marginTop: wp(2),
-                backgroundColor: background,
-                borderWidth: 1,
-                borderColor: '#E0E0E0',
-                borderRadius: 16,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.15,
-                shadowRadius: 12,
-                elevation: 8,
-                zIndex: 1000,
-                minWidth: wp(45),
-                overflow: 'hidden'
-              }}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setUserType('general');
-                    setShowUserTypeDropdown(false);
-                  }}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: wp(4),
-                    paddingVertical: wp(3.5),
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#F0F0F0',
-                    backgroundColor: userType === 'general' ? '#E3F2FD' : 'transparent'
-                  }}
-                >
-                  <View style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 16,
-                    backgroundColor: '#2196F3',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginRight: wp(3)
-                  }}>
-                    <Ionicons name="person" size={18} color="white" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <ThemedText style={{ fontSize: 16, color: '#2196F3', fontWeight: '600' }}>
-                      General User
-                    </ThemedText>
-                    <ThemedText style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
-                      Use AI to help with truck selection
-                    </ThemedText>
-                  </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    setUserType('professional');
-                    setShowUserTypeDropdown(false);
-                  }}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: wp(4),
-                    paddingVertical: wp(3.5),
-                    backgroundColor: userType === 'professional' ? '#E8F5E8' : 'transparent'
-                  }}
-                >
-                  <View style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 16,
-                    backgroundColor: '#4CAF50',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginRight: wp(3)
-                  }}>
-                    <Ionicons name="business" size={18} color="white" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <ThemedText style={{ fontSize: 16, color: '#4CAF50', fontWeight: '600' }}>
-                      Professional User
-                    </ThemedText>
-                    <ThemedText style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
-                      I know the truck details and requirements
-                    </ThemedText>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        }
+       
       />
 
       {/* Overlay to close dropdown when clicking outside */}
@@ -1952,88 +1743,18 @@ for (const brokerId of selectedBrokers) {
         </View>
       )}
 
-      {/* Blur overlay when no user type is selected - only covers content area */}
-      {!userType && (
-        <TouchableOpacity
-          onPress={() => setShowUserTypeDropdown(true)}
-          style={{
-            position: 'absolute',
-            top: 58, // Start below the header
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 50,
-          }}
-        >
-          <BlurView
-            intensity={15}
-            tint="dark"
-            style={{
-              flex: 1,
-              backgroundColor: 'rgba(0, 0, 0, 0.4)', // Darker overlay for smooth dark effect
-            }}
-          />
-        </TouchableOpacity>
-      )}
 
-      {userType && (
-        <StepIndicator
-          steps={userType === 'general'
-            ? ['Load Details', 'Images & AI', 'Truck Selection', 'Review & Submit']
-            : ['Load Details', 'Additional Info', 'Return Load', 'Truck Req']
-          }
-          currentStep={step}
-          onStepPress={setStep}
-        />
-      )}
+            <StepIndicator
+              steps={ ['Load Details', 'Additional Info', 'Return Load', 'Truck Req']}
+              currentStep={step}
+              onStepPress={setStep}
+            />
 
       <View style={{ flex: 1, position: 'relative' }}>
         {step === 0 && (
           <ScrollView keyboardShouldPersistTaps="always" >
             <View style={styles.viewMainDsp}>
-              {userType === 'general' ? (
-                // General User Form - Step 0: Load Details
-                <>
-                  <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-                    Load Details
-                  </ThemedText>
-                  <Divider />
-
-                  <ThemedText>
-                    Type of Load<ThemedText color="red">*</ThemedText>
-                  </ThemedText>
-                  <Input
-                    value={typeofLoad}
-                    onChangeText={setTypeofLoad}
-                    placeholder="e.g., Furniture, Electronics, Food items"
-                  />
-
-                  <LoadingDateSelector
-                    selectedDate={selectedLoadingDate}
-                    setSelectedDate={setSelectedLoadingDate}
-                  />
-
-                  <ThemedText>
-                    Budget (Optional)
-                  </ThemedText>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Input
-                      value={budget}
-                      onChangeText={setBudget}
-                      placeholder="Enter your budget"
-                      keyboardType="numeric"
-                      style={{ flex: 1, marginRight: wp(2) }}
-                    />
-                    <DropDownItem
-                      allData={[{ id: 1, name: "USD" }, { id: 2, name: "ZAR" }, { id: 3, name: "EUR" }]}
-                      selectedItem={budgetCurrency}
-                      setSelectedItem={setBudgetCurrency}
-                      placeholder="Currency"
-                    />
-                  </View>
-                </>
-              ) : (
-                // Professional User Form
+            
                 <>
                   <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
                     Professional Load Details
@@ -2047,7 +1768,7 @@ for (const brokerId of selectedBrokers) {
                     onChangeText={setTypeofLoad}
                   />
                 </>
-              )}
+
 
               {/* Common location fields */}
               <LocationSelector
@@ -2067,7 +1788,7 @@ for (const brokerId of selectedBrokers) {
                 iconColor={accent}
               />
 
-              {userType !== 'general' && <RateInput
+               <RateInput
                 rate={rate}
                 setRate={setRate}
                 selectedCurrency={selectedCurrency}
@@ -2076,7 +1797,7 @@ for (const brokerId of selectedBrokers) {
                 setSelectedModelType={setSelectedModelType}
                 rateExplanation={rateexplantion}
                 setRateExplanation={setRateExplanation}
-              />}
+              />
 
 
               <Divider />
@@ -2097,55 +1818,8 @@ for (const brokerId of selectedBrokers) {
             </View>
           </ScrollView>
         )}
-        {step === 1 && userType === 'general' && (
-          <ScrollView>
-            <View style={styles.viewMainDsp}>
-              <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-                Images & AI Analysis
-              </ThemedText>
-              <Divider />
-
-              <LoadImageUpload
-                loadImages={loadImages}
-                setLoadImages={setLoadImages}
-                onAnalyzeImages={handleAnalyzeLoadImages}
-                aiLoading={aiLoading}
-                aiAnalysisComplete={aiAnalysisComplete}
-                aiAnalysisError={aiAnalysisError}
-              />
-
-              {aiAnalysisComplete && (
-                <AIRecommendations
-                  aiDetectedCargoArea={aiDetectedCargoArea}
-                  aiDetectedTruckType={aiDetectedTruckType}
-                  aiDetectedCapacity={aiDetectedCapacity}
-                  aiDetectedTankerType={aiDetectedTankerType}
-                  aiAnswer=""
-                  onUseRecommendations={() => {
-                    setSelectedCargoArea(aiDetectedCargoArea);
-                    setSelectedTruckType(aiDetectedTruckType);
-                    setSelectedTruckCapacity(aiDetectedCapacity);
-                    if (aiDetectedTankerType) {
-                      setSelectedTankerType(aiDetectedTankerType);
-                    }
-                    ToastAndroid.show('AI recommendations applied!', ToastAndroid.SHORT);
-                  }}
-                  onAnalyzeAgain={() => {
-                    setAiAnalysisComplete(false);
-                    setAiAnalysisError(null);
-                    handleAnalyzeLoadImages();
-                  }}
-                />
-              )}
-            </View>
-            <Divider />
-            <View style={{ paddingVertical: wp(3), gap: wp(2), borderRadius: 8, shadowColor: "#6a0c0c", shadowOffset: { width: 1, height: 2 }, shadowOpacity: 0.7, shadowRadius: 5, overflow: "hidden" }}>
-              <Button onPress={() => setStep(0)} title="Back" />
-              <Button onPress={() => setStep(2)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
-            </View>
-          </ScrollView>
-        )}
-        {step === 1 && (userType as string) === 'professional' && (
+       
+        {step === 1 &&  (
           <ScrollView>
             <View style={styles.viewMainDsp}>
               <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
@@ -2518,54 +2192,8 @@ for (const brokerId of selectedBrokers) {
             </View>
           </ScrollView>
         )}
-        {step === 2 && userType === 'general' && (
-          <ScrollView>
-            <View style={styles.viewMainDsp}>
-              <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-                Truck Selection
-              </ThemedText>
-              <Divider />
-
-              <AfricanTruckSelector
-                selectedTruckTypes={selectedAfricanTrucks}
-                setSelectedTruckTypes={setSelectedAfricanTrucks}
-              />
-
-              {selectedAfricanTrucks.length > 0 && (
-                <View style={{ marginTop: wp(4) }}>
-                  <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2) }}>
-                    Selected Truck Types:
-                  </ThemedText>
-                  {selectedAfricanTrucks.map((truck, index) => (
-                    <View key={truck.id} style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      padding: wp(2),
-                      backgroundColor: backgroundLight,
-                      borderRadius: 8,
-                      marginBottom: wp(1)
-                    }}>
-                      <ThemedText style={{ flex: 1, color: accent, fontWeight: '600' }}>
-                        {truck.name}
-                      </ThemedText>
-                      <TouchableOpacity
-                        onPress={() => setSelectedAfricanTrucks(prev => prev.filter(t => t.id !== truck.id))}
-                      >
-                        <Ionicons name="close-circle" size={20} color="red" />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </View>
-            <Divider />
-            <View style={{ paddingVertical: wp(3), gap: wp(2), borderRadius: 8, shadowColor: "#6a0c0c", shadowOffset: { width: 1, height: 2 }, shadowOpacity: 0.7, shadowRadius: 5, overflow: "hidden" }}>
-              <Button onPress={() => setStep(1)} title="Back" />
-              <Button onPress={() => setStep(3)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
-            </View>
-          </ScrollView>
-        )}
-        {step === 2 && (userType as string) === 'professional' && (
+       
+        {step === 2 &&  (
           <ScrollView keyboardShouldPersistTaps="always">
             <View style={styles.viewMainDsp}>
               <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
@@ -2670,24 +2298,8 @@ for (const brokerId of selectedBrokers) {
             </View>
           </ScrollView>
         )}
-        {step === 3 && userType === 'general' && (
-          <LoadSummary
-            userType={userType}
-            formData={{
-              typeofLoad,
-              origin: origin || undefined,
-              destination: destination || undefined,
-              selectedLoadingDate: selectedLoadingDate || undefined,
-              budget,
-              budgetCurrency,
-              loadImages,
-              selectedAfricanTrucks
-            }}
-            isSubmitting={isSubmitting}
-            onSubmit={handleSubmit}
-          />
-        )}
-        {step === 3 && (userType as string) === 'professional' && (<ScrollView>
+       
+        {step === 3 &&  (<ScrollView>
       <View style={styles.viewMainDsp}>
         <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
           {currentRole?.accType === 'fleet' ? 'Select Fleet Trucks & Drivers' : 'Truck Requirements'}
@@ -3211,121 +2823,7 @@ for (const brokerId of selectedBrokers) {
       </View>
 
 
-      {/* General User Personal Details Modal */}
-      <Modal visible={showPersonalDetailsModal && selectedPersonalType === 'general'} statusBarTranslucent animationType="slide">
-        <ScreenWrapper>
-          <View style={{ margin: wp(4), marginTop: hp(6) }}>
-            <View style={{ gap: wp(2) }}>
-              <ScrollView>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wp(4) }}>
-                  <TouchableOpacity onPress={() => {
-                    setShowPersonalDetailsModal(false);
-                    setSelectedPersonalType(null);
-                  }}>
-                    <AntDesign name="close" color={icon} size={wp(4)} />
-                  </TouchableOpacity>
-                  <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold' }}>PERSONAL DETAILS</ThemedText>
-                </View>
-
-                <ThemedText>Full Name<ThemedText color="red">*</ThemedText></ThemedText>
-                <Input
-                  placeholder="Enter your full name"
-                  value={personalName}
-                  onChangeText={setPersonalName}
-                />
-
-                <ThemedText>Phone Number</ThemedText>
-                <Input
-                  Icon={<>
-                    <Dropdown
-                      style={[{ width: wp(15) }]}
-                      selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
-                      data={countryCodes}
-                      maxHeight={hp(60)}
-                      labelField="name"
-                      valueField="name"
-                      placeholder="+00"
-                      value={personalCountryCode?.name}
-                      itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-                      activeColor={background}
-                      containerStyle={{
-                        borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                        width: wp(30),
-                        shadowOffset: { width: 0, height: 9 },
-                        shadowOpacity: 0.50,
-                        shadowRadius: 12.35,
-                        elevation: 19,
-                        paddingVertical: wp(1)
-                      }}
-                      onChange={item => setPersonalCountryCode(item)}
-                      renderLeftIcon={() => <></>}
-                      renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
-                      renderItem={((item, selected) =>
-                        <>
-                          <View style={[styles.item, selected && {}]}>
-                            <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
-                            {selected && (
-                              <Ionicons color={icon} name='checkmark-outline' size={wp(5)} />
-                            )}
-                          </View>
-                          <Divider />
-                        </>
-                      )}
-                    />
-                    <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
-                  </>}
-                  value={personalPhone}
-                  placeholder="700 000 000"
-                  onChangeText={setPersonalPhone}
-                />
-
-                <ThemedText>Email Address</ThemedText>
-                <Input
-                  placeholder="Enter your email"
-                  value={personalEmail}
-                  onChangeText={setPersonalEmail}
-                />
-
-                <DocumentUploader
-                  documents={selectedPersonalDocuments[0]}
-                  title="ID Document"
-                  subtitle="Upload your National ID or Passport (PDF or Image)"
-                  buttonTiitle="Upload ID Document"
-                  onPickDocument={() => pickDocument(setSelectedPersonalDocuments, setPersonalFileType)}
-                />
-
-                <DocumentUploader
-                  documents={selectedPersonalDocuments[1]}
-                  title="Live Selfie with ID"
-                  subtitle="Take a live photo holding your ID (Camera required)"
-                  buttonTiitle="Take Live Selfie"
-                  onPickDocument={() => takePhoto((image) => {
-                    setSelectedPersonalDocuments(prev => [prev[0], {
-                      name: 'selfie.jpg',
-                      uri: image.uri,
-                      size: image.fileSize || 0,
-                      mimeType: image.mimeType || 'image/jpeg'
-                    }, ...prev.slice(2)]);
-                    setPersonalFileType(prev => ['image', ...prev.slice(1)]);
-                  })}
-                  disabled={!selectedPersonalDocuments[0]}
-                  toastMessage="Upload ID document first"
-                />
-
-                <Button
-                  onPress={handleUpdateGeneralDetails}
-                  loading={isSubmittingPersonal}
-                  disabled={isSubmittingPersonal}
-                  title={isSubmittingPersonal ? "Saving..." : "Save"}
-                  colors={{ text: '#0f9d58', bg: '#0f9d5824' }}
-                  style={{ height: 44 }}
-                />
-                <View style={{ height: 100 }} />
-              </ScrollView>
-            </View>
-          </View>
-        </ScreenWrapper>
-      </Modal>
+    
 
       {/* Professional User Personal Details Modal */}
       {/* <KYCVerificationModal

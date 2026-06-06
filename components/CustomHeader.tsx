@@ -5,6 +5,7 @@ import { Ionicons, EvilIcons } from '@expo/vector-icons';
 import { wp } from '@/constants/common';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { router } from 'expo-router';
+import { useAuth } from '@/context/AuthContext'
 
 interface CustomHeaderProps {
     onPressMenu: () => void;
@@ -27,6 +28,7 @@ interface CustomHeaderProps {
 export default function CustomHeader({ onPressMenu, currentRole, pageTitle }: CustomHeaderProps) {
     const background = useThemeColor("background");
     const icon = useThemeColor('icon');
+    const { user,  } = useAuth()
 
     return (
         <View
@@ -73,7 +75,7 @@ export default function CustomHeader({ onPressMenu, currentRole, pageTitle }: Cu
 
 
 
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 {typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'owner' && (
                     <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                         <TouchableNativeFeedback onPress={() => router.push("/Search/Index")}>
@@ -83,14 +85,14 @@ export default function CustomHeader({ onPressMenu, currentRole, pageTitle }: Cu
                         </TouchableNativeFeedback>
                     </View>
                 )}
-                <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
+               { (user?.email==="transix16@gmail.com" || user?.email==="kelvinyaya8@gmail.com") &&  <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
                     <TouchableNativeFeedback onPress={onPressMenu}>
                         <View style={{ padding: wp(2) }}>
                             <Ionicons name='reorder-three' size={wp(7)} color={icon} />
                         </View>
                     </TouchableNativeFeedback>
-                </View>
-            </View>
+                </View>}
+            </View>}
 
 
             
