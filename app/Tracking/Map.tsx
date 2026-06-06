@@ -236,7 +236,7 @@ export default function Tracking() {
 
       try {
         const username = "Kelvinyaya8@gmail.com";
-        const password = "1zuxl2jn";
+        const password = "a050hw9d";
         // your environment may already polyfill btoa; keep same approach used previously
         const basicAuth = "Basic " + btoa(`${username}:${password}`);
 

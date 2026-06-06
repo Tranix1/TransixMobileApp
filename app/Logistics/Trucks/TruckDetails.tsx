@@ -27,7 +27,7 @@ import { sendPushNotification } from "@/Utilities/pushNotification";
 import Input from "@/components/Input";
 import TruckAvailabilityModal, { TruckAvailabilityData } from "@/components/TruckAvailabilityModal";
 
-import ImageViewing from 'react-native-image-viewing';
+// import ImageViewing from 'react-native-image-viewing';
 
 const TruckDetails = () => {
 
@@ -1137,7 +1137,7 @@ const TruckDetails = () => {
 
 
 
-                        <ImageViewing
+                        {/* <ImageViewing
                             images={images}
                             imageIndex={currentIndex}
                             visible={isVisible}
@@ -1167,7 +1167,7 @@ const TruckDetails = () => {
                                     </ThemedText>
                                 </View>
                             )}
-                        />
+                        /> */}
 
 
                         <Divider />

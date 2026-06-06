@@ -17,7 +17,7 @@ import { selectImage, selectMultipleImages } from '@/Utilities/imageUtils';
 import { pickDocument } from '@/Utilities/utils';
 import { uploadImage } from '@/db/operations';
 import { updateDocument } from '@/db/operations';
-import ImageViewing from 'react-native-image-viewing';
+// import ImageViewing from 'react-native-image-viewing';
 import { BlurView } from 'expo-blur';
 import Button from '@/components/Button';
 import PDFViewer from '@/components/PDFViewer';
@@ -560,13 +560,13 @@ const EditTruckAccountDetails = () => {
             </ScrollView>
 
             {/* Image Viewer */}
-            <ImageViewing
+            {/* <ImageViewing
                 images={images.map(uri => ({ uri }))}
                 imageIndex={currentIndex}
                 visible={isVisible}
                 onRequestClose={() => setIsVisible(false)}
                 onImageIndexChange={setCurrentIndex}
-            />
+            /> */}
 
             {/* PDF Viewer */}
             <PDFViewer

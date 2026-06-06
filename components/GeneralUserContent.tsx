@@ -8,6 +8,7 @@ import { hp, wp } from '@/constants/common';
 import { router } from 'expo-router';
 import HomeItemView from '@/components/HomeItemView';
 import { useAuth } from '@/context/AuthContext';
+import Tracking from '@/app/Tracking/Index';
 
 interface HomeContentProps {
     onAuthCheck: (action?: () => void) => void;
@@ -180,248 +181,257 @@ export default function HomeContent({ onAuthCheck }: HomeContentProps) {
         },
     ];
 
-    return (
-        <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-        >
+return <Tracking/>
 
-            {/* Search Bar */}
-            <View style={styles.searchContainer}>
-                <TouchableOpacity
-                    onPress={() => router.push("/Search/Index")}
-                    style={[styles.searchBar, { backgroundColor: backgroundColor, borderColor: border }]}
-                >
-                    <EvilIcons name='search' size={wp(6)} color={icon} />
-                    <ThemedText color={textlight}>Search..</ThemedText>
-                </TouchableOpacity>
-            </View>
+// commneted out main code for tracking to act as general acc
 
-            {/* Quick Links */}
-            <View style={[styles.quickLinksContainer, { borderColor: border, backgroundColor: background }]}>
-                <View style={styles.quickLinksHeader}>
-                    <MaterialCommunityIcons name="lightning-bolt-circle" size={wp(4)} color={icon} />
-                    <ThemedText type='subtitle' style={styles.quickLinksTitle}>
-                        {sectionTitles[currentQuickLinkIndex] || 'Quick Links'}
-                    </ThemedText>
-                </View>
 
-                {/* Quick Links - Two Pages */}
-                <ScrollView
-                    ref={quickLinksScrollRef}
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.quickLinksScrollView}
-                    onMomentumScrollEnd={(event) => {
-                        const pageWidth = screenWidth - wp(2); // Full width minus container padding
-                        const index = Math.round(event.nativeEvent.contentOffset.x / pageWidth);
-                        setCurrentQuickLinkIndex(index);
-                    }}
-                >
-                    {/* Page 1 - Original 4 items */}
-                    <View style={[styles.quickLinksPage, { width: 325 }]}>
-                        <View style={styles.quickLinksGrid}>
-                            {quickLinksData.slice(0, 4).map((item) => (
-                                <View key={item.id} style={styles.quickLinkItem}>
-                                    <TouchableHighlight
-                                        onPress={item.onPress}
-                                        underlayColor={item.underlayColor}
-                                        style={[styles.quickLinkButton, { backgroundColor: item.bgColor }]}
-                                    >
-                                        {item.icon}
-                                    </TouchableHighlight>
-                                    <View style={styles.labelContainer}>
-                                        <ThemedText type='tiny' style={styles.quickLinkLabel} numberOfLines={2}>
-                                            {item.title}
-                                        </ThemedText>
-                                        {item.id === 7 && loadsCount > 0 && (
-                                            <View style={[styles.badge, { backgroundColor: accent }]}>
-                                                <ThemedText type='tiny' style={styles.badgeText}>
-                                                    {loadsCount}
-                                                </ThemedText>
-                                            </View>
-                                        )}
-                                    </View>
-                                </View>
-                            ))}
-                        </View>
-                    </View>
 
-                    {/* Page 2 - Status 4 items */}
-                    <View style={[styles.quickLinksPage, { width: screenWidth - wp(10) }]}>
-                        <View style={styles.quickLinksGrid}>
-                            {quickLinksData.slice(4, 8).map((item) => (
-                                <View key={item.id} style={styles.quickLinkItem}>
-                                    <TouchableHighlight
-                                        onPress={item.onPress}
-                                        underlayColor={item.underlayColor}
-                                        style={[styles.quickLinkButton, { backgroundColor: item.bgColor }]}
-                                    >
-                                        {item.icon}
-                                    </TouchableHighlight>
-                                    <View style={styles.labelContainer}>
-                                        <ThemedText type='tiny' style={styles.quickLinkLabel} numberOfLines={2}>
-                                            {item.title}
-                                        </ThemedText>
-                                        {item.id === 7 && loadsCount > 0 && (
-                                            <View style={[styles.badge, { backgroundColor: accent }]}>
-                                                <ThemedText type='tiny' style={styles.badgeText}>
-                                                    {loadsCount}
-                                                </ThemedText>
-                                            </View>
-                                        )}
-                                    </View>
-                                </View>
-                            ))}
-                        </View>
-                    </View>
+    // return (
+    //     <ScrollView
+    //         showsVerticalScrollIndicator={false}
+    //         contentContainerStyle={styles.scrollContent}
+    //     >
 
-                    {/* Page 3 - Wallet 4 items */}
-                    <View style={[styles.quickLinksPage, { width: screenWidth - wp(10) }]}>
-                        <View style={styles.quickLinksGrid}>
-                            {quickLinksData.slice(8, 12).map((item) => (
-                                <View key={item.id} style={styles.quickLinkItem}>
-                                    <TouchableHighlight
-                                        onPress={item.onPress}
-                                        underlayColor={item.underlayColor}
-                                        style={[styles.quickLinkButton, { backgroundColor: item.bgColor }]}
-                                    >
-                                        {item.icon}
-                                    </TouchableHighlight>
-                                    <View style={styles.labelContainer}>
-                                        <ThemedText type='tiny' style={styles.quickLinkLabel} numberOfLines={2}>
-                                            {item.title}
-                                        </ThemedText>
-                                    </View>
-                                </View>
-                            ))}
-                        </View>
-                    </View>
-                </ScrollView>
+    //         {/* Search Bar */}
+    //         <View style={styles.searchContainer}>
+    //             <TouchableOpacity
+    //                 onPress={() => router.push("/Search/Index")}
+    //                 style={[styles.searchBar, { backgroundColor: backgroundColor, borderColor: border }]}
+    //             >
+    //                 <EvilIcons name='search' size={wp(6)} color={icon} />
+    //                 <ThemedText color={textlight}>Search..</ThemedText>
+    //             </TouchableOpacity>
+    //         </View>
 
-                {/* Page Indicators */}
-                <View style={styles.pageIndicators}>
-                    {Array.from({ length: Math.ceil(quickLinksData.length / 4) }, (_, index) => (
-                        <View
-                            key={index}
-                            style={[
-                                styles.indicator,
-                                {
-                                    backgroundColor: index === currentQuickLinkIndex ? accent : border,
-                                    width: index === currentQuickLinkIndex ? wp(6) : wp(2),
-                                }
-                            ]}
-                        />
-                    ))}
-                </View>
-            </View>
+    //         {/* Quick Links */}
+    //         <View style={[styles.quickLinksContainer, { borderColor: border, backgroundColor: background }]}>
+    //             <View style={styles.quickLinksHeader}>
+    //                 <MaterialCommunityIcons name="lightning-bolt-circle" size={wp(4)} color={icon} />
+    //                 <ThemedText type='subtitle' style={styles.quickLinksTitle}>
+    //                     {sectionTitles[currentQuickLinkIndex] || 'Quick Links'}
+    //                 </ThemedText>
+    //             </View>
 
-            {/* Feature Items */}
-            {theData.map((item) => (
-                <View key={item.id}>
-                    {item.id === 1 && (
-                        <HomeItemView
-                            topic={item.topic}
-                            description={item.description}
-                            mainColor="#4285f4"
-                            icon="#333"
-                            iconElement={<FontAwesome6 name="file-contract" size={wp(4)} color={'#fff'} />}
-                            buttonTitle={item.btnTitle}
-                            btnBackground="#4285f424"
-                            isAvaialble={true}
-                            btnPressValue={() => router.push('/Logistics/Contracts/ViewMiniContracts')}
-                        />
-                    )}
+    //             {/* Quick Links - Two Pages */}
+    //             <ScrollView
+    //                 ref={quickLinksScrollRef}
+    //                 horizontal
+    //                 pagingEnabled
+    //                 showsHorizontalScrollIndicator={false}
+    //                 style={styles.quickLinksScrollView}
+    //                 onMomentumScrollEnd={(event) => {
+    //                     const pageWidth = screenWidth - wp(2); // Full width minus container padding
+    //                     const index = Math.round(event.nativeEvent.contentOffset.x / pageWidth);
+    //                     setCurrentQuickLinkIndex(index);
+    //                 }}
+    //             >
+    //                 {/* Page 1 - Original 4 items */}
+    //                 <View style={[styles.quickLinksPage, { width: 325 }]}>
+    //                     <View style={styles.quickLinksGrid}>
+    //                         {quickLinksData.slice(0, 4).map((item) => (
+    //                             <View key={item.id} style={styles.quickLinkItem}>
+    //                                 <TouchableHighlight
+    //                                     onPress={item.onPress}
+    //                                     underlayColor={item.underlayColor}
+    //                                     style={[styles.quickLinkButton, { backgroundColor: item.bgColor }]}
+    //                                 >
+    //                                     {item.icon}
+    //                                 </TouchableHighlight>
+    //                                 <View style={styles.labelContainer}>
+    //                                     <ThemedText type='tiny' style={styles.quickLinkLabel} numberOfLines={2}>
+    //                                         {item.title}
+    //                                     </ThemedText>
+    //                                     {item.id === 7 && loadsCount > 0 && (
+    //                                         <View style={[styles.badge, { backgroundColor: accent }]}>
+    //                                             <ThemedText type='tiny' style={styles.badgeText}>
+    //                                                 {loadsCount}
+    //                                             </ThemedText>
+    //                                         </View>
+    //                                     )}
+    //                                 </View>
+    //                             </View>
+    //                         ))}
+    //                     </View>
+    //                 </View>
 
-                    {item.id === 2 && (
-                        <HomeItemView
-                            topic={item.topic}
-                            description={item.description}
-                            mainColor="#6bacbf"
-                            icon="#333"
-                            iconElement={<MaterialCommunityIcons name="satellite-uplink" size={wp(4)} color={'#fff'} />}
-                            buttonTitle={item.btnTitle}
-                            btnBackground="#6bacbf24"
-                            isAvaialble={true}
-                            btnPressValue={() => onAuthCheck(() => router.push("/Tracking/Index"))}
-                        />
-                    )}
+    //                 {/* Page 2 - Status 4 items */}
+    //                 <View style={[styles.quickLinksPage, { width: screenWidth - wp(10) }]}>
+    //                     <View style={styles.quickLinksGrid}>
+    //                         {quickLinksData.slice(4, 8).map((item) => (
+    //                             <View key={item.id} style={styles.quickLinkItem}>
+    //                                 <TouchableHighlight
+    //                                     onPress={item.onPress}
+    //                                     underlayColor={item.underlayColor}
+    //                                     style={[styles.quickLinkButton, { backgroundColor: item.bgColor }]}
+    //                                 >
+    //                                     {item.icon}
+    //                                 </TouchableHighlight>
+    //                                 <View style={styles.labelContainer}>
+    //                                     <ThemedText type='tiny' style={styles.quickLinkLabel} numberOfLines={2}>
+    //                                         {item.title}
+    //                                     </ThemedText>
+    //                                     {item.id === 7 && loadsCount > 0 && (
+    //                                         <View style={[styles.badge, { backgroundColor: accent }]}>
+    //                                             <ThemedText type='tiny' style={styles.badgeText}>
+    //                                                 {loadsCount}
+    //                                             </ThemedText>
+    //                                         </View>
+    //                                     )}
+    //                                 </View>
+    //                             </View>
+    //                         ))}
+    //                     </View>
+    //                 </View>
 
-                    {item.id === 3 && (
-                        <HomeItemView
-                            topic={item.topic}
-                            description={item.description}
-                            mainColor="#fb9274"
-                            icon="#333"
-                            iconElement={<MaterialCommunityIcons name="fuel" size={wp(4)} color={'#fff'} />}
-                            buttonTitle={item.btnTitle}
-                            btnBackground="#fb927424"
-                            isAvaialble={true}
-                            btnPressValue={() => onAuthCheck(() => router.push("/Fuel/Index"))}
-                        />
-                    )}
+    //                 {/* Page 3 - Wallet 4 items */}
+    //                 <View style={[styles.quickLinksPage, { width: screenWidth - wp(10) }]}>
+    //                     <View style={styles.quickLinksGrid}>
+    //                         {quickLinksData.slice(8, 12).map((item) => (
+    //                             <View key={item.id} style={styles.quickLinkItem}>
+    //                                 <TouchableHighlight
+    //                                     onPress={item.onPress}
+    //                                     underlayColor={item.underlayColor}
+    //                                     style={[styles.quickLinkButton, { backgroundColor: item.bgColor }]}
+    //                                 >
+    //                                     {item.icon}
+    //                                 </TouchableHighlight>
+    //                                 <View style={styles.labelContainer}>
+    //                                     <ThemedText type='tiny' style={styles.quickLinkLabel} numberOfLines={2}>
+    //                                         {item.title}
+    //                                     </ThemedText>
+    //                                 </View>
+    //                             </View>
+    //                         ))}
+    //                     </View>
+    //                 </View>
+    //             </ScrollView>
 
-                    {item.id === 4 && (
-                        <HomeItemView
-                            topic={item.topic}
-                            description={item.description}
-                            mainColor="#bada5f"
-                            icon="#333"
-                            iconElement={<MaterialCommunityIcons name="coffee" size={wp(4)} color={'#fff'} />}
-                            buttonTitle={item.btnTitle}
-                            btnBackground="#bada5f24"
-                            isAvaialble={true}
-                            btnPressValue={() => onAuthCheck(() => router.push("/TruckStop/Index"))}
-                        />
-                    )}
+    //             {/* Page Indicators */}
+    //             <View style={styles.pageIndicators}>
+    //                 {Array.from({ length: Math.ceil(quickLinksData.length / 4) }, (_, index) => (
+    //                     <View
+    //                         key={index}
+    //                         style={[
+    //                             styles.indicator,
+    //                             {
+    //                                 backgroundColor: index === currentQuickLinkIndex ? accent : border,
+    //                                 width: index === currentQuickLinkIndex ? wp(6) : wp(2),
+    //                             }
+    //                         ]}
+    //                     />
+    //                 ))}
+    //             </View>
+    //         </View>
 
-                    {item.id === 5 && (
-                        <HomeItemView
-                            topic={item.topic}
-                            description={item.description}
-                            mainColor='#f4c542'
-                            icon="#333"
-                            iconElement={<MaterialCommunityIcons name="shield-check" size={wp(4)} color={'#fff'} />}
-                            buttonTitle={item.btnTitle}
-                            btnBackground="#f4c54224"
-                            isAvaialble={true}
-                            btnPressValue={() => router.push("/Insurance/Index")}
-                        />
-                    )}
+    //         {/* Feature Items */}
+    //         {theData.map((item) => (
+    //             <View key={item.id}>
+    //                 {item.id === 1 && (
+    //                     <HomeItemView
+    //                         topic={item.topic}
+    //                         description={item.description}
+    //                         mainColor="#4285f4"
+    //                         icon="#333"
+    //                         iconElement={<FontAwesome6 name="file-contract" size={wp(4)} color={'#fff'} />}
+    //                         buttonTitle={item.btnTitle}
+    //                         btnBackground="#4285f424"
+    //                         isAvaialble={true}
+    //                         btnPressValue={() => router.push('/Logistics/Contracts/ViewMiniContracts')}
+    //                     />
+    //                 )}
 
-                    {item.id === 6 && (
-                        <HomeItemView
-                            topic={item.topic}
-                            description={item.description}
-                            mainColor='#e06eb5'
-                            icon="#333"
-                            iconElement={<MaterialCommunityIcons name="warehouse" size={wp(4)} color={'#fff'} />}
-                            buttonTitle={item.btnTitle}
-                            btnBackground="#e06eb524"
-                            isAvaialble={true}
-                            btnPressValue={() => router.push("/Warehouse/Index")}
-                        />
-                    )}
+    //                 {item.id === 2 && (
+    //                     <HomeItemView
+    //                         topic={item.topic}
+    //                         description={item.description}
+    //                         mainColor="#6bacbf"
+    //                         icon="#333"
+    //                         iconElement={<MaterialCommunityIcons name="satellite-uplink" size={wp(4)} color={'#fff'} />}
+    //                         buttonTitle={item.btnTitle}
+    //                         btnBackground="#6bacbf24"
+    //                         isAvaialble={true}
+    //                         btnPressValue={() => onAuthCheck(() => router.push("/Tracking/Index"))}
+    //                     />
+    //                 )}
 
-                    {item.id === 7 && (
-                        <HomeItemView
-                            topic={item.topic}
-                            description={item.description}
-                            mainColor='#f47c42'
-                            icon="#333"
-                            iconElement={<Ionicons name="shield-checkmark" size={wp(4)} color={'#fff'} />}
-                            buttonTitle={item.btnTitle}
-                            btnBackground="#f47c4224"
-                            isAvaialble={true}
-                            btnPressValue={() => router.push("/Account/Verification/ApplyVerification")}
-                        />
-                    )}
-                </View>
-            ))}
+    //                 {item.id === 3 && (
+    //                     <HomeItemView
+    //                         topic={item.topic}
+    //                         description={item.description}
+    //                         mainColor="#fb9274"
+    //                         icon="#333"
+    //                         iconElement={<MaterialCommunityIcons name="fuel" size={wp(4)} color={'#fff'} />}
+    //                         buttonTitle={item.btnTitle}
+    //                         btnBackground="#fb927424"
+    //                         isAvaialble={true}
+    //                         btnPressValue={() => onAuthCheck(() => router.push("/Fuel/Index"))}
+    //                     />
+    //                 )}
 
-        </ScrollView>
-    );
+    //                 {item.id === 4 && (
+    //                     <HomeItemView
+    //                         topic={item.topic}
+    //                         description={item.description}
+    //                         mainColor="#bada5f"
+    //                         icon="#333"
+    //                         iconElement={<MaterialCommunityIcons name="coffee" size={wp(4)} color={'#fff'} />}
+    //                         buttonTitle={item.btnTitle}
+    //                         btnBackground="#bada5f24"
+    //                         isAvaialble={true}
+    //                         btnPressValue={() => onAuthCheck(() => router.push("/TruckStop/Index"))}
+    //                     />
+    //                 )}
+
+    //                 {item.id === 5 && (
+    //                     <HomeItemView
+    //                         topic={item.topic}
+    //                         description={item.description}
+    //                         mainColor='#f4c542'
+    //                         icon="#333"
+    //                         iconElement={<MaterialCommunityIcons name="shield-check" size={wp(4)} color={'#fff'} />}
+    //                         buttonTitle={item.btnTitle}
+    //                         btnBackground="#f4c54224"
+    //                         isAvaialble={true}
+    //                         btnPressValue={() => router.push("/Insurance/Index")}
+    //                     />
+    //                 )}
+
+    //                 {item.id === 6 && (
+    //                     <HomeItemView
+    //                         topic={item.topic}
+    //                         description={item.description}
+    //                         mainColor='#e06eb5'
+    //                         icon="#333"
+    //                         iconElement={<MaterialCommunityIcons name="warehouse" size={wp(4)} color={'#fff'} />}
+    //                         buttonTitle={item.btnTitle}
+    //                         btnBackground="#e06eb524"
+    //                         isAvaialble={true}
+    //                         btnPressValue={() => router.push("/Warehouse/Index")}
+    //                     />
+    //                 )}
+
+    //                 {item.id === 7 && (
+    //                     <HomeItemView
+    //                         topic={item.topic}
+    //                         description={item.description}
+    //                         mainColor='#f47c42'
+    //                         icon="#333"
+    //                         iconElement={<Ionicons name="shield-checkmark" size={wp(4)} color={'#fff'} />}
+    //                         buttonTitle={item.btnTitle}
+    //                         btnBackground="#f47c4224"
+    //                         isAvaialble={true}
+    //                         btnPressValue={() => router.push("/Account/Verification/ApplyVerification")}
+    //                     />
+    //                 )}
+    //             </View>
+    //         ))}
+
+    //     </ScrollView>
+    // );
+
+
+
 }
 
 const styles = StyleSheet.create({

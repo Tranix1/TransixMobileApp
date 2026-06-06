@@ -17,7 +17,7 @@ import { useAuth } from '@/context/AuthContext';
 import Divider from '@/components/Divider';
 import { formatNumber } from '@/services/services';
 import { sendPushNotification } from '@/Utilities/pushNotification';
-import ImageViewing from 'react-native-image-viewing';
+// import ImageViewing from 'react-native-image-viewing';
 import { AntDesign } from '@expo/vector-icons';
 
 // Import refactored components
@@ -569,7 +569,7 @@ const TruckDetailsRefactored = () => {
             </ScrollView>
 
             {/* Image Viewer */}
-            <ImageViewing
+            {/* <ImageViewing
                 images={images}
                 imageIndex={currentIndex}
                 visible={isVisible}
@@ -598,7 +598,7 @@ const TruckDetailsRefactored = () => {
                         </ThemedText>
                     </View>
                 )}
-            />
+            /> */}
         </ScreenWrapper>
     );
 };

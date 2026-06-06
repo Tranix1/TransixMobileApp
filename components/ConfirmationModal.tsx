@@ -1,10 +1,13 @@
-import React from 'react';
-import { Modal, View, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import React,{useState} from 'react';
+import { Modal, View, TouchableOpacity, StyleSheet, ActivityIndicator,Alert,ToastAndroid } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { BlurView } from 'expo-blur';
 import { hp, wp } from '@/constants/common';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
+import Input from './Input';
+
+import { handleMakePayment } from '@/payments';
 
 interface ConfirmationModalProps {
   isVisible: boolean;
@@ -15,9 +18,11 @@ interface ConfirmationModalProps {
   cancelText?: string;
   onConfirm: () => void;
   onCancel?: () => void;
-  isLoading?: boolean;
   icon?: string;
   iconColor?: string;
+  loadVehicles : ()=>void;
+  vehicleId : string 
+  vehicleName : string
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -29,26 +34,90 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   cancelText = 'Cancel',
   onConfirm,
   onCancel,
-  isLoading = false,
   icon,
-  iconColor
+  iconColor,
+  loadVehicles,
+  vehicleId ,
+  vehicleName
 }) => {
   const accent = useThemeColor('accent');
   const background = useThemeColor('background');
   const backgroundLight = useThemeColor('backgroundLight');
   const iconColorTheme = useThemeColor('icon');
 
-  const handleConfirm = () => {
-    onConfirm();
-  };
+  // const handleConfirm = () => {
+  //   onConfirm();
+  // };
 
   const handleCancel = () => {
     if (onCancel) {
       onCancel();
     } else {
-      onClose();
+      onClose();  
     }
   };
+
+  const [phoneNumber , setPhoneNumber]=useState("")
+  const [paymentUpdate ,setPaymentUpdate]= useState("")
+  const [loading , setLoading]= useState(false)
+
+ const handleConfirm = async () => {
+    if (!phoneNumber) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+    setPaymentUpdate('');
+
+    try {
+      const result = await handleMakePayment(
+        10,
+        `Wallet Deposit - $${10}`,
+        setPaymentUpdate,
+        phoneNumber
+      );
+
+      if (result.success) {
+        // Add funds to wallet
+         const expiryDate = new Date();
+      expiryDate.setMonth(expiryDate.getMonth() + 1);
+
+      const { updateDocument, addDocument } = await import('@/db/operations');
+
+      await updateDocument("TrackedVehicles", vehicleId , {
+        subscription: {
+          status: "active",
+          expiryDate: expiryDate.toISOString(),
+        },
+        paymentType: "Subscription",
+      });
+
+        loadVehicles()
+
+        Alert.alert(
+          'Subscription Successful',
+          `$10 has been added to your wallet.`,
+          [{ text: 'OK', onPress: () => {} }]
+        );
+              ToastAndroid.show(`${vehicleName} subscribed   successfully.`, ToastAndroid.SHORT);
+        
+
+        setPhoneNumber('');
+        setPaymentUpdate('');
+         onClose();
+
+      } else {
+      }
+    } catch (error) {
+      console.error('Error processing deposit:', error);
+      Alert.alert('Error', 'Failed to process deposit. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
 
   return (
     <Modal visible={isVisible} transparent animationType="fade">
@@ -81,12 +150,20 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               {message}
             </ThemedText>
 
+            {!loading && <Input
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              placeholder="Enter Ecocash phone number"
+              keyboardType="numeric"
+              style={{ height:hp(1) }}
+              />}
+
             {/* Actions */}
-            <View style={styles.actions}>
+            {!loading &&<View style={styles.actions}>
               <TouchableOpacity
                 style={[styles.button, styles.cancelButton, { borderColor:iconColorTheme}]}
                 onPress={handleCancel}
-                disabled={isLoading}
+                disabled={loading}
               >
                 <ThemedText style={[styles.buttonText, styles.cancelText]}>
                   {cancelText}
@@ -96,9 +173,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               <TouchableOpacity
                 style={[styles.button, styles.confirmButton, { backgroundColor: accent }]}
                 onPress={handleConfirm}
-                disabled={isLoading}
+                disabled={loading}
               >
-                {isLoading ? (
+                {loading ? (
                   <ActivityIndicator color="white" size="small" />
                 ) : (
                   <ThemedText style={[styles.buttonText, styles.confirmText]}>
@@ -106,7 +183,13 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                   </ThemedText>
                 )}
               </TouchableOpacity>
-            </View>
+            </View>}
+
+               {paymentUpdate ? (
+                      <View style={[styles.paymentStatusContainer, { backgroundColor: backgroundLight }]}>
+                        <ThemedText style={styles.paymentStatusText}>{paymentUpdate}</ThemedText>
+                      </View>
+                    ) : null}
           </View>
         </View>
       </BlurView>
@@ -177,7 +260,7 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    paddingVertical: wp(3),
+    paddingVertical: wp(2.5),
     paddingHorizontal: wp(4),
     borderRadius: wp(2),
     alignItems: 'center',
@@ -199,6 +282,22 @@ const styles = StyleSheet.create({
   },
   confirmText: {
     color: 'white',
+  },
+   paymentStatusContainer: {
+    margin: wp(4),
+    padding: wp(4),
+    // backgroundColor: '#f8f9fa',
+    borderRadius: wp(3),
+    borderLeftWidth: 4,
+    borderLeftColor: '#007AFF',
+  },
+  paymentStatusText: {
+    fontSize: wp(4),
+    // color: '#333',
+    color: '#666',
+
+    textAlign: 'center',
+    fontWeight: '500',
   },
 });
 

@@ -37,7 +37,7 @@ export default function CustomHeader({ onPressMenu, currentRole, pageTitle }: Cu
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: wp(1),
+                // marginBottom: wp(1),
             }}
         >
             <View>
@@ -58,15 +58,21 @@ export default function CustomHeader({ onPressMenu, currentRole, pageTitle }: Cu
                 : (
                     <>
                         <ThemedText type="title">Transix</ThemedText>
-                        <ThemedText type="tiny">The future of Transport & Logistics</ThemedText>
-                        {currentRole && (
+                        <ThemedText type="tiny">  Role: Tracking</ThemedText>
+
+
+                        {/* <ThemedText type="tiny">The future of Transport & Logistics</ThemedText> */}
+                        {/* {currentRole && (
                             <ThemedText type="tiny" style={{ fontWeight: 'bold' }}>
                                 Role: {currentRole === 'general' ? 'General User' : currentRole === 'fleet' ? 'Fleet Manager' : 'Broker'}
                             </ThemedText>
-                        )}
+                        )} */}
                     </>
                 )}
             </View>
+
+
+
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 {typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'owner' && (
                     <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
@@ -85,6 +91,9 @@ export default function CustomHeader({ onPressMenu, currentRole, pageTitle }: Cu
                     </TouchableNativeFeedback>
                 </View>
             </View>
+
+
+            
         </View>
     );
 }

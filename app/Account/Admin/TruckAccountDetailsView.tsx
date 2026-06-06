@@ -13,7 +13,7 @@ import { formatDate } from '@/services/services';
 import { updateDocument, fetchDocuments, updateUserLoadsAccountApproval, updateDocumentWithAdminTracking } from '@/db/operations';
 import { ADMIN_ACTIONS } from '@/Utilities/adminActionTracker';
 import { where } from 'firebase/firestore';
-import ImageViewing from 'react-native-image-viewing';
+// import ImageViewing from 'react-native-image-viewing';
 import { BlurView } from 'expo-blur';
 import PDFViewer from '@/components/PDFViewer';
 import { fixFirebaseUrl } from '@/Utilities/utils';
@@ -421,12 +421,12 @@ const TruckAccountDetailsView = () => {
             </ScrollView>
 
             {/* Image Viewer */}
-            <ImageViewing
+            {/* <ImageViewing
                 images={images.map(url => ({ uri: url }))}
                 imageIndex={currentImageIndex}
                 visible={showImageViewer}
                 onRequestClose={() => setShowImageViewer(false)}
-            />
+            /> */}
 
             {/* Action Buttons - Only show for pending/edited accounts */}
             {accountDetails.approvalStatus === 'pending' || accountDetails.approvalStatus === 'edited' ? (

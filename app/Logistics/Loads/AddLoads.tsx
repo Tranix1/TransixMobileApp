@@ -1000,6 +1000,7 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
         const result = await fetchDocuments("rewards", 50, undefined, filters);
 
         let remainingToDeduct = 1;
+        let deductedRewardId = null;
       const now = new Date();
       for (const reward of result.data) {
         const expiry = new Date(reward.expiryDate);
@@ -1011,7 +1012,66 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
             updatedAt: new Date().toISOString()
           };
           await updateDocument('rewards', reward.id, updateData);
+
+          // Update tokenHistory for this reward batch
+          const tokenHistoryFilters = [
+            where("userId", "==", user.uid),
+            where("rewardId", "==", reward.id)
+          ];
+          const tokenHistoryResult = await fetchDocuments("tokenHistory", 1, undefined, tokenHistoryFilters);
+
+          if (tokenHistoryResult.data && tokenHistoryResult.data.length > 0) {
+            // Update existing tokenHistory
+            const tokenHistory = tokenHistoryResult.data[0];
+            const newUsedTokens = tokenHistory.totalTokensUsed + deductAmount;
+            const newAvailableTokens = tokenHistory.tokensAvailable - deductAmount;
+            const newUtilizationPercentage = (newUsedTokens / tokenHistory.totalTokensGiven) * 100;
+
+            const tokenHistoryUpdate = {
+              totalTokensUsed: newUsedTokens,
+              tokensAvailable: newAvailableTokens,
+              utilizationPercentage: newUtilizationPercentage,
+              transactions: [
+                ...(tokenHistory.transactions || []),
+                {
+                  type: 'spend' as const,
+                  amount: deductAmount,
+                  description: 'Load posting fee',
+                  createdAt: new Date().toISOString(),
+                  relatedId: 'load-posting' // Could be more specific with load ID if available
+                }
+              ]
+            };
+
+            await updateDocument('tokenHistory', tokenHistory.id, tokenHistoryUpdate);
+          } else {
+            // Create tokenHistory document if it doesn't exist (for existing rewards)
+            const tokenHistoryData = {
+              userId: user.uid,
+              rewardId: reward.id,
+              totalTokensGiven: reward.totalTokens,
+              totalTokensUsed: deductAmount,
+              totalTokensExpired: 0,
+              tokensAvailable: reward.totalTokens - deductAmount,
+              utilizationPercentage: (deductAmount / reward.totalTokens) * 100,
+              issueDate: reward.createdAt,
+              expiryDate: reward.expiryDate,
+              transactions: [
+                {
+                  type: 'spend' as const,
+                  amount: deductAmount,
+                  description: 'Load posting fee',
+                  createdAt: new Date().toISOString(),
+                  relatedId: 'load-posting'
+                }
+              ]
+            };
+
+            await addDocument('tokenHistory', tokenHistoryData);
+          }
+
           remainingToDeduct -= deductAmount;
+          deductedRewardId = reward.id;
           if (remainingToDeduct <= 0) break;
         }
       }
@@ -1064,182 +1124,183 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
     }
   };
 
-  const handleSubmit = async () => {
-    try{
+    const handleSubmit = async () => {
 
-    setIsSubmitting(true)
+      try{
 
-    // Guard: require user type selection before any further validation
-    if (!userType) {
-      setTimeout(() => {
-        alertBox("Select User Type", "Please select whether you are a General or Professional user first.", [], "error");
-      }, 100);
-      setShowUserTypeDropdown(true);
+      setIsSubmitting(true)
+
+      // Guard: require user type selection before any further validation
+      if (!userType) {
+        setTimeout(() => {
+          alertBox("Select User Type", "Please select whether you are a General or Professional user first.", [], "error");
+        }, 100);
+        setShowUserTypeDropdown(true);
+        setIsSubmitting(false);
+        return;
+      }
+
+
+
+      if (!alertBox) {
+      console.error('alertBox not available');
       setIsSubmitting(false);
       return;
     }
-
-
-
-     if (!alertBox) {
-    console.error('alertBox not available');
-    setIsSubmitting(false);
-    return;
-  }
- if (!user) {
-    alert("Please Login first");
-    setIsSubmitting(false);
-    router.push('/Account/Login')
-    return;
-  }
-
-
-    // Skip KYC verification for verified fleet users and verified brokers
-      if (!userIsFleetVerified && !userIsVerified?.isApproved) {
-        // Comprehensive check if user has submitted personal details
-        if (userType === 'general' && !getGeneralDetails) {
-          setIsSubmitting(false);
-          setTimeout(() => {
-            alertBox("Personal Details Required", "Please submit your personal details first before creating a load. All required fields must be completed.", [], "error");
-          }, 100);
-          return;
-        }
- 
-        // if (userType === 'professional' && !getProfessionalDetails) {
-        //   setIsSubmitting(false);
-        //   setTimeout(() => {
-        //     alertBox("Professional Details Required", "Please submit your professional details first before creating a load. All required documents must be uploaded.", [], "error");
-        //   }, 100);
-        //   return;
-        // }
-      }
-
-    // Additional validation: Check if personal details are approved (optional - can be removed if not needed)
-    if (userType === 'general' && getGeneralDetails && !getGeneralDetails.isApproved) {
-      // Allow submission but show warning
-    }
-
-    if (userType === 'professional' && getProfessionalDetails && !getProfessionalDetails.isApproved) {
-      // Allow submission but show warning
-    }
-
-    // Use utility function for validation
-    let validationErrors = [];
-try {
-  validationErrors = validateLoadForm(userType, {
-    typeofLoad,
-    origin,
-    destination,
-    rate,
-    paymentTerms,
-    selectedLoadingDate,
-    loadImages,
-    selectedAfricanTrucks,
-    trucksNeeded,
-    requirements,
-    proofOfOrder: [...proofDocuments],
-    proofOfOrderFileType: [...proofDocumentTypes],
-  }, step);
-} catch (e) {
-  const errorDetails = e instanceof Error ? e.stack : String(e);
-      showError(
-        "Validation Error",
-        "Failed to vallidate Form Data",
-        errorDetails,
-        true
-      );
-          setIsSubmitting(false);
-
-     
-  return;
-}
-
-
-    // Additional validation for new fields
-    if (!numberOfTrucks || numberOfTrucks.trim() === '') {
-      validationErrors.push('Number of trucks needed is required');
-    }
-    if (!deliveryDate || deliveryDate.trim() === '') {
-      validationErrors.push('Delivery date is required');
-    }
-
-    // Additional validation for professional users - check if they have at least one proof file
-    if (userType === 'professional' && proofImages.length === 0 && proofDocuments.length === 0) {
-      validationErrors.push('Upload at least one proof of order document or image');
-    }
-
-    // Additional validation for fleet users - check if they have selected trucks for private loads
-    if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
-      if (selectedFleetTrucks.length === 0) {
-        validationErrors.push('Select at least one truck from your fleet');
-      }
-      // For private trucks, drivers are optional - fleet manager can assign later
-      // Check if selected drivers are actually assigned to selected trucks
-      const invalidDrivers = selectedDrivers.filter(driver =>
-        !selectedFleetTrucks.some(truck => truck.id === driver.truckId)
-      );
-      if (invalidDrivers.length > 0) {
-        validationErrors.push('Some selected drivers are not assigned to the selected trucks');
-      }
-    }
-
-    // Additional validation for broker selection - skip for broker users
-    // if (currentRole?.accType !== 'broker' && selectedBrokers.length === 0) {
-    //   validationErrors.push('Select at least one broker');
-    // }
-
-    // Additional validation for broker private loads
-    if (currentRole?.accType === 'broker' && loadVisibility === 'Private') {
-      if (selectedBrokerTrucks.length === 0) {
-        validationErrors.push('Select at least one assigned truck');
-      }
-    }
-
-    // For private trucks, remove the truck type selection requirement since it's not needed
-    if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
-      // Remove truck type validation for private loads since we're selecting specific trucks
-      // The validation will still check for selected trucks above
-    }
-
-    if (validationErrors.length > 0) {
-      setTimeout(() => {
-        alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
-      }, 100);
-      setIsSubmitting(false)
+  if (!user) {
+      alert("Please Login first");
+      setIsSubmitting(false);
+      router.push('/Account/Login')
       return;
     }
 
-    // Check available tokens for payment message
-    const availableTokens = await checkUserRewards(user.uid);
-    if (availableTokens >= 1) {
-      setPaymentMessage(`Post this load using 1 reward token? ${user ? 'If you have a referrer, they will receive $1 commission.' : ''}`);
-      setPaymentConfirmText('Use Token & Post Load');
-      setPaymentIcon('gift');
-    } else {
-      setPaymentMessage(`Post this load for $2? ${user ? 'If you have a referrer, they will receive $1 commission.' : ''}`);
-      setPaymentConfirmText('Pay & Post Load');
-      setPaymentIcon('cash');
-    }
 
-    // Show payment confirmation modal
-    setShowLoadPaymentModal(true);
-    setIsSubmitting(false);
-    return;
+      // Skip KYC verification for verified fleet users and verified brokers
+        if (!userIsFleetVerified && !userIsVerified?.isApproved) {
+          // Comprehensive check if user has submitted personal details
+          if (userType === 'general' && !getGeneralDetails) {
+            setIsSubmitting(false);
+            setTimeout(() => {
+              alertBox("Personal Details Required", "Please submit your personal details first before creating a load. All required fields must be completed.", [], "error");
+            }, 100);
+            return;
+          }
   
-   }catch(e){
+          // if (userType === 'professional' && !getProfessionalDetails) {
+          //   setIsSubmitting(false);
+          //   setTimeout(() => {
+          //     alertBox("Professional Details Required", "Please submit your professional details first before creating a load. All required documents must be uploaded.", [], "error");
+          //   }, 100);
+          //   return;
+          // }
+        }
+
+      // Additional validation: Check if personal details are approved (optional - can be removed if not needed)
+      if (userType === 'general' && getGeneralDetails && !getGeneralDetails.isApproved) {
+        // Allow submission but show warning
+      }
+
+      if (userType === 'professional' && getProfessionalDetails && !getProfessionalDetails.isApproved) {
+        // Allow submission but show warning
+      }
+
+      // Use utility function for validation
+      let validationErrors = [];
+  try {
+    validationErrors = validateLoadForm(userType, {
+      typeofLoad,
+      origin,
+      destination,
+      rate,
+      paymentTerms,
+      selectedLoadingDate,
+      loadImages,
+      selectedAfricanTrucks,
+      trucksNeeded,
+      requirements,
+      proofOfOrder: [...proofDocuments],
+      proofOfOrderFileType: [...proofDocumentTypes],
+    }, step);
+  } catch (e) {
     const errorDetails = e instanceof Error ? e.stack : String(e);
-      showError(
-        "Failed to Submit Load",
-        "There was an error submitting your load. Please try again.",
-        errorDetails,
-        true
-      );
-          setIsSubmitting(false);
+        showError(
+          "Validation Error",
+          "Failed to vallidate Form Data",
+          errorDetails,
+          true
+        );
+            setIsSubmitting(false);
 
-      console.log(e)
-    }
-  
-  };
+      
+    return;
+  }
+
+
+      // Additional validation for new fields
+      if (!numberOfTrucks || numberOfTrucks.trim() === '') {
+        validationErrors.push('Number of trucks needed is required');
+      }
+      if (!deliveryDate || deliveryDate.trim() === '') {
+        validationErrors.push('Delivery date is required');
+      }
+
+      // Additional validation for professional users - check if they have at least one proof file
+      if (userType === 'professional' && proofImages.length === 0 && proofDocuments.length === 0) {
+        validationErrors.push('Upload at least one proof of order document or image');
+      }
+
+      // Additional validation for fleet users - check if they have selected trucks for private loads
+      if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
+        if (selectedFleetTrucks.length === 0) {
+          validationErrors.push('Select at least one truck from your fleet');
+        }
+        // For private trucks, drivers are optional - fleet manager can assign later
+        // Check if selected drivers are actually assigned to selected trucks
+        const invalidDrivers = selectedDrivers.filter(driver =>
+          !selectedFleetTrucks.some(truck => truck.id === driver.truckId)
+        );
+        if (invalidDrivers.length > 0) {
+          validationErrors.push('Some selected drivers are not assigned to the selected trucks');
+        }
+      }
+
+      // Additional validation for broker selection - skip for broker users
+      // if (currentRole?.accType !== 'broker' && selectedBrokers.length === 0) {
+      //   validationErrors.push('Select at least one broker');
+      // }
+
+      // Additional validation for broker private loads
+      if (currentRole?.accType === 'broker' && loadVisibility === 'Private') {
+        if (selectedBrokerTrucks.length === 0) {
+          validationErrors.push('Select at least one assigned truck');
+        }
+      }
+
+      // For private trucks, remove the truck type selection requirement since it's not needed
+      if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
+        // Remove truck type validation for private loads since we're selecting specific trucks
+        // The validation will still check for selected trucks above
+      }
+
+      if (validationErrors.length > 0) {
+        setTimeout(() => {
+          alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
+        }, 100);
+        setIsSubmitting(false)
+        return;
+      }
+
+      // Check available tokens for payment message
+      const availableTokens = await checkUserRewards(user.uid);
+      if (availableTokens >= 1) {
+        setPaymentMessage(`Post this load using 1 reward token? ${user ? 'If you have a referrer, they will receive $1 commission.' : ''}`);
+        setPaymentConfirmText('Use Token & Post Load');
+        setPaymentIcon('gift');
+      } else {
+        setPaymentMessage(`Post this load for $2? ${user ? 'If you have a referrer, they will receive $1 commission.' : ''}`);
+        setPaymentConfirmText('Pay & Post Load');
+        setPaymentIcon('cash');
+      }
+
+      // Show payment confirmation modal
+      setShowLoadPaymentModal(true);
+      setIsSubmitting(false);
+      return;
+    
+    }catch(e){
+      const errorDetails = e instanceof Error ? e.stack : String(e);
+        showError(
+          "Failed to Submit Load",
+          "There was an error submitting your load. Please try again.",
+          errorDetails,
+          true
+        );
+            setIsSubmitting(false);
+
+        console.log(e)
+      }
+    
+    };
 
   // Function to handle payment confirmation and proceed with load submission
   const confirmLoadPaymentAndSubmit = async () => {
@@ -1260,6 +1321,13 @@ try {
         router.push('/Account/Login')
         return;
       }
+      if (!user || !user.uid) {
+  alert("Please wait for user data to load or reopen Add Load.");
+  return;
+}
+
+
+
       if (!user.organisation) {
         setIsSubmitting(false)
         alert("Please edit your account and add Organisation details first, eg:Organisation Name!");

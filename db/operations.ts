@@ -298,17 +298,17 @@ export const isTrackingAgent = async (userId: string) => {
     }
 };
 
-// export const AddUser = async (userId: string, userData: object) => {
-//     try {
-//         const userRef = doc(db, "personalData", userId); // Custom ID
-//         await setDoc(userRef, userData, { merge: true });
+export const AddUser = async (userId: string, userData: object) => {
+    try {
+        const userRef = doc(db, "personalData", userId); // Custom ID
+        await setDoc(userRef, userData, { merge: true });
 
-//         return true;
-//     } catch (error) {
-//         console.error("Error adding user:", error);
-//         return false;
-//     }
-// };
+        return true;
+    } catch (error) {
+        console.error("Error adding user:", error);
+        return false;
+    }
+};
 
 export const setDocuments = async (dbName: string, userData: object) => {
     try {

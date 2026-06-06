@@ -157,7 +157,28 @@ const AdminRewards = () => {
                 type: 'reward'
             };
 
-            await addDocument('rewards', rewardData);
+            const rewardDocId = await addDocument('rewards', rewardData);
+
+            // Create tokenHistory document for tracking this batch
+            const tokenHistoryData = {
+                userId: selectedUser.id,
+                totalTokensGiven: tokenAmount,
+                totalTokensUsed: 0,
+                totalTokensExpired: 0,
+                tokensAvailable: tokenAmount,
+                utilizationPercentage: 0,
+                issueDate: new Date().toISOString(),
+                expiryDate: new Date(expiryDate).toISOString(),
+                rewardId: rewardDocId, // Reference to the rewards document
+                transactions: [{
+                    type: 'reward' as const,
+                    amount: tokenAmount,
+                    description: `${selectedRewardType} Reward - Initial issuance`,
+                    createdAt: new Date().toISOString()
+                }]
+            };
+
+            await addDocument('tokenHistory', tokenHistoryData);
 
             // Also add to wallet transactions
             await addDocument('walletTransactions', {

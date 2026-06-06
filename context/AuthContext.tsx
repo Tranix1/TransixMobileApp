@@ -250,12 +250,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 referrerId: referrerId,
             }));
             ToastAndroid.show('Account created successfully!', ToastAndroid.SHORT);
-
             router.push({ pathname: '/Account/Profile', params: { operation: 'create' }, });
+
         } catch (error) {
             ToastAndroid.show(`${error}`, ToastAndroid.LONG)
         }
     };
+
+
 
     const Logout = async () => {
         try {
@@ -324,7 +326,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const fullUser: User = {
                 ...credentials,
                 displayName: credentials.organisation,
-                expoPushToken: credentials.expoPushToken || undefined,
+                expoPushToken: credentials.expoPushToken || "",
             };
 
             // 4. Save to Firestore (or your DB)

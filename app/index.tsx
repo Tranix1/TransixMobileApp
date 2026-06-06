@@ -1,29 +1,39 @@
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { NavigationContainer } from "@react-navigation/native";
-import { StyleSheet, TouchableNativeFeedback, View, LogBox } from "react-native";
+import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from "expo-router";
+
 import Home from "./Home/Index";
+import About from "./About/Index";
 import Loads from "./Logistics/Loads/Index";
 import Store from "./Transport/Store/Index";
 import LogisticsTrucks from "./Logistics/Trucks/Index";
-import Account from "./Account/Index";
 import Wallet from "./Wallet/Index";
 import Jobs from "./Fleet/DriverScreens/Jobs/Index";
 import Trucks from "./Fleet/DriverScreens/Trucks/Index";
 import Earnings from "./Fleet/DriverScreens/Earnings/Index";
 import DriverProfile from "./Fleet/DriverScreens/Profile/Index";
+
 import { ThemedText } from "@/components/ThemedText";
-import { useThemeColor } from "@/hooks/useThemeColor";
-import { FontAwesome6, Fontisto, Octicons, Entypo, } from "@expo/vector-icons";
-import { hp, wp } from "@/constants/common";
-import { router } from "expo-router";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import AppLoadingScreen from "@/components/AppLoadingScreen";
 import UpdateModal from "@/components/UpdateModal";
+import AuthStatusModal from "@/components/AuthStatusModal";
+
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuthState } from "@/hooks/useAuthState";
 import { useAppUpdate } from "@/hooks/useAppUpdate";
 import { useAuth } from '@/context/AuthContext';
+
+import {
+  FontAwesome6,
+  Fontisto,
+  Octicons,
+  Entypo,
+} from "@expo/vector-icons";
+
+import { hp, wp } from "@/constants/common";
 import NetInfo from '@react-native-community/netinfo';
 
 const Tab = createBottomTabNavigator();
@@ -32,20 +42,22 @@ export default function Index() {
   const accent = useThemeColor("accent");
   const icon = useThemeColor("icon");
   const background = useThemeColor("background");
-  const backgroundColor = useThemeColor("background");
   const { bottom } = useSafeAreaInsets();
 
   const [isAppReady, setIsAppReady] = useState(false);
   const [isConnectedInternet, setIsConnectedInternet] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [versionCheckComplete, setVersionCheckComplete] = useState(false);
+
+  const [dspCreateAcc, setDspCreateAcc] = useState(false);
+  const [dspVerifyAcc, setDspVerifyAcc] = useState(false);
+
   const versionCheckRun = useRef(false);
 
   const {
     isLoading: authLoading,
     isAuthenticated,
     user,
-    needsProfileSetup,
     needsEmailVerification,
     error: authError,
   } = useAuthState();
@@ -57,175 +69,158 @@ export default function Index() {
     isForceUpdate,
     checkForUpdate,
     dismissUpdate,
-    isLoading: updateLoading
   } = useAppUpdate();
 
   const { currentRole } = useAuth();
 
-  // Check internet connection
+  // Check if profile details are missing
+  const isProfileIncomplete = isAuthenticated && (!user?.phoneNumber || !user?.organisation);
+
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
-      setIsConnectedInternet(state.isConnected as any);
+      setIsConnectedInternet(!!state.isConnected);
     });
     return () => unsubscribe();
   }, []);
 
-  // Simulate loading progress
   useEffect(() => {
     if (authLoading) {
       const progressInterval = setInterval(() => {
-        setLoadingProgress(prev => {
-          if (prev >= 90) return prev;
-          return prev + Math.random() * 10;
-        });
+        setLoadingProgress(prev => (prev >= 90 ? prev : prev + Math.random() * 10));
       }, 200);
-
       return () => clearInterval(progressInterval);
     } else {
       setLoadingProgress(100);
     }
   }, [authLoading]);
 
-  // Determine if app is ready to show main content
   useEffect(() => {
-    console.log('Auth loading:', authLoading, 'App ready:', isAppReady, 'Version check complete:', versionCheckComplete);
     if (!authLoading) {
-      // Add a small delay to ensure smooth transition
-      const timer = setTimeout(() => {
-        console.log('Setting app ready to true');
-        setIsAppReady(true);
-      }, 500);
+      const timer = setTimeout(() => setIsAppReady(true), 500);
       return () => clearTimeout(timer);
     }
   }, [authLoading]);
 
-  // Check for updates after app is ready - wait for completion before showing main content
   useEffect(() => {
     if (isAppReady && isConnectedInternet && !versionCheckRun.current) {
       versionCheckRun.current = true;
-      console.log('Running version check...');
-
-      // Add timeout to prevent hanging
-      const versionTimeout = setTimeout(() => {
-        console.log('Version check timeout - allowing app to continue');
-        setVersionCheckComplete(true);
-      }, 5000); // 5 second timeout
-
-      // Run version check and wait for completion
-      checkForUpdate().then(() => {
-        clearTimeout(versionTimeout);
-        console.log('Version check completed, showUpdateModal:', showUpdateModal);
-        setVersionCheckComplete(true);
-      }).catch(error => {
-        clearTimeout(versionTimeout);
-        console.log('Version check failed:', error);
-        setVersionCheckComplete(true); // Still allow app to show even if version check fails
-      });
+      const versionTimeout = setTimeout(() => setVersionCheckComplete(true), 5000);
+      checkForUpdate()
+        .then(() => {
+          clearTimeout(versionTimeout);
+          setVersionCheckComplete(true);
+        })
+        .catch(() => {
+          clearTimeout(versionTimeout);
+          setVersionCheckComplete(true);
+        });
     }
   }, [isAppReady, isConnectedInternet]);
 
-  // Show loading screen while app is initializing or version check is running
+  useEffect(() => {
+    if (!authLoading && isAppReady && versionCheckComplete) {
+      const timer = setTimeout(() => {
+        if (!isAuthenticated) {
+          setDspCreateAcc(true);
+          setDspVerifyAcc(false);
+          return;
+        }
+
+        setDspCreateAcc(false);
+
+        // ONLY show verify modal if profile data is actually filled
+        if (needsEmailVerification && !isProfileIncomplete) {
+          setDspVerifyAcc(true);
+        } else {
+          setDspVerifyAcc(false);
+        }
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading, isAppReady, versionCheckComplete, isAuthenticated, needsEmailVerification, isProfileIncomplete]);
+
   if (!isAppReady || authLoading || !versionCheckComplete) {
     return (
       <ScreenWrapper>
         <View style={{ flex: 1, backgroundColor: background }}>
-          <AppLoadingScreen
-            message="Initializing Transix..."
-            showProgress={true}
-            progress={loadingProgress}
-          />
+          <AppLoadingScreen message="Initializing Transix..." showProgress={true} progress={loadingProgress} />
         </View>
       </ScreenWrapper>
     );
   }
 
-  // Show error state if there's an authentication error
   if (authError) {
     return (
       <ScreenWrapper>
         <View style={{ flex: 1, backgroundColor: background }}>
-          <AppLoadingScreen
-            message="Something went wrong. Please try again."
-          />
+          <AppLoadingScreen message="Something went wrong. Please try again." />
         </View>
       </ScreenWrapper>
     );
   }
 
-  // Debug log for update modal state
-  console.log('Update modal state - showUpdateModal:', showUpdateModal, 'currentVersion:', currentVersion, 'latestVersion:', latestVersion);
+  // SCREEN RENDER FOR INCOMPLETE PROFILE
+  if (isProfileIncomplete) {
+    return (
+      <ScreenWrapper>
+        <View style={{ flex: 1, backgroundColor: background, justifyContent: 'center', alignItems: 'center', padding: wp(10) }}>
+          <FontAwesome6 name="user-pen" size={wp(15)} color={accent} />
+          <ThemedText type="subtitle" style={{ marginTop: 20, textAlign: 'center' }}>Complete Your Profile</ThemedText>
+          <ThemedText style={{ textAlign: 'center', marginVertical: 10, opacity: 0.7 }}>
+            Please provide your organization and phone details to continue.
+          </ThemedText>
+          <TouchableOpacity 
+            style={[styles.btn, { backgroundColor: accent }]}
+            onPress={() => router.push('/Account/Profile')}
+          >
+            <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>Setup Profile</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ScreenWrapper>
+    );
+  }
 
   return (
     <ScreenWrapper>
-
       <View style={{ flex: 1, backgroundColor: background }}>
-
-        {/* <CustomHeader /> */}
         <Tab.Navigator
           screenOptions={({ route }) => ({
             tabBarIcon: ({ focused }) => {
               const color = focused ? accent : icon;
               const size = wp(5);
-              const style = { marginVertical: wp(2) };
               switch (route.name) {
-                case "Home ":
-                  return <Octicons name="home" size={size} color={color} />;
-                case "Loads":
-                  return <FontAwesome6 name="trailer" size={size} color={color} />;
-                case "Trucks":
-                  return <Fontisto name="truck" size={size} color={color} />;
-                case "Store":
-                  return <Entypo name="shop" size={size} color={color} />;
-                case "Wallet":
-                  return <FontAwesome6 name="wallet" size={size} color={color} />;
-                case "Jobs":
-                  return <FontAwesome6 name="briefcase" size={size} color={color} />;
-                case "Fleet":
-                  return <Fontisto name="truck" size={size} color={color} />;
-                case "Earnings":
-                  return <FontAwesome6 name="dollar-sign" size={size} color={color} />;
-                case "Profile":
-                  return <FontAwesome6 name="user" size={size} color={color} />;
-
-                default:
-                  return null;
+                case "Home ": return <Octicons name="home" size={size} color={color} />;
+                case "About ": return <Octicons name="info" size={size} color={color} />;
+                case "Loads": return <FontAwesome6 name="trailer" size={size} color={color} />;
+                case "Trucks": return <Fontisto name="truck" size={size} color={color} />;
+                case "Store": return <Entypo name="shop" size={size} color={color} />;
+                case "Wallet": return <FontAwesome6 name="wallet" size={size} color={color} />;
+                case "Jobs": return <FontAwesome6 name="briefcase" size={size} color={color} />;
+                case "Earnings": return <FontAwesome6 name="dollar-sign" size={size} color={color} />;
+                case "Profile": return <FontAwesome6 name="user" size={size} color={color} />;
+                default: return null;
               }
             },
             tabBarLabel: ({ focused }) => (
-              <ThemedText
-                type={focused ? "defaultSemiBold" : "default"}
-                color={focused ? accent : icon}
-              >
+              <ThemedText type={focused ? "defaultSemiBold" : "default"} color={focused ? accent : icon}>
                 {route.name}
               </ThemedText>
             ),
             tabBarHideOnKeyboard: true,
             headerShown: false,
-            animation: 'shift',
             tabBarStyle: {
-              backgroundColor: useThemeColor("background"),
+              backgroundColor: background,
               borderTopWidth: 0,
               height: hp(8) + bottom,
               paddingBottom: bottom,
-              justifyContent: 'center'
+              elevation: 10,
             },
-            sceneStyle: {
-              backgroundColor: useThemeColor("background"),
-              paddingBottom: 0,
-              marginBottom: 0
-            }, tabBarItemStyle: {
-              flex: 1,
-              borderTopWidth: 0,
-              padding: wp(2)
-            }
           })}
         >
           {currentRole === 'general' ? (
             <>
               <Tab.Screen name="Home " component={Home} />
-              <Tab.Screen name="Loads" component={Loads} />
-              <Tab.Screen name="Trucks" component={LogisticsTrucks} />
-              <Tab.Screen name="Store" component={Store} />
+              <Tab.Screen name="About " component={About} />
             </>
           ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'owner') ? (
             <>
@@ -241,13 +236,6 @@ export default function Index() {
               <Tab.Screen name="Earnings" component={Earnings} />
               <Tab.Screen name="Profile" component={DriverProfile} />
             </>
-          ) : (typeof currentRole === 'object' && currentRole.role === 'broker') ? (
-            <>
-              <Tab.Screen name="Home " component={Home} />
-              <Tab.Screen name="Loads" component={Loads} />
-              <Tab.Screen name="Trucks" component={LogisticsTrucks} />
-              <Tab.Screen name="Wallet" component={Wallet} />
-            </>
           ) : (
             <>
               <Tab.Screen name="Home " component={Home} />
@@ -258,50 +246,19 @@ export default function Index() {
           )}
         </Tab.Navigator>
 
-        {/* Update Modal */}
-        <UpdateModal
-          visible={showUpdateModal}
-          onClose={dismissUpdate}
-          currentVersion={currentVersion}
-          latestVersion={latestVersion}
-          updateUrl="https://play.google.com/store/apps/details?id=com.yayapana.TransixNewVersion"
-          isForceUpdate={isForceUpdate}
-        />
+        <UpdateModal visible={showUpdateModal} onClose={dismissUpdate} currentVersion={currentVersion} latestVersion={latestVersion} updateUrl="https://play.google.com/store/apps/details?id=com.yayapana.TransixNewVersion" isForceUpdate={isForceUpdate} />
+        <AuthStatusModal visible={dspCreateAcc} onClose={() => isAuthenticated && setDspCreateAcc(false)} user={user} type="create" />
+        <AuthStatusModal visible={dspVerifyAcc} onClose={() => !needsEmailVerification && setDspVerifyAcc(false)} user={user} type="verify" />
       </View>
     </ScreenWrapper>
-
   );
 }
 
-
 const styles = StyleSheet.create({
-  optionsContainerStyle: {
-    borderRadius: wp(3)
-  }, MenuOption: {
+  btn: {
+    paddingHorizontal: wp(10),
+    paddingVertical: hp(1.5),
     borderRadius: wp(2),
-    padding: wp(1.3),
-    flexDirection: 'row',
-    gap: wp(1),
-    alignItems: 'center',
-    marginVertical: wp(1),
-    marginHorizontal: wp(2)
-  }, contentContainer: {
-    paddingHorizontal: wp(4),
-    paddingBottom: wp(5)
-  }, settingsCont: {
-    borderWidth: wp(.2),
-    // padding: wp(2),
-    overflow: 'hidden',
-    marginTop: wp(1.5),
-    marginBottom: wp(1),
-    borderRadius: wp(4),
-    borderColor: '#6565651c',
-    gap: wp(2)
-  }, settingsItem: {
-    flexDirection: 'row',
-    padding: wp(3),
-    paddingVertical: wp(4.5),
-    justifyContent: 'space-between',
-    alignItems: 'center'
+    marginTop: 10
   }
-})
+});

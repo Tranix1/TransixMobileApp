@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet, ActivityIndicator, RefreshControl, Alert, ScrollView } from 'react-native';
+import { View, FlatList, StyleSheet, ActivityIndicator, RefreshControl, Alert, ScrollView, TouchableOpacity } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { useRouter } from 'expo-router';
@@ -173,6 +173,10 @@ export default function RewardsAndBonuses() {
   const renderRewardBonusItem = ({ item }: { item: RewardBonus }) => {
     const color = getRewardBonusColor(item.type);
 
+    const handleViewHistory = () => {
+      router.push(`/Wallet/RewardsHistory?rewardId=${item.id}`);
+    };
+
       return (
 
         <View style={[styles.rewardCard, {
@@ -216,6 +220,15 @@ export default function RewardsAndBonuses() {
     <ThemedText type="subtitle" style={styles.usedText}>
       {Math.abs(item.usedTokens || 0)} T
     </ThemedText>
+
+    {/* History Button */}
+    <TouchableOpacity
+      style={[styles.historyButton, { backgroundColor: accent }]}
+      onPress={handleViewHistory}
+    >
+      <Ionicons name="time-outline" size={wp(3.5)} color="white" />
+      <ThemedText style={styles.historyButtonText}>View History</ThemedText>
+    </TouchableOpacity>
   </View>
 
           </View>
@@ -415,5 +428,22 @@ const styles = StyleSheet.create({
   },
   loadingMoreText: {
     color: '#666',
+  },
+
+  // History button
+  historyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: wp(2),
+    paddingHorizontal: wp(3),
+    borderRadius: wp(2),
+    marginTop: wp(2),
+    gap: wp(1),
+  },
+  historyButtonText: {
+    color: 'white',
+    fontSize: wp(3),
+    fontWeight: '600',
   },
 });

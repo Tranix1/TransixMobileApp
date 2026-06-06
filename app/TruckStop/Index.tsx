@@ -12,7 +12,7 @@ import { TruckStop } from '@/types/types'
 import { useAuth } from '@/context/AuthContext'
 import { router, useFocusEffect } from 'expo-router'
 import { fetchDocuments, isServiceStationOwner as checkServiceStationOwner } from '@/db/operations'
-import ImageViewing from 'react-native-image-viewing'
+// import ImageViewing from 'react-native-image-viewing'
 import { TruckStopPaymentModal } from '@/payments'
 import { getCurrentLocation } from '@/Utilities/utils'
 import { calculateDistance, Coordinate } from '@/Utilities/coordinateUtils'
@@ -314,7 +314,7 @@ export default function Index() {
 
 
             {/* Image Viewer */}
-            <ImageViewing
+            {/* <ImageViewing
                 images={currentImages.map(uri => ({ uri }))}
                 imageIndex={currentImageIndex}
                 visible={showImageViewer}
@@ -330,7 +330,7 @@ export default function Index() {
                         </TouchableOpacity>
                     </View>
                 )}
-            />
+            /> */}
 
             {/* Truck Stop Payment Modal */}
             <TruckStopPaymentModal

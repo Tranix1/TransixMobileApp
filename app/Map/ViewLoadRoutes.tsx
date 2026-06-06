@@ -5,9 +5,9 @@ import {
     ActivityIndicator,
     TouchableOpacity,
     Alert,
-    Dimensions
+    Dimensions,
+    Platform
 } from "react-native";
-import MapView, { Marker, Polyline, Region } from "react-native-maps";
 import { decodePolyline, LatLng } from "@/Utilities/decodePolyline";
 import { useLocalSearchParams, router } from "expo-router";
 import * as Location from "expo-location";
@@ -23,6 +23,8 @@ import { Load } from "@/types/types";
 import { parseCoordinateString, isValidCoordinate, DEFAULT_COORDINATES, Coordinate } from "@/Utilities/coordinateUtils";
 import ScreenWrapper from "@/components/ScreenWrapper";
 
+// import CrossPlatformMapView from "@/components/CrossPlatformMapView";
+
 const { width, height } = Dimensions.get('window');
 
 interface RouteDetails {
@@ -34,7 +36,7 @@ interface RouteDetails {
 
 export default function ViewLoadRoutes() {
     const params = useLocalSearchParams();
-    const mapRef = useRef<MapView>(null);
+    const mapRef = useRef<any>(null);
     const theme = useColorScheme() ?? "light";
 
     // Theme colors
@@ -47,6 +49,7 @@ export default function ViewLoadRoutes() {
 
     // State management
     const [routeCoords, setRouteCoords] = useState<LatLng[]>([]);
+    const [returnRouteCoords, setReturnRouteCoords] = useState<LatLng[]>([]);
     const [hasFitted, setHasFitted] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -62,6 +65,11 @@ export default function ViewLoadRoutes() {
     const bounds = params.bounds as string;
     const destinationType = params.destinationType as string;
     const destinationName = params.destinationName as string;
+
+    // Return route data
+    const returnOriginCoords = loadData?.returnOrigin ? { latitude: loadData.returnOrigin.latitude, longitude: loadData.returnOrigin.longitude } as Coordinate : null;
+    const returnDestinationCoords = loadData?.returnDestination ? { latitude: loadData.returnDestination.latitude, longitude: loadData.returnDestination.longitude } as Coordinate : null;
+    const returnRoutePolyline = loadData?.returnRoutePolyline as string;
 
     // Debug logging
     console.log('ViewLoadRoutes - Load Data:', loadData);
@@ -117,11 +125,11 @@ export default function ViewLoadRoutes() {
 
     const processRouteData = async () => {
         try {
-            // If route polyline is provided, decode it
+            // Process main route data
             if (routePolyline) {
-                console.log('Processing route polyline:', routePolyline);
+                console.log('Processing main route polyline:', routePolyline);
                 const points = decodePolyline(routePolyline);
-                console.log('Decoded polyline points:', points.length);
+                console.log('Decoded main polyline points:', points.length);
                 setRouteCoords(points);
 
                 // Set route details from load data if available, otherwise fetch from API
@@ -135,10 +143,16 @@ export default function ViewLoadRoutes() {
                     await fetchRouteDetailsOnly();
                 }
 
-
                 // Don't fit map here - let the useEffect handle it after map is ready
-                console.log('Route polyline processed with', points.length, 'points - will auto-fit when map is ready');
-                return;
+                console.log('Main route polyline processed with', points.length, 'points - will auto-fit when map is ready');
+            }
+
+            // Process return route data
+            if (returnRoutePolyline) {
+                console.log('Processing return route polyline:', returnRoutePolyline);
+                const returnPoints = decodePolyline(returnRoutePolyline);
+                console.log('Decoded return polyline points:', returnPoints.length);
+                setReturnRouteCoords(returnPoints);
             }
 
             // If no polyline but we have coordinates, fetch route from API
@@ -262,6 +276,13 @@ export default function ViewLoadRoutes() {
             if (isValidOrigin) allCoords.unshift(originCoords!);
             if (isValidDestination) allCoords.push(destinationCoords!);
 
+            // Include return route coordinates if available
+            if (returnRouteCoords.length > 0) {
+                allCoords.push(...returnRouteCoords);
+            }
+            if (returnOriginCoords) allCoords.unshift(returnOriginCoords);
+            if (returnDestinationCoords) allCoords.push(returnDestinationCoords);
+
             console.log('Fitting map to', allCoords.length, 'coordinates');
 
             // Calculate bounds with better padding
@@ -297,7 +318,7 @@ export default function ViewLoadRoutes() {
         }
     };
 
-    const getInitialRegion = (): Region | null => {
+    const getInitialRegion = (): any | null => {
         if (!isValidOrigin && !isValidDestination) return null;
 
         const allLatitudes = [];
@@ -335,6 +356,7 @@ export default function ViewLoadRoutes() {
     const handleRefresh = () => {
         setHasFitted(false);
         setRouteCoords([]);
+        setReturnRouteCoords([]);
         setError(null);
         setRouteDetails(null);
         initializeMap();
@@ -383,10 +405,90 @@ export default function ViewLoadRoutes() {
         );
     }
 
+    const markers = [];
+    if (isValidOrigin) {
+      markers.push({
+        coordinate: originCoords!,
+        title: loadData?.originCoordinates?.address || loadData?.fromLocation || loadData?.origin || "Origin",
+        description: "Load Origin",
+        children: (
+          <LinearGradient
+            colors={[accent, accent + 'CC']}
+            style={styles.markerCircle}
+          >
+            <FontAwesome name="dot-circle-o" size={24} color="white" />
+          </LinearGradient>
+        ),
+      });
+    }
+
+    if (isValidDestination) {
+      markers.push({
+        coordinate: destinationCoords!,
+        title: loadData?.destinationCoordinates?.address || loadData?.toLocation || loadData?.destination || destinationName || "Destination",
+        description: "Load Destination",
+        children: (
+          <LinearGradient
+            colors={[accent, accent + 'CC']}
+            style={styles.markerCircle}
+          >
+            <FontAwesome5 name="map-marker-alt" size={20} color="white" />
+          </LinearGradient>
+        ),
+      });
+    }
+
+    if (returnOriginCoords) {
+      markers.push({
+        coordinate: returnOriginCoords,
+        title: loadData?.returnOrigin?.description || "Return Origin",
+        description: "Return Load Origin",
+        children: (
+          <LinearGradient
+            colors={['#FF0000', '#FF0000CC']}
+            style={styles.markerCircle}
+          >
+            <FontAwesome name="dot-circle-o" size={24} color="white" />
+          </LinearGradient>
+        ),
+      });
+    }
+
+    if (returnDestinationCoords) {
+      markers.push({
+        coordinate: returnDestinationCoords,
+        title: loadData?.returnDestination?.description || "Return Destination",
+        description: "Return Load Destination",
+        children: (
+          <LinearGradient
+            colors={['#FF0000', '#FF0000CC']}
+            style={styles.markerCircle}
+          >
+            <FontAwesome5 name="map-marker-alt" size={20} color="white" />
+          </LinearGradient>
+        ),
+      });
+    }
+
+    const polylines = [];
+    if (routeCoords.length > 0) {
+      polylines.push(
+        { coordinates: routeCoords, strokeColor: accent, strokeWidth: 6 },
+        { coordinates: routeCoords, strokeColor: accent + '80', strokeWidth: 3 }
+      );
+    }
+
+    if (returnRouteCoords.length > 0) {
+      polylines.push(
+        { coordinates: returnRouteCoords, strokeColor: "#FF0000", strokeWidth: 6 },
+        { coordinates: returnRouteCoords, strokeColor: "#FF000080", strokeWidth: 3 }
+      );
+    }
+
     return (
         <ScreenWrapper fh={true}>
             <View style={styles.container}>
-                <MapView
+                {/* <CrossPlatformMapView
                     ref={mapRef}
                     style={styles.map}
                     initialRegion={initialRegion}
@@ -407,59 +509,9 @@ export default function ViewLoadRoutes() {
                             }, 500);
                         }
                     }}
-                >
-                    {/* Origin Marker */}
-                    {isValidOrigin && (
-                        <Marker
-                            coordinate={originCoords!}
-                            title={loadData?.originCoordinates?.address || loadData?.fromLocation || loadData?.origin || "Origin"}
-                            description="Load Origin"
-                        >
-                            <LinearGradient
-                                colors={[accent, accent + 'CC']}
-                                style={styles.markerCircle}
-                            >
-                                <FontAwesome name="dot-circle-o" size={24} color="white" />
-                            </LinearGradient>
-                        </Marker>
-                    )}
-
-                    {/* Destination Marker */}
-                    {isValidDestination && (
-                        <Marker
-                            coordinate={destinationCoords!}
-                            title={loadData?.destinationCoordinates?.address || loadData?.toLocation || loadData?.destination || destinationName || "Destination"}
-                            description="Load Destination"
-                        >
-                            <LinearGradient
-                                colors={[accent, accent + 'CC']}
-                                style={styles.markerCircle}
-                            >
-                                <FontAwesome5 name="map-marker-alt" size={20} color="white" />
-                            </LinearGradient>
-                        </Marker>
-                    )}
-
-                    {/* Main Route Polyline */}
-                    {routeCoords.length > 0 && (
-                        <>
-                            <Polyline
-                                coordinates={routeCoords}
-                                strokeColor={accent}
-                                strokeWidth={6}
-                            />
-                            <Polyline
-                                coordinates={routeCoords}
-                                strokeColor={accent + '80'}
-                                strokeWidth={3}
-                            />
-                        </>
-                    )}
-
-                    {/* Debug: Show route coords count */}
-                    {/* {console.log('Rendering map - routeCoords length:', routeCoords.length)} */}
-
-                </MapView>
+                    markers={markers}
+                    polylines={polylines}
+                /> */}
 
                 {/* Header */}
                 <View style={[styles.header, { backgroundColor: background }]}>

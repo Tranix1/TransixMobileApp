@@ -10,7 +10,7 @@ import { Ionicons, AntDesign } from '@expo/vector-icons';
 import { formatDate } from '@/services/services';
 import { approveLoadAccount, rejectLoadAccount } from '@/db/operations';
 import { useAuth } from '@/context/AuthContext';
-import ImageViewing from 'react-native-image-viewing';
+// import ImageViewing from 'react-native-image-viewing';
 import { fixFirebaseUrl } from '@/Utilities/utils';
 
 interface LoadAccountDetails {
@@ -263,6 +263,7 @@ const LoadAccountDetailsView = () => {
 
     return (
         <ScreenWrapper>
+
             <Heading page='Account Details' />
             <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
                 {/* Status Header */}
@@ -574,7 +575,7 @@ const LoadAccountDetailsView = () => {
             </Modal>
 
             {/* Image Viewer */}
-            <ImageViewing
+            {/* <ImageViewing
                 images={imageViewerImages}
                 imageIndex={currentImageIndex}
                 visible={showImageViewer}
@@ -605,7 +606,7 @@ const LoadAccountDetailsView = () => {
                         </ThemedText>
                     </View>
                 )}
-            />
+            /> */}
         </ScreenWrapper>
     );
 };

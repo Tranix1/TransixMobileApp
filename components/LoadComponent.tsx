@@ -239,6 +239,18 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
               </View>
             )}
 
+            {item.selectedBrokers && item.selectedBrokers.length > 0 && (
+              <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+                <ThemedText type='tiny' style={{}}>Broker Assigned</ThemedText>
+              </View>
+            )}
+
+            {item.loadVisibility === 'Private' && (
+              <View style={[styles.tag, { backgroundColor: backgroundLight }]}>
+                <ThemedText type='tiny' style={{}}>Private Load</ThemedText>
+              </View>
+            )}
+
 
           </View>
 
@@ -310,6 +322,26 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
               </ThemedText>
               <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
                 {item.loadingDate}
+              </ThemedText>
+            </View>
+          }
+          {item.deliveryDate &&
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+              <ThemedText type='default' style={{ flex: 2 }}>
+                Delivery Date
+              </ThemedText>
+              <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                {item.deliveryDate}
+              </ThemedText>
+            </View>
+          }
+          {item.numberOfTrucks &&
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
+              <ThemedText type='default' style={{ flex: 2 }}>
+                Number of Trucks
+              </ThemedText>
+              <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
+                {item.numberOfTrucks}
               </ThemedText>
             </View>
           }
@@ -511,7 +543,7 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
 
               </View>
 
-              <ImageViewing
+               <ImageViewing
                 images={selectedProofType === 'images' && item.proofOfOrder && Array.isArray(item.proofOfOrder) && item.proofOfOrderType && Array.isArray(item.proofOfOrderType)
                   ? item.proofOfOrder
                     .map((url, index) => ({ uri: url }))
@@ -544,7 +576,7 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
                     </ThemedText>
                   </View>
                 )}
-              />
+              /> 
 
               {/* Proof Selection Modal */}
               <Modal

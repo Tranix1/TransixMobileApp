@@ -12,7 +12,7 @@ import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/fire
 import { db } from '@/db/fireBaseConfig';
 import AccentRingLoader from '@/components/AccentRingLoader';
 import { deleteDocument } from '@/db/operations';
-import ImageViewing from 'react-native-image-viewing';
+// import ImageViewing from 'react-native-image-viewing';
 
 interface Driver {
     id: string;
@@ -595,7 +595,7 @@ export default function DriverIndex() {
             </Modal>
 
             {/* Image Viewer Modal */}
-            <ImageViewing
+            {/* <ImageViewing
                 images={driverImages}
                 imageIndex={currentImageIndex}
                 visible={imageViewerVisible}
@@ -610,7 +610,7 @@ export default function DriverIndex() {
                         </ThemedText>
                     </View>
                 )}
-            />
+            /> */}
         </ScreenWrapper>
     );
 }

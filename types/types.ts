@@ -262,6 +262,19 @@ export type Load = {
         address: string;
     };
 
+    // Additional load fields
+    numberOfTrucks?: string;
+    deliveryDate?: string;
+    selectedBrokers?: string[];
+    loadVisibility?: 'Public' | 'Private';
+
+    // Return route fields for map display
+    returnOrigin?: SelectLocationProp;
+    returnDestination?: SelectLocationProp;
+    returnRoutePolyline?: string;
+    returnDistance?: string;
+    returnDuration?: string;
+
 } & LoadFormData;
 
 export const Countries = ['Zimbabwe',
@@ -443,4 +456,26 @@ export interface FuelPurchase {
         routePolyline?: string;
         bounds?: any;
     };
+}
+
+export interface TokenHistory {
+    id?: string;
+    userId: string;
+    totalTokensGiven: number;
+    totalTokensUsed: number;
+    totalTokensExpired: number;
+    tokensAvailable: number;
+    utilizationPercentage: number;
+    issueDate: string;
+    expiryDate: string;
+    rewardId: string; // Reference to the rewards collection document
+    transactions?: TokenTransaction[];
+}
+
+export interface TokenTransaction {
+    type: 'spend' | 'reward';
+    amount: number;
+    description: string;
+    createdAt: string;
+    relatedId?: string; // Optional reference like load ID
 }

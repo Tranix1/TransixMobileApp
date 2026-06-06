@@ -14,6 +14,7 @@ import AccentRingLoader from "@/components/AccentRingLoader";
 import { VehicleLifecycleService, startVehicleLifecycleMonitoring } from '@/services/vehicleLifecycleService';
 import { openWhatsApp, getContactMessage } from '@/Utilities/whatsappUtils';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import { handleMakePayment } from "@/payments";
 
 interface Device {
   id: string;
@@ -72,11 +73,11 @@ export default function Index() {
     startVehicleLifecycleMonitoring();
   }, [user]);
 
-  const LoadTructs = async () => {
+  const LoadVehicles = async () => {
     if (!user) return;
     try {
       setLoading(true);
-      let filters = [where("customerId", "==", user.uid)];
+      let filters = [where("userId", "==", user.uid)];
       const maLoads = await fetchDocuments("TrackedVehicles", 10, undefined, filters);
 
       if (maLoads.data.length) {
@@ -92,13 +93,13 @@ export default function Index() {
     }
   }
   useEffect(() => {
-    LoadTructs();
+    LoadVehicles();
   }, [user])
 
   const onRefresh = async () => {
     try {
       setRefreshing(true);
-      await LoadTructs();
+      await LoadVehicles();
       setRefreshing(false);
 
     } catch (error) {
@@ -109,7 +110,10 @@ export default function Index() {
   const [processingVehicleId, setProcessingVehicleId] = useState<string | null>(null);
   const [showInsufficientBalanceModal, setShowInsufficientBalanceModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState<{ id: string; name: string } | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState< { id: string; name: string } | null>(null);
+
+  const [phoneNumber , setPhoneNumber]=useState("")
+  const [paymentUpdate ,setPaymentUpdate]= useState("")
 
   const handleSubscription = async (vehicleId: string, vehicleName: string) => {
     if (!user?.uid) {
@@ -212,7 +216,7 @@ export default function Index() {
       await addDocument('WalletHistory', paymentData); // Also save to WalletHistory
 
       Alert.alert('Success', 'Vehicle successfully subscribed to tracking!');
-      LoadTructs(); // Refresh the list
+      LoadVehicles(); // Refresh the list
     } catch (error: any) {
       console.error('Error processing subscription:', error);
       Alert.alert('Error', 'Failed to process subscription. Please try again.');
@@ -222,6 +226,55 @@ export default function Index() {
       setSelectedVehicle(null);
     }
   };
+
+
+
+ const handleDeposit = async () => {
+    if (!phoneNumber) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    
+
+    setLoading(true);
+    setPaymentUpdate('');
+
+    try {
+      const result = await handleMakePayment(
+        10,
+        `Wallet Deposit - $${10}`,
+        setPaymentUpdate,
+        phoneNumber
+      );
+
+      if (result.success) {
+        // Add funds to wallet
+       
+
+        Alert.alert(
+          'Subscription Successful',
+          `$10 has been added to your wallet.`,
+          [{ text: 'OK', onPress: () => {} }]
+        );
+
+        setPhoneNumber('');
+        setPaymentUpdate('');
+      } else {
+        Alert.alert('Deposit Failed', result.message);
+      }
+    } catch (error) {
+      console.error('Error processing deposit:', error);
+      Alert.alert('Error', 'Failed to process deposit. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+
+
+  
 
   const handleReAddVehicle = async (vehicleId: string, vehicleName: string) => {
     Alert.alert(
@@ -248,7 +301,7 @@ export default function Index() {
                   });
                 } else {
                   // Fallback: refresh list if deviceId wasn't returned for any reason
-                  LoadTructs();
+                  LoadVehicles();
                 }
               } else {
                 Alert.alert("Error", result.error || "Failed to re-add vehicle");
@@ -301,8 +354,8 @@ export default function Index() {
 
   if (loading) {
     return (
-      <ScreenWrapper>
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <ScreenWrapper >
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" , alignSelf:"center" }}>
           <AccentRingLoader color={accent} size={48} dotSize={8} />
 
           <ThemedText>Loading devices...</ThemedText>
@@ -314,7 +367,9 @@ export default function Index() {
   return (
     <ScreenWrapper>
 
-      <Heading page='Tracking' rightComponent={
+      {/* Cpmmented out tracking header to use it at new home */}
+
+      {/* <Heading page='Tracking' rightComponent={
         isAgent ? (
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: wp(3) }}>
             <View>
@@ -337,7 +392,22 @@ export default function Index() {
             </TouchableNativeFeedback>
           </View>
         ) : undefined
-      } />
+      } /> */}
+
+          { isAgent ? (
+          <View style={{ flexDirection: 'row', justifyContent: "space-evenly", marginRight: wp(3), }}>
+              <TouchableNativeFeedback style={{backgroundColor:backgroundLight, padding: wp(2), borderRadius: wp(2),borderColor:accent,borderWidth:1 , }} onPress={() => router.push('/Tracking/AddTrackedVehicle')}  >
+                <ThemedText style={{ alignSelf: 'flex-start' }}>Add Vehicle</ThemedText>
+              </TouchableNativeFeedback>
+            {user?.uid === 'QOC9krp5BOR7NhFXRuX5f32u17e2' && (
+              <View style={{ marginLeft: wp(4) }}>
+                <TouchableNativeFeedback onPress={() => router.push('/Tracking/AddAgent')} style={{backgroundColor:backgroundLight, padding: wp(2), borderRadius: wp(2),borderColor:accent,borderWidth:1 , }}>
+                  <ThemedText style={{ alignSelf: 'flex-start' }}>Add Agent</ThemedText>
+                </TouchableNativeFeedback>
+              </View>
+            )}
+          </View>
+        ) :  undefined}
 
       <FlatList
         keyExtractor={(item) => item.id.toString()}
@@ -402,7 +472,11 @@ export default function Index() {
                     Alert.alert("Session regenerating", `Please wait ${cooldownRemainingMin} minute(s) before starting a new 4-hour session.`);
                   }
                 } else {
-                  handleSubscription(item.id, item.vehicleName);
+                  // Tjis line commented is for using waalltet now want to pay direct
+                  // handleSubscription(item.id, item.vehicleName);
+
+                    setShowSubscriptionModal(true);
+                  setSelectedVehicle({ id: item.id, name: item.vehicleName });
                 }
               }}
               disabled={processingVehicleId === item.id}
@@ -412,7 +486,7 @@ export default function Index() {
                   style={{
                     fontSize: 16,
                     fontWeight: "600",
-                    marginBottom: 4,
+                    marginBottom: 3,
                   }}
                 >
                   {item.vehicleName}
@@ -446,7 +520,7 @@ export default function Index() {
 
                 {/* Show vehicle category and payment type */}
                 {(item.vehicleCategory || item.paymentType) && (
-                  <View style={{ flexDirection: 'row', marginTop: 4, flexWrap: 'wrap' }}>
+                  <View style={{ flexDirection: 'row', marginTop: 3, flexWrap: 'wrap' }}>
                     {item.vehicleCategory && (
                       <ThemedText style={{ fontSize: 12, color: icon, marginRight: 8 }}>
                         {item.vehicleCategory}{item.vehicleSubType ? ` - ${item.vehicleSubType}` : ''}
@@ -567,7 +641,11 @@ export default function Index() {
         cancelText="Cancel"
         onConfirm={confirmSubscription}
         icon="car-sport"
-        iconColor={accent}
+        iconColor={accent} 
+        loadVehicles={LoadVehicles}
+        vehicleId={selectedVehicle?.id || ''}
+        vehicleName = {selectedVehicle?.name || ''}
+        
       />
     </ScreenWrapper>
   );
@@ -619,7 +697,8 @@ const styles = StyleSheet.create({
     textAlign: 'center'
   }, emptyContainer: {
     minHeight: hp(80),
-    justifyContent: 'center'
+    justifyContent: 'center',
+    alignSelf:'center'
   },
   modalOverlay: {
     position: 'absolute',
