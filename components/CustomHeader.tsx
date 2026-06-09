@@ -6,6 +6,7 @@ import { wp } from '@/constants/common';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext'
+import { FontAwesome6 } from '@expo/vector-icons';
 
 interface CustomHeaderProps {
     onPressMenu: () => void;
@@ -85,7 +86,13 @@ export default function CustomHeader({ onPressMenu, currentRole, pageTitle }: Cu
                         </TouchableNativeFeedback>
                     </View>
                 )}
-               { (user?.email==="transix16@gmail.com" || user?.email==="kelvinyaya8@gmail.com") &&  <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
+               { (user?.email==="transix16@gmail.com" || user?.email==="kelvinyaya8@gmail.com") &&  <View style={{ overflow: 'hidden', borderRadius: wp(10) , flexDirection:'row'}}>
+                <TouchableNativeFeedback onPress={()=> router.push("/Fleet/DriverScreens/Profile/Index")}  >
+                    <View style={{ padding: wp(2) }}>
+                         <FontAwesome6 name="user" size={wp(7)} color={icon} />;
+                    </View>
+                </TouchableNativeFeedback>
+                
                     <TouchableNativeFeedback onPress={onPressMenu}>
                         <View style={{ padding: wp(2) }}>
                             <Ionicons name='reorder-three' size={wp(7)} color={icon} />

@@ -14,6 +14,7 @@ import Jobs from "./Fleet/DriverScreens/Jobs/Index";
 import Trucks from "./Fleet/DriverScreens/Trucks/Index";
 import Earnings from "./Fleet/DriverScreens/Earnings/Index";
 import DriverProfile from "./Fleet/DriverScreens/Profile/Index";
+import ChatIndex from "./Chats/Index";
 
 import { ThemedText } from "@/components/ThemedText";
 import ScreenWrapper from "@/components/ScreenWrapper";
@@ -197,7 +198,7 @@ export default function Index() {
                 case "Wallet": return <FontAwesome6 name="wallet" size={size} color={color} />;
                 case "Jobs": return <FontAwesome6 name="briefcase" size={size} color={color} />;
                 case "Earnings": return <FontAwesome6 name="dollar-sign" size={size} color={color} />;
-                case "Profile": return <FontAwesome6 name="user" size={size} color={color} />;
+                case "Chat": return <FontAwesome6 name="comments" size={size} color={color} />;
                 default: return null;
               }
             },
@@ -224,17 +225,17 @@ export default function Index() {
             </>
           ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'owner') ? (
             <>
-              <Tab.Screen name="Home " component={Home} />
               <Tab.Screen name="Loads" component={Loads} />
               <Tab.Screen name="Trucks" component={LogisticsTrucks} />
+              <Tab.Screen name="Chat" component={ChatIndex} />
               <Tab.Screen name="Wallet" component={Wallet} />
             </>
           ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'driver') ? (
             <>
               <Tab.Screen name="Jobs" component={Jobs} />
               <Tab.Screen name="Trucks" component={Trucks} />
+              <Tab.Screen name="Chat" component={ChatIndex} />
               <Tab.Screen name="Earnings" component={Earnings} />
-              <Tab.Screen name="Profile" component={DriverProfile} />
             </>
           ) : (
             <>
