@@ -167,55 +167,61 @@ fetchFleetOwner();
 
 
 
+    const startChat = async (person : { userId?: string; ownerId?: string; uid?: string; id?: string }) => {
 
+        console.log("Starting chat with person:", person);
 
-
-
-
-const startChat = async (person: any) => {
   if (!user?.uid) return;
 
   const otherUserId =
-    person?.userId ||
-    person?.uid ||
+    person?.userId ??
+    person?.ownerId ??
+    person?.uid ??
     person?.id;
 
+      console.log("Current:", user.uid);
+  console.log("Other:", otherUserId);
+
   if (!otherUserId) return;
+
+  if (otherUserId === user.uid) {
+    console.log("Cannot start a chat with yourself");
+    return;
+  }
+
+
 
   const chatId = [user.uid, otherUserId]
     .sort()
     .join("_");
 
-  try {
-    const chatRef = doc(db, "chats", chatId);
-    const chatSnap = await getDoc(chatRef);
+  const chatRef = doc(db, "chats", chatId);
+  const chatSnap = await getDoc(chatRef);
 
-    // Create only if it doesn't exist
-    if (!chatSnap.exists()) {
-      await setDoc(chatRef, {
-        chatId,
-        participants: [user.uid, otherUserId],
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        lastMessage: "",
-        lastMessageAt: null,
-        type: "direct",
-      });
-    }
-
-
-    // router.push(`/Chats/ChatScreen`);
-
-    router.push({
-    pathname: "/Chats/ChatScreen",
-    params: { chatId }
+  if (!chatSnap.exists()) {
+    await setDoc(chatRef, {
+      chatId,
+      participants: [user.uid, otherUserId],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      lastMessage: "",
+      lastMessageAt: null,
+      type: "direct",
     });
-
-
-  } catch (error) {
-    console.error("Failed to start chat:", error);
   }
+
+  router.push({
+    pathname: "/Chats/ChatScreen",
+    params: { chatId },
+  });
 };
+
+
+
+
+
+
+
 
   
     const [dspMenu, setDspMenu] = useState(false);

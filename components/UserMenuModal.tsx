@@ -21,7 +21,76 @@ export default function UserMenuModal({ visible, onClose, user, onProfileUpdate 
     const backgroundColor = useThemeColor('backgroundLight');
     const background = useThemeColor('background');
 
-    const menuItems = [
+
+
+
+
+    // const menuItems = [
+    //     {
+    //         id: 'requests',
+    //         title: 'My Requests',
+    //         icon: 'truck-front',
+    //         iconFamily: FontAwesome6,
+    //         onPress: () => {
+    //             router.push("/BooksAndBids/SlctBidsAndBooks");
+    //             onClose();
+    //         },
+    //     },
+    //     {
+    //         id: 'contracts',
+    //         title: 'My Contracts',
+    //         icon: 'reader',
+    //         iconFamily: Ionicons,
+    //         onPress: () => {
+    //             router.push("/Logistics/Contracts/ViewMiniContracts");
+    //             onClose();
+    //         },
+    //     },
+    //     {
+    //         id: 'trucks',
+    //         title: 'Manage My Trucks',
+    //         icon: 'truck-front',
+    //         iconFamily: FontAwesome6,
+    //         onPress: () => {
+    //             router.push({ pathname: '/Logistics/Trucks/Index', params: { userId: user?.uid } });
+    //             onClose();
+    //         },
+    //     },
+    //     {
+    //         id: 'loads',
+    //         title: 'Manage My Loads',
+    //         icon: 'boxes-stacked',
+    //         iconFamily: FontAwesome6,
+    //         onPress: () => {
+    //             router.push({ pathname: '/Logistics/Loads/Index', params: { userId: user?.uid } });
+    //             onClose();
+    //         },
+    //     },
+    //     {
+    //         id: 'payments',
+    //         title: 'My Payments History',
+    //         icon: 'work-history',
+    //         iconFamily: MaterialIcons,
+    //         onPress: () => {
+    //             router.push('/Wallet/Index');
+    //             onClose();
+    //         },
+    //     },
+    //     {
+    //         id: 'shop',
+    //         title: 'Manage My Shop',
+    //         icon: 'shop',
+    //         iconFamily: FontAwesome6,
+    //         onPress: () => {
+    //             // TODO: Implement shop management
+    //             onClose();
+    //         },
+    //     },
+    // ];
+
+
+
+   const menuItems = [
         {
             id: 'requests',
             title: 'My Requests',
@@ -33,18 +102,18 @@ export default function UserMenuModal({ visible, onClose, user, onProfileUpdate 
             },
         },
         {
-            id: 'contracts',
-            title: 'My Contracts',
+            id: 'AddLoads',
+            title: 'Add Loads',
             icon: 'reader',
             iconFamily: Ionicons,
             onPress: () => {
-                router.push("/Logistics/Contracts/ViewMiniContracts");
+                router.push("/Fleet/Driver");
                 onClose();
             },
         },
         {
-            id: 'trucks',
-            title: 'Manage My Trucks',
+            id: 'AddTrucks',
+            title: 'Add Trucks',
             icon: 'truck-front',
             iconFamily: FontAwesome6,
             onPress: () => {
@@ -53,12 +122,12 @@ export default function UserMenuModal({ visible, onClose, user, onProfileUpdate 
             },
         },
         {
-            id: 'loads',
-            title: 'Manage My Loads',
+            id: 'Drivers',
+            title: 'Manage Drivers',
             icon: 'boxes-stacked',
             iconFamily: FontAwesome6,
             onPress: () => {
-                router.push({ pathname: '/Logistics/Loads/Index', params: { userId: user?.uid } });
+                router.push({ pathname: '/Fleet/Driver', params: { userId: user?.uid } });
                 onClose();
             },
         },
@@ -83,6 +152,10 @@ export default function UserMenuModal({ visible, onClose, user, onProfileUpdate 
             },
         },
     ];
+
+
+
+
 
     return (
         <Modal onRequestClose={onClose} statusBarTranslucent visible={visible} transparent animationType='fade'>

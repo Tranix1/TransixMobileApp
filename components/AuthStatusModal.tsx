@@ -19,7 +19,7 @@ interface AuthStatusModalProps {
     type: 'create' | 'verify';
 }
 
-export default function AuthStatusModal({ visible, onClose, user, type }: AuthStatusModalProps) {
+export default function     AuthStatusModal({ visible, onClose, user, type }: AuthStatusModalProps) {
     const accent = useThemeColor('accent');
     const icon = useThemeColor('icon');
     const background = useThemeColor('background');

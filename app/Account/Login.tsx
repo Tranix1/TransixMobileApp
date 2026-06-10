@@ -59,18 +59,7 @@ const Login = () => {
 // ... inside your component
 
 const handleAccountSelect = (type: string) => {
-    if (type === 'fleet' || type === 'broker') {
-        // Trigger the smooth native Android toast
-        ToastAndroid.show(
-            'This account type is currently under improvement.', 
-            ToastAndroid.SHORT
-        );
-        
-        // Force the selection back to tracking
-        setSelectedAccount('tracking');
-    } else {
-        setSelectedAccount(type);
-    }
+    setSelectedAccount(type);
 };
 
     const onsubmit = async () => {
@@ -87,6 +76,12 @@ const handleAccountSelect = (type: string) => {
             password,
             accountType: selectedAccount
         });
+
+        if(selectedAccount === 'fleet' ) {
+            router.replace('/Account/FleetSelector');
+        } else {
+            
+        }
 
         setLoading(false);
 

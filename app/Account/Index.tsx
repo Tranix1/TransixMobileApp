@@ -86,7 +86,7 @@ const Index = () => {
 
   
 
-    const handleFleetSave = async (fleetData: any) => {
+    const handleFleetSave = async (fleetData: any) => {     
         setUploadingFleetD(true);
         try {
             // Generate unique fleet ID
@@ -414,7 +414,7 @@ const Index = () => {
                                 ))}
                             </View>
                         ) : (
-                            <TouchableNativeFeedback onPress={() => setShowFleetVerification(true)}>
+                            <TouchableNativeFeedback onPress={() =>router.push('/Account/FleetSelector')}>
                                 <View style={{
                                     backgroundColor: accent + '10',
                                     borderRadius: wp(2),
