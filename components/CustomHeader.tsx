@@ -43,18 +43,32 @@ export default function CustomHeader({ onPressMenu, currentRole, pageTitle }: Cu
                 // marginBottom: wp(1),
             }}
         >
+            
+            
+            
+           { (user?.email==="transix16@gmail.com" || user?.email==="kelvinyaya8@gmail.com") &&  <TouchableNativeFeedback onPress={()=> router.push("/Fleet/DriverScreens/Profile/Index")}  >
+                    <View style={{ padding: wp(2) }}>
+                         <FontAwesome6 name="user" size={wp(7)} color={icon} />;
+                    </View>
+                </TouchableNativeFeedback>}
+            
             <View>
                 {pageTitle ? (
                     <>
-                        <ThemedText type="title">{pageTitle}</ThemedText>
+                        <ThemedText  style= {{ alignSelf: 'center',fontWeight: 'bold',fontSize: wp(5) }} > {pageTitle} </ThemedText>
+
                         {typeof currentRole === 'object' && currentRole.role === 'fleet' && (
-                            <ThemedText type="tiny">{currentRole.companyName}</ThemedText>
+                            <ThemedText type="tiny" style={{ alignSelf: 'center' }}>
+                                {currentRole.companyName}: {currentRole.accType} - {currentRole.userRole}
+                            </ThemedText>
                         )}
                     </>
                 ) : typeof currentRole === 'object' && (currentRole.role === 'fleet'||currentRole.role === 'broker' ) ? (
                     <>
-                        <ThemedText type="title">{currentRole.companyName}</ThemedText>
-                        <ThemedText type="tiny">{currentRole.accType}: {currentRole.userRole}</ThemedText>
+                        <ThemedText  style= {{ alignSelf: 'center',fontWeight: 'bold',fontSize: wp(5) }} >{currentRole.companyName}</ThemedText>
+                        <ThemedText type="tiny" style={{ fontWeight: 'bold' }}>
+                            {currentRole.accType}: {currentRole.userRole}
+                        </ThemedText>
                     </>
                 ) 
                 
@@ -87,15 +101,11 @@ export default function CustomHeader({ onPressMenu, currentRole, pageTitle }: Cu
                     </View>
                 )}
                { (user?.email==="transix16@gmail.com" || user?.email==="kelvinyaya8@gmail.com") &&  <View style={{ overflow: 'hidden', borderRadius: wp(10) , flexDirection:'row'}}>
-                <TouchableNativeFeedback onPress={()=> router.push("/Fleet/DriverScreens/Profile/Index")}  >
-                    <View style={{ padding: wp(2) }}>
-                         <FontAwesome6 name="user" size={wp(7)} color={icon} />;
-                    </View>
-                </TouchableNativeFeedback>
+               
                 
                     <TouchableNativeFeedback onPress={onPressMenu}>
                         <View style={{ padding: wp(2) }}>
-                            <Ionicons name='reorder-three' size={wp(7)} color={icon} />
+                            <Ionicons name="ellipsis-vertical" size={wp(7)} color={icon} />
                         </View>
                     </TouchableNativeFeedback>
                 </View>}

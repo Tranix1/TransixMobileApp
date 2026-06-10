@@ -108,11 +108,16 @@ function FleetSelector() {
         <View style={[,styles.container, { backgroundColor: background }]}>
             <CustomHeader pageTitle="Fleet Selector" onPressMenu={() => { }} />
 
-            <TouchableOpacity style={styles.createButton} onPress={() => router.push('/Fleet/CreateFleet')}>
+          
+
+            <View>
+            <ThemedText style={styles.sectionHeading}>Fleets I Own</ThemedText>
+
+        <TouchableOpacity style={styles.createButton} onPress={() => router.push('/Fleet/CreateFleet')}>
                 <ThemedText style={styles.createButtonText}>Create New Fleet</ThemedText>
             </TouchableOpacity>
+            </View>
 
-            <ThemedText style={styles.sectionHeading}>Fleets I Own</ThemedText>
 
             <View style={[styles.sectionCard, { backgroundColor: background, borderColor: backgroundLight }]}>
                 <View style={styles.sectionHeader}>
@@ -177,12 +182,11 @@ const styles = StyleSheet.create({
         padding: 16,
     },
     createButton: {
-        marginBottom: 16,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
         borderRadius: 8,
         backgroundColor: '#0f9d58',
         alignItems: 'center',
+        paddingVertical: 6,
+        paddingHorizontal: 7,
     },
     createButtonText: {
         color: '#fff',
