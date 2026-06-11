@@ -14,15 +14,16 @@ import { useAuthState } from '@/hooks/useAuthState';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import FleetSelector from '../Account/FleetSelector';
 
 function Index() {
-    const {
-        isAuthenticated,
-        user,
-        needsProfileSetup,
-        needsEmailVerification,
-        updateUserProfile
-    } = useAuthState();
+            const {
+                isAuthenticated,
+                user,
+                needsProfileSetup,
+                needsEmailVerification,
+                updateUserProfile 
+            } = useAuthState();
 
     const { currentRole, setCurrentRole } = useAuth();
 
@@ -97,6 +98,8 @@ function Index() {
     };
 
 
+   
+
     return (
         <View style={styles.container}>
             <CustomHeader onPressMenu={() => checkAuth()} currentRole={currentRole} />
@@ -105,9 +108,13 @@ function Index() {
                 {currentRole === 'general' && (
                     <GeneralUserContent onAuthCheck={checkAuth} />
                 )}
+
+
                 {(currentRole === 'fleet' || (typeof currentRole === 'object' && currentRole.role === 'fleet')) && (
                     <FleetContent onAuthCheck={checkAuth} />
+
                 )}
+
                 {(currentRole === 'broker' || (typeof currentRole === 'object' && currentRole.role === 'broker')) &&(
                     <BrokerContent onAuthCheck={checkAuth} />
                 )}

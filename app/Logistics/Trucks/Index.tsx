@@ -221,6 +221,7 @@ const Index = () => {
                         (currentRole?.role === 'fleet'  || currentRole?.role === 'broker') ? (
                             <HorizontalTickComponent
                                 data={[
+                                    { topic: "Network", value: "Network" },
                                     { topic: "Private", value: "Private" },
                                     { topic: "Public", value: "Public" }
                                 ]}

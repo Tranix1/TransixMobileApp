@@ -93,7 +93,7 @@ function FleetSelector() {
 
         setCurrentRole(fleetRole);
         await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
-        router.back();
+        router.push('/');
     };
 
     if (!user) {
@@ -106,11 +106,11 @@ function FleetSelector() {
 
     return (
         <View style={[,styles.container, { backgroundColor: background }]}>
-            <CustomHeader pageTitle="Fleet Selector" onPressMenu={() => { }} />
+            {/* <CustomHeader pageTitle="Fl`eet Selector" onPressMenu={() => { }} /> */}
 
           
 
-            <View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 ,paddingHorizontal: 13}}>
             <ThemedText style={styles.sectionHeading}>Fleets I Own</ThemedText>
 
         <TouchableOpacity style={styles.createButton} onPress={() => router.push('/Fleet/CreateFleet')}>
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         // paddingHorizontal: 16,
-        // paddingTop: 16,
+        paddingTop: 16,
     },
     centered: {
         flex: 1,

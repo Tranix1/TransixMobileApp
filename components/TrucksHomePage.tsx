@@ -22,6 +22,8 @@ import { TruckTypeProps } from '@/types/types';
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { useAuth } from '@/context/AuthContext';
 import AccentRingLoader from '@/components/AccentRingLoader';
+import { router } from 'expo-router';
+import { FontAwesome6 } from '@expo/vector-icons';
 
 type FinalReturnComponentProps = {
   showfilter: boolean;
@@ -86,7 +88,6 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
 
 }) => {
 
-  console.log(contractName)
   const { user } = useAuth();
   const background = useThemeColor('backgroundLight')
   const bg = useThemeColor('background')
@@ -123,7 +124,13 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
             marginBottom: wp(1),
           }}
         >
-          
+
+          <TouchableNativeFeedback onPress={() => router.push("/Fleet/FleetProfile")}  >
+            <View style={{ padding: wp(2) }}>
+              <FontAwesome6 name="user" size={wp(7)} color={icon} />;
+            </View>
+          </TouchableNativeFeedback>
+
           {!contractId && !userId && <View>
             <View style={{}}>
               <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
@@ -140,15 +147,31 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
                 <ThemedText type="subtitle"  >{organisationName} Trucks </ThemedText>}
             </View>
           )}
-          <View style={{ flexDirection: 'row', gap: wp(2) }}>
-            <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-              <TouchableNativeFeedback onPress={() => setShowfilter(true)}>
-                <View style={{ padding: wp(2) }}>
-                  <Ionicons name={'filter'} size={wp(4)} color={icon} />
-                </View>
-              </TouchableNativeFeedback>
-            </View>
+
+          <View style={{ flexDirection: 'row', width: wp(26), justifyContent: "space-between", alignItems: 'center' }}>
+
+            <TouchableNativeFeedback onPress={() => setShowfilter(true)}>
+              <View >
+                <Ionicons name={'filter'} size={wp(4)} color={icon} />
+              </View>
+            </TouchableNativeFeedback>
+
+
+            <TouchableNativeFeedback onPress={() => router.push("/Logistics/Trucks/AddTrucks")}>
+              <View >
+                <Ionicons name="add" size={wp(7)} color={icon} />
+              </View>
+            </TouchableNativeFeedback>
+
+            <TouchableNativeFeedback >
+              <View >
+                <Ionicons name="ellipsis-vertical" size={wp(7)} color={icon} />
+              </View>
+            </TouchableNativeFeedback>
+
           </View>
+
+
         </View>
         {visibilitySelector}
 

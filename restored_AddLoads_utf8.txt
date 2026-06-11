@@ -1,4 +1,4 @@
-import 'react-native-get-random-values';
+ï»¿import 'react-native-get-random-values';
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, TouchableOpacity, StyleSheet, Modal, ToastAndroid, Image, ActivityIndicator } from "react-native";
 import { BlurView } from 'expo-blur';
@@ -288,15 +288,15 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
           setDistance(leg.distance.text);
           setDuration(leg.duration.text);
 
-          // Ô£à ETA with traffic
+          // Ã”Â£Ã  ETA with traffic
           if (leg.duration_in_traffic) {
             setDurationInTraffic(leg.duration_in_traffic.text);
           }
 
-          // Ô£à Encoded polyline
+          // Ã”Â£Ã  Encoded polyline
           setRoutePolyline(route.overview_polyline.points);
 
-          // Ô£à Bounds for auto-zoom
+          // Ã”Â£Ã  Bounds for auto-zoom
           setBounds(route.bounds);
         } else {
           // No route found
@@ -337,15 +337,15 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
           setReturnDistance(leg.distance.text);
           setReturnDuration(leg.duration.text);
 
-          // Ô£à ETA with traffic
+          // Ã”Â£Ã  ETA with traffic
           if (leg.duration_in_traffic) {
             setReturnDurationInTraffic(leg.duration_in_traffic.text);
           }
 
-          // Ô£à Encoded polyline
+          // Ã”Â£Ã  Encoded polyline
           setReturnRoutePolyline(route.overview_polyline.points);
 
-          // Ô£à Bounds for auto-zoom
+          // Ã”Â£Ã  Bounds for auto-zoom
           setReturnBounds(route.bounds);
         } else {
           // No route found
@@ -1389,7 +1389,7 @@ if (currentRole?.accType === 'fleet' && loadVisibility === 'Private' && selected
 const trucks = selectedFleetTrucks;
 const drivers = selectedDrivers;
 
-// 1´©ÅÔâú Add Cargo to fleet collection and get the auto-generated cargoId
+// 1Â´Â©Ã…Ã”Ã¢Ãº Add Cargo to fleet collection and get the auto-generated cargoId
 const cargoRefPath = `fleets/${currentRole.fleetId}/Cargo`;
 
  const docRef = doc(collection(db, `fleets/${currentRole.fleetId}/Cargo`));
@@ -1418,7 +1418,7 @@ await setDoc(docRef, {
   }))
 });
 
-// 2´©ÅÔâú Add load to selected brokers' subcollections
+// 2Â´Â©Ã…Ã”Ã¢Ãº Add load to selected brokers' subcollections
 for (const brokerId of selectedBrokers) {
   const brokerLoadData = {
     loadId: cargoId,
@@ -1444,7 +1444,7 @@ for (const brokerId of selectedBrokers) {
   await addDocumentWithId(`brokers/${brokerId}/loads`, brokerLoadDocId, brokerLoadData);
 }
 
-  // 2´©ÅÔâú Cargo assignments per truck
+  // 2Â´Â©Ã…Ã”Ã¢Ãº Cargo assignments per truck
   for (const truck of trucks) {
     const truckDrivers = drivers.filter(d => d.truckId === truck.id);
     if (truckDrivers.length > 0) {
@@ -1469,7 +1469,7 @@ for (const brokerId of selectedBrokers) {
     }
   }
 
-  // 3´©ÅÔâú Assign cargo to drivers
+  // 3Â´Â©Ã…Ã”Ã¢Ãº Assign cargo to drivers
   for (const driver of drivers) {
     const driverCargoDocId = `${cargoId}_${driver.driverId}_${driver.truckId}_${driver.role}`;
     await addDocumentWithId(`fleets/${currentRole.fleetId}/Drivers/${driver.docId}/cargo`, driverCargoDocId, {
@@ -1492,7 +1492,7 @@ for (const brokerId of selectedBrokers) {
     });
   }
 
-  // 4´©ÅÔâú Optional: Truck cargo history
+  // 4Â´Â©Ã…Ã”Ã¢Ãº Optional: Truck cargo history
   // for (const truck of trucks) {
   //   console.log("adduing truck sub")
 
@@ -1507,7 +1507,7 @@ for (const brokerId of selectedBrokers) {
   //   }
   // }
 
-  // 5´©ÅÔâú Add to fleet manager's assigned loads
+  // 5Â´Â©Ã…Ã”Ã¢Ãº Add to fleet manager's assigned loads
   if (currentRole.userRole === "owner" || currentRole.userRole === "fleetManager") {
 
     const fleetManagerLoadData = {
@@ -1535,12 +1535,12 @@ for (const brokerId of selectedBrokers) {
 
 }else if (currentRole?.accType === 'fleet' && loadVisibility === 'Public') {
   // Fleet user with public load
-  // 1´©ÅÔâú Regular Cargo addition to main Cargo collection
+  // 1Â´Â©Ã…Ã”Ã¢Ãº Regular Cargo addition to main Cargo collection
 } else if(currentRole?.accType === 'broker' && loadVisibility === 'Private') {
   // Broker user with private load - assign to selected trucks
   const trucks = selectedBrokerTrucks;
 
-  // 1´©ÅÔâú Add Cargo to broker's subcollection and get the auto-generated cargoId
+  // 1Â´Â©Ã…Ã”Ã¢Ãº Add Cargo to broker's subcollection and get the auto-generated cargoId
   const brokerCargoRefPath = `brokers/${currentRole.userId}/loads`;
 
   const docRef = doc(collection(db, `brokers/${currentRole.userId}/loads`));
@@ -1559,7 +1559,7 @@ for (const brokerId of selectedBrokers) {
     }))
   });
 
-  // 2´©ÅÔâú Add load to fleet manager's brokerLoads subcollection
+  // 2Â´Â©Ã…Ã”Ã¢Ãº Add load to fleet manager's brokerLoads subcollection
   // This allows the fleet manager to see which loads brokers have assigned to their trucks
   for (const truck of trucks) {
     const brokerLoadData = {
@@ -1737,7 +1737,7 @@ for (const brokerId of selectedBrokers) {
               <Ionicons name="time" size={wp(4)} color="#ff9800" />
             )}
             <ThemedText style={{ marginLeft: wp(2), color: (userIsFleetVerified || getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "#0f9d58" : "#ff9800", fontSize: 14 }}>
-              {userIsFleetVerified ? "Fleet User ÔÇó Verified" : (getGeneralDetails ? "General" : "Professional") + " User ÔÇó " + ((getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "Verified" : "Pending Verification")}
+              {userIsFleetVerified ? "Fleet User Ã”Ã‡Ã³ Verified" : (getGeneralDetails ? "General" : "Professional") + " User Ã”Ã‡Ã³ " + ((getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "Verified" : "Pending Verification")}
             </ThemedText>
           </View>
         </View>

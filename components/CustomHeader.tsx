@@ -46,11 +46,12 @@ export default function CustomHeader({ onPressMenu, currentRole, pageTitle }: Cu
             
             
             
-           { (user?.email==="transix16@gmail.com" || user?.email==="kelvinyaya8@gmail.com") &&  <TouchableNativeFeedback onPress={()=> router.push("/Fleet/DriverScreens/Profile/Index")}  >
-                    <View style={{ padding: wp(2) }}>
-                         <FontAwesome6 name="user" size={wp(7)} color={icon} />;
-                    </View>
-                </TouchableNativeFeedback>}
+            { (user?.email==="transix16@gmail.com" || user?.email==="kelvinyaya8@gmail.com") &&  <TouchableNativeFeedback onPress={()=> router.push("/Fleet/DriverScreens/Profile/Index")}  >
+                        <View style={{ padding: wp(2) }}>
+                            <FontAwesome6 name="user" size={wp(7)} color={icon} />;
+                        </View>
+                    </TouchableNativeFeedback>
+                }
             
             <View>
                 {pageTitle ? (
@@ -65,10 +66,21 @@ export default function CustomHeader({ onPressMenu, currentRole, pageTitle }: Cu
                     </>
                 ) : typeof currentRole === 'object' && (currentRole.role === 'fleet'||currentRole.role === 'broker' ) ? (
                     <>
-                        <ThemedText  style= {{ alignSelf: 'center',fontWeight: 'bold',fontSize: wp(5) }} >{currentRole.companyName}</ThemedText>
+                        {currentRole.userRole === '' ? 
+                        <View>
+                                <ThemedText  style= {{ alignSelf: 'center',fontWeight: 'bold',fontSize: wp(5) }} >Fleet Selector</ThemedText>
+
+                        </View>
+                         :
+                            <View>
+                                <ThemedText  style= {{ alignSelf: 'center',fontWeight: 'bold',fontSize: wp(5) }} >{currentRole.companyName}</ThemedText>
                         <ThemedText type="tiny" style={{ fontWeight: 'bold' }}>
                             {currentRole.accType}: {currentRole.userRole}
                         </ThemedText>
+                                 </View>
+                          }
+
+                        
                     </>
                 ) 
                 

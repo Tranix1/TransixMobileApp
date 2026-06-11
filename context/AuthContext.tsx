@@ -11,7 +11,7 @@ const AuthContext = createContext({
     signUp: async (credentials: any) => { },
     Login: async (credentials: any) => ({ success: false, message: "" }),
     isSignedIn: false,
-    user: null as User | null,
+    user: null as User | null | undefined,
     setupUser: async (userData: any) => { },
     Logout: async () => false,
     alertBox: (title: string, message: string, buttons?: Alertbutton[], type?: "default" | "error" | "success" | "laoding" | "destructive" | undefined) => { },
@@ -32,7 +32,7 @@ import { updateUserTokenInAllCollections } from "@/Utilities/pushNotification";
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User | null | undefined>(undefined);
     const [isSignedIn, setIsSignedIN] = useState(false);
     const [currentRole, setCurrentRole] = useState<'general' | 'fleet' | 'broker' | { role: 'fleet'; fleetId: string; companyName: string; userRole: string; accType: string; } | { role: 'broker'; brokerId: string; companyName: string; userRole: string; accType: string; brokerType: string;  }>('general');
     const [isAppReady, setIsAppReady] = useState(false);
@@ -144,67 +144,118 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         message: string;
     }
 
-    const Login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
-        try {
-            const userCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
-            const user = userCredential.user;
+    const Login = async ( credentials: LoginCredentials): Promise<LoginResponse> => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      credentials.email,
+      credentials.password
+    );
+    
+setUser(undefined);
 
-            if (auth.currentUser && !auth.currentUser.emailVerified) {
-                const user = userCredential.user;
-                await sendEmailVerification(user);
-                alert('Verification Email Sent \b Please Verify Your Email To Continue');
-            }
+    const firebaseUser = userCredential.user;
 
+    if (auth.currentUser && !auth.currentUser.emailVerified) {
+      await sendEmailVerification(firebaseUser);
+      alert(
+        "Verification Email Sent\nPlease Verify Your Email To Continue"
+      );
+    }
 
-            const aditional = await readById('users', user.uid)
-            const fullUser = { uid: user.uid, email: user.email, displayName: user.displayName, phoneNumber: user.phoneNumber, photoURL: user.photoURL, ...aditional };
-            setUser(fullUser as User);
-            setIsSignedIN(true);
-            await AsyncStorage.setItem("user", JSON.stringify(fullUser));
+    const additional = await readById("users", firebaseUser.uid);
 
-            // Also store current user details for persistence
-            await AsyncStorage.setItem("currentUser", JSON.stringify(fullUser));
+    if (!additional) {
+      setUser(null);
+      setIsSignedIN(true);
 
-            router.dismissAll();
-            return { success: true, message: 'Login successful' };
+      router.dismissAll();
 
-        } catch (error: any) {
-            const errorCode = error.message.match(/\(([^)]+)\)/)?.[1];
-            console.log(error);
-            let errorMessage = "An unexpected error occurred. Please try again.";
+      return {
+        success: true,
+        message: "Login successful",
+      };
+    }
 
-            if (errorCode) {
-                switch (errorCode) {
-                    case "auth/network-request-failed":
-                        errorMessage = "Network request failed";
-                        break;
-                    case "auth/invalid-email":
-                        errorMessage = "Invalid email format.";
-                        break;
-                    case "auth/user-not-found":
-                        errorMessage = "No account found with this email.";
-                        break;
-                    case "auth/wrong-password":
-                        errorMessage = "Incorrect password. Please try again.";
-                        break;
-                    case "auth/user-disabled":
-                        errorMessage = "This account has been disabled.";
-                        break;
-                    case "auth/too-many-requests":
-                        errorMessage = "Too many failed attempts. Try again later.";
-                        break;
-                    case "auth/invalid-credentials":
-                        errorMessage = "Password and Email are not recognised";
-                        break;
-                    default:
-                        errorMessage = 'Password and Email are not recognised';
-                }
-            }
-
-            return { success: false, message: errorMessage ?? "An unexpected error occurred. Please try again." };
-        }
+    const fullUser = {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      displayName: firebaseUser.displayName,
+      phoneNumber: firebaseUser.phoneNumber,
+      photoURL: firebaseUser.photoURL,
+      ...additional,
     };
 
+    setUser(fullUser as User);
+    setIsSignedIN(true);
+    
+
+    await AsyncStorage.setItem(
+      "user",
+      JSON.stringify(fullUser)
+    );
+
+    await AsyncStorage.setItem(
+      "currentUser",
+      JSON.stringify(fullUser)
+    );
+
+    router.dismissAll();
+
+    return {
+      success: true,
+      message: "Login successful",
+    };
+  } catch (error: any) {
+    const errorCode =
+      error.message.match(/\(([^)]+)\)/)?.[1];
+
+    console.log(error);
+
+    let errorMessage =
+      "An unexpected error occurred. Please try again.";
+
+    if (errorCode) {
+      switch (errorCode) {
+        case "auth/network-request-failed":
+          errorMessage = "Network request failed";
+          break;
+        case "auth/invalid-email":
+          errorMessage = "Invalid email format.";
+          break;
+        case "auth/user-not-found":
+          errorMessage = "No account found with this email.";
+          break;
+        case "auth/wrong-password":
+          errorMessage =
+            "Incorrect password. Please try again.";
+          break;
+        case "auth/user-disabled":
+          errorMessage =
+            "This account has been disabled.";
+          break;
+        case "auth/too-many-requests":
+          errorMessage =
+            "Too many failed attempts. Try again later.";
+          break;
+        case "auth/invalid-credentials":
+          errorMessage =
+            "Password and Email are not recognised";
+          break;
+        default:
+          errorMessage =
+            "Password and Email are not recognised";
+      }
+    }
+
+    return {
+      success: false,
+      message:
+        errorMessage ??
+        "An unexpected error occurred. Please try again.",
+    };
+  }
+};
 
     interface SignUpCredentials {
         email: string;

@@ -51,9 +51,7 @@ export function useAuthState() {
                 let userProfile = null;
                 try {
                     // Always fetch fresh profile data to ensure we have the latest
-                    console.log('Fetching fresh profile data for:', firebaseUser.uid);
                     const freshProfile = await readById('personalData', firebaseUser.uid);
-                    console.log('Fresh profile data from database:', freshProfile);
 
                     if (freshProfile) {
                         userProfile = freshProfile;
@@ -82,22 +80,7 @@ export function useAuthState() {
                 // If personalData was loaded from cache, don't require profile setup
                 const needsProfileSetup = isPersonalDataLoadedFromCache ? false : !fullUser?.organisation;
 
-                // Debug logging
-                console.log('Profile check:', {
-                    firebaseUser: {
-                        uid: firebaseUser.uid,
-                        email: firebaseUser.email,
-                        displayName: firebaseUser.displayName
-                    },
-                    userProfile,
-                    fullUser: {
-                        uid: fullUser.uid,
-                        email: fullUser.email,
-                        organisation: fullUser.organisation,
-                        displayName: fullUser.displayName
-                    },
-                    needsProfileSetup
-                });
+
 
                 // Check if email verification is needed
                 const needsEmailVerification = !firebaseUser.emailVerified;
@@ -136,17 +119,7 @@ export function useAuthState() {
             // If personalData was loaded from cache, don't require profile setup
             const needsProfileSetup = isPersonalDataLoadedFromCache ? false : !contextUser?.organisation;
 
-            console.log('Syncing with context user:', {
-                contextUser: {
-                    uid: contextUser.uid,
-                    email: contextUser.email,
-                    organisation: contextUser.organisation,
-                    displayName: contextUser.displayName
-                },
-                needsProfileSetup,
-                isPersonalDataLoadedFromCache
-            });
-
+           
             setAuthState(prev => ({
                 ...prev,
                 user: contextUser,

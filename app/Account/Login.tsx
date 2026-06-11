@@ -22,6 +22,7 @@ import {
     FontAwesome5,
     Ionicons
 } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -38,7 +39,7 @@ const Login = () => {
     const accent = useThemeColor('accent');
     const coolGray = useThemeColor('coolGray');
 
-    const { Login: loginUser } = useAuth();
+    const { Login: loginUser,setCurrentRole } = useAuth();
     const auth = getAuth();
 
     // Unified account selection handler
@@ -78,7 +79,22 @@ const handleAccountSelect = (type: string) => {
         });
 
         if(selectedAccount === 'fleet' ) {
-            router.replace('/Account/FleetSelector');
+
+             const fleetRole = {
+            role: 'fleet' as const,
+            fleetId: "",
+            companyName: "",
+            userRole:  "",
+            accType: 'fleet' as const,
+            driverId:  null,
+            fleetMainAdminId: null,
+            fleetManagerId:  null,
+            fleetDispatcherId:  null,
+        };
+
+        setCurrentRole(fleetRole);
+        await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
+
         } else {
             
         }

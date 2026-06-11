@@ -74,8 +74,11 @@ export default function Index() {
 
   const { currentRole } = useAuth();
 
+  console.log("Current Role in Index.tsx:", currentRole);
+  console.log(user , "the user in index.tsx ")
+
   // Check if profile details are missing
-  const isProfileIncomplete = isAuthenticated && (!user?.phoneNumber || !user?.organisation);
+  const isProfileIncomplete = isAuthenticated &&user !== undefined &&(user === null ||!user.phoneNumber ||!user.organisation);
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
@@ -140,7 +143,9 @@ export default function Index() {
     }
   }, [authLoading, isAppReady, versionCheckComplete, isAuthenticated, needsEmailVerification, isProfileIncomplete]);
 
-  if (!isAppReady || authLoading || !versionCheckComplete) {
+ 
+
+  if (!isAppReady || authLoading || !versionCheckComplete || (isAuthenticated && user === undefined)) {
     return (
       <ScreenWrapper>
         <View style={{ flex: 1, backgroundColor: background }}>
@@ -240,9 +245,7 @@ export default function Index() {
           ) : (
             <>
               <Tab.Screen name="Home " component={Home} />
-              <Tab.Screen name="Loads" component={Loads} />
-              <Tab.Screen name="Trucks" component={Trucks} />
-              <Tab.Screen name="Store" component={Store} />
+              <Tab.Screen name="About " component={About} />
             </>
           )}
         </Tab.Navigator>
