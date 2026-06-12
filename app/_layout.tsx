@@ -1,27 +1,25 @@
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { onAuthStateChanged } from "firebase/auth";
 import { useFonts } from 'expo-font';
 import { useEffect, useState } from "react";
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme, AppState } from 'react-native';
 import { setupGlobalErrorHandler } from '@/Utilities/globalErrorHandler';
-
-// Keep the splash screen visible while we fetch resources
-SplashScreen.preventAutoHideAsync();
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Linking } from "react-native";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { auth } from "@/db/fireBaseConfig";
+import AppLoadingScreen from "@/components/AppLoadingScreen";
+import ScreenWrapper from "@/components/ScreenWrapper";
 
 import { useNotificationRouting } from "@/Utilities/pushNotification";
 import { configureNavigationBar, refreshNavigationBar, configureNavigationBarAlternative, debugNavigationBar } from "@/Utilities/navigationBarUtils";
 import { configureNativeNavigationBar, forceNavigationBarConfig } from "@/Utilities/nativeNavigationBarUtils";
 import 'react-native-get-random-values';
 
+SplashScreen.preventAutoHideAsync();
+
 
 export default function RootLayout() {
-    const router = useRouter();
-    const [appIsReady, setAppIsReady] = useState(false);
     const colorScheme = useColorScheme();
 
     // Setup global error handler
@@ -109,8 +107,7 @@ export default function RootLayout() {
 
 
 const MainLayout = () => {
-    const { isSignedIn, setupUser, isAppReady } = useAuth();
-    const router = useRouter();
+    const { setupUser, isAppReady } = useAuth();
 
 
     useEffect(() => {
@@ -135,7 +132,11 @@ const MainLayout = () => {
     }, [isAppReady]);
 
     if (!isAppReady) {
-        return null; // Show nothing until app is ready
+        return (
+            <ScreenWrapper>
+                <AppLoadingScreen message="Initializing Transix..." />
+            </ScreenWrapper>
+        );
     }
 
     return (

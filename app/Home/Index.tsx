@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ToastAndroid, Animated } from 'react-native';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import { useAuth } from '@/context/AuthContext';
 import CustomHeader from '@/components/CustomHeader';
 import AuthStatusModal from '@/components/AuthStatusModal';
@@ -13,8 +13,6 @@ import FleetContent from '@/components/FleetContent';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
 import NetInfo from '@react-native-community/netinfo';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import FleetSelector from '../Account/FleetSelector';
 
 function Index() {
             const {
@@ -25,7 +23,7 @@ function Index() {
                 updateUserProfile 
             } = useAuthState();
 
-    const { currentRole, setCurrentRole } = useAuth();
+    const { currentRole } = useAuth();
 
     const {
         showUpdateModal,

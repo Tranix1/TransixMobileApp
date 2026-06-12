@@ -46,10 +46,8 @@ export default function Index() {
   const background = useThemeColor("background");
   const { bottom } = useSafeAreaInsets();
 
-  const [isAppReady, setIsAppReady] = useState(false);
   const [isConnectedInternet, setIsConnectedInternet] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [versionCheckComplete, setVersionCheckComplete] = useState(false);
 
   const [dspCreateAcc, setDspCreateAcc] = useState(false);
   const [dspVerifyAcc, setDspVerifyAcc] = useState(false);
@@ -73,13 +71,11 @@ export default function Index() {
     dismissUpdate,
   } = useAppUpdate();
 
-  const { currentRole, isSignedIn } = useAuth();
-
-  console.log("Current Role in Index.tsx:", currentRole);
-  console.log(user , "the user in index.tsx ")
+  const { currentRole } = useAuth();
 
   // Check if profile details are missing
   const isProfileIncomplete = isAuthenticated &&user !== undefined &&(user === null ||!user.phoneNumber ||!user.organisation);
+  const isAuthReady = !authLoading && user !== undefined;
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
@@ -100,53 +96,50 @@ export default function Index() {
   }, [authLoading]);
 
   useEffect(() => {
-    if (!authLoading) {
-      const timer = setTimeout(() => setIsAppReady(true), 500);
-      return () => clearTimeout(timer);
+    if (!isAuthReady) {
+      return;
     }
-  }, [authLoading]);
+
+    const timer = setTimeout(() => {
+      setDspCreateAcc(false);
+      setDspVerifyAcc(false);
+
+      if (!isConnectedInternet) {
+        return;
+      }
+
+      if (!isAuthenticated) {
+        setDspCreateAcc(true);
+        return;
+      }
+
+      if (needsEmailVerification && !isProfileIncomplete) {
+        setDspVerifyAcc(true);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [isAuthReady, isConnectedInternet, isAuthenticated, needsEmailVerification, isProfileIncomplete]);
 
   useEffect(() => {
-    if (isAppReady && isConnectedInternet && !versionCheckRun.current) {
-      versionCheckRun.current = true;
-      const versionTimeout = setTimeout(() => setVersionCheckComplete(true), 5000);
-      checkForUpdate()
-        .then(() => {
-          clearTimeout(versionTimeout);
-          setVersionCheckComplete(true);
-        })
-        .catch(() => {
-          clearTimeout(versionTimeout);
-          setVersionCheckComplete(true);
-        });
+    if (!isAuthReady || !isConnectedInternet || versionCheckRun.current) {
+      return;
     }
-  }, [isAppReady, isConnectedInternet]);
 
-  useEffect(() => {
-    if (!authLoading && isAppReady && versionCheckComplete) {
-      const timer = setTimeout(() => {
-        if (!isAuthenticated) {
-          setDspCreateAcc(true);
-          setDspVerifyAcc(false);
-          return;
-        }
-
-        setDspCreateAcc(false);
-
-        // ONLY show verify modal if profile data is actually filled
-        if (needsEmailVerification && !isProfileIncomplete) {
-          setDspVerifyAcc(true);
-        } else {
-          setDspVerifyAcc(false);
-        }
-      }, 700);
-      return () => clearTimeout(timer);
-    }
-  }, [authLoading, isAppReady, versionCheckComplete, isAuthenticated, needsEmailVerification, isProfileIncomplete]);
+    versionCheckRun.current = true;
+    const versionTimeout = setTimeout(() => {}, 5000);
+    checkForUpdate()
+      .then(() => {
+        clearTimeout(versionTimeout);
+      })
+      .catch(() => {
+        clearTimeout(versionTimeout);
+      });
+  }, [isAuthReady, isConnectedInternet]);
 
  
 
-  if (!isAppReady || authLoading || !versionCheckComplete || (isAuthenticated && user === undefined ) || ((typeof currentRole === 'object' && currentRole.role === '' ))  ) {
+  if (!isAuthReady) {
     return (
       <ScreenWrapper>
         <View style={{ flex: 1, backgroundColor: background }}>

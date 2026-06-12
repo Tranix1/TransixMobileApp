@@ -94,7 +94,7 @@ export default function     AuthStatusModal({ visible, onClose, user, type }: Au
 
                             <TouchableOpacity
                                 onPress={() => {
-                                    router.push("/Account/Login");
+                                    router.replace("/Account/Login");
                                     onClose();
                                 }}
                                 style={[styles.actionButton, { backgroundColor: "#d1f7e9" }]}

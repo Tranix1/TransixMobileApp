@@ -24,7 +24,7 @@ const AuthContext = createContext({
 });
 
 import { ReactNode } from "react";
-import { addDocument, setDocuments, readById, validateReferrer, validateReferrerCode } from "@/db/operations";
+import { setDocuments, readById, validateReferrerCode } from "@/db/operations";
 import { User } from "@/types/types";
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 import { updateUserTokenInAllCollections } from "@/Utilities/pushNotification";
@@ -40,59 +40,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const loadUser = async () => {
-            const storedUser = await AsyncStorage.getItem('user');
-            const currentUser = await AsyncStorage.getItem('currentUser');
-            const storedRole = await AsyncStorage.getItem('currentRole');
+            try {
+                const storedUser = await AsyncStorage.getItem('user');
+                const currentUser = await AsyncStorage.getItem('currentUser');
+                const storedRole = await AsyncStorage.getItem('currentRole');
 
-            if (storedUser) {
-                const parsedUser = JSON.parse(storedUser);
-                const cachedPersonalData = await AsyncStorage.getItem(`personalData_${parsedUser.uid}`);
-                let personalData;
-                let loadedFromCache = false;
-                if (cachedPersonalData) {
-                    personalData = JSON.parse(cachedPersonalData);
-                    loadedFromCache = true;
-                    setIsPersonalDataLoadedFromCache(true);
-                } else {
-                    try {
-                        personalData = await readById('personalData', parsedUser.uid);
-                        await AsyncStorage.setItem(`personalData_${parsedUser.uid}`, JSON.stringify(personalData));
-                        setIsPersonalDataLoadedFromCache(false);
-                    } catch (error) {
-                        console.log('Error loading personalData from DB:', error);
-                        // If DB fetch fails, set personalData to empty object or handle gracefully
-                        personalData = {};
-                        setIsPersonalDataLoadedFromCache(false);
+                if (storedUser) {
+                    const parsedUser = JSON.parse(storedUser);
+                    const cachedPersonalData = await AsyncStorage.getItem(`personalData_${parsedUser.uid}`);
+                    let personalData;
+                    if (cachedPersonalData) {
+                        personalData = JSON.parse(cachedPersonalData);
+                        setIsPersonalDataLoadedFromCache(true);
+                    } else {
+                        try {
+                            personalData = await readById('personalData', parsedUser.uid);
+                            await AsyncStorage.setItem(`personalData_${parsedUser.uid}`, JSON.stringify(personalData));
+                            setIsPersonalDataLoadedFromCache(false);
+                        } catch (error) {
+                            console.log('Error loading personalData from DB:', error);
+                            personalData = {};
+                            setIsPersonalDataLoadedFromCache(false);
+                        }
                     }
-                }
-                setUser({ ...parsedUser, ...personalData });
-                setIsSignedIN(true);
-            }
-
-            // Also load currentUser if available
-            if (currentUser) {
-                const parsedCurrentUser = JSON.parse(currentUser);
-                // Update user state with currentUser if it's more recent
-                if (!storedUser || JSON.parse(storedUser).uid !== parsedCurrentUser.uid) {
-                    setUser(parsedCurrentUser);
+                    setUser({ ...parsedUser, ...personalData });
                     setIsSignedIN(true);
                 }
-            }
 
-            if (storedRole) {
-                try {
-                    const parsedRole = JSON.parse(storedRole);
-                    if (typeof parsedRole === 'object' && (parsedRole.role === 'fleet' || parsedRole.role === 'broker')) {
-                        setCurrentRole(parsedRole);
-                    } else {
-                        setCurrentRole(parsedRole as 'general' | 'fleet' | 'broker');
+                if (currentUser) {
+                    const parsedCurrentUser = JSON.parse(currentUser);
+                    if (!storedUser || JSON.parse(storedUser).uid !== parsedCurrentUser.uid) {
+                        setUser(parsedCurrentUser);
+                        setIsSignedIN(true);
                     }
-                } catch (error) {
-                    setCurrentRole(storedRole as 'general' | 'fleet' | 'broker');
                 }
-            }
 
-            setIsAppReady(true);
+                if (storedRole) {
+                    try {
+                        const parsedRole = JSON.parse(storedRole);
+                        if (typeof parsedRole === 'object' && (parsedRole.role === 'fleet' || parsedRole.role === 'broker')) {
+                            setCurrentRole(parsedRole);
+                        } else {
+                            setCurrentRole(parsedRole as 'general' | 'fleet' | 'broker');
+                        }
+                    } catch (error) {
+                        setCurrentRole(storedRole as 'general' | 'fleet' | 'broker');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user from cache:', error);
+            } finally {
+                setIsAppReady(true);
+            }
         };
 
         loadUser();
@@ -106,6 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const fullUser = { ...userData, ...aditional };
             setUser(fullUser)
             setIsSignedIN(true);
+            setIsAppReady(true);
             await AsyncStorage.setItem('user', JSON.stringify(userData))
             await AsyncStorage.setItem(`personalData_${userData.uid}`, JSON.stringify(aditional))
 
@@ -117,8 +117,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return;
         } else {
             console.log("here")
-            // setUser(null)
+            setUser(null)
             setIsSignedIN(false);
+            setIsAppReady(true);
             await AsyncStorage.removeItem('user')
             return;
         }
@@ -186,6 +187,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       setUser(fullUser as User);
       setIsSignedIN(true);
+      setIsAppReady(true);
       await AsyncStorage.setItem('user', JSON.stringify(fullUser));
       await AsyncStorage.setItem('currentUser', JSON.stringify(fullUser));
 
@@ -210,7 +212,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await AsyncStorage.setItem('currentRole', roleToSet);
       }
 
-      router.dismissAll();
+      router.replace('/');
 
       return {
         success: true,
@@ -238,6 +240,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     setUser(fullUser as User);
     setIsSignedIN(true);
+    setIsAppReady(true);
     
     await AsyncStorage.setItem(
       "user",
@@ -270,7 +273,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await AsyncStorage.setItem('currentRole', roleToSet);
     }
 
-    router.dismissAll();
+    router.replace('/');
 
     return {
       success: true,
@@ -451,7 +454,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             };
 
             // 4. Save to Firestore (or your DB)
-            console.log('Saving to database:', fullUser);
             await setDocuments("personalData", fullUser);
 
             // 5. Set locally
@@ -467,7 +469,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             // 7. Verify the data was saved by reading it back
             const savedData = await readById('personalData', fullUser.uid);
-            console.log('Data saved to database:', savedData);
 
             // 8. Force a small delay to ensure state propagation
             await new Promise(resolve => setTimeout(resolve, 100));
