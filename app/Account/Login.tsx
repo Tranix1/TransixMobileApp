@@ -92,11 +92,11 @@ const handleAccountSelect = (type: string) => {
             fleetDispatcherId:  null,
         };
 
-        setCurrentRole(fleetRole);
-        await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
-
-        } else {
-            
+            await setCurrentRole(fleetRole);
+            await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
+        } else if(selectedAccount === 'tracking') {
+            await setCurrentRole('general');
+            await AsyncStorage.setItem('currentRole', 'general');
         }
 
         setLoading(false);

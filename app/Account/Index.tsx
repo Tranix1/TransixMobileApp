@@ -12,7 +12,6 @@ import Divider from '@/components/Divider'
 import { AntDesign, FontAwesome6, Ionicons, MaterialIcons } from '@expo/vector-icons'
 import Heading from '@/components/Heading'
 import AppLoadingScreen from '@/components/AppLoadingScreen'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import FleetVerificationModal from '@/components/FleetVerificationModal'
 import BrokerVerificationModal from '@/components/BrokerVerificationModal'
 import { DocumentAsset } from '@/types/types'
@@ -23,7 +22,6 @@ const Index = () => {
 
     const { user } = useAuth();
 
-    const [currentRole, setCurrentRole] = useState<'general' | 'fleet' | 'broker'>('general');
     const [showFleetVerification, setShowFleetVerification] = useState(false);
     const [showBrokerVerification, setShowBrokerVerification] = useState(false);
 
@@ -284,12 +282,7 @@ const Index = () => {
     const { setCurrentRole: setGlobalCurrentRole } = useAuth();
 
     const switchRole = async (role: 'general' | 'fleet' | 'broker') => {
-
-        setCurrentRole(role);
         setGlobalCurrentRole(role);
-        // Store the selected role in AsyncStorage
-        await AsyncStorage.setItem('currentRole', role);
-        router.back() // Role selected and stored, user can navigate to Home manually to see the update
     };
 
     if (!user) {
@@ -347,15 +340,15 @@ const Index = () => {
 
                 {/* Account Sections */}
                 <View style={styles.sectionsContainer}>
-                    {/* General User Section */}
+                    {/* Tracking Section */}
                     <TouchableNativeFeedback onPress={() => switchRole('general')}>
                         <View style={[styles.sectionCard, { backgroundColor: background, borderColor: backgroundLight }]}>
                             <View style={styles.sectionHeader}>
                                 <Ionicons name="person-outline" size={wp(6)} color={accent} />
-                                <ThemedText style={styles.sectionTitle}>General User</ThemedText>
+                                <ThemedText style={styles.sectionTitle}>Tracking</ThemedText>
                             </View>
                             <ThemedText style={styles.sectionDescription}>
-                                Switch to General User role - Access all features and services
+                                Switch to Tracking role - Access all features and services
                             </ThemedText>
                         </View>
                     </TouchableNativeFeedback>
@@ -389,10 +382,7 @@ const Index = () => {
                                                 fleetManagerId: fleet.fleetManagerId || null ,
                                                 fleetDispatcherId: fleet.fleetDispatcherId || null ,
                                             };
-                                            setCurrentRole('fleet');
                                             setGlobalCurrentRole(fleetRole);
-                                            AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
-                                            router.back();
                                         }}
                                     >
                                         <View style={{
@@ -459,10 +449,7 @@ const Index = () => {
                                                     companyName: broker.companyName,
                                                     userRole: broker.role,
                                                 };
-                                                setCurrentRole('broker');
                                                 setGlobalCurrentRole(brokerRole);
-                                                AsyncStorage.setItem('currentRole', JSON.stringify(brokerRole));
-                                                router.back();
                                             }}
                                         >
                                             <View style={{

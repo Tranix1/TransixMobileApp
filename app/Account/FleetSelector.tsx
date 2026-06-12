@@ -26,8 +26,10 @@ function FleetSelector() {
     const hasReferral = !!user?.referrerId || !!user?.referrerCode;
 
     useEffect(() => {
-        setShowReferralModal(!hasReferral);
-    }, [hasReferral]);
+        if (user) {
+            setShowReferralModal(!hasReferral);
+        }
+    }, [user, hasReferral]);
 
     const handleSubmitReferralCode = async (code: string) => {
         if (!code || !code.trim()) {
@@ -106,7 +108,7 @@ function FleetSelector() {
 
     return (
         <View style={[,styles.container, { backgroundColor: background }]}>
-            {/* <CustomHeader pageTitle="Fl`eet Selector" onPressMenu={() => { }} /> */}
+            <CustomHeader pageTitle="Fleet Selector" onPressMenu={() => { }} />
 
           
 

@@ -36,6 +36,7 @@ import {
 
 import { hp, wp } from "@/constants/common";
 import NetInfo from '@react-native-community/netinfo';
+import FleetSelector from "./Account/FleetSelector";
 
 const Tab = createBottomTabNavigator();
 
@@ -72,7 +73,7 @@ export default function Index() {
     dismissUpdate,
   } = useAppUpdate();
 
-  const { currentRole } = useAuth();
+  const { currentRole, isSignedIn } = useAuth();
 
   console.log("Current Role in Index.tsx:", currentRole);
   console.log(user , "the user in index.tsx ")
@@ -145,7 +146,7 @@ export default function Index() {
 
  
 
-  if (!isAppReady || authLoading || !versionCheckComplete || (isAuthenticated && user === undefined)) {
+  if (!isAppReady || authLoading || !versionCheckComplete || (isAuthenticated && user === undefined ) || ((typeof currentRole === 'object' && currentRole.role === '' ))  ) {
     return (
       <ScreenWrapper>
         <View style={{ flex: 1, backgroundColor: background }}>
@@ -186,6 +187,7 @@ export default function Index() {
     );
   }
 
+
   return (
     <ScreenWrapper>
       <View style={{ flex: 1, backgroundColor: background }}>
@@ -223,7 +225,7 @@ export default function Index() {
             },
           })}
         >
-          {currentRole === 'general' ? (
+          { (typeof currentRole === 'object' && currentRole.role === 'general' ) ? (
             <>
               <Tab.Screen name="Home " component={Home} />
               <Tab.Screen name="About " component={About} />
@@ -242,7 +244,13 @@ export default function Index() {
               <Tab.Screen name="Chat" component={ChatIndex} />
               <Tab.Screen name="Earnings" component={Earnings} />
             </>
-          ) : (
+          ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' ) ? 
+           (<>
+               <Tab.Screen name="Home " component={FleetSelector} />
+              <Tab.Screen name="About " component={About} />
+          </>)
+          
+          : (
             <>
               <Tab.Screen name="Home " component={Home} />
               <Tab.Screen name="About " component={About} />

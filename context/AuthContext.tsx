@@ -134,9 +134,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // initUser()
 
-    interface LoginCredentials {
+    interface LoginCredentials {    
         email: string;
         password: string;
+        accountType: 'general' | 'fleet' | 'broker' | 'tracking'
     }
 
     interface LoginResponse {
@@ -152,7 +153,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       credentials.password
     );
     
-setUser(undefined);
+    setUser(undefined);
 
     const firebaseUser = userCredential.user;
 
@@ -166,8 +167,48 @@ setUser(undefined);
     const additional = await readById("users", firebaseUser.uid);
 
     if (!additional) {
-      setUser(null);
+      let personalData = {};
+      try {
+        personalData = await readById('personalData', firebaseUser.uid) || {};
+        await AsyncStorage.setItem(`personalData_${firebaseUser.uid}`, JSON.stringify(personalData));
+      } catch (error) {
+        console.log('Error loading personalData during login:', error);
+      }
+
+      const fullUser = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName,
+        phoneNumber: firebaseUser.phoneNumber,
+        photoURL: firebaseUser.photoURL,
+        ...personalData,
+      };
+
+      setUser(fullUser as User);
       setIsSignedIN(true);
+      await AsyncStorage.setItem('user', JSON.stringify(fullUser));
+      await AsyncStorage.setItem('currentUser', JSON.stringify(fullUser));
+
+      const roleToSet = credentials.accountType === 'tracking' ? 'general' : credentials.accountType;
+
+      if (roleToSet === 'fleet') {
+        const fleetRole = {
+          role: 'fleet' as const,
+          fleetId: "",
+          companyName: "",
+          userRole: "",
+          accType: 'fleet' as const,
+          driverId: null,
+          fleetMainAdminId: null,
+          fleetManagerId: null,
+          fleetDispatcherId: null,
+        };
+        setCurrentRole(fleetRole);
+        await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
+      } else {
+        setCurrentRole(roleToSet as 'general' | 'fleet' | 'broker');
+        await AsyncStorage.setItem('currentRole', roleToSet);
+      }
 
       router.dismissAll();
 
@@ -177,6 +218,14 @@ setUser(undefined);
       };
     }
 
+    let personalData = {};
+    try {
+      personalData = await readById('personalData', firebaseUser.uid) || {};
+      await AsyncStorage.setItem(`personalData_${firebaseUser.uid}`, JSON.stringify(personalData));
+    } catch (error) {
+      console.log('Error loading personalData during login:', error);
+    }
+
     const fullUser = {
       uid: firebaseUser.uid,
       email: firebaseUser.email,
@@ -184,12 +233,12 @@ setUser(undefined);
       phoneNumber: firebaseUser.phoneNumber,
       photoURL: firebaseUser.photoURL,
       ...additional,
+      ...personalData,
     };
 
     setUser(fullUser as User);
     setIsSignedIN(true);
     
-
     await AsyncStorage.setItem(
       "user",
       JSON.stringify(fullUser)
@@ -199,6 +248,27 @@ setUser(undefined);
       "currentUser",
       JSON.stringify(fullUser)
     );
+
+    const roleToSet = credentials.accountType === 'tracking' ? 'general' : credentials.accountType;
+
+    if (roleToSet === 'fleet') {
+      const fleetRole = {
+        role: 'fleet' as const,
+        fleetId: "",
+        companyName: "",
+        userRole: "",
+        accType: 'fleet' as const,
+        driverId: null,
+        fleetMainAdminId: null,
+        fleetManagerId: null,
+        fleetDispatcherId: null,
+      };
+      setCurrentRole(fleetRole);
+      await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
+    } else {
+      setCurrentRole(roleToSet as 'general' | 'fleet' | 'broker');
+      await AsyncStorage.setItem('currentRole', roleToSet);
+    }
 
     router.dismissAll();
 
