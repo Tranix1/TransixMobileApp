@@ -11,14 +11,9 @@ import { Ionicons, AntDesign, Feather } from "@expo/vector-icons";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 import { router } from "expo-router";
-import { addDocument, addDocumentWithId, setDocuments, getDocById, updateDocument } from "@/db/operations";
 import { db } from '@/db/fireBaseConfig';
-import { collection,doc,serverTimestamp,setDoc,query,getDocs } from 'firebase/firestore';
+import { collection,query,getDocs ,setDoc,doc,serverTimestamp} from 'firebase/firestore';
 import { useAuth } from "@/context/AuthContext";
-import { DropDownItem } from "@/components/DropDown";
-import { countryCodes } from "@/data/appConstants";
-import { Dropdown } from "react-native-element-dropdown";
-import { DocumentUploader } from "@/components/DocumentUploader";
 
 import { hp, wp } from "@/constants/common";
 
@@ -26,24 +21,17 @@ import { AddTruckDetails } from "@/components/AddTruckDetails";
 import { TruckFormData } from "@/types/types";
 import { TruckTypeProps } from "@/types/types";
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { LoadImageUpload } from '@/components/LoadImageUpload';
-import { AIRecommendations } from '@/components/AIRecommendations';
-import { LoadingDateSelector } from '@/components/LoadingDateSelector';
-import { AfricanTruckSelector } from '@/components/AfricanTruckSelector';
 
 // New extracted components
 import { StepIndicator } from '@/components/StepIndicator';
 import { LocationSelector } from '@/components/LocationSelector';
 import { RateInput } from '@/components/RateInput';
-import { LoadSummary } from '@/components/LoadSummary';
 
 import { usePushNotifications, notifyLoadApprovalAdmins } from "@/Utilities/pushNotification";
-
-import { uploadImage } from "@/db/operations";
+import { uploadImage,addDocumentWithId ,addDocument , fetchDocuments} from "@/db/operations";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "@/db/fireBaseConfig";
-import { pickDocument, selectManyImages, pickDocumentsOnly } from "@/Utilities/utils";
-import { selectImage, selectImageNoCrop, selectImageWithCrop, takePhoto } from "@/Utilities/imageUtils";
+import {  selectManyImages, pickDocumentsOnly } from "@/Utilities/utils";
 import { DocumentAsset } from "@/types/types";
 import { ImagePickerAsset } from "expo-image-picker";
 import { ErrorModal } from "@/components/ErrorModal";
@@ -52,13 +40,6 @@ import KYCVerificationModal from "@/components/KYCVerificationModal";
 import { notifyTrucksByFilters } from "@/Utilities/notifyTruckByFilters";
 import { TruckNeededType } from "@/types/types";
 
-// Payment related imports
-import { getWalletBalance, hasSufficientBalance, deductFromWallet, addToWallet } from '@/Utilities/walletUtils';
-import { processReferralCommission, getUserReferrer } from '@/Utilities/referralUtils';
-import ConfirmationModal from '@/components/ConfirmationModal';
-import InsufficientFundsModal from '@/components/InsufficientFundsModal';
-import { fetchDocuments } from '@/db/operations';
-import { where } from 'firebase/firestore';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SelectLocationProp } from '@/types/types';
@@ -67,10 +48,9 @@ import { getUsers } from '@/db/operations';
 // New utilities
 import {
   validateLoadForm,
-  prepareLoadData,
   getDefaultFormState,
+  prepareLoadData
 } from '@/Utilities/loadUtils';
-import { analyzeLoadImages } from '@/Utilities/aiAnalysisUtils';
 const AddLoadDB = () => {
 
     interface userIsVerifiedProps {
@@ -106,12 +86,7 @@ const [searchedBrokerTrucks, setSearchedBrokerTrucks] = useState<any[]>([]);
 const [numberOfTrucks, setNumberOfTrucks] = useState('');
 const [deliveryDate, setDeliveryDate] = useState('');
 const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
-const [userIsVerified , setUserIsVerified] = useState<userIsVerifiedProps| null> (null);
 
-  const [userIsFleetVerified, setUserIsFleetVerified] = useState<boolean>(false);
-const [allUsers, setAllUsers] = useState<any[]>([]);
-
-  const [dataChecked, setDataChecked] = useState(false);
 
  useEffect(() => {
    const fetchAll = async () => {
@@ -122,7 +97,6 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
          const parsedRole = JSON.parse(storedRole);
          setCurrentRole(parsedRole);
          if (parsedRole.role === 'fleet' && parsedRole.accType === 'fleet') {
-           setUserIsFleetVerified(true);
            setFleetManagerId(parsedRole.fleetManagerId || parsedRole.userId); // Use fleetManagerId if available, fallback to userId
          }
        }
@@ -130,30 +104,6 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
        console.error("Error fetching current role:", error);
      }
 
-     // Check for owner verification in the unified verifiedUsers collection
-     const personDetails = await getDocById('verifiedUsers', (data) => {
-
-        if (data && data.accType === 'professional') {
-           setUserIsVerified({
-             docId: data.id || '',
-             isApproved: data.isApproved || false,
-             accType: 'professional'
-           });
-         }
-
-        // Check for fleet verification
-        if (data && data.accType === 'fleet' && data.verificationStatus === 'approved') {
-           setUserIsFleetVerified(true);
-         }
-     });
-
-     // Fetch all users for search functionality
-     try {
-       const fetchedUsers = await getUsers();
-       setAllUsers(fetchedUsers);
-     } catch (error) {
-       console.error("Error fetching users:", error);
-     }
 
      // Fetch brokers for broker search functionality
      try {
@@ -186,14 +136,10 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
        }
      }
 
-     // Add a short delay before rendering UI to prevent flicker
-     setTimeout(() => {
-       setDataChecked(true);
-     }, 300); // 300ms feels natural
    };
 
    fetchAll();
- }, [currentRole]); // Remove userIsFleetVerified dependency to prevent infinite loops
+ }, []); // Remove userIsFleetVerified dependency to prevent infinite loops
 
 
 
@@ -210,7 +156,6 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
   // Initialize form state using utility function
   const defaultState = getDefaultFormState();
   const [step, setStep] = useState(defaultState.step);
-  const [userType, setUserType] = useState<'general' | 'professional' | null>(null);
 
   // Form state variables
   const [typeofLoad, setTypeofLoad] = useState(defaultState.typeofLoad);
@@ -260,6 +205,7 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
   const [showCountries, setShowCountries] = useState(defaultState.showCountries);
   const [operationCountries, setOperationCountries] = useState<string[]>(defaultState.operationCountries);
   const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>(defaultState.trucksNeeded);
+  
   const [distance, setDistance] = useState("");
   const [duration, setDuration] = useState("");
   const [durationInTraffic, setDurationInTraffic] = useState("");
@@ -288,15 +234,15 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
           setDistance(leg.distance.text);
           setDuration(leg.duration.text);
 
-          // Ô£à ETA with traffic
+          // Ô£ï¿½ ETA with traffic
           if (leg.duration_in_traffic) {
             setDurationInTraffic(leg.duration_in_traffic.text);
           }
 
-          // Ô£à Encoded polyline
+          // Ô£ï¿½ Encoded polyline
           setRoutePolyline(route.overview_polyline.points);
 
-          // Ô£à Bounds for auto-zoom
+          // Ô£ï¿½ Bounds for auto-zoom
           setBounds(route.bounds);
         } else {
           // No route found
@@ -337,15 +283,15 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
           setReturnDistance(leg.distance.text);
           setReturnDuration(leg.duration.text);
 
-          // Ô£à ETA with traffic
+          // Ô£ï¿½ ETA with traffic
           if (leg.duration_in_traffic) {
             setReturnDurationInTraffic(leg.duration_in_traffic.text);
           }
 
-          // Ô£à Encoded polyline
+          // Ô£ï¿½ Encoded polyline
           setReturnRoutePolyline(route.overview_polyline.points);
 
-          // Ô£à Bounds for auto-zoom
+          // Ô£ï¿½ Bounds for auto-zoom
           setReturnBounds(route.bounds);
         } else {
           // No route found
@@ -366,54 +312,7 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
   }, [returnOrigin, returnDestination]);
 
 
-
-
-
-  // AI loading state
-  const [aiLoading, setAiLoading] = useState(false);
-
-  // AI-powered truck detection for general users
-  const [aiDetectedTruckType, setAiDetectedTruckType] = useState<{ id: number, name: string } | null>(null);
-  const [aiDetectedCargoArea, setAiDetectedCargoArea] = useState<TruckTypeProps | null>(null);
-  const [aiDetectedCapacity, setAiDetectedCapacity] = useState<{ id: number, name: string } | null>(null);
-  const [aiDetectedTankerType, setAiDetectedTankerType] = useState<{ id: number, name: string } | null>(null);
-  const [aiAnalysisComplete, setAiAnalysisComplete] = useState(false);
-  const [aiAnalysisError, setAiAnalysisError] = useState<string | null>(null);
-
-  // General user specific fields
-  const [budget, setBudget] = useState("");
-  const [budgetCurrency, setBudgetCurrency] = useState({ id: 1, name: "USD" });
-  const [loadImages, setLoadImages] = useState<ImagePickerAsset[]>([]);
-  const [selectedLoadingDate, setSelectedLoadingDate] = useState<{ id: number, name: string } | null>(null);
-  const [selectedAfricanTrucks, setSelectedAfricanTrucks] = useState<TruckTypeProps[]>([]);
-
-
-  // AI-powered truck type detection from images
-  const handleAnalyzeLoadImages = async () => {
-    try {
-      await analyzeLoadImages(
-        loadImages,
-        setAiLoading,
-        setAiAnalysisError,
-        setAiAnalysisComplete,
-        setAiDetectedCargoArea,
-        setAiDetectedTruckType,
-        setAiDetectedCapacity,
-        setAiDetectedTankerType,
-        () => { } // setAiAnswer - not used anymore
-      );
-    } catch (error) {
-      console.error("Error analyzing load images:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      const errorDetails = error instanceof Error ? error.stack : String(error);
-      showError(
-        "AI Analysis Error",
-        "Failed to analyze your load images. Please try again.",
-        errorDetails,
-        true
-      );
-    }
-  };
+ 
 
   function pushTruck() {
     const newTruck: TruckNeededType = {
@@ -467,19 +366,11 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Error modal state
-  const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorTitle, setErrorTitle] = useState("Error");
   const [errorMessage, setErrorMessage] = useState("");
   const [errorDetails, setErrorDetails] = useState("");
   const [showErrorDetails, setShowErrorDetails] = useState(false);
 
-  // Payment state
-  const [showInsufficientFundsModal, setShowInsufficientFundsModal] = useState(false);
-  const [showLoadPaymentModal, setShowLoadPaymentModal] = useState(false);
-  const [processingPayment, setProcessingPayment] = useState(false);
-  const [paymentMessage, setPaymentMessage] = useState('');
-  const [paymentConfirmText, setPaymentConfirmText] = useState('');
-  const [paymentIcon, setPaymentIcon] = useState('cash');
 
   // Helper function to show error modal
   const showError = (title: string, message: string, details?: string, showDetails: boolean = false) => {
@@ -487,16 +378,6 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
     setErrorMessage(message);
     setErrorDetails(details || "");
     setShowErrorDetails(showDetails);
-    setShowErrorModal(true);
-  };
-
-  // Helper function to close error modal
-  const closeError = () => {
-    setShowErrorModal(false);
-    setErrorTitle("Error");
-    setErrorMessage("");
-    setErrorDetails("");
-    setShowErrorDetails(false);
   };
 
 
@@ -530,7 +411,6 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
     setOperationCountries(defaultState.operationCountries);
     setTrucksNeeded(defaultState.trucksNeeded);
     setStep(defaultState.step);
-    setUploadImageUpdate(defaultState.uploadImageUpdate);
 
     // Reset new fields
     setNumberOfTrucks('');
@@ -562,22 +442,6 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
     setHasReturnLoad(false);
     setUseDifferentReturnLocation(false);
 
-    // Reset user type and general user specific fields
-    setUserType(null);
-    setBudget("");
-    setBudgetCurrency({ id: 1, name: "USD" });
-    setLoadImages([]);
-    setSelectedLoadingDate(null);
-    setSelectedAfricanTrucks([]);
-
-    // Reset AI analysis fields
-    setAiLoading(false);
-    setAiDetectedTruckType(null);
-    setAiDetectedCargoArea(null);
-    setAiDetectedCapacity(null);
-    setAiDetectedTankerType(null);
-    setAiAnalysisComplete(false);
-    setAiAnalysisError(null);
 
     // Reset proof of order fields
     setProofImages([]);
@@ -589,18 +453,6 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
     setBrokerSearchText('');
     setSearchedBrokers([]);
 
-    // Reset personal details fields
-    setPersonalName('');
-    setPersonalPhone('');
-    setPersonalEmail('');
-    setPersonalCountryCode({ id: 0, name: '+263' });
-    setSelectedPersonalDocuments([]);
-    setPersonalFileType([]);
-    setSelectedBrokerPersonalDocuments([]);
-    setBrokerPersonalFileType([]);
-    setTypeOfBrokerPersonal('');
-    setShowPersonalDetailsModal(false);
-    setSelectedPersonalType(null);
   };
 
 
@@ -608,504 +460,14 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
   const [proofImages, setProofImages] = useState<ImagePickerAsset[]>([]);
   const [proofDocuments, setProofDocuments] = useState<DocumentAsset[]>([]);
   const [proofDocumentTypes, setProofDocumentTypes] = React.useState<('pdf' | 'doc' | 'docx')[]>([]);
+  const [uploadImageUpdate, setUploadImageUpdate] = useState("");
 
-
-
-  // Cargo Personal Details State (similar to truckPersonDetails)
-  interface CargoGeneralUser {
-    docId: string;
-    isApproved: boolean;
-    accType: 'general';
-  }
-
-  interface CargoProfessionalUser {
-    docId: string;
-    isApproved: boolean;
-    accType: 'professional';
-  }
-
-  const [getGeneralDetails, setGeneralDetails] = useState<CargoGeneralUser | null>(null);
-  const [getProfessionalDetails, setProfessionalDetails] = useState<CargoProfessionalUser | null>(null);
-  const [cargoDataChecked, setCargoDataChecked] = useState(false);
-  const [cargoLoading, setCargoLoading] = useState(true);
-
-  // Modal states for document submission
-  const [showPersonalDetailsModal, setShowPersonalDetailsModal] = useState(false);
-  const [selectedPersonalType, setSelectedPersonalType] = useState<'general' | 'professional' | null>(null);
-  const [showUserTypeDropdown, setShowUserTypeDropdown] = useState(false);
-
-  // Personal details form state
-  const [personalName, setPersonalName] = useState('');
-  const [personalPhone, setPersonalPhone] = useState('');
-  const [personalEmail, setPersonalEmail] = useState('');
-  const [personalCountryCode, setPersonalCountryCode] = useState({ id: 0, name: '+263' });
-
-
-  // Document states for personal details
-  const [selectedPersonalDocuments, setSelectedPersonalDocuments] = useState<DocumentAsset[]>([]);
-  const [personalFileType, setPersonalFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([]);
-  const [selectedBrokerPersonalDocuments, setSelectedBrokerPersonalDocuments] = useState<DocumentAsset[]>([]);
-  const [brokerPersonalFileType, setBrokerPersonalFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([]);
-  const [typeOfBrokerPersonal, setTypeOfBrokerPersonal] = React.useState("");
-
-  const [uploadingPersonalD, setUploadingPersonalD] = React.useState(false);
-  const [isSubmittingPersonal, setIsSubmittingPersonal] = React.useState(false);
-
-  const [imageUpdate, setUploadImageUpdate] = React.useState("")
-
-
-
-
-  // Check for personal details on component mount
-  useEffect(() => {
-    const fetchPersonalDetails = async () => {
-      // Check for both general and professional in the unified collection
-      const personDetails = await getDocById('verifiedUsers', (data) => {
-        if (data) {
-         
-            if (data.accType === 'professional') {
-            setProfessionalDetails({
-              docId: data.id || '',
-              isApproved: data.isApproved || false,
-              accType: 'professional'
-            });
-          }
-        }
-      });
-
-      setCargoLoading(false);
-
-      // Add a short delay before rendering UI to prevent flicker
-      setTimeout(() => {
-        setCargoDataChecked(true);
-      }, 300);
-    };
-
-    fetchPersonalDetails();
-  }, []);
-
-  
-
-  // Autofill fields for professional users with existing verified details
-  useEffect(() => {
-    if (userType === 'professional' && getProfessionalDetails) {
-      // In a real implementation, fetch and autofill from verifiedUsers collection
-      // For now, show confirmation that verified details will be used
-      // Future: setPersonalName(fetchedData.fullName);
-      // Future: setPersonalPhone(fetchedData.phoneNumber);
-      // Future: setPersonalEmail(fetchedData.email);
-      // Future: setPersonalCountryCode({ id: 0, name: fetchedData.countryCode });
-      // Future: setTypeOfBrokerPersonal(fetchedData.typeOfBroker);
-      // Disable editing of autofilled fields
-      ToastAndroid.show('Your verified professional details will be used', ToastAndroid.SHORT);
-    }
-  }, [userType, getProfessionalDetails]);
-
- 
-
-  // Ensure return currency and model are properly initialized
-  useEffect(() => {
-    if (!selectedReturnCurrency || !selectedReturnCurrency.name) {
-      setSelectedReturnCurrency({ id: 1, name: "USD" });
-    }
-    if (!selectedReturnModelType || !selectedReturnModelType.name) {
-      setSelectedReturnModelType({ id: 1, name: "Solid" });
-    }
-  }, [selectedReturnCurrency, selectedReturnModelType]);
-
-  // Ensure return load fields are properly initialized
-  useEffect(() => {
-    if (returnLoad === undefined || returnLoad === null) {
-      setReturnLoad("");
-    }
-    if (returnRate === undefined || returnRate === null) {
-      setReturnRate("");
-    }
-    if (returnTerms === undefined || returnTerms === null) {
-      setReturnTerms("");
-    }
-  }, [returnLoad, returnRate, returnTerms]);
-
-  // Handle general user personal details submission
-  const handleUpdateGeneralDetails = async () => {
-    setIsSubmittingPersonal(true);
-    try {
-      // Basic validation
-      if (!personalName || personalName.trim().length < 2) {
-        alertBox("Missing Personal Details", "Please enter a valid full name (minimum 2 characters)", [], "error");
-        setIsSubmittingPersonal(false);
-        return;
-      }
-      if (!personalPhone || personalPhone.trim().length < 7) {
-        alertBox("Missing Personal Details", "Please enter a valid phone number (minimum 7 characters)", [], "error");
-        setIsSubmittingPersonal(false);
-        return;
-      }
-      if (!personalEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalEmail.trim())) {
-        alertBox("Missing Personal Details", "Please enter a valid email address", [], "error");
-        setIsSubmittingPersonal(false);
-        return;
-      }
-      if (!personalCountryCode || !personalCountryCode.name) {
-        alertBox("Missing Personal Details", "Please select a country code", [], "error");
-        setIsSubmittingPersonal(false);
-        return;
-      }
-      if (!selectedPersonalDocuments[0] || !personalFileType[0]) {
-        alertBox("Missing Personal Details", "Please upload an ID document", [], "error");
-        setIsSubmittingPersonal(false);
-        return;
-      }
-      if (!selectedPersonalDocuments[1] || !personalFileType[1]) {
-        alertBox("Missing Personal Details", "Please take a live selfie holding your ID using the camera", [], "error");
-        setIsSubmittingPersonal(false);
-        return;
-      }
-
-      let idDocument, selfieDocument;
-
-      idDocument = await uploadImage(selectedPersonalDocuments[0], "CargoPersonal", setUploadImageUpdate, "ID uploading");
-      selfieDocument = await uploadImage(selectedPersonalDocuments[1], "CargoPersonal", setUploadImageUpdate, "Selfie uploading");
-
-      const personalDetailsData = {
-        userId: user?.uid,
-        accType: 'general',
-        fullName: personalName,
-        phoneNumber: personalPhone,
-        email: personalEmail,
-        countryCode: personalCountryCode.name,
-        idDocument: idDocument || null,
-        idDocumentType: personalFileType[0] || null,
-        selfieDocument: selfieDocument || null,
-        selfieDocumentType: personalFileType[1] || null,
-        createdAt: Date.now().toString(),
-        isApproved: false,
-        approvalStatus: 'pending',
-        // Placeholders for future AI/photo verification
-        aiVerificationScore: null,
-        photoVerificationStatus: null,
-        biometricData: null
-      };
-
-      await setDocuments("verifiedUsers", personalDetailsData);
-
-      setShowPersonalDetailsModal(false);
-      ToastAndroid.show("Personal Details created successfully!", ToastAndroid.SHORT);
-
-    } catch (error) {
-      console.error("Error saving personal details:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      const errorDetails = error instanceof Error ? error.stack : String(error);
-      showError(
-        "Failed to Save Personal Details",
-        "There was an error saving your personal details. Please try again.",
-        errorDetails,
-        true
-      );
-    } finally {
-      setIsSubmittingPersonal(false);
-    }
-  };
-
-  // Handle professional user personal details submission
-  const handleUpdateProfessionalDetails = async () => {
-    setUploadingPersonalD(true);
-
-    try {
-      // Basic validation
-      if (!personalName || personalName.trim().length < 2) {
-        alertBox("Missing Professional Details", "Please enter a valid full name (minimum 2 characters)", [], "error");
-        setUploadingPersonalD(false);
-        return;
-      }
-      if (!personalPhone || personalPhone.trim().length < 7) {
-        alertBox("Missing Professional Details", "Please enter a valid phone number (minimum 7 characters)", [], "error");
-        setUploadingPersonalD(false);
-        return;
-      }
-      if (!personalEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalEmail.trim())) {
-        alertBox("Missing Professional Details", "Please enter a valid email address", [], "error");
-        setUploadingPersonalD(false);
-        return;
-      }
-      if (!personalCountryCode || !personalCountryCode.name) {
-        alertBox("Missing Professional Details", "Please select a country code", [], "error");
-        setUploadingPersonalD(false);
-        return;
-      }
-      if (!typeOfBrokerPersonal || typeOfBrokerPersonal.trim() === '') {
-        alertBox("Missing Professional Details", "Please select broker type", [], "error");
-        setUploadingPersonalD(false);
-        return;
-      }
-      if (!selectedBrokerPersonalDocuments[0] || !brokerPersonalFileType[0]) {
-        alertBox("Missing Professional Details", "Please upload National ID Document", [], "error");
-        setUploadingPersonalD(false);
-        return;
-      }
-      if (!selectedBrokerPersonalDocuments[1] || !brokerPersonalFileType[1]) {
-        alertBox("Missing Professional Details", "Please upload Proof of Residence Document", [], "error");
-        setUploadingPersonalD(false);
-        return;
-      }
-      if (typeOfBrokerPersonal === "Company Broker") {
-        if (!selectedBrokerPersonalDocuments[2] || !brokerPersonalFileType[2] ||
-          !selectedBrokerPersonalDocuments[3] || !brokerPersonalFileType[3]) {
-          alertBox("Missing Professional Details", "Please upload Company Registration Certificate and Letter Head", [], "error");
-          setUploadingPersonalD(false);
-          return;
-        }
-      }
-
-      let brokerId, proofOfResidence, companyRegCertificate, companyLetterHead;
-
-      brokerId = await uploadImage(selectedBrokerPersonalDocuments[0], "CargoPersonal", setUploadImageUpdate, "National ID");
-      proofOfResidence = await uploadImage(selectedBrokerPersonalDocuments[1], "CargoPersonal", setUploadImageUpdate, "Proof Of Residence");
-
-      if (typeOfBrokerPersonal === "Company Broker") {
-        companyRegCertificate = await uploadImage(selectedBrokerPersonalDocuments[2], "CargoPersonal", setUploadImageUpdate, "Company Registration Certificate");
-        companyLetterHead = await uploadImage(selectedBrokerPersonalDocuments[3], "CargoPersonal", setUploadImageUpdate, "Company Letter Head");
-      }
-
-      const professionalDetailsData = {
-        userId: user?.uid,
-        accType: 'professional',
-        typeOfBroker: typeOfBrokerPersonal,
-        fullName: personalName,
-        phoneNumber: personalPhone,
-        email: personalEmail,
-        countryCode: personalCountryCode.name,
-        brokerId: brokerId || null,
-        proofOfResidence: proofOfResidence || null,
-        companyRegCertificate: companyRegCertificate || null,
-        companyLetterHead: companyLetterHead || null,
-        brokerIdType: brokerPersonalFileType[0] || null,
-        proofOfResidenceType: brokerPersonalFileType[1] || null,
-        companyRegCertificateType: brokerPersonalFileType[2] || null,
-        companyLetterHeadType: brokerPersonalFileType[3] || null,
-        createdAt: Date.now().toString(),
-        isApproved: false,
-        approvalStatus: 'pending',
-        // Placeholders for future AI/photo verification
-        aiVerificationScore: null,
-        photoVerificationStatus: null,
-        biometricData: null
-      };
-
-      await setDocuments("verifiedUsers", professionalDetailsData);
-
-      setShowPersonalDetailsModal(false);
-      ToastAndroid.show("Professional Details submitted successfully!", ToastAndroid.SHORT);
-
-      // Refresh the personal details check
-      const updatedDetails = await getDocById('verifiedUsers', (data) => {
-        if (data && data.accType === 'professional') {
-          setProfessionalDetails({
-            docId: data.id || '',
-            isApproved: data.isApproved || false,
-            accType: 'professional'
-          });
-        }
-      });
-    } catch (error) {
-      console.error("Error saving professional details:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      const errorDetails = error instanceof Error ? error.stack : String(error);
-      showError(
-        "Failed to Save Professional Details",
-        "There was an error saving your professional details. Please try again.",
-        errorDetails,
-        true
-      );
-    } finally {
-      setUploadingPersonalD(false);
-    }
-  };
-
-  // Function to check if user has available rewards
-  const checkUserRewards = async (userId: string): Promise<number> => {
-    try {
-      const filters = [
-        where("userId", "==", userId),
-      ];
-      const result = await fetchDocuments( "rewards", 50, undefined, filters);
-
-      let totalAvailable = 0;
-      const now = new Date();
-      result.data.forEach((reward: any) => {
-        const expiry = new Date(reward.expiryDate);
-        if (expiry > now) {
-          totalAvailable += reward.availableTokens || 0;
-        }
-      });
-
-      return totalAvailable;
-    } catch (error) {
-      console.error('Error checking user rewards:', error);
-      return 0;
-    }
-  };
-
-  // Function to process load payment
-  const processLoadPayment = async (): Promise<boolean> => {
-    if (!user?.uid) return false;
-
-    try {
-      setProcessingPayment(true);
-
-      // Check for available reward tokens
-      const availableRewards = await checkUserRewards(user.uid);
-
-      if (availableRewards >= 1) {
-        // Use 1 reward token
-        // Deduct from reward tokens
-        const filters = [
-          where("userId", "==", user.uid),
-         ];
-        const result = await fetchDocuments("rewards", 50, undefined, filters);
-
-        let remainingToDeduct = 1;
-        let deductedRewardId = null;
-      const now = new Date();
-      for (const reward of result.data) {
-        const expiry = new Date(reward.expiryDate);
-        if (expiry > now && (reward.availableTokens || 0) > 0) {
-          const deductAmount = Math.min(remainingToDeduct, reward.availableTokens);
-          const updateData = {
-            availableTokens: reward.availableTokens - deductAmount,
-            usedTokens: (reward.usedTokens || 0) + deductAmount,
-            updatedAt: new Date().toISOString()
-          };
-          await updateDocument('rewards', reward.id, updateData);
-
-          // Update tokenHistory for this reward batch
-          const tokenHistoryFilters = [
-            where("userId", "==", user.uid),
-            where("rewardId", "==", reward.id)
-          ];
-          const tokenHistoryResult = await fetchDocuments("tokenHistory", 1, undefined, tokenHistoryFilters);
-
-          if (tokenHistoryResult.data && tokenHistoryResult.data.length > 0) {
-            // Update existing tokenHistory
-            const tokenHistory = tokenHistoryResult.data[0];
-            const newUsedTokens = tokenHistory.totalTokensUsed + deductAmount;
-            const newAvailableTokens = tokenHistory.tokensAvailable - deductAmount;
-            const newUtilizationPercentage = (newUsedTokens / tokenHistory.totalTokensGiven) * 100;
-
-            const tokenHistoryUpdate = {
-              totalTokensUsed: newUsedTokens,
-              tokensAvailable: newAvailableTokens,
-              utilizationPercentage: newUtilizationPercentage,
-              transactions: [
-                ...(tokenHistory.transactions || []),
-                {
-                  type: 'spend' as const,
-                  amount: deductAmount,
-                  description: 'Load posting fee',
-                  createdAt: new Date().toISOString(),
-                  relatedId: 'load-posting' // Could be more specific with load ID if available
-                }
-              ]
-            };
-
-            await updateDocument('tokenHistory', tokenHistory.id, tokenHistoryUpdate);
-          } else {
-            // Create tokenHistory document if it doesn't exist (for existing rewards)
-            const tokenHistoryData = {
-              userId: user.uid,
-              rewardId: reward.id,
-              totalTokensGiven: reward.totalTokens,
-              totalTokensUsed: deductAmount,
-              totalTokensExpired: 0,
-              tokensAvailable: reward.totalTokens - deductAmount,
-              utilizationPercentage: (deductAmount / reward.totalTokens) * 100,
-              issueDate: reward.createdAt,
-              expiryDate: reward.expiryDate,
-              transactions: [
-                {
-                  type: 'spend' as const,
-                  amount: deductAmount,
-                  description: 'Load posting fee',
-                  createdAt: new Date().toISOString(),
-                  relatedId: 'load-posting'
-                }
-              ]
-            };
-
-            await addDocument('tokenHistory', tokenHistoryData);
-          }
-
-          remainingToDeduct -= deductAmount;
-          deductedRewardId = reward.id;
-          if (remainingToDeduct <= 0) break;
-        }
-      }
-
-      if (remainingToDeduct > 0) {
-        alertBox("Payment Failed", "Insufficient reward tokens available.", [], "error");
-        return false;
-      }
-      } else {
-        // No tokens available, use wallet
-        const hasBalance = await hasSufficientBalance(user.uid, 2);
-
-        if (!hasBalance) {
-          setShowInsufficientFundsModal(true);
-          return false;
-        }
-
-        // Deduct $2 from wallet
-        const deductionSuccess = await deductFromWallet(
-          user.uid,
-          2,
-          'Load posting fee',
-          'wallet'
-        );
-
-        if (!deductionSuccess) {
-          alertBox("Payment Failed", "Failed to process payment. Please try again.", [], "error");
-          return false;
-        }
-      }
-
-      // Process referral commission (1 to referrer, 1 to company)
-      const referrerId = await getUserReferrer(user.uid);
-      if (referrerId) {
-        // Add $1 to referrer
-        await addToWallet(referrerId, 1, 'Referral commission from load posting', 'bonus');
-      }
-
-      // Add $1 to company (assuming company has a special wallet ID)
-      // For now, we'll log this - you might want to create a special company wallet
-      console.log('Company revenue: $1 from load posting');
-
-      return true;
-    } catch (error) {
-      console.error('Error processing load payment:', error);
-      alertBox("Payment Error", "An error occurred while processing payment. Please try again.", [], "error");
-      return false;
-    } finally {
-      setProcessingPayment(false);
-    }
-  };
 
     const handleSubmit = async () => {
 
       try{
 
       setIsSubmitting(true)
-
-      // Guard: require user type selection before any further validation
-      if (!userType) {
-        setTimeout(() => {
-          alertBox("Select User Type", "Please select whether you are a General or Professional user first.", [], "error");
-        }, 100);
-        setShowUserTypeDropdown(true);
-        setIsSubmitting(false);
-        return;
-      }
-
-
 
       if (!alertBox) {
       console.error('alertBox not available');
@@ -1120,24 +482,15 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
     }
 
 
-   
-
-      if (userType === 'professional' && getProfessionalDetails && !getProfessionalDetails.isApproved) {
-        // Allow submission but show warning
-      }
-
       // Use utility function for validation
       let validationErrors = [];
   try {
-    validationErrors = validateLoadForm(userType, {
+    validationErrors = validateLoadForm("professional", {
       typeofLoad,
       origin,
       destination,
       rate,
       paymentTerms,
-      selectedLoadingDate,
-      loadImages,
-      selectedAfricanTrucks,
       trucksNeeded,
       requirements,
       proofOfOrder: [...proofDocuments],
@@ -1166,10 +519,6 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
         validationErrors.push('Delivery date is required');
       }
 
-      // Additional validation for professional users - check if they have at least one proof file
-      if (userType === 'professional' && proofImages.length === 0 && proofDocuments.length === 0) {
-        validationErrors.push('Upload at least one proof of order document or image');
-      }
 
       // Additional validation for fleet users - check if they have selected trucks for private loads
       if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
@@ -1198,12 +547,7 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
         }
       }
 
-      // For private trucks, remove the truck type selection requirement since it's not needed
-      if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
-        // Remove truck type validation for private loads since we're selecting specific trucks
-        // The validation will still check for selected trucks above
-      }
-
+     
       if (validationErrors.length > 0) {
         setTimeout(() => {
           alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
@@ -1212,20 +556,8 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
         return;
       }
 
-      // Check available tokens for payment message
-      const availableTokens = await checkUserRewards(user.uid);
-      if (availableTokens >= 1) {
-        setPaymentMessage(`Post this load using 1 reward token? ${user ? 'If you have a referrer, they will receive $1 commission.' : ''}`);
-        setPaymentConfirmText('Use Token & Post Load');
-        setPaymentIcon('gift');
-      } else {
-        setPaymentMessage(`Post this load for $2? ${user ? 'If you have a referrer, they will receive $1 commission.' : ''}`);
-        setPaymentConfirmText('Pay & Post Load');
-        setPaymentIcon('cash');
-      }
-
       // Show payment confirmation modal
-      setShowLoadPaymentModal(true);
+      confirmLoadPaymentAndSubmit()
       setIsSubmitting(false);
       return;
     
@@ -1244,17 +576,13 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
     
     };
 
+ 
+
   // Function to handle payment confirmation and proceed with load submission
   const confirmLoadPaymentAndSubmit = async () => {
-    setShowLoadPaymentModal(false);
     setIsSubmitting(true);
 
-    // Process payment first
-    const paymentSuccess = await processLoadPayment();
-    if (!paymentSuccess) {
-      setIsSubmitting(false);
-      return;
-    }
+  
 
     try {
       if (!user) {
@@ -1280,7 +608,6 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
       let loadImagesUrls: string[] = []
 
       // Handle different proof types based on user type
-     if (userType === 'professional') {
         // Upload all proof images for professional users
         if (proofImages && proofImages.length > 0) {
           for (let i = 0; i < proofImages.length; i++) {
@@ -1296,12 +623,11 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
             if (docUrl) proofOfOerSub.push(docUrl);
           }
         }
-      }
 
      
 
       // Use utility function to prepare load data
-      const loadData = prepareLoadData(userType!, {
+      const loadData = prepareLoadData("professional", {
         typeofLoad,
         origin,
         destination,
@@ -1319,12 +645,7 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
         selectedModelType,
         selectedReturnCurrency: selectedReturnCurrency || { id: 1, name: "USD" },
         selectedReturnModelType: selectedReturnModelType || { id: 1, name: "Solid" },
-        budget,
-        budgetCurrency,
-        selectedLoadingDate,
         loadingDate,
-        loadImages,
-        selectedAfricanTrucks,
         trucksNeeded,
         proofOfOerSub,
         proofOfOrderFileType: [...(proofImages || []).map(() => 'image' as const), ...(proofDocumentTypes || [])],
@@ -1334,62 +655,21 @@ const [allUsers, setAllUsers] = useState<any[]>([]);
         durationInTraffic,
         routePolyline,
         bounds,
-        // Personal details reference from verifiedUsers
-        personalDetailsDocId: getGeneralDetails?.docId || getProfessionalDetails?.docId || null,
-        personalAccTypeIsApproved: getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved || false,
-        personalAccType: getGeneralDetails?.accType || getProfessionalDetails?.accType || null,
+       
         // New fields
         numberOfTrucks,
         deliveryDate,
         selectedBrokers,
       }, user, expoPushToken);
 
-      // Save payment to Payments collection and WalletHistory
-      const paymentId = `LOAD_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const currentDate = new Date();
-      const formattedDate = currentDate.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        timeZoneName: 'short'
-      });
-
-      const paymentData = {
-        id: paymentId,
-        serviceType: 'Load Posting Fee',
-        price: 2,
-        quantity: 1,
-        totalAmount: 2,
-        stationName: 'Transix Load Service',
-        stationId: 'load-service',
-        purchaseDate: currentDate.toISOString(),
-        qrCode: `LOAD_PAYMENT:${paymentId}:${user.uid}:load:1:2`,
-        status: 'completed',
-        serviceCategory: 'load',
-        userId: user.uid,
-        userEmail: user.email,
-        paymentMethod: 'wallet',
-        phoneNumber: '',
-        createdAt: formattedDate,
-        updatedAt: formattedDate,
-        timeStamp: formattedDate,
-        historyType: 'payment', // Add for WalletHistory
-      };
-
-      await addDocumentWithId('Payments', paymentId, paymentData);
-      await addDocumentWithId('WalletHistory', paymentId, paymentData); // Also save to WalletHistory
-
-  
+     
 // Fleet-specific logic: If user is in a fleet and load is private, assign selected trucks and drivers
 if (currentRole?.accType === 'fleet' && loadVisibility === 'Private' && selectedFleetTrucks.length > 0) {
 
 const trucks = selectedFleetTrucks;
 const drivers = selectedDrivers;
 
-// 1´©ÅÔâú Add Cargo to fleet collection and get the auto-generated cargoId
+// 1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Add Cargo to fleet collection and get the auto-generated cargoId
 const cargoRefPath = `fleets/${currentRole.fleetId}/Cargo`;
 
  const docRef = doc(collection(db, `fleets/${currentRole.fleetId}/Cargo`));
@@ -1418,7 +698,7 @@ await setDoc(docRef, {
   }))
 });
 
-// 2´©ÅÔâú Add load to selected brokers' subcollections
+// 2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Add load to selected brokers' subcollections
 for (const brokerId of selectedBrokers) {
   const brokerLoadData = {
     loadId: cargoId,
@@ -1444,7 +724,7 @@ for (const brokerId of selectedBrokers) {
   await addDocumentWithId(`brokers/${brokerId}/loads`, brokerLoadDocId, brokerLoadData);
 }
 
-  // 2´©ÅÔâú Cargo assignments per truck
+  // 2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Cargo assignments per truck
   for (const truck of trucks) {
     const truckDrivers = drivers.filter(d => d.truckId === truck.id);
     if (truckDrivers.length > 0) {
@@ -1469,7 +749,7 @@ for (const brokerId of selectedBrokers) {
     }
   }
 
-  // 3´©ÅÔâú Assign cargo to drivers
+  // 3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Assign cargo to drivers
   for (const driver of drivers) {
     const driverCargoDocId = `${cargoId}_${driver.driverId}_${driver.truckId}_${driver.role}`;
     await addDocumentWithId(`fleets/${currentRole.fleetId}/Drivers/${driver.docId}/cargo`, driverCargoDocId, {
@@ -1492,7 +772,7 @@ for (const brokerId of selectedBrokers) {
     });
   }
 
-  // 4´©ÅÔâú Optional: Truck cargo history
+  // 4ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Optional: Truck cargo history
   // for (const truck of trucks) {
   //   console.log("adduing truck sub")
 
@@ -1507,40 +787,19 @@ for (const brokerId of selectedBrokers) {
   //   }
   // }
 
-  // 5´©ÅÔâú Add to fleet manager's assigned loads
-  if (currentRole.userRole === "owner" || currentRole.userRole === "fleetManager") {
-
-    const fleetManagerLoadData = {
-      loadId: cargoId,
-      loadStatus: "pending",
-      loadVisibility: 'Private',
-      trucks: trucks.map(truck => ({
-        truckId: truck.id,
-        truckName: truck.truckName,
-        truckStatus: "pending",
-        drivers: drivers.filter(d => d.truckId === truck.id).map(driver => ({
-          driverId: driver.driverId,
-          role: driver.role,
-          status: "pending",
-          fullName: driver.fullName,
-          phoneNumber: driver.phoneNumber,
-        }))
-      })),
-      createdAt: new Date()
-    };
-
-    const fleetManagerDocId = `LOAD_${cargoId}`;
-    await addDocumentWithId(`fleets/${currentRole.fleetId}/fleetManagers/FLTMGR${currentRole.fleetId}/assignedLoads`, fleetManagerDocId, fleetManagerLoadData);
-  }
+ 
 
 }else if (currentRole?.accType === 'fleet' && loadVisibility === 'Public') {
   // Fleet user with public load
-  // 1´©ÅÔâú Regular Cargo addition to main Cargo collection
+
+
+     
+  // 1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Regular Cargo addition to main Cargo collection
 } else if(currentRole?.accType === 'broker' && loadVisibility === 'Private') {
   // Broker user with private load - assign to selected trucks
   const trucks = selectedBrokerTrucks;
 
-  // 1´©ÅÔâú Add Cargo to broker's subcollection and get the auto-generated cargoId
+  // 1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Add Cargo to broker's subcollection and get the auto-generated cargoId
   const brokerCargoRefPath = `brokers/${currentRole.userId}/loads`;
 
   const docRef = doc(collection(db, `brokers/${currentRole.userId}/loads`));
@@ -1559,7 +818,7 @@ for (const brokerId of selectedBrokers) {
     }))
   });
 
-  // 2´©ÅÔâú Add load to fleet manager's brokerLoads subcollection
+  // 2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Add load to fleet manager's brokerLoads subcollection
   // This allows the fleet manager to see which loads brokers have assigned to their trucks
   for (const truck of trucks) {
     const brokerLoadData = {
@@ -1588,40 +847,32 @@ for (const brokerId of selectedBrokers) {
 }
 
 
-// Regular load submission for non-fleet users or fleet users with public loads
-await addDocument("Cargo", {
-  ...loadData,
-  loadVisibility: 'Public' // All loads are public unless specified as private fleet loads
-});
-
-// Add load to selected brokers' subcollections for public loads
-for (const brokerId of selectedBrokers) {
-  const brokerLoadData = {
-    loadId: loadData.loadId,
-    loadStatus: "pending",
-    loadVisibility: 'Public',
-    origin: origin,
-    destination: destination,
-    loadingDate: loadingDate,
-    deliveryDate: deliveryDate,
-    createdAt: new Date(),
-    coordinator: {
-      id: user.uid,
-      name: user.organisation || "",
-      phoneNumber: user.phoneNumber || ""
-    }
-  };
-
-  const brokerLoadDocId = `${loadData.loadId}_${brokerId}`;
-  await addDocumentWithId(`brokers/${brokerId}/loads`, brokerLoadDocId, brokerLoadData);
-}
 
 
 
 
 
+// // Add load to selected brokers' subcollections for public loads
+// for (const brokerId of selectedBrokers) {
+//   const brokerLoadData = {
+//     loadId: loadData.loadId,
+//     loadStatus: "pending",
+//     loadVisibility: 'Public',
+//     origin: origin,
+//     destination: destination,
+//     loadingDate: loadingDate,
+//     deliveryDate: deliveryDate,
+//     createdAt: new Date(),
+//     coordinator: {
+//       id: user.uid,
+//       name: user.organisation || "",
+//       phoneNumber: user.phoneNumber || ""
+//     }
+//   };
 
-
+//   const brokerLoadDocId = `${loadData.loadId}_${brokerId}`;
+//   await addDocumentWithId(`brokers/${brokerId}/loads`, brokerLoadDocId, brokerLoadData);
+// }
 
 
 
@@ -1676,72 +927,7 @@ for (const brokerId of selectedBrokers) {
        
       />
 
-      {/* Overlay to close dropdown when clicking outside */}
-      {showUserTypeDropdown && (
-        <TouchableOpacity
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 999
-          }}
-          onPress={() => setShowUserTypeDropdown(false)}
-        />
-      )}
-
-      {/* Personal Details Status */}
-      {cargoLoading && (
-        <View style={{ padding: wp(4), alignItems: 'center' }}>
-          <ActivityIndicator size="small" color={accent} />
-        </View>
-      )}
-
-      {!cargoLoading && cargoDataChecked && userType && !userIsFleetVerified && (
-        (userType === 'general' && !getGeneralDetails) ||
-        (userType === 'professional' && !getProfessionalDetails)
-      ) && (
-          <View style={{ paddingHorizontal: wp(4), paddingVertical: wp(2) }}>
-            <TouchableOpacity
-              onPress={() => {
-                setSelectedPersonalType(userType);
-                setShowPersonalDetailsModal(true);
-              }}
-              style={{
-                backgroundColor: '#0f9d5824',
-                paddingVertical: wp(3),
-                paddingHorizontal: wp(4),
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: '#0f9d58',
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Ionicons name="person-add" size={16} color="#0f9d58" style={{ marginRight: wp(2) }} />
-              <ThemedText style={{ color: '#0f9d58', fontWeight: '600' }}>
-                Submit {userType === 'general' ? 'Personal' : 'Professional'} Details
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-        )}
-
-      {!cargoLoading && cargoDataChecked && userType && (userIsFleetVerified || getGeneralDetails || getProfessionalDetails) && (
-        <View style={{ paddingHorizontal: wp(4), paddingVertical: wp(1) }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-            {(userIsFleetVerified || getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? (
-              <Ionicons name="checkmark-circle" size={wp(4)} color="#0f9d58" />
-            ) : (
-              <Ionicons name="time" size={wp(4)} color="#ff9800" />
-            )}
-            <ThemedText style={{ marginLeft: wp(2), color: (userIsFleetVerified || getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "#0f9d58" : "#ff9800", fontSize: 14 }}>
-              {userIsFleetVerified ? "Fleet User ÔÇó Verified" : (getGeneralDetails ? "General" : "Professional") + " User ÔÇó " + ((getGeneralDetails?.isApproved || getProfessionalDetails?.isApproved) ? "Verified" : "Pending Verification")}
-            </ThemedText>
-          </View>
-        </View>
-      )}
+     
 
 
             <StepIndicator
@@ -1885,26 +1071,13 @@ for (const brokerId of selectedBrokers) {
               />
 
               {
-                (userType === 'general' ? loadImages.length > 0 : (proofImages.length > 0 || proofDocuments.length > 0)) ? (
+                ( (proofImages.length > 0 || proofDocuments.length > 0)) ? (
                   <View>
                     <ThemedText style={{ marginBottom: wp(2), fontWeight: 'bold' }}>
-                      {userType === 'general' ? 'Load Images' : 'Proof of Order'}
+                       Proof of Order
                     </ThemedText>
 
-                    {userType === 'general' ? (
-                      // Show all load images for general users
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        {loadImages.map((image, index) => (
-                          <View key={index} style={{ marginRight: wp(2) }}>
-                            <Image source={{ uri: image.uri }} style={styles.loadImagePreview} />
-                            <ThemedText style={{ textAlign: 'center', fontSize: 12, marginTop: 4 }}>
-                              Image {index + 1}
-                            </ThemedText>
-                          </View>
-                        ))}
-                      </ScrollView>
-                    ) : (
-                      // Show proof files for professional users
+                  
                       <View>
                         <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
                           {(proofImages.length + proofDocuments.length)}/6 files uploaded
@@ -2108,7 +1281,7 @@ for (const brokerId of selectedBrokers) {
                           </View>
                         )}
                       </View>
-                    )}
+                    
                   </View>
                 ) : (
                   <View>
@@ -2518,9 +1691,7 @@ for (const brokerId of selectedBrokers) {
                         </View>
                       </TouchableOpacity>
 
-                      {/* Drivers for this truck */}
-                                 {/* {console.log(truckDrivers.length)} */}
-                                   {/* {console.log(selectedFleetTrucks.length)}       */}
+                     
 
                      {truckDrivers.length > 0 && selectedFleetTrucks.find(t => t.id === truck.id)&& (
 
@@ -2850,41 +2021,9 @@ for (const brokerId of selectedBrokers) {
         onSave={handleUpdateProfessionalDetails}
       /> */}
 
-      {/* Error Modal */}
-      <ErrorModal
-        visible={showErrorModal}
-        onClose={closeError}
-        title={errorTitle}
-        message={errorMessage}
-        details={errorDetails}
-        showDetails={showErrorDetails}
-      />
+  
+     
 
-      {/* Load Payment Confirmation Modal */}
-      <ConfirmationModal
-        isVisible={showLoadPaymentModal}
-        onClose={() => {
-          setShowLoadPaymentModal(false);
-          setIsSubmitting(false);
-        }}
-        title="Confirm Load Posting"
-        message={paymentMessage}
-        confirmText={paymentConfirmText}
-        cancelText="Cancel"
-        onConfirm={confirmLoadPaymentAndSubmit}
-        icon={paymentIcon}
-        iconColor={accent}
-        isLoading={processingPayment}
-      />
-
-      {/* Insufficient Funds Modal */}
-      <InsufficientFundsModal
-        isVisible={showInsufficientFundsModal}
-        onClose={() => setShowInsufficientFundsModal(false)}
-        requiredAmount={2}
-        itemType="load"
-        itemName="Load Posting Fee"
-      />
     </ScreenWrapper>
   );
 };
@@ -2954,5 +2093,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
   }
 });
-
 

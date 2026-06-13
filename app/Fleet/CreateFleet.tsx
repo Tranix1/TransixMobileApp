@@ -177,9 +177,12 @@ const CreateFleet = () => {
     };
 
     return (
-        <ScreenWrapper>
-            <View style={{ margin: wp(4), marginTop: hp(6) }}>
-                    <Heading page='Create Fleet' />
+        <View style={{ flex: 1, backgroundColor: background , paddingTop:36 , }} >
+            
+                    <CustomHeader pageTitle="Create Fleet" onPressMenu={() => { }} />
+
+
+            <View style={{ margin: hp(3) }}>
 
                 <ScrollView>
                     <ThemedText>Company/Business Name</ThemedText>
@@ -189,7 +192,7 @@ const CreateFleet = () => {
                         onChangeText={setFleetName}
                     />
 
-                    <ThemedText>Fleet Main Admin Phone Number</ThemedText>
+                    <ThemedText>Fleet Main Phone Number</ThemedText>
                     <Input
                         Icon={
                             <>
@@ -237,7 +240,7 @@ const CreateFleet = () => {
                         onChangeText={setFleetPhone}
                     />
 
-                    <ThemedText>Fleet Main Admin Email Address</ThemedText>
+                    <ThemedText>Fleet Email Address</ThemedText>
                     <Input
                         placeholder="Enter fleet owner email"
                         value={fleetEmail}
@@ -333,7 +336,7 @@ const CreateFleet = () => {
                     <View style={{ height: 140 }} />
                 </ScrollView>
             </View>
-        </ScreenWrapper>
+        </View>
     );
 };
 

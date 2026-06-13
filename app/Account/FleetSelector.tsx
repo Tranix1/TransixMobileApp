@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { validateReferrerCode, setDocuments } from "@/db/operations";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { hp } from "@/constants/common";
 
 function FleetSelector() {
     const { user, Logout, setupUser, setCurrentRole } = useAuth();
@@ -112,7 +113,7 @@ function FleetSelector() {
 
           
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 ,paddingHorizontal: 13}}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 ,paddingHorizontal: 13, marginTop:hp(4)}}>
             <ThemedText style={styles.sectionHeading}>Fleets I Own</ThemedText>
 
         <TouchableOpacity style={styles.createButton} onPress={() => router.push('/Fleet/CreateFleet')}>
@@ -172,7 +173,7 @@ function FleetSelector() {
 }
 
 const styles = StyleSheet.create({
-    container: {
+        container: {
         flex: 1,
         // paddingHorizontal: 16,
         paddingTop: 16,
@@ -185,13 +186,13 @@ const styles = StyleSheet.create({
     },
     createButton: {
         borderRadius: 8,
-        backgroundColor: '#0f9d58',
+        backgroundColor: '#0f9d5824',
         alignItems: 'center',
         paddingVertical: 6,
         paddingHorizontal: 7,
     },
     createButtonText: {
-        color: '#fff',
+        color: '#0f9d58',
         fontSize: 16,
         fontWeight: 'bold',
     },
