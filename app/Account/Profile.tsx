@@ -23,12 +23,11 @@ const Edit = () => {
 
     const { operation } = useLocalSearchParams();
 
-    const { user, updateAccount, alertBox } = useAuth();
+    const { user, updateAccount, alertBox, currentRole } = useAuth();
     const { expoPushToken } = usePushNotifications();
 
 
     const [imagelogo, setLogo] = useState<ImagePickerAsset | null>(null);
-    const [imageUpdate, setUploadImageUpdate] = React.useState("")
 
     const [organisation, setOrganisation] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -45,17 +44,17 @@ const Edit = () => {
 
     const countries = Countries.map((item) => ({ value: item, label: item }))
     useEffect(() => {
-        if (!user)
-            router.back()
-        else {
-            setOrganisation(user?.organisation || '')
-            setPhoneNumber(user?.number || '')
-            setCountryCode(user.countryCode || { id: 0, name: '+263' })
-            setAddress(user?.address || '')
-            setSelectedValue({ value: user.country || '', label: user.country || '' })
+        if (!user) {
+            router.back();
+            return;
         }
 
-    }, [])
+        setOrganisation(user?.organisation || '');
+        setPhoneNumber(user?.number || '');
+        setCountryCode(user.countryCode || { id: 0, name: '+263' });
+        setAddress(user?.address || '');
+        setSelectedValue({ value: user.country || '', label: user.country || '' });
+    }, [user]);
 
     const [loading, setLoading] = React.useState(false)
 
@@ -98,9 +97,13 @@ const Edit = () => {
         }
 
 
-        setLoading(true)
+        if (!user) {
+            return;
+        }
 
-        const logoImage = imagelogo ? await uploadImage(imagelogo, "Profiles", setUploadImageUpdate, "Logo") : null;
+        setLoading(true);
+
+        const logoImage = imagelogo ? await uploadImage(imagelogo, "Profiles", () => { }, "Logo") : null;
         const data = {
             country: selectedValue.value,
             address: address,
@@ -109,22 +112,30 @@ const Edit = () => {
             countryCode: countryCode,
             organisation: organisation,
             displayName: organisation,
-            photoURL: imagelogo ? logoImage : user?.photoURL,
-            uid: user?.uid,
-            email: user?.email,
-            expoPushToken: expoPushToken || null,
-            // createdAt: user?.createdAt
+            photoURL: imagelogo ? logoImage || undefined : user.photoURL,
+            uid: user.uid,
+            email: user.email,
+            expoPushToken: expoPushToken || undefined,
+            accountType: currentRole.accType,
+            role: currentRole.role,
+            roleDetails: currentRole,
+            createdAt: user?.createdAt || Date.now().toString(),
 
-        }
+        };
 
         try {
             const update = await updateAccount(data);
+            setLoading(false);
+
             if (update.success) {
-                router.dismissAll()
+                await router.replace('/');
+            } else {
+                alertBox("Profile Update Failed", update.error || "Unable to save profile.", [], "error");
             }
         } catch (error) {
-            setLoading(false)
-            console.error("errror", error)
+            setLoading(false);
+            alertBox("Profile Update Failed", error instanceof Error ? error.message : "Unable to save profile.", [], "error");
+            console.error("errror", error);
         }
 
     }
@@ -165,7 +176,6 @@ const Edit = () => {
                         placeholder="Your Organisation"
                         value={organisation}
                         onChangeText={setOrganisation}
-                        keyboardType='email-address'
                     />
                     <ThemedText style={styles.label}>Country</ThemedText>
                     <Dropdown

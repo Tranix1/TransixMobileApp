@@ -6,8 +6,7 @@ import {
     StyleSheet,
     ScrollView,
     ActivityIndicator,
-    Alert, // Added Alert for the toast-like notification
-    ToastAndroid,
+    Alert,
 } from 'react-native';
 import Input from '@/components/Input';
 import {
@@ -22,6 +21,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import { AccountType } from '@/types/types';
 
 const Index = () => {
     const [fullname, setFullName] = useState('');
@@ -31,7 +31,7 @@ const Index = () => {
     const [acceptTerms, setAcceptTerms] = useState(false);
 
     // Default account selection
-    const [selectedAccount, setSelectedAccount] = useState('tracking');
+    const [selectedAccount, setSelectedAccount] = useState<AccountType>('tracking');
 
     const backgroundLight = useThemeColor('backgroundLight');
     const icon = useThemeColor('icon');
@@ -43,20 +43,9 @@ const Index = () => {
 
     // Function to handle account selection logic
   
-  const handleAccountSelect = (type: string) => {
-    //   if (type === 'fleet' || type === 'broker') {
-    //       // Trigger the smooth native Android toast
-    //       ToastAndroid.show(
-    //           'This account type is currently under improvement.', 
-    //           ToastAndroid.SHORT
-    //       );
-          
-    //       // Force the selection back to tracking
-    //       setSelectedAccount('tracking');
-    //   } else {
-    // }
-    setSelectedAccount(type);
-  };
+    const handleAccountSelect = (type: AccountType) => {
+        setSelectedAccount(type);
+    };
     const onsubmit = async () => {
         if (!email || !password || !fullname) {
             Alert.alert('Error', 'Please fill in all fields');
@@ -74,14 +63,13 @@ const Index = () => {
                 email,
                 password,
                 referrerCode,
-                // accountType: selectedAccount,
+                accountType: selectedAccount,
                 displayName: fullname,
             });
-            setLoading(false);
-            
         } catch (error: any) {
-            setLoading(false);
             Alert.alert('Sign up failed', error.message);
+        } finally {
+            setLoading(false);
         }
     };
 

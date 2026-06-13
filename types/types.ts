@@ -1,24 +1,39 @@
 import { ImageSourcePropType } from "react-native";
 import { ImagePickerAsset } from "expo-image-picker";
 
-export type RoleProps =
-  | 'general'
-  | 'fleet'
-  | 'broker'
+export type AccountType = 'general' | 'tracking' | 'fleet' | 'broker';
+
+export type CurrentRole =
+  | {
+      role: 'general';
+      accType: 'general' | 'tracking';
+      userRole: 'tracking';
+    }
   | {
       role: 'fleet';
       fleetId: string;
       companyName: string;
       userRole: string;
-      accType: string;
+      accType: 'fleet';
+      driverId: string | null;
+      fleetMainAdminId: string | null;
+      fleetManagerId: string | null;
+      fleetDispatcherId: string | null;
     }
   | {
       role: 'broker';
       brokerId: string;
       companyName: string;
       userRole: string;
-      accType: string;
+      accType: 'broker';
+      brokerType: string;
     };
+
+export type RoleProps =
+  | 'general'
+  | 'fleet'
+  | 'broker'
+  | CurrentRole;
 
 
 export type TruckTypeProps = {

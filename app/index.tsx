@@ -245,7 +245,7 @@ export default function Index() {
           
           : (
             <>
-              <Tab.Screen name="Home " component={Home} />
+              <Tab.Screen name="Home x" component={About} />
               <Tab.Screen name="About " component={About} />
             </>
           )}

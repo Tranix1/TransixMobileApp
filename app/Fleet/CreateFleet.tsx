@@ -24,7 +24,7 @@ import Heading from '@/components/Heading';
 
 const CreateFleet = () => {
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, setCurrentRole, setupUser } = useAuth();
     const [typeOfFleet, setTypeOfFleet] = useState('');
     const [fleetName, setFleetName] = useState('');
     const [fleetPhone, setFleetPhone] = useState('');
@@ -137,14 +137,37 @@ const CreateFleet = () => {
                 companyName: fleetData.fleetName,
             };
 
+            const updatedUser = {
+                ...user,
+                fleetVerified: true,
+                fleets: [...existingFleets, newFleetAccess],
+                updatedAt: new Date().toISOString(),
+            };
+
             await updateDocument('personalData', user.uid, {
                 fleetVerified: true,
                 fleets: [...existingFleets, newFleetAccess],
                 updatedAt: new Date().toISOString(),
             });
 
+            await setupUser(updatedUser);
+
+            const fleetRole = {
+                role: 'fleet' as const,
+                fleetId,
+                companyName: fleetData.fleetName,
+                userRole: 'owner',
+                accType: 'fleet' as const,
+                driverId: null,
+                fleetMainAdminId: null,
+                fleetManagerId: null,
+                fleetDispatcherId: null,
+            };
+
+            await setCurrentRole(fleetRole);
+
             Alert.alert('Fleet saved', 'Your fleet request has been submitted.');
-            router.back();
+            await router.replace('/');
         } catch (error) {
             console.error('Error saving fleet verification:', error);
             Alert.alert('Error submitting fleet verification', 'Please try again.');

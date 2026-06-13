@@ -95,7 +95,7 @@ function FleetSelector() {
 
         setCurrentRole(fleetRole);
         await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
-        router.push('/');
+        await router.replace('/');
     };
 
     if (!user) {

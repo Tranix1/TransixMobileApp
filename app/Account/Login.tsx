@@ -6,8 +6,7 @@ import {
     StyleSheet,
     ActivityIndicator,
     ScrollView,
-    Alert, // Added Alert
-    ToastAndroid 
+    Alert,
 } from 'react-native';
 import Input from '@/components/Input';
 import { hp, wp } from '@/constants/common';
@@ -22,46 +21,27 @@ import {
     FontAwesome5,
     Ionicons
 } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AccountType } from '@/types/types';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [resetPassword, setResetPassword] = useState(false); // Fixed typo
-
-    // Default Selected Account
-    const [selectedAccount, setSelectedAccount] = useState('tracking');
+    const [resetPassword, setResetPassword] = useState(false);
+    const [selectedAccount, setSelectedAccount] = useState<AccountType>('tracking');
 
     const backgroundLight = useThemeColor('backgroundLight');
     const icon = useThemeColor('icon');
     const accent = useThemeColor('accent');
     const coolGray = useThemeColor('coolGray');
 
-    const { Login: loginUser,setCurrentRole } = useAuth();
+    const { Login: loginUser } = useAuth();
     const auth = getAuth();
 
-    // Unified account selection handler
-    // const handleAccountSelect = (type: string) => {
-    //     if (type === 'fleet' || type === 'broker') {
-    //         Alert.alert(
-    //             "Coming Soon",
-    //             "The Fleet and Broker modules are currently being optimized. Please use the Tracking account for now.",
-    //             [{ text: "OK", onPress: () => setSelectedAccount('tracking') }]
-    //         );
-    //     } else {
-    //         setSelectedAccount(type);
-    //     }
-    // };
-
-
-
-// ... inside your component
-
-const handleAccountSelect = (type: string) => {
-    setSelectedAccount(type);
-};
+    const handleAccountSelect = (type: AccountType) => {
+        setSelectedAccount(type);
+    };
 
     const onsubmit = async () => {
         if (!email || !password) {
@@ -72,37 +52,20 @@ const handleAccountSelect = (type: string) => {
         setError(null);
         setLoading(true);
 
-        const res = await loginUser({
-            email,
-            password,
-            accountType: selectedAccount
-        });
+        try {
+            const res = await loginUser({
+                email,
+                password,
+                accountType: selectedAccount,
+            });
 
-        if(selectedAccount === 'fleet' ) {
-
-             const fleetRole = {
-            role: 'fleet' as const,
-            fleetId: "",
-            companyName: "",
-            userRole:  "",
-            accType: 'fleet' as const,
-            driverId:  null,
-            fleetMainAdminId: null,
-            fleetManagerId:  null,
-            fleetDispatcherId:  null,
-        };
-
-            await setCurrentRole(fleetRole);
-            await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
-        } else if(selectedAccount === 'tracking') {
-            await setCurrentRole('general');
-            await AsyncStorage.setItem('currentRole', 'general');
-        }
-
-        setLoading(false);
-
-        if (!res.success) {
-            setError(res.message || "Login failed. Please try again.");
+            if (!res.success) {
+                setError(res.message || "Login failed. Please try again.");
+            }
+        } catch (error: any) {
+            setError(error.message || "Login failed. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -111,12 +74,12 @@ const handleAccountSelect = (type: string) => {
             setLoading(true);
             try {
                 await sendPasswordResetEmail(auth, email);
-                setLoading(false);
                 setResetPassword(false);
                 Alert.alert('Success', 'A password reset link has been sent to your email.');
             } catch (err: any) {
-                setLoading(false);
                 setError(err.message);
+            } finally {
+                setLoading(false);
             }
         } else {
             Alert.alert("Error", "Enter your email address to reset your password");
@@ -130,14 +93,12 @@ const handleAccountSelect = (type: string) => {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.container}>
-                    {/* LOGO */}
                     <Image
                         contentFit='contain'
                         source={require('@/assets/trialogo.svg')}
                         style={styles.logo}
                     />
 
-                    {/* HEADER */}
                     <View style={styles.headerContainer}>
                         <ThemedText type='title' style={styles.header}>
                             Welcome Back
@@ -147,14 +108,12 @@ const handleAccountSelect = (type: string) => {
                         </ThemedText>
                     </View>
 
-                    {/* ACCOUNT SELECTOR */}
                     <View style={styles.accountContainer}>
                         <ThemedText style={styles.accountTitle} color={coolGray}>
                             Select Account Type
                         </ThemedText>
 
                         <View style={styles.accountButtonsWrapper}>
-                            {/* TRACKING */}
                             <TouchableOpacity
                                 activeOpacity={0.85}
                                 onPress={() => handleAccountSelect('tracking')}
@@ -173,7 +132,6 @@ const handleAccountSelect = (type: string) => {
                                 </ThemedText>
                             </TouchableOpacity>
 
-                            {/* FLEET */}
                             <TouchableOpacity
                                 activeOpacity={0.85}
                                 onPress={() => handleAccountSelect('fleet')}
@@ -192,7 +150,6 @@ const handleAccountSelect = (type: string) => {
                                 </ThemedText>
                             </TouchableOpacity>
 
-                            {/* BROKER */}
                             <TouchableOpacity
                                 activeOpacity={0.85}
                                 onPress={() => handleAccountSelect('broker')}
@@ -221,7 +178,6 @@ const handleAccountSelect = (type: string) => {
                         <ThemedText style={styles.errorText}>{error}</ThemedText>
                     )}
 
-                    {/* LOGIN FORM */}
                     {!resetPassword ? (
                         <View>
                             <ThemedText style={styles.label}>Email</ThemedText>
@@ -262,7 +218,6 @@ const handleAccountSelect = (type: string) => {
                             </TouchableOpacity>
                         </View>
                     ) : (
-                        /* RESET PASSWORD VIEW */
                         <View>
                             <ThemedText style={styles.resetText} color={coolGray}>
                                 Enter a valid email to receive a password reset link.
@@ -296,7 +251,6 @@ const handleAccountSelect = (type: string) => {
                         </View>
                     )}
 
-                    {/* FOOTER */}
                     <TouchableOpacity
                         style={{ marginTop: hp(2) }}
                         onPress={() => router.replace('/Account/SignUp')}
@@ -307,7 +261,7 @@ const handleAccountSelect = (type: string) => {
                         </ThemedText>
                     </TouchableOpacity>
                 </View>
-                <View style={{ height: hp(25) }} /> 
+                <View style={{ height: hp(25) }} />
             </ScrollView>
         </ScreenWrapper>
     );
@@ -336,8 +290,3 @@ const styles = StyleSheet.create({
     footerText: { textAlign: 'center', marginTop: hp(1) },
     loginLink: { fontWeight: '700', textDecorationLine: 'underline' },
 });
-
-
-
-
-

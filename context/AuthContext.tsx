@@ -1,42 +1,165 @@
-import { auth } from "@/db/fireBaseConfig";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendEmailVerification } from "firebase/auth";
-import { createContext, ReactElement, useContext, useState, useEffect } from "react";
-import { ToastAndroid } from "react-native";
+import {
+    createUserWithEmailAndPassword,
+    sendEmailVerification,
+    signInWithEmailAndPassword,
+    signOut,
+    updateProfile,
+} from "firebase/auth";
+import { createContext, ReactElement, useContext, useEffect, useState } from "react";
+import { Alert, ToastAndroid } from "react-native";
+import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
+import { auth } from "@/db/fireBaseConfig";
+import { readById, setDocuments, validateReferrerCode } from "@/db/operations";
+import { AccountType, CurrentRole, User } from "@/types/types";
+import { updateUserTokenInAllCollections } from "@/Utilities/pushNotification";
 
+type AlertType = "default" | "error" | "success" | "laoding" | "destructive";
 
+interface LoginCredentials {
+    email: string;
+    password: string;
+    accountType: AccountType;
+}
 
-const AuthContext = createContext({
-    signUp: async (credentials: any) => { },
-    Login: async (credentials: any) => ({ success: false, message: "" }),
+interface LoginResponse {
+    success: boolean;
+    message: string;
+}
+
+interface SignUpCredentials {
+    email: string;
+    password: string;
+    displayName: string;
+    referrerCode?: string;
+    accountType?: AccountType;
+}
+
+interface UpdateAccountResponse {
+    success: boolean;
+    error?: string;
+    user?: User;
+}
+
+interface AuthContextValue {
+    signUp: (credentials: SignUpCredentials) => Promise<void>;
+    Login: (credentials: LoginCredentials) => Promise<LoginResponse>;
+    isSignedIn: boolean;
+    user: User | null | undefined;
+    setupUser: (userData: User | null) => Promise<void>;
+    Logout: () => Promise<boolean>;
+    alertBox: (title: string, message: string, buttons?: Alertbutton[], type?: AlertType) => void;
+    updateAccount: (credentials: User) => Promise<UpdateAccountResponse>;
+    currentRole: CurrentRole;
+    setCurrentRole: (role: CurrentRole | AccountType) => Promise<void>;
+    isAppReady: boolean;
+    updateCurrentUser: (userData: User) => Promise<void>;
+    isPersonalDataLoadedFromCache: boolean;
+}
+
+const DEFAULT_GENERAL_ROLE: CurrentRole = {
+    role: 'general',
+    accType: 'tracking',
+    userRole: 'tracking',
+};
+
+const DEFAULT_FLEET_ROLE: CurrentRole = {
+    role: 'fleet',
+    fleetId: "",
+    companyName: "",
+    userRole: "",
+    accType: 'fleet',
+    driverId: null,
+    fleetMainAdminId: null,
+    fleetManagerId: null,
+    fleetDispatcherId: null,
+};
+
+const DEFAULT_BROKER_ROLE: CurrentRole = {
+    role: 'broker',
+    brokerId: "",
+    companyName: "",
+    userRole: "",
+    accType: 'broker',
+    brokerType: "",
+};
+
+const AuthContext = createContext<AuthContextValue>({
+    signUp: async () => { },
+    Login: async () => ({ success: false, message: "" }),
     isSignedIn: false,
-    user: null as User | null | undefined,
-    setupUser: async (userData: any) => { },
+    user: null,
+    setupUser: async () => { },
     Logout: async () => false,
-    alertBox: (title: string, message: string, buttons?: Alertbutton[], type?: "default" | "error" | "success" | "laoding" | "destructive" | undefined) => { },
-    updateAccount: async (credentials: any) => ({ success: false }),
-    currentRole: 'general' as 'general' | 'fleet' | 'broker' | { role: 'fleet'; fleetId: string; companyName: string; userRole: string; accType: string; } | { role: 'broker'; brokerId: string; companyName: string; userRole: string; accType: string; brokerType: string;  },
-    setCurrentRole: (role: 'general' | 'fleet' | 'broker' | { role: 'fleet'; fleetId: string; companyName: string; userRole: string; accType: string; } | { role: 'broker'; brokerId: string; companyName: string; userRole: string; accType: string; brokerType: string;  }) => { },
+    alertBox: () => { },
+    updateAccount: async () => ({ success: false }),
+    currentRole: DEFAULT_GENERAL_ROLE,
+    setCurrentRole: async () => { },
     isAppReady: false,
-    updateCurrentUser: async (userData: User) => { },
+    updateCurrentUser: async () => { },
     isPersonalDataLoadedFromCache: false,
 });
 
-import { ReactNode } from "react";
-import { setDocuments, readById, validateReferrerCode } from "@/db/operations";
-import { User } from "@/types/types";
-import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
-import { updateUserTokenInAllCollections } from "@/Utilities/pushNotification";
+const normalizeAccountType = (roleInput: CurrentRole | AccountType | null | undefined): CurrentRole => {
+    if (!roleInput) {
+        return DEFAULT_GENERAL_ROLE;
+    }
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+    if (typeof roleInput !== 'string') {
+        return roleInput;
+    }
 
+    switch (roleInput) {
+        case 'tracking':
+            return DEFAULT_GENERAL_ROLE;
+        case 'general':
+            return { ...DEFAULT_GENERAL_ROLE, accType: 'general' };
+        case 'fleet':
+            return DEFAULT_FLEET_ROLE;
+        case 'broker':
+            return DEFAULT_BROKER_ROLE;
+        default:
+            return DEFAULT_GENERAL_ROLE;
+    }
+};
 
+const getFirebaseErrorMessage = (error: any) => {
+    const errorCode = error?.message?.match(/\(([^)]+)\)/)?.[1];
+
+    switch (errorCode) {
+        case "auth/network-request-failed":
+            return "Network request failed";
+        case "auth/invalid-email":
+            return "Invalid email format.";
+        case "auth/user-not-found":
+            return "No account found with this email.";
+        case "auth/wrong-password":
+            return "Incorrect password. Please try again.";
+        case "auth/user-disabled":
+            return "This account has been disabled.";
+        case "auth/too-many-requests":
+            return "Too many failed attempts. Try again later.";
+        case "auth/invalid-credentials":
+            return "Password and Email are not recognised";
+        case "auth/email-already-in-use":
+            return "An account already exists with this email.";
+        case "auth/weak-password":
+            return "Password should be at least 6 characters.";
+        case "auth/operation-not-allowed":
+            return "This sign-in method is not enabled.";
+        default:
+            return error?.message || "An unexpected error occurred. Please try again.";
+    }
+};
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null | undefined>(undefined);
     const [isSignedIn, setIsSignedIN] = useState(false);
-    const [currentRole, setCurrentRole] = useState<'general' | 'fleet' | 'broker' | { role: 'fleet'; fleetId: string; companyName: string; userRole: string; accType: string; } | { role: 'broker'; brokerId: string; companyName: string; userRole: string; accType: string; brokerType: string;  }>('general');
+    const [currentRole, setCurrentRoleState] = useState<CurrentRole>(DEFAULT_GENERAL_ROLE);
     const [isAppReady, setIsAppReady] = useState(false);
     const [isPersonalDataLoadedFromCache, setIsPersonalDataLoadedFromCache] = useState(false);
+    const [showAlert, setshowAlert] = useState<ReactElement | null>(null);
 
     useEffect(() => {
         const loadUser = async () => {
@@ -44,48 +167,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const storedUser = await AsyncStorage.getItem('user');
                 const currentUser = await AsyncStorage.getItem('currentUser');
                 const storedRole = await AsyncStorage.getItem('currentRole');
+                const rawUser = currentUser || storedUser;
 
-                if (storedUser) {
-                    const parsedUser = JSON.parse(storedUser);
+                if (rawUser) {
+                    const parsedUser = JSON.parse(rawUser);
                     const cachedPersonalData = await AsyncStorage.getItem(`personalData_${parsedUser.uid}`);
-                    let personalData;
+                    let personalData: any = {};
+
                     if (cachedPersonalData) {
                         personalData = JSON.parse(cachedPersonalData);
                         setIsPersonalDataLoadedFromCache(true);
                     } else {
-                        try {
-                            personalData = await readById('personalData', parsedUser.uid);
-                            await AsyncStorage.setItem(`personalData_${parsedUser.uid}`, JSON.stringify(personalData));
-                            setIsPersonalDataLoadedFromCache(false);
-                        } catch (error) {
-                            console.log('Error loading personalData from DB:', error);
-                            personalData = {};
-                            setIsPersonalDataLoadedFromCache(false);
-                        }
+                        personalData = await readById('personalData', parsedUser.uid) || {};
+                        await AsyncStorage.setItem(`personalData_${parsedUser.uid}`, JSON.stringify(personalData));
+                        setIsPersonalDataLoadedFromCache(false);
                     }
-                    setUser({ ...parsedUser, ...personalData });
-                    setIsSignedIN(true);
-                }
 
-                if (currentUser) {
-                    const parsedCurrentUser = JSON.parse(currentUser);
-                    if (!storedUser || JSON.parse(storedUser).uid !== parsedCurrentUser.uid) {
-                        setUser(parsedCurrentUser);
-                        setIsSignedIN(true);
-                    }
+                    const fullUser = { ...parsedUser, ...personalData };
+                    setUser(fullUser);
+                    setIsSignedIN(true);
+                    await AsyncStorage.setItem('user', JSON.stringify(fullUser));
+                    await AsyncStorage.setItem('currentUser', JSON.stringify(fullUser));
                 }
 
                 if (storedRole) {
                     try {
-                        const parsedRole = JSON.parse(storedRole);
-                        if (typeof parsedRole === 'object' && (parsedRole.role === 'fleet' || parsedRole.role === 'broker')) {
-                            setCurrentRole(parsedRole);
-                        } else {
-                            setCurrentRole(parsedRole as 'general' | 'fleet' | 'broker');
-                        }
-                    } catch (error) {
-                        setCurrentRole(storedRole as 'general' | 'fleet' | 'broker');
+                        setCurrentRoleState(normalizeAccountType(JSON.parse(storedRole) as CurrentRole | AccountType));
+                    } catch {
+                        setCurrentRoleState(normalizeAccountType(storedRole as AccountType));
                     }
+                } else {
+                    setCurrentRoleState(DEFAULT_GENERAL_ROLE);
                 }
             } catch (error) {
                 console.error('Error loading user from cache:', error);
@@ -97,391 +209,236 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         loadUser();
     }, []);
 
+    const saveCurrentRole = async (roleInput: CurrentRole | AccountType) => {
+        const normalizedRole = normalizeAccountType(roleInput);
+        setCurrentRoleState(normalizedRole);
 
-    const setupUser = async (userData: any) => {
+        try {
+            await AsyncStorage.setItem('currentRole', JSON.stringify(normalizedRole));
+        } catch (error) {
+            console.error('Error saving current role:', error);
+        }
+    };
+
+    const setupUser = async (userData: User | null) => {
         if (userData) {
-            console.log(user?.organisation)
-            const aditional = await readById('personalData', userData.uid)
-            const fullUser = { ...userData, ...aditional };
-            setUser(fullUser)
+            const additional = await readById('personalData', userData.uid) || {};
+            const fullUser = { ...userData, ...additional };
+
+            setUser(fullUser);
             setIsSignedIN(true);
             setIsAppReady(true);
-            await AsyncStorage.setItem('user', JSON.stringify(userData))
-            await AsyncStorage.setItem(`personalData_${userData.uid}`, JSON.stringify(aditional))
+            await AsyncStorage.setItem('user', JSON.stringify(fullUser));
+            await AsyncStorage.setItem('currentUser', JSON.stringify(fullUser));
+            await AsyncStorage.setItem(`personalData_${userData.uid}`, JSON.stringify(additional));
 
-            // Update expoPushToken in ALL collections for this user
             if (fullUser.expoPushToken) {
                 await updateUserTokenInAllCollections(fullUser.uid, fullUser.expoPushToken);
             }
 
             return;
-        } else {
-            console.log("here")
-            setUser(null)
-            setIsSignedIN(false);
-            setIsAppReady(true);
-            await AsyncStorage.removeItem('user')
-            return;
         }
-    }
 
-    // const initUser = async () => {
-    //     const getuser = await AsyncStorage.getItem('user');
-    //     if (getuser) {
-    //         setUser(JSON.parse(getuser))
-    //         setIsSignedIN(true);
-    //     }
-    // }
-
-    // initUser()
-
-    interface LoginCredentials {    
-        email: string;
-        password: string;
-        accountType: 'general' | 'fleet' | 'broker' | 'tracking'
-    }
-
-    interface LoginResponse {
-        success: boolean;
-        message: string;
-    }
-
-    const Login = async ( credentials: LoginCredentials): Promise<LoginResponse> => {
-  try {
-    const userCredential = await signInWithEmailAndPassword(
-      auth,
-      credentials.email,
-      credentials.password
-    );
-    
-    setUser(undefined);
-
-    const firebaseUser = userCredential.user;
-
-    if (auth.currentUser && !auth.currentUser.emailVerified) {
-      await sendEmailVerification(firebaseUser);
-      alert(
-        "Verification Email Sent\nPlease Verify Your Email To Continue"
-      );
-    }
-
-    const additional = await readById("users", firebaseUser.uid);
-
-    if (!additional) {
-      let personalData = {};
-      try {
-        personalData = await readById('personalData', firebaseUser.uid) || {};
-        await AsyncStorage.setItem(`personalData_${firebaseUser.uid}`, JSON.stringify(personalData));
-      } catch (error) {
-        console.log('Error loading personalData during login:', error);
-      }
-
-      const fullUser = {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email,
-        displayName: firebaseUser.displayName,
-        phoneNumber: firebaseUser.phoneNumber,
-        photoURL: firebaseUser.photoURL,
-        ...personalData,
-      };
-
-      setUser(fullUser as User);
-      setIsSignedIN(true);
-      setIsAppReady(true);
-      await AsyncStorage.setItem('user', JSON.stringify(fullUser));
-      await AsyncStorage.setItem('currentUser', JSON.stringify(fullUser));
-
-      const roleToSet = credentials.accountType === 'tracking' ? 'general' : credentials.accountType;
-
-      if (roleToSet === 'fleet') {
-        const fleetRole = {
-          role: 'fleet' as const,
-          fleetId: "",
-          companyName: "",
-          userRole: "",
-          accType: 'fleet' as const,
-          driverId: null,
-          fleetMainAdminId: null,
-          fleetManagerId: null,
-          fleetDispatcherId: null,
-        };
-        setCurrentRole(fleetRole);
-        await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
-      } else {
-        setCurrentRole(roleToSet as 'general' | 'fleet' | 'broker');
-        await AsyncStorage.setItem('currentRole', roleToSet);
-      }
-
-      router.replace('/');
-
-      return {
-        success: true,
-        message: "Login successful",
-      };
-    }
-
-    let personalData = {};
-    try {
-      personalData = await readById('personalData', firebaseUser.uid) || {};
-      await AsyncStorage.setItem(`personalData_${firebaseUser.uid}`, JSON.stringify(personalData));
-    } catch (error) {
-      console.log('Error loading personalData during login:', error);
-    }
-
-    const fullUser = {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      displayName: firebaseUser.displayName,
-      phoneNumber: firebaseUser.phoneNumber,
-      photoURL: firebaseUser.photoURL,
-      ...additional,
-      ...personalData,
+        setUser(null);
+        setIsSignedIN(false);
+        setIsAppReady(true);
+        await AsyncStorage.removeItem('user');
+        await AsyncStorage.removeItem('currentUser');
     };
 
-    setUser(fullUser as User);
-    setIsSignedIN(true);
-    setIsAppReady(true);
-    
-    await AsyncStorage.setItem(
-      "user",
-      JSON.stringify(fullUser)
-    );
+    const Login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
+        try {
+            const userCredential = await signInWithEmailAndPassword(
+                auth,
+                credentials.email,
+                credentials.password
+            );
 
-    await AsyncStorage.setItem(
-      "currentUser",
-      JSON.stringify(fullUser)
-    );
+            setUser(undefined);
 
-    const roleToSet = credentials.accountType === 'tracking' ? 'general' : credentials.accountType;
+            const firebaseUser = userCredential.user;
 
-    if (roleToSet === 'fleet') {
-      const fleetRole = {
-        role: 'fleet' as const,
-        fleetId: "",
-        companyName: "",
-        userRole: "",
-        accType: 'fleet' as const,
-        driverId: null,
-        fleetMainAdminId: null,
-        fleetManagerId: null,
-        fleetDispatcherId: null,
-      };
-      setCurrentRole(fleetRole);
-      await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
-    } else {
-      setCurrentRole(roleToSet as 'general' | 'fleet' | 'broker');
-      await AsyncStorage.setItem('currentRole', roleToSet);
-    }
+            if (auth.currentUser && !auth.currentUser.emailVerified) {
+                await sendEmailVerification(firebaseUser);
+                Alert.alert(
+                    "Verification Email Sent",
+                    "Please verify your email to continue."
+                );
+            }
 
-    router.replace('/');
+            const personalData = await readById('personalData', firebaseUser.uid) || {};
+            const fullUser: User = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email ?? undefined,
+                displayName: firebaseUser.displayName ?? undefined,
+                phoneNumber: firebaseUser.phoneNumber ?? undefined,
+                photoURL: firebaseUser.photoURL ?? undefined,
+                ...personalData,
+            };
 
-    return {
-      success: true,
-      message: "Login successful",
+            setUser(fullUser);
+            setIsSignedIN(true);
+            setIsAppReady(true);
+            await AsyncStorage.setItem('user', JSON.stringify(fullUser));
+            await AsyncStorage.setItem('currentUser', JSON.stringify(fullUser));
+            await AsyncStorage.setItem(`personalData_${firebaseUser.uid}`, JSON.stringify(personalData));
+            await saveCurrentRole(credentials.accountType);
+            await router.replace('/');
+
+            return {
+                success: true,
+                message: "Login successful",
+            };
+        } catch (error) {
+            console.log(error);
+
+            return {
+                success: false,
+                message: getFirebaseErrorMessage(error),
+            };
+        }
     };
-  } catch (error: any) {
-    const errorCode =
-      error.message.match(/\(([^)]+)\)/)?.[1];
-
-    console.log(error);
-
-    let errorMessage =
-      "An unexpected error occurred. Please try again.";
-
-    if (errorCode) {
-      switch (errorCode) {
-        case "auth/network-request-failed":
-          errorMessage = "Network request failed";
-          break;
-        case "auth/invalid-email":
-          errorMessage = "Invalid email format.";
-          break;
-        case "auth/user-not-found":
-          errorMessage = "No account found with this email.";
-          break;
-        case "auth/wrong-password":
-          errorMessage =
-            "Incorrect password. Please try again.";
-          break;
-        case "auth/user-disabled":
-          errorMessage =
-            "This account has been disabled.";
-          break;
-        case "auth/too-many-requests":
-          errorMessage =
-            "Too many failed attempts. Try again later.";
-          break;
-        case "auth/invalid-credentials":
-          errorMessage =
-            "Password and Email are not recognised";
-          break;
-        default:
-          errorMessage =
-            "Password and Email are not recognised";
-      }
-    }
-
-    return {
-      success: false,
-      message:
-        errorMessage ??
-        "An unexpected error occurred. Please try again.",
-    };
-  }
-};
-
-    interface SignUpCredentials {
-        email: string;
-        password: string;
-        displayName: string;
-        referrerCode?: string;
-        // displayName: string;
-        // organisation: string;
-    }
 
     const signUp = async (credentials: SignUpCredentials): Promise<void> => {
         try {
-            // Validate referrer code if provided
-            let referrerId = null;
+            let referrerId: string | null = null;
+
             if (credentials.referrerCode && credentials.referrerCode.trim() !== '') {
-                const referrerValidation = await validateReferrerCode(credentials.referrerCode);
+                const referrerValidation = await validateReferrerCode(credentials.referrerCode.trim().toUpperCase());
+
                 if (!referrerValidation.exists) {
                     ToastAndroid.show('Invalid referrer code. Please check the code or leave it blank.', ToastAndroid.LONG);
                     return;
                 }
+
                 referrerId = referrerValidation.referrerId;
             }
 
             const userCredential = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
-            console.log("")
-            setIsSignedIN(true);
+            const firebaseUser = userCredential.user;
+            const accountRole = normalizeAccountType(credentials.accountType || 'tracking');
 
-            const user = userCredential.user;
-
-            await updateProfile(user, {});
-            const newUser = await setDocuments("personalData", {
-                uid: user.uid,
-                email: user.email,
+            await updateProfile(firebaseUser, {
                 displayName: credentials.displayName,
-                referrerId: referrerId,
-                createdAt: Date.now().toString()
             });
 
-            setIsSignedIN(true);
-            await AsyncStorage.setItem('user', JSON.stringify({
-                ...user,
+            const userData: User = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email ?? undefined,
                 displayName: credentials.displayName,
-                referrerId: referrerId,
-            }));
-            ToastAndroid.show('Account created successfully!', ToastAndroid.SHORT);
-            router.push({ pathname: '/Account/Profile', params: { operation: 'create' }, });
+                referrerId: referrerId || undefined,
+                accountType: accountRole.accType,
+                role: accountRole.role,
+                createdAt: Date.now().toString(),
+            };
 
+            const saved = await setDocuments("personalData", userData);
+
+            if (!saved) {
+                ToastAndroid.show('Unable to create profile. Please try again.', ToastAndroid.LONG);
+                return;
+            }
+
+            const fullUser = { ...userData };
+
+            setUser(fullUser);
+            setIsSignedIN(true);
+            setIsAppReady(true);
+            await AsyncStorage.setItem('user', JSON.stringify(fullUser));
+            await AsyncStorage.setItem('currentUser', JSON.stringify(fullUser));
+            await AsyncStorage.setItem(`personalData_${firebaseUser.uid}`, JSON.stringify(userData));
+            await saveCurrentRole(accountRole);
+
+            await sendEmailVerification(firebaseUser).catch(() => { });
+
+            ToastAndroid.show('Account created successfully!', ToastAndroid.SHORT);
+            await router.replace({
+                pathname: '/Account/Profile',
+                params: { operation: 'create', accountType: accountRole.accType },
+            });
         } catch (error) {
-            ToastAndroid.show(`${error}`, ToastAndroid.LONG)
+            console.error('Sign up failed:', error);
+            ToastAndroid.show(getFirebaseErrorMessage(error), ToastAndroid.LONG);
         }
     };
-
-
 
     const Logout = async () => {
         try {
             await signOut(auth);
-            // Clear all AsyncStorage items
             await AsyncStorage.clear();
-            // Reset role to general
-            setCurrentRole('general');
+            setCurrentRoleState(DEFAULT_GENERAL_ROLE);
             setUser(null);
             setIsSignedIN(false);
-            setIsAppReady(true); // Set to true so app can proceed
-            router.dismissAll(); // Use dismissAll instead of back to go to root
-            ToastAndroid.show('logout successful', ToastAndroid.SHORT)
-            return true; // Returns true if successful
+            setIsAppReady(true);
+            await router.replace('/');
+            ToastAndroid.show('logout successful', ToastAndroid.SHORT);
+            return true;
         } catch (error) {
-            ToastAndroid.show('logout unsuccessful', ToastAndroid.SHORT)
+            ToastAndroid.show('logout unsuccessful', ToastAndroid.SHORT);
             console.error("Error during logout:", error);
-            return false; // Returns false on failure
+            return false;
         }
     };
 
-    // Function to update current user details in AsyncStorage
     const updateCurrentUser = async (userData: User) => {
         try {
             await AsyncStorage.setItem("currentUser", JSON.stringify(userData));
+            await AsyncStorage.setItem("user", JSON.stringify(userData));
+            setUser(userData);
             console.log('Current user updated in AsyncStorage');
         } catch (error) {
             console.error('Error updating current user:', error);
         }
     };
 
-
-
-
-    interface UpdateAccountCredentials {
-        organization: string;
-        photoURL: string | null;
-    }
-
-    interface UpdateAccountResponse {
-        success: boolean;
-        error?: string;
-    }
-
     const updateAccount = async (credentials: User): Promise<UpdateAccountResponse> => {
         try {
             const currentUser = auth.currentUser;
 
-            if (!isSignedIn || !currentUser) {
+            if (!isSignedIn || !currentUser || !credentials.uid) {
                 return { success: false, error: "User not signed in." };
             }
 
-            // 1. Update Firebase profile
             await updateProfile(currentUser, {
                 displayName: credentials.organisation || credentials.displayName || "",
                 photoURL: credentials.photoURL || null,
             });
 
-            // 2. Send verification email
             if (!currentUser.emailVerified) {
-                await sendEmailVerification(currentUser);
-                alert("📧 Verification Email Sent. Please check your inbox.");
+                await sendEmailVerification(currentUser).catch(() => { });
+                    ToastAndroid.show('Verification Email Sent. Please check your inbox.', ToastAndroid.LONG);
+
             }
 
-            // 3. Combine user data
             const fullUser: User = {
                 ...credentials,
-                displayName: credentials.organisation,
+                displayName: credentials.organisation || credentials.displayName || "",
+                accountType: currentRole.accType,
+                role: currentRole.role,
                 expoPushToken: credentials.expoPushToken || "",
             };
 
-            // 4. Save to Firestore (or your DB)
             await setDocuments("personalData", fullUser);
-
-            // 5. Set locally
             await AsyncStorage.setItem("user", JSON.stringify(fullUser));
-            setUser(fullUser);
-            setIsSignedIN(true);
-
-            // 6. Also update the profile cache
+            await AsyncStorage.setItem("currentUser", JSON.stringify(fullUser));
             await AsyncStorage.setItem(`profile_${fullUser.uid}`, JSON.stringify(fullUser));
-
-            // 7. Update the personalData cache
             await AsyncStorage.setItem(`personalData_${fullUser.uid}`, JSON.stringify(fullUser));
 
-            // 7. Verify the data was saved by reading it back
-            const savedData = await readById('personalData', fullUser.uid);
+            setUser(fullUser);
+            setIsSignedIN(true);
+            setIsAppReady(true);
 
-            // 8. Force a small delay to ensure state propagation
-            await new Promise(resolve => setTimeout(resolve, 100));
-
-            return { success: true };
+            if (fullUser.expoPushToken) {
+                await updateUserTokenInAllCollections(fullUser.uid, fullUser.expoPushToken);
+            }
+            return { success: true, user: fullUser };
         } catch (error) {
             console.log("Update Error >", error);
             return { error: (error as Error).message, success: false };
         }
     };
 
-    const [showAlert, setshowAlert] = useState<ReactElement | null>(null);
-    function alertBox(title: string, message: string, buttons?: Alertbutton[], type?: "default" | "error" | "success" | "laoding" | "destructive" | undefined) {
+    function alertBox(title: string, message: string, buttons?: Alertbutton[], type?: AlertType) {
         setshowAlert(
             <AlertComponent
                 visible
@@ -491,16 +448,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 type={type}
                 onBackPress={() => setshowAlert(null)}
             />
-        )
-
+        );
     }
 
     return (
-        <AuthContext.Provider value={{ signUp, Login, isSignedIn, user, setupUser, Logout, updateAccount, alertBox, currentRole, setCurrentRole, isAppReady, updateCurrentUser, isPersonalDataLoadedFromCache }}>
+        <AuthContext.Provider value={{
+            signUp,
+            Login,
+            isSignedIn,
+            user,
+            setupUser,
+            Logout,
+            updateAccount,
+            alertBox,
+            currentRole,
+            setCurrentRole: saveCurrentRole,
+            isAppReady,
+            updateCurrentUser,
+            isPersonalDataLoadedFromCache,
+        }}>
             {children}
             {showAlert}
         </AuthContext.Provider>
     );
 };
 
-export const useAuth = () => { return useContext(AuthContext) }
+export const useAuth = () => useContext(AuthContext);
+
+export type { AlertType, AuthContextValue, LoginCredentials, LoginResponse, SignUpCredentials };

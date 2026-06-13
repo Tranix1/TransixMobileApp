@@ -6,23 +6,12 @@ import { wp } from '@/constants/common';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext'
+import { CurrentRole } from '@/types/types';
 import { FontAwesome6 } from '@expo/vector-icons';
 
 interface CustomHeaderProps {
     onPressMenu: () => void;
-    currentRole?: 'general' | 'fleet' | 'broker' | {
-        role: 'fleet';
-        fleetId: string;
-        companyName: string;
-        userRole: string;
-        accType: string;
-    } | {
-        role: 'broker';
-        brokerId: string;
-        companyName: string;
-        userRole: string;
-        accType: string;
-    } 
+    currentRole?: CurrentRole;
     pageTitle?: string;
 }
 

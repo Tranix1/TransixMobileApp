@@ -114,7 +114,7 @@ const MainLayout = () => {
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 console.log('User Found >', user.email);
-                setupUser(user);
+                setupUser(user as any);
             } else {
                 console.log('Currently no user');
                 setupUser(null);

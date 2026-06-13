@@ -281,8 +281,9 @@ const Index = () => {
 
     const { setCurrentRole: setGlobalCurrentRole } = useAuth();
 
-    const switchRole = async (role: 'general' | 'fleet' | 'broker') => {
-        setGlobalCurrentRole(role);
+    const switchRole = async (role: 'general' | 'tracking') => {
+        await setGlobalCurrentRole(role);
+        await router.replace('/');
     };
 
     if (!user) {
@@ -370,20 +371,21 @@ const Index = () => {
                                 {user.fleets.map((fleet: any, index: number) => (
                                     <TouchableNativeFeedback
                                         key={fleet.fleetId}
-                                        onPress={() => {
-                                            const fleetRole = {
-                                                role: 'fleet' as const,
-                                                fleetId: fleet.fleetId,
-                                                companyName: fleet.companyName,
-                                                userRole: fleet.role,
-                                                accType: 'fleet' as const ,
-                                                driverId: fleet.driverId|| null,
-                                                fleetMainAdminId: fleet.fleetMainAdminId || null ,
-                                                fleetManagerId: fleet.fleetManagerId || null ,
-                                                fleetDispatcherId: fleet.fleetDispatcherId || null ,
-                                            };
-                                            setGlobalCurrentRole(fleetRole);
-                                        }}
+                                            onPress={async () => {
+                                                const fleetRole = {
+                                                    role: 'fleet' as const,
+                                                    fleetId: fleet.fleetId,
+                                                    companyName: fleet.companyName,
+                                                    userRole: fleet.role,
+                                                    accType: 'fleet' as const ,
+                                                    driverId: fleet.driverId|| null,
+                                                    fleetMainAdminId: fleet.fleetMainAdminId || null ,
+                                                    fleetManagerId: fleet.fleetManagerId || null ,
+                                                    fleetDispatcherId: fleet.fleetDispatcherId || null ,
+                                                };
+                                                await setGlobalCurrentRole(fleetRole);
+                                                await router.replace('/');
+                                            }}
                                     >
                                         <View style={{
                                             backgroundColor: backgroundLight,
@@ -439,8 +441,9 @@ const Index = () => {
 
 
                                 { user?.brokerDetails.map((broker: any, index: number) => (   <TouchableNativeFeedback
+                                    key={broker.brokerId || index}
                                 
-                                            onPress={() => {
+                                            onPress={async () => {
                                                 const brokerRole = {
                                                     role: 'broker' as const,
                                                     accType: 'broker' as const,
@@ -449,7 +452,8 @@ const Index = () => {
                                                     companyName: broker.companyName,
                                                     userRole: broker.role,
                                                 };
-                                                setGlobalCurrentRole(brokerRole);
+                                                await setGlobalCurrentRole(brokerRole);
+                                                await router.replace('/');
                                             }}
                                         >
                                             <View style={{
