@@ -179,8 +179,7 @@ const CreateFleet = () => {
     return (
         <View style={{ flex: 1, backgroundColor: background , paddingTop:36 , }} >
             
-                    <CustomHeader pageTitle="Create Fleet" onPressMenu={() => { }} />
-
+            <Heading page="Create Fleet" />
 
             <View style={{ margin: hp(3) }}>
 
@@ -273,10 +272,10 @@ const CreateFleet = () => {
                         documents={selectedFleetDocuments[2]}
                         title="Fleet Main Admin Live Selfie with ID"
                         subtitle="Take a live photo holding fleet main admin ID (Camera required)"
-                        buttonTiitle="Take Fleet Live Selfie"
+                        buttonTiitle="Take Live Selfie"
                         onPickDocument={() =>
                             takePhoto(image => {
-                                setSelectedFleetDocuments(prev => [
+                                    setSelectedFleetDocuments(prev => [
                                     prev[0],
                                     prev[1],
                                     {

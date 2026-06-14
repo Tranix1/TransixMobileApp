@@ -17,6 +17,7 @@ import { parseCoordinateString, isValidCoordinate, DEFAULT_COORDINATES } from '@
 import { deleteDocument } from '@/db/operations';
 import { Share, Alert } from 'react-native';
 import AccentRingLoader from '@/components/AccentRingLoader';
+import CustomHeader from './CustomHeader';
 
 interface LoadsComponentProps {
     Loads: Load[];
@@ -172,109 +173,8 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
         <View style={[styles.container, { backgroundColor: background, flex: 1 }]}>
             {/* Visibility Selector */}
 
-            {/* <View style={{
-                backgroundColor: background,
-                paddingHorizontal: wp(2),
-                paddingVertical: userId ? wp(5) : wp(1),
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: wp(1),
-            }} >
-                <View>
-                    {!userId && <ThemedText type="title">
-                        Loads
-                    </ThemedText>}
-                    {userId && <ThemedText type='subtitle' >
-                        {organisationName}
-                    </ThemedText>}
-                    {!userId && <ThemedText type="tiny">Find a Truck for your Load Today</ThemedText>}
-                </View>
-                <View style={{ flexDirection: 'row', gap: wp(2) }}>
 
-                    <View style={{ overflow: 'hidden', borderRadius: wp(10) }}>
-                        <TouchableNativeFeedback onPress={() => setShowfilter(true)}>
-                            <View style={{ padding: wp(2) }}>
-                                <Ionicons name={'filter'} size={wp(4)} color={icon} />
-                            </View>
-                        </TouchableNativeFeedback>
-                    </View>
-                </View>
-            </View> */}
-
-
-
-
-
-
-
-
-
-
-   <View
-          style={{
-            backgroundColor: background,
-            paddingHorizontal: wp(2),
-            paddingVertical: wp(1),
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: wp(1),
-          }}
-        >
-
-          <TouchableNativeFeedback onPress={() => router.push("/Fleet/FleetProfile")}  >
-            <View style={{ padding: wp(2) }}>
-              <FontAwesome6 name="user" size={wp(7)} color={icon} />;
-            </View>
-          </TouchableNativeFeedback>
-
-          { !userId && <View>
-            <View style={{}}>
-              <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                <ThemedText type="title" >Loads</ThemedText>
-
-              </View>
-            </View>
-            {/* <ThemedzText type="tiny">Find a Truck for your Load Today</ThemedText> */}
-          </View>
-          }
-          {(userId ) && (
-            <View style={{ marginLeft: 10, }}>
-                <ThemedText type="subtitle"  >{organisationName} Trucks </ThemedText>
-            </View>
-          )}
-
-          <View style={{ flexDirection: 'row', width: wp(26), justifyContent: "space-between", alignItems: 'center' }}>
-
-            <TouchableNativeFeedback onPress={() => setShowfilter(true)}>
-              <View >
-                <Ionicons name={'filter'} size={wp(4)} color={icon} />
-              </View>
-            </TouchableNativeFeedback>
-
-
-            <TouchableNativeFeedback onPress={() => router.push("/Logistics/Loads/AddLoads")}>
-              <View >
-                <Ionicons name="add" size={wp(7)} color={icon} />
-              </View>
-            </TouchableNativeFeedback>
-
-            <TouchableNativeFeedback >
-              <View >
-                <Ionicons name="ellipsis-vertical" size={wp(5)} color={icon} />
-              </View>
-            </TouchableNativeFeedback>
-
-          </View>
-
-
-        </View>
-
-
-
-
-
+                <CustomHeader pageTitle="Loads" addingNavigate="/Logistics/Loads/AddLoads" filterElement={setShowfilter} />
 
 
             {visibilitySelector}

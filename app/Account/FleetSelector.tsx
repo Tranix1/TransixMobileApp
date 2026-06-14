@@ -79,6 +79,17 @@ function FleetSelector() {
         await Logout();
     };
 
+
+    const uploadedDocuments = [
+    user?.driverProfile?.selfieImage,
+    user?.driverProfile?.nationalIdUrl,
+    user?.driverProfile?.driverLicenseUrl,
+    user?.driverProfile?.passportUrl,
+    user?.driverProfile?.medicalCertificateUrl,
+    user?.driverProfile?.proofOfResidenceUrl,
+    user?.driverProfile?.internationalPermitUrl,
+].filter(Boolean).length;
+
     const handleFleetSelect = async (fleet: any) => {
         if (!fleet) return;
 
@@ -109,7 +120,7 @@ function FleetSelector() {
 
     return (
         <View style={[,styles.container, { backgroundColor: background }]}>
-            <CustomHeader pageTitle="Fleet Selector" onPressMenu={() => { }} />
+            <CustomHeader pageTitle="Fleet Selector"  />
 
           
 
@@ -154,7 +165,18 @@ function FleetSelector() {
                 )}
             </View>
 
-            <ThemedText style={[styles.sectionHeading, { marginTop: 20 }]}>Fleets I Drive For</ThemedText>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 ,paddingHorizontal: 13, marginTop:hp(4)}} >
+            <ThemedText style={styles.sectionHeading} >Driver Profile</ThemedText>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                    <Ionicons name="documents-outline" size={16} color={accent} />
+                    <ThemedText> <ThemedText color={icon} >{uploadedDocuments}</ThemedText>/7</ThemedText>
+                </View>
+
+                <TouchableOpacity style={styles.createButton} onPress={() => router.push('/Driver/Add/Index')}>
+                <ThemedText style={styles.createButtonText}>{user.driverProfile ? "Edit Registration" : "Driver Registration"}</ThemedText>
+            </TouchableOpacity>
+                </View>
             <View style={[styles.sectionCard, { backgroundColor: background, borderColor: backgroundLight }]}> 
                 <ThemedText style={[styles.sectionDescription, { fontSize: 12 }]}>No fleet driving assignments are currently available.</ThemedText>
             </View>
@@ -199,7 +221,6 @@ const styles = StyleSheet.create({
     sectionHeading: {
         fontSize: 18,
         fontFamily: 'sfregular',
-        marginBottom: 12,
     },
     sectionCard: {
         borderWidth: 1,

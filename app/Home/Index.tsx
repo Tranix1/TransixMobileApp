@@ -131,7 +131,7 @@ function Index() {
                 onClose={() => setDspVerifyAcc(false)}
                 user={user}
                 type="verify"
-            />
+            />  
 
             <UserMenuModal
                 visible={dspMenu}

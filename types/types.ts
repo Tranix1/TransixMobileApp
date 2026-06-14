@@ -8,6 +8,8 @@ export type CurrentRole =
       role: 'general';
       accType: 'general' | 'tracking';
       userRole: 'tracking';
+      companyName : string;
+      driverId: string | null;
     }
   | {
       role: 'fleet';
