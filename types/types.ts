@@ -10,6 +10,8 @@ export type CurrentRole =
       userRole: 'tracking';
       companyName : string;
       driverId: string | null;
+      fleetId: string | null;
+      
     }
   | {
       role: 'fleet';
@@ -29,6 +31,8 @@ export type CurrentRole =
       userRole: string;
       accType: 'broker';
       brokerType: string;
+      fleetId: string | null;
+
     };
 
 export type RoleProps =

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Modal } from 'react-native';
+import { View, TouchableOpacity, Modal, ToastAndroid } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from './ThemedText';
 import Button from './Button';
 import Input from './Input';
 import { wp } from '@/constants/common';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { setDocuments } from '@/db/operations';
+import { updateDocument } from '@/db/operations';
 import { router } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
 
 interface TruckTrackerManagerProps {
   truck: any;
@@ -23,6 +24,10 @@ export const TruckTrackerManager: React.FC<TruckTrackerManagerProps> = ({
   const accent = useThemeColor('accent');
   const backgroundLight = useThemeColor('backgroundLight');
   const background = useThemeColor('background');
+  const icon = useThemeColor('icon');
+
+      const { currentRole } = useAuth();
+  
   
   const [showAddTracker, setShowAddTracker] = useState(false);
   const [trackerName, setTrackerName] = useState('');
@@ -38,20 +43,28 @@ export const TruckTrackerManager: React.FC<TruckTrackerManagerProps> = ({
     setIsSubmitting(true);
     try {
       // Use document ID to update the truck
-      await setDocuments(`Trucks/${truck.id}`, {
+     
+
+
+      await updateDocument(
+    `fleets/${currentRole?.fleetId}/Trucks`    ,
+    truck.id,
+    {
         hasTracker: true,
-        trackerStatus: 'available',
+        trackerStatus: "available",
         trackerName: trackerName.trim(),
         trackerImei: trackerImei.trim(),
         trackerId: `TRK${Date.now()}`,
-        trackerAddedAt: Date.now().toString()
-      });
+        trackerAddedAt: Date.now().toString(),
+    }
+);
+
       
       setShowAddTracker(false);
       setTrackerName('');
       setTrackerImei('');
       onTrackerUpdate?.();
-      alert('Tracker added successfully!');
+      ToastAndroid.show("Tracker added successfully", ToastAndroid.SHORT);
     } catch (error) {
       console.error('Error adding tracker:', error);
       alert('Failed to add tracker. Please try again.');
@@ -160,20 +173,59 @@ export const TruckTrackerManager: React.FC<TruckTrackerManagerProps> = ({
               style={{ marginBottom: wp(4) }}
             />
 
-            <View style={{ flexDirection: 'row', gap: wp(2) }}>
-              <Button
-                title="Cancel"
-                onPress={() => setShowAddTracker(false)}
-                colors={{ text: '#666', bg: backgroundLight }}
-                style={{ flex: 1 }}
-              />
-              <Button
-                title={isSubmitting ? "Adding..." : "Add Tracker"}
-                onPress={handleAddTracker}
-                disabled={isSubmitting}
-                style={{ flex: 1 }}
-              />
-            </View>
+           <View
+    style={{
+        flexDirection: 'row',
+        gap: wp(2),
+        marginTop: wp(4),
+    }}
+>
+    <TouchableOpacity
+        onPress={() => setShowAddTracker(false)}
+        style={{
+            flex: 1,
+            paddingVertical: wp(3),
+            borderWidth: 1,
+            borderColor: icon,
+            borderRadius: wp(2),
+            alignItems: 'center',
+            justifyContent: 'center',
+        }}
+    >
+        <ThemedText
+            style={{
+                fontWeight: '600',
+            }}
+        >
+            Cancel
+        </ThemedText>
+    </TouchableOpacity>
+
+    <TouchableOpacity
+        onPress={handleAddTracker}
+        disabled={isSubmitting}
+        style={{
+            flex: 1,
+            paddingVertical: wp(3),
+            borderRadius: wp(2),
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: isSubmitting ? 0.6 : 1,
+            backgroundColor: icon,
+        }}
+    >
+        <ThemedText
+            style={{
+                color: '#fff',
+                fontWeight: '600',
+            }}
+        >
+            {isSubmitting ? 'Adding...' : 'Add Tracker'}
+        </ThemedText>
+    </TouchableOpacity>
+</View>
+
+
           </View>
         </View>
       </Modal>

@@ -27,7 +27,7 @@ import { sendPushNotification } from "@/Utilities/pushNotification";
 import Input from "@/components/Input";
 import TruckAvailabilityModal, { TruckAvailabilityData } from "@/components/TruckAvailabilityModal";
 
-// import ImageViewing from 'react-native-image-viewing';
+import ImageViewing from 'react-native-image-viewing';
 
 const TruckDetails = () => {
 
@@ -1078,13 +1078,6 @@ const TruckDetails = () => {
                         <Image source={{ uri: truckData.trailerBookSc }} />
 
 
-
-
-
-                        <ThemedText style={{ textAlign: 'center', marginVertical: wp(4), color: "#1E90FF" }}>Driver Details</ThemedText>
-                        <Divider />
-                        <ThemedText type="tiny" style={{ marginTop: hp(1) }}>Driver Phone</ThemedText>
-                        <ThemedText type="subtitle">{formatNumber(parseFloat(truckData.driverPhone))}</ThemedText>
                         <Divider />
 
                         <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >
@@ -1137,7 +1130,7 @@ const TruckDetails = () => {
 
 
 
-                        {/* <ImageViewing
+                        <ImageViewing
                             images={images}
                             imageIndex={currentIndex}
                             visible={isVisible}
@@ -1167,7 +1160,7 @@ const TruckDetails = () => {
                                     </ThemedText>
                                 </View>
                             )}
-                        /> */}
+                        /> 
 
 
                         <Divider />
