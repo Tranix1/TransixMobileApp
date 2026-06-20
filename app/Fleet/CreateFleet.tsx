@@ -118,7 +118,6 @@ const CreateFleet = () => {
                 },
             };
 
-            await addDocument('verifiedUsers', fleetVerificationData);
 
             const fleetCollectionData = {
                 name: fleetData.fleetName,

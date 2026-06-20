@@ -8,11 +8,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { wp, hp } from '@/constants/common';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, deleteDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import AccentRingLoader from '@/components/AccentRingLoader';
-import { deleteDocument } from '@/db/operations';
-// import ImageViewing from 'react-native-image-viewing';
+import { deleteDocument, updateDocument } from '@/db/operations';
+// import ImageViewing from 'react-nativeput';
+import Input from '@/components/Input';
+import { useAuth } from '@/context/AuthContext';
 
 interface Driver {
     id: string;
@@ -48,6 +50,23 @@ interface Driver {
     }>;
 }
 
+
+interface Driver {
+    id: string;
+    name: string;
+    email: string;
+    userId : string
+    // Add other properties present in your 'Drivers' collection
+}
+
+interface FleetAccess {
+    fleetId: string;
+    fleetName: string;
+    status: 'pending' | 'active' | 'removed';
+    invitedAt: any; // Using 'any' for Firestore serverTimestamp
+    acceptedAt?: any;
+}
+
 export default function DriverIndex() {
     const background = useThemeColor('background');
     const backgroundLight = useThemeColor('backgroundLight');
@@ -57,11 +76,13 @@ export default function DriverIndex() {
     const coolGray = useThemeColor('coolGray');
 
     const { driverId } = useLocalSearchParams();
+    const { currentRole } = useAuth();
+    const currentFleet = currentRole
+
 
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [currentFleet, setCurrentFleet] = useState<any>(null);
     const [hasLoaded, setHasLoaded] = useState(false);
     const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
@@ -70,43 +91,13 @@ export default function DriverIndex() {
     const [driverImages, setDriverImages] = useState<any[]>([]);
     const [imageLabels, setImageLabels] = useState<string[]>([]);
 
-    useEffect(() => {
-        const getCurrentFleetAndDrivers = async () => {
-            try {
-                const fleetData = await AsyncStorage.getItem('currentRole');
-                if (fleetData) {
-                    const parsedFleet = JSON.parse(fleetData);
-                    setCurrentFleet(parsedFleet);
-                    await fetchDrivers(parsedFleet.fleetId);
-
-                    // If driverId is provided, find and set the selected driver
-                    if (driverId) {
-                        // We'll set the selected driver after fetching
-                        setTimeout(() => {
-                            const driver = drivers.find(d => d.id === driverId);
-                            if (driver) {
-                                setSelectedDriver(driver);
-                                setModalVisible(true);
-                            }
-                        }, 1000); // Small delay to ensure drivers are loaded
-                    }
-                }
-            } catch (error) {
-                console.error('Error getting current fleet:', error);
-            } finally {
-                setLoading(false);
-                setHasLoaded(true);
-            }
-        };
-
-        getCurrentFleetAndDrivers();
-    }, [driverId, drivers]);
+    
 
     const onRefresh = async () => {
         try {
             setRefreshing(true);
             if (currentFleet?.fleetId) {
-                await fetchDrivers(currentFleet.fleetId);
+                await fetchDrivers();
             }
         } catch (error) {
             console.error('Error refreshing drivers:', error);
@@ -115,25 +106,29 @@ export default function DriverIndex() {
         }
     };
 
-    const fetchDrivers = async (fleetId: string) => {
-        try {
-            const driversRef = collection(db, 'fleets', fleetId, 'Drivers');
-            const q = query(driversRef);
-            const querySnapshot = await getDocs(q);
+    const fetchDrivers = async () => {
+    // 1. Add a guard clause
+    if (!currentRole || !currentRole.fleetId) {
+        console.warn("Fleet ID is missing, skipping fetch.");
+        return; 
+    }
 
-            const driversData: Driver[] = [];
-            querySnapshot.forEach((doc) => {
-                driversData.push({
-                    id: doc.id,
-                    ...doc.data()
-                } as Driver);
-            });
+    try {
+        // Now TypeScript knows fleetId is definitely a string
+        const driversRef = collection(db, 'fleets', currentRole.fleetId, 'Drivers');
+        const q = query(driversRef);
+        const querySnapshot = await getDocs(q);
 
-            setDrivers(driversData);
-        } catch (error) {
-            console.error('Error fetching drivers:', error);
-        }
-    };
+        const driversData = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        })) as Driver[];
+
+        setDrivers(driversData);
+    } catch (error) {
+        console.error('Error fetching drivers:', error);
+    }
+};
 
     const renderDriverItem = ({ item }: { item: Driver }) => (
         <TouchableOpacity onPress={() => {
@@ -265,23 +260,7 @@ export default function DriverIndex() {
         </TouchableOpacity>
     );
 
-    if (loading) {
-        return (
-            <ScreenWrapper>
-                <Heading page="Drivers" />
-                <View style={[styles.container, { backgroundColor: background }]}>
-                    <AccentRingLoader color={accent} size={32} dotSize={6} />
-                    <ThemedText type='defaultSemiBold' style={styles.loadingText}>
-                        Loading Drivers…
-                    </ThemedText>
-                    <ThemedText type='tiny' style={styles.loadingSubtext}>
-                        Please Wait
-                    </ThemedText>
-                </View>
-            </ScreenWrapper>
-        );
-    }
-
+  
     const handleEditDriver = () => {
         if (selectedDriver) {
             setModalVisible(false);
@@ -305,7 +284,7 @@ export default function DriverIndex() {
                                 setModalVisible(false);
                                 setSelectedDriver(null);
                                 // Refresh the list
-                                await fetchDrivers(currentFleet.fleetId);
+                                await fetchDrivers();
                             } catch (error) {
                                 console.error('Error deleting driver:', error);
                                 Alert.alert('Error', 'Failed to delete driver');
@@ -324,13 +303,201 @@ export default function DriverIndex() {
         setImageViewerVisible(true);
     };
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showAddTracker, setShowAddDriver] = useState(false);
+  
+    // States
+    const [allDrivers, setAllDrivers] = useState<Driver[]>([]);
+    const [searchedDrivers, setSearchedDrivers] = useState<Driver[]>([]);
+    const [selectedDrivers, setSelectedDrivers] = useState<Driver[]>([]);
+    const [driverSearchQuery, setDriverSearchQuery] = useState('');
+
+    // Fetch drivers once
+    useEffect(() => {
+        const fetchDrivers = async () => {
+            const querySnapshot = await getDocs(collection(db, "Drivers"));
+            const driversData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setAllDrivers(driversData as any);
+
+        };
+        fetchDrivers();
+    }, []);
+
+
+
+const handleSearch = (text: string) => {
+    setDriverSearchQuery(text);
+
+    const searchText = text.trim().toLowerCase();
+
+    if (!searchText) {
+        setSearchedDrivers([]);
+        return;
+    }
+
+    const filtered = allDrivers
+        .filter(driver =>
+            driver.fullName?.toLowerCase().includes(searchText) ||
+            driver.email?.toLowerCase().includes(searchText)
+        )
+        .slice(0, 20); // limit to 20 results
+
+    setSearchedDrivers(filtered);
+};
+
+    const handleAddDrivers = async () => {  
+        if (selectedDrivers.length === 0) return;
+
+        setIsSubmitting(true);
+
+        try {
+            const fleetUpdate = {
+                fleetId: currentRole.fleetId,
+                fleetName: currentRole.companyName,
+                status: "pending",
+                invitedAt: Date.now(),
+
+            };
+
+            // Update each selected driver
+            await Promise.all(selectedDrivers.map(async (driver) => {
+                await updateDocument('personalData', driver.userId, {
+                    accesibleFleets: arrayUnion(fleetUpdate), // Use arrayUnion to avoid overwriting existing data
+                        updatedAt: serverTimestamp(),
+
+                });
+            }));
+
+            setShowAddDriver(false);
+            setSelectedDrivers([]); // Clear selection
+        } catch (e) {
+            console.error("Error updating drivers:", e);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+
     return (
         <ScreenWrapper>
+
+            <Modal visible={showAddTracker} transparent animationType="slide">
+                <View style={{
+                    flex: 1,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    justifyContent: 'center',
+                    paddingHorizontal: wp(4)
+                }}>
+                    <View style={{
+                        backgroundColor: background,
+                        borderRadius: 12,
+                        padding: wp(4)
+                    }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: wp(3) }}>
+                            <ThemedText style={{ fontSize: 18, fontWeight: 'bold' }}>Add Tracker</ThemedText>
+                            <TouchableOpacity onPress={() => setShowAddDriver(false)}>
+                                <Ionicons name="close" size={24} color={accent} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ThemedText style={{ marginBottom: wp(1) }}>Driver Name</ThemedText>                    
+                        <Input
+                            placeholder="Search by name or email"
+                            onChangeText={handleSearch}
+                            value={driverSearchQuery}
+                            style={{ marginBottom: wp(3) }}
+                        />
+
+                        <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Available Drivers</ThemedText>
+
+                     {driverSearchQuery.trim().length > 0 && (
+    <FlatList
+        data={searchedDrivers}
+        keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="handled"
+        style={{ maxHeight: hp(35) }}
+        renderItem={({ item }) => {
+            const isSelected = selectedDrivers.some(
+                d => d.id === item.id
+            );
+
+            return (
+                <TouchableOpacity
+                    onPress={() => {
+                        setSelectedDrivers(prev =>
+                            isSelected
+                                ? prev.filter(d => d.id !== item.id)
+                                : [...prev, item]
+                        );
+                    }}
+                    style={{
+                        padding: 10,
+                        borderWidth: 1,
+                        borderColor: icon,
+                        borderRadius: 8,
+                        marginVertical: 4,
+                        backgroundColor: isSelected
+                            ? backgroundLight
+                            : background,
+                    }}
+                >
+                    <ThemedText>{item.fullName}</ThemedText>
+                    <ThemedText style={{ fontSize: 12 }}>
+                        {item.email}
+                    </ThemedText>
+                </TouchableOpacity>
+            );
+        }}
+        ListEmptyComponent={
+            <ThemedText style={{ textAlign: 'center', marginTop: 10 }}>
+                No drivers found
+            </ThemedText>
+        }
+    />
+)}
+
+                        <TouchableOpacity
+                            disabled={isSubmitting || selectedDrivers.length === 0}
+                            onPress={handleAddDrivers}
+                            style={{
+                                marginTop: wp(4),
+                                padding: wp(3),
+                                backgroundColor: selectedDrivers.length === 0 ? '#ccc' : accent,
+                                borderRadius: 8,
+                                alignItems: 'center'
+                            }}
+                        >
+                            <ThemedText style={{ color: '#fff', fontWeight: 'bold' }}>
+                                {isSubmitting ? "Submitting..." : `Submit (${selectedDrivers.length})`}
+                            </ThemedText>
+                        </TouchableOpacity>
+
+
+
+                    </View>
+                </View>
+            </Modal>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             <Heading
                 page="Drivers"
                 rightComponent={
                     <TouchableOpacity
-                        onPress={() => router.push('/Fleet/Driver/Add')}
+                        onPress={() => setShowAddDriver(true)}
                         style={[styles.addButton, { backgroundColor: accent }]}
                     >
                         <Ionicons name="add" size={wp(5)} color="white" />
@@ -693,14 +860,8 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         textAlign: 'center',
     },
-    loadingText: {
-        textAlign: 'center',
-        marginTop: wp(4)
-    },
-    loadingSubtext: {
-        textAlign: 'center',
-        marginTop: wp(2)
-    },
+   
+   
     emptyContainer: {
         minHeight: hp(80),
         justifyContent: 'center',

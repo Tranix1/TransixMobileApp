@@ -2,10 +2,12 @@ import { TouchableOpacity, View, Linking,StyleSheet } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { wp } from "@/constants/common";
 import { useThemeColor } from "@/hooks/useThemeColor";
-
+import { useAuth } from "@/context/AuthContext";
 function About() {
 
     const background = useThemeColor("background");
+        const {  Logout,  } = useAuth();
+    
 
   const openWhatsApp = () => {
     const phoneNumber = "263716325160";
@@ -27,6 +29,9 @@ function About() {
           <View style={styles.header}>
                   <ThemedText type="title">About Transix</ThemedText>
                 </View>
+                <TouchableOpacity onPress={Logout}>
+                  <ThemedText>Logout</ThemedText>
+                </TouchableOpacity>
       {/* About Section */}
       <View style={{ gap: 10 }}>
 

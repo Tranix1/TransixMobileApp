@@ -271,8 +271,8 @@ export default Login;
 
 const styles = StyleSheet.create({
     scrollContainer: { flexGrow: 1 },
-    container: { flex: 1, paddingHorizontal: wp(6), paddingBottom: hp(5) },
-    logo: { width: wp(60), height: hp(10), alignSelf: 'center', marginTop: hp(6), marginBottom: hp(4) },
+    container: { flex: 1, paddingHorizontal: wp(2), paddingBottom: hp(3) },
+    logo: { width: wp(60), height: hp(10), alignSelf: 'center', marginTop: hp(2 ), marginBottom: hp(4) },
     headerContainer: { marginBottom: hp(3) },
     header: { fontSize: wp(7), fontWeight: '700' },
     subHeader: { marginTop: hp(0.8), fontSize: wp(3.8) },

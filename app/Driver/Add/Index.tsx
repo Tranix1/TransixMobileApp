@@ -124,6 +124,7 @@ export default function AddDriver() {
                 expoPushToken: expoPushToken,
                 updatedAt: new Date().toISOString() ,
                 driverVerificationTier : driverVerificationTiers,
+                email : user?.email
             };
 
             // Add to Fleet collection under fleetId as subcollection with fixed ID
@@ -370,7 +371,7 @@ export default function AddDriver() {
                         style={{ height: 44 }}
                     />
 
-            <View style={{height:50  }} />
+            <View style={{height:5}} />
         </ScreenWrapper>
     );
 }

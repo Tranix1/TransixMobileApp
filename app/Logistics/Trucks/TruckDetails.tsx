@@ -739,9 +739,7 @@ const TruckDetails = () => {
                     </View>
 
                     {/* Assignment Information Section */}
-                    {(truckData.brokers && truckData.brokers.length > 0) ||
-                     (truckData.drivers && truckData.drivers.length > 0) ||
-                     (truckData.loadTypes && truckData.loadTypes.length > 0) ? (
+                    {(truckData.brokers && truckData.brokers.length > 0) ? (
                         <View style={{
                             backgroundColor: backgroundLight,
                             padding: wp(4),
@@ -764,33 +762,7 @@ const TruckDetails = () => {
                                 </View>
                             )}
 
-                            {/* Driver Information */}
-                            {((truckData as any).mainDriver || (truckData as any).secondMainDriver || ((truckData as any).backupDrivers && (truckData as any).backupDrivers.length > 0)) && (
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: wp(2) }}>
-                                    <ThemedText style={{ color: textColor }}>Assigned Drivers:</ThemedText>
-                                    <ThemedText style={{ color: textColor, fontWeight: 'bold' }}>
-                                        {[
-                                            (truckData as any).mainDriver ? 1 : 0,
-                                            (truckData as any).secondMainDriver ? 1 : 0,
-                                            (truckData as any).backupDrivers ? (truckData as any).backupDrivers.length : 0
-                                        ].reduce((a, b) => a + b, 0)} driver{[
-                                            (truckData as any).mainDriver ? 1 : 0,
-                                            (truckData as any).secondMainDriver ? 1 : 0,
-                                            (truckData as any).backupDrivers ? (truckData as any).backupDrivers.length : 0
-                                        ].reduce((a, b) => a + b, 0) > 1 ? 's' : ''}
-                                    </ThemedText>
-                                </View>
-                            )}
-
-                            {/* Load Types Information */}
-                            {truckData.loadTypes && truckData.loadTypes.length > 0 && (
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: wp(2) }}>
-                                    <ThemedText style={{ color: textColor }}>Supported Load Types:</ThemedText>
-                                    <ThemedText style={{ color: textColor, fontWeight: 'bold' }}>
-                                        {truckData.loadTypes.length} type{truckData.loadTypes.length !== 1 ? 's' : ''}
-                                    </ThemedText>
-                                </View>
-                            )}
+                         
 
                             {/* Show actual lists if available */}
                             {truckData.brokers && truckData.brokers.length > 0 && (
@@ -804,94 +776,8 @@ const TruckDetails = () => {
                                 </View>
                             )}
 
-                            {/* Display drivers by role */}
-                            {((truckData as any).mainDriver || (truckData as any).secondMainDriver || ((truckData as any).backupDrivers && (truckData as any).backupDrivers.length > 0)) && (
-                                <View style={{ marginTop: wp(2) }}>
-                                    <ThemedText type="tiny" style={{ color: icon, marginBottom: wp(1) }}>Drivers by Role:</ThemedText>
+                                                     
 
-                                    {/* Main Driver */}
-                                    {(truckData as any).mainDriver && (
-                                        <TouchableOpacity
-                                            onPress={() => router.push({
-                                                pathname: '/Fleet/Driver/Index',
-                                                params: { driverId: (truckData as any).mainDriver.driverId }
-                                            })}
-                                            style={{ marginBottom: wp(1) }}
-                                        >
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <ThemedText type="tiny" style={{ color: textColor }}>
-                                                    • Main Driver: {(truckData as any).mainDriver.fullName}
-                                                </ThemedText>
-                                                <Ionicons name="chevron-forward" size={wp(4)} color={accent} />
-                                            </View>
-                                        </TouchableOpacity>
-                                    )}
-
-                                    {/* Second Main Driver */}
-                                    {(truckData as any).secondMainDriver && (
-                                        <TouchableOpacity
-                                            onPress={() => router.push({
-                                                pathname: '/Fleet/Driver/Index',
-                                                params: { driverId: (truckData as any).secondMainDriver.driverId }
-                                            })}
-                                            style={{ marginBottom: wp(1) }}
-                                        >
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <ThemedText type="tiny" style={{ color: textColor }}>
-                                                    • Second Main Driver: {(truckData as any).secondMainDriver.fullName}
-                                                </ThemedText>
-                                                <Ionicons name="chevron-forward" size={wp(4)} color={accent} />
-                                            </View>
-                                        </TouchableOpacity>
-                                    )}
-
-                                    {/* Backup Drivers */}
-                                    {(truckData as any).backupDrivers && (truckData as any).backupDrivers.length > 0 && (
-                                        <View>
-                                            <ThemedText type="tiny" style={{ color: icon, marginBottom: wp(1), marginTop: wp(1) }}>Backup Drivers:</ThemedText>
-                                            {(truckData as any).backupDrivers.map((driver: any, index: number) => (
-                                                <TouchableOpacity
-                                                    key={index}
-                                                    onPress={() => router.push({
-                                                        pathname: '/Fleet/Driver/Index',
-                                                        params: { driverId: driver.driverId }
-                                                    })}
-                                                    style={{ marginBottom: wp(1) }}
-                                                >
-                                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                        <ThemedText type="tiny" style={{ color: textColor }}>
-                                                            • {driver.fullName}
-                                                        </ThemedText>
-                                                        <Ionicons name="chevron-forward" size={wp(4)} color={accent} />
-                                                    </View>
-                                                </TouchableOpacity>
-                                            ))}
-                                        </View>
-                                    )}
-                                </View>
-                            )}
-
-                            {truckData.loadTypes && truckData.loadTypes.length > 0 && (
-                                <View style={{ marginTop: wp(2) }}>
-                                    <ThemedText type="tiny" style={{ color: icon, marginBottom: wp(1) }}>Load Types:</ThemedText>
-                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                                        {truckData.loadTypes.map((type, index) => (
-                                            <View key={index} style={{
-                                                backgroundColor: accent + '20',
-                                                paddingHorizontal: wp(2),
-                                                paddingVertical: wp(1),
-                                                borderRadius: wp(2),
-                                                marginRight: wp(1),
-                                                marginBottom: wp(1)
-                                            }}>
-                                                <ThemedText type="tiny" style={{ color: accent, fontWeight: 'bold' }}>
-                                                    {type}
-                                                </ThemedText>
-                                            </View>
-                                        ))}
-                                    </View>
-                                </View>
-                            )}
                         </View>
                     ) : null}
 
@@ -1031,23 +917,6 @@ const TruckDetails = () => {
                             />
                         )}
 
-                        {/* Show Get Tracker button for non-owners if no tracker */}
-                        {user?.uid !== truckData.userId && !(truckData as any).hasTracker && (
-                            <TouchableOpacity
-                                style={{
-                                    backgroundColor: accent,
-                                    padding: wp(2),
-                                    borderRadius: 8,
-                                    alignItems: 'center',
-                                    marginTop: wp(2)
-                                }}
-                                onPress={() => router.push('/Tracking/AddTrackedVehicle')}
-                            >
-                                <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>
-                                    Get Tracker Now
-                                </ThemedText>
-                            </TouchableOpacity>
-                        )}
                     </View>}
 
                     {(dspDetails === "true" || user?.uid === truckData.userId) && <View>

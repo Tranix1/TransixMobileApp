@@ -63,9 +63,9 @@ const AddLoadDB = () => {
 const [fleetDrivers, setFleetDrivers] = useState<any[]>([]);
 const [searchedDrivers, setSearchedDrivers] = useState<any[]>([]);
 const [driversLoading, setDriversLoading] = useState(false);
-const [fleetTrucks, setFleetTrucks] = useState<any[]>([]);
+const [fleetTrucks, setFleetTrucks] = useState<any[]>([]);  
 const [searchedTrucks, setSearchedTrucks] = useState<any[]>([]);
-const [selectedFleetTrucks, setSelectedFleetTrucks] = useState<any[]>([]);
+const [selectedFleetTrucks, setSelectedFleetTrucks ] = useState<any[]>([]);
 const [selectedDrivers, setSelectedDrivers] = useState<any[]>([]);
 const [truckSearchQuery, setTruckSearchQuery] = useState('');
 const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public'>('Private');
@@ -77,7 +77,6 @@ const [searchedBrokers, setSearchedBrokers] = useState<any[]>([]);
 
 // Broker truck states
 const [brokerTrucks, setBrokerTrucks] = useState<any[]>([]);
-console.log(brokerTrucks)
 const [selectedBrokerTrucks, setSelectedBrokerTrucks] = useState<any[]>([]);
 const [brokerTruckSearchQuery, setBrokerTruckSearchQuery] = useState('');
 const [searchedBrokerTrucks, setSearchedBrokerTrucks] = useState<any[]>([]);
@@ -1632,148 +1631,148 @@ for (const brokerId of selectedBrokers) {
                 />
 
                 {/* Available Trucks with Drivers */}
-                <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Available Trucks</ThemedText>
-                
-                {searchedTrucks.map((truck, index) => {
-                  // Get drivers for this truck
-            const truckDrivers = fleetDriversFromTrucks.filter(driver => driver.truckId === truck.id);
-
+                  <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Available Trucks</ThemedText>
                   
-                  return (
-                    <View key={truck.truckId || index} style={{
+                  {searchedTrucks.map((truck, index) => {
+                    // Get drivers for this truck
+              const truckDrivers = fleetDriversFromTrucks.filter(driver => driver.truckId === truck.id);
 
-                      marginVertical: wp(1),
-                      borderRadius: 8,
-                      backgroundColor: backgroundLight,
-                      borderWidth: 1,
-                      borderColor: '#E0E0E0',
-                      overflow: 'hidden'
-                    }}>
-                      {/* Truck Header */}
-                      <TouchableOpacity
-                        onPress={() => {
-                          if (selectedFleetTrucks.find(t => t.id === truck.id)) {
-    setSelectedFleetTrucks(prev => prev.filter(t => t.id !== truck.id));
-    setSelectedDrivers(prev => prev.filter(d => d.truckId !== truck.id));
-  } else {
-    setSelectedFleetTrucks(prev => [...prev, {...truck}]);
-  }
-                        }}
-                        style={{
-                          padding: wp(3),
-                          borderBottomWidth: truckDrivers.length > 0 ? 1 : 0,
-                          borderBottomColor: '#E0E0E0',
+                    
+                    return (
+                      <View key={truck.truckId || index} style={{
+
+                        marginVertical: wp(1),
+                        borderRadius: 8,
+                        backgroundColor: backgroundLight,
+                        borderWidth: 1,
+                        borderColor: '#E0E0E0',
+                        overflow: 'hidden'
+                      }}>
+                        {/* Truck Header */}
+                        <TouchableOpacity
+                          onPress={() => {
+                            if (selectedFleetTrucks.find(t => t.id === truck.id)) {
+      setSelectedFleetTrucks(prev => prev.filter(t => t.id !== truck.id));
+      setSelectedDrivers(prev => prev.filter(d => d.truckId !== truck.id));
+    } else {
+      setSelectedFleetTrucks(prev => [...prev, {...truck}]);
+    }
+                          }}
+                          style={{
+                            padding: wp(3),
+                            borderBottomWidth: truckDrivers.length > 0 ? 1 : 0,
+                            borderBottomColor: '#E0E0E0',
 
 
-                          backgroundColor: selectedFleetTrucks.some(t => t.id === truck.id) 
-    ? 'rgba(33, 150, 243, 0.1)' // light blue highlight
-    : 'transparent',
-                          
-                        }}
-                      >
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                         <Ionicons
-  name={selectedFleetTrucks.some(t => t.id === truck.id) ? "checkbox" : "square-outline"}
-  size={20}
-  color={selectedFleetTrucks.some(t => t.id === truck.id) ? '#2196F3' : '#666'}
-  style={{ marginRight: wp(2) }}
-/>
+                            backgroundColor: selectedFleetTrucks.some(t => t.id === truck.id) 
+      ? 'rgba(33, 150, 243, 0.1)' // light blue highlight
+      : 'transparent',
+                            
+                          }}
+                        >
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Ionicons
+    name={selectedFleetTrucks.some(t => t.id === truck.id) ? "checkbox" : "square-outline"}
+    size={20}
+    color={selectedFleetTrucks.some(t => t.id === truck.id) ? '#2196F3' : '#666'}
+    style={{ marginRight: wp(2) }}
+  />
 
-                          <View style={{ flex: 1 }}>
-                            <ThemedText style={{ fontWeight: '600' }}>{truck.truckName}</ThemedText>
-                            <ThemedText style={{ fontSize: 12, color: '#666' }}>{truck.truckType} - {truck.truckCapacity}</ThemedText>
+                            <View style={{ flex: 1 }}>
+                              <ThemedText style={{ fontWeight: '600' }}>{truck.truckName}</ThemedText>
+                              <ThemedText style={{ fontSize: 12, color: '#666' }}>{truck.truckType} - {truck.truckCapacity}</ThemedText>
+                            </View>
+                            {truckDrivers.length > 0 && (
+                              <ThemedText style={{ fontSize: 12, color: '#666' }}>
+                                {truckDrivers.length} driver{truckDrivers.length !== 1 ? 's' : ''}
+                              </ThemedText>
+                            )}
                           </View>
-                          {truckDrivers.length > 0 && (
-                            <ThemedText style={{ fontSize: 12, color: '#666' }}>
-                              {truckDrivers.length} driver{truckDrivers.length !== 1 ? 's' : ''}
+                        </TouchableOpacity>
+
+                      
+
+                      {truckDrivers.length > 0 && selectedFleetTrucks.find(t => t.id === truck.id)&& (
+
+
+
+                          <View style={{ paddingHorizontal: wp(3), paddingBottom: wp(2) }}>
+                            <ThemedText style={{ fontSize: 14, fontWeight: '600', marginTop: wp(2), marginBottom: wp(1) }}>
+                              Select Drivers for this Truck:
                             </ThemedText>
-                          )}
-                        </View>
-                      </TouchableOpacity>
+                              {truckDrivers.map((driver, driverIndex) => {
+                                return(
 
-                     
+                                <TouchableOpacity
+                                  key={`${driver.driverId}-${driver.truckId}-${driver.role}` || driverIndex}
+                                  onPress={() => {
+                                    const driverKey = `${driver.driverId}-${driver.truckId}-${driver.role}`;
+                                    const existingDriver = selectedDrivers.find(d =>
+                                      `${d.driverId}-${d.truckId}-${d.role}` === driverKey
+                                    );
 
-                     {truckDrivers.length > 0 && selectedFleetTrucks.find(t => t.id === truck.id)&& (
-
-
-
-                        <View style={{ paddingHorizontal: wp(3), paddingBottom: wp(2) }}>
-                          <ThemedText style={{ fontSize: 14, fontWeight: '600', marginTop: wp(2), marginBottom: wp(1) }}>
-                            Select Drivers for this Truck:
-                          </ThemedText>
-                            {truckDrivers.map((driver, driverIndex) => {
-                              return(
-
-                              <TouchableOpacity
-                                key={`${driver.driverId}-${driver.truckId}-${driver.role}` || driverIndex}
-                                onPress={() => {
-                                  const driverKey = `${driver.driverId}-${driver.truckId}-${driver.role}`;
-                                  const existingDriver = selectedDrivers.find(d =>
-                                    `${d.driverId}-${d.truckId}-${d.role}` === driverKey
-                                  );
-
-                                  if (existingDriver) {
-                                    setSelectedDrivers(prev => prev.filter(d =>
-                                      `${d.driverId}-${d.truckId}-${d.role}` !== driverKey
-                                    ));
-                                  } else {
-                                    setSelectedDrivers(prev => [...prev, driver]);
-                                  }
-                                }}
-                                style={{
-                                  padding: wp(2),
-                                  marginVertical: wp(0.5),
-                                  borderRadius: 6,
-                                  // backgroundColor: selectedDrivers.find(d => d.driverId === driver.driverId) ? '#E8F5E8' : '#F9F9F9',
-                                  borderWidth: 1,
-                                  borderColor: selectedDrivers.find(d =>
-                                    `${d.driverId}-${d.truckId}-${d.role}` === `${driver.driverId}-${driver.truckId}-${driver.role}`
-                                  )
-     ? '#4CAF50'
-     : '#E0E0E0',
-   backgroundColor: selectedDrivers.find(d =>
-                                    `${d.driverId}-${d.truckId}-${d.role}` === `${driver.driverId}-${driver.truckId}-${driver.role}`
-                                  )
-     ? 'rgba(76, 175, 80, 0.15)'
-     : 'transparent',
-
-}}
-
-
-                                
-                              >
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                  <Ionicons
-                                    name={selectedDrivers.find(d =>
+                                    if (existingDriver) {
+                                      setSelectedDrivers(prev => prev.filter(d =>
+                                        `${d.driverId}-${d.truckId}-${d.role}` !== driverKey
+                                      ));
+                                    } else {
+                                      setSelectedDrivers(prev => [...prev, driver]);
+                                    }
+                                  }}
+                                  style={{
+                                    padding: wp(2),
+                                    marginVertical: wp(0.5),
+                                    borderRadius: 6,
+                                    // backgroundColor: selectedDrivers.find(d => d.driverId === driver.driverId) ? '#E8F5E8' : '#F9F9F9',
+                                    borderWidth: 1,
+                                    borderColor: selectedDrivers.find(d =>
                                       `${d.driverId}-${d.truckId}-${d.role}` === `${driver.driverId}-${driver.truckId}-${driver.role}`
-                                    ) ? "checkbox" : "square-outline"}
-                                    size={16}
-                                    color={selectedDrivers.find(d =>
+                                    )
+      ? '#4CAF50'
+      : '#E0E0E0',
+    backgroundColor: selectedDrivers.find(d =>
                                       `${d.driverId}-${d.truckId}-${d.role}` === `${driver.driverId}-${driver.truckId}-${driver.role}`
-                                    ) ? '#4CAF50' : '#666'}
-                                    style={{ marginRight: wp(2) }}
-                                  />
-                                  <View style={{ flex: 1 }}>
-                                    <ThemedText style={{ fontWeight: '500', fontSize: 14 }}>{driver.fullName} </ThemedText>
-                                    <ThemedText style={{ fontSize: 12, color: '#666' }}>
-                                      {driver.role === 'main' ? 'Main Driver' :
-                                      driver.role === 'second_main' ? 'Second Main Driver' :
-                                      driver.role === 'backup' ? 'Backup Driver' : driver.role}
-                                    </ThemedText>
+                                    )
+      ? 'rgba(76, 175, 80, 0.15)'
+      : 'transparent',
+
+  }}
+
+
+                                  
+                                >
+                                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Ionicons
+                                      name={selectedDrivers.find(d =>
+                                        `${d.driverId}-${d.truckId}-${d.role}` === `${driver.driverId}-${driver.truckId}-${driver.role}`
+                                      ) ? "checkbox" : "square-outline"}
+                                      size={16}
+                                      color={selectedDrivers.find(d =>
+                                        `${d.driverId}-${d.truckId}-${d.role}` === `${driver.driverId}-${driver.truckId}-${driver.role}`
+                                      ) ? '#4CAF50' : '#666'}
+                                      style={{ marginRight: wp(2) }}
+                                    />
+                                    <View style={{ flex: 1 }}>
+                                      <ThemedText style={{ fontWeight: '500', fontSize: 14 }}>{driver.fullName} </ThemedText>
+                                      <ThemedText style={{ fontSize: 12, color: '#666' }}>
+                                        {driver.role === 'main' ? 'Main Driver' :
+                                        driver.role === 'second_main' ? 'Second Main Driver' :
+                                        driver.role === 'backup' ? 'Backup Driver' : driver.role}
+                                      </ThemedText>
+                                    </View>
                                   </View>
-                                </View>
-                              </TouchableOpacity>
-                            )}   )}
-                          </View>
-                      )  }
+                                </TouchableOpacity>
+                              )}   )}
+                            </View>
+                        )  }
 
 
 
 
 
-                    </View>
-                  );
-                })}
+                      </View>
+                    );
+                  })}
 
               </>
             ) : currentRole?.accType === 'fleet' && loadVisibility === 'Public' ? (

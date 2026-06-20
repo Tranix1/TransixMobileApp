@@ -119,12 +119,12 @@ function Index() {
             </Animated.View>
 
             {/* Authentication Modals */}
-            <AuthStatusModal
+            {/* <AuthStatusModal
                 visible={dspCreateAcc}
                 onClose={() => setDspCreateAcc(false)}
                 user={user}
                 type="create"
-            />
+            /> */}
 
             <AuthStatusModal
                 visible={dspVerifyAcc}

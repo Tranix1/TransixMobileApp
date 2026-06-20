@@ -37,6 +37,7 @@ import {
 import { hp, wp } from "@/constants/common";
 import NetInfo from '@react-native-community/netinfo';
 import FleetSelector from "./Account/FleetSelector";
+import Login from "./Account/Login";
 
 const Tab = createBottomTabNavigator();
 
@@ -218,7 +219,14 @@ export default function Index() {
             },
           })}
         >
-          { (typeof currentRole === 'object' && currentRole.role === 'general' ) ? (
+          { dspCreateAcc ? (
+            <>
+                <Tab.Screen name="Home " component={Login} />
+              <Tab.Screen name="About " component={About} />
+            </>
+          ):
+          
+          (typeof currentRole === 'object' && currentRole.role === 'general' ) ? (
             <>
               <Tab.Screen name="Home " component={Home} />
               <Tab.Screen name="About " component={About} />
@@ -245,14 +253,18 @@ export default function Index() {
           
           : (
             <>
-              <Tab.Screen name="Home x" component={About} />
+              <Tab.Screen name="Home " component={Login} />
               <Tab.Screen name="About " component={About} />
             </>
           )}
         </Tab.Navigator>
 
         <UpdateModal visible={showUpdateModal} onClose={dismissUpdate} currentVersion={currentVersion} latestVersion={latestVersion} updateUrl="https://play.google.com/store/apps/details?id=com.yayapana.TransixNewVersion" isForceUpdate={isForceUpdate} />
-        <AuthStatusModal visible={dspCreateAcc} onClose={() => isAuthenticated && setDspCreateAcc(false)} user={user} type="create" />
+
+
+        {/* <AuthStatusModal visible={dspCreateAcc} onClose={() => isAuthenticated && setDspCreateAcc(false)} user={user} type="create" /> */}
+
+          
         <AuthStatusModal visible={dspVerifyAcc} onClose={() => !needsEmailVerification && setDspVerifyAcc(false)} user={user} type="verify" />
       </View>
     </ScreenWrapper>

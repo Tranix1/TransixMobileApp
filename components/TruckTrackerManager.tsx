@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Modal, ToastAndroid } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from './ThemedText';
 import Button from './Button';
-import Input from './Input';
+import Input from './Input';      
 import { wp } from '@/constants/common';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { updateDocument } from '@/db/operations';
@@ -30,8 +30,8 @@ export const TruckTrackerManager: React.FC<TruckTrackerManagerProps> = ({
   
   
   const [showAddTracker, setShowAddTracker] = useState(false);
-  const [trackerName, setTrackerName] = useState('');
-  const [trackerImei, setTrackerImei] = useState('');
+    const [trackerName, setTrackerName] = useState('');
+    const [trackerImei, setTrackerImei] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddTracker = async () => {
@@ -112,7 +112,7 @@ export const TruckTrackerManager: React.FC<TruckTrackerManagerProps> = ({
           {renderTrackerStatus()}
           <Button
             title="Add Tracker"
-            onPress={() => setShowAddTracker(true)}
+            onPress={() => router.push('/Tracking/AddTrackedVehicle')}
             style={{ marginTop: wp(2), paddingVertical: wp(1) }}
             colors={{ text: accent, bg: `${accent}20` }}
           />
@@ -230,5 +230,7 @@ export const TruckTrackerManager: React.FC<TruckTrackerManagerProps> = ({
         </View>
       </Modal>
     </View>
+
+    
   );
 };

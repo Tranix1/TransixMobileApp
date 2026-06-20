@@ -27,7 +27,9 @@ export default function AddTrackedVehicle() {
   const [selectedTruck, setSelectedTruck] = useState<any | null>(null);
   const [showUserTrucks, setShowUserTrucks] = useState(false);
   
-  const { user: salesman } = useAuth();
+  
+
+  const { user: salesman , currentRole } = useAuth();
   const accent = useThemeColor('accent');
   const backgroundLight = useThemeColor('backgroundLight');
 
@@ -52,7 +54,7 @@ export default function AddTrackedVehicle() {
 
   const fetchUserTrucks = async (userId: string) => {
     try {
-      const trucks = await fetchDocuments("Trucks", 50, undefined, [
+      const trucks = await fetchDocuments(`fleets/${currentRole.fleetId}/Trucks`, 50, undefined, [
         where("userId", "==", userId),
         where("isApproved", "==", true),
         where("hasTracker", "==", false)
@@ -168,7 +170,7 @@ export default function AddTrackedVehicle() {
         category: vehicleCategory.name,
         subType: vehicleSubType?.name || null,
         paymentType: paymentType?.name || null,
-        userId: selectedUser.uid,
+        userId: selectedUser.userId,
         userEmail: selectedUser.email,
         userName: selectedUser.displayName || selectedUser.email,
         salesmanId: salesman?.uid,
@@ -190,7 +192,7 @@ export default function AddTrackedVehicle() {
       await addDocument("TrackedVehicles", vehicleData);
 
       if (selectedTruck) {
-        await updateDocument("Trucks", selectedTruck.id, {
+        await updateDocument(`fleets/${currentRole?.fleetId}/Trucks`, selectedTruck.id, {
           hasTracker: true,
           trackerStatus: 'active',
           trackingDeviceId: deviceId,

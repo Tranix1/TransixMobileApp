@@ -14,7 +14,7 @@ import Divider from '@/components/Divider';
 import { readById, deleteDocument, updateDocument } from '@/db/operations';
 import AlertComponent, { Alertbutton } from '@/components/AlertComponent';
 import Input from '@/components/Input';
-// import ImageViewing from 'react-native-image-viewing';
+import ImageViewing from 'react-native-image-viewing';
 import { BlurView } from 'expo-blur';
 
 interface Driver {
@@ -844,7 +844,7 @@ const DriverDetails = () => {
 
 
 
-    {/* <ImageViewing
+ <ImageViewing
         images={images}
         imageIndex={currentIndex}
         visible={isVisible}
@@ -874,7 +874,7 @@ const DriverDetails = () => {
                 </ThemedText>
             </View>
         )}
-    /> */}
+    /> 
 
 
     <Divider />
