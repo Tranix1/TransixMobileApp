@@ -16,7 +16,7 @@ import { setDoc,doc,updateDoc, arrayUnion } from "firebase/firestore";
 interface FleetAccess {
     fleetId: string;
     fleetName: string;
-    status: 'pending' | 'active' | 'rejected' | 'removed';
+    status: 'pending' | 'active' | 'declined' | 'ended';
     invitedAt?: any;
     acceptedAt?: any;
 }
@@ -115,11 +115,11 @@ function FleetSelector() {
     ).length;
 
     const rejectedCount = accessibleFleets.filter(
-        fleet => fleet.status === 'rejected'
+        fleet => fleet.status === 'declined'
     ).length;
 
     const removedCount = accessibleFleets.filter(
-        fleet => fleet.status === 'removed'
+        fleet => fleet.status === 'ended'
     ).length;
 
     const driverFleetCount = accessibleFleets.length;
@@ -134,14 +134,7 @@ function FleetSelector() {
     );
 
 
-    const [fleetFilter, setFleetFilter] = useState<'active' | 'pending' | 'removed'>('active');
-
-const displayedFleets =
-    fleetFilter === 'active'
-        ? activeFleets
-        : fleetFilter === 'pending'
-            ? pendingFleets
-            : accessibleFleets.filter(fleet => fleet.status === 'removed');
+    const [fleetFilter, setFleetFilter] = useState<'active' | 'pending' | 'endedj'>('active');
 
 
 
@@ -151,7 +144,7 @@ const filteredFleets =
         : fleetFilter === 'pending'
         ? pendingFleets
         : accessibleFleets.filter(
-            fleet => fleet.status === 'removed' || fleet.status === 'rejected'
+            fleet => fleet.status === 'ended' || fleet.status === 'declined'
           );
 
 
@@ -169,12 +162,12 @@ const filteredFleets =
 
         // 1. Update the user's document
         // We need to find the specific fleet in the array and update its 'accepted' status
-        const userRef = doc(db, 'users', user?.uid); // Ensure you have the current userId
-        const updatedFleets = user?.fleets.map((f: any) => 
-            f.fleetId === fleet.fleetId ? { ...f, accepted: decision === 'active' } : f
+        const userRef = doc(db, 'personalData', user?.uid); // Ensure you have the current userId
+        const updatedAccessibleFleetss = accessibleFleets.map((f: any) => 
+            f.fleetId === fleet.fleetId ? { ...f, status: decision } : f
         );
 
-        await updateDoc(userRef, { accesibleFleets: updatedFleets });
+        await updateDoc(userRef, { accesibleFleets: updatedAccessibleFleetss });
 
 
         // 2. Update the Fleet's 'Drivers' sub-collection
@@ -204,7 +197,7 @@ const filteredFleets =
 
 
         } else  {
-            // If rejected, we remove them from the fleet's active list
+            // If declined, we remove them from the fleet's active list
             
                 const driverRef = doc(db, 'fleets', fleet?.fleetId, 'Drivers', user.uid);
 
@@ -216,8 +209,9 @@ const filteredFleets =
 
         }
 
-        console.log(`Fleet invitation ${decision} successfully!`);
         // Optionally refresh your local state
+              ToastAndroid.show( `Fleet invitation ${decision} successfully!`, ToastAndroid.SHORT);
+        
         }
 
     } catch (error) {

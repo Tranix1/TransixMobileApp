@@ -12,7 +12,7 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 import { router } from "expo-router";
 import { db } from '@/db/fireBaseConfig';
-import { collection,query,getDocs ,setDoc,doc,serverTimestamp} from 'firebase/firestore';
+import { collection, query, getDocs, setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from "@/context/AuthContext";
 
 import { hp, wp } from "@/constants/common";
@@ -28,10 +28,10 @@ import { LocationSelector } from '@/components/LocationSelector';
 import { RateInput } from '@/components/RateInput';
 
 import { usePushNotifications, notifyLoadApprovalAdmins } from "@/Utilities/pushNotification";
-import { uploadImage,addDocumentWithId ,addDocument , fetchDocuments} from "@/db/operations";
+import { uploadImage, addDocumentWithId, addDocument, fetchDocuments } from "@/db/operations";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "@/db/fireBaseConfig";
-import {  selectManyImages, pickDocumentsOnly } from "@/Utilities/utils";
+import { selectManyImages, pickDocumentsOnly } from "@/Utilities/utils";
 import { DocumentAsset } from "@/types/types";
 import { ImagePickerAsset } from "expo-image-picker";
 import { ErrorModal } from "@/components/ErrorModal";
@@ -39,12 +39,11 @@ import KYCVerificationModal from "@/components/KYCVerificationModal";
 
 import { notifyTrucksByFilters } from "@/Utilities/notifyTruckByFilters";
 import { TruckNeededType } from "@/types/types";
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SelectLocationProp } from '@/types/types';
 
-import { getUsers } from '@/db/operations';
 // New utilities
 import {
   validateLoadForm,
@@ -53,92 +52,150 @@ import {
 } from '@/Utilities/loadUtils';
 const AddLoadDB = () => {
 
-    interface userIsVerifiedProps {
+  interface userIsVerifiedProps {
     docId: string;
     isApproved: boolean;
     accType: 'professional';
   }
-  const [currentRole, setCurrentRole] = useState<any>(null);
+
+  const { user, alertBox, currentRole } = useAuth();
+
+
   const [fleetManagerId, setFleetManagerId] = useState<string | null>(null);
-const [fleetDrivers, setFleetDrivers] = useState<any[]>([]);
-const [searchedDrivers, setSearchedDrivers] = useState<any[]>([]);
-const [driversLoading, setDriversLoading] = useState(false);
-const [fleetTrucks, setFleetTrucks] = useState<any[]>([]);  
-const [searchedTrucks, setSearchedTrucks] = useState<any[]>([]);
-const [selectedFleetTrucks, setSelectedFleetTrucks ] = useState<any[]>([]);
-const [selectedDrivers, setSelectedDrivers] = useState<any[]>([]);
-const [truckSearchQuery, setTruckSearchQuery] = useState('');
-const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public'>('Private');
-
-// Broker search states
-const [selectedBrokers, setSelectedBrokers] = useState<string[]>([]);
-const [brokerSearchText, setBrokerSearchText] = useState('');
-const [searchedBrokers, setSearchedBrokers] = useState<any[]>([]);
-
-// Broker truck states
-const [brokerTrucks, setBrokerTrucks] = useState<any[]>([]);
-const [selectedBrokerTrucks, setSelectedBrokerTrucks] = useState<any[]>([]);
-const [brokerTruckSearchQuery, setBrokerTruckSearchQuery] = useState('');
-const [searchedBrokerTrucks, setSearchedBrokerTrucks] = useState<any[]>([]);
-
-// New fields for load requirements
-const [numberOfTrucks, setNumberOfTrucks] = useState('');
-const [deliveryDate, setDeliveryDate] = useState('');
-const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
 
 
- useEffect(() => {
-   const fetchAll = async () => {
-     // Check current role from AsyncStorage
-     try {
-       const storedRole = await AsyncStorage.getItem('currentRole');
-       if (storedRole) {
-         const parsedRole = JSON.parse(storedRole);
-         setCurrentRole(parsedRole);
-         if (parsedRole.role === 'fleet' && parsedRole.accType === 'fleet') {
-           setFleetManagerId(parsedRole.fleetManagerId || parsedRole.userId); // Use fleetManagerId if available, fallback to userId
-         }
-       }
-     } catch (error) {
-       console.error("Error fetching current role:", error);
-     }
+  const [assignments, setAssignments] = useState<any[]>([]);
 
 
-     // Fetch brokers for broker search functionality
-     try {
-       const brokersResult = await fetchDocuments('brokers', 100);
-       if (brokersResult && brokersResult.data && Array.isArray(brokersResult.data)) {
-         setSearchedBrokers(brokersResult.data);
-       }
-     } catch (error) {
-       console.error("Error fetching brokers:", error);
-     }
+  const [pickupDateTruckId, setPickupDateTruckId] = useState<string | null>(null);
+  const [deliveryDateTruckId, setDeliveryDateTruckId] = useState<string | null>(null);
 
-     // Fetch broker assigned trucks if user is a broker
-     if (currentRole && currentRole.accType === 'broker') {
-       try {
-         // Use getDocs to fetch broker assigned trucks directly
-         const brokerTrucksQuery = query(collection(db, `brokers/${currentRole.brokerId}/trucks`));
-         const brokerTrucksSnapshot = await getDocs(brokerTrucksQuery);
 
-         const brokerTrucksData = brokerTrucksSnapshot.docs.map(doc => ({
-           id: doc.id,
-           ...doc.data()
-         }));
+  const [assignmentOrigin, setAssignmentOrigin] =
+    useState<SelectLocationProp | null>(null);
 
-         setBrokerTrucks(brokerTrucksData);
-         setSearchedBrokerTrucks(brokerTrucksData);
-       } catch (error) {
-         console.error("Error fetching broker trucks:", error);
-         setBrokerTrucks([]);
-         setSearchedBrokerTrucks([]);
-       }
-     }
+  const [assignmentDestination, setAssignmentDestination] =
+    useState<SelectLocationProp | null>(null);
 
-   };
+  const [assignmentDspFromLocation, setAssignmentDspFromLocation] =
+    useState(false);
 
-   fetchAll();
- }, []); // Remove userIsFleetVerified dependency to prevent infinite loops
+  const [assignmentDspToLocation, setAssignmentDspToLocation] =
+    useState(false);
+
+  const [assignmentLocationPicKERdSP, setAssignmentPickLocationOnMap] =
+    useState(false);
+
+  const [assignmentDistance, setAssignmentDistance] =
+    useState("");
+
+  const [assignmentDuration, setAssignmentDuration] =
+    useState("");
+
+  const [assignmentDurationInTraffic, setAssignmentDurationInTraffic] =
+    useState("");
+
+
+
+
+
+  const [showPickupPicker, setShowPickupPicker] = useState(false);
+
+
+  const [fleetDrivers, setFleetDrivers] = useState<any[]>([]);
+  const [searchedDrivers, setSearchedDrivers] = useState<any[]>([]);
+  const [driversLoading, setDriversLoading] = useState(false);
+  const [selectedDrivers, setSelectedDrivers] = useState<any[]>([]);
+  const [driverSearchQueries, setDriverSearchQueries] = useState<{ [truckId: string]: string; }>({});
+
+  const [expandedTruckIds, setExpandedTruckIds] = useState<string[]>([]);
+  const [locationAssigmentPick, setLocationAssigmentPick] = useState<{
+    truckId: string, type: "pickup" | "delivery"
+  } | null>(null)
+
+  const [fleetTrucks, setFleetTrucks] = useState<any[]>([]);
+  const [searchedTrucks, setSearchedTrucks] = useState<any[]>([]);
+  const [selectedFleetTrucks, setSelectedFleetTrucks] = useState<any[]>([]);
+
+  const [truckSearchQuery, setTruckSearchQuery] = useState('');
+  const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public'>('Private');
+
+  // Broker search states
+  const [selectedBrokers, setSelectedBrokers] = useState<string[]>([]);
+  const [brokerSearchText, setBrokerSearchText] = useState('');
+  const [searchedBrokers, setSearchedBrokers] = useState<any[]>([]);
+
+  // Broker truck states
+  const [brokerTrucks, setBrokerTrucks] = useState<any[]>([]);
+  const [selectedBrokerTrucks, setSelectedBrokerTrucks] = useState<any[]>([]);
+  const [brokerTruckSearchQuery, setBrokerTruckSearchQuery] = useState('');
+  const [searchedBrokerTrucks, setSearchedBrokerTrucks] = useState<any[]>([]);
+
+  // New fields for load requirements
+  const [numberOfTrucks, setNumberOfTrucks] = useState('');
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
+
+
+  useEffect(() => {
+    const fetchAll = async () => {
+
+
+      // Fetch trucks for broker search functionality
+      try {
+        const driversGetResult = await fetchDocuments(`fleets/${currentRole.fleetId}/Drivers`, 100);
+        if (driversGetResult && driversGetResult.data && Array.isArray(driversGetResult.data)) {
+          setFleetDrivers(driversGetResult.data);
+        }
+      } catch (error) {
+        console.error("Error fetching brokers:", error);
+      }
+
+      // Fetch trucks for broker search functionality
+      try {
+        const trucksGetResult = await fetchDocuments(`fleets/${currentRole.fleetId}/Trucks`, 100);
+        if (trucksGetResult && trucksGetResult.data && Array.isArray(trucksGetResult.data)) {
+          setFleetTrucks(trucksGetResult.data);
+        }
+      } catch (error) {
+        console.error("Error fetching brokers:", error);
+      }
+
+      // Fetch brokers for broker search functionality
+      try {
+        const brokersResult = await fetchDocuments('brokers', 100);
+        if (brokersResult && brokersResult.data && Array.isArray(brokersResult.data)) {
+          setSearchedBrokers(brokersResult.data);
+        }
+      } catch (error) {
+        console.error("Error fetching brokers:", error);
+      }
+
+      // Fetch broker assigned trucks if user is a broker
+      if (currentRole && currentRole.accType === 'broker') {
+        try {
+          // Use getDocs to fetch broker assigned trucks directly
+          const brokerTrucksQuery = query(collection(db, `brokers/${currentRole.brokerId}/trucks`));
+          const brokerTrucksSnapshot = await getDocs(brokerTrucksQuery);
+
+          const brokerTrucksData = brokerTrucksSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+
+          setBrokerTrucks(brokerTrucksData);
+          setSearchedBrokerTrucks(brokerTrucksData);
+        } catch (error) {
+          console.error("Error fetching broker trucks:", error);
+          setBrokerTrucks([]);
+          setSearchedBrokerTrucks([]);
+        }
+      }
+
+    };
+
+    fetchAll();
+  }, []); // Remove userIsFleetVerified dependency to prevent infinite loops
 
 
 
@@ -204,7 +261,7 @@ const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
   const [showCountries, setShowCountries] = useState(defaultState.showCountries);
   const [operationCountries, setOperationCountries] = useState<string[]>(defaultState.operationCountries);
   const [trucksNeeded, setTrucksNeeded] = useState<TruckNeededType[]>(defaultState.trucksNeeded);
-  
+
   const [distance, setDistance] = useState("");
   const [duration, setDuration] = useState("");
   const [durationInTraffic, setDurationInTraffic] = useState("");
@@ -311,7 +368,7 @@ const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
   }, [returnOrigin, returnDestination]);
 
 
- 
+
 
   function pushTruck() {
     const newTruck: TruckNeededType = {
@@ -360,7 +417,6 @@ const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
 
 
 
-  const { user, alertBox } = useAuth();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -462,52 +518,52 @@ const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
   const [uploadImageUpdate, setUploadImageUpdate] = useState("");
 
 
-    const handleSubmit = async () => {
+  const handleSubmit = async () => {
 
-      try{
+    try {
 
       setIsSubmitting(true)
 
       if (!alertBox) {
-      console.error('alertBox not available');
-      setIsSubmitting(false);
-      return;
-    }
-  if (!user) {
-      alert("Please Login first");
-      setIsSubmitting(false);
-      router.push('/Account/Login')
-      return;
-    }
+        console.error('alertBox not available');
+        setIsSubmitting(false);
+        return;
+      }
+      if (!user) {
+        alert("Please Login first");
+        setIsSubmitting(false);
+        router.push('/Account/Login')
+        return;
+      }
 
 
       // Use utility function for validation
       let validationErrors = [];
-  try {
-    validationErrors = validateLoadForm("professional", {
-      typeofLoad,
-      origin,
-      destination,
-      rate,
-      paymentTerms,
-      trucksNeeded,
-      requirements,
-      proofOfOrder: [...proofDocuments],
-      proofOfOrderFileType: [...proofDocumentTypes],
-    }, step);
-  } catch (e) {
-    const errorDetails = e instanceof Error ? e.stack : String(e);
+      try {
+        validationErrors = validateLoadForm("professional", {
+          typeofLoad,
+          origin,
+          destination,
+          rate,
+          paymentTerms,
+          trucksNeeded,
+          requirements,
+          proofOfOrder: [...proofDocuments],
+          proofOfOrderFileType: [...proofDocumentTypes],
+        }, step);
+      } catch (e) {
+        const errorDetails = e instanceof Error ? e.stack : String(e);
         showError(
           "Validation Error",
           "Failed to vallidate Form Data",
           errorDetails,
           true
         );
-            setIsSubmitting(false);
+        setIsSubmitting(false);
 
-      
-    return;
-  }
+
+        return;
+      }
 
 
       // Additional validation for new fields
@@ -546,7 +602,7 @@ const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
         }
       }
 
-     
+
       if (validationErrors.length > 0) {
         setTimeout(() => {
           alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
@@ -559,29 +615,29 @@ const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
       confirmLoadPaymentAndSubmit()
       setIsSubmitting(false);
       return;
-    
-    }catch(e){
+
+    } catch (e) {
       const errorDetails = e instanceof Error ? e.stack : String(e);
-        showError(
-          "Failed to Submit Load",
-          "There was an error submitting your load. Please try again.",
-          errorDetails,
-          true
-        );
-            setIsSubmitting(false);
+      showError(
+        "Failed to Submit Load",
+        "There was an error submitting your load. Please try again.",
+        errorDetails,
+        true
+      );
+      setIsSubmitting(false);
 
-        console.log(e)
-      }
-    
-    };
+      console.log(e)
+    }
 
- 
+  };
+
+
 
   // Function to handle payment confirmation and proceed with load submission
   const confirmLoadPaymentAndSubmit = async () => {
     setIsSubmitting(true);
 
-  
+
 
     try {
       if (!user) {
@@ -591,9 +647,9 @@ const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
         return;
       }
       if (!user || !user.uid) {
-  alert("Please wait for user data to load or reopen Add Load.");
-  return;
-}
+        alert("Please wait for user data to load or reopen Add Load.");
+        return;
+      }
 
 
 
@@ -607,23 +663,23 @@ const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
       let loadImagesUrls: string[] = []
 
       // Handle different proof types based on user type
-        // Upload all proof images for professional users
-        if (proofImages && proofImages.length > 0) {
-          for (let i = 0; i < proofImages.length; i++) {
-            const imageUrl = await uploadImage(proofImages[i], "CargoProof", setUploadImageUpdate, `Proof Image ${i + 1}`);
-            if (imageUrl) proofOfOerSub.push(imageUrl);
-          }
+      // Upload all proof images for professional users
+      if (proofImages && proofImages.length > 0) {
+        for (let i = 0; i < proofImages.length; i++) {
+          const imageUrl = await uploadImage(proofImages[i], "CargoProof", setUploadImageUpdate, `Proof Image ${i + 1}`);
+          if (imageUrl) proofOfOerSub.push(imageUrl);
         }
+      }
 
-        // Upload all proof documents for professional users
-        if (proofDocuments && proofDocuments.length > 0) {
-          for (let i = 0; i < proofDocuments.length; i++) {
-            const docUrl = await uploadImage(proofDocuments[i], "CargoProof", setUploadImageUpdate, `Proof Document ${i + 1}`);
-            if (docUrl) proofOfOerSub.push(docUrl);
-          }
+      // Upload all proof documents for professional users
+      if (proofDocuments && proofDocuments.length > 0) {
+        for (let i = 0; i < proofDocuments.length; i++) {
+          const docUrl = await uploadImage(proofDocuments[i], "CargoProof", setUploadImageUpdate, `Proof Document ${i + 1}`);
+          if (docUrl) proofOfOerSub.push(docUrl);
         }
+      }
 
-     
+
 
       // Use utility function to prepare load data
       const loadData = prepareLoadData("professional", {
@@ -654,196 +710,196 @@ const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
         durationInTraffic,
         routePolyline,
         bounds,
-       
+
         // New fields
         numberOfTrucks,
         deliveryDate,
         selectedBrokers,
       }, user, expoPushToken);
 
-     
-// Fleet-specific logic: If user is in a fleet and load is private, assign selected trucks and drivers
-if (currentRole?.accType === 'fleet' && loadVisibility === 'Private' && selectedFleetTrucks.length > 0) {
 
-const trucks = selectedFleetTrucks;
-const drivers = selectedDrivers;
+      // Fleet-specific logic: If user is in a fleet and load is private, assign selected trucks and drivers
+      if (currentRole?.accType === 'fleet' && loadVisibility === 'Private' && selectedFleetTrucks.length > 0) {
 
-// 1������ Add Cargo to fleet collection and get the auto-generated cargoId
-const cargoRefPath = `fleets/${currentRole.fleetId}/Cargo`;
+        const trucks = selectedFleetTrucks;
+        const drivers = selectedDrivers;
 
- const docRef = doc(collection(db, `fleets/${currentRole.fleetId}/Cargo`));
-const cargoId = docRef.id;
+        // 1������ Add Cargo to fleet collection and get the auto-generated cargoId
+        const cargoRefPath = `fleets/${currentRole.fleetId}/Cargo`;
 
-await setDoc(docRef, {
+        const docRef = doc(collection(db, `fleets/${currentRole.fleetId}/Cargo`));
+        const cargoId = docRef.id;
 
-  ...loadData,
-  cargoId: cargoId,
-  loadVisibility: 'Private',
-  cargoStatus: "pending",
-  trucks: trucks.map(truck => ({
-    truckId: truck.id,
-    truckName : truck.truckName,
-    truckStatus: "pending",
-   drivers: drivers.filter(d => d.truckId === truck.id).map(driver => ({
- driverId: driver.driverId ||null,
- role: driver.role||null,
- fullName: driver.fullName||null,
- phoneNumber: driver.phoneNumber||null,
- status: "pending",
-  timeStamp: serverTimestamp(),
- 
-}))
+        await setDoc(docRef, {
 
-  }))
-});
+          ...loadData,
+          cargoId: cargoId,
+          loadVisibility: 'Private',
+          cargoStatus: "pending",
+          trucks: trucks.map(truck => ({
+            truckId: truck.id,
+            truckName: truck.truckName,
+            truckStatus: "pending",
+            drivers: drivers.filter(d => d.truckId === truck.id).map(driver => ({
+              driverId: driver.driverId || null,
+              role: driver.role || null,
+              fullName: driver.fullName || null,
+              phoneNumber: driver.phoneNumber || null,
+              status: "pending",
+              timeStamp: serverTimestamp(),
 
-// 2������ Add load to selected brokers' subcollections
-for (const brokerId of selectedBrokers) {
-  const brokerLoadData = {
-    loadId: cargoId,
-    loadStatus: "pending",
-    loadVisibility: 'Private',
-    truckId: trucks[0]?.id || null, // Primary truck
-    truckName: trucks[0]?.truckName || null,
-    driverId: drivers[0]?.driverId || null,
-    driverName: drivers[0]?.fullName || null,
-    origin: origin,
-    destination: destination,
-    loadingDate: loadingDate,
-    deliveryDate: deliveryDate,
-    createdAt: new Date(),
-    coordinator: {
-      id: currentRole.userId,
-      name: user.organisation || "",
-      phoneNumber: user.phoneNumber || ""
-    }
-  };
+            }))
 
-  const brokerLoadDocId = `${cargoId}_${brokerId}`;
-  await addDocumentWithId(`brokers/${brokerId}/loads`, brokerLoadDocId, brokerLoadData);
-}
+          }))
+        });
 
-  // 2������ Cargo assignments per truck
-  for (const truck of trucks) {
-    const truckDrivers = drivers.filter(d => d.truckId === truck.id);
-    if (truckDrivers.length > 0) {
-      const assignmentDocId = `${cargoId}_${truck.id}`;
-      await addDocumentWithId(`${cargoRefPath}/${cargoId}/assignments`, assignmentDocId, {
-        truckId: truck.id,
-        truckName: truck.truckName,
-        cargoId: cargoId,
-        assignedDrivers: truckDrivers.map(driver => ({
-          driverId: driver.driverId,
-          role: driver.role,
-          fullName: driver.fullName,
-          phoneNumber: driver.phoneNumber,
-          status: "pending"
-        })),
-        mainDriver: truckDrivers.find(d => d.role === "main")?.driverId || "",
-        status: "pending",
-        acceptedBy: null,
-        createdAt: new Date() ,
-       
-      });
-    }
-  }
+        // 2������ Add load to selected brokers' subcollections
+        for (const brokerId of selectedBrokers) {
+          const brokerLoadData = {
+            loadId: cargoId,
+            loadStatus: "pending",
+            loadVisibility: 'Private',
+            truckId: trucks[0]?.id || null, // Primary truck
+            truckName: trucks[0]?.truckName || null,
+            driverId: drivers[0]?.driverId || null,
+            driverName: drivers[0]?.fullName || null,
+            origin: origin,
+            destination: destination,
+            loadingDate: loadingDate,
+            deliveryDate: deliveryDate,
+            createdAt: new Date(),
+            coordinator: {
+              id: currentRole.userId,
+              name: user.organisation || "",
+              phoneNumber: user.phoneNumber || ""
+            }
+          };
 
-  // 3������ Assign cargo to drivers
-  for (const driver of drivers) {
-    const driverCargoDocId = `${cargoId}_${driver.driverId}_${driver.truckId}_${driver.role}`;
-    await addDocumentWithId(`fleets/${currentRole.fleetId}/Drivers/${driver.docId}/cargo`, driverCargoDocId, {
-      cargoId: cargoId,
-      truckId: driver.truckId,
-      truckName: driver.truckName,
-      role: driver.role,
-      status: "pending",
-      assignedAt: new Date(),
-      loadingDate ,
-      deliveryDate ,
-      origin,
-      destination,
-      loadVisibility: 'Private',
-      coordinator: {
-        id: currentRole.userId,
-        name: user.organisation || "" ,
-        phoneNumber : user.phoneNumber || ""
+          const brokerLoadDocId = `${cargoId}_${brokerId}`;
+          await addDocumentWithId(`brokers/${brokerId}/loads`, brokerLoadDocId, brokerLoadData);
+        }
+
+        // 2������ Cargo assignments per truck
+        for (const truck of trucks) {
+          const truckDrivers = drivers.filter(d => d.truckId === truck.id);
+          if (truckDrivers.length > 0) {
+            const assignmentDocId = `${cargoId}_${truck.id}`;
+            await addDocumentWithId(`${cargoRefPath}/${cargoId}/assignments`, assignmentDocId, {
+              truckId: truck.id,
+              truckName: truck.truckName,
+              cargoId: cargoId,
+              assignedDrivers: truckDrivers.map(driver => ({
+                driverId: driver.driverId,
+                role: driver.role,
+                fullName: driver.fullName,
+                phoneNumber: driver.phoneNumber,
+                status: "pending"
+              })),
+              mainDriver: truckDrivers.find(d => d.role === "main")?.driverId || "",
+              status: "pending",
+              acceptedBy: null,
+              createdAt: new Date(),
+
+            });
+          }
+        }
+
+        // 3������ Assign cargo to drivers
+        for (const driver of drivers) {
+          const driverCargoDocId = `${cargoId}_${driver.driverId}_${driver.truckId}_${driver.role}`;
+          await addDocumentWithId(`fleets/${currentRole.fleetId}/Drivers/${driver.docId}/cargo`, driverCargoDocId, {
+            cargoId: cargoId,
+            truckId: driver.truckId,
+            truckName: driver.truckName,
+            role: driver.role,
+            status: "pending",
+            assignedAt: new Date(),
+            loadingDate,
+            deliveryDate,
+            origin,
+            destination,
+            loadVisibility: 'Private',
+            coordinator: {
+              id: currentRole.userId,
+              name: user.organisation || "",
+              phoneNumber: user.phoneNumber || ""
+            }
+          });
+        }
+
+        // 4������ Optional: Truck cargo history
+        // for (const truck of trucks) {
+        //   console.log("adduing truck sub")
+
+        //   const truckDrivers = drivers.filter(d => d.truckId === truck.truckId);
+        //   if (truckDrivers.length > 0) {
+        //     await addDocument(`fleets/${currentRole.fleetId}/Trucks/${truck.truckId}/cargoHistory`, {
+        //       cargoId,
+        //       assignedDriverId: truckDrivers.find(d => d.role === "main")?.driverId || "",
+        //       status: "pending",
+        //       completedAt: null
+        //     });
+        //   }
+        // }
+
+
+
+      } else if (currentRole?.accType === 'fleet' && loadVisibility === 'Public') {
+        // Fleet user with public load
+
+
+
+        // 1������ Regular Cargo addition to main Cargo collection
+      } else if (currentRole?.accType === 'broker' && loadVisibility === 'Private') {
+        // Broker user with private load - assign to selected trucks
+        const trucks = selectedBrokerTrucks;
+
+        // 1������ Add Cargo to broker's subcollection and get the auto-generated cargoId
+        const brokerCargoRefPath = `brokers/${currentRole.userId}/loads`;
+
+        const docRef = doc(collection(db, `brokers/${currentRole.userId}/loads`));
+        const cargoId = docRef.id;
+
+        await setDoc(docRef, {
+          ...loadData,
+          cargoId: cargoId,
+          loadVisibility: 'Private',
+          cargoStatus: "pending",
+          trucks: trucks.map(truck => ({
+            truckId: truck.truckId,
+            truckName: truck.truckName,
+            truckStatus: "pending",
+            // Note: Brokers don't select drivers - fleet managers handle that
+          }))
+        });
+
+        // 2������ Add load to fleet manager's brokerLoads subcollection
+        // This allows the fleet manager to see which loads brokers have assigned to their trucks
+        for (const truck of trucks) {
+          const brokerLoadData = {
+            loadId: cargoId,
+            loadStatus: "pending",
+            loadVisibility: 'Private',
+            truckId: truck.truckId,
+            truckName: truck.truckName,
+            brokerId: currentRole.userId,
+            brokerName: user.organisation || user.displayName || "Broker",
+            origin: origin,
+            destination: destination,
+            loadingDate: loadingDate,
+            deliveryDate: deliveryDate,
+            createdAt: new Date(),
+            coordinator: {
+              id: currentRole.userId,
+              name: user.organisation || user.displayName || "Broker",
+              phoneNumber: user.phoneNumber || ""
+            }
+          };
+
+          const brokerLoadDocId = `${cargoId}_${truck.truckId}`;
+          await addDocumentWithId(`fleets/${truck.fleetId}/fleetManagers/FLTMGR${truck.fleetId}/brokerLoads`, brokerLoadDocId, brokerLoadData);
+        }
       }
-    });
-  }
-
-  // 4������ Optional: Truck cargo history
-  // for (const truck of trucks) {
-  //   console.log("adduing truck sub")
-
-  //   const truckDrivers = drivers.filter(d => d.truckId === truck.truckId);
-  //   if (truckDrivers.length > 0) {
-  //     await addDocument(`fleets/${currentRole.fleetId}/Trucks/${truck.truckId}/cargoHistory`, {
-  //       cargoId,
-  //       assignedDriverId: truckDrivers.find(d => d.role === "main")?.driverId || "",
-  //       status: "pending",
-  //       completedAt: null
-  //     });
-  //   }
-  // }
-
- 
-
-}else if (currentRole?.accType === 'fleet' && loadVisibility === 'Public') {
-  // Fleet user with public load
-
-
-     
-  // 1������ Regular Cargo addition to main Cargo collection
-} else if(currentRole?.accType === 'broker' && loadVisibility === 'Private') {
-  // Broker user with private load - assign to selected trucks
-  const trucks = selectedBrokerTrucks;
-
-  // 1������ Add Cargo to broker's subcollection and get the auto-generated cargoId
-  const brokerCargoRefPath = `brokers/${currentRole.userId}/loads`;
-
-  const docRef = doc(collection(db, `brokers/${currentRole.userId}/loads`));
-  const cargoId = docRef.id;
-
-  await setDoc(docRef, {
-    ...loadData,
-    cargoId: cargoId,
-    loadVisibility: 'Private',
-    cargoStatus: "pending",
-    trucks: trucks.map(truck => ({
-      truckId: truck.truckId,
-      truckName: truck.truckName,
-      truckStatus: "pending",
-      // Note: Brokers don't select drivers - fleet managers handle that
-    }))
-  });
-
-  // 2������ Add load to fleet manager's brokerLoads subcollection
-  // This allows the fleet manager to see which loads brokers have assigned to their trucks
-  for (const truck of trucks) {
-    const brokerLoadData = {
-      loadId: cargoId,
-      loadStatus: "pending",
-      loadVisibility: 'Private',
-      truckId: truck.truckId,
-      truckName: truck.truckName,
-      brokerId: currentRole.userId,
-      brokerName: user.organisation || user.displayName || "Broker",
-      origin: origin,
-      destination: destination,
-      loadingDate: loadingDate,
-      deliveryDate: deliveryDate,
-      createdAt: new Date(),
-      coordinator: {
-        id: currentRole.userId,
-        name: user.organisation || user.displayName || "Broker",
-        phoneNumber: user.phoneNumber || ""
-      }
-    };
-
-    const brokerLoadDocId = `${cargoId}_${truck.truckId}`;
-    await addDocumentWithId(`fleets/${truck.fleetId}/fleetManagers/FLTMGR${truck.fleetId}/brokerLoads`, brokerLoadDocId, brokerLoadData);
-  }
-}
 
 
 
@@ -851,27 +907,27 @@ for (const brokerId of selectedBrokers) {
 
 
 
-// // Add load to selected brokers' subcollections for public loads
-// for (const brokerId of selectedBrokers) {
-//   const brokerLoadData = {
-//     loadId: loadData.loadId,
-//     loadStatus: "pending",
-//     loadVisibility: 'Public',
-//     origin: origin,
-//     destination: destination,
-//     loadingDate: loadingDate,
-//     deliveryDate: deliveryDate,
-//     createdAt: new Date(),
-//     coordinator: {
-//       id: user.uid,
-//       name: user.organisation || "",
-//       phoneNumber: user.phoneNumber || ""
-//     }
-//   };
+      // // Add load to selected brokers' subcollections for public loads
+      // for (const brokerId of selectedBrokers) {
+      //   const brokerLoadData = {
+      //     loadId: loadData.loadId,
+      //     loadStatus: "pending",
+      //     loadVisibility: 'Public',
+      //     origin: origin,
+      //     destination: destination,
+      //     loadingDate: loadingDate,
+      //     deliveryDate: deliveryDate,
+      //     createdAt: new Date(),
+      //     coordinator: {
+      //       id: user.uid,
+      //       name: user.organisation || "",
+      //       phoneNumber: user.phoneNumber || ""
+      //     }
+      //   };
 
-//   const brokerLoadDocId = `${loadData.loadId}_${brokerId}`;
-//   await addDocumentWithId(`brokers/${brokerId}/loads`, brokerLoadDocId, brokerLoadData);
-// }
+      //   const brokerLoadDocId = `${loadData.loadId}_${brokerId}`;
+      //   await addDocumentWithId(`brokers/${brokerId}/loads`, brokerLoadDocId, brokerLoadData);
+      // }
 
 
 
@@ -923,36 +979,36 @@ for (const brokerId of selectedBrokers) {
 
       <Heading
         page='Create Load'
-       
+
       />
 
-     
 
 
-            <StepIndicator
-              steps={ ['Load Details', 'Additional Info', 'Return Load', 'Truck Req']}
-              currentStep={step}
-              onStepPress={setStep}
-            />
+
+      <StepIndicator
+        steps={['Load Details', 'Additional Info', 'Return Load', 'Truck Req']}
+        currentStep={step}
+        onStepPress={setStep}
+      />
 
       <View style={{ flex: 1, position: 'relative' }}>
         {step === 0 && (
           <ScrollView keyboardShouldPersistTaps="always" >
             <View style={styles.viewMainDsp}>
-            
-                <>
-                  <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-                    Professional Load Details
-                  </ThemedText>
-                  <Divider />
-                  <ThemedText>
-                    Type of Load<ThemedText color="red">*</ThemedText>
-                  </ThemedText>
-                  <Input
-                    value={typeofLoad}
-                    onChangeText={setTypeofLoad}
-                  />
-                </>
+
+              <>
+                <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
+                  Professional Load Details
+                </ThemedText>
+                <Divider />
+                <ThemedText>
+                  Type of Load<ThemedText color="red">*</ThemedText>
+                </ThemedText>
+                <Input
+                  value={typeofLoad}
+                  onChangeText={setTypeofLoad}
+                />
+              </>
 
 
               {/* Common location fields */}
@@ -973,7 +1029,7 @@ for (const brokerId of selectedBrokers) {
                 iconColor={accent}
               />
 
-               <RateInput
+              <RateInput
                 rate={rate}
                 setRate={setRate}
                 selectedCurrency={selectedCurrency}
@@ -987,7 +1043,7 @@ for (const brokerId of selectedBrokers) {
 
               <Divider />
 
-             
+
               <ThemedText>
                 Payment Terms<ThemedText color="red">*</ThemedText>
               </ThemedText>
@@ -1003,15 +1059,15 @@ for (const brokerId of selectedBrokers) {
             </View>
           </ScrollView>
         )}
-       
-        {step === 1 &&  (
+
+        {step === 1 && (
           <ScrollView>
             <View style={styles.viewMainDsp}>
               <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
                 Additional Info
               </ThemedText>
               <Divider />
-<ThemedText>
+              <ThemedText>
                 Number of Trucks Needed<ThemedText color="red">*</ThemedText>
               </ThemedText>
               <Input
@@ -1070,217 +1126,217 @@ for (const brokerId of selectedBrokers) {
               />
 
               {
-                ( (proofImages.length > 0 || proofDocuments.length > 0)) ? (
+                ((proofImages.length > 0 || proofDocuments.length > 0)) ? (
                   <View>
                     <ThemedText style={{ marginBottom: wp(2), fontWeight: 'bold' }}>
-                       Proof of Order
+                      Proof of Order
                     </ThemedText>
 
-                  
-                      <View>
-                        <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
-                          {(proofImages.length + proofDocuments.length)}/6 files uploaded
-                        </ThemedText>
 
-                        {/* Proof Images Section */}
-                        {proofImages.length > 0 && (
-                          <View style={{ marginBottom: wp(3) }}>
-                            <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2), color: '#004d40' }}>
-                              Images ({proofImages.length})
-                            </ThemedText>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                              {proofImages.map((image, index) => (
-                                <View
-                                  key={`img-${index}`}
+                    <View>
+                      <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
+                        {(proofImages.length + proofDocuments.length)}/6 files uploaded
+                      </ThemedText>
+
+                      {/* Proof Images Section */}
+                      {proofImages.length > 0 && (
+                        <View style={{ marginBottom: wp(3) }}>
+                          <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2), color: '#004d40' }}>
+                            Images ({proofImages.length})
+                          </ThemedText>
+                          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            {proofImages.map((image, index) => (
+                              <View
+                                key={`img-${index}`}
+                                style={{
+                                  width: wp(30),
+                                  marginRight: wp(2),
+                                  backgroundColor: '#f9f9f9',
+                                  borderRadius: 8,
+                                  padding: 10,
+                                  shadowColor: '#000',
+                                  shadowOffset: { width: 0, height: 2 },
+                                  shadowOpacity: 0.1,
+                                  shadowRadius: 2,
+                                  elevation: 2,
+                                  position: 'relative',
+                                }}
+                              >
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    setProofImages(prev => prev.filter((_, i) => i !== index));
+                                  }}
                                   style={{
-                                    width: wp(30),
-                                    marginRight: wp(2),
-                                    backgroundColor: '#f9f9f9',
-                                    borderRadius: 8,
-                                    padding: 10,
-                                    shadowColor: '#000',
-                                    shadowOffset: { width: 0, height: 2 },
-                                    shadowOpacity: 0.1,
-                                    shadowRadius: 2,
-                                    elevation: 2,
-                                    position: 'relative',
+                                    position: 'absolute',
+                                    top: -5,
+                                    right: -5,
+                                    backgroundColor: 'white',
+                                    borderRadius: 10,
+                                    zIndex: 1,
                                   }}
                                 >
-                                  <TouchableOpacity
-                                    onPress={() => {
-                                      setProofImages(prev => prev.filter((_, i) => i !== index));
-                                    }}
-                                    style={{
-                                      position: 'absolute',
-                                      top: -5,
-                                      right: -5,
-                                      backgroundColor: 'white',
-                                      borderRadius: 10,
-                                      zIndex: 1,
-                                    }}
-                                  >
-                                    <Ionicons name="close-circle" size={20} color="red" />
-                                  </TouchableOpacity>
+                                  <Ionicons name="close-circle" size={20} color="red" />
+                                </TouchableOpacity>
 
-                                  <Image
-                                    source={{ uri: image.uri }}
-                                    style={{
-                                      width: '100%',
-                                      height: wp(20),
-                                      borderRadius: 8,
-                                    }}
-                                    resizeMode="cover"
+                                <Image
+                                  source={{ uri: image.uri }}
+                                  style={{
+                                    width: '100%',
+                                    height: wp(20),
+                                    borderRadius: 8,
+                                  }}
+                                  resizeMode="cover"
+                                />
+                                <ThemedText
+                                  style={{
+                                    marginTop: 8,
+                                    textAlign: 'center',
+                                    fontSize: 13,
+                                    color: '#004d40',
+                                    fontWeight: '600',
+                                  }}
+                                >
+                                  Image {index + 1}
+                                </ThemedText>
+                              </View>
+                            ))}
+                          </ScrollView>
+                        </View>
+                      )}
+
+                      {/* Proof Documents Section */}
+                      {proofDocuments.length > 0 && (
+                        <View style={{ marginBottom: wp(3) }}>
+                          <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2), color: '#004d40' }}>
+                            Documents ({proofDocuments.length})
+                          </ThemedText>
+                          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            {proofDocuments.map((file, index) => (
+                              <View
+                                key={`doc-${index}`}
+                                style={{
+                                  width: wp(30),
+                                  marginRight: wp(2),
+                                  backgroundColor: '#f9f9f9',
+                                  borderRadius: 8,
+                                  padding: 10,
+                                  shadowColor: '#000',
+                                  shadowOffset: { width: 0, height: 2 },
+                                  shadowOpacity: 0.1,
+                                  shadowRadius: 2,
+                                  elevation: 2,
+                                  position: 'relative',
+                                }}
+                              >
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    setProofDocuments(prev => prev.filter((_, i) => i !== index));
+                                    setProofDocumentTypes(prev => prev.filter((_, i) => i !== index));
+                                  }}
+                                  style={{
+                                    position: 'absolute',
+                                    top: -5,
+                                    right: -5,
+                                    backgroundColor: 'white',
+                                    borderRadius: 10,
+                                    zIndex: 1,
+                                  }}
+                                >
+                                  <Ionicons name="close-circle" size={20} color="red" />
+                                </TouchableOpacity>
+
+                                <View
+                                  style={{
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    height: wp(20),
+                                    backgroundColor: '#e0f2f1',
+                                    borderRadius: 8,
+                                  }}
+                                >
+                                  <Ionicons
+                                    name={proofDocumentTypes[index] === 'pdf' ? 'document-text' : 'document'}
+                                    size={40}
+                                    color="#004d40"
                                   />
-                                  <ThemedText
-                                    style={{
-                                      marginTop: 8,
-                                      textAlign: 'center',
-                                      fontSize: 13,
-                                      color: '#004d40',
-                                      fontWeight: '600',
-                                    }}
-                                  >
-                                    Image {index + 1}
-                                  </ThemedText>
                                 </View>
-                              ))}
-                            </ScrollView>
-                          </View>
-                        )}
-
-                        {/* Proof Documents Section */}
-                        {proofDocuments.length > 0 && (
-                          <View style={{ marginBottom: wp(3) }}>
-                            <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2), color: '#004d40' }}>
-                              Documents ({proofDocuments.length})
-                            </ThemedText>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                              {proofDocuments.map((file, index) => (
-                                <View
-                                  key={`doc-${index}`}
+                                <ThemedText
                                   style={{
-                                    width: wp(30),
-                                    marginRight: wp(2),
-                                    backgroundColor: '#f9f9f9',
-                                    borderRadius: 8,
-                                    padding: 10,
-                                    shadowColor: '#000',
-                                    shadowOffset: { width: 0, height: 2 },
-                                    shadowOpacity: 0.1,
-                                    shadowRadius: 2,
-                                    elevation: 2,
-                                    position: 'relative',
+                                    marginTop: 8,
+                                    textAlign: 'center',
+                                    fontSize: 13,
+                                    color: '#004d40',
+                                    fontWeight: '600',
                                   }}
                                 >
-                                  <TouchableOpacity
-                                    onPress={() => {
-                                      setProofDocuments(prev => prev.filter((_, i) => i !== index));
-                                      setProofDocumentTypes(prev => prev.filter((_, i) => i !== index));
-                                    }}
-                                    style={{
-                                      position: 'absolute',
-                                      top: -5,
-                                      right: -5,
-                                      backgroundColor: 'white',
-                                      borderRadius: 10,
-                                      zIndex: 1,
-                                    }}
-                                  >
-                                    <Ionicons name="close-circle" size={20} color="red" />
-                                  </TouchableOpacity>
+                                  {file.name}
+                                </ThemedText>
+                              </View>
+                            ))}
+                          </ScrollView>
+                        </View>
+                      )}
 
-                                  <View
-                                    style={{
-                                      justifyContent: 'center',
-                                      alignItems: 'center',
-                                      height: wp(20),
-                                      backgroundColor: '#e0f2f1',
-                                      borderRadius: 8,
-                                    }}
-                                  >
-                                    <Ionicons
-                                      name={proofDocumentTypes[index] === 'pdf' ? 'document-text' : 'document'}
-                                      size={40}
-                                      color="#004d40"
-                                    />
-                                  </View>
-                                  <ThemedText
-                                    style={{
-                                      marginTop: 8,
-                                      textAlign: 'center',
-                                      fontSize: 13,
-                                      color: '#004d40',
-                                      fontWeight: '600',
-                                    }}
-                                  >
-                                    {file.name}
-                                  </ThemedText>
-                                </View>
-                              ))}
-                            </ScrollView>
-                          </View>
-                        )}
-
-                        {/* Add More Files Buttons */}
-                        {(proofImages.length + proofDocuments.length) < 6 && (
-                          <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: wp(2) }}>
-                            <TouchableOpacity
-                              onPress={() => selectManyImages(setProofImages, false, 6 - proofDocuments.length, proofImages.length)}
+                      {/* Add More Files Buttons */}
+                      {(proofImages.length + proofDocuments.length) < 6 && (
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: wp(2) }}>
+                          <TouchableOpacity
+                            onPress={() => selectManyImages(setProofImages, false, 6 - proofDocuments.length, proofImages.length)}
+                            style={{
+                              backgroundColor: '#1E90FF',
+                              height: 45,
+                              justifyContent: 'center',
+                              paddingHorizontal: 20,
+                              borderRadius: 8,
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.25,
+                              shadowRadius: 3.84,
+                              elevation: 5,
+                            }}
+                          >
+                            <ThemedText
                               style={{
-                                backgroundColor: '#1E90FF',
-                                height: 45,
-                                justifyContent: 'center',
-                                paddingHorizontal: 20,
-                                borderRadius: 8,
-                                shadowColor: '#000',
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.25,
-                                shadowRadius: 3.84,
-                                elevation: 5,
+                                textAlign: 'center',
+                                color: 'white',
+                                fontWeight: '600',
+                                fontSize: 12,
                               }}
                             >
-                              <ThemedText
-                                style={{
-                                  textAlign: 'center',
-                                  color: 'white',
-                                  fontWeight: '600',
-                                  fontSize: 12,
-                                }}
-                              >
-                                Add Images
-                              </ThemedText>
-                            </TouchableOpacity>
+                              Add Images
+                            </ThemedText>
+                          </TouchableOpacity>
 
-                            <TouchableOpacity
-                              onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6 - proofImages.length, proofDocuments.length)}
+                          <TouchableOpacity
+                            onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6 - proofImages.length, proofDocuments.length)}
+                            style={{
+                              backgroundColor: '#004d40',
+                              height: 45,
+                              justifyContent: 'center',
+                              paddingHorizontal: 20,
+                              borderRadius: 8,
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.25,
+                              shadowRadius: 3.84,
+                              elevation: 5,
+                            }}
+                          >
+                            <ThemedText
                               style={{
-                                backgroundColor: '#004d40',
-                                height: 45,
-                                justifyContent: 'center',
-                                paddingHorizontal: 20,
-                                borderRadius: 8,
-                                shadowColor: '#000',
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.25,
-                                shadowRadius: 3.84,
-                                elevation: 5,
+                                textAlign: 'center',
+                                color: 'white',
+                                fontWeight: '600',
+                                fontSize: 12,
                               }}
                             >
-                              <ThemedText
-                                style={{
-                                  textAlign: 'center',
-                                  color: 'white',
-                                  fontWeight: '600',
-                                  fontSize: 12,
-                                }}
-                              >
-                                Add Documents
-                              </ThemedText>
-                            </TouchableOpacity>
-                          </View>
-                        )}
-                      </View>
-                    
+                              Add Documents
+                            </ThemedText>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
+
                   </View>
                 ) : (
                   <View>
@@ -1364,8 +1420,8 @@ for (const brokerId of selectedBrokers) {
             </View>
           </ScrollView>
         )}
-       
-        {step === 2 &&  (
+
+        {step === 2 && (
           <ScrollView keyboardShouldPersistTaps="always">
             <View style={styles.viewMainDsp}>
               <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
@@ -1374,12 +1430,12 @@ for (const brokerId of selectedBrokers) {
               <Divider />
 
 
- {/* Return Load Location Selection */}
+              {/* Return Load Location Selection */}
               <TouchableOpacity style={{ marginTop: wp(3) }} onPress={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: wp(2) }}  onTouchEnd={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}>
-                  
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: wp(2) }} onTouchEnd={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}>
+
                   <View
-                   
+
                     style={{
                       width: 20,
                       height: 20,
@@ -1461,7 +1517,7 @@ for (const brokerId of selectedBrokers) {
                 placeholder="Enter return load terms"
               />
 
-             
+
             </View>
             <Divider />
             <View style={styles.viewMainDsp}>
@@ -1470,76 +1526,76 @@ for (const brokerId of selectedBrokers) {
             </View>
           </ScrollView>
         )}
-       
-        {step === 3 &&  (<ScrollView>
-      <View style={styles.viewMainDsp}>
-        <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-          {currentRole?.accType === 'fleet' ? 'Select Fleet Trucks & Drivers' : 'Truck Requirements'}
-        </ThemedText>
-        <Divider />
 
-        {/* Broker Selection Section - Hide for broker users */}
-        {currentRole?.accType !== 'broker' && (
-          <>
-            <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Select Brokers</ThemedText>
-            <Input
-              value={brokerSearchText}
-              onChangeText={(text) => {
-                setBrokerSearchText(text);
-                if (text.trim() === '') {
-                  setSearchedBrokers(searchedBrokers); // Reset to all brokers
-                } else {
-                  const filtered = searchedBrokers.filter(broker =>
-                    broker.name?.toLowerCase().includes(text.toLowerCase()) ||
-                    broker.brokerEmail?.toLowerCase().includes(text.toLowerCase())
-                  );
-                  setSearchedBrokers(filtered);
-                }
-              }}
-              placeholder="Search brokers by name or email"
-            />
-
-            <ThemedText style={{ fontSize: 14, color: '#666', marginTop: wp(1) }}>
-              Available Brokers:
+        {step === 3 && (<ScrollView>
+          <View style={styles.viewMainDsp}>
+            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
+              {currentRole?.accType === 'fleet' ? 'Select Fleet Trucks & Drivers' : 'Truck Requirements'}
             </ThemedText>
-            {searchedBrokers.map((broker, index) => (
-              <TouchableOpacity
-                key={broker.brokerId || index}
-                onPress={() => {
-                  if (selectedBrokers.includes(broker.brokerId)) {
-                    setSelectedBrokers(prev => prev.filter(id => id !== broker.brokerId));
-                  } else {
-                    setSelectedBrokers(prev => [...prev, broker.brokerId]);
-                  }
-                }}
-                style={{
-                  padding: wp(3),
-                  marginVertical: wp(1),
-                  borderRadius: 8,
-                  backgroundColor: backgroundLight,
-                  borderWidth: 1,
-                  borderColor: selectedBrokers.includes(broker.brokerId) ? accent : '#E0E0E0',
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Ionicons
-                    name={selectedBrokers.includes(broker.brokerId) ? "checkbox" : "square-outline"}
-                    size={20}
-                    color={selectedBrokers.includes(broker.brokerId) ? accent : '#666'}
-                    style={{ marginRight: wp(2) }}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <ThemedText style={{ fontWeight: '600' }}>{broker.name}</ThemedText>
-                    <ThemedText style={{ fontSize: 12, color: '#666' }}>{broker.brokerEmail}</ThemedText>
-                    <ThemedText style={{ fontSize: 12, color: '#666' }}>{broker.brokerType}</ThemedText>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-
             <Divider />
-          </>
-        )}
+
+            {/* Broker Selection Section - Hide for broker users */}
+            {currentRole?.accType !== 'broker' && (
+              <>
+                <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Select Brokers</ThemedText>
+                <Input
+                  value={brokerSearchText}
+                  onChangeText={(text) => {
+                    setBrokerSearchText(text);
+                    if (text.trim() === '') {
+                      setSearchedBrokers(searchedBrokers); // Reset to all brokers
+                    } else {
+                      const filtered = searchedBrokers.filter(broker =>
+                        broker.name?.toLowerCase().includes(text.toLowerCase()) ||
+                        broker.brokerEmail?.toLowerCase().includes(text.toLowerCase())
+                      );
+                      setSearchedBrokers(filtered);
+                    }
+                  }}
+                  placeholder="Search brokers by name or email"
+                />
+
+                <ThemedText style={{ fontSize: 14, color: '#666', marginTop: wp(1) }}>
+                  Available Brokers:
+                </ThemedText>
+                {searchedBrokers.map((broker, index) => (
+                  <TouchableOpacity
+                    key={broker.brokerId || index}
+                    onPress={() => {
+                      if (selectedBrokers.includes(broker.brokerId)) {
+                        setSelectedBrokers(prev => prev.filter(id => id !== broker.brokerId));
+                      } else {
+                        setSelectedBrokers(prev => [...prev, broker.brokerId]);
+                      }
+                    }}
+                    style={{
+                      padding: wp(3),
+                      marginVertical: wp(1),
+                      borderRadius: 8,
+                      backgroundColor: backgroundLight,
+                      borderWidth: 1,
+                      borderColor: selectedBrokers.includes(broker.brokerId) ? accent : '#E0E0E0',
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Ionicons
+                        name={selectedBrokers.includes(broker.brokerId) ? "checkbox" : "square-outline"}
+                        size={20}
+                        color={selectedBrokers.includes(broker.brokerId) ? accent : '#666'}
+                        style={{ marginRight: wp(2) }}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <ThemedText style={{ fontWeight: '600' }}>{broker.name}</ThemedText>
+                        <ThemedText style={{ fontSize: 12, color: '#666' }}>{broker.brokerEmail}</ThemedText>
+                        <ThemedText style={{ fontSize: 12, color: '#666' }}>{broker.brokerType}</ThemedText>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+
+                <Divider />
+              </>
+            )}
 
             {/* Load Visibility Toggle for Fleet and Broker Users */}
             {(currentRole?.accType === 'fleet' || currentRole?.accType === 'broker') && (
@@ -1607,7 +1663,7 @@ for (const brokerId of selectedBrokers) {
               </View>
             )}
 
- 
+
             {currentRole?.accType === 'fleet' && loadVisibility === 'Private' ? (
               // Fleet User: Private load - Select trucks and display their drivers
               <>
@@ -1631,148 +1687,513 @@ for (const brokerId of selectedBrokers) {
                 />
 
                 {/* Available Trucks with Drivers */}
-                  <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Available Trucks</ThemedText>
-                  
-                  {searchedTrucks.map((truck, index) => {
-                    // Get drivers for this truck
-              const truckDrivers = fleetDriversFromTrucks.filter(driver => driver.truckId === truck.id);
+                <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Available Trucks</ThemedText>
 
-                    
-                    return (
-                      <View key={truck.truckId || index} style={{
-
-                        marginVertical: wp(1),
-                        borderRadius: 8,
-                        backgroundColor: backgroundLight,
-                        borderWidth: 1,
-                        borderColor: '#E0E0E0',
-                        overflow: 'hidden'
-                      }}>
-                        {/* Truck Header */}
-                        <TouchableOpacity
-                          onPress={() => {
-                            if (selectedFleetTrucks.find(t => t.id === truck.id)) {
-      setSelectedFleetTrucks(prev => prev.filter(t => t.id !== truck.id));
-      setSelectedDrivers(prev => prev.filter(d => d.truckId !== truck.id));
-    } else {
-      setSelectedFleetTrucks(prev => [...prev, {...truck}]);
-    }
-                          }}
-                          style={{
-                            padding: wp(3),
-                            borderBottomWidth: truckDrivers.length > 0 ? 1 : 0,
-                            borderBottomColor: '#E0E0E0',
+                {searchedTrucks.map((truck, index) => {
+                  // Get drivers for this truck
+                  const truckDrivers = fleetDriversFromTrucks.filter(driver => driver.truckId === truck.id)
+                  const defaultDriver = fleetDriversFromTrucks.find(driver => driver.truckId === truck.id && (driver.role === 'main' || driver.isDefault));
 
 
-                            backgroundColor: selectedFleetTrucks.some(t => t.id === truck.id) 
-      ? 'rgba(33, 150, 243, 0.1)' // light blue highlight
-      : 'transparent',
-                            
-                          }}
-                        >
-                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  return (
+                    <View key={truck.truckId || index} style={{
+
+                      marginVertical: wp(1),
+                      borderRadius: 8,
+                      backgroundColor: backgroundLight,
+                      borderWidth: 1,
+                      borderColor: '#E0E0E0',
+                      overflow: 'hidden'
+                    }}>
+                      {/* Truck Header */}
+                      <TouchableOpacity
+                        onPress={() => {
+
+                          const exists = selectedFleetTrucks.find(
+                            t => t.id === truck.id
+                          );
+
+                          if (exists) {
+
+                            setSelectedFleetTrucks(prev =>
+                              prev.filter(t => t.id !== truck.id)
+                            );
+
+                            setAssignments(prev =>
+                              prev.filter(a => a.truckId !== truck.id)
+                            );
+
+                            setExpandedTruckIds(prev => prev.filter(id => id !== truck.id));
+
+                          } else {
+
+                            setSelectedFleetTrucks(prev => [
+                              ...prev,
+                              truck
+                            ]);
+
+                            setExpandedTruckIds(prev => [...prev, truck.id]);
+                          }
+
+                        }}
+                        style={{
+                          padding: wp(3),
+                          borderBottomWidth: truckDrivers.length > 0 ? 1 : 0,
+                          borderBottomColor: '#E0E0E0',
+
+
+                          backgroundColor: selectedFleetTrucks.some(t => t.id === truck.id)
+                            ? 'rgba(33, 150, 243, 0.1)' // light blue highlight
+                            : 'transparent',
+
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <Ionicons
-    name={selectedFleetTrucks.some(t => t.id === truck.id) ? "checkbox" : "square-outline"}
-    size={20}
-    color={selectedFleetTrucks.some(t => t.id === truck.id) ? '#2196F3' : '#666'}
-    style={{ marginRight: wp(2) }}
-  />
+                            name={selectedFleetTrucks.some(t => t.id === truck.id) ? "checkbox" : "square-outline"}
+                            size={20}
+                            color={selectedFleetTrucks.some(t => t.id === truck.id) ? '#2196F3' : '#666'}
+                            style={{ marginRight: wp(2) }}
+                          />
 
-                            <View style={{ flex: 1 }}>
-                              <ThemedText style={{ fontWeight: '600' }}>{truck.truckName}</ThemedText>
-                              <ThemedText style={{ fontSize: 12, color: '#666' }}>{truck.truckType} - {truck.truckCapacity}</ThemedText>
-                            </View>
-                            {truckDrivers.length > 0 && (
-                              <ThemedText style={{ fontSize: 12, color: '#666' }}>
-                                {truckDrivers.length} driver{truckDrivers.length !== 1 ? 's' : ''}
-                              </ThemedText>
-                            )}
+                          <View style={{ flex: 1 }}>
+                            <ThemedText style={{ fontWeight: '600' }}>{truck.truckName}</ThemedText>
+                            <ThemedText style={{ fontSize: 12, color: '#666' }}>{truck.truckType} - {truck.truckCapacity}</ThemedText>
                           </View>
-                        </TouchableOpacity>
-
-                      
-
-                      {truckDrivers.length > 0 && selectedFleetTrucks.find(t => t.id === truck.id)&& (
-
-
-
-                          <View style={{ paddingHorizontal: wp(3), paddingBottom: wp(2) }}>
-                            <ThemedText style={{ fontSize: 14, fontWeight: '600', marginTop: wp(2), marginBottom: wp(1) }}>
-                              Select Drivers for this Truck:
+                          {truckDrivers.length > 0 && (
+                            <ThemedText style={{ fontSize: 12, color: '#666' }}>
+                              {truckDrivers.length} driver{truckDrivers.length !== 1 ? 's' : ''}
                             </ThemedText>
-                              {truckDrivers.map((driver, driverIndex) => {
-                                return(
+                          )}
+                        </View>
+                      </TouchableOpacity>
 
-                                <TouchableOpacity
-                                  key={`${driver.driverId}-${driver.truckId}-${driver.role}` || driverIndex}
-                                  onPress={() => {
-                                    const driverKey = `${driver.driverId}-${driver.truckId}-${driver.role}`;
-                                    const existingDriver = selectedDrivers.find(d =>
-                                      `${d.driverId}-${d.truckId}-${d.role}` === driverKey
+
+
+                      {expandedTruckIds.includes(truck.id) && (
+
+                        <View style={{
+                          padding: wp(3),
+                          borderTopWidth: 1,
+                          borderColor: '#eee'
+                        }}>
+
+
+                          <ThemedText
+                            style={{
+                              fontWeight: '700',
+                              marginBottom: wp(2)
+                            }}
+                          >
+                            Assign Driver (Optional)
+                          </ThemedText>
+
+
+
+                          <Input
+                            placeholder="Search driver..."
+                            value={
+                              driverSearchQueries[truck.id] || ''
+                            }
+
+                            onChangeText={(text) => {
+
+                              setDriverSearchQueries(prev => ({
+                                ...prev,
+                                [truck.id]: text
+                              }))
+
+                            }}
+
+                          />
+
+
+
+                          {/* DEFAULT DRIVER */}
+
+                          {defaultDriver && (
+
+                            <TouchableOpacity
+
+                              onPress={() => {
+
+                                setAssignments(prev => [
+
+                                  ...prev.filter(
+                                    a => a.truckId !== truck.id
+                                  ),
+
+                                  {
+                                    truckId: truck.id,
+                                    driverId: defaultDriver.driverId,
+                                    driverName: defaultDriver.fullName,
+
+                                    pickupDate: null,
+                                    deliveryDate: null,
+                                    pickupLocation: "",
+                                    deliveryLocation: "",
+
+                                    isDefault: true
+                                  }
+
+                                ])
+
+                              }}
+
+                              style={{
+                                marginTop: wp(2),
+                                padding: wp(2),
+                                borderRadius: 8,
+                                backgroundColor: 'rgba(33,150,243,0.15)',
+                                borderWidth: 1,
+                                borderColor: '#2196F3'
+                              }}
+
+                            >
+
+                              <ThemedText>
+                                ⭐ Default - {defaultDriver.fullName}
+                              </ThemedText>
+
+                            </TouchableOpacity>
+
+                          )}
+
+
+
+
+                          {/* SHOW DRIVERS ONLY WHEN SEARCHING */}
+
+                          {driverSearchQueries[truck.id]?.length > 0 &&
+
+                            fleetDrivers
+                              .filter(d =>
+                                d.fullName
+                                  ?.toLowerCase()
+                                  .includes(
+                                    driverSearchQueries[truck.id]
+                                      .toLowerCase()
+                                  )
+                              )
+                              .map(driver => {
+
+
+                                const selected =
+                                  assignments.find(
+                                    a =>
+                                      a.driverId === driver.driverId &&
+                                      a.truckId === truck.id
+                                  )
+
+
+
+                                return (
+
+                                  <TouchableOpacity
+
+                                    key={driver.driverId}
+
+                                    onPress={() => {
+
+
+                                      if (selected) {
+
+                                        setAssignments(prev =>
+                                          prev.filter(
+                                            a => a.driverId !== driver.driverId ||
+                                              a.truckId !== truck.id
+                                          )
+                                        )
+
+
+                                      } else {
+
+
+                                        setAssignments(prev => [
+
+                                          ...prev,
+
+                                          {
+
+                                            truckId: truck.id,
+
+                                            driverId: driver.driverId,
+
+                                            driverName: driver.fullName,
+
+
+                                            pickupDate: null,
+
+                                            deliveryDate: null,
+
+                                            pickupLocation: "",
+
+                                            deliveryLocation: "",
+
+
+                                            isDefault: false
+
+                                          }
+
+                                        ])
+
+
+                                      }
+
+
+                                    }}
+
+
+                                    style={{
+                                      marginTop: wp(1),
+                                      padding: wp(2),
+                                      borderRadius: 8,
+                                      borderWidth: 1,
+
+                                      backgroundColor: selected
+                                        ? 'rgba(76,175,80,.15)'
+                                        : 'transparent'
+
+                                    }}
+
+                                  >
+
+
+                                    <View style={{
+                                      flexDirection: 'row',
+                                      alignItems: 'center'
+                                    }}>
+
+
+                                      <Ionicons
+
+                                        name={
+                                          selected
+                                            ? 'checkbox'
+                                            : 'square-outline'
+                                        }
+                                        color={selected ? '#4CAF50' : '#ddd'}
+
+
+                                        size={18}
+
+                                      />
+
+
+                                      <ThemedText
+                                        style={{
+                                          marginLeft: wp(2)
+                                        }}
+                                      >
+                                        {driver.fullName}
+                                      </ThemedText>
+
+
+                                    </View>
+
+
+                                  </TouchableOpacity>
+
+
+                                )
+
+                              })
+
+                          }
+
+
+                          {/* Assignment details */}
+
+                          {assignments.some(
+                            a => a.truckId === truck.id
+                          ) && (
+
+                              <View style={{ marginTop: wp(3) }}>
+
+
+
+
+
+
+                                <LocationSelector
+
+                                  origin={assignmentOrigin}
+
+                                  destination={assignmentDestination}
+
+                                  setOrigin={(location) => {
+
+                                    setAssignments(prev =>
+                                      prev.map(a =>
+                                        a.truckId === locationAssigmentPick?.truckId
+                                          ? {
+                                            ...a,
+                                            pickupLocation: location
+                                          }
+                                          : a
+                                      )
                                     );
 
-                                    if (existingDriver) {
-                                      setSelectedDrivers(prev => prev.filter(d =>
-                                        `${d.driverId}-${d.truckId}-${d.role}` !== driverKey
-                                      ));
-                                    } else {
-                                      setSelectedDrivers(prev => [...prev, driver]);
-                                    }
+                                    setAssignmentOrigin(location);
+
                                   }}
+
+                                  setDestination={(location) => {
+
+                                    setAssignmentDestination(location);
+
+                                    if (locationAssigmentPick?.truckId) {
+
+                                      setAssignments(prev =>
+                                        prev.map(a =>
+                                          a.truckId === locationAssigmentPick.truckId
+                                            ? {
+                                              ...a,
+                                              deliveryLocation: location
+                                            }
+                                            : a
+                                        )
+                                      );
+
+                                    }
+
+                                  }}
+
+                                  dspFromLocation={assignmentDspFromLocation}
+                                  setDspFromLocation={setAssignmentDspFromLocation}
+
+                                  dspToLocation={assignmentDspToLocation}
+                                  setDspToLocation={setAssignmentDspToLocation}
+
+                                  locationPicKERdSP={assignmentLocationPicKERdSP}
+                                  setPickLocationOnMap={setAssignmentPickLocationOnMap}
+
+                                  distance={assignmentDistance}
+                                  duration={assignmentDuration}
+                                  durationInTraffic={assignmentDurationInTraffic}
+
+                                  iconColor={accent}
+                                />
+
+
+
+
+
+                                <TouchableOpacity
+                                  onPress={() => setPickupDateTruckId(truck.id)}
                                   style={{
-                                    padding: wp(2),
-                                    marginVertical: wp(0.5),
-                                    borderRadius: 6,
-                                    // backgroundColor: selectedDrivers.find(d => d.driverId === driver.driverId) ? '#E8F5E8' : '#F9F9F9',
                                     borderWidth: 1,
-                                    borderColor: selectedDrivers.find(d =>
-                                      `${d.driverId}-${d.truckId}-${d.role}` === `${driver.driverId}-${driver.truckId}-${driver.role}`
-                                    )
-      ? '#4CAF50'
-      : '#E0E0E0',
-    backgroundColor: selectedDrivers.find(d =>
-                                      `${d.driverId}-${d.truckId}-${d.role}` === `${driver.driverId}-${driver.truckId}-${driver.role}`
-                                    )
-      ? 'rgba(76, 175, 80, 0.15)'
-      : 'transparent',
-
-  }}
-
-
-                                  
+                                    borderColor: '#ddd',
+                                    borderRadius: 8,
+                                    padding: wp(3),
+                                    marginTop: wp(2),
+                                  }}
                                 >
-                                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Ionicons
-                                      name={selectedDrivers.find(d =>
-                                        `${d.driverId}-${d.truckId}-${d.role}` === `${driver.driverId}-${driver.truckId}-${driver.role}`
-                                      ) ? "checkbox" : "square-outline"}
-                                      size={16}
-                                      color={selectedDrivers.find(d =>
-                                        `${d.driverId}-${d.truckId}-${d.role}` === `${driver.driverId}-${driver.truckId}-${driver.role}`
-                                      ) ? '#4CAF50' : '#666'}
-                                      style={{ marginRight: wp(2) }}
-                                    />
-                                    <View style={{ flex: 1 }}>
-                                      <ThemedText style={{ fontWeight: '500', fontSize: 14 }}>{driver.fullName} </ThemedText>
-                                      <ThemedText style={{ fontSize: 12, color: '#666' }}>
-                                        {driver.role === 'main' ? 'Main Driver' :
-                                        driver.role === 'second_main' ? 'Second Main Driver' :
-                                        driver.role === 'backup' ? 'Backup Driver' : driver.role}
-                                      </ThemedText>
-                                    </View>
-                                  </View>
+                                  <ThemedText>
+                                    {
+                                      assignments.find(a => a.truckId === truck.id)?.pickupDate
+                                        ? new Date(
+                                          assignments.find(a => a.truckId === truck.id)!.pickupDate!
+                                        ).toLocaleDateString()
+                                        : 'Select Pickup Date'
+                                    }
+                                  </ThemedText>
                                 </TouchableOpacity>
-                              )}   )}
-                            </View>
-                        )  }
+
+                                {pickupDateTruckId === truck.id && (
+                                  <DateTimePicker
+                                    value={
+                                      assignments.find(a => a.truckId === truck.id)?.pickupDate
+                                        ? new Date(
+                                          assignments.find(a => a.truckId === truck.id)!.pickupDate!
+                                        )
+                                        : new Date()
+                                    }
+                                    mode="date"
+                                    display="default"
+                                    onChange={(event, selectedDate) => {
+                                      setPickupDateTruckId(null);
+
+                                      if (selectedDate) {
+                                        setAssignments(prev =>
+                                          prev.map(a =>
+                                            a.truckId === truck.id
+                                              ? {
+                                                ...a,
+                                                pickupDate: selectedDate.toISOString(),
+                                              }
+                                              : a
+                                          )
+                                        );
+                                      }
+                                    }}
+                                  />
+                                )}
 
 
 
+                                <TouchableOpacity
+                                  onPress={() => setDeliveryDateTruckId(truck.id)}
+                                  style={{
+                                    borderWidth: 1,
+                                    borderColor: '#ddd',
+                                    borderRadius: 8,
+                                    padding: wp(3),
+                                    marginTop: wp(2),
+                                  }}
+                                >
+                                  <ThemedText>
+                                    {
+                                      assignments.find(a => a.truckId === truck.id)?.deliveryDate
+                                        ? new Date(
+                                          assignments.find(a => a.truckId === truck.id)!.deliveryDate!
+                                        ).toLocaleDateString()
+                                        : 'Select Delivery Date'
+                                    }
+                                  </ThemedText>
+                                </TouchableOpacity>
 
+                                {deliveryDateTruckId === truck.id && (
+                                  <DateTimePicker
+                                    value={
+                                      assignments.find(a => a.truckId === truck.id)?.deliveryDate
+                                        ? new Date(
+                                          assignments.find(a => a.truckId === truck.id)!.deliveryDate!
+                                        )
+                                        : new Date()
+                                    }
+                                    mode="date"
+                                    display="default"
+                                    onChange={(event, selectedDate) => {
+                                      setDeliveryDateTruckId(null);
 
-                      </View>
-                    );
-                  })}
+                                      if (selectedDate) {
+                                        setAssignments(prev =>
+                                          prev.map(a =>
+                                            a.truckId === truck.id
+                                              ? {
+                                                ...a,
+                                                deliveryDate: selectedDate.toISOString(),
+                                              }
+                                              : a
+                                          )
+                                        );
+                                      }
+                                    }}
+                                  />
+                                )}
+
+                              </View>
+
+                            )}
+
+                        </View>
+
+                      )}
+
+                    </View>
+                  );
+                })}
 
               </>
             ) : currentRole?.accType === 'fleet' && loadVisibility === 'Public' ? (
@@ -1992,37 +2413,7 @@ for (const brokerId of selectedBrokers) {
         </ScrollView>)}
       </View>
 
-
     
-
-      {/* Professional User Personal Details Modal */}
-      {/* <KYCVerificationModal
-        visible={showPersonalDetailsModal && selectedPersonalType === 'professional'}
-        onClose={() => {
-          setShowPersonalDetailsModal(false);
-          setSelectedPersonalType(null);
-        }}
-        typeOfBrokerPersonal={typeOfBrokerPersonal}
-        setTypeOfBrokerPersonal={setTypeOfBrokerPersonal}
-        personalName={personalName}
-        setPersonalName={setPersonalName}
-        personalPhone={personalPhone}
-        setPersonalPhone={setPersonalPhone}
-        personalEmail={personalEmail}
-        setPersonalEmail={setPersonalEmail}
-        personalCountryCode={personalCountryCode}
-        setPersonalCountryCode={setPersonalCountryCode}
-        selectedBrokerPersonalDocuments={selectedBrokerPersonalDocuments}
-        setSelectedBrokerPersonalDocuments={setSelectedBrokerPersonalDocuments}
-        brokerPersonalFileType={brokerPersonalFileType}
-        setBrokerPersonalFileType={setBrokerPersonalFileType}
-        uploadingPersonalD={uploadingPersonalD}
-        onSave={handleUpdateProfessionalDetails}
-      /> */}
-
-  
-     
-
     </ScreenWrapper>
   );
 };
