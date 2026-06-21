@@ -118,7 +118,7 @@ const AddLoadDB = () => {
   const [selectedFleetTrucks, setSelectedFleetTrucks] = useState<any[]>([]);
 
   const [truckSearchQuery, setTruckSearchQuery] = useState('');
-  const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public'>('Private');
+  const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public' | 'Both'>('Private');
 
   // Broker search states
   const [selectedBrokers, setSelectedBrokers] = useState<string[]>([]);
@@ -133,7 +133,6 @@ const AddLoadDB = () => {
 
   // New fields for load requirements
   const [numberOfTrucks, setNumberOfTrucks] = useState('');
-  const [deliveryDate, setDeliveryDate] = useState('');
   const [fleetDriversFromTrucks, setFleetDriversFromTrucks] = useState<any[]>([]);
 
 
@@ -223,8 +222,15 @@ const AddLoadDB = () => {
   const [rate, setRate] = useState(defaultState.rate);
   const [rateexplantion, setRateExplanation] = useState(defaultState.rateexplantion);
   const [paymentTerms, setPaymentTerms] = useState(defaultState.paymentTerms);
-  const [requirements, setRequirements] = useState(defaultState.requirements);
-  const [loadingDate, setLoadingDate] = useState(defaultState.loadingDate);
+  const [requirements, setRequirements] = useState(defaultState.requirements)
+  
+  ;
+const [loadingDate, setLoadingDate] = useState(defaultState.loadingDate);
+const [showLoadingDatePicker, setShowLoadingDatePicker] = useState(false)
+
+const [deliveryDate, setDeliveryDate] = useState(defaultState.deliveryDate);
+const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
+
   const [additionalInfo, setAdditionalInfo] = useState(defaultState.additionalInfo);
   const [alertMsg, setAlertMsg] = useState(defaultState.alertMsg);
   const [fuelAvai, setFuelAvai] = useState(defaultState.fuelAvai);
@@ -540,13 +546,19 @@ const AddLoadDB = () => {
       // Use utility function for validation
       let validationErrors = [];
       try {
+        const validationTrucksNeeded = currentRole?.accType === 'fleet' && loadVisibility === 'Private'
+          ? selectedFleetTrucks
+          : currentRole?.accType === 'broker' && loadVisibility === 'Private'
+            ? selectedBrokerTrucks
+            : trucksNeeded;
+
         validationErrors = validateLoadForm("professional", {
           typeofLoad,
           origin,
           destination,
           rate,
           paymentTerms,
-          trucksNeeded,
+          trucksNeeded: validationTrucksNeeded,
           requirements,
           proofOfOrder: [...proofDocuments],
           proofOfOrderFileType: [...proofDocumentTypes],
@@ -575,19 +587,21 @@ const AddLoadDB = () => {
       }
 
 
-      // Additional validation for fleet users - check if they have selected trucks for private loads
-      if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
+      // Additional validation for fleet users - private and both loads need a private truck assignment.
+      if (currentRole?.accType === 'fleet' && (loadVisibility === 'Private' || loadVisibility === 'Both')) {
         if (selectedFleetTrucks.length === 0) {
           validationErrors.push('Select at least one truck from your fleet');
         }
-        // For private trucks, drivers are optional - fleet manager can assign later
-        // Check if selected drivers are actually assigned to selected trucks
-        const invalidDrivers = selectedDrivers.filter(driver =>
-          !selectedFleetTrucks.some(truck => truck.id === driver.truckId)
+        const invalidAssignments = assignments.filter(assignment =>
+          !selectedFleetTrucks.some(truck => truck.id === assignment.truckId)
         );
-        if (invalidDrivers.length > 0) {
-          validationErrors.push('Some selected drivers are not assigned to the selected trucks');
+        if (invalidAssignments.length > 0) {
+          validationErrors.push('Some assignments are not linked to the selected trucks');
         }
+      }
+
+      if (currentRole?.accType === 'fleet' && (loadVisibility === 'Public' || loadVisibility === 'Both') && trucksNeeded.length === 0) {
+        validationErrors.push('Select at least 1 truck requirement for the public load');
       }
 
       // Additional validation for broker selection - skip for broker users
@@ -658,6 +672,7 @@ const AddLoadDB = () => {
         alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
         return;
       }
+      const activeUser = user;
 
       let proofOfOerSub: string[] = []
       let loadImagesUrls: string[] = []
@@ -715,7 +730,246 @@ const AddLoadDB = () => {
         numberOfTrucks,
         deliveryDate,
         selectedBrokers,
-      }, user, expoPushToken);
+      }, activeUser, expoPushToken);
+
+      const roleAny = currentRole as any;
+      const cargoId = doc(collection(db, "Cargo")).id;
+      const fleetId = roleAny?.fleetId || null;
+      const brokerId = roleAny?.brokerId || roleAny?.userId || activeUser.uid;
+      const coordinator = {
+        id: roleAny?.userId || activeUser.uid,
+        fleetId,
+        name: activeUser.organisation || activeUser.displayName || "",
+        phoneNumber: activeUser.phoneNumber || ""
+      };
+      const assignmentDetails = assignments.map(assignment => {
+        const truck = selectedFleetTrucks.find(item => item.id === assignment.truckId);
+        const driver = fleetDrivers.find(item => item.driverId === assignment.driverId || item.id === assignment.driverId);
+
+        return {
+          cargoId,
+          truckId: assignment.truckId || "",
+          truckName: truck?.truckName || "",
+          registrationNumber: truck?.registrationNumber || "",
+          truckType: truck?.truckType || "",
+          truckCapacity: truck?.truckCapacity || "",
+          driverId: assignment.driverId || null,
+          driverDocId: driver?.docId || driver?.id || assignment.driverId || null,
+          driverName: assignment.driverName || driver?.fullName || null,
+          driverPhone: driver?.phoneNumber || driver?.phone || null,
+          role: driver?.role || assignment.role || (assignment.isDefault ? "main" : "assigned"),
+          pickupDate: assignment.pickupDate || loadingDate || null,
+          deliveryDate: assignment.deliveryDate || deliveryDate || null,
+          pickupLocation: assignment.pickupLocation || origin || null,
+          deliveryLocation: assignment.deliveryLocation || destination || null,
+          isDefault: Boolean(assignment.isDefault),
+          status: "pending",
+        };
+      });
+      const fleetTruckSummary = selectedFleetTrucks.map(truck => ({
+        truckId: truck.id,
+        truckName: truck.truckName || "",
+        registrationNumber: truck.registrationNumber || "",
+        truckType: truck.truckType || "",
+        truckCapacity: truck.truckCapacity || "",
+        truckStatus: "pending",
+        assignment: assignmentDetails.find(assignment => assignment.truckId === truck.id) || null,
+      }));
+      const assignmentSummary = assignmentDetails.map(assignment => ({
+        truckId: assignment.truckId,
+        truckName: assignment.truckName,
+        registrationNumber: assignment.registrationNumber,
+        truckType: assignment.truckType,
+        truckCapacity: assignment.truckCapacity,
+        driverId: assignment.driverId,
+        driverName: assignment.driverName,
+        driverPhone: assignment.driverPhone,
+        role: assignment.role,
+        pickupDate: assignment.pickupDate,
+        deliveryDate: assignment.deliveryDate,
+        pickupLocation: assignment.pickupLocation,
+        deliveryLocation: assignment.deliveryLocation,
+        status: assignment.status,
+      }));
+      const commonLoadData = {
+        ...loadData,
+        cargoId,
+        loadId: cargoId,
+        cargoStatus: "pending",
+        numberOfTrucks,
+        deliveryDate,
+        selectedBrokers,
+        coordinator,
+        assignmentCount: assignmentSummary.length,
+        assignmentSummary,
+        timeStamp: serverTimestamp(),
+      };
+      const writeFleetPrivateLoad = async () => {
+        if (!fleetId) return;
+
+        const fleetCargoPath = `fleets/${fleetId}/Cargo`;
+        await setDoc(doc(db, fleetCargoPath, cargoId), {
+          ...commonLoadData,
+          loadVisibility: "Private",
+          publicCargoId: loadVisibility === "Both" ? cargoId : null,
+          trucks: fleetTruckSummary,
+        });
+
+        for (const truck of selectedFleetTrucks) {
+          const truckAssignments = assignmentDetails.filter(assignment => assignment.truckId === truck.id);
+          const assignmentDocId = `${cargoId}_${truck.id}`;
+          const assignmentPayload = {
+            cargoId,
+            loadId: cargoId,
+            fleetId,
+            truckId: truck.id,
+            truckName: truck.truckName || "",
+            registrationNumber: truck.registrationNumber || "",
+            assignedDrivers: truckAssignments.map(assignment => ({
+              driverId: assignment.driverId,
+              driverDocId: assignment.driverDocId,
+              role: assignment.role,
+              fullName: assignment.driverName,
+              phoneNumber: assignment.driverPhone,
+              status: "pending",
+            })),
+            mainDriver: truckAssignments.find(assignment => assignment.role === "main")?.driverId || "",
+            pickupDate: truckAssignments[0]?.pickupDate || loadingDate || null,
+            deliveryDate: truckAssignments[0]?.deliveryDate || deliveryDate || null,
+            pickupLocation: truckAssignments[0]?.pickupLocation || origin || null,
+            deliveryLocation: truckAssignments[0]?.deliveryLocation || destination || null,
+            status: "pending",
+            acceptedBy: null,
+            createdAt: new Date(),
+            coordinator,
+          };
+
+          await addDocumentWithId(`${fleetCargoPath}/${cargoId}/assignments`, assignmentDocId, assignmentPayload);
+          await addDocumentWithId(`fleets/${fleetId}/assignments`, assignmentDocId, assignmentPayload);
+        }
+
+        for (const assignment of assignmentDetails.filter(item => item.driverDocId)) {
+          const driverCargoDocId = `${cargoId}_${assignment.driverId || "driver"}_${assignment.truckId}`;
+          await addDocumentWithId(`fleets/${fleetId}/Drivers/${assignment.driverDocId}/cargo`, driverCargoDocId, {
+            cargoId,
+            loadId: cargoId,
+            truckId: assignment.truckId,
+            truckName: assignment.truckName,
+            role: assignment.role,
+            status: "pending",
+            assignedAt: new Date(),
+            loadingDate,
+            pickupDate: assignment.pickupDate,
+            deliveryDate: assignment.deliveryDate,
+            pickupLocation: assignment.pickupLocation,
+            deliveryLocation: assignment.deliveryLocation,
+            origin,
+            destination,
+            loadVisibility: "Private",
+            coordinator,
+          });
+        }
+
+        for (const selectedBrokerId of selectedBrokers) {
+          await addDocumentWithId(`brokers/${selectedBrokerId}/loads`, `${cargoId}_${selectedBrokerId}`, {
+            loadId: cargoId,
+            cargoId,
+            loadStatus: "pending",
+            loadVisibility: "Private",
+            truckId: fleetTruckSummary[0]?.truckId || null,
+            truckName: fleetTruckSummary[0]?.truckName || null,
+            driverId: assignmentSummary[0]?.driverId || null,
+            driverName: assignmentSummary[0]?.driverName || null,
+            origin,
+            destination,
+            loadingDate,
+            deliveryDate,
+            assignmentSummary,
+            createdAt: new Date(),
+            coordinator,
+          });
+        }
+      };
+      const writePublicLoad = async () => {
+        await setDoc(doc(db, "Cargo", cargoId), {
+          ...commonLoadData,
+          loadVisibility: "Public",
+          privateFleetCargoId: currentRole?.accType === "fleet" && loadVisibility === "Both" ? cargoId : null,
+          trucks: currentRole?.accType === "fleet" ? fleetTruckSummary : [],
+        });
+      };
+      const writeBrokerPrivateLoad = async () => {
+        const trucks = selectedBrokerTrucks;
+        await setDoc(doc(db, `brokers/${brokerId}/Cargo`, cargoId), {
+          ...commonLoadData,
+          loadVisibility: "Private",
+          trucks: trucks.map(truck => ({
+            truckId: truck.truckId || "",
+            truckName: truck.truckName || "",
+            truckStatus: "pending",
+          })),
+        });
+
+        for (const truck of trucks) {
+          await addDocumentWithId(`fleets/${truck.fleetId}/fleetManagers/FLTMGR${truck.fleetId}/brokerLoads`, `${cargoId}_${truck.truckId}`, {
+            loadId: cargoId,
+            cargoId,
+            loadStatus: "pending",
+            loadVisibility: "Private",
+            truckId: truck.truckId,
+            truckName: truck.truckName,
+            brokerId,
+            brokerName: activeUser.organisation || activeUser.displayName || "Broker",
+            origin,
+            destination,
+            loadingDate,
+            deliveryDate,
+            assignmentSummary,
+            createdAt: new Date(),
+            coordinator,
+          });
+        }
+      };
+
+      if (currentRole?.accType === "fleet") {
+        if (loadVisibility === "Private" || loadVisibility === "Both") {
+          await writeFleetPrivateLoad();
+        }
+        if (loadVisibility === "Public" || loadVisibility === "Both") {
+          await writePublicLoad();
+          await notifyTrucksByFilters({
+            trucksNeeded,
+            loadItem: {
+              typeofLoad,
+              origin: origin?.description || "",
+              destination: destination?.description || "",
+              rate,
+              model: selectedModelType?.name || "Solid",
+              currency: selectedCurrency?.name || "USD",
+            },
+          });
+        }
+      } else if (currentRole?.accType === "broker" && loadVisibility === "Private") {
+        await writeBrokerPrivateLoad();
+      } else {
+        await writePublicLoad();
+        if (trucksNeeded.length > 0) {
+          await notifyTrucksByFilters({
+            trucksNeeded,
+            loadItem: {
+              typeofLoad,
+              origin: origin?.description || "",
+              destination: destination?.description || "",
+              rate,
+              model: selectedModelType?.name || "Solid",
+              currency: selectedCurrency?.name || "USD",
+            },
+          });
+        }
+      }
+
+      ToastAndroid.show('Trucks notified and load added successfully.', ToastAndroid.SHORT);
+      return;
 
 
       // Fleet-specific logic: If user is in a fleet and load is private, assign selected trucks and drivers
@@ -769,9 +1023,9 @@ const AddLoadDB = () => {
             deliveryDate: deliveryDate,
             createdAt: new Date(),
             coordinator: {
-              id: currentRole.userId,
-              name: user.organisation || "",
-              phoneNumber: user.phoneNumber || ""
+              id: roleAny?.userId || activeUser.uid,
+              name: activeUser.organisation || "",
+              phoneNumber: activeUser.phoneNumber || ""
             }
           };
 
@@ -820,9 +1074,9 @@ const AddLoadDB = () => {
             destination,
             loadVisibility: 'Private',
             coordinator: {
-              id: currentRole.userId,
-              name: user.organisation || "",
-              phoneNumber: user.phoneNumber || ""
+              id: roleAny?.userId || activeUser.uid,
+              name: activeUser.organisation || "",
+              phoneNumber: activeUser.phoneNumber || ""
             }
           });
         }
@@ -855,9 +1109,9 @@ const AddLoadDB = () => {
         const trucks = selectedBrokerTrucks;
 
         // 1������ Add Cargo to broker's subcollection and get the auto-generated cargoId
-        const brokerCargoRefPath = `brokers/${currentRole.userId}/loads`;
+        const brokerCargoRefPath = `brokers/${roleAny?.userId || activeUser.uid}/loads`;
 
-        const docRef = doc(collection(db, `brokers/${currentRole.userId}/loads`));
+        const docRef = doc(collection(db, `brokers/${roleAny?.userId || activeUser.uid}/loads`));
         const cargoId = docRef.id;
 
         await setDoc(docRef, {
@@ -882,17 +1136,17 @@ const AddLoadDB = () => {
             loadVisibility: 'Private',
             truckId: truck.truckId,
             truckName: truck.truckName,
-            brokerId: currentRole.userId,
-            brokerName: user.organisation || user.displayName || "Broker",
+            brokerId: roleAny?.userId || activeUser.uid,
+            brokerName: activeUser.organisation || activeUser.displayName || "Broker",
             origin: origin,
             destination: destination,
             loadingDate: loadingDate,
             deliveryDate: deliveryDate,
             createdAt: new Date(),
             coordinator: {
-              id: currentRole.userId,
-              name: user.organisation || user.displayName || "Broker",
-              phoneNumber: user.phoneNumber || ""
+              id: roleAny?.userId || activeUser.uid,
+              name: activeUser.organisation || activeUser.displayName || "Broker",
+              phoneNumber: activeUser.phoneNumber || ""
             }
           };
 
@@ -1083,6 +1337,91 @@ const AddLoadDB = () => {
                 value={loadingDate}
                 onChangeText={setLoadingDate}
               />
+
+
+
+          <ThemedText>
+  Loading date <ThemedText color="red">*</ThemedText>
+</ThemedText>
+
+<TouchableOpacity onPress={() => setShowLoadingDatePicker(true)}>
+  <Input
+    value={
+      loadingDate
+        ? new Date(loadingDate).toLocaleDateString()
+        : ""
+    }
+    placeholder="Select loading date"
+    editable={false}
+  />
+</TouchableOpacity>
+
+
+{showLoadingDatePicker && (
+  <DateTimePicker
+    value={
+      loadingDate
+        ? new Date(loadingDate)
+        : new Date()
+    }
+    mode="date"
+    display="default"
+    onChange={(event, selectedDate) => {
+      setShowLoadingDatePicker(false);
+
+      if (selectedDate) {
+        setLoadingDate(selectedDate.toISOString());
+      }
+    }}
+  />
+)}
+
+
+
+
+
+
+
+
+<ThemedText>
+  Delivery Date <ThemedText color="red">*</ThemedText>
+</ThemedText>
+
+<TouchableOpacity onPress={() => setShowDeliveryDatePicker(true)}>
+  <Input
+    value={
+      deliveryDate
+        ? new Date(deliveryDate).toLocaleDateString()
+        : ""
+    }
+    placeholder="Select delivery date"
+    editable={false}
+  />
+</TouchableOpacity>
+
+
+{showDeliveryDatePicker && (
+  <DateTimePicker
+    value={
+      deliveryDate
+        ? new Date(deliveryDate)
+        : new Date()
+    }
+    mode="date"
+    display="default"
+    onChange={(event, selectedDate) => {
+      setShowDeliveryDatePicker(false);
+
+      if (selectedDate) {
+        setDeliveryDate(selectedDate.toISOString());
+      }
+    }}
+  />
+)}
+
+
+
+
 
               <ThemedText>
                 Delivery Date<ThemedText color="red">*</ThemedText>
@@ -1659,12 +1998,43 @@ const AddLoadDB = () => {
                       All available trucks
                     </ThemedText>
                   </TouchableOpacity>
+
+                  {currentRole?.accType === 'fleet' && (
+                    <TouchableOpacity
+                      onPress={() => setLoadVisibility('Both')}
+                      style={{
+                        flex: 1,
+                        padding: wp(3),
+                        borderRadius: 8,
+                        backgroundColor: loadVisibility === 'Both' ? '#FFF3E0' : backgroundLight,
+                        borderWidth: 1,
+                        borderColor: loadVisibility === 'Both' ? '#FB8C00' : '#E0E0E0',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <Ionicons
+                        name="git-branch"
+                        size={20}
+                        color={loadVisibility === 'Both' ? '#FB8C00' : '#666'}
+                        style={{ marginBottom: wp(1) }}
+                      />
+                      <ThemedText style={{
+                        fontWeight: loadVisibility === 'Both' ? 'bold' : 'normal',
+                        color: loadVisibility === 'Both' ? '#FB8C00' : '#666'
+                      }}>
+                        Both
+                      </ThemedText>
+                      <ThemedText style={{ fontSize: 12, color: '#666', textAlign: 'center', marginTop: wp(1) }}>
+                        Fleet and public
+                      </ThemedText>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             )}
 
 
-            {currentRole?.accType === 'fleet' && loadVisibility === 'Private' ? (
+            {currentRole?.accType === 'fleet' && (loadVisibility === 'Private' || loadVisibility === 'Both') ? (
               // Fleet User: Private load - Select trucks and display their drivers
               <>
                 {/* Truck Search */}
@@ -1677,6 +2047,7 @@ const AddLoadDB = () => {
                       setSearchedTrucks(fleetTrucks);
                     } else {
                       const filtered = fleetTrucks.filter(truck =>
+                        truck.truckName?.toLowerCase().includes(text.toLowerCase()) ||
                         truck.registrationNumber?.toLowerCase().includes(text.toLowerCase()) ||
                         truck.truckType?.toLowerCase().includes(text.toLowerCase())
                       );
@@ -2195,6 +2566,69 @@ const AddLoadDB = () => {
                   );
                 })}
 
+                {loadVisibility === 'Both' && (
+                  <>
+                    <Divider />
+                    <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Public Truck Requirements</ThemedText>
+                    {trucksNeeded.map((truck, index) => (
+                      <View
+                        key={index}
+                        style={{
+                          position: 'relative',
+                          marginBottom: 10,
+                          padding: 14,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          borderRadius: 8,
+                          backgroundColor: backgroundLight
+                        }}
+                      >
+                        <ThemedText>Truck {index + 1}: {truck.truckType?.name}</ThemedText>
+                        <ThemedText>{truck.cargoArea?.name}</ThemedText>
+                        <ThemedText>{truck.capacity?.name}</ThemedText>
+                        <TouchableOpacity onPress={() => removeTruck(index)} style={{ padding: 5, zIndex: 1 }}>
+                          <Feather name="x" color={'red'} size={wp(4)} />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+
+                    <AddTruckDetails
+                      selectedTruckType={selectedTruckType}
+                      setSelectedTruckType={setSelectedTruckType}
+                      selectedCargoArea={selectedCargoArea}
+                      setSelectedCargoArea={setSelectedCargoArea}
+                      selectedTankerType={selectedTankerType}
+                      setSelectedTankerType={setSelectedTankerType}
+                      selectedTruckCapacity={selectedTruckCapacity}
+                      setSelectedTruckCapacity={setSelectedTruckCapacity}
+                      formData={formDataTruck}
+                      setFormData={setFormDataTruck}
+                      showCountries={showCountries}
+                      setShowCountries={setShowCountries}
+                      operationCountries={operationCountries}
+                      setOperationCountries={setOperationCountries}
+                    />
+
+                    <TouchableOpacity
+                      onPress={pushTruck}
+                      style={{
+                        borderWidth: 1,
+                        borderColor: 'gray',
+                        borderRadius: 6,
+                        paddingVertical: 6,
+                        paddingHorizontal: 29,
+                        alignSelf: 'flex-start',
+                        marginVertical: 10,
+                      }}
+                    >
+                      <ThemedText style={{ color: 'gray', fontSize: 14 }}>
+                        Select {trucksNeeded.length <= 0 ? "Truck" : "another"}
+                      </ThemedText>
+                    </TouchableOpacity>
+                  </>
+                )}
+
               </>
             ) : currentRole?.accType === 'fleet' && loadVisibility === 'Public' ? (
               // Fleet User: Public load - Show truck requirements (will be visible to all trucks)
@@ -2409,7 +2843,7 @@ const AddLoadDB = () => {
               <Button onPress={handleSubmit} title={isSubmitting ? "Submiting..." : "Submit"} disabled={isSubmitting} loading={isSubmitting} colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{ borderWidth: 1, borderColor: accent }} />
             </View>
           </View>
-
+            <View style={{height:15}}/>
         </ScrollView>)}
       </View>
 

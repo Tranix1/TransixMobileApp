@@ -307,6 +307,7 @@ export const getDefaultFormState = () => ({
     paymentTerms: "",
     requirements: "",
     loadingDate: "",
+    deliveryDate: "",
     additionalInfo: "",
     alertMsg: "",
     fuelAvai: "",

@@ -119,6 +119,7 @@ export const RateInput: React.FC<RateInputProps> = ({
                         value={rate}
                         onChangeText={setRate}
                         style={{ height: 45.5 }}
+                        keyboardType='numeric'
                     />
                 </View>
                 <View style={{ width: wp(28), marginLeft: wp(2) }}>
