@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { wp, hp } from '@/constants/common';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { collection, query, where, getDocs, doc, deleteDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, deleteDoc, serverTimestamp, arrayUnion,setDoc } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import AccentRingLoader from '@/components/AccentRingLoader';
 import { deleteDocument, updateDocument } from '@/db/operations';
@@ -356,17 +356,25 @@ const handleSearch = (text: string) => {
                 fleetName: currentRole.companyName,
                 status: "pending",
                 invitedAt: Date.now(),
-
+                role :"fleet",
+                userRole :"driver"
             };
 
             // Update each selected driver
             await Promise.all(selectedDrivers.map(async (driver) => {
                 await updateDocument('personalData', driver.userId, {
-                    accesibleFleets: arrayUnion(fleetUpdate), // Use arrayUnion to avoid overwriting existing data
+                        accesibleFleets: arrayUnion(  { ...fleetUpdate,driverId : `DRV_${driver?.userId}` }  ), // Use arrayUnion to avoid overwriting existing data
                         updatedAt: serverTimestamp(),
 
                 });
+
+                if (!currentRole.fleetId) return
+                 const driverRef = doc(db, 'fleets', currentRole.fleetId, 'Drivers', `DRV_${driver.userId}` );
+                  await setDoc(driverRef, { ...fleetUpdate,driverId : `DRV_${driver?.userId}` });
+                
             }));
+
+
 
             setShowAddDriver(false);
             setSelectedDrivers([]); // Clear selection

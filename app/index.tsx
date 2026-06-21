@@ -181,7 +181,6 @@ export default function Index() {
     );
   }
 
-
   return (
     <ScreenWrapper>
       <View style={{ flex: 1, backgroundColor: background }}>

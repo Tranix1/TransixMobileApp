@@ -13,6 +13,8 @@ import { fetchDocuments, updateDocument } from '@/db/operations';
 import { Ionicons } from '@expo/vector-icons';
 import { hp, wp } from '@/constants/common';
 import { Alert } from 'react-native';
+import { db } from '@/db/fireBaseConfig';
+import { query, collection, getDocs, doc, updateDoc, getDoc, where } from 'firebase/firestore';
 
 interface CargoItem {
     id: string;
@@ -46,94 +48,45 @@ function Jobs() {
 
     // Driver-specific state
     const [driverId, setDriverId] = useState<string | null>(null);
-    console.log("Driver ID:", driverId);
+    const [assigmentDriver, setAssigmentDriver] = useState<any[]>([]);
+
     const [fleetId, setFleetId] = useState<string | null>(null);
     const [assignedCargo, setAssignedCargo] = useState<CargoItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'completed' | 'accepted' | 'rejected'>('active');
     const [expandedCargo, setExpandedCargo] = useState<string | null>(null);
-    // Get driver info from AsyncStorage
-    useEffect(() => {
-        const getDriverInfo = async () => {
-            try {
-                const storedRole = await AsyncStorage.getItem('currentRole');
-                if (storedRole) {
-                    const parsedRole = JSON.parse(storedRole);
-                    console.log("Parsed Role from AsyncStorage:", parsedRole);
-                    if (parsedRole.userRole === 'driver' && parsedRole.driverId) {
-                        setDriverId(parsedRole.driverId);
-                        setFleetId(parsedRole.fleetId);
-                    } else {
-                        console.warn("Current role is not 'driver' or missing driverId");
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching driver info:", error);
-            }
-        };
 
-        getDriverInfo();
-    }, []);
 
-    // Fetch assigned cargo for the driver
+
+
+
+
     useEffect(() => {
         const fetchAssignedCargo = async () => {
-            if (!driverId || !fleetId) return;
+            // Ensure you have both fleetId and the logged-in user's ID
+            if (!currentRole.fleetId || !user?.uid) return;
 
             try {
                 setLoading(true);
-                // Fetch cargo assignments for this driver
-                const assignmentsResult = await fetchDocuments(`fleets/${fleetId}/Drivers/${driverId}/cargo`, 100);
 
-                if (assignmentsResult && assignmentsResult.data && Array.isArray(assignmentsResult.data)) {
-                    const cargoItems: CargoItem[] = [];
+                // Query: Get all assignments for the fleet where the driver is assigned
+                // Note: 'assignedDrivers' is an array of objects. 
+                // Firestore supports array-contains if we check the whole object, 
+                // but for simplicity, ensure your query targets the collection correctly.
+                const q = query(
+                    collection(db, `fleets/${currentRole.fleetId}/assignments`),
+                    where("driverIds", "array-contains", `DRV_${user.uid}` ) // Efficient server-side filter
+                );
 
-                    for (const assignment of assignmentsResult.data) {
-                         // Fetch the full load data from the correct collection based on loadVisibility
-                         try {
-                             let loadData;
-                             if (assignment.loadVisibility === 'Private') {
-                                 // Fetch from fleet-specific Cargo collection
-                                 loadData = await fetchDocuments(`fleets/${fleetId}/Cargo`, 1, undefined, [
-                                     { field: 'cargoId', operator: '==', value: assignment.cargoId }
-                                 ]);
-                             } else {
-                                 // Fetch from public Cargo collection
-                                 loadData = await fetchDocuments('Cargo', 1, undefined, [
-                                     { field: 'cargoId', operator: '==', value: assignment.cargoId }
-                                 ]);
-                             }
+                const snapshot = await getDocs(q);
+                const myAssignments = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
 
-                             const fullLoadData = loadData.data && loadData.data.length > 0 ? loadData.data[0] : null;
+                setAssignedCargo(myAssignments as any);
 
-                            cargoItems.push({
-                                id: assignment.id,
-                                cargoId: assignment.cargoId,
-                                truckId: assignment.truckId,
-                                truckName: assignment.truckName,
-                                role: assignment.role,
-                                status: assignment.status || 'pending',
-                                assignedAt: assignment.assignedAt,
-                                loadData: fullLoadData
-                            });
-                        } catch (error) {
-                            console.error(`Error fetching load data for cargo ${assignment.cargoId}:`, error);
-                            // Still add the assignment even if load data fails
-                            cargoItems.push({
-                                id: assignment.id,
-                                cargoId: assignment.cargoId,
-                                truckId: assignment.truckId,
-                                truckName: assignment.truckName,
-                                role: assignment.role,
-                                status: assignment.status || 'pending',
-                                assignedAt: assignment.assignedAt,
-                                loadData: null
-                            });
-                        }
-                    }
 
-                    setAssignedCargo(cargoItems);
-                }
             } catch (error) {
                 console.error("Error fetching assigned cargo:", error);
             } finally {
@@ -142,31 +95,36 @@ function Jobs() {
         };
 
         fetchAssignedCargo();
-    }, [driverId, fleetId]);
+    }, [currentRole.fleetId, user?.uid]);
 
-    const checkAuth = (theAction?: () => void) => {
-        if (!isAuthenticated) {
-            setDspCreateAcc(true);
-            return;
-        }
+    // 2. Updated Update Function
+    const updateCargoStatus = async (cargoId: string, assignmentDocId: string, newStatus: string) => {
+        try {
+            if (!user?.uid) return;
 
-        if (needsProfileSetup) {
-            router.push({ pathname: '/Account/Profile', params: { operation: 'create' } });
-            return;
-        }
+            // You need to update the specific driver's status inside the array
+            // Or maintain a sub-collection structure. 
+            // Based on your previous code, let's target the assignment document:
+            const docRef = doc(db, `fleets/${currentRole.fleetId}/assignments`, assignmentDocId);
 
-        if (needsEmailVerification) {
-            setDspVerifyAcc(true);
-            return;
-        }
+            // Fetch current doc to modify the specific driver in the array
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const updatedDrivers = data.assignedDrivers.map((d: any) =>
+                    d.driverId === user.uid ? { ...d, status: newStatus } : d
+                );
 
-        // User is authenticated and verified
-        if (typeof theAction === 'function') {
-            theAction();
-        } else {
-            setDspMenu(true);
+                await updateDoc(docRef, { assignedDrivers: updatedDrivers });
+
+                // Refresh list
+                Alert.alert('Success', `Job status updated to ${newStatus}`);
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to update.');
         }
     };
+
 
     const getFilteredCargo = () => {
         return assignedCargo.filter(cargo => cargo.status === activeTab);
@@ -228,8 +186,8 @@ function Jobs() {
                         <Ionicons name="person" size={16} color={accent} />
                         <ThemedText style={styles.detailText}>
                             Role: {cargo.role === 'main' ? 'Main Driver' :
-                                   cargo.role === 'second_main' ? 'Second Main Driver' :
-                                   'Backup Driver'}
+                                cargo.role === 'second_main' ? 'Second Main Driver' :
+                                    'Backup Driver'}
                         </ThemedText>
                     </View>
 
@@ -475,109 +433,10 @@ function Jobs() {
         }
     };
 
-    const updateCargoStatus = async (cargoId: string, driverId: string, newStatus: 'active' | 'completed' | 'rejected' | 'accepted') => {
-        try {
-            // Update the driver's cargo assignment status
-            const updateData = {
-                status: newStatus,
-                updatedAt: new Date().toISOString(),
-                ...(newStatus === 'accepted' && { acceptedAt: new Date().toISOString() }),
-                ...(newStatus === 'completed' && { completedAt: new Date().toISOString() }),
-                ...(newStatus === 'rejected' && { rejectedAt: new Date().toISOString() }),
-            };
-
-            await updateDocument(`fleets/${fleetId}/Drivers/${driverId}/cargo`, cargoId, updateData);
-
-            // If accepting a pending job, also update the assignment status
-            if (newStatus === 'accepted') {
-                // Find the assignment in the cargo collection
-                const assignmentsResult = await fetchDocuments(`fleets/${fleetId}/Cargo/${cargoId}/assignments`, 10);
-                if (assignmentsResult.data) {
-                    const driverAssignment = assignmentsResult.data.find((assignment: any) =>
-                        assignment.assignedDrivers?.some((driver: any) => driver.driverId === driverId)
-                    );
-
-                    if (driverAssignment) {
-                        // Update the specific driver's status in the assignment
-                        const updatedDrivers = driverAssignment.assignedDrivers.map((driver: any) => {
-                            if (driver.driverId === driverId) {
-                                return { ...driver, status: 'accepted' };
-                            }
-                            return driver;
-                        });
-
-                        await updateDocument(`fleets/${fleetId}/Cargo/${cargoId}/assignments`, driverAssignment.id, {
-                            assignedDrivers: updatedDrivers,
-                            status: 'accepted',
-                            acceptedBy: driverId,
-                            updatedAt: new Date().toISOString()
-                        });
-                    }
-                }
-            }
-
-            // Refresh the data
-            if (driverId && fleetId) {
-                const assignmentsResult = await fetchDocuments(`fleets/${fleetId}/Drivers/${driverId}/cargo`, 100);
-                if (assignmentsResult && assignmentsResult.data && Array.isArray(assignmentsResult.data)) {
-                    const cargoItems: CargoItem[] = [];
-
-                    for (const assignment of assignmentsResult.data) {
-                         try {
-                             let loadData;
-                             if (assignment.loadVisibility === 'Private') {
-                                 // Fetch from fleet-specific Cargo collection
-                                 loadData = await fetchDocuments(`fleets/${fleetId}/Cargo`, 1, undefined, [
-                                     { field: 'cargoId', operator: '==', value: assignment.cargoId }
-                                 ]);
-                             } else {
-                                 // Fetch from public Cargo collection
-                                 loadData = await fetchDocuments('Cargo', 1, undefined, [
-                                     { field: 'cargoId', operator: '==', value: assignment.cargoId }
-                                 ]);
-                             }
-
-                             const fullLoadData = loadData.data && loadData.data.length > 0 ? loadData.data[0] : null;
-
-                            cargoItems.push({
-                                id: assignment.id,
-                                cargoId: assignment.cargoId,
-                                truckId: assignment.truckId,
-                                truckName: assignment.truckName,
-                                role: assignment.role,
-                                status: assignment.status || 'pending',
-                                assignedAt: assignment.assignedAt,
-                                loadData: fullLoadData
-                            });
-                        } catch (error) {
-                            console.error(`Error fetching load data for cargo ${assignment.cargoId}:`, error);
-                            cargoItems.push({
-                                id: assignment.id,
-                                cargoId: assignment.cargoId,
-                                truckId: assignment.truckId,
-                                truckName: assignment.truckName,
-                                role: assignment.role,
-                                status: assignment.status || 'pending',
-                                assignedAt: assignment.assignedAt,
-                                loadData: null
-                            });
-                        }
-                    }
-
-                    setAssignedCargo(cargoItems);
-                }
-            }
-
-            Alert.alert('Success', `Job status updated to ${newStatus}`);
-        } catch (error) {
-            console.error('Error updating cargo status:', error);
-            Alert.alert('Error', 'Failed to update job status. Please try again.');
-        }
-    };
 
     return (
         <View style={[styles.container, { backgroundColor: background }]}>
-            <CustomHeader onPressMenu={() => checkAuth()} currentRole={currentRole} />
+            <CustomHeader pageTitle="Assignments" />
 
             <View style={styles.content}>
                 {/* Status Tabs */}
@@ -635,8 +494,8 @@ function Jobs() {
                                 </ThemedText>
                                 <ThemedText style={styles.emptyStateSubtext}>
                                     {activeTab === 'pending' ? 'New assignments will appear here' :
-                                     activeTab === 'active' ? 'Active jobs will be shown here' :
-                                     'Completed jobs will appear here'}
+                                        activeTab === 'active' ? 'Active jobs will be shown here' :
+                                            'Completed jobs will appear here'}
                                 </ThemedText>
                             </View>
                         )}
@@ -644,27 +503,7 @@ function Jobs() {
                 )}
             </View>
 
-            {/* Authentication Modals */}
-            <AuthStatusModal
-                visible={dspCreateAcc}
-                onClose={() => setDspCreateAcc(false)}
-                user={user}
-                type="create"
-            />
 
-            <AuthStatusModal
-                visible={dspVerifyAcc}
-                onClose={() => setDspVerifyAcc(false)}
-                user={user}
-                type="verify"
-            />
-
-            <UserMenuModal
-                visible={dspMenu}
-                onClose={() => setDspMenu(false)}
-                user={user}
-                onProfileUpdate={updateUserProfile}
-            />
         </View>
     );
 }

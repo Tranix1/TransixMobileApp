@@ -154,7 +154,7 @@ const filteredFleets =
 
     // }
 
-    const handleFleetDecision = async (fleet: any, decision: 'active' | 'declined') => {
+    const handleDriverDecision = async (fleet: any, decision: 'active' | 'declined') => {
     try {
         if(user?.uid){
 
@@ -181,13 +181,13 @@ const filteredFleets =
                 // Add any other default fields needed
             }, { merge: true });
 
-           const contactDetails={
+           const contactDetails={   
                 userName : user?.displayName ,
                 email : user?.email ,
                 phoneNumber : user?.phoneNumber ,
                 photoUrl : user?.photoURL ,
                 userId : user?.uid ,    
-                role : "Driver" ,
+                userRole : "driver" ,
                 status : "active",
             }
 
@@ -223,14 +223,15 @@ const filteredFleets =
 
 
 
-    const handleFleetSelect = async (fleet: any) => {
+    const handleFleetSelect = async (fleet: any) => {    
+
         if (!fleet) return;
 
         const fleetRole = {
             role: 'fleet' as const,
             fleetId: fleet.fleetId,
             companyName: fleet.companyName,
-            userRole: fleet.role || 'owner',
+            userRole: fleet.userRole || 'owner',
             accType: 'fleet' as const,
             driverId: fleet.driverId || null,
             fleetMainAdminId: fleet.fleetMainAdminId || null,
@@ -238,11 +239,12 @@ const filteredFleets =
             fleetDispatcherId: fleet.fleetDispatcherId || null,
         };
 
-        setCurrentRole(fleetRole as any);
+    (fleetRole as any);
         await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
-        await router.replace('/');
+        setCurrentRole(fleetRole as any)
+        router.replace('/');
     };
-
+    
     if (!user) {
         return (
             <View style={styles.centered}>
@@ -385,10 +387,10 @@ const filteredFleets =
 
     <View>
 
-        {filteredFleets.map((fleet) => (
+        {filteredFleets.map((driver) => (
 
             <View
-                key={fleet.fleetId}
+                key={driver.fleetId}
                 style={[
                     styles.sectionCard,
                     {
@@ -409,6 +411,8 @@ const filteredFleets =
 
                     <TouchableOpacity
                         // onPress={() => fleetProfile(fleet)}`
+                            onPress={() => driver.status === 'active' && handleFleetSelect(driver)}
+
                         style={{flex:1}}
                     >
 
@@ -418,7 +422,7 @@ const filteredFleets =
                                 fontSize:wp(4)
                             }}
                         >
-                            {fleet.fleetName}
+                            {driver.fleetName}
                         </ThemedText>
 
 
@@ -438,9 +442,9 @@ const filteredFleets =
                     <View
                         style={{
                             backgroundColor:
-                                fleet.status === 'pending'
+                                driver.status === 'pending'
                                 ? '#FFF3E0'
-                                : fleet.status === 'active'
+                                : driver.status === 'active'
                                 ? '#E8F5E9'
                                 : '#FFEBEE',
                             paddingHorizontal:wp(2),
@@ -454,14 +458,14 @@ const filteredFleets =
                                 fontSize:11,
                                 fontWeight:'700',
                                 color:
-                                fleet.status === 'pending'
+                                driver.status === 'pending'
                                 ? '#EF6C00'
-                                : fleet.status === 'active'
+                                : driver.status === 'active'
                                 ? '#2E7D32'
                                 : '#C62828'
                             }}
                         >
-                            {fleet.status.toUpperCase()}
+                            {driver.status.toUpperCase()}
                         </ThemedText>
 
                     </View>
@@ -471,7 +475,7 @@ const filteredFleets =
 
 
 
-                {fleet.status === 'pending' && (
+                {driver.status === 'pending' && (
 
                     <View
                         style={{
@@ -482,7 +486,7 @@ const filteredFleets =
                     >
 
                         <TouchableOpacity
-                            onPress={() =>handleFleetDecision(fleet,'declined')}
+                            onPress={() =>handleDriverDecision(driver,'declined')}
                             style={{
                                 flex:1,
                                 padding:wp(2),
@@ -502,7 +506,7 @@ const filteredFleets =
 
 
                         <TouchableOpacity
-                            onPress={() =>handleFleetDecision(fleet,'active')}
+                            onPress={() =>handleDriverDecision(driver,'active')}
                             style={{
                                 flex:1,
                                 padding:wp(2),
