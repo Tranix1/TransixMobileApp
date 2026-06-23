@@ -133,7 +133,7 @@ function AddTrucks() {
       selectedCargoArea?.name === "Tanker" && !selectedTankerType && "Select Type of Tanker",
       !selectedTruckCapacity && "Select Truck Capacity",
       operationCountries.length <= 0 && "Select the countries where the truck has permits.",
-      (!gitImage || gitImage.length === 0) && "Upload GIT Certificate",
+      // (!gitImage || gitImage.length === 0) && "Upload GIT Certificate",
       (!truckNumberPlate || truckNumberPlate.length === 0) && "Upload Number Plate image",
       (!selectedProofOfOwnerShip || selectedProofOfOwnerShip.trim() === '') && (!selectedTruckLease || selectedTruckLease.length === 0) && "Enter Ownership details or upload Ownership document",
       !truckType && "Select Truck Type (Private/Public)",
@@ -306,22 +306,11 @@ function AddTrucks() {
 
           </View>
 
-          <ThemedText style={{ marginTop: wp(4), fontSize: 16, fontWeight: 'bold', fontStyle: 'italic', }}>
-            Truck Type
-          </ThemedText>
+        
 
-          <HorizontalTickComponent
-            data={[{ topic: "Private", value: "Private" }, { topic: "Public", value: "Public" }]}
-            condition={truckType}
-            onSelect={setTruckType}
-          />
-          <ThemedText style={{ fontSize: 12, opacity: 0.8, fontWeight: 'bold', color: truckType === 'Private' ? "#1E90FF" : "#32CD32" }}>
-            {truckType === 'Private'
-              ? 'Private: Visible only to truck owner and assigned brokers'
-              : 'Public: Visible to everyone'
-            }
+           <ThemedText style={{ marginTop: wp(4), fontSize: 16, fontWeight: 'bold', fontStyle: 'italic', }}>
+            Truck Details
           </ThemedText>
-
 
           <View style={{
 
@@ -591,7 +580,7 @@ function AddTrucks() {
                     onPress={() => selectImageNoCrop((image) => setGitImage([image]))}
                     style={{ height: wp(27), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                     <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
-                    <ThemedText style={{ fontSize: 13.5, fontWeight: "bold" }} color={icon + "4c"}>GIT Insuarance<ThemedText color="red">*</ThemedText></ThemedText>
+                    <ThemedText style={{ fontSize: 13.5, fontWeight: "bold" }} color={icon + "4c"}>GIT Insuarance</ThemedText>
                   </TouchableOpacity>}
                 </View>
 
@@ -621,7 +610,7 @@ function AddTrucks() {
                     onPress={() => selectImageWithCrop((image) => setTruckThirdPlate([image]))}
                     style={{ height: wp(27), backgroundColor: background, alignItems: 'center', justifyContent: 'center', borderRadius: wp(4) }}>
                     <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
-                    <ThemedText style={{ fontSize: 13.5, fontWeight: "bold" }} color={icon + "4c"}>Third Plate<ThemedText color="red">*</ThemedText></ThemedText>
+                    <ThemedText style={{ fontSize: 13.5, fontWeight: "bold" }} color={icon + "4c"}>Third Plate</ThemedText>
                   </TouchableOpacity>}
                 </View>
               </ScrollView>

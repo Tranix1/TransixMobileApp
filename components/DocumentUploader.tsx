@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Image, TouchableOpacity,ToastAndroid } from 'react-native';
 import { ThemedText } from './ThemedText'; // your custom text component
 import { hp, wp } from "@/constants/common";
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 interface DocumentUploaderProps {
   documents: any;
@@ -23,6 +24,9 @@ buttonTiitle,
 disabled,
 toastMessage
 }) => {
+        const background = useThemeColor('background');
+        const backgroundLight = useThemeColor("backgroundLight")
+        const icon = useThemeColor("icon")
     
 
   return documents ? (
@@ -30,15 +34,16 @@ toastMessage
       style={{
         width: wp(45),
         alignSelf: 'center',
-        backgroundColor: '#f9f9f9',
+        backgroundColor: backgroundLight,
         borderRadius: 8,
-        padding: 10,
+        padding: 6,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 2,
         elevation: 2,
         marginBottom: 10,
+        paddingHorizontal:10
       }}
     >
       {documents.name.toLowerCase().endsWith('.pdf') ? (
@@ -48,7 +53,7 @@ toastMessage
               justifyContent: 'center',
               alignItems: 'center',
               height: wp(10),
-              backgroundColor: '#e0f2f1',
+              backgroundColor: backgroundLight,
               borderRadius: 8,
             }}
           >
@@ -65,7 +70,7 @@ toastMessage
             style={{
               marginTop: 8,
               textAlign: 'center',
-              fontSize: 13,
+              fontSize: 12,
               color: '#004d40',
               fontWeight: '600',
             }}
@@ -75,6 +80,7 @@ toastMessage
         </>
       ) : (
         <>
+        <ThemedText style={{textAlign:"center" ,color:icon}} type='tiny'> {buttonTiitle} </ThemedText>
           <Image
             source={{ uri: documents.uri }}
             style={{
@@ -88,9 +94,8 @@ toastMessage
             style={{
               marginTop: 8,
               textAlign: 'center',
-              fontSize: 13,
-              color: '#004d40',
-              fontWeight: '600',
+              fontSize: 12,
+              // fontWeight: '600',`
             }}
           >
             {documents.name}
@@ -138,7 +143,6 @@ toastMessage
           {buttonTiitle}
         </ThemedText>
       </TouchableOpacity>
-      <ThemedText></ThemedText>
     </View>
   );
 };

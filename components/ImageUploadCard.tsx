@@ -20,7 +20,7 @@ interface ImageUploadCardProps {
   successMessage: string;
     }
 
-const ImageUploadCard: React.FC<ImageUploadCardProps> = ({ 
+const   ImageUploadCard: React.FC<ImageUploadCardProps> = ({ 
   image, 
   setImage, 
   selectImage, 
@@ -55,7 +55,7 @@ const borderColor = `${icon}4c`;
           >
             <Ionicons name="camera" size={40} color={borderColor} />
             <ThemedText style={styles.buttonText} color={borderColor}>
-              Take Photo<ThemedText color="red">*</ThemedText>
+              {label} { (label === "National ID" ) ||   (label === "Driver's License")?<ThemedText color="red">*</ThemedText>:null}
             </ThemedText>
           </TouchableOpacity>
         </>

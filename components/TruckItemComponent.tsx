@@ -7,9 +7,9 @@ import { ThemedText } from './ThemedText'
 import { Image } from 'expo-image'
 import { FontAwesome5, FontAwesome6, Fontisto, Octicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
-import { auth, db } from '@/db/fireBaseConfig'
+import { auth,  } from '@/db/fireBaseConfig'
 
-const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contracts, fleetId }: { truck?: Truck, truckContract?: Contracts, fleetId?: string }) => {
+const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contracts,  }: { truck?: Truck, truckContract?: Contracts,  }) => {
     const backgroundLight = useThemeColor('backgroundLight')
     const background = useThemeColor('background')
     const coolGray = useThemeColor('coolGray')
@@ -19,13 +19,12 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
 
     const placeholder = require('@/assets/images/failedimage.jpg')
 
-
     return (
-        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id, dspDetails: "false", fleetId: fleetId ||truck.fleetId || undefined } })} style={[styles.container, { backgroundColor: background, borderColor: backgroundLight }]}>
+        <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id, dspDetails: "false", fleetId: truck.fleetId || undefined } })} style={[styles.container, { backgroundColor: background, borderColor: backgroundLight }]}>
             <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truck.imageUrl }} style={styles.image} />
             <View style={styles.detailsContainer}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <ThemedText type='subtitle' numberOfLines={1} style={[styles.title, { color: textColor, flex: 1 }]}>{truck.CompanyName || 'Unknown Company'}</ThemedText>
+                    <ThemedText type='subtitle' numberOfLines={1} style={[styles.title, { color: textColor, flex: 1 }]}>{truck.truckName || 'Unamed Truck'}</ThemedText>
 
                 </View>
                 {/* ADD THE CONDITION HERE!!!!! */}

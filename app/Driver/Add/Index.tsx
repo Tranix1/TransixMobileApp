@@ -30,7 +30,7 @@ export default function AddDriver() {
 
     const [fullName, setFullName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
-    const [selfieImage , setSelfieImage]= useState<ImagePickerAsset | null>(null);
+    const [selfieImage, setSelfieImage] = useState<ImagePickerAsset | null>(null);
     const [driverLicense, setDriverLicense] = useState<ImagePickerAsset | null>(null);
     const [nationalId, setNationalId] = useState<ImagePickerAsset | null>(null);
     const [passport, setPassport] = useState<ImagePickerAsset | null>(null);
@@ -45,8 +45,7 @@ export default function AddDriver() {
 
 
     const { expoPushToken } = usePushNotifications();
-
-
+    
     const handleAddDriver = async () => {
 
         if (!user?.uid) {
@@ -54,7 +53,7 @@ export default function AddDriver() {
             return;
         }
 
-        if (!fullName.trim() || !phoneNumber.trim() || !driverLicense || !passport || !internationalPermit) {
+        if (!fullName.trim() || !phoneNumber.trim() || !driverLicense || !selfieImage || !nationalId) {
             ToastAndroid.show('Please fill all required fields', ToastAndroid.SHORT);
             return;
         }
@@ -77,7 +76,7 @@ export default function AddDriver() {
             }
             const nationalIdUrl = await uploadImage(nationalId as any, "NationalIds", () => { }, "Uploading national ID");
 
-              if (!nationalIdUrl) {
+            if (!nationalIdUrl) {
                 ToastAndroid.show('Failed to upload driver license', ToastAndroid.SHORT);
                 return;
             }
@@ -91,7 +90,7 @@ export default function AddDriver() {
             const medicalCertUrl = medicalCertificate ? await uploadImage(medicalCertificate, "MedicalCertificates", () => { }, "Uploading medical certificate") : null;
 
             const proofOfResidenceUrl = proofOfResidence ? await uploadImage(proofOfResidence, "ProofOfResidences", () => { }, "Uploading proof of residence") : null;
-         
+
             const driverVerificationTiers = getDriverLevel({
                 nationalIdUrl,
                 driverLicenseUrl: licenseUrl,
@@ -109,7 +108,7 @@ export default function AddDriver() {
             const driverData = {
                 fullName: fullName.trim(),
                 phoneNumber: phoneNumber.trim(),
-                selfieImage : selfieImageUrl,
+                selfieImage: selfieImageUrl,
                 nationalIdUrl: nationalIdUrl,
                 driverLicenseUrl: licenseUrl,
                 passportUrl: passportUrl,
@@ -122,9 +121,9 @@ export default function AddDriver() {
                 createdAt: new Date().toISOString(),
                 status: 'active',
                 expoPushToken: expoPushToken,
-                updatedAt: new Date().toISOString() ,
-                driverVerificationTier : driverVerificationTiers,
-                email : user?.email
+                updatedAt: new Date().toISOString(),
+                driverVerificationTier: driverVerificationTiers,
+                email: user?.email
             };
 
             // Add to Fleet collection under fleetId as subcollection with fixed ID
@@ -138,7 +137,7 @@ export default function AddDriver() {
             });
 
             ToastAndroid.show('Driver added successfully', ToastAndroid.SHORT);
-            router.back();  
+            router.back();
 
         } catch (error) {
             console.error('Error adding driver:', error);
@@ -263,23 +262,23 @@ export default function AddDriver() {
 
 
 
-                      {!selfieImage && <TouchableOpacity
-    onPress={() => {
-        takePhoto((image) => {setSelfieImage(image);});
-    }}
-    style={{ 
-        height: wp(27), 
-        backgroundColor: background, 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        borderRadius: wp(4) 
-    }}
->
-    <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
-    <ThemedText style={{ fontSize: 13.5, fontWeight: "bold" }} color={icon + "4c"}>
-        Take Photo<ThemedText color="red">*</ThemedText>
-    </ThemedText>
-</TouchableOpacity>}
+                        {!selfieImage && <TouchableOpacity
+                            onPress={() => {
+                                takePhoto((image) => { setSelfieImage(image); });
+                            }}
+                            style={{
+                                height: wp(27),
+                                backgroundColor: background,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: wp(4)
+                            }}
+                        >
+                            <Ionicons name="camera" size={wp(15)} color={icon + "4c"} />
+                            <ThemedText style={{ fontSize: 13.5, fontWeight: "bold" }} color={icon + "4c"}>
+                                Take Photo<ThemedText color="red">*</ThemedText>
+                            </ThemedText>
+                        </TouchableOpacity>}
 
 
 
@@ -356,22 +355,22 @@ export default function AddDriver() {
                 </ScrollView>
 
 
-                   
 
+                <Button
+                    onPress={handleAddDriver}
+                    loading={isSubmitting}
+                    disabled={isSubmitting}
+                    title={isSubmitting ? (isEditMode ? 'Updating...' : 'Adding...') : (isEditMode ? 'Update Driver' : 'Add Driver')}
+                    colors={{ text: '#0f9d58', bg: '#0f9d5824' }}
+                    style={{ height: 44 ,width:200 , margin:8 , borderRadius:5}}
+                />
+
+                <View style={{ height: 10, }} />
 
             </ScrollView>
 
 
-                        <Button
-                        onPress={handleAddDriver}
-                        loading={isSubmitting}
-                        disabled={isSubmitting}
-                        title={isSubmitting ? (isEditMode ? 'Updating...' : 'Adding...') : (isEditMode ? 'Update Driver' : 'Add Driver')}
-                        colors={{ text: '#0f9d58', bg: '#0f9d5824' }}
-                        style={{ height: 44 }}
-                    />
 
-            <View style={{height:5}} />
         </ScreenWrapper>
     );
 }
@@ -398,7 +397,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
         borderRadius: 8,
         gap: 8,
-        marginTop: 20   ,
+        marginTop: 20,
     },
     buttonText: {
         color: 'white',

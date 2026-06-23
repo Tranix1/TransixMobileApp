@@ -151,19 +151,34 @@ const CreateFleet = () => {
 
             await setupUser(updatedUser);
 
-            const fleetRole = {
-                role: 'fleet' as const,
-                fleetId,
-                companyName: fleetData.fleetName,
-                userRole: 'owner',
-                accType: 'fleet' as const,
-                driverId: null,
-                fleetMainAdminId: null,
-                fleetManagerId: null,
-                fleetDispatcherId: null,
-            };
 
-            await setCurrentRole(fleetRole);
+             const contactDetails={   
+                userName : user?.displayName ,
+                email : user?.email ,
+                phoneNumber : user?.phoneNumber ,
+                photoUrl : user?.photoURL ,
+                userId : user?.uid ,    
+                userRole : "owner" ,
+                status : "active",
+            }
+
+            const contactRef = doc(db, 'fleets', fleetId, 'Contacts', `OWN_${user?.uid}` );
+            await setDoc(contactRef, contactDetails);
+
+
+                // const fleetRole = {
+                //     role: 'fleet' as const,
+                //     fleetId,
+                //     companyName: fleetData.fleetName,
+                //     userRole: 'owner',
+                //     accType: 'fleet' as const,
+                //     driverId: null,
+                //     fleetMainAdminId: null,
+                //     fleetManagerId: null,
+                //     fleetDispatcherId: null,
+                // };
+
+            await setCurrentRole("fleet");
 
             Alert.alert('Fleet saved', 'Your fleet request has been submitted.');
             await router.replace('/');

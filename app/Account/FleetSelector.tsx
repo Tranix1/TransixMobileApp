@@ -134,7 +134,7 @@ function FleetSelector() {
     );
 
 
-    const [fleetFilter, setFleetFilter] = useState<'active' | 'pending' | 'endedj'>('active');
+    const [fleetFilter, setFleetFilter] = useState<'active' | 'pending' | 'endedj'>('pending');
 
 
 
@@ -174,7 +174,7 @@ const filteredFleets =
         // If accepted, we might want to ensure the driver exists there
         if (decision === 'active') {
 
-            const driverRef = doc(db, 'fleets', fleet.fleetId, 'Drivers', user?.uid );
+            const driverRef = doc(db, 'fleets', fleet.fleetId, 'Drivers', `DRV_${user?.uid}` );
             await setDoc(driverRef, {
                 status: 'active',
                 joinedAt: new Date().toISOString(),
@@ -286,7 +286,7 @@ const filteredFleets =
                             <TouchableNativeFeedback key={fleet.fleetId || fleet.companyName} onPress={() => handleFleetSelect(fleet)}>
                                 <View style={[styles.fleetCard, { backgroundColor: backgroundLight, borderColor: accent + '20' }]}>
                                     <ThemedText style={styles.fleetName}>{fleet.companyName || 'Fleet'}</ThemedText>
-                                    <ThemedText style={styles.fleetRole}>Role: {fleet.role || 'owner'}</ThemedText>
+                                    <ThemedText style={{fontSize:12,color:icon}}>Role: {fleet.role || 'owner'}</ThemedText>
                                 </View>
                             </TouchableNativeFeedback>
                         ))}
@@ -332,18 +332,19 @@ const filteredFleets =
 
     {[
         {
-            id: 'active',
-            label: 'Active',
-            count: approvedCount,
-        },
-        {
             id: 'pending',
             label: 'Pending',
             count: pendingCount,
         },
         {
+            id: 'active',
+            label: 'Active',
+            count: approvedCount,
+        },
+        
+        {
             id: 'removed',
-            label: 'Removed',
+            label: 'Inactive',
             count: removedCount + rejectedCount,
         },
     ].map(item => {

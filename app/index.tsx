@@ -38,6 +38,7 @@ import { hp, wp } from "@/constants/common";
 import NetInfo from '@react-native-community/netinfo';
 import FleetSelector from "./Account/FleetSelector";
 import Login from "./Account/Login";
+import Tracking from "./Tracking/Map";
 
 const Tab = createBottomTabNavigator();
 
@@ -227,7 +228,7 @@ export default function Index() {
           
           (typeof currentRole === 'object' && currentRole.role === 'general' ) ? (
             <>
-              <Tab.Screen name="Home " component={Home} />
+              <Tab.Screen name="Home " component={Tracking} />
               <Tab.Screen name="About " component={About} />
             </>
           ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'owner') ? (

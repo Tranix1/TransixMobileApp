@@ -436,7 +436,7 @@ function Jobs() {
 
     return (
         <View style={[styles.container, { backgroundColor: background }]}>
-            <CustomHeader pageTitle="Assignments" />
+            <CustomHeader pageTitle="Jobs" />
 
             <View style={styles.content}>
                 {/* Status Tabs */}

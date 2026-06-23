@@ -1,26 +1,23 @@
 // https://www.youtube.com/watch?v=QdU6WxHXSxE&list=PLi97PD1Y9JAVb1y4PX9tFTN9Gb0TSEJGB&index=8
-import { StyleSheet, View, } from 'react-native'
-import React, { useEffect, useId, useState } from 'react'
-import { hp, wp } from '@/constants/common'
+import {  View, } from 'react-native'
+import React, { useEffect,  useState } from 'react'
 import { fetchDocuments } from '@/db/operations'
 import { Truck } from '@/types/types'
-import { DocumentData, QueryDocumentSnapshot, where, collection, query, getDocs } from 'firebase/firestore'
+import { DocumentData, QueryDocumentSnapshot, where,  } from 'firebase/firestore'
 import { TruckTypeProps } from '@/types/types'
-import { useAuth } from '@/context/AuthContext'
 import { useLocalSearchParams } from 'expo-router'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import { FinalReturnComponent } from '@/components/TrucksHomePage'
-import AccentRingLoader from '@/components/AccentRingLoader';
-import { useThemeColor } from '@/hooks/useThemeColor';
 import { HorizontalTickComponent } from '@/components/SlctHorizonzalTick';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { db } from '@/db/fireBaseConfig';
+import { useAuth } from '@/context/AuthContext'
 const Index = () => {
 
     const { userId, organisationName, contractName, contractId, capacityG, cargoAreaG, truckTypeG, operationCountriesG } = useLocalSearchParams();
 
     // const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string, image: ImageSourcePropType | undefined } | null>(null)
 
+    const {currentRole}= useAuth()
     const [trucks, setTrucks] = useState<Truck[]>([])
     const [tankerType, setTankerType] = React.useState<string>("")
     const [truckCapacity, setTruckCapacity] = useState(capacityG ? `${capacityG}` : "")
@@ -36,6 +33,7 @@ const Index = () => {
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+
     const [hasLoaded, setHasLoaded] = useState(false);
 
     const [operationCountries, setOperationCountries] = useState<string[]>(() => {
@@ -45,30 +43,11 @@ const Index = () => {
     });
 
     const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
-    const [truckVisibility, setTruckVisibility] = useState< 'Private' | 'Public'>('Public');
-    const [currentRole, setCurrentRole] = useState<any>(null);
-
-    useEffect(() => {
-        const getCurrentRole = async () => {
-            try {
-                const roleData = await AsyncStorage.getItem('currentRole');
-                if (roleData) {
-                    const parsedRole = JSON.parse(roleData);
-                    setCurrentRole(parsedRole);
-                }
-            } catch (error) {
-                console.error('Error getting current role:', error);
-            }
-        };
-        getCurrentRole();
-    }, []);
-
-    
+    const [truckVisibility, setTruckVisibility] = useState< 'Private' | 'Network'>('Private');
 
     const LoadTructs = async () => {
         try {
-            setIsLoading(true);
-            let filters: any[] = [];
+                let filters: any[] = [];
 
             // Apply filters for truck properties first
             if (userId) filters.push(where("userId", "==", userId));
@@ -97,8 +76,10 @@ const Index = () => {
             }else if (currentRole?.role === 'broker' && truckVisibility === 'Private') { 
                 collectionName = `brokers/${currentRole.brokerId}/trucks`;
             }
+                    console.log("BEFORE fetch");
 
             const maTrucks = await fetchDocuments(collectionName, 10, undefined, filters);
+                    console.log("AFTER fetch", maTrucks);
 
             let trucksToSet: Truck[] = [];
 
@@ -119,22 +100,42 @@ const Index = () => {
 
                 setTrucks(trucksToSet);
                 setLastVisible(maTrucks.lastVisible);
+                setIsLoading(false)
+
             } else {
                 // If no data, set empty array
                 setTrucks([]);
                 setLastVisible(null);
+                setIsLoading(false)
             }
+
         } catch (error) {
             console.error('Error loading trucks:', error);
         } finally {
-            setIsLoading(false);
-            setHasLoaded(true);
+            setIsLoading(false)
+            console.log("LOAD END");
         }
     };
 
-    useEffect(() => {
-        LoadTructs();
-    }, [truckCapacity, truckConfig, truckSuspension, operationCountries, selectedCargoArea, userId, truckVisibility])
+   console.log("trucks loading")
+
+useEffect(() => {
+
+    if (!currentRole) return;
+
+    LoadTructs();
+
+}, [
+ userId,
+ currentRole,
+ truckCapacity,
+ truckConfig,
+ truckSuspension,
+ operationCountries,
+ selectedCargoArea,
+ truckVisibility
+]);
+
 
     const onRefresh = async () => {
         try {
@@ -152,6 +153,8 @@ const Index = () => {
 
     const loadMoreTrucks = async () => {
         if (loadingMore || !lastVisible) return;
+                console.log("START loading");
+
         let filters: any[] = [];
 
         setLoadingMore(true);
@@ -179,10 +182,7 @@ const Index = () => {
         // Fetch data from Firestore with the initially applied filters
         let collectionName = contractId ? "ContractRequests" : "Trucks";
 
-        // If user is in fleet mode and viewing private trucks, fetch from fleet subcollection
-        if ( currentRole?.accType === 'fleet' && truckVisibility === 'Private') {
-            collectionName = `fleets/${currentRole.fleetId}/Trucks`;
-        }
+       
 
         // Fetch with pagination
         const result = await fetchDocuments(collectionName, 10, lastVisible, filters);
@@ -213,21 +213,24 @@ const Index = () => {
         setSelectedCargoArea(null)
     }
 
+
+
     return (
         <View style={{ flex: 1 }}>
             {(!contractId || !userId || !capacityG) && <View style={{ flex: 1 }}>
                 <FinalReturnComponent
                     visibilitySelector={
                         (currentRole?.role === 'fleet'  || currentRole?.role === 'broker') ? (
+                            <View style={{ paddingHorizontal:15}}> 
                             <HorizontalTickComponent
                                 data={[
-                                    { topic: "Network", value: "Network" },
                                     { topic: "Private", value: "Private" },
-                                    { topic: "Public", value: "Public" }
+                                    { topic: "Network", value: "Network" },
                                 ]}
                                 condition={truckVisibility}
                                 onSelect={setTruckVisibility}
                             />
+                            </View>
                         ) : null
                     }
                     // ... pass all props
@@ -248,8 +251,8 @@ const Index = () => {
                     lastVisible={lastVisible}
                     loadingMore={loadingMore}
                     clearFilter={clearFilter}
-                    fleetId={currentRole?.accType === 'fleet' ? currentRole.fleetId : undefined}
                     filteredPNotAavaialble={filteredPNotAavaialble}
+                    isLoading 
                 />
             </View>}
             {(contractId || userId || capacityG) && <ScreenWrapper >
@@ -265,8 +268,6 @@ const Index = () => {
                     setTankerType={setTankerType}
                     operationCountries={operationCountries}
                     setOperationCountries={setOperationCountries}
-                    userId={`${userId}`}
-                    organisationName={`${organisationName}`}
                     trucks={contractId ? trucks : trucks}
                     refreshing={refreshing}
                     onRefresh={onRefresh}
@@ -274,12 +275,9 @@ const Index = () => {
                     lastVisible={lastVisible}
                     loadingMore={loadingMore}
                     clearFilter={clearFilter}
-                    contractName={`${contractName}`}
-                    contractId={`${contractId}`}
                     filteredPNotAavaialble={filteredPNotAavaialble}
-                    isLoading={isLoading}
-                    hasLoaded={hasLoaded}
-                />
+                    isLoading
+                    />
             </ScreenWrapper>}
         </View>
     )

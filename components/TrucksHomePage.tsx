@@ -24,6 +24,7 @@ import { useAuth } from '@/context/AuthContext';
 import AccentRingLoader from '@/components/AccentRingLoader';
 import { router } from 'expo-router';
 import { FontAwesome6 } from '@expo/vector-icons';
+import CustomHeader from './CustomHeader';
 
 type FinalReturnComponentProps = {
   showfilter: boolean;
@@ -36,8 +37,6 @@ type FinalReturnComponentProps = {
   setTankerType: React.Dispatch<React.SetStateAction<string>>;
   operationCountries: string[];
   setOperationCountries: React.Dispatch<React.SetStateAction<string[]>>
-  userId?: string;
-  organisationName?: string
 
   trucks: any
 
@@ -48,12 +47,8 @@ type FinalReturnComponentProps = {
   loadingMore: boolean;
   clearFilter: () => void;
 
-  contractName?: string
-  contractId?: string
   filteredPNotAavaialble: boolean;
   isLoading?: boolean;
-  hasLoaded?: boolean;
-  fleetId?: string;
   visibilitySelector?: React.ReactNode;
 
 }
@@ -69,8 +64,6 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
   setTankerType,
   operationCountries,
   setOperationCountries,
-  userId,
-  organisationName,
   trucks,
   refreshing,
   onRefresh,
@@ -78,12 +71,8 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
   lastVisible,
   loadingMore,
   clearFilter,
-  contractName,
-  contractId,
   filteredPNotAavaialble,
-  isLoading = false,
-  hasLoaded = false,
-  fleetId,
+  isLoading ,
   visibilitySelector
 
 }) => {
@@ -113,66 +102,9 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
 
         {/* Visibility Selector */}
 
-        <View
-          style={{
-            backgroundColor: bg,
-            paddingHorizontal: wp(2),
-            paddingVertical: wp(1),
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: wp(1),
-          }}
-        >
+        <CustomHeader pageTitle='Trucks' addingNavigate="/Logistics/Trucks/AddTrucks" filterElement={setShowfilter}/>
 
-          <TouchableNativeFeedback onPress={() => router.push("/Fleet/FleetProfile")}  >
-            <View style={{ padding: wp(2) }}>
-              <FontAwesome6 name="user" size={wp(7)} color={icon} />;
-            </View>
-          </TouchableNativeFeedback>
-
-          {!contractId && !userId && <View>
-            <View style={{}}>
-              <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                <ThemedText type="title" >Trucks</ThemedText>
-
-              </View>
-            </View>
-            {/* <ThemedzText type="tiny">Find a Truck for your Load Today</ThemedText> */}
-          </View>
-          }
-          {(userId || contractId) && (
-            <View style={{ marginLeft: 10, }}>
-              {(userId === user?.uid || contractId !== "undefined") ? <ThemedText type="subtitle" > Manage Trucks </ThemedText> :
-                <ThemedText type="subtitle"  >{organisationName} Trucks </ThemedText>}
-            </View>
-          )}
-
-          <View style={{ flexDirection: 'row', width: wp(26), justifyContent: "space-between", alignItems: 'center' }}>
-
-            <TouchableNativeFeedback onPress={() => setShowfilter(true)}>
-              <View >
-                <Ionicons name={'filter'} size={wp(4)} color={icon} />
-              </View>
-            </TouchableNativeFeedback>
-
-
-            <TouchableNativeFeedback onPress={() => router.push("/Logistics/Trucks/AddTrucks")}>
-              <View >
-                <Ionicons name="add" size={wp(7)} color={icon} />
-              </View>
-            </TouchableNativeFeedback>
-
-            <TouchableNativeFeedback >
-              <View >
-                <Ionicons name="ellipsis-vertical" size={wp(7)} color={icon} />
-              </View>
-            </TouchableNativeFeedback>
-
-          </View>
-
-
-        </View>
+        
         {visibilitySelector}
 
 
@@ -260,13 +192,13 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
             </>
           )}
           data={trucks}
-          renderItem={({ item }) => <TruckItemComponent truck={contractId !== "undefined" && contractId ? item.truckInfo : item} truckContract={contractId ? item : null} fleetId={fleetId} />}
+          renderItem={({ item }) => <TruckItemComponent truck={ item} truckContract={ item }  />}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[accent]} />
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              {isLoading || !hasLoaded ? (
+              {isLoading  ? (
                 <>
                   <AccentRingLoader color={accent} size={32} dotSize={6} />
                   <ThemedText type='defaultSemiBold' style={styles.emptyText}>
@@ -278,7 +210,8 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
                 </>
               ) : filteredPNotAavaialble ? (
                 <>
-                  <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                  <Ionicons name="car-outline" size={wp(8)} color={icon} />
+                <ThemedText type='defaultSemiBold' style={styles.emptyText}>
                     Specified Truck Not Available!
                   </ThemedText>
                   <ThemedText type='tiny' style={styles.emptySubtext}>
@@ -287,7 +220,8 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
                 </>
               ) : (
                 <>
-                  <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                  <Ionicons name="car-outline" size={wp(8)} color={icon} />
+                <ThemedText type='defaultSemiBold' style={styles.emptyText}>
                     No Trucks Available
                   </ThemedText>
                   <ThemedText type='tiny' style={styles.emptySubtext}>
