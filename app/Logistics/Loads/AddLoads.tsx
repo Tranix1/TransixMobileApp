@@ -62,23 +62,17 @@ const AddLoadDB = () => {
   const [assignmentDestination, setAssignmentDestination] =
     useState<SelectLocationProp | null>(null);
 
-  const [assignmentDspFromLocation, setAssignmentDspFromLocation] =
-    useState(false);
+  const [assignmentDspFromLocation, setAssignmentDspFromLocation] =  useState(false);
 
-  const [assignmentDspToLocation, setAssignmentDspToLocation] =
-    useState(false);
+  const [assignmentDspToLocation, setAssignmentDspToLocation] =useState(false);
 
-  const [assignmentLocationPicKERdSP, setAssignmentPickLocationOnMap] =
-    useState(false);
+  const [assignmentLocationPicKERdSP, setAssignmentPickLocationOnMap] =useState(false);
 
-  const [assignmentDistance, setAssignmentDistance] =
-    useState("");
+  const [assignmentDistance, setAssignmentDistance] =useState("");
 
-  const [assignmentDuration, setAssignmentDuration] =
-    useState("");
+  const [assignmentDuration, setAssignmentDuration] =useState("");
 
-  const [assignmentDurationInTraffic, setAssignmentDurationInTraffic] =
-    useState("");
+  const [assignmentDurationInTraffic, setAssignmentDurationInTraffic] = useState("");
   const [fleetDrivers, setFleetDrivers] = useState<any[]>([]);
   const [driverSearchQueries, setDriverSearchQueries] = useState<{ [truckId: string]: string; }>({});
 
@@ -198,7 +192,6 @@ const AddLoadDB = () => {
   const [paymentTerms, setPaymentTerms] = useState(defaultState.paymentTerms);
   const [requirements, setRequirements] = useState(defaultState.requirements)
   
-  ;
 const [loadingDate, setLoadingDate] = useState(defaultState.loadingDate);
 const [showLoadingDatePicker, setShowLoadingDatePicker] = useState(false)
 
@@ -702,9 +695,10 @@ const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
         rate,
         selectedModelType,
         selectedCurrency,
+           
       });
 
-      ToastAndroid.show('Trucks notified and load added successfully.', ToastAndroid.SHORT);
+      ToastAndroid.show('load added successfully.', ToastAndroid.SHORT);
     } catch (error) {
       console.error("Error submitting load:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
@@ -716,7 +710,7 @@ const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
         true
       );
     } finally {
-      // setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -1728,9 +1722,6 @@ const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
                             </TouchableOpacity>
 
                           )}
-
-
-
 
                           {/* SHOW DRIVERS ONLY WHEN SEARCHING */}
 

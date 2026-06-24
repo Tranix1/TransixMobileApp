@@ -131,7 +131,7 @@ export default function AddDriver() {
 
             await updateDocument('personalData', user.uid, {
                 // fleets: [...existingFleets, newFleetAccess],
-
+                            
                 driverProfile: driverData,
                 updatedAt: new Date().toISOString()
             });

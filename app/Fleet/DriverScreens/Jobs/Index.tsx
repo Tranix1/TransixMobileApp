@@ -25,6 +25,8 @@ interface CargoItem {
     status: 'pending' | 'active' | 'completed' | 'accepted' | 'rejected';
     assignedAt: string;
     loadData?: any; // Full load data from Cargo collection
+    createdAt : string ; 
+    acceptedAt : string ;
 }
 
 function Jobs() {
@@ -75,7 +77,7 @@ function Jobs() {
                 // but for simplicity, ensure your query targets the collection correctly.
                 const q = query(
                     collection(db, `fleets/${currentRole.fleetId}/assignments`),
-                    where("driverIds", "array-contains", `DRV_${user.uid}` ) // Efficient server-side filter
+                    where("driverId", "==", `DRV_${user.uid}`)  // Efficient server-side filter
                 );
 
                 const snapshot = await getDocs(q);
@@ -96,6 +98,7 @@ function Jobs() {
 
         fetchAssignedCargo();
     }, [currentRole.fleetId, user?.uid]);
+
 
     // 2. Updated Update Function
     const updateCargoStatus = async (cargoId: string, assignmentDocId: string, newStatus: string) => {
@@ -130,26 +133,20 @@ function Jobs() {
         return assignedCargo.filter(cargo => cargo.status === activeTab);
     };
 
-    const renderCargoItem = (cargo: CargoItem) => {
-        const loadData = cargo.loadData;
+    const renderCargoItem = (assignmentData: any) => {
+        
         return (
-            <TouchableOpacity
-                key={cargo.id}
+            <View
+                key={assignmentData.id}
                 style={[styles.cargoItem, { backgroundColor: backgroundLight }]}
-                onPress={() => {
-                    // Navigate to cargo details or tracking
-                    router.push({
-                        pathname: '/Map/ViewLoadRoutes',
-                        params: { cargoId: cargo.cargoId, driverId: driverId }
-                    });
-                }}
+                
             >
                 <View style={styles.cargoHeader}>
                     <ThemedText style={styles.cargoTitle}>
-                        {loadData?.typeofLoad || 'Load'} - {cargo.truckName}
+                        {assignmentData?.typeofLoad || 'Load'} - {assignmentData.truckName}
                     </ThemedText>
-                    <View style={[styles.statusBadge, { backgroundColor: getStatusColor(cargo.status) }]}>
-                        <ThemedText style={styles.statusText}>{cargo.status.toUpperCase()}</ThemedText>
+                    <View style={[styles.statusBadge, { backgroundColor: getStatusColor(assignmentData.status) }]}>
+                        <ThemedText style={styles.statusText}>{assignmentData.status.toUpperCase()}</ThemedText>
                     </View>
                 </View>
 
@@ -157,45 +154,47 @@ function Jobs() {
                     <View style={styles.detailRow}>
                         <Ionicons name="location" size={16} color={accent} />
                         <ThemedText style={styles.detailText}>
-                            {loadData?.origin?.description || 'Origin'} → {loadData?.destination?.description || 'Destination'}
+                            {assignmentData?.pickupLocation?.description || 'Origin'} → {assignmentData?.deliveryLocation?.description || 'Destination'}
                         </ThemedText>
                     </View>
 
                     <View style={styles.detailRow}>
                         <Ionicons name="calendar" size={16} color={accent} />
                         <ThemedText style={styles.detailText}>
-                            Loading: {loadData?.loadingDate ? new Date(loadData.loadingDate).toLocaleDateString() : 'TBD'}
+                            Loading: {assignmentData?.pickupDate ? new Date(assignmentData.pickupDate).toLocaleDateString() : 'TBD'}
                         </ThemedText>
                     </View>
 
                     <View style={styles.detailRow}>
                         <Ionicons name="time" size={16} color={accent} />
                         <ThemedText style={styles.detailText}>
-                            Delivery: {loadData?.deliveryDate ? new Date(loadData.deliveryDate).toLocaleDateString() : 'TBD'}
+                            Delivery: {assignmentData?.deliveryDate ? new Date(assignmentData.deliveryDate).toLocaleDateString() : 'TBD'}
                         </ThemedText>
                     </View>
 
-                    <View style={styles.detailRow}>
+                    {/* <View style={styles.detailRow}>
                         <Ionicons name="cash" size={16} color={accent} />
                         <ThemedText style={styles.detailText}>
                             {loadData?.rate || 'TBD'} {loadData?.selectedCurrency?.name || 'USD'}
                         </ThemedText>
-                    </View>
+                    </View> */}
 
-                    <View style={styles.detailRow}>
+                    {/* <View style={styles.detailRow}>
                         <Ionicons name="person" size={16} color={accent} />
                         <ThemedText style={styles.detailText}>
                             Role: {cargo.role === 'main' ? 'Main Driver' :
                                 cargo.role === 'second_main' ? 'Second Main Driver' :
                                     'Backup Driver'}
                         </ThemedText>
-                    </View>
+                    </View> */}
 
-                    {loadData?.coordinator && (
+                    {assignmentData?.coordinator &&(
                         <View style={styles.detailRow}>
                             <Ionicons name="call" size={16} color={accent} />
                             <ThemedText style={styles.detailText}>
-                                Coordinator: {loadData.coordinator.name || 'N/A'}
+                                Coordinator: {assignmentData.coordinator.name || 'N/A'}  <ThemedText style={styles.detailText}>
+                                - {assignmentData.coordinator.phoneNumber || 'N/A'}
+                            </ThemedText>
                             </ThemedText>
                         </View>
                     )}
@@ -203,129 +202,108 @@ function Jobs() {
                     <View style={styles.detailRow}>
                         <Ionicons name="time" size={16} color={accent} />
                         <ThemedText style={styles.detailText}>
-                            Assigned: {new Date(cargo.assignedAt).toLocaleDateString()}
+                            Assigned: {assignmentData?.createdAt?.toDate? new Intl.DateTimeFormat('en-GB').format(assignmentData.createdAt.toDate()): "TBD"}
                         </ThemedText>
                     </View>
                 </View>
 
                 {/* Expanded Details */}
-                {expandedCargo === cargo.id && (
+                {expandedCargo === assignmentData.id && (
                     <View style={styles.expandedDetails}>
                         <View style={styles.detailSection}>
                             <ThemedText style={styles.sectionTitle}>Load Details</ThemedText>
                             <View style={styles.detailRow}>
                                 <Ionicons name="cube" size={16} color="#2196F3" />
                                 <ThemedText style={styles.detailText}>
-                                    Type: {loadData?.typeofLoad || 'N/A'}
+                                    Type: {assignmentData?.typeofLoad || 'N/A'}
                                 </ThemedText>
                             </View>
                             <View style={styles.detailRow}>
                                 <Ionicons name="list" size={16} color="#2196F3" />
                                 <ThemedText style={styles.detailText}>
-                                    Requirements: {loadData?.requirements || 'N/A'}
+                                    Requirements: {assignmentData?.requirements || 'N/A'}
                                 </ThemedText>
                             </View>
                             <View style={styles.detailRow}>
                                 <Ionicons name="chatbubble" size={16} color="#2196F3" />
                                 <ThemedText style={styles.detailText}>
-                                    Additional Info: {loadData?.additionalInfo || 'N/A'}
+                                    Additional Info: {assignmentData?.additionalInfo || 'N/A'}
                                 </ThemedText>
                             </View>
                             <View style={styles.detailRow}>
                                 <Ionicons name="flame" size={16} color="#2196F3" />
                                 <ThemedText style={styles.detailText}>
-                                    Fuel & Tolls: {loadData?.fuelAvai || 'N/A'}
+                                    Fuel & Tolls: {assignmentData?.fuelAvai || 'N/A'}
                                 </ThemedText>
                             </View>
-                            {loadData?.returnLoad && (
+                            {assignmentData?.returnLoad && (
                                 <View style={styles.detailRow}>
                                     <Ionicons name="return-up-back" size={16} color="#2196F3" />
                                     <ThemedText style={styles.detailText}>
-                                        Return Load: {loadData.returnLoad}
+                                        Return Load: {assignmentData.returnLoad}
                                     </ThemedText>
                                 </View>
                             )}
-                            {loadData?.returnRate && (
+                            {assignmentData?.returnRate && (
                                 <View style={styles.detailRow}>
                                     <Ionicons name="cash" size={16} color="#2196F3" />
                                     <ThemedText style={styles.detailText}>
-                                        Return Rate: {loadData.returnRate} {loadData?.selectedReturnCurrency?.name || 'USD'}
+                                        Return Rate: {assignmentData.returnRate} {assignmentData?.selectedReturnCurrency?.name || 'USD'}
                                     </ThemedText>
                                 </View>
                             )}
-                            {loadData?.returnTerms && (
+                            {assignmentData?.returnTerms && (
                                 <View style={styles.detailRow}>
                                     <Ionicons name="document-text" size={16} color="#2196F3" />
                                     <ThemedText style={styles.detailText}>
-                                        Return Terms: {loadData.returnTerms}
+                                        Return Terms: {assignmentData.returnTerms}
                                     </ThemedText>
                                 </View>
                             )}
                         </View>
 
                         <View style={styles.detailSection}>
-                            <ThemedText style={styles.sectionTitle}>Coordinator Information</ThemedText>
+                            <ThemedText style={styles.sectionTitle}>Contact Information</ThemedText>
                             <View style={styles.detailRow}>
                                 <Ionicons name="person" size={16} color="#2196F3" />
                                 <ThemedText style={styles.detailText}>
-                                    Name: {loadData?.coordinator?.name || 'N/A'}
+                                    Name: {assignmentData?.coordinator?.name || 'N/A'}
                                 </ThemedText>
                             </View>
                             <View style={styles.detailRow}>
                                 <Ionicons name="business" size={16} color="#2196F3" />
                                 <ThemedText style={styles.detailText}>
-                                    Organization: {loadData?.coordinator?.id ? 'Fleet Manager' : 'Load Owner'}
+                                    Organization: {assignmentData?.coordinator?.id ? 'Fleet Manager' : 'Load Owner'}
                                 </ThemedText>
                             </View>
                             <View style={styles.detailRow}>
                                 <Ionicons name="call" size={16} color="#2196F3" />
                                 <ThemedText style={styles.detailText}>
-                                    Phone: {loadData?.coordinator?.phoneNumber || 'N/A'}
+                                    Phone: {assignmentData?.coordinator?.phoneNumber || 'N/A'}
                                 </ThemedText>
                             </View>
                         </View>
 
-                        <View style={styles.detailSection}>
-                            <ThemedText style={styles.sectionTitle}>Payment & Terms</ThemedText>
-                            <View style={styles.detailRow}>
-                                <Ionicons name="cash" size={16} color="#2196F3" />
-                                <ThemedText style={styles.detailText}>
-                                    Rate: {loadData?.rate || 'TBD'} {loadData?.selectedCurrency?.name || 'USD'}
-                                </ThemedText>
-                            </View>
-                            <View style={styles.detailRow}>
-                                <Ionicons name="document-text" size={16} color="#2196F3" />
-                                <ThemedText style={styles.detailText}>
-                                    Payment Terms: {loadData?.paymentTerms || 'N/A'}
-                                </ThemedText>
-                            </View>
-                            <View style={styles.detailRow}>
-                                <Ionicons name="shield-checkmark" size={16} color="#2196F3" />
-                                <ThemedText style={styles.detailText}>
-                                    Fuel & Tolls: {loadData?.fuelAvai || 'N/A'}
-                                </ThemedText>
-                            </View>
-                        </View>
 
                         <View style={styles.detailSection}>
                             <ThemedText style={styles.sectionTitle}>Timestamps</ThemedText>
                             <View style={styles.detailRow}>
                                 <Ionicons name="time" size={16} color="#2196F3" />
                                 <ThemedText style={styles.detailText}>
-                                    Created: {loadData?.createdAt ? new Date(loadData.createdAt).toLocaleString() : 'N/A'}
+                                    Created: {assignmentData?.createdAt ? new Date(assignmentData.createdAt).toLocaleString() : 'N/A'}
                                 </ThemedText>
                             </View>
                             <View style={styles.detailRow}>
                                 <Ionicons name="person-add" size={16} color="#2196F3" />
                                 <ThemedText style={styles.detailText}>
-                                    Assigned: {new Date(cargo.assignedAt).toLocaleString()}
+                                    Assigned: {new Date(assignmentData.createdAt).toLocaleString()}
                                 </ThemedText>
                             </View>
-                            {cargo.status === 'accepted' && (
+                            {assignmentData.status === 'accepted' && (
                                 <View style={styles.detailRow}>
                                     <Ionicons name="checkmark-circle" size={16} color="#2196F3" />
                                     <ThemedText style={styles.detailText}>
-                                        Accepted: {new Date(cargo.assignedAt).toLocaleString()}
+                                        Accepted: {new Date(assignmentData.acceptedAt).toLocaleString()}
                                     </ThemedText>
                                 </View>
                             )}
@@ -335,11 +313,11 @@ function Jobs() {
 
                 {/* Status Action Buttons */}
                 <View style={styles.statusActionButtons}>
-                    {cargo.status === 'pending' && (
+                    {assignmentData.status === 'pending' && (
                         <>
                             <TouchableOpacity
                                 style={[styles.statusActionButton, { backgroundColor: '#4CAF50' }]}
-                                onPress={() => updateCargoStatus(cargo.cargoId, cargo.id, 'accepted')}
+                                onPress={() => updateCargoStatus(assignmentData.cargoId, assignmentData.id, 'accepted')}
                             >
                                 <Ionicons name="checkmark" size={16} color="white" />
                                 <ThemedText style={styles.statusActionButtonText}>Accept</ThemedText>
@@ -347,7 +325,7 @@ function Jobs() {
 
                             <TouchableOpacity
                                 style={[styles.statusActionButton, { backgroundColor: '#F44336' }]}
-                                onPress={() => updateCargoStatus(cargo.cargoId, cargo.id, 'rejected')}
+                                onPress={() => updateCargoStatus(assignmentData.cargoId, assignmentData.id, 'rejected')}
                             >
                                 <Ionicons name="close" size={16} color="white" />
                                 <ThemedText style={styles.statusActionButtonText}>Reject</ThemedText>
@@ -355,20 +333,20 @@ function Jobs() {
                         </>
                     )}
 
-                    {cargo.status === 'accepted' && (
+                    {assignmentData.status === 'accepted' && (
                         <TouchableOpacity
                             style={[styles.statusActionButton, { backgroundColor: '#2196F3' }]}
-                            onPress={() => updateCargoStatus(cargo.cargoId, cargo.id, 'active')}
+                            onPress={() => updateCargoStatus(assignmentData.cargoId, assignmentData.id, 'active')}
                         >
                             <Ionicons name="play" size={16} color="white" />
                             <ThemedText style={styles.statusActionButtonText}>Start Job</ThemedText>
                         </TouchableOpacity>
                     )}
 
-                    {cargo.status === 'active' && (
+                    {assignmentData.status === 'active' && (
                         <TouchableOpacity
                             style={[styles.statusActionButton, { backgroundColor: '#4CAF50' }]}
-                            onPress={() => updateCargoStatus(cargo.cargoId, cargo.id, 'completed')}
+                            onPress={() => updateCargoStatus(assignmentData.cargoId, assignmentData.id, 'completed')}
                         >
                             <Ionicons name="checkmark-circle" size={16} color="white" />
                             <ThemedText style={styles.statusActionButtonText}>Complete</ThemedText>
@@ -384,7 +362,7 @@ function Jobs() {
                             // Navigate to truck details
                             router.push({
                                 pathname: '/Logistics/Trucks/TruckDetails',
-                                params: { truckId: cargo.truckId }
+                                params: { truckId: assignmentData.truckId }
                             });
                         }}
                     >
@@ -396,12 +374,12 @@ function Jobs() {
                         style={[styles.actionButton, { backgroundColor: '#9C27B0' }]}
                         onPress={() => {
                             // Toggle expanded view for more details
-                            setExpandedCargo(expandedCargo === cargo.id ? null : cargo.id);
+                            setExpandedCargo(expandedCargo === assignmentData.id ? null : assignmentData.id);
                         }}
                     >
-                        <Ionicons name={expandedCargo === cargo.id ? "chevron-up" : "chevron-down"} size={16} color="white" />
+                        <Ionicons name={expandedCargo === assignmentData.id ? "chevron-up" : "chevron-down"} size={16} color="white" />
                         <ThemedText style={styles.actionButtonText}>
-                            {expandedCargo === cargo.id ? 'Less Info' : 'More Info'}
+                            {expandedCargo === assignmentData.id ? 'Less Info' : 'More Info'}
                         </ThemedText>
                     </TouchableOpacity>
 
@@ -411,7 +389,7 @@ function Jobs() {
                             // Navigate to map view
                             router.push({
                                 pathname: '/Map/ViewLoadRoutes',
-                                params: { cargoId: cargo.cargoId, driverId: driverId }
+                                params: { cargoId: assignmentData.cargoId, driverId: driverId }
                             });
                         }}
                     >
@@ -419,7 +397,7 @@ function Jobs() {
                         <ThemedText style={styles.actionButtonText}>View on Map</ThemedText>
                     </TouchableOpacity>
                 </View>
-            </TouchableOpacity>
+            </View>
         );
     };
 

@@ -76,10 +76,8 @@ const Index = () => {
             }else if (currentRole?.role === 'broker' && truckVisibility === 'Private') { 
                 collectionName = `brokers/${currentRole.brokerId}/trucks`;
             }
-                    console.log("BEFORE fetch");
 
             const maTrucks = await fetchDocuments(collectionName, 10, undefined, filters);
-                    console.log("AFTER fetch", maTrucks);
 
             let trucksToSet: Truck[] = [];
 
@@ -117,7 +115,6 @@ const Index = () => {
         }
     };
 
-   console.log("trucks loading")
 
 useEffect(() => {
 

@@ -255,14 +255,14 @@ const handleSearch = (text: string) => {
             // Update each selected driver
             await Promise.all(selectedDrivers.map(async (driver) => {
                 await updateDocument('personalData', driver.userId, {
-                        accesibleFleets: arrayUnion(  { ...fleetUpdate,driverId : `DRV_${driver?.userId}` }  ), // Use arrayUnion to avoid overwriting existing data
+                        accesibleFleets: arrayUnion(  { ...fleetUpdate,driverId : `DRV_${driver?.userId}`  }  ), // Use arrayUnion to avoid overwriting existing data
                         updatedAt: serverTimestamp(),
 
                 });
 
                 if (!currentRole.fleetId) return
                  const driverRef = doc(db, 'fleets', currentRole.fleetId, 'Drivers', `DRV_${driver.userId}` );
-                  await setDoc(driverRef, { ...fleetUpdate,driverId : `DRV_${driver?.userId}` ,fullName : driver.fullName , phoneNumber :driver.phoneNumber , email : driver.email });
+                  await setDoc(driverRef, { ...fleetUpdate,driverId : `DRV_${driver?.userId}` ,fullName : driver.fullName , phoneNumber :driver.phoneNumber , email : driver.email , timeStamp : serverTimestamp() } );
                 
             }));
 

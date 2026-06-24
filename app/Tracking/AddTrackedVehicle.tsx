@@ -52,13 +52,11 @@ export default function AddTrackedVehicle() {
     { id: 2, name: "Subscription" }
   ];
 
-  const fetchUserTrucks = async (userId: string) => {
+  const fetchUserTrucks = async () => {
     try {
-      const trucks = await fetchDocuments(`fleets/${currentRole.fleetId}/Trucks`, 50, undefined, [
-        where("userId", "==", userId),
-        where("isApproved", "==", true),
-        where("hasTracker", "==", false)
-      ]);
+      console.log("started loading")
+      const trucks = await fetchDocuments(`fleets/${currentRole.fleetId}/Trucks`, 50, undefined, );
+      console.log("finished loading")    
       setUserTrucks(trucks.data || []);
       setShowUserTrucks(true);
     } catch (error) {
@@ -291,7 +289,7 @@ export default function AddTrackedVehicle() {
                     setSelectedUser(item);
                     setSearchQuery(item.email);
                     if (vehicleCategory?.name === "Commercial" && vehicleSubType?.name === "Truck") {
-                      fetchUserTrucks(item.uid);
+                      fetchUserTrucks();
                     }
                   }}
                 >
@@ -324,7 +322,7 @@ export default function AddTrackedVehicle() {
                         setShowUserTrucks(false);
                       }}
                     >
-                      <ThemedText style={{ fontWeight: 'bold' }}>{item.truckType} - {item.truckNumberPlate}</ThemedText>
+                      <ThemedText style={{ fontWeight: 'bold' }}>{item.truckType} - {item.truckName}</ThemedText>
                     </TouchableOpacity>
                   ))}
                 </View>

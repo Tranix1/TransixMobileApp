@@ -136,13 +136,19 @@ export const submitLoad = async (params: SubmitLoadParams) => {
   const writeFleetPrivateLoad = async () => {
     if (!fleetId) return;
 
-    const fleetCargoPath = `fleets/${fleetId}/Cargo`;
-    await setDoc(doc(db, fleetCargoPath, cargoId), {
-      ...commonLoadData,
-      loadVisibility: 'Private',
-      publicCargoId: loadVisibility === 'Both' ? cargoId : null,
-      trucks: fleetTruckSummary,
-    });
+    // const fleetCargoPath = `fleets/${fleetId}/Cargo`;
+    // await setDoc(doc(db, fleetCargoPath, cargoId), {
+    //   ...commonLoadData,
+    //   loadVisibility: 'Private',
+    //   publicCargoId: loadVisibility === 'Both' ? cargoId : null,
+    //   trucks: fleetTruckSummary,
+    // });
+
+
+
+
+
+    // Truck centric approach 
 
     for (const truck of selectedFleetTrucks) {
       const truckAssignments = assignmentDetails.filter((assignment) => assignment.truckId === truck.id);
@@ -172,33 +178,83 @@ export const submitLoad = async (params: SubmitLoadParams) => {
         acceptedBy: null,
         createdAt: new Date(),
         coordinator,
+
       };
 
-      await addDocumentWithId(`${fleetCargoPath}/${cargoId}/assignments`, assignmentDocId, assignmentPayload);
+      // await addDocumentWithId(`${fleetCargoPath}/${cargoId}/assignments`, assignmentDocId, assignmentPayload);
       await addDocumentWithId(`fleets/${fleetId}/assignments`, assignmentDocId, assignmentPayload);
     }
 
-    for (const assignment of assignmentDetails.filter((item) => item.driverDocId)) {
-      const driverCargoDocId = `${cargoId}_${assignment.driverId || 'driver'}_${assignment.truckId}`;
-      await addDocumentWithId(`fleets/${fleetId}/Drivers/${assignment.driverDocId}/cargo`, driverCargoDocId, {
+
+
+
+
+
+
+
+
+
+
+    for (const assignment of assignments) {
+
+      const assignmentDocId =
+        `${cargoId}_${assignment.truckId}_${assignment.driverId}`;
+
+
+      const payload = {
         cargoId,
         loadId: cargoId,
-        truckId: assignment.truckId,
-        truckName: assignment.truckName,
-        role: assignment.role,
-        status: 'pending',
-        assignedAt: new Date(),
-        loadingDate,
-        pickupDate: assignment.pickupDate,
-        deliveryDate: assignment.deliveryDate,
-        pickupLocation: assignment.pickupLocation,
-        deliveryLocation: assignment.deliveryLocation,
-        origin,
-        destination,
-        loadVisibility: 'Private',
+        fleetId,
+
+        status: "pending",
+        createdAt: new Date(),
+
+
+        acceptedBy: null,
         coordinator,
-      });
-    }
+        ...assignment ,
+      };
+
+
+      await addDocumentWithId(`fleets/${fleetId}/assignments`,assignmentDocId, payload);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // for (const assignment of assignmentDetails.filter((item) => item.driverDocId)) {
+    //   const driverCargoDocId = `${cargoId}_${assignment.driverId || 'driver'}_${assignment.truckId}`;
+    //   await addDocumentWithId(`fleets/${fleetId}/Drivers/${assignment.driverDocId}/cargo`, driverCargoDocId, {
+    //     cargoId,
+    //     loadId: cargoId,
+    //     truckId: assignment.truckId,
+    //     truckName: assignment.truckName,
+    //     role: assignment.role,
+    //     status: 'pending',
+    //     assignedAt: new Date(),
+    //     loadingDate,
+    //     pickupDate: assignment.pickupDate,
+    //     deliveryDate: assignment.deliveryDate,
+    //     pickupLocation: assignment.pickupLocation,
+    //     deliveryLocation: assignment.deliveryLocation,
+    //     origin,
+    //     destination,
+    //     loadVisibility: 'Private',
+    //     coordinator,
+    //   });
+    // }
 
     for (const selectedBrokerId of selectedBrokers) {
       await addDocumentWithId(`brokers/${selectedBrokerId}/loads`, `${cargoId}_${selectedBrokerId}`, {

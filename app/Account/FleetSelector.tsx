@@ -230,7 +230,7 @@ const filteredFleets =
         const fleetRole = {
             role: 'fleet' as const,
             fleetId: fleet.fleetId,
-            companyName: fleet.companyName,
+            companyName: fleet.companyName || fleet.fleetName,
             userRole: fleet.userRole || 'owner',
             accType: 'fleet' as const,
             driverId: fleet.driverId || null,
