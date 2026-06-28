@@ -3,7 +3,7 @@ import { ImagePickerAsset } from 'expo-image-picker';
 import { DocumentAsset } from '@/types/types';
 
 // Validation utilities for load forms
-export const validateLoadForm = (
+export const    validateLoadForm = (
     userType: 'general' | 'professional' | null,
     formData: {
         typeofLoad: string;

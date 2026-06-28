@@ -23,7 +23,7 @@ import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { AccountType } from '@/types/types';
 
-const Index = () => {
+const Index = ({ setDspLoginOrSignup }:any) => {
     const [fullname, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -42,7 +42,7 @@ const Index = () => {
     const [loading, setLoading] = useState(false);
 
     // Function to handle account selection logic
-  
+
     const handleAccountSelect = (type: AccountType) => {
         setSelectedAccount(type);
     };
@@ -146,19 +146,19 @@ const Index = () => {
                             {/* BROKER */}
                             <TouchableOpacity
                                 activeOpacity={0.85}
-                                onPress={() => handleAccountSelect('broker')}
+                                onPress={() => handleAccountSelect('brokerage')}
                                 style={[
                                     styles.accountButton,
-                                    { backgroundColor: selectedAccount === 'broker' ? accent : backgroundLight }
+                                    { backgroundColor: selectedAccount === 'brokerage' ? accent : backgroundLight }
                                 ]}
                             >
                                 <MaterialCommunityIcons
                                     name="briefcase-outline"
                                     size={22}
-                                    color={selectedAccount === 'broker' ? '#fff' : icon}
+                                    color={selectedAccount === 'brokerage' ? '#fff' : icon}
                                 />
-                                <ThemedText style={{ color: selectedAccount === 'broker' ? '#fff' : undefined }}>
-                                    Broker
+                                <ThemedText style={{ color: selectedAccount === 'brokerage' ? '#fff' : undefined }}>
+                                    Brokerage
                                 </ThemedText>
                             </TouchableOpacity>
                         </View>
@@ -198,18 +198,18 @@ const Index = () => {
                         onChangeText={setPassword}
                     />
 
-                   {selectedAccount === 'fleet' || selectedAccount === 'broker' ? (
-                    <View > 
-                        <ThemedText style={styles.label}>Referrer Code (Optional)</ThemedText>
-                    <Input
-                        containerStyles={styles.input}
-                        placeholder="Enter referrer code"
-                        value={referrerCode}
-                        onChangeText={setReferrerCode}
-                        autoCapitalize="characters"
-                    />
+                    {selectedAccount === 'fleet' || selectedAccount === 'brokerage' ? (
+                        <View >
+                            <ThemedText style={styles.label}>Referrer Code (Optional)</ThemedText>
+                            <Input
+                                containerStyles={styles.input}
+                                placeholder="Enter referrer code"
+                                value={referrerCode}
+                                onChangeText={setReferrerCode}
+                                autoCapitalize="characters"
+                            />
 
-                    </View>  ) : null}
+                        </View>) : null}
 
 
                     {/* TERMS */}
@@ -240,7 +240,7 @@ const Index = () => {
 
                     {/* FOOTER */}
                     <TouchableOpacity
-                        onPress={() => router.replace('/Account/Login')}
+                        onPress={() => setDspLoginOrSignup(true)}
                         disabled={loading}
                     >
                         <ThemedText style={styles.footerText}>
@@ -260,9 +260,9 @@ export default Index;
 
 const styles = StyleSheet.create({
     scrollContainer: { flexGrow: 1 },
-    container: { flex: 1, paddingHorizontal: wp(6), paddingBottom: hp(3) },
-    logo: { width: wp(60), height: hp(10), alignSelf: 'center', marginTop: hp(6), marginBottom: hp(4) },
-    headerContainer: { marginBottom: hp(3) },
+    container: { flex: 1, paddingHorizontal: wp(2), paddingBottom: hp(3) },
+    logo: { width: wp(60), height: hp(10), alignSelf: 'center',  marginBottom: hp(2) },
+    headerContainer: { marginBottom: hp(2) },
     header: { fontSize: wp(7), fontWeight: '700' },
     subHeader: { marginTop: hp(0.8), fontSize: wp(3.8), lineHeight: 22 },
     accountContainer: { marginBottom: hp(3) },

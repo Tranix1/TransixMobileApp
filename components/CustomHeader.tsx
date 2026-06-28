@@ -27,12 +27,6 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement}
 
     const [dspMenu, setDspMenu] = React.useState(false)
 
-
-
-
-
-
-
     return (
         <View style={{ backgroundColor: background, }} >
 
@@ -42,10 +36,6 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement}
                 user={user}
                 onProfileUpdate={updateUserProfile}
             />
-
-
-            <View>
-
 
                 <View>
 
@@ -80,7 +70,6 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement}
                                         <FontAwesome6 name="user" size={wp(7)} color={icon} />;
                                     </View>
                                 </TouchableNativeFeedback>
-
 
                                 <View style={{}}>
                                     <View style={{}}>
@@ -125,13 +114,38 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement}
                     )
 
                         : (
-                            <>
-                               
+                             <View
+                                style={{
+                                    backgroundColor: background,
+                                    paddingHorizontal: wp(2),
+                                    paddingVertical: wp(1),
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: wp(1),
+                                    marginTop:-35        /* adding negaive margin to pull it up for the tracking page to have good header`*/
+                                }}
+                            >
 
-                            </>
+                                <View style={{}}>
+                                    <View style={{}}>
+                                        <ThemedText type="title" >{pageTitle}</ThemedText>
+                                        <ThemedText type='default' >Role: {currentRole.accType}
+                                        </ThemedText>
+                                    </View>
+                                </View>
+
+                                    <TouchableNativeFeedback onPress={()=>setDspMenu(true)} style={{marginRight:6}} >
+                                        <View >
+                                            <Ionicons name="ellipsis-vertical" size={wp(6)} color={icon} />
+                                        </View>
+                                    </TouchableNativeFeedback>
+
+
+
+                            </View>    
                         )
                     }
-                </View>
 
 
 

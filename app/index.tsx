@@ -26,6 +26,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuthState } from "@/hooks/useAuthState";
 import { useAppUpdate } from "@/hooks/useAppUpdate";
 import { useAuth } from '@/context/AuthContext';
+import SignUp from "./Account/SignUp"
 
 import {
   FontAwesome6,
@@ -36,9 +37,13 @@ import {
 
 import { hp, wp } from "@/constants/common";
 import NetInfo from '@react-native-community/netinfo';
-import FleetSelector from "./Account/FleetSelector";
+// import FleetSelector from "./Account/FleetSelector";
+import FleetSelector from "./Fleet/FleetSelector/Index";
+import BrokerageSelector from "./brokerage/BrokerageSelector/Index";
+
 import Login from "./Account/Login";
 import Tracking from "./Tracking/Map";
+import TrackingIndex from "./Tracking/Index"
 
 const Tab = createBottomTabNavigator();
 
@@ -53,8 +58,9 @@ export default function Index() {
 
   const [dspCreateAcc, setDspCreateAcc] = useState(false);
   const [dspVerifyAcc, setDspVerifyAcc] = useState(false);
-
   const versionCheckRun = useRef(false);
+
+  const [dspLoginOrSignup, setDspLoginOrSignup] = useState(true);
 
   const {
     isLoading: authLoading,
@@ -76,7 +82,7 @@ export default function Index() {
   const { currentRole } = useAuth();
 
   // Check if profile details are missing
-  const isProfileIncomplete = isAuthenticated &&user !== undefined &&(user === null ||!user.phoneNumber ||!user.organisation);
+  const isProfileIncomplete = isAuthenticated && user !== undefined && (user === null || !user.phoneNumber || !user.organisation);
   const isAuthReady = !authLoading && user !== undefined;
 
   useEffect(() => {
@@ -129,7 +135,7 @@ export default function Index() {
     }
 
     versionCheckRun.current = true;
-    const versionTimeout = setTimeout(() => {}, 5000);
+    const versionTimeout = setTimeout(() => { }, 5000);
     checkForUpdate()
       .then(() => {
         clearTimeout(versionTimeout);
@@ -139,7 +145,7 @@ export default function Index() {
       });
   }, [isAuthReady, isConnectedInternet]);
 
- 
+
 
   if (!isAuthReady) {
     return (
@@ -171,7 +177,7 @@ export default function Index() {
           <ThemedText style={{ textAlign: 'center', marginVertical: 10, opacity: 0.7 }}>
             Please provide your organization and phone details to continue.
           </ThemedText>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.btn, { backgroundColor: accent }]}
             onPress={() => router.push('/Account/Profile')}
           >
@@ -219,44 +225,105 @@ export default function Index() {
             },
           })}
         >
-          { dspCreateAcc ? (
+          {dspCreateAcc ? (
             <>
-                <Tab.Screen name="Home " component={Login} />
+              {/* <Tab.Screen name="Home " component={dspLoginOSignup ? Login : SignUp} /> */}
+
+              <Tab.Screen name="Home">
+                {(props) =>
+                  dspLoginOrSignup ? (
+                    <Login
+                      {...props}
+                      setDspLoginOrSignup={setDspLoginOrSignup}
+                    />
+                  ) : (
+                    <SignUp
+                      {...props}
+                      setDspLoginOrSignup={setDspLoginOrSignup}
+                    />
+                  )
+                }
+              </Tab.Screen>
+
+
               <Tab.Screen name="About " component={About} />
             </>
-          ):
-          
-          (typeof currentRole === 'object' && currentRole.role === 'general' ) ? (
-            <>
-              <Tab.Screen name="Home " component={Tracking} />
-              <Tab.Screen name="About " component={About} />
-            </>
-          ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'owner') ? (
-            <>
-              <Tab.Screen name="Loads" component={Loads} />
-              <Tab.Screen name="Trucks" component={LogisticsTrucks} />
-              <Tab.Screen name="Chat" component={ChatIndex} />
-              <Tab.Screen name="Wallet" component={Wallet} />
-            </>
-          ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'driver') ? (
-            <>
-              <Tab.Screen name="Jobs" component={Jobs} />
-              <Tab.Screen name="Trucks" component={Trucks} />
-              <Tab.Screen name="Chat" component={ChatIndex} />
-              <Tab.Screen name="Earnings" component={Earnings} />
-            </>
-          ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' ) ? 
-           (<>
-               <Tab.Screen name="Home " component={FleetSelector} />
-              <Tab.Screen name="About " component={About} />
-          </>)
-          
-          : (
-            <>
-              <Tab.Screen name="Home " component={Login} />
-              <Tab.Screen name="About " component={About} />
-            </>
-          )}
+          ) :
+
+            (typeof currentRole === 'object' && currentRole.role === 'general') ? (
+              <>
+                <Tab.Screen name="Home " component={TrackingIndex} />
+                <Tab.Screen name="About " component={About} />
+              </>
+            ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'owner') ? (
+              <>
+                <Tab.Screen name="Loads" component={Loads} />
+                <Tab.Screen name="Trucks" component={LogisticsTrucks} />
+                <Tab.Screen name="Chat" component={ChatIndex} />
+                <Tab.Screen name="Wallet" component={Wallet} />
+              </>
+            ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'driver') ? (
+              <>
+                <Tab.Screen name="Jobs" component={Jobs} />
+                <Tab.Screen name="Trucks" component={Trucks} />
+                <Tab.Screen name="Chat" component={ChatIndex} />
+                <Tab.Screen name="Earnings" component={Earnings} />
+              </>
+            ) : (typeof currentRole === 'object' && currentRole.role === 'fleet') ?
+              (<>
+                <Tab.Screen name="Home " component={FleetSelector} />
+                <Tab.Screen name="About " component={About} />
+              </>)   
+
+
+
+
+
+
+
+
+
+
+
+
+
+: (typeof currentRole === 'object' && currentRole.role === 'brokerage' && currentRole.userRole === 'owner') ? (
+              <>
+                <Tab.Screen name="Loads" component={Loads} />
+                <Tab.Screen name="Trucks" component={LogisticsTrucks} />
+                <Tab.Screen name="Chat" component={ChatIndex} />
+                <Tab.Screen name="Wallet" component={Wallet} />
+              </>
+            ) :  (typeof currentRole === 'object' && currentRole.role === 'brokerage') ?
+              (<>
+                <Tab.Screen name="Home " component={BrokerageSelector} />
+                <Tab.Screen name="About " component={About} />
+              </>)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              : (
+                <>
+                  {/* <Tab.Screen name="Home " component={Login} /> */}
+                  <Tab.Screen name="About " component={About} />
+                </>
+              )}
         </Tab.Navigator>
 
         <UpdateModal visible={showUpdateModal} onClose={dismissUpdate} currentVersion={currentVersion} latestVersion={latestVersion} updateUrl="https://play.google.com/store/apps/details?id=com.yayapana.TransixNewVersion" isForceUpdate={isForceUpdate} />
@@ -264,7 +331,7 @@ export default function Index() {
 
         {/* <AuthStatusModal visible={dspCreateAcc} onClose={() => isAuthenticated && setDspCreateAcc(false)} user={user} type="create" /> */}
 
-          
+
         <AuthStatusModal visible={dspVerifyAcc} onClose={() => !needsEmailVerification && setDspVerifyAcc(false)} user={user} type="verify" />
       </View>
     </ScreenWrapper>

@@ -23,7 +23,7 @@ import {
 } from '@expo/vector-icons';
 import { AccountType } from '@/types/types';
 
-const Login = () => {
+const Login = ({ setDspLoginOrSignup }:any) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -152,19 +152,19 @@ const Login = () => {
 
                             <TouchableOpacity
                                 activeOpacity={0.85}
-                                onPress={() => handleAccountSelect('broker')}
+                                onPress={() => handleAccountSelect('brokerage')}
                                 style={[
                                     styles.accountButton,
-                                    { backgroundColor: selectedAccount === 'broker' ? accent : backgroundLight }
+                                    { backgroundColor: selectedAccount === 'brokerage' ? accent : backgroundLight }
                                 ]}
                             >
                                 <MaterialCommunityIcons
                                     name="briefcase-outline"
                                     size={22}
-                                    color={selectedAccount === 'broker' ? '#fff' : icon}
+                                    color={selectedAccount === 'brokerage' ? '#fff' : icon}
                                 />
-                                <ThemedText style={{ color: selectedAccount === 'broker' ? '#fff' : undefined }}>
-                                    Broker
+                                <ThemedText style={{ color: selectedAccount === 'brokerage' ? '#fff' : undefined }}>
+                                    Brokerage
                                 </ThemedText>
                             </TouchableOpacity>
                         </View>
@@ -253,7 +253,9 @@ const Login = () => {
 
                     <TouchableOpacity
                         style={{ marginTop: hp(2) }}
-                        onPress={() => router.replace('/Account/SignUp')}
+                        // onPress={() => router.replace('/Account/SignUp')}
+                            onPress={() => setDspLoginOrSignup(false)}
+
                     >
                         <ThemedText style={styles.footerText}>
                             Do not have an Account?{" "}

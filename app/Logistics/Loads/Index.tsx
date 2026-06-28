@@ -38,7 +38,7 @@ const Index = () => {
     const [bottomMode, setBottomMode] = useState<'Bid' | 'Book' | ''>('');
 
     const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
-    const [loadVisibility, setLoadVisibility] = useState< 'Private' | 'Public'>('Public');
+    const [loadVisibility, setLoadVisibility] = useState< 'Private' | 'Public'>('Private');
     const [currentRole, setCurrentRole] = useState<any>(null);
 
     useEffect(() => {
@@ -74,7 +74,6 @@ const Index = () => {
                 console.log(2)
                 collectionName = `brokers/${currentRole.brokerId}/Cargo`;
             }else      if (currentRole?.accType === 'general' && loadVisibility === 'Private') { 
-                console.log(3)
                     filters = [
                     where("approvalStatus", "==", "approved"),
                     where("isApproved", "==", true),
@@ -90,12 +89,9 @@ const Index = () => {
                     where("isApproved", "==", true),
                     where("personalAccTypeIsApproved", "==", true)
                 ];
-
-                
               
             }
 
-            console.log("Filters applied for loads:", filters);
 
 
             const maLoads = await fetchDocuments(collectionName, 50, undefined, filters);
@@ -149,10 +145,7 @@ const Index = () => {
             // Apply same filters as in LoadTructs for pagination
             if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
                 collectionName = `fleets/${currentRole.fleetId}/Cargo`;
-                filters = [
-                    where("loadVisibility", "==", "Private"),
-                    where("cargoStatus", "==", "pending")
-                ];
+                    
             } else {
                 filters = [
                     where("approvalStatus", "==", "approved"),
@@ -210,8 +203,9 @@ const Index = () => {
                     visibilitySelector={
                             <HorizontalTickComponent
                                 data={[
-                                    { topic: "Public", value: "Public" },
                                     { topic: "Private", value: "Private" },
+                                    { topic: "Public", value: "Public" },
+                                    { topic: "Network", value: "Network" },
                                 ]}
                                 condition={loadVisibility}
                                 onSelect={setLoadVisibility}

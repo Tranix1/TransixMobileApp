@@ -74,8 +74,16 @@ export const TruckTrackerManager: React.FC<TruckTrackerManagerProps> = ({
   };
 
   const handleViewTracker = () => {
-    if (truck.hasTracker && truck.trackerId) {
-      router.push(`/Tracking/Map?trackerId=${truck.trackerId}`);
+    if (truck.hasTracker && truck.trackingDeviceId) {
+
+      router.push({
+                    pathname: "/Tracking/Map",
+                    params: {
+                      deviceId: truck.trackingDeviceId,
+                      firebaseDocId: truck.id,
+                      isOnceOff:  'false'
+                    }, }  )
+
     }
   };
 
@@ -137,98 +145,7 @@ export const TruckTrackerManager: React.FC<TruckTrackerManagerProps> = ({
     <View>
       {renderTrackerActions()}
 
-      <Modal visible={showAddTracker} transparent animationType="slide">
-        <View style={{ 
-          flex: 1, 
-          backgroundColor: 'rgba(0,0,0,0.5)', 
-          justifyContent: 'center', 
-          paddingHorizontal: wp(4) 
-        }}>
-          <View style={{ 
-            backgroundColor: background, 
-            borderRadius: 12, 
-            padding: wp(4) 
-          }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: wp(3) }}>
-              <ThemedText style={{ fontSize: 18, fontWeight: 'bold' }}>Add Tracker</ThemedText>
-              <TouchableOpacity onPress={() => setShowAddTracker(false)}>
-                <Ionicons name="close" size={24} color={accent} />
-              </TouchableOpacity>
-            </View>
-
-            <ThemedText style={{ marginBottom: wp(1) }}>Tracker Name</ThemedText>
-            <Input
-              value={trackerName}
-              onChangeText={setTrackerName}
-              placeholder="e.g., Main Truck Tracker"
-              style={{ marginBottom: wp(3) }}
-            />
-
-            <ThemedText style={{ marginBottom: wp(1) }}>IMEI Number</ThemedText>
-            <Input
-              value={trackerImei}
-              onChangeText={setTrackerImei}
-              placeholder="Enter tracker IMEI"
-              keyboardType="numeric"
-              style={{ marginBottom: wp(4) }}
-            />
-
-           <View
-    style={{
-        flexDirection: 'row',
-        gap: wp(2),
-        marginTop: wp(4),
-    }}
->
-    <TouchableOpacity
-        onPress={() => setShowAddTracker(false)}
-        style={{
-            flex: 1,
-            paddingVertical: wp(3),
-            borderWidth: 1,
-            borderColor: icon,
-            borderRadius: wp(2),
-            alignItems: 'center',
-            justifyContent: 'center',
-        }}
-    >
-        <ThemedText
-            style={{
-                fontWeight: '600',
-            }}
-        >
-            Cancel
-        </ThemedText>
-    </TouchableOpacity>
-
-    <TouchableOpacity
-        onPress={handleAddTracker}
-        disabled={isSubmitting}
-        style={{
-            flex: 1,
-            paddingVertical: wp(3),
-            borderRadius: wp(2),
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: isSubmitting ? 0.6 : 1,
-            backgroundColor: icon,
-        }}
-    >
-        <ThemedText
-            style={{
-                color: '#fff',
-                fontWeight: '600',
-            }}
-        >
-            {isSubmitting ? 'Adding...' : 'Add Tracker'}
-        </ThemedText>
-    </TouchableOpacity>
-</View>
-
-
-          </View>
-        </View>
-      </Modal>
+     
     </View>
 
     

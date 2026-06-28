@@ -15,6 +15,7 @@ import { VehicleLifecycleService, startVehicleLifecycleMonitoring } from '@/serv
 import { openWhatsApp, getContactMessage } from '@/Utilities/whatsappUtils';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { handleMakePayment } from "@/payments";
+import CustomHeader from "@/components/CustomHeader";
 
 interface Device {
   id: string;
@@ -366,33 +367,10 @@ export default function Index() {
 
   return (
     <ScreenWrapper>
+      <CustomHeader pageTitle="Transix"  />
 
-      {/* Cpmmented out tracking header to use it at new home */}
 
-      {/* <Heading page='Tracking' rightComponent={
-        isAgent ? (
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: wp(3) }}>
-            <View>
-              <TouchableNativeFeedback onPress={() => router.push('/Tracking/AddTrackedVehicle')}>
-                <ThemedText style={{ alignSelf: 'flex-start' }}>Add Vehicle</ThemedText>
-              </TouchableNativeFeedback>
-            </View>
-            {user?.uid === 'QOC9krp5BOR7NhFXRuX5f32u17e2' && (
-              <View style={{ marginLeft: wp(4) }}>
-                <TouchableNativeFeedback onPress={() => router.push('/Tracking/AddAgent')}>
-                  <ThemedText style={{ alignSelf: 'flex-start' }}>Add Agent</ThemedText>
-                </TouchableNativeFeedback>
-              </View>
-            )}
-          </View>
-        ) : !isAgent && user?.uid !== 'QOC9krp5BOR7NhFXRuX5f32u17e2' ? (
-          <View style={{ marginRight: wp(3) }}>
-            <TouchableNativeFeedback onPress={handleContactUs}>
-              <ThemedText style={{ alignSelf: 'flex-start' }}>Contact Us</ThemedText>
-            </TouchableNativeFeedback>
-          </View>
-        ) : undefined
-      } /> */}
+
 
           { isAgent ? (
           <View style={{ flexDirection: 'row', justifyContent: "space-evenly", marginRight: wp(3), }}>
@@ -454,13 +432,13 @@ export default function Index() {
               activeOpacity={0.8}
               onPress={() => {
                 if (isAccessible) {
-                  router.push({
-                    pathname: "/Tracking/Map",
-                    params: {
-                      deviceId: item.deviceId,
-                      firebaseDocId: item.id,
-                      isOnceOff: item.subscription?.isOnceOff ? 'true' : 'false'
-                    },
+                    router.push({
+                      pathname: "/Tracking/Map",
+                      params: {
+                        deviceId: item.deviceId,
+                        firebaseDocId: item.id,
+                        isOnceOff: item.subscription?.isOnceOff ? 'true' : 'false'
+                      },
                   });
                 } else if (isDeletedFromTraccar) {
                   handleReAddVehicle(item.id, item.vehicleName);
@@ -653,9 +631,8 @@ export default function Index() {
 
 
 const styles = StyleSheet.create({
-  container: {
-    padding: wp(2)
-  }, countryButton: {
+  
+   countryButton: {
     padding: wp(2),
     paddingHorizontal: wp(4),
     borderRadius: wp(4)

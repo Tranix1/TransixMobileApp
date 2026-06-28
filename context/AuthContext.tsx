@@ -77,11 +77,11 @@ const DEFAULT_FLEET_ROLE: CurrentRole = {
 };
 
 const DEFAULT_BROKER_ROLE: CurrentRole = {
-    role: 'broker',
+    role: 'brokerage',
     brokerId: "",
     companyName: "",
     userRole: "",
-    accType: 'broker',
+    accType: 'brokerage',
     brokerType: "",
 };
 

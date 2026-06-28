@@ -1,7 +1,7 @@
 import { ImageSourcePropType } from "react-native";
 import { ImagePickerAsset } from "expo-image-picker";
 
-export type AccountType = 'general' | 'tracking' | 'fleet' | 'broker';
+export type AccountType = 'general' | 'tracking' | 'fleet' | 'brokerage';
 
 export type CurrentRole =
   | {
@@ -27,11 +27,11 @@ export type CurrentRole =
       brokerId: string;
     }
   | {
-      role: 'broker';
+      role: 'brokerage';
       brokerId: string;
       companyName: string;
       userRole: string;
-      accType: 'broker';
+      accType: 'brokerage';
       brokerType: string;
       fleetId: string | null;
 
@@ -40,7 +40,7 @@ export type CurrentRole =
 export type RoleProps =
   | 'general'
   | 'fleet'
-  | 'broker'
+  | 'brokerage'
   | CurrentRole;
 
 

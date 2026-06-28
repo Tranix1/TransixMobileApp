@@ -62,15 +62,15 @@ const AddLoadDB = () => {
   const [assignmentDestination, setAssignmentDestination] =
     useState<SelectLocationProp | null>(null);
 
-  const [assignmentDspFromLocation, setAssignmentDspFromLocation] =  useState(false);
+  const [assignmentDspFromLocation, setAssignmentDspFromLocation] = useState(false);
 
-  const [assignmentDspToLocation, setAssignmentDspToLocation] =useState(false);
+  const [assignmentDspToLocation, setAssignmentDspToLocation] = useState(false);
 
-  const [assignmentLocationPicKERdSP, setAssignmentPickLocationOnMap] =useState(false);
+  const [assignmentLocationPicKERdSP, setAssignmentPickLocationOnMap] = useState(false);
 
-  const [assignmentDistance, setAssignmentDistance] =useState("");
+  const [assignmentDistance, setAssignmentDistance] = useState("");
 
-  const [assignmentDuration, setAssignmentDuration] =useState("");
+  const [assignmentDuration, setAssignmentDuration] = useState("");
 
   const [assignmentDurationInTraffic, setAssignmentDurationInTraffic] = useState("");
   const [fleetDrivers, setFleetDrivers] = useState<any[]>([]);
@@ -94,7 +94,7 @@ const AddLoadDB = () => {
   const [searchedBrokers, setSearchedBrokers] = useState<any[]>([]);
 
   // Broker truck states
-  const [brokerTrucks, setBrokerTrucks] = useState<any[]>([]);  
+  const [brokerTrucks, setBrokerTrucks] = useState<any[]>([]);
   const [selectedBrokerTrucks, setSelectedBrokerTrucks] = useState<any[]>([]);
   const [brokerTruckSearchQuery, setBrokerTruckSearchQuery] = useState('');
   const [searchedBrokerTrucks, setSearchedBrokerTrucks] = useState<any[]>([]);
@@ -139,7 +139,7 @@ const AddLoadDB = () => {
       }
 
       // Fetch broker assigned trucks if user is a broker
-      if (currentRole && currentRole.accType === 'broker') {
+      if (currentRole && currentRole.accType === 'brokerage') {
         try {
           // Use getDocs to fetch broker assigned trucks directly
           const brokerTrucksQuery = query(collection(db, `brokers/${currentRole.brokerId}/trucks`));
@@ -164,11 +164,6 @@ const AddLoadDB = () => {
     fetchAll();
   }, []); // Remove userIsFleetVerified dependency to prevent infinite loops
 
-
-
-
-
-
   const { expoPushToken } = usePushNotifications();
   const icon = useThemeColor('icon')
   const accent = useThemeColor('accent')
@@ -191,12 +186,12 @@ const AddLoadDB = () => {
   const [rateexplantion, setRateExplanation] = useState(defaultState.rateexplantion);
   const [paymentTerms, setPaymentTerms] = useState(defaultState.paymentTerms);
   const [requirements, setRequirements] = useState(defaultState.requirements)
-  
-const [loadingDate, setLoadingDate] = useState(defaultState.loadingDate);
-const [showLoadingDatePicker, setShowLoadingDatePicker] = useState(false)
 
-const [deliveryDate, setDeliveryDate] = useState(defaultState.deliveryDate);
-const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
+  const [loadingDate, setLoadingDate] = useState(defaultState.loadingDate);
+  const [showLoadingDatePicker, setShowLoadingDatePicker] = useState(false)
+
+  const [deliveryDate, setDeliveryDate] = useState(defaultState.deliveryDate);
+  const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
 
   const [additionalInfo, setAdditionalInfo] = useState(defaultState.additionalInfo);
   const [alertMsg, setAlertMsg] = useState(defaultState.alertMsg);
@@ -387,8 +382,7 @@ const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
     setTrucksNeeded(prev => prev.filter((_, index) => index !== indexToRemove));
   }
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
-  console.log("Is submmiting",isSubmitting)
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Error modal state
   const [errorTitle, setErrorTitle] = useState("Error");
@@ -494,19 +488,12 @@ const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
 
       setIsSubmitting(true)
 
-      if (!alertBox) {
-        console.error('alertBox not available');
-        return;
-      }
-      
-
-
       // Use utility function for validation
       let validationErrors = [];
       try {
         const validationTrucksNeeded = currentRole?.accType === 'fleet' && loadVisibility === 'Private'
           ? selectedFleetTrucks
-          : currentRole?.accType === 'broker' && loadVisibility === 'Private'
+          : currentRole?.accType === 'brokerage' && loadVisibility === 'Private'
             ? selectedBrokerTrucks
             : trucksNeeded;
 
@@ -567,23 +554,20 @@ const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
       // }
 
       // Additional validation for broker private loads
-      if (currentRole?.accType === 'broker' && loadVisibility === 'Private') {
+      if (currentRole?.accType === 'brokerage' && loadVisibility === 'Private') {
         if (selectedBrokerTrucks.length === 0) {
           validationErrors.push('Select at least one assigned truck');
         }
       }
 
-
-      if (validationErrors.length > 0) {
-        setTimeout(() => {
-          alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
-        }, 100);
-        // setIsSubmitting(false)
-        return;
-      }
+      // if (validationErrors.length > 0) {
+      //     alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
+      //   // setIsSubmitting(false)
+      //   return;`
+      // }
 
       // Show payment confirmation modal
-      confirmLoadPaymentAndSubmit()
+      // confirmLoadPaymentAndSubmit()
       return;
 
     } catch (e) {
@@ -606,9 +590,9 @@ const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
   // Function to handle payment confirmation and proceed with load submission
   const confirmLoadPaymentAndSubmit = async () => {
     setIsSubmitting(true);
-          
+
     try {
-      
+
       if (!user || !user.uid) {
         alert("Please wait for user data to load or reopen Add Load.");
         return;
@@ -695,7 +679,7 @@ const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
         rate,
         selectedModelType,
         selectedCurrency,
-           
+
       });
 
       ToastAndroid.show('load added successfully.', ToastAndroid.SHORT);
@@ -844,85 +828,78 @@ const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
                 placeholder='e.g., 1, 2, 5'
                 keyboardType="numeric"
               />
-              
-          <ThemedText>
-  Loading date <ThemedText color="red">*</ThemedText>
-</ThemedText>
 
-<TouchableOpacity onPress={() => setShowLoadingDatePicker(true)}>
-  <Input
-    value={
-      loadingDate
-        ? new Date(loadingDate).toLocaleDateString()
-        : ""
-    }
-    placeholder="Select loading date"
-    editable={false}
-  />
-</TouchableOpacity>
+              <ThemedText>
+                Loading date <ThemedText color="red">*</ThemedText>
+              </ThemedText>
 
-
-{showLoadingDatePicker && (
-  <DateTimePicker
-    value={
-      loadingDate
-        ? new Date(loadingDate)
-        : new Date()
-    }
-    mode="date"
-    display="default"
-    onChange={(event, selectedDate) => {
-      setShowLoadingDatePicker(false);
-
-      if (selectedDate) {
-        setLoadingDate(selectedDate.toISOString());
-      }
-    }}
-  />
-)}
+              <TouchableOpacity onPress={() => setShowLoadingDatePicker(true)}>
+                <Input
+                  value={
+                    loadingDate
+                      ? new Date(loadingDate).toLocaleDateString()
+                      : ""
+                  }
+                  placeholder="Select loading date"
+                  editable={false}
+                />
+              </TouchableOpacity>
 
 
+              {showLoadingDatePicker && (
+                <DateTimePicker
+                  value={
+                    loadingDate
+                      ? new Date(loadingDate)
+                      : new Date()
+                  }
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowLoadingDatePicker(false);
+
+                    if (selectedDate) {
+                      setLoadingDate(selectedDate.toISOString());
+                    }
+                  }}
+                />
+              )}
+
+              <ThemedText>
+                Delivery Date <ThemedText color="red">*</ThemedText>
+              </ThemedText>
+
+              <TouchableOpacity onPress={() => setShowDeliveryDatePicker(true)}>
+                <Input
+                  value={
+                    deliveryDate
+                      ? new Date(deliveryDate).toLocaleDateString()
+                      : ""
+                  }
+                  placeholder="Select delivery date"
+                  editable={false}
+                />
+              </TouchableOpacity>
 
 
+              {showDeliveryDatePicker && (
+                <DateTimePicker
+                  value={
+                    deliveryDate
+                      ? new Date(deliveryDate)
+                      : new Date()
+                  }
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowDeliveryDatePicker(false);
 
-
-
-
-<ThemedText>
-  Delivery Date <ThemedText color="red">*</ThemedText>
-</ThemedText>
-
-<TouchableOpacity onPress={() => setShowDeliveryDatePicker(true)}>
-  <Input
-    value={
-      deliveryDate
-        ? new Date(deliveryDate).toLocaleDateString()
-        : ""
-    }
-    placeholder="Select delivery date"
-    editable={false}
-  />
-</TouchableOpacity>
-
-
-{showDeliveryDatePicker && (
-  <DateTimePicker
-    value={
-      deliveryDate
-        ? new Date(deliveryDate)
-        : new Date()
-    }
-    mode="date"
-    display="default"
-    onChange={(event, selectedDate) => {
-      setShowDeliveryDatePicker(false);
-
-      if (selectedDate) {
-        setDeliveryDate(selectedDate.toISOString());
-      }
-    }}
-  />
-)}
+                    if (selectedDate) {
+                      setDeliveryDate(selectedDate.toISOString());
+                    }
+                  }}
+                />
+              )}
 
 
 
@@ -1367,7 +1344,7 @@ const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
             <Divider />
 
             {/* Broker Selection Section - Hide for broker users */}
-            {currentRole?.accType !== 'broker' && (
+            {currentRole?.accType !== 'brokerage' && (
               <>
                 <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Select Brokers</ThemedText>
                 <Input
@@ -1430,7 +1407,7 @@ const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
             )}
 
             {/* Load Visibility Toggle for Fleet and Broker Users */}
-            {(currentRole?.accType === 'fleet' || currentRole?.accType === 'broker') && (
+            {(currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage') && (
               <View style={{ marginBottom: wp(4) }}>
                 <ThemedText style={{ fontWeight: 'bold', marginBottom: wp(2) }}>Load Visibility</ThemedText>
                 <View style={{ flexDirection: 'row', gap: wp(2) }}>
@@ -2069,7 +2046,7 @@ const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
               <>
                 {renderTruckRequirements({ helperText: 'This public load will be visible to all available trucks in the system.' })}
               </>
-            ) : currentRole?.accType === 'broker' && loadVisibility === 'Private' ? (
+            ) : currentRole?.accType === 'brokerage' && loadVisibility === 'Private' ? (
               // Broker User: Private load - Select assigned trucks (no drivers)
               <>
                 {/* Truck Search */}
@@ -2140,11 +2117,11 @@ const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
               <Button onPress={handleSubmit} title={isSubmitting ? "Submiting..." : "Submit"} disabled={isSubmitting} loading={isSubmitting} colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{ borderWidth: 1, borderColor: accent }} />
             </View>
           </View>
-            <View style={{height:25}}/>
+          <View style={{ height: 25 }} />
         </ScrollView>)}
       </View>
 
-    
+
     </ScreenWrapper>
   );
 };
