@@ -158,7 +158,7 @@ const Index = ({ setDspLoginOrSignup }:any) => {
                                     color={selectedAccount === 'brokerage' ? '#fff' : icon}
                                 />
                                 <ThemedText style={{ color: selectedAccount === 'brokerage' ? '#fff' : undefined }}>
-                                    Brokerage
+                                    Broker
                                 </ThemedText>
                             </TouchableOpacity>
                         </View>

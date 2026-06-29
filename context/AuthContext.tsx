@@ -117,7 +117,7 @@ const normalizeAccountType = (roleInput: CurrentRole | AccountType | null | unde
             return { ...DEFAULT_GENERAL_ROLE, accType: 'general' };
         case 'fleet':
             return DEFAULT_FLEET_ROLE;
-        case 'broker':
+        case 'brokerage':
             return DEFAULT_BROKER_ROLE;
         default:
             return DEFAULT_GENERAL_ROLE;
@@ -277,6 +277,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             };
 
             setUser(fullUser);
+            console.log(fullUser)
             setIsSignedIN(true);
             setIsAppReady(true);
             await AsyncStorage.setItem('user', JSON.stringify(fullUser));

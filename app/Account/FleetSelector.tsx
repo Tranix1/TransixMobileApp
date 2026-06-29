@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { View, StyleSheet, TouchableOpacity, TouchableNativeFeedback, ToastAndroid } from "react-native";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { ThemedText } from "@/components/ThemedText";
@@ -327,6 +327,7 @@ const filteredFleets =
         gap: wp(2),
         marginTop: wp(2),
         marginBottom: wp(3),
+        paddingLeft:15
     }}
 >
 

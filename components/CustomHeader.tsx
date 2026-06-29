@@ -40,7 +40,7 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement}
                 <View>
 
 
-                    {typeof currentRole === 'object' && (currentRole.role === 'fleet' || currentRole.role === 'broker') ? (
+                    {typeof currentRole === 'object' && (currentRole.role === 'fleet' || currentRole.role === 'brokerage') ? (
                         <>
                             {currentRole.userRole === '' ?
                                 <View style={{flexDirection :"row" , justifyContent:"space-between", alignItems:"center",

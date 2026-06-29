@@ -22,6 +22,7 @@ import { hp, wp } from "@/constants/common";
 import { Load } from "@/types/types";
 import { parseCoordinateString, isValidCoordinate, DEFAULT_COORDINATES, Coordinate } from "@/Utilities/coordinateUtils";
 import ScreenWrapper from "@/components/ScreenWrapper";
+import AccentRingLoader from "@/components/AccentRingLoader";
 
 // import CrossPlatformMapView from "@/components/CrossPlatformMapView";
 
@@ -371,7 +372,7 @@ export default function ViewLoadRoutes() {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={accent} />
+                <AccentRingLoader color={accent} />
                 <ThemedText style={styles.loadingText}>Loading route...</ThemedText>
             </View>
         );
@@ -684,7 +685,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: '#f5f5f5',
     },
     loadingText: {
         marginTop: wp(4),
@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
     },
     header: {
         position: 'absolute',
-        top: wp(8),
+        top: wp(4),
         left: wp(4),
         right: wp(4),
         flexDirection: 'row',

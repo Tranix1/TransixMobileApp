@@ -142,7 +142,7 @@ function AddTrucks() {
 
     if (missingTruckDetails.length > 0) {
       // setContractDErr(true);
-      alertBox("Missing Truck Details", missingTruckDetails.join("\n"), [], "error");
+            alertBox("Missing Truck Details", missingTruckDetails.join("\n"), [], "error");
       setSpinnerItem(false)
       return;
     }

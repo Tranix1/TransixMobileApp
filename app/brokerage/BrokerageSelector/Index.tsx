@@ -11,13 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { hp, wp } from "@/constants/common";
 
-interface BrokerageAccess {
-    brokerageId: string;
-    brokerageName: string;
-    status: 'pending' | 'active' | 'declined' | 'ended';
-    invitedAt?: any;
-    acceptedAt?: any;
-}
+
 
 function BrokerageSelector() {
     const { user, Logout, setupUser, setCurrentRole } = useAuth();
@@ -30,7 +24,7 @@ function BrokerageSelector() {
     const accent = useThemeColor('accent');
     const icon = useThemeColor('icon');
 
-    const ownedBrokerages = Array.isArray(user?.fleets) ? user.fleets : [];
+    const ownedBrokerages = Array.isArray(user?.brokergePDetails) ? user.brokergePDetails : [];
     const fleetBrokerages = ownedBrokerages.length;
     const hasReferral = !!user?.referrerId || !!user?.referrerCode;
 
@@ -93,7 +87,7 @@ function BrokerageSelector() {
 
         if (!brokerage) return;
 
-        const fleetRole = {
+        const brokerageRole = {
             role: 'brokerage' as const,
             brokerageId: brokerage.brokerageId,
             companyName: brokerage.companyName || brokerage.brokerage,
@@ -101,9 +95,9 @@ function BrokerageSelector() {
             accType: 'brokerage' as const,
         };
 
-    (fleetRole as any);
-        await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
-        setCurrentRole(fleetRole as any)
+    (brokerageRole as any);
+        await AsyncStorage.setItem('currentRole', JSON.stringify(brokerageRole));
+        setCurrentRole(brokerageRole as any)
         router.replace('/');
     };
     
@@ -124,7 +118,7 @@ function BrokerageSelector() {
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingHorizontal: 13, marginTop: hp(4) }}>
                 <ThemedText style={styles.sectionHeading}>Brokerages I Own</ThemedText>
 
-                <TouchableOpacity style={styles.createButton} onPress={() => router.push('/')}>
+                <TouchableOpacity style={styles.createButton} onPress={() => router.push('/brokerage/CreateBrokerage/Index')}>
                     <ThemedText style={styles.createButtonText}>Create New Brokerage</ThemedText>
                 </TouchableOpacity>
             </View>
@@ -154,14 +148,14 @@ function BrokerageSelector() {
                         ))}
                     </View>  
                 ) : (
-                    <TouchableNativeFeedback onPress={() => router.push('/')}>
+                    <TouchableNativeFeedback onPress={() => router.push('/brokerage/CreateBrokerage/Index')}>
                         <View style={styles.emptyCard}>
                             <ThemedText style={styles.emptyCardText}>Create Brokerage</ThemedText>
                         </View>
                     </TouchableNativeFeedback>
                 )}
             </View>
-                
+
 
             <ReferralCodeModal
                 visible={showReferralModal}

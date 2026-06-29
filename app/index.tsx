@@ -37,7 +37,6 @@ import {
 
 import { hp, wp } from "@/constants/common";
 import NetInfo from '@react-native-community/netinfo';
-// import FleetSelector from "./Account/FleetSelector";
 import FleetSelector from "./Fleet/FleetSelector/Index";
 import BrokerageSelector from "./brokerage/BrokerageSelector/Index";
 
@@ -80,6 +79,7 @@ export default function Index() {
   } = useAppUpdate();
 
   const { currentRole } = useAuth();
+  console.log(currentRole)
 
   // Check if profile details are missing
   const isProfileIncomplete = isAuthenticated && user !== undefined && (user === null || !user.phoneNumber || !user.organisation);
@@ -229,7 +229,7 @@ export default function Index() {
             <>
               {/* <Tab.Screen name="Home " component={dspLoginOSignup ? Login : SignUp} /> */}
 
-              <Tab.Screen name="Home">
+              <Tab.Screen name="Home ">
                 {(props) =>
                   dspLoginOrSignup ? (
                     <Login

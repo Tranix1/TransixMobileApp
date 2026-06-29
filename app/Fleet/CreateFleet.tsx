@@ -16,7 +16,7 @@ import { pickDocument } from '@/Utilities/utils';
 import { takePhoto } from '@/Utilities/imageUtils';
 import { DocumentAsset } from '@/types/types';
 import { useAuth } from '@/context/AuthContext';
-import { addDocument, uploadImage, updateDocument } from '@/db/operations';
+import { addDocument, uploadImage, updateDocument,generateUniqueReferrerCode } from '@/db/operations';
 import { setDoc, doc } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import CustomHeader from '@/components/CustomHeader';
@@ -69,6 +69,7 @@ const CreateFleet = () => {
         setUploadingFleetD(true);
         try {
             const fleetId = `FLT_${Date.now()}_${user.uid}`;
+             const code = await generateUniqueReferrerCode();
 
             const uploadPromises = fleetData.selectedFleetDocuments.map(async (docItem: DocumentAsset, index: number) => {
                 if (!docItem) return null;
@@ -116,7 +117,10 @@ const CreateFleet = () => {
                     revenue: 0,
                     rating: 0,
                 },
+                code ,
             };
+            await addDocument('verifiedUsers', fleetVerificationData);
+            
 
 
             const fleetCollectionData = {
@@ -134,21 +138,22 @@ const CreateFleet = () => {
                 fleetId,
                 role: 'owner',
                 companyName: fleetData.fleetName,
-            };
-
-            const updatedUser = {
-                ...user,
-                fleetVerified: true,
-                fleets: [...existingFleets, newFleetAccess],
-                updatedAt: new Date().toISOString(),
-            };
+                referrerCode: code,
+            };       
 
             await updateDocument('personalData', user.uid, {
                 fleetVerified: true,
                 fleets: [...existingFleets, newFleetAccess],
                 updatedAt: new Date().toISOString(),
+                verificationStatus :"pending"
             });
 
+              const updatedUser = {
+                ...user,
+                fleetVerified: true,
+                fleets: [...existingFleets, newFleetAccess],
+                updatedAt: new Date().toISOString(),
+            };
             await setupUser(updatedUser);
 
 
@@ -163,8 +168,20 @@ const CreateFleet = () => {
             }
 
             const contactRef = doc(db, 'fleets', fleetId, 'Contacts', `OWN_${user?.uid}` );
-            await setDoc(contactRef, contactDetails);
-
+            await setDoc(contactRef, contactDetails);   
+            
+                  const referrerData = {
+                    accType : "fleet" ,
+                    organisationId: fleetId, // Use Firebase Auth UID instead of document ID
+                    organisationEmail: fleetData.fleetEmail,
+                    organisationName: fleetData.fleetName,
+                    referrerCode: code,
+                    createdAt: new Date().toISOString(),
+                    isActive: true,
+                    fltOwnerId : user?.uid
+                  };
+            
+                  await addDocument('referrers', referrerData);
 
                 // const fleetRole = {
                 //     role: 'fleet' as const,

@@ -30,7 +30,7 @@ const Login = ({ setDspLoginOrSignup }:any) => {
     const [error, setError] = useState<string | null>(null);
     const [resetPassword, setResetPassword] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<AccountType>('tracking');
-
+    
     const backgroundLight = useThemeColor('backgroundLight');
     const icon = useThemeColor('icon');
     const accent = useThemeColor('accent');
@@ -164,7 +164,7 @@ const Login = ({ setDspLoginOrSignup }:any) => {
                                     color={selectedAccount === 'brokerage' ? '#fff' : icon}
                                 />
                                 <ThemedText style={{ color: selectedAccount === 'brokerage' ? '#fff' : undefined }}>
-                                    Brokerage
+                                    Broker
                                 </ThemedText>
                             </TouchableOpacity>
                         </View>

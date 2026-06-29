@@ -327,6 +327,7 @@ const filteredFleets =
         gap: wp(2),
         marginTop: wp(2),
         marginBottom: wp(3),
+        paddingLeft:15
     }}
 >
 
