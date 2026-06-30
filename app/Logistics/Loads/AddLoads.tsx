@@ -523,7 +523,7 @@ const AddLoadDB = () => {
 
 
       // Additional validation for new fields
-      if (!numberOfTrucks || numberOfTrucks.trim() === '') {
+      if ( (loadVisibility==="Public" || loadVisibility==="Both")&& !numberOfTrucks || numberOfTrucks.trim() === '') {
         validationErrors.push('Number of trucks needed is required');
       }
       if (!deliveryDate || deliveryDate.trim() === '') {
@@ -560,17 +560,16 @@ const AddLoadDB = () => {
         }
       }
 
-      alert(validationErrors)
-      if (validationErrors.length > 0  ) {
-          alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
+      if (validationErrors.length > 0) {
+        alert(validationErrors.join("\n"),)
+        // alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
 
         setIsSubmitting(false)
         return;
       }
-      
 
       // Show payment confirmation modal
-      // confirmLoadPaymentAndSubmit()
+      confirmLoadPaymentAndSubmit()
       return;
 
     } catch (e) {
@@ -660,7 +659,7 @@ const AddLoadDB = () => {
         numberOfTrucks,
         deliveryDate,
         selectedBrokers,
-      }, activeUser, expoPushToken);
+      }, activeUser, expoPushToken , currentRole);
 
       await submitLoad({
         currentRole,
@@ -822,15 +821,7 @@ const AddLoadDB = () => {
                 Additional Info
               </ThemedText>
               <Divider />
-              <ThemedText>
-                Number of Trucks Needed<ThemedText color="red">*</ThemedText>
-              </ThemedText>
-              <Input
-                value={numberOfTrucks}
-                onChangeText={setNumberOfTrucks}
-                placeholder='e.g., 1, 2, 5'
-                keyboardType="numeric"
-              />
+
 
               <ThemedText>
                 Loading date <ThemedText color="red">*</ThemedText>
@@ -1439,7 +1430,7 @@ const AddLoadDB = () => {
                       Private
                     </ThemedText>
                     <ThemedText style={{ fontSize: 12, color: '#666', textAlign: 'center', marginTop: wp(1) }}>
-                      {currentRole?.accType === 'fleet' ? 'Only fleet trucks' : 'Only assigned trucks'}
+                      {currentRole?.accType === 'fleet' ? 'Only fleet trucks' : 'Assigned trucks'}
                     </ThemedText>
                   </TouchableOpacity>
 
@@ -1472,36 +1463,34 @@ const AddLoadDB = () => {
                     </ThemedText>
                   </TouchableOpacity>
 
-                  {currentRole?.accType === 'fleet' && (
-                    <TouchableOpacity
-                      onPress={() => setLoadVisibility('Both')}
-                      style={{
-                        flex: 1,
-                        padding: wp(3),
-                        borderRadius: 8,
-                        backgroundColor: loadVisibility === 'Both' ? '#FFF3E0' : backgroundLight,
-                        borderWidth: 1,
-                        borderColor: loadVisibility === 'Both' ? '#FB8C00' : '#E0E0E0',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <Ionicons
-                        name="git-branch"
-                        size={20}
-                        color={loadVisibility === 'Both' ? '#FB8C00' : '#666'}
-                        style={{ marginBottom: wp(1) }}
-                      />
-                      <ThemedText style={{
-                        fontWeight: loadVisibility === 'Both' ? 'bold' : 'normal',
-                        color: loadVisibility === 'Both' ? '#FB8C00' : '#666'
-                      }}>
-                        Both
-                      </ThemedText>
-                      <ThemedText style={{ fontSize: 12, color: '#666', textAlign: 'center', marginTop: wp(1) }}>
-                        Fleet and public
-                      </ThemedText>
-                    </TouchableOpacity>
-                  )}
+                  <TouchableOpacity
+                    onPress={() => setLoadVisibility('Both')}
+                    style={{
+                      flex: 1,
+                      padding: wp(3),
+                      borderRadius: 8,
+                      backgroundColor: loadVisibility === 'Both' ? '#FFF3E0' : backgroundLight,
+                      borderWidth: 1,
+                      borderColor: loadVisibility === 'Both' ? '#FB8C00' : '#E0E0E0',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Ionicons
+                      name="git-branch"
+                      size={20}
+                      color={loadVisibility === 'Both' ? '#FB8C00' : '#666'}
+                      style={{ marginBottom: wp(1) }}
+                    />
+                    <ThemedText style={{
+                      fontWeight: loadVisibility === 'Both' ? 'bold' : 'normal',
+                      color: loadVisibility === 'Both' ? '#FB8C00' : '#666'
+                    }}>
+                      Both
+                    </ThemedText>
+                    <ThemedText style={{ fontSize: 12, color: '#666', textAlign: 'center', marginTop: wp(1) }}>
+                      Fleet and public
+                    </ThemedText>
+                  </TouchableOpacity>
                 </View>
               </View>
             )}
@@ -1510,6 +1499,7 @@ const AddLoadDB = () => {
             {currentRole?.accType === 'fleet' && (loadVisibility === 'Private' || loadVisibility === 'Both') ? (
               // Fleet User: Private load - Select trucks and display their drivers
               <>
+
                 {/* Truck Search */}
                 <ThemedText>Search Trucks</ThemedText>
                 <Input
@@ -1538,6 +1528,7 @@ const AddLoadDB = () => {
                   const truckDrivers = fleetDriversFromTrucks.filter(driver => driver.truckId === truck.id)
                   const defaultDriver = fleetDriversFromTrucks.find(driver => driver.truckId === truck.id && (driver.role === 'main' || driver.isDefault));
 
+                  const assignment = assignments.find(a => a.truckId === truck.id);
 
                   return (
                     <View key={truck.truckId || index} style={{
@@ -1672,10 +1663,10 @@ const AddLoadDB = () => {
                                     driverId: defaultDriver.driverId,
                                     driverName: defaultDriver.fullName,
 
-                                    pickupDate: null,
-                                    deliveryDate: null,
-                                    pickupLocation: "",
-                                    deliveryLocation: "",
+                                    pickupDate: loadingDate,
+                                    deliveryDate: deliveryDate,
+                                    pickupLocation: origin,
+                                    deliveryLocation: destination,
 
                                     isDefault: true
                                   }
@@ -1763,13 +1754,13 @@ const AddLoadDB = () => {
                                             driverName: driver.fullName,
 
 
-                                            pickupDate: null,
+                                            pickupDate: loadingDate,
 
-                                            deliveryDate: null,
+                                            deliveryDate: deliveryDate,
 
-                                            pickupLocation: "",
+                                            pickupLocation: origin,
 
-                                            deliveryLocation: "",
+                                            deliveryLocation: destination,
 
 
                                             isDefault: false
@@ -1856,50 +1847,37 @@ const AddLoadDB = () => {
 
 
 
+
+
+
+
+
+
+
+
                                 <LocationSelector
-
-                                  origin={assignmentOrigin}
-
-                                  destination={assignmentDestination}
+                                  origin={assignment?.pickupLocation || null}
+                                  destination={assignment?.deliveryLocation || null}
 
                                   setOrigin={(location) => {
-
                                     setAssignments(prev =>
                                       prev.map(a =>
-                                        a.truckId === locationAssigmentPick?.truckId
-                                          ? {
-                                            ...a,
-                                            pickupLocation: location
-                                          }
+                                        a.truckId === truck.id
+                                          ? { ...a, pickupLocation: location }
                                           : a
                                       )
                                     );
-
-                                    setAssignmentOrigin(location);
-
                                   }}
 
                                   setDestination={(location) => {
-
-                                    setAssignmentDestination(location);
-
-                                    if (locationAssigmentPick?.truckId) {
-
-                                      setAssignments(prev =>
-                                        prev.map(a =>
-                                          a.truckId === locationAssigmentPick.truckId
-                                            ? {
-                                              ...a,
-                                              deliveryLocation: location
-                                            }
-                                            : a
-                                        )
-                                      );
-
-                                    }
-
+                                    setAssignments(prev =>
+                                      prev.map(a =>
+                                        a.truckId === truck.id
+                                          ? { ...a, deliveryLocation: location }
+                                          : a
+                                      )
+                                    );
                                   }}
-
                                   dspFromLocation={assignmentDspFromLocation}
                                   setDspFromLocation={setAssignmentDspFromLocation}
 
@@ -1914,7 +1892,12 @@ const AddLoadDB = () => {
                                   durationInTraffic={assignmentDurationInTraffic}
 
                                   iconColor={accent}
+
                                 />
+
+
+
+
 
 
 
@@ -2039,6 +2022,15 @@ const AddLoadDB = () => {
                 {loadVisibility === 'Both' && (
                   <>
                     <Divider />
+                    <ThemedText>
+                      Number of Public Trucks Needed<ThemedText color="red">*</ThemedText>
+                    </ThemedText>
+                    <Input
+                      value={numberOfTrucks}
+                      onChangeText={setNumberOfTrucks}
+                      placeholder='e.g., 1, 2, 5'
+                      keyboardType="numeric"
+                    />
                     {renderTruckRequirements({ title: 'Public Truck Requirements' })}
                   </>
                 )}
@@ -2047,9 +2039,18 @@ const AddLoadDB = () => {
             ) : currentRole?.accType === 'fleet' && loadVisibility === 'Public' ? (
               // Fleet User: Public load - Show truck requirements (will be visible to all trucks)
               <>
+                <ThemedText>
+                  Number of Public Trucks Needed<ThemedText color="red">*</ThemedText>
+                </ThemedText>
+                <Input
+                  value={numberOfTrucks}
+                  onChangeText={setNumberOfTrucks}
+                  placeholder='e.g., 1, 2, 5'
+                  keyboardType="numeric"
+                />
                 {renderTruckRequirements({ helperText: 'This public load will be visible to all available trucks in the system.' })}
               </>
-            ) : currentRole?.accType === 'brokerage' && loadVisibility === 'Private' ? (
+            ) : currentRole?.accType === 'brokerage' && (loadVisibility === 'Private' || loadVisibility === 'Both') ? (
               // Broker User: Private load - Select assigned trucks (no drivers)
               <>
                 {/* Truck Search */}
@@ -2106,10 +2107,35 @@ const AddLoadDB = () => {
                     </View>
                   </TouchableOpacity>
                 ))}
+
+                {loadVisibility === 'Both' && (
+                  <>
+                    <Divider />
+                    <ThemedText>
+                      Number of Public Trucks Needed<ThemedText color="red">*</ThemedText>
+                    </ThemedText>
+                    <Input
+                      value={numberOfTrucks}
+                      onChangeText={setNumberOfTrucks}
+                      placeholder='e.g., 1, 2, 5'
+                      keyboardType="numeric"
+                    />
+                    {renderTruckRequirements({ title: 'Public Truck Requirements' })}
+                  </>
+                )}
               </>
             ) : (
               // Professional User: Truck requirements
               <>
+                <ThemedText>
+                  Number of Public Trucks Needed<ThemedText color="red">*</ThemedText>
+                </ThemedText>
+                <Input
+                  value={numberOfTrucks}
+                  onChangeText={setNumberOfTrucks}
+                  placeholder='e.g., 1, 2, 5'
+                  keyboardType="numeric"
+                />
                 {renderTruckRequirements()}
               </>
             )}

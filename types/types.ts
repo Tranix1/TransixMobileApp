@@ -12,6 +12,7 @@ export type CurrentRole =
       driverId: string | null;
       fleetId: string | null;
       brokerId: string;
+      referrerCode :string | null
     
     }
   | {
@@ -25,6 +26,8 @@ export type CurrentRole =
       fleetManagerId: string | null;
       fleetDispatcherId: string | null;
       brokerId: string;
+      referrerCode :string | null
+
     }
   | {
       role: 'brokerage';
@@ -34,6 +37,8 @@ export type CurrentRole =
       accType: 'brokerage';
       brokerType: string;
       fleetId: string | null;
+      referrerCode :string | null
+
 
     };
 

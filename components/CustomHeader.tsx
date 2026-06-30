@@ -73,7 +73,7 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement}
 
                                 <View style={{}}>
                                     <View style={{}}>
-                                        <ThemedText type="title" >{pageTitle}</ThemedText>
+                                        <ThemedText type="title" style={{alignSelf:"center"}} >{pageTitle}</ThemedText>
                                         <ThemedText type="tiny" style={{ alignSelf: 'center' }}><ThemedText type='tiny' style={{  fontSize: wp(3), }}>
                                             {currentRole.companyName?.length > 5
                                                 ? `${currentRole.companyName.slice(0, 5)}`

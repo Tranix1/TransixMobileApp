@@ -316,18 +316,7 @@ const LoadDetailsView = () => {
                         </View>
                     </View>
 
-                    {loadDetails.personalAccType && (
-                        <View style={styles.detailRow}>
-                            <Ionicons name="person-outline" size={wp(4)} color={icon} />
-                            <View style={styles.detailContent}>
-                                <ThemedText type="tiny" style={{ color: icon }}>Account Type</ThemedText>
-                                <ThemedText>
-                                    {loadDetails.personalAccType}
-                                    {loadDetails.personalAccTypeIsApproved ? ' (Approved)' : ' (Pending)'}
-                                </ThemedText>
-                            </View>
-                        </View>
-                    )}
+                    
                 </View>
 
                 {/* Personal Details Section */}

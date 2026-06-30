@@ -62,37 +62,26 @@ const Index = () => {
             setError(null)
 
             let filters: any[] = [];
-            let collectionName = "Cargo";
-            console.log(1)
+            let collectionName = "nothing";
             // Apply filters based on load visibility and user role
             if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
                 // Fetch private loads from fleet subcollection
                 collectionName = `fleets/${currentRole.fleetId}/Cargo`;
-            console.log(1)
                     
-            }else       if (currentRole?.accType === "broker" && loadVisibility === 'Private') { 
-                console.log(2)
+            }else       if (currentRole?.accType === "brokerage" && loadVisibility === 'Private') { 
                 collectionName = `brokers/${currentRole.brokerId}/Cargo`;
-            }else      if (currentRole?.accType === 'general' && loadVisibility === 'Private') { 
-                    filters = [
-                    where("approvalStatus", "==", "approved"),
-                    where("isApproved", "==", true),
-                    where("personalAccTypeIsApproved", "==", true) ,
-                    where("loadVisibility", "==", "Private"),
-                    where("cargoStatus", "==", "pending")
-                ];
             }else {
                 // Fetch public loads from main collection
-                console.log(4)
+                if(loadVisibility ==="Public"){
+
                 filters = [
                     where("approvalStatus", "==", "approved"),
                     where("isApproved", "==", true),
                     where("personalAccTypeIsApproved", "==", true)
                 ];
-              
+                collectionName = "Cargo"
+                }              
             }
-
-
 
             const maLoads = await fetchDocuments(collectionName, 50, undefined, filters);
 
@@ -140,13 +129,16 @@ const Index = () => {
             setError(null);
 
             let filters: any[] = [];
-            let collectionName = "Cargo";
+            let collectionName = "";
 
             // Apply same filters as in LoadTructs for pagination
             if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
                 collectionName = `fleets/${currentRole.fleetId}/Cargo`;
                     
-            } else {
+            }else   if (currentRole?.accType === 'brokerage' && loadVisibility === 'Private') {
+                collectionName = `brokerages/${currentRole.fleetId}/Cargo`;
+                    
+            }  else {
                 filters = [
                     where("approvalStatus", "==", "approved"),
                     where("isApproved", "==", true),
@@ -155,6 +147,7 @@ const Index = () => {
 
                 if (loadVisibility === 'Public') {
                     filters.push(where("loadVisibility", "==", "Public"));
+                    collectionName = "Cargo"
                 }
             }
 

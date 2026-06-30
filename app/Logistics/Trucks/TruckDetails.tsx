@@ -25,7 +25,7 @@ import { AntDesign } from '@expo/vector-icons'; // or any close icon
 // import { sendPushNotification } from "@/Utilities/pushNotification";
 import { sendPushNotification } from "@/Utilities/pushNotification";
 import Input from "@/components/Input";
-import TruckAvailabilityModal, { TruckAvailabilityData } from "@/components/TruckAvailabilityModal";
+import TruckAvailabilityModal  from "@/components/TruckNotificationSettingsModal";
 
 import ImageViewing from 'react-native-image-viewing';
 
@@ -362,7 +362,7 @@ const TruckDetails = () => {
         }
     };
 
-    const handleSaveAvailability = async (availabilityData: TruckAvailabilityData) => {
+    const handleSaveAvailability = async (availabilityData:any) => {
         try {
             // Update truck with availability data
             await updateDocument('Trucks', truckData.id, {

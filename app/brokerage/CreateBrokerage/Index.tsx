@@ -62,6 +62,8 @@ const CreaterBrokerage = ({ }) => {
       const uploadedUrls = await Promise.all(uploadPromises);
       const brokerageId = `BRK_${Date.now()}_${user?.uid}`;
 
+      const code = await generateUniqueReferrerCode();
+
       // Prepare broker verification data
       const brokerVerificationData = {
         userId: user?.uid,
@@ -90,6 +92,8 @@ const CreaterBrokerage = ({ }) => {
         submittedAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        referrerCode: code,
+
         // Additional scalable fields
         performanceMetrics: {
           totalLoads: 0,
@@ -113,6 +117,8 @@ const CreaterBrokerage = ({ }) => {
         brokerEmail: brokerData.brokerEmail,
         countryCode: brokerData.brokerCountryCode?.name,
         brokerPhone: brokerData.brokerPhone,
+        referrerCode: code,
+        
       };
 
       await setDoc(doc(db, "brokerages", brokerageId), brokerCollectionData);
@@ -125,7 +131,9 @@ const CreaterBrokerage = ({ }) => {
         role: 'owner', // owner for the broker creator
         companyName: brokerData.brokerName,
         brokerType: brokerData.typeOfBroker,
-        verificationStatus: "pending"
+        verificationStatus: "pending",
+        referrerCode: code,
+
 
       };
 
@@ -136,7 +144,6 @@ const CreaterBrokerage = ({ }) => {
       });
 
 
-      const code = await generateUniqueReferrerCode();
 
       const contactDetails = {
         userName: user?.displayName,

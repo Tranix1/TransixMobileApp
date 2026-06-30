@@ -24,7 +24,7 @@ import { parseCoordinateString, isValidCoordinate, DEFAULT_COORDINATES, Coordina
 import ScreenWrapper from "@/components/ScreenWrapper";
 import AccentRingLoader from "@/components/AccentRingLoader";
 
-// import CrossPlatformMapView from "@/components/CrossPlatformMapView";
+import CrossPlatformMapView from "@/components/CrossPlatformMapView";
 
 const { width, height } = Dimensions.get('window');
 
@@ -371,7 +371,7 @@ export default function ViewLoadRoutes() {
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
+            <View style={ [styles.loadingContainer , {backgroundColor:background}] }>
                 <AccentRingLoader color={accent} />
                 <ThemedText style={styles.loadingText}>Loading route...</ThemedText>
             </View>
@@ -380,7 +380,7 @@ export default function ViewLoadRoutes() {
 
     if (error) {
         return (
-            <View style={styles.errorContainer}>
+            <View style={ [styles.errorContainer,{backgroundColor : background} ] }>
                 <MaterialIcons name="error-outline" size={wp(15)} color={accent} />
                 <ThemedText style={styles.errorText}>{error}</ThemedText>
                 <TouchableOpacity style={[styles.retryButton, { backgroundColor: accent }]} onPress={handleRefresh}>
@@ -396,7 +396,7 @@ export default function ViewLoadRoutes() {
     const initialRegion = getInitialRegion();
     if (!initialRegion) {
         return (
-            <View style={styles.errorContainer}>
+            <View style={ [styles.errorContainer, {backgroundColor:background   }] }>
                 <MaterialIcons name="location-off" size={wp(15)} color={accent} />
                 <ThemedText style={styles.errorText}>No valid coordinates found</ThemedText>
                 <TouchableOpacity style={[styles.backButton, { borderColor: accent }]} onPress={handleBack}>
@@ -408,112 +408,94 @@ export default function ViewLoadRoutes() {
 
     const markers = [];
     if (isValidOrigin) {
-      markers.push({
-        coordinate: originCoords!,
-        title: loadData?.originCoordinates?.address || loadData?.fromLocation || loadData?.origin || "Origin",
-        description: "Load Origin",
-        children: (
-          <LinearGradient
-            colors={[accent, accent + 'CC']}
-            style={styles.markerCircle}
-          >
-            <FontAwesome name="dot-circle-o" size={24} color="white" />
-          </LinearGradient>
-        ),
-      });
+        markers.push({
+            coordinate: originCoords!,
+            title: loadData?.originCoordinates?.address || loadData?.fromLocation || loadData?.origin || "Origin",
+            description: "Load Origin",
+            children: (
+                <LinearGradient
+                    colors={[accent, accent + 'CC']}
+                    style={styles.markerCircle}
+                >
+                    <FontAwesome name="dot-circle-o" size={24} color="white" />
+                </LinearGradient>
+            ),
+        });
     }
 
     if (isValidDestination) {
-      markers.push({
-        coordinate: destinationCoords!,
-        title: loadData?.destinationCoordinates?.address || loadData?.toLocation || loadData?.destination || destinationName || "Destination",
-        description: "Load Destination",
-        children: (
-          <LinearGradient
-            colors={[accent, accent + 'CC']}
-            style={styles.markerCircle}
-          >
-            <FontAwesome5 name="map-marker-alt" size={20} color="white" />
-          </LinearGradient>
-        ),
-      });
+        markers.push({
+            coordinate: destinationCoords!,
+            title: loadData?.destinationCoordinates?.address || loadData?.toLocation || loadData?.destination || destinationName || "Destination",
+            description: "Load Destination",
+            children: (
+                <LinearGradient
+                    colors={[accent, accent + 'CC']}
+                    style={styles.markerCircle}
+                >
+                    <FontAwesome5 name="map-marker-alt" size={20} color="white" />
+                </LinearGradient>
+            ),
+        });
     }
 
     if (returnOriginCoords) {
-      markers.push({
-        coordinate: returnOriginCoords,
-        title: loadData?.returnOrigin?.description || "Return Origin",
-        description: "Return Load Origin",
-        children: (
-          <LinearGradient
-            colors={['#FF0000', '#FF0000CC']}
-            style={styles.markerCircle}
-          >
-            <FontAwesome name="dot-circle-o" size={24} color="white" />
-          </LinearGradient>
-        ),
-      });
+        markers.push({
+            coordinate: returnOriginCoords,
+            title: loadData?.returnOrigin?.description || "Return Origin",
+            description: "Return Load Origin",
+            children: (
+                <LinearGradient
+                    colors={['#FF0000', '#FF0000CC']}
+                    style={styles.markerCircle}
+                >
+                    <FontAwesome name="dot-circle-o" size={24} color="white" />
+                </LinearGradient>
+            ),
+        });
     }
 
     if (returnDestinationCoords) {
-      markers.push({
-        coordinate: returnDestinationCoords,
-        title: loadData?.returnDestination?.description || "Return Destination",
-        description: "Return Load Destination",
-        children: (
-          <LinearGradient
-            colors={['#FF0000', '#FF0000CC']}
-            style={styles.markerCircle}
-          >
-            <FontAwesome5 name="map-marker-alt" size={20} color="white" />
-          </LinearGradient>
-        ),
-      });
+        markers.push({
+            coordinate: returnDestinationCoords,
+            title: loadData?.returnDestination?.description || "Return Destination",
+            description: "Return Load Destination",
+            children: (
+                <LinearGradient
+                    colors={['#FF0000', '#FF0000CC']}
+                    style={styles.markerCircle}
+                >
+                    <FontAwesome5 name="map-marker-alt" size={20} color="white" />
+                </LinearGradient>
+            ),
+        });
     }
 
     const polylines = [];
     if (routeCoords.length > 0) {
-      polylines.push(
-        { coordinates: routeCoords, strokeColor: accent, strokeWidth: 6 },
-        { coordinates: routeCoords, strokeColor: accent + '80', strokeWidth: 3 }
-      );
+        polylines.push(
+            { coordinates: routeCoords, strokeColor: accent, strokeWidth: 6 },
+            { coordinates: routeCoords, strokeColor: accent + '80', strokeWidth: 3 }
+        );
     }
 
     if (returnRouteCoords.length > 0) {
-      polylines.push(
-        { coordinates: returnRouteCoords, strokeColor: "#FF0000", strokeWidth: 6 },
-        { coordinates: returnRouteCoords, strokeColor: "#FF000080", strokeWidth: 3 }
-      );
+        polylines.push(
+            { coordinates: returnRouteCoords, strokeColor: "#FF0000", strokeWidth: 6 },
+            { coordinates: returnRouteCoords, strokeColor: "#FF000080", strokeWidth: 3 }
+        );
     }
 
     return (
         <ScreenWrapper fh={true}>
             <View style={styles.container}>
-                {/* <CrossPlatformMapView
+                <CrossPlatformMapView
                     ref={mapRef}
                     style={styles.map}
                     initialRegion={initialRegion}
-                    provider="google"
-                    customMapStyle={theme === "dark" ? darkMapStyle : undefined}
-                    showsCompass={true}
-                    showsScale={true}
-                    onMapReady={() => {
-                        console.log('🗺️ Map is ready!');
-                        // Trigger fitting if we have route coords but haven't fitted yet
-                        if (routeCoords.length > 0 && !hasFitted) {
-                            setTimeout(() => {
-                                if (mapRef.current) {
-                                    console.log('Auto-fitting map after map ready');
-                                    fitMapToRoute(routeCoords);
-                                    setHasFitted(true);
-                                }
-                            }, 500);
-                        }
-                    }}
                     markers={markers}
                     polylines={polylines}
-                /> */}
-
+                />
                 {/* Header */}
                 <View style={[styles.header, { backgroundColor: background }]}>
                     <TouchableOpacity style={styles.headerButton} onPress={handleBack}>
@@ -695,7 +677,6 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         padding: wp(8),
-        backgroundColor: '#f5f5f5',
     },
     errorText: {
         fontSize: wp(4),

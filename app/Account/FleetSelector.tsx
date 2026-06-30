@@ -224,7 +224,7 @@ const filteredFleets =
 
 
     const handleFleetSelect = async (fleet: any) => {    
-
+        console.log(fleet)
         if (!fleet) return;
 
         const fleetRole = {
@@ -237,11 +237,12 @@ const filteredFleets =
             fleetMainAdminId: fleet.fleetMainAdminId || null,
             fleetManagerId: fleet.fleetManagerId || null,
             fleetDispatcherId: fleet.fleetDispatcherId || null,
+            referrerCode : fleet.referrerCode || null
         };
 
     (fleetRole as any);
         await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
-        setCurrentRole(fleetRole as any)
+        setCurrentRole("fleet")
         router.replace('/');
     };
     

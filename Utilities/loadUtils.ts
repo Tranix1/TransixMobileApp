@@ -189,10 +189,11 @@ export const prepareLoadData = (
     userType: 'general' | 'professional',
     formData: any,
     user: any,
-    expoPushToken: string | null
+    expoPushToken: string | null ,
+    currentRole :any 
 ) => {
     return {
-        userId: user?.uid,
+        userId: currentRole.companyName || user?.uid || "",
         companyName: user?.organisation,
         contact: user?.phoneNumber || '',
         logo: user.photoURL,
@@ -282,11 +283,6 @@ export const prepareLoadData = (
         durationInTraffic: formData.durationInTraffic || 0,
         routePolyline: formData.routePolyline || '',
         bounds: formData.bounds || null,
-
-        // Personal details reference
-        personalDetailsDocId: formData.personalDetailsDocId || null,
-        personalAccTypeIsApproved: formData.personalAccTypeIsApproved || false,
-        personalAccType: formData.personalAccType || null,
 
         // Referral system
         referrerId: user?.referrerId || null,
