@@ -23,6 +23,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { StepIndicator } from '@/components/StepIndicator';
 import { LocationSelector } from '@/components/LocationSelector';
 import { RateInput } from '@/components/RateInput';
+import PaymentTerms ,{ getDefaultPaymentTerms,PaymentTermsValue} from '@/components/PaymentTerms';
 
 import { usePushNotifications } from "@/Utilities/pushNotification";
 import { uploadImage, fetchDocuments } from "@/db/operations";
@@ -34,6 +35,7 @@ import { ErrorModal } from "@/components/ErrorModal";
 import { TruckNeededType } from "@/types/types";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
+import CustomerPicker, { Customer } from '@/components/CustomerPicker';
 
 import { SelectLocationProp } from '@/types/types';
 
@@ -176,6 +178,8 @@ const AddLoadDB = () => {
   const [step, setStep] = useState(defaultState.step);
 
   // Form state variables
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
   const [typeofLoad, setTypeofLoad] = useState(defaultState.typeofLoad);
   const [dspFromLocation, setDspFromLocation] = useState(false);
   const [destination, setDestination] = useState<SelectLocationProp | null>(null);
@@ -184,7 +188,13 @@ const AddLoadDB = () => {
   const [dspToLocation, setDspToLocation] = useState(false);
   const [rate, setRate] = useState(defaultState.rate);
   const [rateexplantion, setRateExplanation] = useState(defaultState.rateexplantion);
-  const [paymentTerms, setPaymentTerms] = useState(defaultState.paymentTerms);
+  // const [paymentTerms, setPaymentTerms] = useState(defaultState.paymentTerms);
+
+  const [paymentTerms, setPaymentTerms] = useState<PaymentTermsValue>(
+  getDefaultPaymentTerms()
+);
+console.log(paymentTerms)
+
   const [requirements, setRequirements] = useState(defaultState.requirements)
 
   const [loadingDate, setLoadingDate] = useState(defaultState.loadingDate);
@@ -408,7 +418,7 @@ const AddLoadDB = () => {
     setTypeofLoad(defaultState.typeofLoad);
     setRate(defaultState.rate);
     setRateExplanation(defaultState.rateexplantion);
-    setPaymentTerms(defaultState.paymentTerms);
+    // setPaymentTerms(defaultState.paymentTerms);`
     setRequirements(defaultState.requirements);
     setLoadingDate(defaultState.loadingDate);
     setAdditionalInfo(defaultState.additionalInfo);
@@ -503,7 +513,6 @@ const AddLoadDB = () => {
           destination,
           rate,
           paymentTerms,
-          trucksNeeded: validationTrucksNeeded,
           requirements,
           proofOfOrder: [...proofDocuments],
           proofOfOrderFileType: [...proofDocumentTypes],
@@ -523,7 +532,7 @@ const AddLoadDB = () => {
 
 
       // Additional validation for new fields
-      if ( (loadVisibility==="Public" || loadVisibility==="Both")&& !numberOfTrucks || numberOfTrucks.trim() === '') {
+      if ( (loadVisibility==="Public" || loadVisibility==="Both")&& (!numberOfTrucks || numberOfTrucks.trim() === '') ) {
         validationErrors.push('Number of trucks needed is required');
       }
       if (!deliveryDate || deliveryDate.trim() === '') {
@@ -532,19 +541,9 @@ const AddLoadDB = () => {
 
 
       // Additional validation for fleet users - private and both loads need a private truck assignment.
-      if (currentRole?.accType === 'fleet' && (loadVisibility === 'Private' || loadVisibility === 'Both')) {
-        if (selectedFleetTrucks.length === 0) {
-          validationErrors.push('Select at least one truck from your fleet');
-        }
-        const invalidAssignments = assignments.filter(assignment =>
-          !selectedFleetTrucks.some(truck => truck.id === assignment.truckId)
-        );
-        if (invalidAssignments.length > 0) {
-          validationErrors.push('Some assignments are not linked to the selected trucks');
-        }
-      }
+    
 
-      if (currentRole?.accType === 'fleet' && (loadVisibility === 'Public' || loadVisibility === 'Both') && trucksNeeded.length === 0) {
+      if ( (loadVisibility === 'Public' || loadVisibility === 'Both') && trucksNeeded.length === 0) {
         validationErrors.push('Select at least 1 truck requirement for the public load');
       }
 
@@ -755,6 +754,19 @@ const AddLoadDB = () => {
                   Professional Load Details
                 </ThemedText>
                 <Divider />
+
+
+          <CustomerPicker
+            userId={user?.uid || ""}
+            selectedCustomer={selectedCustomer}
+            onSelectCustomer={setSelectedCustomer}
+          />
+
+
+
+
+
+
                 <ThemedText>
                   Type of Load<ThemedText color="red">*</ThemedText>
                 </ThemedText>
@@ -798,19 +810,17 @@ const AddLoadDB = () => {
               <Divider />
 
 
-              <ThemedText>
-                Payment Terms<ThemedText color="red">*</ThemedText>
-              </ThemedText>
-              <Input
-                value={paymentTerms}
-                onChangeText={setPaymentTerms}
-                placeholder='e.g., Payment terms, Payment method, Payment schedule'
-              />
+             
+<PaymentTerms value={paymentTerms} onChange={setPaymentTerms} />
+
+          
+
             </View>
             <Divider />
             <View style={styles.viewMainDsp}>
               <Button onPress={() => setStep(1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
             </View>
+            <View style={{ height: 100 }} />
           </ScrollView>
         )}
 
@@ -1220,6 +1230,8 @@ const AddLoadDB = () => {
             <View style={{ paddingVertical: wp(3), gap: wp(2), borderRadius: 8, shadowColor: "#6a0c0c", shadowOffset: { width: 1, height: 2 }, shadowOpacity: 0.7, shadowRadius: 5, overflow: "hidden", }}>
               <Button onPress={() => setStep(0)} title="Back" />
               <Button onPress={() => setStep(2)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
+            <View style={{ height: 100 }} />
+
             </View>
           </ScrollView>
         )}
@@ -2048,7 +2060,6 @@ const AddLoadDB = () => {
                   placeholder='e.g., 1, 2, 5'
                   keyboardType="numeric"
                 />
-                {renderTruckRequirements({ helperText: 'This public load will be visible to all available trucks in the system.' })}
               </>
             ) : currentRole?.accType === 'brokerage' && (loadVisibility === 'Private' || loadVisibility === 'Both') ? (
               // Broker User: Private load - Select assigned trucks (no drivers)

@@ -1,6 +1,7 @@
 import { SelectLocationProp, ProofFileType } from '@/types/types';
 import { ImagePickerAsset } from 'expo-image-picker';
 import { DocumentAsset } from '@/types/types';
+import { PaymentTermsValue } from '@/components/PaymentTerms';
 
 // Validation utilities for load forms
 export const    validateLoadForm = (
@@ -10,11 +11,10 @@ export const    validateLoadForm = (
         origin: SelectLocationProp | null;
         destination: SelectLocationProp | null;
         rate?: string;
-        paymentTerms?: string;
+        paymentTerms?: PaymentTermsValue;
         selectedLoadingDate?: { id: number, name: string } | null;
         loadImages?: ImagePickerAsset[];
         selectedAfricanTrucks?: any[];
-        trucksNeeded?: any[];
         requirements?: string;
         additionalInfo?: string;
         alertMsg?: string;
@@ -60,15 +60,13 @@ export const    validateLoadForm = (
         if (!formData.rate || formData.rate.trim() === '') {
             errors.push('Enter Load Rate');
         }
-        if (!formData.paymentTerms || formData.paymentTerms.trim() === '') {
+        if (!formData.paymentTerms ) {
             errors.push('Enter Payment Terms');
         }
 
         // Only validate step-specific fields if we're on the final submission
         if (currentStep === undefined || currentStep >= 3) {
-            if (!formData.trucksNeeded || formData.trucksNeeded.length === 0) {
-                errors.push('Select at least 1 truck required');
-            }
+            
             // Only validate additional fields if they exist in the form data
             if (formData.requirements !== undefined && (!formData.requirements || formData.requirements.trim() === '')) {
                 errors.push('Enter Requirements');
@@ -193,12 +191,14 @@ export const prepareLoadData = (
     currentRole :any 
 ) => {
     return {
-        userId: currentRole.companyName || user?.uid || "",
-        companyName: user?.organisation,
+        userId:  user?.uid || "",
+        organizationId : currentRole?.role === 'fleet' ? currentRole.fleetId : currentRole?.role === 'brokerage' ? currentRole.brokerId : null,
+        userRole: currentRole?.userRole || 'general',
+        accType: currentRole?.accType || 'general',
+        companyName:currentRole.companyName || user?.organisation,
         contact: user?.phoneNumber || '',
         logo: user.photoURL,
         created_at: Date.now().toString(),
-        isVerified: false,
         userType: userType,
         typeofLoad: formData.typeofLoad,
         destination: formData.destination?.description,
@@ -289,7 +289,6 @@ export const prepareLoadData = (
 
         // Approval system
         approvalStatus: 'pending',
-        isApproved: false,
         submittedAt: Date.now().toString(),
     };
 };

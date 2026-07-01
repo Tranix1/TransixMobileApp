@@ -278,7 +278,7 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
           </View>
         </View>
 
-        <View style={{ backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2) }}>
+        <View style={{ backgroundColor: backgroundLight, padding: wp(2), }}>
 
 
           <View style={styles.detailRow}>
@@ -303,25 +303,43 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
         </View>
 
 
+
+        <View style={{ backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2), marginTop: wp(1) }}>
+          <ThemedText type='default' style={{ flex: 2 }}>
+            Payment Terms <ThemedText color='#6D28D9' style={{fontWeight:"bold"}}> - </ThemedText>
+          {item.paymentTerms?.type}</ThemedText>
+
+
+          <ThemedText style={{alignSelf:"center"}}>
+            {item.paymentTerms?.timing}:{" "}
+            {item.paymentTerms?.firstAmount}
+            {item.paymentTerms?.amountType === "percent" ? "%" : ""}
+
+            {item.paymentTerms?.secondAmount && (
+              <>
+                <ThemedText color='#6D28D9'>{" • "}</ThemedText>
+                {item.paymentTerms.secondTiming}:{" "}
+                {item.paymentTerms.secondAmount}
+                {item.paymentTerms.amountType === "percent" ? "%" : ""}
+              </>
+            )}
+          </ThemedText>
+
+        </View>
+
+
+
+
         <View style={[{ marginTop: wp(1), backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2), flex: 1, gap: wp(2) }]}>
 
-          {item.requirements &&
-            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
-              <ThemedText type='default' style={{ flex: 2 }}>
-                Payment Terms
-              </ThemedText>
-              <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-                {item.paymentTerms}
-              </ThemedText>
-            </View>
-          }
+
           {item.loadingDate &&
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
               <ThemedText type='default' style={{ flex: 2 }}>
                 Loading
               </ThemedText>
-              <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-                {item.loadingDate}
+              <ThemedText type="defaultSemiBold" style={{ flex: 2 }}>
+                {new Date(item.loadingDate).toLocaleDateString("en-GB")}
               </ThemedText>
             </View>
           }
@@ -331,7 +349,8 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
                 Delivery Date
               </ThemedText>
               <ThemedText type='defaultSemiBold' style={{ flex: 2 }}>
-                {item.deliveryDate}
+                {new Date(item.deliveryDate).toLocaleDateString("en-GB")}
+
               </ThemedText>
             </View>
           }
@@ -543,7 +562,7 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
 
               </View>
 
-               <ImageViewing
+              <ImageViewing
                 images={selectedProofType === 'images' && item.proofOfOrder && Array.isArray(item.proofOfOrder) && item.proofOfOrderType && Array.isArray(item.proofOfOrderType)
                   ? item.proofOfOrder
                     .map((url, index) => ({ uri: url }))
@@ -576,7 +595,7 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
                     </ThemedText>
                   </View>
                 )}
-              /> 
+              />
 
               {/* Proof Selection Modal */}
               <Modal

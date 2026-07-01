@@ -104,16 +104,7 @@ export default function UserMenuModal({ visible, onClose, onProfileUpdate }: Use
 
             case 'fleet':
                 return [
-                    {
-                        id: 'AddTrucks',
-                        title: 'Add Truck',
-                        icon: 'truck-front',
-                        iconFamily: FontAwesome6,
-                        onPress: () => {
-                            router.push({ pathname: '/Logistics/Trucks/Index', params: { userId: user?.uid } });
-                            onClose();
-                        },
-                    },
+                     
                     {
                         id: 'Drivers',
                         title: 'Drivers',
@@ -151,6 +142,16 @@ export default function UserMenuModal({ visible, onClose, onProfileUpdate }: Use
                         iconFamily: MaterialIcons,
                         onPress: () => {
                             router.push('/Wallet/Index');
+                            onClose();
+                        },
+                    },
+                    {
+                        id: 'AddTrucks',
+                        title: 'Add Truck',
+                        icon: 'truck-front',
+                        iconFamily: FontAwesome6,
+                        onPress: () => {
+                            router.push({ pathname: '/Logistics/Trucks/Index', params: { userId: user?.uid } });
                             onClose();
                         },
                     },
@@ -224,16 +225,16 @@ export default function UserMenuModal({ visible, onClose, onProfileUpdate }: Use
                 onClose();
             },
         },
-        {
-            id: 'manageAcc',
-            title: 'Manage Account',
-            icon: 'person-circle-outline',
-            iconFamily: Ionicons,
-            onPress: () => {
-                // router.push('/Account/Manage');
-                onClose();
-            },
-        },
+        // {
+        //     id: 'manageAcc',
+        //     title: 'Manage Account',
+        //     icon: 'person-circle-outline',
+        //     iconFamily: Ionicons,
+        //     onPress: () => {
+        //         // router.push('/Account/Manage');
+        //         onClose();
+        //     },
+        // },
     ];
 
     return (
@@ -346,7 +347,7 @@ export default function UserMenuModal({ visible, onClose, onProfileUpdate }: Use
                                 </TouchableNativeFeedback>
                             
 
-                            {/* <View style={styles.menuItems}>
+                            <View style={styles.menuItems}>
                                 {commonItems.map((item, index) => (
                                     <TouchableNativeFeedback key={item.id} onPress={item.onPress}>
                                         <View
@@ -369,7 +370,7 @@ export default function UserMenuModal({ visible, onClose, onProfileUpdate }: Use
                                         </View>
                                     </TouchableNativeFeedback>
                                 ))}
-                            </View> */}
+                            </View>
 
                             <TouchableNativeFeedback
                                 onPress={() => {

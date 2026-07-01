@@ -76,8 +76,6 @@ const Index = () => {
 
                 filters = [
                     where("approvalStatus", "==", "approved"),
-                    where("isApproved", "==", true),
-                    where("personalAccTypeIsApproved", "==", true)
                 ];
                 collectionName = "Cargo"
                 }              

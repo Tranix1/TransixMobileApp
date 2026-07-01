@@ -1,5 +1,7 @@
 import { ImageSourcePropType } from "react-native";
 import { ImagePickerAsset } from "expo-image-picker";
+import { GetDerivedStateFromError } from "react";
+import { getDefaultPaymentTerms } from "@/components/PaymentTerms";
 
 export type AccountType = 'general' | 'tracking' | 'fleet' | 'brokerage';
 
@@ -12,7 +14,8 @@ export type CurrentRole =
       driverId: string | null;
       fleetId: string | null;
       brokerId: string;
-      referrerCode :string | null
+      referrerCode :string | null 
+      organizationId: string | null;
     
     }
   | {
@@ -27,6 +30,8 @@ export type CurrentRole =
       fleetDispatcherId: string | null;
       brokerId: string;
       referrerCode :string | null
+      organizationId: string | null;
+
 
     }
   | {
@@ -38,6 +43,7 @@ export type CurrentRole =
       brokerType: string;
       fleetId: string | null;
       referrerCode :string | null
+      organizationId: string | null;
 
 
     };
@@ -196,7 +202,7 @@ export type LoadFormData = {
     rateexplantion: string;
     fromLocation: string;
     toLocation: string;
-    paymentTerms: string;
+    paymentTerms: ReturnType<typeof getDefaultPaymentTerms>;
     requirements: string;
     alertMsg: string;
     fuelAvai: string;
@@ -218,7 +224,7 @@ export type TruckNeededType = {
     capacity: SelectedOption;
     operationCountries: string[];
 }
-export type Load = {
+export type     Load = {
     id: string,
     distance: string,
     duration: string,
