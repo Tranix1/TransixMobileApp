@@ -6,7 +6,7 @@ import { ThemedText } from './ThemedText'; // adjust path
 import { wp } from '@/constants/common';
 import { fetchDocuments, addDocument } from '@/db/operations';
 import { useAuth } from '@/context/AuthContext';
-import {useThemeColor} from '@/hooks/useThemeColor';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 export interface Customer {
   id: string;
@@ -41,10 +41,10 @@ export default function CustomerPicker({
   onSelectCustomer
 }: CustomerPickerProps) {
 
-  const { currentRole}= useAuth();
-    const background = useThemeColor('background')
-    const backgroundLight = useThemeColor('backgroundLight')
-  
+  const { currentRole } = useAuth();
+  const background = useThemeColor('background')
+  const backgroundLight = useThemeColor('backgroundLight')
+
 
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -75,8 +75,8 @@ export default function CustomerPicker({
   const displayedCustomers: Customer[] =
     searchQuery.length > 0
       ? customers.filter(c =>
-          c.name?.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+        c.name?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
       : customers.slice(0, 5);
 
   const handleSelect = (customer: Customer) => {
@@ -119,15 +119,15 @@ export default function CustomerPicker({
 
   return (
     <View>
-      <View style={{  alignItems: 'center', flexDirection: 'row',  }}>
-        <View style={{width : "85%",height:10}}>
-        <Input
-          placeholder="Search customer..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        //   style={{ flex: 1 }}
-        />
-                </View>
+      <View style={{ alignItems: 'center', flexDirection: 'row', marginBottom: wp(2) }}>
+        <View style={{ width: "85%", height: 10 }}>
+          <Input
+            placeholder="Search customer..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          //   style={{ flex: 1 }}
+          />
+        </View>
         <TouchableOpacity
           onPress={() => setShowAddModal(true)}
           style={{
@@ -154,17 +154,21 @@ export default function CustomerPicker({
               padding: wp(2),
               borderRadius: 8,
               borderWidth: 1,
-              backgroundColor: isSelected ? '#E3F2FD' : backgroundLight, 
-              borderColor: isSelected ? '#2196F3' : '#ddd',
+              backgroundColor: isSelected ? '#F3E8FF' : backgroundLight,
+              borderColor: isSelected ? '#7C3AED' : '#ddd',
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Ionicons
                 name={isSelected ? 'checkbox' : 'square-outline'}
-                color={isSelected ? '#2196F3' : '#ddd'}
+                color={isSelected ? '#7C3AED' : '#ddd'}
                 size={18}
               />
-              <ThemedText style={{ marginLeft: wp(2) }}>
+
+              <ThemedText style={{
+                marginLeft: wp(2), color: isSelected ? "#7C3AED" : '#666',
+                fontWeight: isSelected ? "600" : "400",
+              }}>
                 {customer.name}
               </ThemedText>
             </View>
@@ -190,7 +194,7 @@ export default function CustomerPicker({
               onChangeText={(t: string) => setNewCustomer(prev => ({ ...prev, phone: t }))}
               style={{ marginTop: wp(2) }}
             />
-           
+
             <Input
               placeholder="Billing Address"
               value={newCustomer.billingAddress}

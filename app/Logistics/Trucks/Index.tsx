@@ -72,7 +72,7 @@ const Index = () => {
 
             // If user is in fleet mode and viewing private trucks, fetch from fleet subcollection
             if ( currentRole?.accType === 'fleet' && truckVisibility === 'Private') {
-                collectionName = `fleets/${currentRole.fleetId}/Trucks`;
+                collectionName = `fleets/${currentRole.fleetId}/Trucks` ;
             }else if (currentRole?.role === 'broker' && truckVisibility === 'Private') { 
                 collectionName = `brokers/${currentRole.brokerId}/trucks`;
             }

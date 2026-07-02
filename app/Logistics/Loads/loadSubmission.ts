@@ -58,6 +58,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     destination,
     trucksNeeded,
     selectedCustomer ,
+
   } = params;
 
   const roleAny = currentRole as any;
@@ -93,6 +94,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       deliveryLocation: assignment.deliveryLocation || destination || null,
       isDefault: Boolean(assignment.isDefault),
       status: 'pending',
+      selectedCustomer       
     };
   });
 
@@ -244,12 +246,12 @@ export const submitLoad = async (params: SubmitLoadParams) => {
 
   const writePublicLoad = async () => {
     await setDoc(doc(db, 'Cargo', cargoId), {
-      ...commonLoadData,
-      loadVisibility: 'Public',
-      expiresAt: Timestamp.fromDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)),
-      trucksNeeded: numberOfTrucks,
-      trucksRemaining: numberOfTrucks,
-      privateFleetCargoId: currentRole?.accType === 'fleet' && loadVisibility === 'Both' ? cargoId : null,
+        ...commonLoadData,
+        loadVisibility: 'Public',
+        expiresAt: Timestamp.fromDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)),
+        trucksNeeded: numberOfTrucks,
+        trucksRemaining: numberOfTrucks,
+        privateFleetCargoId: currentRole?.accType === 'fleet' && loadVisibility === 'Both' ? cargoId : null,
     });
   };
 

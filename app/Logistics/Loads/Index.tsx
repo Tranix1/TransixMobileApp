@@ -76,11 +76,9 @@ const Index = () => {
                 if (loadVisibility === "Public") {
 
                     filters = [
-
-
-                        where("approvalStatus", "==", "approved"),
-                        where("state", "==", "available"),
-                        where("expiresAt", ">", Timestamp.now())
+                            where("approvalStatus", "==", "approved"),
+                            where("state", "==", "available"),
+                            where("expiresAt", ">", Timestamp.now())
                     ];
                     collectionName = "Cargo"
                 }

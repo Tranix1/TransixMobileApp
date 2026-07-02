@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, TouchableOpacity, StyleSheet, ToastAndroid, Image } from "react-native";
+import { View, ScrollView, TouchableOpacity, StyleSheet, ToastAndroid, Image,Switch } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
@@ -84,9 +84,10 @@ const AddLoadDB = () => {
   } | null>(null)
 
   const [fleetTrucks, setFleetTrucks] = useState<any[]>([]);
+  console.log("🚀 ~ file: AddLoads.tsx:122 ~ AddLoadDB ~ fleetTrucks:", fleetTrucks)
   const [searchedTrucks, setSearchedTrucks] = useState<any[]>([]);
+  console.log("🚀 ~ file: AddLoads.tsx:123 ~ AddLoadDB ~ searchedTrucks:", searchedTrucks)
   const [selectedFleetTrucks, setSelectedFleetTrucks] = useState<any[]>([]);
-
   const [truckSearchQuery, setTruckSearchQuery] = useState('');
   const [loadVisibility, setLoadVisibility] = useState<LoadVisibility>('Private');
 
@@ -125,6 +126,7 @@ const AddLoadDB = () => {
         const trucksGetResult = await fetchDocuments(`fleets/${currentRole.fleetId}/Trucks`, 100);
         if (trucksGetResult && trucksGetResult.data && Array.isArray(trucksGetResult.data)) {
           setFleetTrucks(trucksGetResult.data);
+          setSearchedTrucks(trucksGetResult.data); // Initialize searchedBrokerTrucks with all trucks
         }
       } catch (error) {
         console.error("Error fetching brokers:", error);
@@ -698,6 +700,10 @@ const AddLoadDB = () => {
     }
   };
 
+
+  
+
+
   const renderTruckRequirements = (options?: { title?: string; helperText?: string }) => (
     <TruckRequirementsSection
       title={options?.title}
@@ -725,632 +731,57 @@ const AddLoadDB = () => {
 
 
 
-  return (
-    <ScreenWrapper fh={false}>
 
 
-      <Heading
-        page='Create Load'
+const [displayedTruckCount, setDisplayedTruckCount] = useState(10);
+const [displayedBrokerTruckCount, setDisplayedBrokerTruckCount] = useState(10);
 
-      />
+const [isReturnLoadEnabled, setIsReturnLoadEnabled] = useState(false);
 
+const stepKeys = ['basicInfo', 'loadDetails', 'additionalInfo'];
+if (isReturnLoadEnabled) stepKeys.push('returnLoad');
+stepKeys.push('truckReq');
 
+const stepLabels = ['Basic Info', 'Load Details', 'Additi Info'];
+if (isReturnLoadEnabled) stepLabels.push('Return Load');
+stepLabels.push('Truck Req');
 
+const currentStepKey = stepKeys[step];
 
-      <StepIndicator
-        steps={['Load Details', 'Additional Info', 'Return Load', 'Truck Req']}
-        currentStep={step}
-        onStepPress={setStep}
-      />
 
-      <View style={{ flex: 1, position: 'relative' }}>
-        {step === 0 && (
-          <ScrollView keyboardShouldPersistTaps="always" >
-            <View style={styles.viewMainDsp}>
+return (
+  <ScreenWrapper fh={false}>
 
-              <>
-                <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-                  Professional Load Details
-                </ThemedText>
-                <Divider />
+    <Heading page='Create Load' />
 
+    <StepIndicator
+      steps={stepLabels}
+      currentStep={step}
+      onStepPress={setStep}
+    />
 
-          <CustomerPicker
-            userId={user?.uid || ""}
-            selectedCustomer={selectedCustomer}
-            onSelectCustomer={setSelectedCustomer}
-          />
+    <View style={{ flex: 1, position: 'relative' }}>
 
-
-
-
-                <ThemedText>
-                  Type of Load<ThemedText color="red">*</ThemedText>
-                </ThemedText>
-                <Input
-                  value={typeofLoad}
-                  onChangeText={setTypeofLoad}
-                />
-              </>
-
-
-              {/* Common location fields */}
-              <LocationSelector
-                origin={origin}
-                destination={destination}
-                setOrigin={setOrigin}
-                setDestination={setDestination}
-                dspFromLocation={dspFromLocation}
-                setDspFromLocation={setDspFromLocation}
-                dspToLocation={dspToLocation}
-                setDspToLocation={setDspToLocation}
-                locationPicKERdSP={locationPicKERdSP}
-                setPickLocationOnMap={setPickLocationOnMap}
-                distance={distance}
-                duration={duration}
-                durationInTraffic={durationInTraffic}
-                iconColor={accent}
-              />
-
-              <RateInput
-                rate={rate}
-                setRate={setRate}
-                selectedCurrency={selectedCurrency}
-                setSelectedCurrency={setSelectedCurrency}
-                selectedModelType={selectedModelType}
-                setSelectedModelType={setSelectedModelType}
-                rateExplanation={rateexplantion}
-                setRateExplanation={setRateExplanation}
-              />
-
-
-              <Divider />
-
-
-             
-<PaymentTerms value={paymentTerms} onChange={setPaymentTerms} />
-
-          
-
-            </View>
-            <Divider />
-            <View style={styles.viewMainDsp}>
-              <Button onPress={() => setStep(1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
-            </View>
-            <View style={{ height: 100 }} />
-          </ScrollView>
-        )}
-
-        {step === 1 && (
-          <ScrollView>
-            <View style={styles.viewMainDsp}>
-              <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-                Additional Info
-              </ThemedText>
-              <Divider />
-
-
-              <ThemedText>
-                Loading date <ThemedText color="red">*</ThemedText>
-              </ThemedText>
-
-              <TouchableOpacity onPress={() => setShowLoadingDatePicker(true)}>
-                <Input
-                  value={
-                    loadingDate
-                      ? new Date(loadingDate).toLocaleDateString()
-                      : ""
-                  }
-                  placeholder="Select loading date"
-                  editable={false}
-                />
-              </TouchableOpacity>
-
-
-              {showLoadingDatePicker && (
-                <DateTimePicker
-                  value={
-                    loadingDate
-                      ? new Date(loadingDate)
-                      : new Date()
-                  }
-                  mode="date"
-                  display="default"
-                  onChange={(event, selectedDate) => {
-                    setShowLoadingDatePicker(false);
-
-                    if (selectedDate) {
-                      setLoadingDate(selectedDate.toISOString());
-                    }
-                  }}
-                />
-              )}
-
-              <ThemedText>
-                Delivery Date <ThemedText color="red">*</ThemedText>
-              </ThemedText>
-
-              <TouchableOpacity onPress={() => setShowDeliveryDatePicker(true)}>
-                <Input
-                  value={
-                    deliveryDate
-                      ? new Date(deliveryDate).toLocaleDateString()
-                      : ""
-                  }
-                  placeholder="Select delivery date"
-                  editable={false}
-                />
-              </TouchableOpacity>
-
-
-              {showDeliveryDatePicker && (
-                <DateTimePicker
-                  value={
-                    deliveryDate
-                      ? new Date(deliveryDate)
-                      : new Date()
-                  }
-                  mode="date"
-                  display="default"
-                  onChange={(event, selectedDate) => {
-                    setShowDeliveryDatePicker(false);
-
-                    if (selectedDate) {
-                      setDeliveryDate(selectedDate.toISOString());
-                    }
-                  }}
-                />
-              )}
-
-
-
-              <ThemedText>
-                Requirements<ThemedText color="red">*</ThemedText>
-              </ThemedText>
-              <Input
-                value={requirements}
-                onChangeText={setRequirements}
-              />
-              <ThemedText>
-                Additional Information<ThemedText color="red">*</ThemedText>
-              </ThemedText>
-              <Input
-                multiline
-                value={additionalInfo}
-                onChangeText={setAdditionalInfo}
-              />
-
-              <ThemedText>
-                Alert Message<ThemedText color="red">*</ThemedText>
-              </ThemedText>
-              <Input
-                value={alertMsg}
-                onChangeText={setAlertMsg}
-              />
-              <ThemedText>
-                Fuel & Tolls Infomation<ThemedText color="red">*</ThemedText>
-              </ThemedText>
-              <Input
-                value={fuelAvai}
-                onChangeText={setFuelAvai}
-              />
-
-              {
-                ((proofImages.length > 0 || proofDocuments.length > 0)) ? (
-                  <View>
-                    <ThemedText style={{ marginBottom: wp(2), fontWeight: 'bold' }}>
-                      Proof of Order
-                    </ThemedText>
-
-
-                    <View>
-                      <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
-                        {(proofImages.length + proofDocuments.length)}/6 files uploaded
-                      </ThemedText>
-
-                      {/* Proof Images Section */}
-                      {proofImages.length > 0 && (
-                        <View style={{ marginBottom: wp(3) }}>
-                          <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2), color: '#004d40' }}>
-                            Images ({proofImages.length})
-                          </ThemedText>
-                          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                            {proofImages.map((image, index) => (
-                              <View
-                                key={`img-${index}`}
-                                style={{
-                                  width: wp(30),
-                                  marginRight: wp(2),
-                                  backgroundColor: '#f9f9f9',
-                                  borderRadius: 8,
-                                  padding: 10,
-                                  shadowColor: '#000',
-                                  shadowOffset: { width: 0, height: 2 },
-                                  shadowOpacity: 0.1,
-                                  shadowRadius: 2,
-                                  elevation: 2,
-                                  position: 'relative',
-                                }}
-                              >
-                                <TouchableOpacity
-                                  onPress={() => {
-                                    setProofImages(prev => prev.filter((_, i) => i !== index));
-                                  }}
-                                  style={{
-                                    position: 'absolute',
-                                    top: -5,
-                                    right: -5,
-                                    backgroundColor: 'white',
-                                    borderRadius: 10,
-                                    zIndex: 1,
-                                  }}
-                                >
-                                  <Ionicons name="close-circle" size={20} color="red" />
-                                </TouchableOpacity>
-
-                                <Image
-                                  source={{ uri: image.uri }}
-                                  style={{
-                                    width: '100%',
-                                    height: wp(20),
-                                    borderRadius: 8,
-                                  }}
-                                  resizeMode="cover"
-                                />
-                                <ThemedText
-                                  style={{
-                                    marginTop: 8,
-                                    textAlign: 'center',
-                                    fontSize: 13,
-                                    color: '#004d40',
-                                    fontWeight: '600',
-                                  }}
-                                >
-                                  Image {index + 1}
-                                </ThemedText>
-                              </View>
-                            ))}
-                          </ScrollView>
-                        </View>
-                      )}
-
-                      {/* Proof Documents Section */}
-                      {proofDocuments.length > 0 && (
-                        <View style={{ marginBottom: wp(3) }}>
-                          <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2), color: '#004d40' }}>
-                            Documents ({proofDocuments.length})
-                          </ThemedText>
-                          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                            {proofDocuments.map((file, index) => (
-                              <View
-                                key={`doc-${index}`}
-                                style={{
-                                  width: wp(30),
-                                  marginRight: wp(2),
-                                  backgroundColor: '#f9f9f9',
-                                  borderRadius: 8,
-                                  padding: 10,
-                                  shadowColor: '#000',
-                                  shadowOffset: { width: 0, height: 2 },
-                                  shadowOpacity: 0.1,
-                                  shadowRadius: 2,
-                                  elevation: 2,
-                                  position: 'relative',
-                                }}
-                              >
-                                <TouchableOpacity
-                                  onPress={() => {
-                                    setProofDocuments(prev => prev.filter((_, i) => i !== index));
-                                    setProofDocumentTypes(prev => prev.filter((_, i) => i !== index));
-                                  }}
-                                  style={{
-                                    position: 'absolute',
-                                    top: -5,
-                                    right: -5,
-                                    backgroundColor: 'white',
-                                    borderRadius: 10,
-                                    zIndex: 1,
-                                  }}
-                                >
-                                  <Ionicons name="close-circle" size={20} color="red" />
-                                </TouchableOpacity>
-
-                                <View
-                                  style={{
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    height: wp(20),
-                                    backgroundColor: '#e0f2f1',
-                                    borderRadius: 8,
-                                  }}
-                                >
-                                  <Ionicons
-                                    name={proofDocumentTypes[index] === 'pdf' ? 'document-text' : 'document'}
-                                    size={40}
-                                    color="#004d40"
-                                  />
-                                </View>
-                                <ThemedText
-                                  style={{
-                                    marginTop: 8,
-                                    textAlign: 'center',
-                                    fontSize: 13,
-                                    color: '#004d40',
-                                    fontWeight: '600',
-                                  }}
-                                >
-                                  {file.name}
-                                </ThemedText>
-                              </View>
-                            ))}
-                          </ScrollView>
-                        </View>
-                      )}
-
-                      {/* Add More Files Buttons */}
-                      {(proofImages.length + proofDocuments.length) < 6 && (
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: wp(2) }}>
-                          <TouchableOpacity
-                            onPress={() => selectManyImages(setProofImages, false, 6 - proofDocuments.length, proofImages.length)}
-                            style={{
-                              backgroundColor: '#1E90FF',
-                              height: 45,
-                              justifyContent: 'center',
-                              paddingHorizontal: 20,
-                              borderRadius: 8,
-                              shadowColor: '#000',
-                              shadowOffset: { width: 0, height: 2 },
-                              shadowOpacity: 0.25,
-                              shadowRadius: 3.84,
-                              elevation: 5,
-                            }}
-                          >
-                            <ThemedText
-                              style={{
-                                textAlign: 'center',
-                                color: 'white',
-                                fontWeight: '600',
-                                fontSize: 12,
-                              }}
-                            >
-                              Add Images
-                            </ThemedText>
-                          </TouchableOpacity>
-
-                          <TouchableOpacity
-                            onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6 - proofImages.length, proofDocuments.length)}
-                            style={{
-                              backgroundColor: '#004d40',
-                              height: 45,
-                              justifyContent: 'center',
-                              paddingHorizontal: 20,
-                              borderRadius: 8,
-                              shadowColor: '#000',
-                              shadowOffset: { width: 0, height: 2 },
-                              shadowOpacity: 0.25,
-                              shadowRadius: 3.84,
-                              elevation: 5,
-                            }}
-                          >
-                            <ThemedText
-                              style={{
-                                textAlign: 'center',
-                                color: 'white',
-                                fontWeight: '600',
-                                fontSize: 12,
-                              }}
-                            >
-                              Add Documents
-                            </ThemedText>
-                          </TouchableOpacity>
-                        </View>
-                      )}
-                    </View>
-
-                  </View>
-                ) : (
-                  <View>
-                    <ThemedText style={{ fontSize: 13.6, fontWeight: 'bold', textAlign: "center", color: "#1E90FF", }}>
-                      Upload: Proof of Load Request
-                    </ThemedText>
-                    <ThemedText type="tiny">
-                      Upload images, PDFs, or Word documents proving this load is real and needs a truck. (Max 6 files)
-                    </ThemedText>
-
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: wp(3) }}>
-                      <TouchableOpacity
-                        onPress={() => selectManyImages(setProofImages, false, 6, proofImages.length)}
-                        style={{
-                          backgroundColor: '#1E90FF',
-                          height: 45,
-                          justifyContent: 'center',
-                          paddingHorizontal: 20,
-                          borderRadius: 8,
-                          shadowColor: '#000',
-                          shadowOffset: { width: 0, height: 2 },
-                          shadowOpacity: 0.25,
-                          shadowRadius: 3.84,
-                          elevation: 5,
-                        }}
-                      >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                          <Ionicons name="camera" size={16} color="white" style={{ marginRight: 8 }} />
-                          <ThemedText
-                            style={{
-                              textAlign: 'center',
-                              color: 'white',
-                              fontWeight: '600',
-                              fontSize: 14,
-                            }}
-                          >
-                            Add Images
-                          </ThemedText>
-                        </View>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6, proofDocuments.length)}
-                        style={{
-                          backgroundColor: '#004d40',
-                          height: 45,
-                          justifyContent: 'center',
-                          paddingHorizontal: 20,
-                          borderRadius: 8,
-                          shadowColor: '#000',
-                          shadowOffset: { width: 0, height: 2 },
-                          shadowOpacity: 0.25,
-                          shadowRadius: 3.84,
-                          elevation: 5,
-                        }}
-                      >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                          <Ionicons name="document-text" size={16} color="white" style={{ marginRight: 8 }} />
-                          <ThemedText
-                            style={{
-                              textAlign: 'center',
-                              color: 'white',
-                              fontWeight: '600',
-                              fontSize: 14,
-                            }}
-                          >
-                            Add Documents
-                          </ThemedText>
-                        </View>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )
-              }
-
-            </View>
-            <Divider />
-            <View style={{ paddingVertical: wp(3), gap: wp(2), borderRadius: 8, shadowColor: "#6a0c0c", shadowOffset: { width: 1, height: 2 }, shadowOpacity: 0.7, shadowRadius: 5, overflow: "hidden", }}>
-              <Button onPress={() => setStep(0)} title="Back" />
-              <Button onPress={() => setStep(2)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
-            <View style={{ height: 100 }} />
-
-            </View>
-          </ScrollView>
-        )}
-
-        {step === 2 && (
-          <ScrollView keyboardShouldPersistTaps="always">
-            <View style={styles.viewMainDsp}>
-              <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-                Return Load
-              </ThemedText>
-              <Divider />
-
-
-              {/* Return Load Location Selection */}
-              <TouchableOpacity style={{ marginTop: wp(3) }} onPress={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: wp(2) }} onTouchEnd={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}>
-
-                  <View
-
-                    style={{
-                      width: 20,
-                      height: 20,
-                      borderWidth: 2,
-                      borderColor: useDifferentReturnLocation ? accent : coolGray,
-                      borderRadius: 4,
-                      backgroundColor: useDifferentReturnLocation ? accent : 'transparent',
-                      marginRight: wp(2),
-                      justifyContent: 'center',
-                      alignItems: 'center'
-                    }}
-                  >
-                    {useDifferentReturnLocation && (
-                      <Ionicons name="checkmark" size={12} color="white" />
-                    )}
-                  </View>
-                  <ThemedText style={{ flex: 1, fontSize: 14, fontWeight: '600' }}>
-                    Use different return load locations
-                  </ThemedText>
-                </View>
-
-                <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
-                  Check this if the return load pickup and delivery locations are different from the main load
-                </ThemedText>
-
-                {useDifferentReturnLocation && (
-                  <LocationSelector
-                    origin={returnOrigin}
-                    destination={returnDestination}
-                    setOrigin={setReturnOrigin}
-                    setDestination={setReturnDestination}
-                    dspFromLocation={returnDspFromLocation}
-                    setDspFromLocation={setReturnDspFromLocation}
-                    dspToLocation={returnDspToLocation}
-                    setDspToLocation={setReturnDspToLocation}
-                    locationPicKERdSP={returnLocationPicKERdSP}
-                    setPickLocationOnMap={setReturnPickLocationOnMap}
-                    distance={returnDistance}
-                    duration={returnDuration}
-                    durationInTraffic={returnDurationInTraffic}
-                    iconColor="#2196F3"
-                  />
-                )}
-              </TouchableOpacity>
-
-
-              <ThemedText>
-                Return Load<ThemedText color="red">*</ThemedText>
-              </ThemedText>
-              <Input
-                value={returnLoad || ""}
-                onChangeText={(text) => setReturnLoad(text || "")}
-                placeholder="Enter return load details"
-              />
-              <RateInput
-                rate={returnRate || ""}
-                setRate={(rate) => setReturnRate(rate || "")}
-                selectedCurrency={selectedReturnCurrency || { id: 1, name: "USD" }}
-                setSelectedCurrency={setSelectedReturnCurrency}
-                selectedModelType={selectedReturnModelType || { id: 1, name: "Solid" }}
-                setSelectedModelType={setSelectedReturnModelType}
-                rateExplanation={returnTerms || ""}
-                setRateExplanation={(terms) => setReturnTerms(terms || "")}
-                isReturnRate={true}
-              />
-
-
-
-
-
-
-
-              <ThemedText>
-                Return Terms<ThemedText color="red">*</ThemedText>
-              </ThemedText>
-              <Input
-                value={returnTerms || ""}
-                onChangeText={(text) => setReturnTerms(text || "")}
-                placeholder="Enter return load terms"
-              />
-
-
-            </View>
-            <Divider />
-            <View style={styles.viewMainDsp}>
-              <Button onPress={() => setStep(1)} title="Back" />
-              <Button onPress={() => setStep(3)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
-            </View>
-          </ScrollView>
-        )}
-
-        {step === 3 && (<ScrollView>
+      {/* ============ NEW FIRST STEP: BASIC INFO ============ */}
+      {currentStepKey === 'basicInfo' && (
+        <ScrollView keyboardShouldPersistTaps="always">
           <View style={styles.viewMainDsp}>
             <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-              {currentRole?.accType === 'fleet' ? 'Select Fleet Trucks & Drivers' : 'Truck Requirements'}
+              Basic Load Info
             </ThemedText>
             <Divider />
 
-            
+            <ThemedText>
+              Customer<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+            <CustomerPicker
+              userId={user?.uid || ""}
+              selectedCustomer={selectedCustomer}
+              onSelectCustomer={setSelectedCustomer}
+            />
 
-            {/* Load Visibility Toggle for Fleet and Broker Users */}
             {(currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage') && (
-              <View style={{ marginBottom: wp(4) }}>
+              <View style={{ marginTop: wp(3), marginBottom: wp(2) }}>
                 <ThemedText style={{ fontWeight: 'bold', marginBottom: wp(2) }}>Load Visibility</ThemedText>
                 <View style={{ flexDirection: 'row', gap: wp(2) }}>
                   <TouchableOpacity
@@ -1443,17 +874,621 @@ const AddLoadDB = () => {
               </View>
             )}
 
+            <Divider />
+
+            <LocationSelector
+              origin={origin}
+              destination={destination}
+              setOrigin={setOrigin}
+              setDestination={setDestination}
+              dspFromLocation={dspFromLocation}
+              setDspFromLocation={setDspFromLocation}
+              dspToLocation={dspToLocation}
+              setDspToLocation={setDspToLocation}
+              locationPicKERdSP={locationPicKERdSP}
+              setPickLocationOnMap={setPickLocationOnMap}
+              distance={distance}
+              duration={duration}
+              durationInTraffic={durationInTraffic}
+              iconColor={accent}
+            />
+
+            <Divider />
+
+            <TouchableOpacity
+              onPress={() => setIsReturnLoadEnabled(!isReturnLoadEnabled)}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: wp(3),
+                borderRadius: 8,
+                backgroundColor: backgroundLight,
+                borderWidth: 1,
+                borderColor: isReturnLoadEnabled ? '#2196F3' : '#E0E0E0',
+                marginTop: wp(2),
+              }}
+            >
+              <View style={{ flex: 1, marginRight: wp(2) }}>
+                <ThemedText style={{ fontWeight: '600' }}>Return Load?</ThemedText>
+                <ThemedText style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
+                  Turn this on if there's a return load for this trip
+                </ThemedText>
+              </View>
+              <Switch
+                value={isReturnLoadEnabled}
+                onValueChange={setIsReturnLoadEnabled}
+                trackColor={{ false: '#ccc', true: '#2196F3' }}
+              />
+            </TouchableOpacity>
+
+          </View>
+          <Divider />
+          <View style={styles.viewMainDsp}>
+            <Button onPress={() => setStep(step + 1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
+          </View>
+          <View style={{ height: 100 }} />
+        </ScrollView>
+      )}
+
+      {/* ============ LOAD DETAILS (Customer + Location removed — now on Basic Info) ============ */}
+      {currentStepKey === 'loadDetails' && (
+        <ScrollView keyboardShouldPersistTaps="always">
+          <View style={styles.viewMainDsp}>
+            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
+              Load Details
+            </ThemedText>
+            <Divider />
+
+            <ThemedText>
+              Type of Load<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+            <Input
+              value={typeofLoad}
+              onChangeText={setTypeofLoad}
+            />
+
+            <RateInput
+              rate={rate}
+              setRate={setRate}
+              selectedCurrency={selectedCurrency}
+              setSelectedCurrency={setSelectedCurrency}
+              selectedModelType={selectedModelType}
+              setSelectedModelType={setSelectedModelType}
+              rateExplanation={rateexplantion}
+              setRateExplanation={setRateExplanation}
+            />
+
+            <Divider />
+
+            <PaymentTerms value={paymentTerms} onChange={setPaymentTerms} />
+
+          </View>
+          <Divider />
+          <View style={styles.viewMainDsp}>
+            <Button onPress={() => setStep(step - 1)} title="Back" />
+            <Button onPress={() => setStep(step + 1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
+          </View>
+          <View style={{ height: 100 }} />
+        </ScrollView>
+      )}
+
+      {/* ============ ADDITIONAL INFO (unchanged) ============ */}
+      {currentStepKey === 'additionalInfo' && (
+        <ScrollView>
+          <View style={styles.viewMainDsp}>
+            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
+              Additional Info
+            </ThemedText>
+            <Divider />
+
+            <ThemedText>
+              Loading date <ThemedText color="red">*</ThemedText>
+            </ThemedText>
+
+            <TouchableOpacity onPress={() => setShowLoadingDatePicker(true)}>
+              <Input
+                value={
+                  loadingDate
+                    ? new Date(loadingDate).toLocaleDateString()
+                    : ""
+                }
+                placeholder="Select loading date"
+                editable={false}
+              />
+            </TouchableOpacity>
+
+            {showLoadingDatePicker && (
+              <DateTimePicker
+                value={
+                  loadingDate
+                    ? new Date(loadingDate)
+                    : new Date()
+                }
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowLoadingDatePicker(false);
+                  if (selectedDate) {
+                    setLoadingDate(selectedDate.toISOString());
+                  }
+                }}
+              />
+            )}
+
+            <ThemedText>
+              Delivery Date <ThemedText color="red">*</ThemedText>
+            </ThemedText>
+
+            <TouchableOpacity onPress={() => setShowDeliveryDatePicker(true)}>
+              <Input
+                value={
+                  deliveryDate
+                    ? new Date(deliveryDate).toLocaleDateString()
+                    : ""
+                }
+                placeholder="Select delivery date"
+                editable={false}
+              />
+            </TouchableOpacity>
+
+            {showDeliveryDatePicker && (
+              <DateTimePicker
+                value={
+                  deliveryDate
+                    ? new Date(deliveryDate)
+                    : new Date()
+                }
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowDeliveryDatePicker(false);
+                  if (selectedDate) {
+                    setDeliveryDate(selectedDate.toISOString());
+                  }
+                }}
+              />
+            )}
+
+            <ThemedText>
+              Requirements<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+            <Input
+              value={requirements}
+              onChangeText={setRequirements}
+            />
+            <ThemedText>
+              Additional Information<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+            <Input
+              multiline
+              value={additionalInfo}
+              onChangeText={setAdditionalInfo}
+            />
+
+            <ThemedText>
+              Alert Message<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+            <Input
+              value={alertMsg}
+              onChangeText={setAlertMsg}
+            />
+            <ThemedText>
+              Fuel & Tolls Infomation<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+            <Input
+              value={fuelAvai}
+              onChangeText={setFuelAvai}
+            />
+
+            {
+              ((proofImages.length > 0 || proofDocuments.length > 0)) ? (
+                <View>
+                  <ThemedText style={{ marginBottom: wp(2), fontWeight: 'bold' }}>
+                    Proof of Order
+                  </ThemedText>
+
+                  <View>
+                    <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
+                      {(proofImages.length + proofDocuments.length)}/6 files uploaded
+                    </ThemedText>
+
+                    {proofImages.length > 0 && (
+                      <View style={{ marginBottom: wp(3) }}>
+                        <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2), color: '#004d40' }}>
+                          Images ({proofImages.length})
+                        </ThemedText>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                          {proofImages.map((image, index) => (
+                            <View
+                              key={`img-${index}`}
+                              style={{
+                                width: wp(30),
+                                marginRight: wp(2),
+                                backgroundColor: '#f9f9f9',
+                                borderRadius: 8,
+                                padding: 10,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 2,
+                                elevation: 2,
+                                position: 'relative',
+                              }}
+                            >
+                              <TouchableOpacity
+                                onPress={() => {
+                                  setProofImages(prev => prev.filter((_, i) => i !== index));
+                                }}
+                                style={{
+                                  position: 'absolute',
+                                  top: -5,
+                                  right: -5,
+                                  backgroundColor: 'white',
+                                  borderRadius: 10,
+                                  zIndex: 1,
+                                }}
+                              >
+                                <Ionicons name="close-circle" size={20} color="red" />
+                              </TouchableOpacity>
+
+                              <Image
+                                source={{ uri: image.uri }}
+                                style={{
+                                  width: '100%',
+                                  height: wp(20),
+                                  borderRadius: 8,
+                                }}
+                                resizeMode="cover"
+                              />
+                              <ThemedText
+                                style={{
+                                  marginTop: 8,
+                                  textAlign: 'center',
+                                  fontSize: 13,
+                                  color: '#004d40',
+                                  fontWeight: '600',
+                                }}
+                              >
+                                Image {index + 1}
+                              </ThemedText>
+                            </View>
+                          ))}
+                        </ScrollView>
+                      </View>
+                    )}
+
+                    {proofDocuments.length > 0 && (
+                      <View style={{ marginBottom: wp(3) }}>
+                        <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2), color: '#004d40' }}>
+                          Documents ({proofDocuments.length})
+                        </ThemedText>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                          {proofDocuments.map((file, index) => (
+                            <View
+                              key={`doc-${index}`}
+                              style={{
+                                width: wp(30),
+                                marginRight: wp(2),
+                                backgroundColor: '#f9f9f9',
+                                borderRadius: 8,
+                                padding: 10,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 2,
+                                elevation: 2,
+                                position: 'relative',
+                              }}
+                            >
+                              <TouchableOpacity
+                                onPress={() => {
+                                  setProofDocuments(prev => prev.filter((_, i) => i !== index));
+                                  setProofDocumentTypes(prev => prev.filter((_, i) => i !== index));
+                                }}
+                                style={{
+                                  position: 'absolute',
+                                  top: -5,
+                                  right: -5,
+                                  backgroundColor: 'white',
+                                  borderRadius: 10,
+                                  zIndex: 1,
+                                }}
+                              >
+                                <Ionicons name="close-circle" size={20} color="red" />
+                              </TouchableOpacity>
+
+                              <View
+                                style={{
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                  height: wp(20),
+                                  backgroundColor: '#e0f2f1',
+                                  borderRadius: 8,
+                                }}
+                              >
+                                <Ionicons
+                                  name={proofDocumentTypes[index] === 'pdf' ? 'document-text' : 'document'}
+                                  size={40}
+                                  color="#004d40"
+                                />
+                              </View>
+                              <ThemedText
+                                style={{
+                                  marginTop: 8,
+                                  textAlign: 'center',
+                                  fontSize: 13,
+                                  color: '#004d40',
+                                  fontWeight: '600',
+                                }}
+                              >
+                                {file.name}
+                              </ThemedText>
+                            </View>
+                          ))}
+                        </ScrollView>
+                      </View>
+                    )}
+
+                    {(proofImages.length + proofDocuments.length) < 6 && (
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: wp(2) }}>
+                        <TouchableOpacity
+                          onPress={() => selectManyImages(setProofImages, false, 6 - proofDocuments.length, proofImages.length)}
+                          style={{
+                            backgroundColor: '#1E90FF',
+                            height: 45,
+                            justifyContent: 'center',
+                            paddingHorizontal: 20,
+                            borderRadius: 8,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 3.84,
+                            elevation: 5,
+                          }}
+                        >
+                          <ThemedText
+                            style={{
+                              textAlign: 'center',
+                              color: 'white',
+                              fontWeight: '600',
+                              fontSize: 12,
+                            }}
+                          >
+                            Add Images
+                          </ThemedText>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6 - proofImages.length, proofDocuments.length)}
+                          style={{
+                            backgroundColor: '#004d40',
+                            height: 45,
+                            justifyContent: 'center',
+                            paddingHorizontal: 20,
+                            borderRadius: 8,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 3.84,
+                            elevation: 5,
+                          }}
+                        >
+                          <ThemedText
+                            style={{
+                              textAlign: 'center',
+                              color: 'white',
+                              fontWeight: '600',
+                              fontSize: 12,
+                            }}
+                          >
+                            Add Documents
+                          </ThemedText>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+
+                </View>
+              ) : (
+                <View>
+                  <ThemedText style={{ fontSize: 13.6, fontWeight: 'bold', textAlign: "center", color: "#1E90FF", }}>
+                    Upload: Proof of Load Request
+                  </ThemedText>
+                  <ThemedText type="tiny">
+                    Upload images, PDFs, or Word documents proving this load is real and needs a truck. (Max 6 files)
+                  </ThemedText>
+
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: wp(3) }}>
+                    <TouchableOpacity
+                      onPress={() => selectManyImages(setProofImages, false, 6, proofImages.length)}
+                      style={{
+                        backgroundColor: '#1E90FF',
+                        height: 45,
+                        justifyContent: 'center',
+                        paddingHorizontal: 20,
+                        borderRadius: 8,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 3.84,
+                        elevation: 5,
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons name="camera" size={16} color="white" style={{ marginRight: 8 }} />
+                        <ThemedText
+                          style={{
+                            textAlign: 'center',
+                            color: 'white',
+                            fontWeight: '600',
+                            fontSize: 14,
+                          }}
+                        >
+                          Add Images
+                        </ThemedText>
+                      </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6, proofDocuments.length)}
+                      style={{
+                        backgroundColor: '#004d40',
+                        height: 45,
+                        justifyContent: 'center',
+                        paddingHorizontal: 20,
+                        borderRadius: 8,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 3.84,
+                        elevation: 5,
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons name="document-text" size={16} color="white" style={{ marginRight: 8 }} />
+                        <ThemedText
+                          style={{
+                            textAlign: 'center',
+                            color: 'white',
+                            fontWeight: '600',
+                            fontSize: 14,
+                          }}
+                        >
+                          Add Documents
+                        </ThemedText>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )
+            }
+
+          </View>
+          <Divider />
+          <View style={{ paddingVertical: wp(3), gap: wp(2), borderRadius: 8, shadowColor: "#6a0c0c", shadowOffset: { width: 1, height: 2 }, shadowOpacity: 0.7, shadowRadius: 5, overflow: "hidden", }}>
+            <Button onPress={() => setStep(step - 1)} title="Back" />
+            <Button onPress={() => setStep(step + 1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
+            <View style={{ height: 100 }} />
+          </View>
+        </ScrollView>
+      )}
+
+      {/* ============ RETURN LOAD (only shown when toggle is ON — unchanged content) ============ */}
+      {currentStepKey === 'returnLoad' && (
+        <ScrollView keyboardShouldPersistTaps="always">
+          <View style={styles.viewMainDsp}>
+            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
+              Return Load
+            </ThemedText>
+            <Divider />
+
+            <TouchableOpacity style={{ marginTop: wp(3) }} onPress={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: wp(2) }} onTouchEnd={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}>
+
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderWidth: 2,
+                    borderColor: useDifferentReturnLocation ? accent : coolGray,
+                    borderRadius: 4,
+                    backgroundColor: useDifferentReturnLocation ? accent : 'transparent',
+                    marginRight: wp(2),
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  {useDifferentReturnLocation && (
+                    <Ionicons name="checkmark" size={12} color="white" />
+                  )}
+                </View>
+                <ThemedText style={{ flex: 1, fontSize: 14, fontWeight: '600' }}>
+                  Use different return load locations
+                </ThemedText>
+              </View>
+
+              <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
+                Check this if the return load pickup and delivery locations are different from the main load
+              </ThemedText>
+
+              {useDifferentReturnLocation && (
+                <LocationSelector
+                  origin={returnOrigin}
+                  destination={returnDestination}
+                  setOrigin={setReturnOrigin}
+                  setDestination={setReturnDestination}
+                  dspFromLocation={returnDspFromLocation}
+                  setDspFromLocation={setReturnDspFromLocation}
+                  dspToLocation={returnDspToLocation}
+                  setDspToLocation={setReturnDspToLocation}
+                  locationPicKERdSP={returnLocationPicKERdSP}
+                  setPickLocationOnMap={setReturnPickLocationOnMap}
+                  distance={returnDistance}
+                  duration={returnDuration}
+                  durationInTraffic={returnDurationInTraffic}
+                  iconColor="#2196F3"
+                />
+              )}
+            </TouchableOpacity>
+
+            <ThemedText>
+              Return Load<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+            <Input
+              value={returnLoad || ""}
+              onChangeText={(text) => setReturnLoad(text || "")}
+              placeholder="Enter return load details"
+            />
+            <RateInput
+              rate={returnRate || ""}
+              setRate={(rate) => setReturnRate(rate || "")}
+              selectedCurrency={selectedReturnCurrency || { id: 1, name: "USD" }}
+              setSelectedCurrency={setSelectedReturnCurrency}
+              selectedModelType={selectedReturnModelType || { id: 1, name: "Solid" }}
+              setSelectedModelType={setSelectedReturnModelType}
+              rateExplanation={returnTerms || ""}
+              setRateExplanation={(terms) => setReturnTerms(terms || "")}
+              isReturnRate={true}
+            />
+
+            <ThemedText>
+              Return Terms<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+            <Input
+              value={returnTerms || ""}
+              onChangeText={(text) => setReturnTerms(text || "")}
+              placeholder="Enter return load terms"
+            />
+
+          </View>
+          <Divider />
+          <View style={styles.viewMainDsp}>
+            <Button onPress={() => setStep(step - 1)} title="Back" />
+            <Button onPress={() => setStep(step + 1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
+          </View>
+        </ScrollView>
+      )}
+
+      {/* ============ TRUCK REQ (Load Visibility moved out, truck lists now paginated + scrollable) ============ */}
+      {currentStepKey === 'truckReq' && (
+        <ScrollView>
+          <View style={styles.viewMainDsp}>
+            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
+              {currentRole?.accType === 'fleet' ? 'Select Fleet Trucks & Drivers' : 'Truck Requirements'}
+            </ThemedText>
+            <Divider />
+
+            {/* Load Visibility selector now lives on the Basic Info step — nothing else here changed */}
 
             {currentRole?.accType === 'fleet' && (loadVisibility === 'Private' || loadVisibility === 'Both') ? (
-              // Fleet User: Private load - Select trucks and display their drivers
               <>
-
-                {/* Truck Search */}
                 <ThemedText>Search Trucks</ThemedText>
                 <Input
                   value={truckSearchQuery}
                   onChangeText={(text) => {
                     setTruckSearchQuery(text);
+                    setDisplayedTruckCount(10); // reset pagination whenever the filter changes
                     if (text.trim() === '') {
                       setSearchedTrucks(fleetTrucks);
                     } else {
@@ -1468,19 +1503,19 @@ const AddLoadDB = () => {
                   placeholder="Search by registration or type"
                 />
 
-                {/* Available Trucks with Drivers */}
-                <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Available Trucks</ThemedText>
+                <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>
+                  Available Trucks ({searchedTrucks.length})
+                </ThemedText>
 
-                {searchedTrucks.map((truck, index) => {
-                  // Get drivers for this truck
+                <View style={{ maxHeight: hp(48), marginTop: wp(1) }}>
+                  <ScrollView nestedScrollEnabled showsVerticalScrollIndicator keyboardShouldPersistTaps="always">
+                    {searchedTrucks.slice(0, displayedTruckCount).map((truck, index) => {
                   const truckDrivers = fleetDriversFromTrucks.filter(driver => driver.truckId === truck.id)
                   const defaultDriver = fleetDriversFromTrucks.find(driver => driver.truckId === truck.id && (driver.role === 'main' || driver.isDefault));
-
                   const assignment = assignments.find(a => a.truckId === truck.id);
 
                   return (
                     <View key={truck.truckId || index} style={{
-
                       marginVertical: wp(1),
                       borderRadius: 8,
                       backgroundColor: backgroundLight,
@@ -1488,47 +1523,34 @@ const AddLoadDB = () => {
                       borderColor: '#E0E0E0',
                       overflow: 'hidden'
                     }}>
-                      {/* Truck Header */}
                       <TouchableOpacity
                         onPress={() => {
-
                           const exists = selectedFleetTrucks.find(
                             t => t.id === truck.id
                           );
-
                           if (exists) {
-
                             setSelectedFleetTrucks(prev =>
                               prev.filter(t => t.id !== truck.id)
                             );
-
                             setAssignments(prev =>
                               prev.filter(a => a.truckId !== truck.id)
                             );
-
                             setExpandedTruckIds(prev => prev.filter(id => id !== truck.id));
-
                           } else {
-
                             setSelectedFleetTrucks(prev => [
                               ...prev,
                               truck
                             ]);
-
                             setExpandedTruckIds(prev => [...prev, truck.id]);
                           }
-
                         }}
                         style={{
                           padding: wp(3),
                           borderBottomWidth: truckDrivers.length > 0 ? 1 : 0,
                           borderBottomColor: '#E0E0E0',
-
-
                           backgroundColor: selectedFleetTrucks.some(t => t.id === truck.id)
-                            ? 'rgba(33, 150, 243, 0.1)' // light blue highlight
+                            ? 'rgba(33, 150, 243, 0.1)'
                             : 'transparent',
-
                         }}
                       >
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -1551,17 +1573,12 @@ const AddLoadDB = () => {
                         </View>
                       </TouchableOpacity>
 
-
-
                       {expandedTruckIds.includes(truck.id) && (
-
                         <View style={{
                           padding: wp(3),
                           borderTopWidth: 1,
                           borderColor: '#eee'
                         }}>
-
-
                           <ThemedText
                             style={{
                               fontWeight: '700',
@@ -1571,58 +1588,38 @@ const AddLoadDB = () => {
                             Assign Driver (Optional)
                           </ThemedText>
 
-
-
                           <Input
                             placeholder="Search driver..."
                             value={
                               driverSearchQueries[truck.id] || ''
                             }
-
                             onChangeText={(text) => {
-
                               setDriverSearchQueries(prev => ({
                                 ...prev,
                                 [truck.id]: text
                               }))
-
                             }}
-
                           />
 
-
-
-                          {/* DEFAULT DRIVER */}
-
                           {defaultDriver && (
-
                             <TouchableOpacity
-
                               onPress={() => {
-
                                 setAssignments(prev => [
-
                                   ...prev.filter(
                                     a => a.truckId !== truck.id
                                   ),
-
                                   {
                                     truckId: truck.id,
                                     driverId: defaultDriver.driverId,
                                     driverName: defaultDriver.fullName,
-
                                     pickupDate: loadingDate,
                                     deliveryDate: deliveryDate,
                                     pickupLocation: origin,
                                     deliveryLocation: destination,
-
                                     isDefault: true
                                   }
-
                                 ])
-
                               }}
-
                               style={{
                                 marginTop: wp(2),
                                 padding: wp(2),
@@ -1631,21 +1628,14 @@ const AddLoadDB = () => {
                                 borderWidth: 1,
                                 borderColor: '#2196F3'
                               }}
-
                             >
-
                               <ThemedText>
                                 ⭐ Default - {defaultDriver.fullName}
                               </ThemedText>
-
                             </TouchableOpacity>
-
                           )}
 
-                          {/* SHOW DRIVERS ONLY WHEN SEARCHING */}
-
                           {driverSearchQueries[truck.id]?.length > 0 &&
-
                             fleetDrivers
                               .filter(d =>
                                 d.fullName
@@ -1656,8 +1646,6 @@ const AddLoadDB = () => {
                                   )
                               )
                               .map(driver => {
-
-
                                 const selected =
                                   assignments.find(
                                     a =>
@@ -1665,101 +1653,56 @@ const AddLoadDB = () => {
                                       a.truckId === truck.id
                                   )
 
-
-
                                 return (
-
                                   <TouchableOpacity
-
                                     key={driver.driverId}
-
                                     onPress={() => {
-
-
                                       if (selected) {
-
                                         setAssignments(prev =>
                                           prev.filter(
                                             a => a.driverId !== driver.driverId ||
                                               a.truckId !== truck.id
                                           )
                                         )
-
-
                                       } else {
-
-
                                         setAssignments(prev => [
-
                                           ...prev,
-
                                           {
-
                                             truckId: truck.id,
-
                                             driverId: driver.driverId,
-
                                             driverName: driver.fullName,
-
-
                                             pickupDate: loadingDate,
-
                                             deliveryDate: deliveryDate,
-
                                             pickupLocation: origin,
-
                                             deliveryLocation: destination,
-
-
                                             isDefault: false
-
                                           }
-
                                         ])
-
-
                                       }
-
-
                                     }}
-
-
                                     style={{
                                       marginTop: wp(1),
                                       padding: wp(2),
                                       borderRadius: 8,
                                       borderWidth: 1,
-
                                       backgroundColor: selected
                                         ? 'rgba(76,175,80,.15)'
                                         : 'transparent'
-
                                     }}
-
                                   >
-
-
                                     <View style={{
                                       flexDirection: 'row',
                                       alignItems: 'center'
                                     }}>
-
-
                                       <Ionicons
-
                                         name={
                                           selected
                                             ? 'checkbox'
                                             : 'square-outline'
                                         }
                                         color={selected ? '#4CAF50' : '#ddd'}
-
-
                                         size={18}
-
                                       />
-
-
                                       <ThemedText
                                         style={{
                                           marginLeft: wp(2)
@@ -1767,46 +1710,19 @@ const AddLoadDB = () => {
                                       >
                                         {driver.fullName}
                                       </ThemedText>
-
-
                                     </View>
-
-
                                   </TouchableOpacity>
-
-
                                 )
-
                               })
-
                           }
-
-
-                          {/* Assignment details */}
 
                           {assignments.some(
                             a => a.truckId === truck.id
                           ) && (
-
                               <View style={{ marginTop: wp(3) }}>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                                 <LocationSelector
                                   origin={assignment?.pickupLocation || null}
                                   destination={assignment?.deliveryLocation || null}
-
                                   setOrigin={(location) => {
                                     setAssignments(prev =>
                                       prev.map(a =>
@@ -1816,7 +1732,6 @@ const AddLoadDB = () => {
                                       )
                                     );
                                   }}
-
                                   setDestination={(location) => {
                                     setAssignments(prev =>
                                       prev.map(a =>
@@ -1828,28 +1743,15 @@ const AddLoadDB = () => {
                                   }}
                                   dspFromLocation={assignmentDspFromLocation}
                                   setDspFromLocation={setAssignmentDspFromLocation}
-
                                   dspToLocation={assignmentDspToLocation}
                                   setDspToLocation={setAssignmentDspToLocation}
-
                                   locationPicKERdSP={assignmentLocationPicKERdSP}
                                   setPickLocationOnMap={setAssignmentPickLocationOnMap}
-
                                   distance={assignmentDistance}
                                   duration={assignmentDuration}
                                   durationInTraffic={assignmentDurationInTraffic}
-
                                   iconColor={accent}
-
                                 />
-
-
-
-
-
-
-
-
 
                                 <TouchableOpacity
                                   onPress={() => setPickupDateTruckId(truck.id)}
@@ -1885,7 +1787,6 @@ const AddLoadDB = () => {
                                     display="default"
                                     onChange={(event, selectedDate) => {
                                       setPickupDateTruckId(null);
-
                                       if (selectedDate) {
                                         setAssignments(prev =>
                                           prev.map(a =>
@@ -1901,8 +1802,6 @@ const AddLoadDB = () => {
                                     }}
                                   />
                                 )}
-
-
 
                                 <TouchableOpacity
                                   onPress={() => setDeliveryDateTruckId(truck.id)}
@@ -1938,7 +1837,6 @@ const AddLoadDB = () => {
                                     display="default"
                                     onChange={(event, selectedDate) => {
                                       setDeliveryDateTruckId(null);
-
                                       if (selectedDate) {
                                         setAssignments(prev =>
                                           prev.map(a =>
@@ -1954,18 +1852,33 @@ const AddLoadDB = () => {
                                     }}
                                   />
                                 )}
-
                               </View>
-
                             )}
-
                         </View>
-
                       )}
-
                     </View>
                   );
                 })}
+                  </ScrollView>
+                </View>
+
+                {searchedTrucks.length > displayedTruckCount && (
+                  <TouchableOpacity
+                    onPress={() => setDisplayedTruckCount(prev => prev + 10)}
+                    style={{
+                      marginTop: wp(2),
+                      padding: wp(2.5),
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: accent,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <ThemedText style={{ color: accent, fontWeight: '600' }}>
+                      Show More ({searchedTrucks.length - displayedTruckCount} remaining)
+                    </ThemedText>
+                  </TouchableOpacity>
+                )}
 
                 {loadVisibility === 'Both' && (
                   <>
@@ -1982,10 +1895,8 @@ const AddLoadDB = () => {
                     {renderTruckRequirements({ title: 'Public Truck Requirements' })}
                   </>
                 )}
-
               </>
             ) : currentRole?.accType === 'fleet' && loadVisibility === 'Public' ? (
-              // Fleet User: Public load - Show truck requirements (will be visible to all trucks)
               <>
                 <ThemedText>
                   Number of Public Trucks Needed<ThemedText color="red">*</ThemedText>
@@ -1996,16 +1907,17 @@ const AddLoadDB = () => {
                   placeholder='e.g., 1, 2, 5'
                   keyboardType="numeric"
                 />
+                  {renderTruckRequirements({ title: 'Public Truck Requirements' })}
+
               </>
             ) : currentRole?.accType === 'brokerage' && (loadVisibility === 'Private' || loadVisibility === 'Both') ? (
-              // Broker User: Private load - Select assigned trucks (no drivers)
               <>
-                {/* Truck Search */}
                 <ThemedText>Search Assigned Trucks</ThemedText>
                 <Input
                   value={brokerTruckSearchQuery}
                   onChangeText={(text) => {
                     setBrokerTruckSearchQuery(text);
+                    setDisplayedBrokerTruckCount(10); // reset pagination whenever the filter changes
                     if (text.trim() === '') {
                       setSearchedBrokerTrucks(brokerTrucks);
                     } else {
@@ -2019,9 +1931,12 @@ const AddLoadDB = () => {
                   placeholder="Search by truck name or type"
                 />
 
-                {/* Available Assigned Trucks */}
-                <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Available Assigned Trucks</ThemedText>
-                {searchedBrokerTrucks.map((truck, index) => (
+                <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>
+                  Available Assigned Trucks ({searchedBrokerTrucks.length})
+                </ThemedText>
+                <View style={{ maxHeight: hp(48), marginTop: wp(1) }}>
+                  <ScrollView nestedScrollEnabled showsVerticalScrollIndicator keyboardShouldPersistTaps="always">
+                    {searchedBrokerTrucks.slice(0, displayedBrokerTruckCount).map((truck, index) => (
                   <TouchableOpacity
                     key={truck.truckId || index}
                     onPress={() => {
@@ -2054,6 +1969,26 @@ const AddLoadDB = () => {
                     </View>
                   </TouchableOpacity>
                 ))}
+                  </ScrollView>
+                </View>
+
+                {searchedBrokerTrucks.length > displayedBrokerTruckCount && (
+                  <TouchableOpacity
+                    onPress={() => setDisplayedBrokerTruckCount(prev => prev + 10)}
+                    style={{
+                      marginTop: wp(2),
+                      padding: wp(2.5),
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: accent,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <ThemedText style={{ color: accent, fontWeight: '600' }}>
+                      Show More ({searchedBrokerTrucks.length - displayedBrokerTruckCount} remaining)
+                    </ThemedText>
+                  </TouchableOpacity>
+                )}
 
                 {loadVisibility === 'Both' && (
                   <>
@@ -2072,7 +2007,6 @@ const AddLoadDB = () => {
                 )}
               </>
             ) : (
-              // Professional User: Truck requirements
               <>
                 <ThemedText>
                   Number of Public Trucks Needed<ThemedText color="red">*</ThemedText>
@@ -2089,17 +2023,24 @@ const AddLoadDB = () => {
 
             <Divider />
             <View style={styles.viewMainDsp}>
-              <Button onPress={() => setStep(2)} title="Back" />
+              <Button onPress={() => setStep(step - 1)} title="Back" />
               <Button onPress={handleSubmit} title={isSubmitting ? "Submiting..." : "Submit"} disabled={isSubmitting} loading={isSubmitting} colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{ borderWidth: 1, borderColor: accent }} />
             </View>
           </View>
           <View style={{ height: 25 }} />
-        </ScrollView>)}
-      </View>
+        </ScrollView>
+      )}
+    </View>
+
+  </ScreenWrapper>
+);
 
 
-    </ScreenWrapper>
-  );
+
+
+
+
+
 };
 
 export default AddLoadDB;

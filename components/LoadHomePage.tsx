@@ -91,22 +91,24 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     );
 
     const handleContact = (method: 'whatsapp' | 'call' | 'message') => {
-        if (!selectedLoad?.contact) return
 
+        ToastAndroid.show('Please book or bid this load. Direct contact is not available yet.', ToastAndroid.SHORT);
+        return;
+        // if (!selectedLoad?.contact) return
 
-        const message = `${selectedLoad.companyName}\nIs this load still available\n${selectedLoad.typeofLoad}\nrOUTE: ${selectedLoad.origin} TO ${selectedLoad.destination}\nRate : ${selectedLoad.currency} ${selectedLoad.rate} ${selectedLoad.model}`
+        // const message = `${selectedLoad.companyName}\nIs this load still available\n${selectedLoad.typeofLoad}\nrOUTE: ${selectedLoad.origin} TO ${selectedLoad.destination}\nRate : ${selectedLoad.currency} ${selectedLoad.rate} ${selectedLoad.model}`
 
-        switch (method) {
-            case 'whatsapp':
-                Linking.openURL(`whatsapp://send?phone=${selectedLoad.contact}&text=${encodeURIComponent(message)}`)
-                break
-            case 'call':
-                Linking.openURL(`tel:${selectedLoad.contact}`)
-                break
-            case 'message':
-                // Implement your messaging logic
-                break
-        }
+        // switch (method) {
+        //     case 'whatsapp':
+        //         Linking.openURL(`whatsapp://send?phone=${selectedLoad.contact}&text=${encodeURIComponent(message)}`)
+        //         break
+        //     case 'call':
+        //         Linking.openURL(`tel:${selectedLoad.contact}`)
+        //         break
+        //     case 'message':
+        //         // Implement your messaging logic
+        //         break
+        // }
     }
 
     const handleDeleteLoad = async () => {
@@ -174,12 +176,12 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
             {/* Visibility Selector */}
 
 
-                <CustomHeader pageTitle="Loads" addingNavigate="/Logistics/Loads/AddLoads" filterElement={setShowfilter} />
+            <CustomHeader pageTitle="Loads" addingNavigate="/Logistics/Loads/AddLoads" filterElement={setShowfilter} />
 
 
             {visibilitySelector}
 
-            
+
 
             <FlatList
                 keyExtractor={(item) => item.id.toString()}
@@ -366,90 +368,7 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                                 }
                                 {
                                     <>
-                                        {bottomMode === 'Bid' &&
-                                            <View style={[{
-                                                borderColor: accent, borderWidth: .5, padding: wp(2), borderRadius: wp(6),
-                                            }]}>
-                                                <View style={{ gap: wp(2) }}>
-                                                    <ThemedText type='subtitle' color={coolGray} style={{ textAlign: 'center' }}>
-                                                        Bid Rate
-                                                    </ThemedText>
-                                                    <View style={{}}>
-                                                        {selectedLoad.rate && (
-                                                            <View
-                                                                style={{
-                                                                    flexDirection: 'row',
-                                                                    flexWrap: 'wrap',
-                                                                    justifyContent: 'center',
-                                                                    marginBottom: wp(2)
-                                                                }}
-                                                            >
-                                                                <ThemedText style={{ color: '#616161', fontSize: 16, fontWeight: '500' }} type='tiny'>
-                                                                    from
-                                                                </ThemedText>
-
-                                                                <ThemedText
-                                                                    style={{
-                                                                        color: '#1976D2', // blue
-                                                                        fontSize: 16,
-                                                                        fontWeight: 'bold',
-                                                                        marginHorizontal: 6,
-                                                                    }}
-                                                                    type='tiny'
-                                                                >
-                                                                    {selectedLoad.currency} {selectedLoad.rate} {selectedLoad.model}
-                                                                </ThemedText>
-
-                                                                <ThemedText style={{ color: '#616161', fontSize: 16, fontWeight: '500' }} type='tiny'>
-                                                                    to
-                                                                </ThemedText>
-
-                                                                <ThemedText
-                                                                    style={{
-                                                                        color: bidRate ? '#2E7D32' : '#9E9E9E', // green or grey
-                                                                        fontSize: 16,
-                                                                        fontWeight: 'bold',
-                                                                        marginLeft: 6,
-                                                                    }}
-                                                                    type='tiny'
-                                                                >
-                                                                    {selectedLoad.currency} {bidRate ? bidRate : "--"}
-                                                                </ThemedText>
-                                                            </View>
-                                                        )}
-
-                                                        <Input
-                                                            onChangeText={(text) => setBidRate(text)}
-                                                            value={bidRate}
-                                                            keyboardType="numeric"
-                                                            placeholderTextColor={coolGray}
-                                                            placeholder="Bid rate"
-                                                        />
-                                                    </View>
-
-                                                </View>
-
-                                                <View style={{ flexDirection: 'row', gap: wp(2) }}>
-                                                    <TouchableOpacity
-                                                        onPress={() => setBottomMode('')}
-                                                        style={[{ backgroundColor: coolGray, flex: 2, padding: wp(3), borderRadius: wp(4), alignItems: 'center' }]}
-                                                    >
-                                                        <ThemedText style={{ color: 'white' }}>Cancel</ThemedText>
-                                                    </TouchableOpacity>
-
-                                                    {/* <TouchableOpacity
-                                                        onPress={() => submitBidsOBookings("biddings" as 'biddings', selectedLoad as Load)} */}
-                                                    <TouchableOpacity onPress={() => router.push({
-                                                        pathname: '/MakeOffer/BookBidlCargo',
-                                                        params: { cargo: JSON.stringify(selectedLoad), bidRate: bidRate }
-                                                    })}
-                                                        style={[{ backgroundColor: '#0f9d5824', flex: 2, padding: wp(3), borderRadius: wp(4), alignItems: 'center' }]}
-                                                    >
-                                                        <ThemedText style={{ color: '#0f9d58' }}>Send</ThemedText>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            </View>
-                                        }
+                                       
 
                                         {<>
                                             <View>
@@ -467,7 +386,10 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
 
                                             </View>
                                             <View>
-                                                <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => setBottomMode('Bid')}>
+                                                <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }}  onPress={() => router.push({
+                                                        pathname: '/MakeOffer/BookBidlCargo',
+                                                        params: { cargo: JSON.stringify(selectedLoad), OperationType: "Bid"  }
+                                                    })}>
                                                     <ThemedText color='white'>
                                                         Bid Load
                                                     </ThemedText>

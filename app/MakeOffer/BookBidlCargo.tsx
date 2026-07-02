@@ -1,10 +1,12 @@
 import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, ToastAndroid, Alert } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ToastAndroid, Alert, TextInput } from "react-native";
+import { Image } from 'expo-image'
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth, db } from "@/db/fireBaseConfig";
 import { addDocument, runFirestoreTransaction, checkDocumentExists, setDocuments, readById } from "@/db/operations";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Feather, } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { collection, serverTimestamp, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 import { Truck } from "@/types/types";
 import { toggleItemById } from "@/Utilities/utils";
@@ -17,6 +19,7 @@ import Heading from "@/components/Heading";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { formatCurrency } from '@/services/services'
 import { usePushNotifications, sendPushNotification, sendBookingWithTrackerNotification } from "@/Utilities/pushNotification";
+import { useAuth } from "@/context/AuthContext";
 
 function BookLCargo({ }) {
   const { bottom } = useSafeAreaInsets();
@@ -31,11 +34,15 @@ function BookLCargo({ }) {
   const { cargo, contract, bidRate, OperationType } = useLocalSearchParams();
   const loadItem = JSON.parse((cargo || contract) as any);
 
+
+  const { currentRole } = useAuth();
+  // where("approvalStatus", "==", "approved"), where("state", "==", "available"),
+
   useEffect(() => {
     try {
       if (auth.currentUser) {
         const userId = auth.currentUser.uid;
-        const dataQuery = query(collection(db, "Trucks"), where("userId", "==", userId), where("isApproved", "==", true), where("accTypeIsApproved", "==", true), where("approvalStatus", "==", "approved"));
+        const dataQuery = query(collection(db, `fleets/${currentRole.fleetId}/Trucks`),);
         const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
           const loadedData: Truck[] = [];
           snapshot.docChanges().forEach((change) => {
@@ -53,6 +60,37 @@ function BookLCargo({ }) {
     }
   }, []);
 
+  // ---- Drivers, fetched the same way as Trucks. Typed any for now, tighten later. ----
+  const [allDrivers, setAllDrivers] = React.useState<any[]>([]);
+  useEffect(() => {
+    try {
+      if (auth.currentUser) {
+        const dataQuery = query(collection(db, `fleets/${currentRole.fleetId}/Drivers`));
+        const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
+          setAllDrivers((prev) => {
+            const map = new Map(prev.map((d) => [d.id, d]));
+            snapshot.docChanges().forEach((change) => {
+              if (change.type === 'added' || change.type === 'modified') {
+                map.set(change.doc.id, { id: change.doc.id, ...change.doc.data() });
+              }
+              if (change.type === 'removed') {
+                map.delete(change.doc.id);
+              }
+            });
+            return Array.from(map.values());
+          });
+        });
+        return () => unsubscribe();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  // Per-truck driver search text and the driver currently selected for that truck.
+  const [driverSearchText, setDriverSearchText] = React.useState<{ [truckId: string]: string }>({});
+  const [selectedDrivers, setSelectedDrivers] = React.useState<{ [truckId: string]: any }>({});
+
   const [truckDetails, setTruckDDsp] = React.useState<{ [key: string]: boolean }>({ ['']: false });
   function togglrTruckDe(itemId: string) {
     toggleItemById(itemId, setTruckDDsp)
@@ -68,11 +106,11 @@ function BookLCargo({ }) {
   }
 
   const [driverDetails, setDriverDDsp] = React.useState<{ [key: string]: boolean }>({ ['']: false });
-  function togglrDriverDe(itemId: string) {
-    toggleItemById(itemId, setDriverDDsp)
-    setTruckBuzDDsp({ ['']: false })
-    setTruckDDsp({ ['']: false })
-  }
+
+const [bidAmount, setBidAmount] = React.useState<string>(
+  loadItem.rate ? String(loadItem.rate) : ''
+);
+const [isEditingBid, setIsEditingBid] = React.useState(true);
 
   type BookJob = {
     id: string;
@@ -107,7 +145,7 @@ function BookLCargo({ }) {
   }, [setTrucksRequested]);
 
   const checkExistixtBBDoc = async (trckCargoId: string) => {
-    const chatsRef = collection(db, "loadRequests");
+    const chatsRef = collection(db, "cargoRequests");
     const chatQuery = query(chatsRef, where('requestId', '==', trckCargoId), where('alreadyInRequested', '==', true));
     const querySnapshot = await getDocs(chatQuery);
     return !querySnapshot.empty;
@@ -117,115 +155,122 @@ function BookLCargo({ }) {
 
   let renderElements = bbVerifiedLoadD.map((item) => {
 
-    async function handleSubmitDetails() {
-      try {
-        if (auth.currentUser) {
-          const userId = auth.currentUser.uid
-          const existingBBDoc = await checkExistixtBBDoc(`${userId}${loadItem.id}${item.timeStamp}`);
+   async function handleSubmitDetails() {
+  try {
+    if (auth.currentUser) {
+      const userId = auth.currentUser.uid
 
-          // Check if truck has tracker and if it's available for sharing
-          const truckData = await readById('Trucks', item.id) as any;
-          const hasTracker = truckData?.hasTracker;
-          const trackerStatus = truckData?.trackerStatus;
-          const trackingDeviceId = truckData?.trackingDeviceId;
+      const selectedDriver = selectedDrivers[item.id];
+      if (!selectedDriver) {
+        ToastAndroid.show("Select a driver for this truck first", ToastAndroid.SHORT);
+        return;
+      }
 
-          // Note: Allow booking even without tracker, but track the status
+      // NEW: require a valid bid amount when bidding
+      if (OperationType === "Bid" && (!bidAmount || isNaN(Number(bidAmount)) || Number(bidAmount) <= 0)) {
+        ToastAndroid.show("Enter a valid bid rate first", ToastAndroid.SHORT);
+        return;
+      }
 
-          if (!existingBBDoc) {
-            const theData = {
-              truckId: item.id,
-              trackingDeviceId: (item as any).trackingDeviceId || null,
-              created_at: Date.now().toString(),
-              requestId: `${userId}${loadItem.id}${item.timeStamp}`,
-              cargoId: loadItem.id,
-              companyName: loadItem.companyName,
-              onwerId: loadItem.userId,
-              productName: loadItem.typeofLoad,
-              origin: loadItem.origin,
-              destination: loadItem.destination,
-              // Add location coordinates for tracking
-              originCoordinates: loadItem.originCoordinates || null,
-              destinationCoordinates: loadItem.destinationCoordinates || null,
-              rate: bidRate ? bidRate : loadItem.rate,
-              currency: loadItem.currency,
-              model: loadItem.model,
-              ownerDecision: "Pending",
-              status: bidRate ? "Bidded" : "Booked",
-              loadId: loadItem.id,
-              approvedTrck: false,
-              alreadyInRequested: true,
-              expoPushToken: expoPushToken || null,
-              trackerShared: false, // Track if tracker is shared
-              trackerSharingRequested: false, // Track if sharing was requested
-              loadOwnerId: loadItem.userId, // Load owner ID for notifications
-              truckOwnerId: truckData?.userId, // Truck owner ID for notifications
-              truckOwnerName: truckData?.ownerName || truckData?.CompanyName || "Truck Owner", // Truck owner name for display
-              truckHasTracker: hasTracker, // Store tracker availability status
-              trackerStatus: trackerStatus, // Store tracker status
-              // Add route information for better tracking
-              routePolyline: loadItem.routePolyline || null,
-              bounds: loadItem.bounds || null,
-              distance: loadItem.distance || null,
-              duration: loadItem.duration || null
-            }
-            addDocument("loadRequests", theData)
+      const existingBBDoc = await checkExistixtBBDoc(`${userId}${loadItem.id}${item.timeStamp}`);
 
-            if (loadItem.expoPushToken) {
-              await sendBookingWithTrackerNotification(
-                loadItem.expoPushToken,
-                truckData?.ownerName || "Truck Owner",
-                `${loadItem.origin} to ${loadItem.destination}`,
-                hasTracker && trackerStatus === 'active' && trackingDeviceId,
-                theData.requestId
-              );
-            } else {
-              console.warn('⚠️ No expoPushToken found in loadItem, skipping notification');
-            }
+      const truckData = await readById('Trucks', item.id) as any;
+      const hasTracker = truckData?.hasTracker;
+      const trackerStatus = truckData?.trackerStatus;
+      const trackingDeviceId = truckData?.trackingDeviceId;
 
-            const existingBBDoc = await checkDocumentExists("newIterms", [where('receriverId', '==', userId)]);
-            // const existingChat = await checkExistingChat(addChatId);
-            let newBiddedDoc = 0
-            let newBOOKEDDoc = 0
-
-            // dbName === "bookings" ? newBOOKEDDoc = 1  : newBiddedDoc = 1
-            // Chat doesn't exist, add it to 'ppleInTouch'
-            if (!existingBBDoc) {
-              setDocuments("bidBookingStats", {
-                bookingdocs: newBOOKEDDoc,
-                biddingdocs: newBiddedDoc,
-                timestamp: serverTimestamp(),
-                receriverId: item.userId,
-              })
-
-            }
-            else {
-
-              await runFirestoreTransaction(`bidBookingStats/${userId}`, (data) => {
-                const currentBiddingDocs = data?.biddingdocs || 0;
-                const currentBookingsDocs = data?.bookingdocs || 0;
-
-                return {
-                  // biddingdocs: dbName !== "bookings" ? currentBiddingDocs + 1 : currentBiddingDocs,
-                  // bookingdocs: dbName === "bookings" ? currentBookingsDocs + 1 : currentBookingsDocs,
-                };
-              });
-
-
-            }
-
-            ToastAndroid.show(`Load ${bidRate ? "BIDDING" : "BOOKING"} completed successfully.`, ToastAndroid.SHORT);
-
-          } else {
-            alert("Truck alreadyy Booked")
-          }
+      if (!existingBBDoc) {
+        const theData = {
+          truckId: item.id,
+          trackingDeviceId: (item as any).trackingDeviceId || null,
+          driverId: selectedDriver.id,
+          driverName: selectedDriver.fullName || null,
+          driverPhoneNumber: selectedDriver.phoneNumber || null,
+          created_at: Date.now().toString(),
+          requestId: `${userId}${loadItem.id}${item.timeStamp}`,
+          cargoId: loadItem.id,
+          companyName: loadItem.companyName,
+          onwerId: loadItem.userId,
+          productName: loadItem.typeofLoad,
+          origin: loadItem.origin,
+          destination: loadItem.destination,
+          originCoordinates: loadItem.originCoordinates || null,
+          destinationCoordinates: loadItem.destinationCoordinates || null,
+          // CHANGED: use the typed bid amount when bidding, otherwise the posted rate
+          rate: OperationType === "Bid" ? Number(bidAmount) : loadItem.rate,
+          currency: loadItem.currency,
+          model: loadItem.model,
+          ownerDecision: "Pending",
+          // CHANGED: status now driven by OperationType, not a bidRate param
+          status: OperationType === "Bid" ? "Bidded" : "Booked",
+          loadId: loadItem.id,
+          approvedTrck: false,
+          alreadyInRequested: true,
+          expoPushToken: expoPushToken || null,
+          trackerShared: false,
+          trackerSharingRequested: false,
+          loadOwnerId: loadItem.userId,
+          truckOwnerId: truckData?.userId,
+          truckOwnerName: truckData?.ownerName || truckData?.CompanyName || "Truck Owner",
+          truckHasTracker: hasTracker,
+          trackerStatus: trackerStatus,
+          routePolyline: loadItem.routePolyline || null,
+          bounds: loadItem.bounds || null,
+          distance: loadItem.distance || null,
+          duration: loadItem.duration || null
         }
-      } catch (err) {
-        console.error(err)
+        addDocument("cargoRequests", theData)
+
+        if (loadItem.expoPushToken) {
+          await sendBookingWithTrackerNotification(
+            loadItem.expoPushToken,
+            truckData?.ownerName || "Truck Owner",
+            `${loadItem.origin} to ${loadItem.destination}`,
+            hasTracker && trackerStatus === 'active' && trackingDeviceId,
+            theData.requestId
+          );
+        } else {
+          console.warn('⚠️ No expoPushToken found in loadItem, skipping notification');
+        }
+
+        const existingBBDoc2 = await checkDocumentExists("newIterms", [where('receriverId', '==', userId)]);
+        let newBiddedDoc = 0
+        let newBOOKEDDoc = 0
+
+        if (!existingBBDoc2) {
+          setDocuments("bidBookingStats", {
+            bookingdocs: newBOOKEDDoc,
+            biddingdocs: newBiddedDoc,
+            timestamp: serverTimestamp(),
+            receriverId: item.userId,
+          })
+        } else {
+          await runFirestoreTransaction(`bidBookingStats/${userId}`, (data) => {
+            const currentBiddingDocs = data?.biddingdocs || 0;
+            const currentBookingsDocs = data?.bookingdocs || 0;
+            return {};
+          });
+        }
+
+        // CHANGED: message now driven by OperationType
+        ToastAndroid.show(`Load ${OperationType === "Bid" ? "BIDDING" : "BOOKING"} completed successfully.`, ToastAndroid.SHORT);
+
+      } else {
+        alert("Truck alreadyy Booked")
       }
     }
+  } catch (err) {
+    console.error(err)
+  }
+}
 
-
-
+    // Drivers filtered for this specific truck's search box
+    const filteredDriversForTruck = allDrivers.filter((driver) => {
+      const term = (driverSearchText[item.id] || '').trim().toLowerCase();
+      if (!term) return true;
+      return (driver.fullName || '').toLowerCase().includes(term);
+    });
+    const selectedDriverForTruck = selectedDrivers[item.id];
 
     return (
       <View
@@ -233,16 +278,19 @@ function BookLCargo({ }) {
         key={item.id}
       >
         {/* Main Image */}
+        
         {item.imageUrl && (
           <Image
             source={{ uri: item.imageUrl }}
             style={styles.mainImage}
           />
-        )}
+        )}  
+
+
 
         {trucksRequested.map((scndItem) => {
           function removeFrmRequest() {
-            updateDocument("loadRequests", scndItem.id, {
+            updateDocument("cargoRequests", scndItem.id, {
               alreadyInRequested: false,
               reasonForLeaving: "hahahah",
               cargoId: loadItem.id,
@@ -272,7 +320,140 @@ function BookLCargo({ }) {
           )
         })}
 
-        {/* Select Button */}
+        {/* Company Name */}
+        <ThemedText type="subtitle" style={[styles.companyName, { color: accent }]}>
+          {item.CompanyName}
+        </ThemedText>
+
+        {/* Truck Details Section */}
+        <View style={styles.detailsSection}>
+
+
+          <View style={styles.detailsContent}>
+            <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
+              <View style={{ flex: 1 }}>
+                <ThemedText type="tiny" style={{}}>
+                  Truck Type
+                </ThemedText>
+                <ThemedText type="subtitle" style={{}}>
+                  {item.truckType || '--'}
+                </ThemedText>
+              </View>
+              <ThemedText type="subtitle" color="#1E90FF" >|</ThemedText>
+              <View style={{ flex: 1 }}>
+                <ThemedText type="tiny" style={{}}>
+                  Cargo Area:
+                </ThemedText>
+                <ThemedText type="subtitle" style={{}}>
+                  {item.cargoArea !== "Other" ? item.cargoArea : item.otherCargoArea}
+                </ThemedText>
+              </View>
+
+            </View>
+
+
+            <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
+              <View style={{ flex: 1 }}>
+                <ThemedText type="tiny" style={{}}>
+                  Maximum Load Capacity
+                </ThemedText>
+                <ThemedText type="subtitle" style={{}}>
+                  {item.maxloadCapacity || '--'}t
+                </ThemedText>
+              </View>
+              <ThemedText type="subtitle" color="#1E90FF" >|</ThemedText>
+              <View style={{ flex: 1 }}>
+                <ThemedText type="tiny" style={{}}>
+                  Capacity:
+                </ThemedText>
+                <ThemedText type="subtitle" style={{}}>
+                  {item.truckCapacity || '--'}t
+                </ThemedText>
+              </View>
+
+            </View>
+
+
+            <View style={{ flexDirection: 'row' }}>
+              <View style={{ flex: 1 }}>
+                <ThemedText type="tiny" style={{}}>
+                  Operation Country{item.locations?.length > 1 ? 's' : ''}
+                </ThemedText>
+                <ThemedText type="subtitle" style={{ marginBottom: wp(4) }}>
+                  {item.locations?.join(', ') || '--'}
+                </ThemedText>
+              </View>
+
+            </View>
+
+            {/* ---- Driver search + select, nested under this truck ---- */}
+            <View style={{ marginTop: wp(2) }}>
+              <ThemedText type="tiny" style={{ marginBottom: wp(1) }}>
+                Assign Driver
+              </ThemedText>
+              <TextInput
+                value={driverSearchText[item.id] || ''}
+                onChangeText={(text) => setDriverSearchText((prev) => ({ ...prev, [item.id]: text }))}
+                placeholder="Search driver by name"
+                placeholderTextColor={coolGray}
+                style={[styles.driverSearchInput, { borderColor: coolGray, color: icon }]}
+              />
+
+              {selectedDriverForTruck && (
+                <ThemedText style={{ color: accent, marginTop: wp(1), fontWeight: '600' }}>
+                  Selected: {selectedDriverForTruck.fullName || '--'}
+                </ThemedText>
+              )}
+
+              <View style={{ maxHeight: hp(22), marginTop: wp(1) }}>
+                <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="always">
+                  {filteredDriversForTruck.map((driver) => {
+                    const isSelected = selectedDriverForTruck?.id === driver.id;
+                    return (
+                      <TouchableOpacity
+                        key={driver.id}
+                        onPress={() =>
+                          setSelectedDrivers((prev) => ({
+                            ...prev,
+                            [item.id]: isSelected ? null : driver,
+                          }))
+                        }
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          padding: wp(2),
+                          marginVertical: wp(1),
+                          borderRadius: 8,
+                          borderWidth: 1,
+                          borderColor: isSelected ? accent : '#E0E0E0',
+                          backgroundColor: backgroundColor,
+                        }}
+                      >
+                        <Ionicons
+                          name={isSelected ? "checkbox" : "square-outline"}
+                          size={18}
+                          color={isSelected ? accent : '#666'}
+                          style={{ marginRight: wp(2) }}
+                        />
+                        <View style={{ flex: 1 }}>
+                          <ThemedText style={{ fontWeight: '600' }}>{driver.fullName || '--'}</ThemedText>
+                          {!!driver.phoneNumber && (
+                            <ThemedText style={{ fontSize: 12, color: '#666' }}>{driver.phoneNumber}</ThemedText>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            </View>
+
+          </View>
+
+
+        </View>
+
+        {/* Select Button — now submits truck + driver as one request */}
         <TouchableOpacity
           onPress={handleSubmitDetails}
           style={[styles.primaryButton, { backgroundColor: accent }]}
@@ -282,115 +463,15 @@ function BookLCargo({ }) {
           </ThemedText>
         </TouchableOpacity>
 
-        {/* Company Name */}
-        <ThemedText type="subtitle" style={[styles.companyName, { color: accent }]}>
-          {item.CompanyName}
-        </ThemedText>
 
-        {/* Truck Details Section */}
-        <View style={styles.detailsSection}>
-          <TouchableOpacity
-            onPress={() => togglrTruckDe(item.id)}
-            style={[styles.secondaryButton, { backgroundColor: accent }]}
-          >
-            <ThemedText style={styles.buttonTextWhite}>Truck Details</ThemedText>
-          </TouchableOpacity>
-
-          {truckDetails[item.id] && (
-            <View style={styles.detailsContent}>
-              <View style={styles.detailRow}>
-                <ThemedText style={[styles.detailLabel, { color: icon }]}>Trailer Type</ThemedText>
-                <ThemedText style={styles.detailValue}>: {item.cargoArea}</ThemedText>
-              </View>
-
-              <ScrollView
-                horizontal
-                style={styles.horizontalScroll}
-                showsHorizontalScrollIndicator={false}
-              >
-                {item.truckBookImage && (
-                  <View style={styles.imageContainer}>
-                    <ThemedText style={styles.imageLabel}>Truck Image</ThemedText>
-                    <Image
-                      source={{ uri: item.truckBookImage }}
-                      style={styles.detailImage}
-                    />
-                  </View>
-                )}
-                {item.trailerBookF && (
-                  <View style={styles.imageContainer}>
-                    <ThemedText style={styles.imageLabel}>Trailer Book</ThemedText>
-                    <Image
-                      source={{ uri: item.trailerBookF }}
-                      style={styles.detailImage}
-                    />
-                  </View>
-                )}
-                {item.trailerBookSc && (
-                  <View style={styles.imageContainer}>
-                    <ThemedText style={styles.imageLabel}>Second Trailer Book</ThemedText>
-                    <Image
-                      source={{ uri: item.trailerBookSc }}
-                      style={styles.detailImage}
-                    />
-                  </View>
-                )}
-              </ScrollView>
-            </View>
-          )}
-        </View>
-
-        {/* Driver Details Section */}
-        <View style={styles.detailsSection}>
-          <TouchableOpacity
-            onPress={() => togglrDriverDe(item.id)}
-            style={[styles.outlineButton, { borderColor: accent }]}
-          >
-            <ThemedText style={[styles.buttonTextDark, { color: accent }]}>Driver Details</ThemedText>
-          </TouchableOpacity>
-
-          {driverDetails[item.id] && (
-            <View style={styles.detailsContent}>
-              <View style={styles.detailRow}>
-                <ThemedText style={[styles.detailLabel, { color: icon }]}>Driver Phone</ThemedText>
-                <ThemedText style={styles.detailValue}>: {item.driverPhone}</ThemedText>
-              </View>
-
-              <ScrollView
-                horizontal
-                style={styles.horizontalScroll}
-                showsHorizontalScrollIndicator={false}
-              >
-                {item.driverLicense && (
-                  <View style={styles.imageContainer}>
-                    <ThemedText style={styles.imageLabel}>Driver License</ThemedText>
-                    <Image
-                      source={{ uri: item.driverLicense }}
-                      style={styles.detailImage}
-                    />
-                  </View>
-                )}
-                {item.driverPassport && (
-                  <View style={styles.imageContainer}>
-                    <ThemedText style={styles.imageLabel}>Driver Passport</ThemedText>
-                    <Image
-                      source={{ uri: item.driverPassport }}
-                      style={styles.detailImage}
-                    />
-                  </View>
-                )}
-              </ScrollView>
-            </View>
-          )}
-        </View>
 
         {/* Business Details Section */}
-        <View style={styles.detailsSection}>
+      {currentRole.accType==="brokerage"&&  <View style={styles.detailsSection}>
           <TouchableOpacity
             onPress={() => togglrTruckBuzDe(item.id)}
-            style={[styles.secondaryButton, { backgroundColor: accent }]}
+            style={[styles.secondaryButton, { borderColor: accent }]}
           >
-            <ThemedText style={styles.buttonTextWhite}>Business Details</ThemedText>
+            <ThemedText color={accent}>Business Details</ThemedText>
           </TouchableOpacity>
 
           {truckBuzDe[item.id] && (
@@ -405,7 +486,9 @@ function BookLCargo({ }) {
               </View>
             </View>
           )}
-        </View>
+        </View>}
+
+
       </View>
 
 
@@ -458,11 +541,60 @@ function BookLCargo({ }) {
               <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Product</ThemedText>
               <ThemedText >{loadItem.typeofLoad || "Tobacco"}</ThemedText>
             </View>
-            <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
 
-              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate {loadItem.model} </ThemedText>
-              <ThemedText   >{loadItem.currency} {formatCurrency(!bidRate ? loadItem.rate : bidRate)}</ThemedText>
-            </View>
+
+
+
+
+           <View style={{ flexDirection: 'row', marginBottom: wp(1), alignItems: 'center' }}>
+  <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate {loadItem.model} </ThemedText>
+
+  {OperationType === "Bid" ? (
+    isEditingBid ? (
+      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: wp(1) }}>
+        <ThemedText>{loadItem.currency}</ThemedText>
+        <TextInput
+          value={bidAmount}
+          onChangeText={setBidAmount}
+          keyboardType="numeric"
+          placeholder="Enter your rate"
+          placeholderTextColor={coolGray}
+          autoFocus
+          onBlur={() => setIsEditingBid(false)}
+          onSubmitEditing={() => setIsEditingBid(false)}
+          style={{
+            flex: 1,
+            borderBottomWidth: 1,
+            borderColor: accent,
+            color: textColor,
+            paddingVertical: 2,
+            fontSize: wp(4),
+          }}
+        />
+        <MaterialIcons name="check" size={wp(5)} color={accent} onPress={() => setIsEditingBid(false)} />
+      </View>
+    ) : (
+      <TouchableOpacity
+        onPress={() => setIsEditingBid(true)}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: wp(1) }}
+      >
+        <ThemedText style={{ color: bidAmount ? textColor : coolGray }}>
+          {loadItem.currency} {bidAmount ? formatCurrency(Number(bidAmount)) : "Tap to enter rate"}
+        </ThemedText>
+        <Feather name="chevron-right" size={wp(4)} color={accent} />
+      </TouchableOpacity>
+    )
+  ) : (
+    <ThemedText>{loadItem.currency} {formatCurrency(loadItem.rate)}</ThemedText>
+  )}
+</View>
+
+
+
+
+
+
+
 
             <View style={{ flexDirection: 'row', marginBottom: wp(1) }}>
 
@@ -479,6 +611,11 @@ function BookLCargo({ }) {
           </View>
         </View>
       </View>
+
+
+
+x
+
 
       {/* Add Button */}
       <TouchableOpacity style={{
@@ -569,7 +706,8 @@ const styles = StyleSheet.create({
     borderRadius: wp(2),
     paddingVertical: wp(2),
     alignItems: "center",
-    marginBottom: wp(2)
+    marginBottom: wp(2),
+    marginTop: wp(2)
   },
   secondaryButton: {
     borderRadius: wp(2),
@@ -638,6 +776,11 @@ const styles = StyleSheet.create({
   },
   buttonTextDark: {
     fontSize: wp(4)
+  },
+  driverSearchInput: {
+    borderWidth: 1,
+    borderRadius: wp(3),
+    paddingHorizontal: wp(5),
+    paddingVertical: wp(2),
   }
 });
-
