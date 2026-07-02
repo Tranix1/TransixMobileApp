@@ -78,6 +78,10 @@ function SlctBookingsandBiddings({ }) {
           color="#6a0c0c"
           onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dspRoute: "Requested Loads" } })}
         />
+
+        <TouchableOpacity onPress={() => router.push({ pathname: '/Assignments/Index' })} style={[styles.card, { borderColor: "#4eb37a" }]}>
+          <ThemedText color={"#4eb37a"}>Assignments</ThemedText>
+        </TouchableOpacity>
         {/* <ModernCard
           label="Bidded by Carriers"
           count={newItermBidded}

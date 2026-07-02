@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HorizontalTickComponent } from '@/components/SlctHorizonzalTick';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Timestamp } from 'firebase/firestore';
 
 
 const Index = () => {
@@ -38,7 +39,7 @@ const Index = () => {
     const [bottomMode, setBottomMode] = useState<'Bid' | 'Book' | ''>('');
 
     const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
-    const [loadVisibility, setLoadVisibility] = useState< 'Private' | 'Public'>('Private');
+    const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public'>('Private');
     const [currentRole, setCurrentRole] = useState<any>(null);
 
     useEffect(() => {
@@ -67,23 +68,27 @@ const Index = () => {
             if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
                 // Fetch private loads from fleet subcollection
                 collectionName = `fleets/${currentRole.fleetId}/Cargo`;
-                    
-            }else       if (currentRole?.accType === "brokerage" && loadVisibility === 'Private') { 
-                collectionName = `brokers/${currentRole.brokerId}/Cargo`;
-            }else {
-                // Fetch public loads from main collection
-                if(loadVisibility ==="Public"){
 
-                filters = [
-                    where("approvalStatus", "==", "approved"),
-                ];
-                collectionName = "Cargo"
-                }              
+            } else if (currentRole?.accType === "brokerage" && loadVisibility === 'Private') {
+                collectionName = `brokers/${currentRole.brokerId}/Cargo`;
+            } else {
+                // Fetch public loads from main collection
+                if (loadVisibility === "Public") {
+
+                    filters = [
+
+
+                        where("approvalStatus", "==", "approved"),
+                        where("state", "==", "available"),
+                        where("expiresAt", ">", Timestamp.now())
+                    ];
+                    collectionName = "Cargo"
+                }
             }
 
             const maLoads = await fetchDocuments(collectionName, 50, undefined, filters);
 
-            
+
             if (maLoads.data.length) {
                 if (filters.length > 0 && maLoads.data.length < 0) setFilteredPNotAavaialble(true)
                 setLoads(maLoads.data as Load[])
@@ -132,11 +137,11 @@ const Index = () => {
             // Apply same filters as in LoadTructs for pagination
             if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
                 collectionName = `fleets/${currentRole.fleetId}/Cargo`;
-                    
-            }else   if (currentRole?.accType === 'brokerage' && loadVisibility === 'Private') {
+
+            } else if (currentRole?.accType === 'brokerage' && loadVisibility === 'Private') {
                 collectionName = `brokerages/${currentRole.fleetId}/Cargo`;
-                    
-            }  else {
+
+            } else {
                 filters = [
                     where("approvalStatus", "==", "approved"),
                     where("isApproved", "==", true),
@@ -192,15 +197,15 @@ const Index = () => {
                     isLoading={isLoading}
                     error={error}
                     visibilitySelector={
-                            <HorizontalTickComponent
-                                data={[
-                                    { topic: "Private", value: "Private" },
-                                    { topic: "Public", value: "Public" },
-                                    { topic: "Network", value: "Network" },
-                                ]}
-                                condition={loadVisibility}
-                                onSelect={setLoadVisibility}
-                            />
+                        <HorizontalTickComponent
+                            data={[
+                                { topic: "Private", value: "Private" },
+                                { topic: "Public", value: "Public" },
+                                { topic: "Network", value: "Network" },
+                            ]}
+                            condition={loadVisibility}
+                            onSelect={setLoadVisibility}
+                        />
                     }
                 />
             </View>

@@ -43,6 +43,7 @@ export default function CustomerPicker({
 
   const { currentRole}= useAuth();
     const background = useThemeColor('background')
+    const backgroundLight = useThemeColor('backgroundLight')
   
 
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -119,7 +120,7 @@ export default function CustomerPicker({
   return (
     <View>
       <View style={{  alignItems: 'center', flexDirection: 'row',  }}>
-        <View style={{width : "80%",height:30}}>
+        <View style={{width : "85%",height:10}}>
         <Input
           placeholder="Search customer..."
           value={searchQuery}
@@ -130,10 +131,12 @@ export default function CustomerPicker({
         <TouchableOpacity
           onPress={() => setShowAddModal(true)}
           style={{
-            marginLeft: wp(2),
-            padding: wp(2.5),
+            padding: wp(3.7),
+            paddingHorizontal: wp(5.5),
             backgroundColor: '#4CAF50',
-            borderRadius: 8
+            borderEndEndRadius: 8,
+            borderEndStartRadius: 8,
+            marginLeft: wp(-3),
           }}
         >
           <Ionicons name="add" color="#fff" size={20} />
@@ -151,13 +154,14 @@ export default function CustomerPicker({
               padding: wp(2),
               borderRadius: 8,
               borderWidth: 1,
-              backgroundColor: isSelected ? 'rgba(76,175,80,.15)' : 'transparent'
+              backgroundColor: isSelected ? '#E3F2FD' : backgroundLight, 
+              borderColor: isSelected ? '#2196F3' : '#ddd',
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Ionicons
                 name={isSelected ? 'checkbox' : 'square-outline'}
-                color={isSelected ? '#4CAF50' : '#ddd'}
+                color={isSelected ? '#2196F3' : '#ddd'}
                 size={18}
               />
               <ThemedText style={{ marginLeft: wp(2) }}>

@@ -4,7 +4,7 @@ import { DocumentAsset } from '@/types/types';
 import { PaymentTermsValue } from '@/components/PaymentTerms';
 
 // Validation utilities for load forms
-export const    validateLoadForm = (
+export const validateLoadForm = (
     userType: 'general' | 'professional' | null,
     formData: {
         typeofLoad: string;
@@ -60,13 +60,13 @@ export const    validateLoadForm = (
         if (!formData.rate || formData.rate.trim() === '') {
             errors.push('Enter Load Rate');
         }
-        if (!formData.paymentTerms ) {
+        if (!formData.paymentTerms) {
             errors.push('Enter Payment Terms');
         }
 
         // Only validate step-specific fields if we're on the final submission
         if (currentStep === undefined || currentStep >= 3) {
-            
+
             // Only validate additional fields if they exist in the form data
             if (formData.requirements !== undefined && (!formData.requirements || formData.requirements.trim() === '')) {
                 errors.push('Enter Requirements');
@@ -187,15 +187,22 @@ export const prepareLoadData = (
     userType: 'general' | 'professional',
     formData: any,
     user: any,
-    expoPushToken: string | null ,
-    currentRole :any 
+    expoPushToken: string | null,
+    currentRole: any
 ) => {
     return {
-        userId:  user?.uid || "",
-        organizationId : currentRole?.role === 'fleet' ? currentRole.fleetId : currentRole?.role === 'brokerage' ? currentRole.brokerId : null,
+        userId: user?.uid || "",
+        organizationId:
+            currentRole?.organizationId ??
+            (currentRole?.role === "fleet"
+                ? currentRole.fleetId
+                : currentRole?.role === "brokerage"
+                    ? currentRole.brokerId
+                    : null),
+
         userRole: currentRole?.userRole || 'general',
         accType: currentRole?.accType || 'general',
-        companyName:currentRole.companyName || user?.organisation,
+        companyName: currentRole.companyName || user?.organisation,
         contact: user?.phoneNumber || '',
         logo: user.photoURL,
         created_at: Date.now().toString(),

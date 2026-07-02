@@ -179,6 +179,7 @@ const AddLoadDB = () => {
 
   // Form state variables
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  console.log("Selected Customer:", selectedCustomer); // Debugging log
 
   const [typeofLoad, setTypeofLoad] = useState(defaultState.typeofLoad);
   const [dspFromLocation, setDspFromLocation] = useState(false);
@@ -193,7 +194,6 @@ const AddLoadDB = () => {
   const [paymentTerms, setPaymentTerms] = useState<PaymentTermsValue>(
   getDefaultPaymentTerms()
 );
-console.log(paymentTerms)
 
   const [requirements, setRequirements] = useState(defaultState.requirements)
 
@@ -622,8 +622,6 @@ console.log(paymentTerms)
         }
       }
 
-
-
       // Use utility function to prepare load data
       const loadData = prepareLoadData("professional", {
         typeofLoad,
@@ -680,6 +678,7 @@ console.log(paymentTerms)
         rate,
         selectedModelType,
         selectedCurrency,
+        selectedCustomer,
 
       });
 
@@ -761,8 +760,6 @@ console.log(paymentTerms)
             selectedCustomer={selectedCustomer}
             onSelectCustomer={setSelectedCustomer}
           />
-
-
 
 
 
@@ -1349,68 +1346,7 @@ console.log(paymentTerms)
             </ThemedText>
             <Divider />
 
-            {/* Broker Selection Section - Hide for broker users */}
-            {currentRole?.accType !== 'brokerage' && (
-              <>
-                <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Select Brokers</ThemedText>
-                <Input
-                  value={brokerSearchText}
-                  onChangeText={(text) => {
-                    setBrokerSearchText(text);
-                    if (text.trim() === '') {
-                      setSearchedBrokers(searchedBrokers); // Reset to all brokers
-                    } else {
-                      const filtered = searchedBrokers.filter(broker =>
-                        broker.name?.toLowerCase().includes(text.toLowerCase()) ||
-                        broker.brokerEmail?.toLowerCase().includes(text.toLowerCase())
-                      );
-                      setSearchedBrokers(filtered);
-                    }
-                  }}
-                  placeholder="Search brokers by name or email"
-                />
-
-                <ThemedText style={{ fontSize: 14, color: '#666', marginTop: wp(1) }}>
-                  Available Brokers:
-                </ThemedText>
-                {searchedBrokers.map((broker, index) => (
-                  <TouchableOpacity
-                    key={broker.brokerId || index}
-                    onPress={() => {
-                      if (selectedBrokers.includes(broker.brokerId)) {
-                        setSelectedBrokers(prev => prev.filter(id => id !== broker.brokerId));
-                      } else {
-                        setSelectedBrokers(prev => [...prev, broker.brokerId]);
-                      }
-                    }}
-                    style={{
-                      padding: wp(3),
-                      marginVertical: wp(1),
-                      borderRadius: 8,
-                      backgroundColor: backgroundLight,
-                      borderWidth: 1,
-                      borderColor: selectedBrokers.includes(broker.brokerId) ? accent : '#E0E0E0',
-                    }}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Ionicons
-                        name={selectedBrokers.includes(broker.brokerId) ? "checkbox" : "square-outline"}
-                        size={20}
-                        color={selectedBrokers.includes(broker.brokerId) ? accent : '#666'}
-                        style={{ marginRight: wp(2) }}
-                      />
-                      <View style={{ flex: 1 }}>
-                        <ThemedText style={{ fontWeight: '600' }}>{broker.name}</ThemedText>
-                        <ThemedText style={{ fontSize: 12, color: '#666' }}>{broker.brokerEmail}</ThemedText>
-                        <ThemedText style={{ fontSize: 12, color: '#666' }}>{broker.brokerType}</ThemedText>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-
-                <Divider />
-              </>
-            )}
+            
 
             {/* Load Visibility Toggle for Fleet and Broker Users */}
             {(currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage') && (

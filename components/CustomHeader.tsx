@@ -93,10 +93,10 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement}
                                     </TouchableNativeFeedback>
 
 
-                                    <TouchableNativeFeedback onPress={() => router.push(addingNavigate as any)}>
+                                  { addingNavigate && <TouchableNativeFeedback onPress={() => router.push(addingNavigate as any)}>
                                             <Ionicons name="add" size={wp(7)} color={icon} />
-                                    </TouchableNativeFeedback>
-
+                                    </TouchableNativeFeedback>}
+                                                
                                     <TouchableNativeFeedback onPress={()=>setDspMenu(true)} >
                                         <View >
                                             <Ionicons name="ellipsis-vertical" size={wp(5)} color={icon} />
