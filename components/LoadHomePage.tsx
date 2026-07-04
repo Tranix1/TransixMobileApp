@@ -378,7 +378,7 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                                                         pathname: '/MakeOffer/BookBidlCargo',
                                                         params: { contract: JSON.stringify(selectedLoad), OperationType: "Book" }
                                                     })}>
-
+                                                        
                                                     <ThemedText color='white'>
                                                         Book Load
                                                     </ThemedText>

@@ -35,7 +35,7 @@ function BookLCargo({ }) {
   const loadItem = JSON.parse((cargo || contract) as any);
 
 
-  const { currentRole } = useAuth();
+  const { currentRole, user } = useAuth();
   // where("approvalStatus", "==", "approved"), where("state", "==", "available"),
 
   useEffect(() => {
@@ -107,10 +107,10 @@ function BookLCargo({ }) {
 
   const [driverDetails, setDriverDDsp] = React.useState<{ [key: string]: boolean }>({ ['']: false });
 
-const [bidAmount, setBidAmount] = React.useState<string>(
-  loadItem.rate ? String(loadItem.rate) : ''
-);
-const [isEditingBid, setIsEditingBid] = React.useState(true);
+  const [bidAmount, setBidAmount] = React.useState<string>(
+    loadItem.rate ? String(loadItem.rate) : ''
+  );
+  const [isEditingBid, setIsEditingBid] = React.useState(true);
 
   type BookJob = {
     id: string;
@@ -155,114 +155,178 @@ const [isEditingBid, setIsEditingBid] = React.useState(true);
 
   let renderElements = bbVerifiedLoadD.map((item) => {
 
-   async function handleSubmitDetails() {
-  try {
-    if (auth.currentUser) {
-      const userId = auth.currentUser.uid
 
-      const selectedDriver = selectedDrivers[item.id];
-      if (!selectedDriver) {
-        ToastAndroid.show("Select a driver for this truck first", ToastAndroid.SHORT);
-        return;
-      }
 
-      // NEW: require a valid bid amount when bidding
-      if (OperationType === "Bid" && (!bidAmount || isNaN(Number(bidAmount)) || Number(bidAmount) <= 0)) {
-        ToastAndroid.show("Enter a valid bid rate first", ToastAndroid.SHORT);
-        return;
-      }
 
-      const existingBBDoc = await checkExistixtBBDoc(`${userId}${loadItem.id}${item.timeStamp}`);
 
-      const truckData = await readById('Trucks', item.id) as any;
-      const hasTracker = truckData?.hasTracker;
-      const trackerStatus = truckData?.trackerStatus;
-      const trackingDeviceId = truckData?.trackingDeviceId;
 
-      if (!existingBBDoc) {
-        const theData = {
-          truckId: item.id,
-          trackingDeviceId: (item as any).trackingDeviceId || null,
-          driverId: selectedDriver.id,
-          driverName: selectedDriver.fullName || null,
-          driverPhoneNumber: selectedDriver.phoneNumber || null,
-          created_at: Date.now().toString(),
-          requestId: `${userId}${loadItem.id}${item.timeStamp}`,
-          cargoId: loadItem.id,
-          companyName: loadItem.companyName,
-          onwerId: loadItem.userId,
-          productName: loadItem.typeofLoad,
-          origin: loadItem.origin,
-          destination: loadItem.destination,
-          originCoordinates: loadItem.originCoordinates || null,
-          destinationCoordinates: loadItem.destinationCoordinates || null,
-          // CHANGED: use the typed bid amount when bidding, otherwise the posted rate
-          rate: OperationType === "Bid" ? Number(bidAmount) : loadItem.rate,
-          currency: loadItem.currency,
-          model: loadItem.model,
-          ownerDecision: "Pending",
-          // CHANGED: status now driven by OperationType, not a bidRate param
-          status: OperationType === "Bid" ? "Bidded" : "Booked",
-          loadId: loadItem.id,
-          approvedTrck: false,
-          alreadyInRequested: true,
-          expoPushToken: expoPushToken || null,
-          trackerShared: false,
-          trackerSharingRequested: false,
-          loadOwnerId: loadItem.userId,
-          truckOwnerId: truckData?.userId,
-          truckOwnerName: truckData?.ownerName || truckData?.CompanyName || "Truck Owner",
-          truckHasTracker: hasTracker,
-          trackerStatus: trackerStatus,
-          routePolyline: loadItem.routePolyline || null,
-          bounds: loadItem.bounds || null,
-          distance: loadItem.distance || null,
-          duration: loadItem.duration || null
+
+
+    async function handleSubmitDetails() {
+      try {
+        if (auth.currentUser) {
+          const userId = auth.currentUser.uid
+
+          const selectedDriver = selectedDrivers[item.id];
+          if (!selectedDriver) {
+            ToastAndroid.show("Select a driver for this truck first", ToastAndroid.SHORT);
+            return;
+          }
+
+          // NEW: require a valid bid amount when bidding
+          if (OperationType === "Bid" && (!bidAmount || isNaN(Number(bidAmount)) || Number(bidAmount) <= 0)) {
+            ToastAndroid.show("Enter a valid bid rate first", ToastAndroid.SHORT);
+            return;
+          }
+
+          const existingBBDoc = await checkExistixtBBDoc(`${userId}${loadItem.id}${item.timeStamp}`);
+
+          const truckData = await readById(`fleets/${currentRole.fleetId}/Trucks`, item.id) as any;
+          const hasTracker = truckData?.hasTracker;
+          const trackerStatus = truckData?.trackerStatus;
+          const trackingDeviceId = truckData?.trackingDeviceId;
+
+          if (!existingBBDoc) {
+            const theData = {
+              truckId: item.id,
+              truckCapacity: item.truckCapacity,
+              truckType: item.truckType,
+              cargoArea: item.cargoArea,
+              locations: item.locations || [],
+              trackingDeviceId: (item as any).trackingDeviceId || null,
+              driverId: selectedDriver.id,
+              driverName: selectedDriver.fullName || null,
+              driverPhoneNumber: selectedDriver.phoneNumber || null,
+              created_at: Date.now().toString(),
+              requestId: `${userId}${loadItem.id}${item.timeStamp}`,
+              cargoId: loadItem.id,
+              companyName: loadItem.companyName,
+              onwerId: loadItem.userId,
+              productName: loadItem.typeofLoad,
+              origin: loadItem.origin,
+              destination: loadItem.destination,
+              originCoordinates: loadItem.originCoordinates || null,
+              destinationCoordinates: loadItem.destinationCoordinates || null,
+              // CHANGED: use the typed bid amount when bidding, otherwise the posted rate
+              rate: OperationType === "Bid" ? Number(bidAmount) : loadItem.rate,
+              currency: loadItem.currency,
+              model: loadItem.model,
+              ownerDecision: "Pending",
+              // CHANGED: status now driven by OperationType, not a bidRate param
+              status: OperationType === "Bid" ? "Bidded" : "Booked",
+              loadId: loadItem.id,
+              approvedTrck: false,
+              alreadyInRequested: true,
+              expoPushToken: expoPushToken || null,
+              trackerShared: false,
+              trackerSharingRequested: false,
+              loadOwnerId: loadItem.userId,
+
+
+              fleetId: truckData?.fleetId || null,
+              fleetName: truckData?.CompanyName || null,
+
+              bookedBy: {
+                userId: user?.uid || "unknown",
+                name: user?.displayName || "unknown",
+                role: currentRole?.userRole || "unknown",
+                phone: user?.phoneNumber || "unknown",
+                email: user?.email || "unknown",
+                addedAt: Date.now().toString(),
+              },
+              driverDetails: {
+                driverId: selectedDriver.id,
+                driverName: selectedDriver.fullName || null,
+                driverPhoneNumber: selectedDriver.phoneNumber || null,
+                driverEmail: selectedDriver.email || null,
+                driverLicenseNumber: selectedDriver.licenseNumber || null
+
+              },
+              truckDetails: {
+                truckId: item.id,
+                truckType: item.truckType || null,
+                truckCapacity: item.truckCapacity || null,
+                cargoArea: item.cargoArea || null,
+                locations: item.locations || [],
+                trackingDeviceId: (item as any).trackingDeviceId || null,
+                numberPlate: item.numberPlate || null,
+              },
+              loadItemDetails: {
+                loadId: loadItem.id,
+                companyName: loadItem.companyName || null,
+                productName: loadItem.typeofLoad || null,
+                origin: loadItem.origin || null,
+                originFull: loadItem.originFull || null,
+                destination: loadItem.destination || null,
+                destinationFull: loadItem.destinationFull || null,
+                originCoordinates: loadItem.originCoordinates || null,
+                destinationCoordinates: loadItem.destinationCoordinates || null,
+                rate: OperationType === "Bid" ? Number(bidAmount) : loadItem.rate,
+                currency: loadItem.currency || null,
+                model: loadItem.model || null,
+                paymentTerms : loadItem.paymentTerms||null ,
+                loadingDate: loadItem.loadingDate || null,
+                deliveryDate: loadItem.deliveryDate || null,
+                accType: loadItem.accType,
+                userRole: loadItem.userRole,
+                organizationId: loadItem.organizationId,
+                shipper : loadItem.shipper ,                
+                organizationDetails : loadItem.organizationDetails ,
+              },
+              
+
+
+              truckHasTracker: hasTracker,
+              trackerStatus: trackerStatus,
+              routePolyline: loadItem.routePolyline || null,
+              bounds: loadItem.bounds || null,
+              distance: loadItem.distance || null,
+              duration: loadItem.duration || null
+            }
+            addDocument("cargoRequests", theData)
+
+            if (loadItem.expoPushToken) {
+              await sendBookingWithTrackerNotification(
+                loadItem.expoPushToken,
+                truckData?.ownerName || "Truck Owner",
+                `${loadItem.origin} to ${loadItem.destination}`,
+                hasTracker && trackerStatus === 'active' && trackingDeviceId,
+                theData.requestId
+              );
+            } else {
+              console.warn('⚠️ No expoPushToken found in loadItem, skipping notification');
+            }
+
+            const existingBBDoc2 = await checkDocumentExists("newIterms", [where('receriverId', '==', userId)]);
+            let newBiddedDoc = 0
+            let newBOOKEDDoc = 0
+
+            if (!existingBBDoc2) {
+              setDocuments("bidBookingStats", {
+                bookingdocs: newBOOKEDDoc,
+                biddingdocs: newBiddedDoc,
+                timestamp: serverTimestamp(),
+                receriverId: item.userId,
+              })
+            } else {
+              await runFirestoreTransaction(`bidBookingStats/${userId}`, (data) => {
+                const currentBiddingDocs = data?.biddingdocs || 0;
+                const currentBookingsDocs = data?.bookingdocs || 0;
+                return {};
+              });
+            }
+
+            // CHANGED: message now driven by OperationType
+            ToastAndroid.show(`Load ${OperationType === "Bid" ? "BIDDING" : "BOOKING"} completed successfully.`, ToastAndroid.SHORT);
+
+          } else {
+            alert("Truck alreadyy Booked")
+          }
         }
-        addDocument("cargoRequests", theData)
-
-        if (loadItem.expoPushToken) {
-          await sendBookingWithTrackerNotification(
-            loadItem.expoPushToken,
-            truckData?.ownerName || "Truck Owner",
-            `${loadItem.origin} to ${loadItem.destination}`,
-            hasTracker && trackerStatus === 'active' && trackingDeviceId,
-            theData.requestId
-          );
-        } else {
-          console.warn('⚠️ No expoPushToken found in loadItem, skipping notification');
-        }
-
-        const existingBBDoc2 = await checkDocumentExists("newIterms", [where('receriverId', '==', userId)]);
-        let newBiddedDoc = 0
-        let newBOOKEDDoc = 0
-
-        if (!existingBBDoc2) {
-          setDocuments("bidBookingStats", {
-            bookingdocs: newBOOKEDDoc,
-            biddingdocs: newBiddedDoc,
-            timestamp: serverTimestamp(),
-            receriverId: item.userId,
-          })
-        } else {
-          await runFirestoreTransaction(`bidBookingStats/${userId}`, (data) => {
-            const currentBiddingDocs = data?.biddingdocs || 0;
-            const currentBookingsDocs = data?.bookingdocs || 0;
-            return {};
-          });
-        }
-
-        // CHANGED: message now driven by OperationType
-        ToastAndroid.show(`Load ${OperationType === "Bid" ? "BIDDING" : "BOOKING"} completed successfully.`, ToastAndroid.SHORT);
-
-      } else {
-        alert("Truck alreadyy Booked")
+      } catch (err) {
+        console.error(err)
       }
     }
-  } catch (err) {
-    console.error(err)
-  }
-}
 
     // Drivers filtered for this specific truck's search box
     const filteredDriversForTruck = allDrivers.filter((driver) => {
@@ -278,13 +342,13 @@ const [isEditingBid, setIsEditingBid] = React.useState(true);
         key={item.id}
       >
         {/* Main Image */}
-        
+
         {item.imageUrl && (
           <Image
             source={{ uri: item.imageUrl }}
             style={styles.mainImage}
           />
-        )}  
+        )}
 
 
 
@@ -466,7 +530,7 @@ const [isEditingBid, setIsEditingBid] = React.useState(true);
 
 
         {/* Business Details Section */}
-      {currentRole.accType==="brokerage"&&  <View style={styles.detailsSection}>
+        {currentRole.accType === "brokerage" && <View style={styles.detailsSection}>
           <TouchableOpacity
             onPress={() => togglrTruckBuzDe(item.id)}
             style={[styles.secondaryButton, { borderColor: accent }]}
@@ -499,7 +563,7 @@ const [isEditingBid, setIsEditingBid] = React.useState(true);
 
   return (
     <ScreenWrapper>
-      <Heading page={`Book Cargo: ${loadItem.typeofLoad}`} />
+      <Heading page={`${OperationType} Cargo: ${loadItem.typeofLoad}`} />
 
       {/* Contract Card */}
       <View style={{
@@ -546,53 +610,48 @@ const [isEditingBid, setIsEditingBid] = React.useState(true);
 
 
 
-           <View style={{ flexDirection: 'row', marginBottom: wp(1), alignItems: 'center' }}>
-  <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate {loadItem.model} </ThemedText>
+            <View style={{ flexDirection: 'row', marginBottom: wp(1), alignItems: 'center' }}>
+              <ThemedText style={{ width: wp(38), color: icon, fontWeight: 'bold' }}>Rate {loadItem.model} </ThemedText>
 
-  {OperationType === "Bid" ? (
-    isEditingBid ? (
-      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: wp(1) }}>
-        <ThemedText>{loadItem.currency}</ThemedText>
-        <TextInput
-          value={bidAmount}
-          onChangeText={setBidAmount}
-          keyboardType="numeric"
-          placeholder="Enter your rate"
-          placeholderTextColor={coolGray}
-          autoFocus
-          onBlur={() => setIsEditingBid(false)}
-          onSubmitEditing={() => setIsEditingBid(false)}
-          style={{
-            flex: 1,
-            borderBottomWidth: 1,
-            borderColor: accent,
-            color: textColor,
-            paddingVertical: 2,
-            fontSize: wp(4),
-          }}
-        />
-        <MaterialIcons name="check" size={wp(5)} color={accent} onPress={() => setIsEditingBid(false)} />
-      </View>
-    ) : (
-      <TouchableOpacity
-        onPress={() => setIsEditingBid(true)}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: wp(1) }}
-      >
-        <ThemedText style={{ color: bidAmount ? textColor : coolGray }}>
-          {loadItem.currency} {bidAmount ? formatCurrency(Number(bidAmount)) : "Tap to enter rate"}
-        </ThemedText>
-        <Feather name="chevron-right" size={wp(4)} color={accent} />
-      </TouchableOpacity>
-    )
-  ) : (
-    <ThemedText>{loadItem.currency} {formatCurrency(loadItem.rate)}</ThemedText>
-  )}
-</View>
-
-
-
-
-
+              {OperationType === "Bid" ? (
+                isEditingBid ? (
+                  <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: wp(1) }}>
+                    <ThemedText>{loadItem.currency}</ThemedText>
+                    <TextInput
+                      value={bidAmount}
+                      onChangeText={setBidAmount}
+                      keyboardType="numeric"
+                      placeholder="Enter your rate"
+                      placeholderTextColor={coolGray}
+                      autoFocus
+                      onBlur={() => setIsEditingBid(false)}
+                      onSubmitEditing={() => setIsEditingBid(false)}
+                      style={{
+                        flex: 1,
+                        borderBottomWidth: 1,
+                        borderColor: accent,
+                        color: textColor,
+                        paddingVertical: 2,
+                        fontSize: wp(4),
+                      }}
+                    />
+                    <MaterialIcons name="check" size={wp(5)} color={accent} onPress={() => setIsEditingBid(false)} />
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => setIsEditingBid(true)}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: wp(1) }}
+                  >
+                    <ThemedText style={{ color: bidAmount ? textColor : coolGray }}>
+                      {loadItem.currency} {bidAmount ? formatCurrency(Number(bidAmount)) : "Tap to enter rate"}
+                    </ThemedText>
+                    <Feather name="chevron-right" size={wp(4)} color={accent} />
+                  </TouchableOpacity>
+                )
+              ) : (
+                <ThemedText>{loadItem.currency} {formatCurrency(loadItem.rate)}</ThemedText>
+              )}
+            </View>
 
 
 
@@ -614,7 +673,7 @@ const [isEditingBid, setIsEditingBid] = React.useState(true);
 
 
 
-x
+      x
 
 
       {/* Add Button */}

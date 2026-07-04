@@ -199,7 +199,12 @@ export const prepareLoadData = (
                 : currentRole?.role === "brokerage"
                     ? currentRole.brokerId
                     : null),
-
+         organizationDetails :{
+            id:currentRole.organizationId || null ,
+            name : currentRole.companyName || user?.organisation ,
+            phone : currentRole.phone ,
+            billingAddress : currentRole.organizationBillingAddress,       
+         },       
         userRole: currentRole?.userRole || 'general',
         accType: currentRole?.accType || 'general',
         companyName: currentRole.companyName || user?.organisation,
@@ -295,7 +300,7 @@ export const prepareLoadData = (
         referrerId: user?.referrerId || null,
 
         // Approval system
-        approvalStatus: 'pending',
+        approvalStatus: 'approved',
         submittedAt: Date.now().toString(),
     };
 };

@@ -19,6 +19,7 @@ import { router } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/db/fireBaseConfig';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import Heading from '@/components/Heading';
 
 // ---------------------------------------------------------------------------
 // Independent Assignments page for Fleet / Broker use.
@@ -511,55 +512,13 @@ function Jobs() {
                 {expandedCargo === assignmentData.id && (
                     <View style={styles.expandedDetails}>
                         <View style={styles.detailSection}>
-                            <ThemedText style={styles.sectionTitle}>Load Details</ThemedText>
-                            <View style={styles.detailRow}>
-                                <Ionicons name="cube" size={16} color="#2196F3" />
-                                <ThemedText style={styles.detailText}>
-                                    Type: {assignmentData?.typeofLoad || 'N/A'}
-                                </ThemedText>
-                            </View>
-                            <View style={styles.detailRow}>
-                                <Ionicons name="list" size={16} color="#2196F3" />
-                                <ThemedText style={styles.detailText}>
-                                    Requirements: {assignmentData?.requirements || 'N/A'}
-                                </ThemedText>
-                            </View>
-                            <View style={styles.detailRow}>
-                                <Ionicons name="chatbubble" size={16} color="#2196F3" />
-                                <ThemedText style={styles.detailText}>
-                                    Additional Info: {assignmentData?.additionalInfo || 'N/A'}
-                                </ThemedText>
-                            </View>
-                            <View style={styles.detailRow}>
-                                <Ionicons name="flame" size={16} color="#2196F3" />
-                                <ThemedText style={styles.detailText}>
-                                    Fuel & Tolls: {assignmentData?.fuelAvai || 'N/A'}
-                                </ThemedText>
-                            </View>
-                            {!!assignmentData?.returnLoad && (
-                                <View style={styles.detailRow}>
-                                    <Ionicons name="return-up-back" size={16} color="#2196F3" />
-                                    <ThemedText style={styles.detailText}>
-                                        Return Load: {assignmentData.returnLoad}
-                                    </ThemedText>
-                                </View>
-                            )}
-                            {!!assignmentData?.returnRate && (
-                                <View style={styles.detailRow}>
-                                    <Ionicons name="cash" size={16} color="#2196F3" />
-                                    <ThemedText style={styles.detailText}>
-                                        Return Rate: {assignmentData.returnRate} {assignmentData?.selectedReturnCurrency?.name || 'USD'}
-                                    </ThemedText>
-                                </View>
-                            )}
-                            {!!assignmentData?.returnTerms && (
-                                <View style={styles.detailRow}>
-                                    <Ionicons name="document-text" size={16} color="#2196F3" />
-                                    <ThemedText style={styles.detailText}>
-                                        Return Terms: {assignmentData.returnTerms}
-                                    </ThemedText>
-                                </View>
-                            )}
+                            <ThemedText style={styles.sectionTitle}>Details</ThemedText>
+                            
+                           
+                           
+                           
+                            
+                           
                         </View>
 
                         <View style={styles.detailSection}>
@@ -584,76 +543,10 @@ function Jobs() {
                             </View>
                         </View>
 
-                        <View style={styles.detailSection}>
-                            <ThemedText style={styles.sectionTitle}>Timestamps</ThemedText>
-                            <View style={styles.detailRow}>
-                                <Ionicons name="time" size={16} color="#2196F3" />
-                                <ThemedText style={styles.detailText}>
-                                    Created: {assignmentData?.createdAt ? new Date(assignmentData.createdAt).toLocaleString() : 'N/A'}
-                                </ThemedText>
-                            </View>
-                            {assignmentData.status === 'accepted' && (
-                                <View style={styles.detailRow}>
-                                    <Ionicons name="checkmark-circle" size={16} color="#2196F3" />
-                                    <ThemedText style={styles.detailText}>
-                                        Accepted: {new Date(assignmentData.acceptedAt).toLocaleString()}
-                                    </ThemedText>
-                                </View>
-                            )}
-                            {assignmentData.status === 'rejected' && !!assignmentData.rejectionReason && (
-                                <View style={styles.detailRow}>
-                                    <Ionicons name="close-circle" size={16} color="#F44336" />
-                                    <ThemedText style={styles.detailText}>
-                                        Rejection Reason: {assignmentData.rejectionReason}
-                                    </ThemedText>
-                                </View>
-                            )}
-                        </View>
+                        
                     </View>
                 )}
 
-                {/* Status Action Buttons */}
-                <View style={styles.statusActionButtons}>
-                    {assignmentData.status === 'pending' && (
-                        <>
-                            <TouchableOpacity
-                                style={[styles.statusActionButton, { backgroundColor: '#4CAF50' }]}
-                                onPress={() => updateCargoStatus(assignmentData.cargoId, assignmentData.id, 'accepted')}
-                            >
-                                <Ionicons name="checkmark" size={16} color="white" />
-                                <ThemedText style={styles.statusActionButtonText}>Accept</ThemedText>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.statusActionButton, { backgroundColor: '#F44336' }]}
-                                onPress={() => openRejectModal(assignmentData.cargoId, assignmentData.id)}
-                            >
-                                <Ionicons name="close" size={16} color="white" />
-                                <ThemedText style={styles.statusActionButtonText}>Reject</ThemedText>
-                            </TouchableOpacity>
-                        </>
-                    )}
-
-                    {assignmentData.status === 'accepted' && (
-                        <TouchableOpacity
-                            style={[styles.statusActionButton, { backgroundColor: '#2196F3' }]}
-                            onPress={() => updateCargoStatus(assignmentData.cargoId, assignmentData.id, 'active')}
-                        >
-                            <Ionicons name="play" size={16} color="white" />
-                            <ThemedText style={styles.statusActionButtonText}>Start Job</ThemedText>
-                        </TouchableOpacity>
-                    )}
-
-                    {assignmentData.status === 'active' && (
-                        <TouchableOpacity
-                            style={[styles.statusActionButton, { backgroundColor: '#4CAF50' }]}
-                            onPress={() => updateCargoStatus(assignmentData.cargoId, assignmentData.id, 'completed')}
-                        >
-                            <Ionicons name="checkmark-circle" size={16} color="white" />
-                            <ThemedText style={styles.statusActionButtonText}>Complete</ThemedText>
-                        </TouchableOpacity>
-                    )}
-                </View>
 
                 {/* Navigation Action Buttons */}
                 <View style={styles.actionButtons}>
@@ -720,7 +613,16 @@ function Jobs() {
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: background }]} edges={['top']}>
-            <CustomHeader pageTitle="Jobs" filterElement={setFilterTypeModalVisible} />
+            {/* <CustomHeader pageTitle="Jobs" filterElement={setFilterTypeModalVisible} /> */}
+            <Heading page="My Assignments"  rightComponent={ <View>
+                <TouchableOpacity
+                        style={styles.filterButton}
+                        onPress={() => setFilterTypeModalVisible(true)}
+                    >
+                        <Ionicons name="filter" size={16} color="white" />
+                        <ThemedText style={styles.filterButtonText}>Filter</ThemedText>
+                    </TouchableOpacity>
+                 </View> }/>
 
             <View style={styles.content}>
 
@@ -735,7 +637,7 @@ function Jobs() {
                         return (
                             <TouchableOpacity
                                 key={tab.key}
-                                style={[styles.statusButton, activeTab === tab.key && styles.activeButton]}
+                                style={[styles.statusButton, activeTab === tab.key && { backgroundColor: accent }]}
                                 onPress={() => setActiveTab(tab.key)}
                             >
                                 <ThemedText
@@ -859,10 +761,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E0E0E0',
     },
-    activeButton: {
-        backgroundColor: '#2196F3',
-        borderColor: '#2196F3',
-    },
+    
     buttonText: { fontSize: 14 },
     activeButtonText: { color: 'white' },
     filterButton: {

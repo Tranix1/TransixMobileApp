@@ -138,6 +138,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     timeStamp: serverTimestamp(),
     createdAt: serverTimestamp(),
     availability: 'available',
+    shipper: selectedCustomer,
   };
 
   const writeFleetPrivateLoad = async () => {
@@ -209,7 +210,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       };
 
 
-      await addDocumentWithId(`fleets/${fleetId}/assignments`, assignmentDocId, payload);
+      await addDocumentWithId( `fleets/${fleetId}/assignments`, assignmentDocId, payload);
     }
 
 
@@ -249,9 +250,10 @@ export const submitLoad = async (params: SubmitLoadParams) => {
         ...commonLoadData,
         loadVisibility: 'Public',
         expiresAt: Timestamp.fromDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)),
-        trucksNeeded: numberOfTrucks,
+        trucksNeeded: numberOfTrucks, 
         trucksRemaining: numberOfTrucks,
         privateFleetCargoId: currentRole?.accType === 'fleet' && loadVisibility === 'Both' ? cargoId : null,
+        state :"available",
     });
   };
 

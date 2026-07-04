@@ -49,9 +49,8 @@ function BookingsandBiddings({ }) {
   // Debug function to check all loadRequests
   const debugLoadRequests = async () => {
     try {
-      const allRequestsQuery = query(collection(db, "loadRequests"));
+      const allRequestsQuery = query(collection(db, "cargoRequests"));
       const snapshot = await getDocs(allRequestsQuery);
-      console.log('🔍 All loadRequests in database:');
       snapshot.docs.forEach(doc => {
         const data = doc.data();
         console.log(`📄 Doc ${doc.id}:`, {
@@ -76,7 +75,7 @@ function BookingsandBiddings({ }) {
 
     if (dspRoute === "Requested by Carriers") {
       // Show loads where current user is the truck owner (carrier)
-      filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
+      // filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
     } else if (dspRoute === "Requested Loads") {
       // Show loads where current user is the truck owner (truck owner requests)
       filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
@@ -90,7 +89,7 @@ function BookingsandBiddings({ }) {
     // Debug: Check all requests in database
     await debugLoadRequests();
 
-    const result = await fetchDocuments('loadRequests', 10, lastVisible, filters);
+    const result = await fetchDocuments('cargoRequests', 10, lastVisible, );
 
     if (result) {
       console.log('📊 Fetched documents:', result.data.length);
@@ -157,7 +156,7 @@ function BookingsandBiddings({ }) {
 
     if (loadingMore || !lastVisible) return;
     setLoadingMore(true);
-    const result = await fetchDocuments('loadRequests', 10, lastVisible, filters);
+    const result = await fetchDocuments('cargoRequests', 10, lastVisible, filters);
     if (result) {
       setFetchedDocuments([...fectedDocuments, ...result.data as any[]]);
       setLastVisible(result.lastVisible);

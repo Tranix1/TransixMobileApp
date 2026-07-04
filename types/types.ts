@@ -107,6 +107,7 @@ export type Truck = {
     name: string;
     userId: string;
     withDetails: boolean;
+    numberPlate : string;
 
     // Approval system fields
     isApproved?: boolean;

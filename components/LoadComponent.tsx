@@ -198,8 +198,8 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
             activeOpacity={0.8}
           >
             <Ionicons name="checkmark-circle" size={wp(3.5)} color="white" />
-            <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(0.5), fontSize: wp(3.5) }}>Book</ThemedText>
-          </TouchableOpacity>
+            <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(0.5), fontSize: wp(3.5) }}>Respond</ThemedText>
+          </TouchableOpacity> 
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
@@ -800,8 +800,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: "center",
     justifyContent: 'center',
-    paddingVertical: wp(1.5),
-    paddingHorizontal: wp(3),
+    paddingVertical: wp(0.7),
+    paddingHorizontal: wp(2),
     borderRadius: wp(1.5),
     elevation: 2,
     shadowColor: '#000',
