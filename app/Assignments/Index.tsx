@@ -20,6 +20,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/db/fireBaseConfig';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import Heading from '@/components/Heading';
+import { wp } from '@/constants/common';
+import Input from '@/components/Input';
 
 // ---------------------------------------------------------------------------
 // Independent Assignments page for Fleet / Broker use.
@@ -340,6 +342,11 @@ function Jobs() {
     const [rejectModalVisible, setRejectModalVisible] = useState(false);
     const [rejectTarget, setRejectTarget] = useState<{ cargoId: string; assignmentDocId: string } | null>(null);
 
+    // NOTE STATE (place at top of component)
+    const [noteVisible, setNoteVisible] = useState(false);
+    const [noteText, setNoteText] = useState("");
+    const [noteType, setNoteType] = useState<"NOTE" | "ISSUE">("NOTE");
+
     const getAssignmentsPath = useCallback(() => {
         if (accType === 'brokerage') return `brokerages/${scopeId}/assignments`;
         return `fleets/${scopeId}/assignments`;
@@ -442,152 +449,280 @@ function Jobs() {
         });
     };
 
+
+
     const filteredCargo = getFilteredCargo();
     const activeFilterEntries = Object.entries(filters) as [FilterType, FilterValue][];
 
     const renderCargoItem = (assignmentData: any) => {
         return (
             <View key={assignmentData.id} style={[styles.cargoItem, { backgroundColor: backgroundLight }]}>
+
+                {/* HEADER */}
                 <View style={styles.cargoHeader}>
                     <ThemedText style={styles.cargoTitle}>
                         {assignmentData?.typeofLoad || 'Load'} - {assignmentData.truckName}
                     </ThemedText>
+
                     <View style={[styles.statusBadge, { backgroundColor: getStatusColor(assignmentData.status) }]}>
-                        <ThemedText style={styles.statusText}>{assignmentData.status.toUpperCase()}</ThemedText>
+                        <ThemedText style={styles.statusText}>
+                            {assignmentData.status.toUpperCase()}
+                        </ThemedText>
                     </View>
                 </View>
 
+                {/* DETAILS */}
                 <View style={styles.cargoDetails}>
+
+                    {/* ROUTE */}
                     <View style={styles.detailRow}>
-                        <Ionicons name="location" size={16} color={accent} />
+                        <Ionicons name="location-outline" size={16} color={accent} />
                         <ThemedText style={styles.detailText}>
                             {assignmentData?.pickupLocation?.description || 'Origin'} → {assignmentData?.deliveryLocation?.description || 'Destination'}
                         </ThemedText>
                     </View>
 
+                    {/* TRUCK */}
                     <View style={styles.detailRow}>
-                        <Ionicons name="calendar" size={16} color={accent} />
+                        <Ionicons name="car-sport-outline" size={16} color={accent} />
+                        <ThemedText style={styles.detailText} numberOfLines={1}>
+                            {assignmentData?.truckDetails?.truckCapacity || "N/A"} •{" "}
+                            {assignmentData?.truckDetails?.truckType || "N/A"} • Plate:{" "}
+                            {assignmentData?.truckDetails?.numberPlate || "N/A"}
+                        </ThemedText>
+                    </View>
+
+                    {/* DRIVER */}
+                    <View style={styles.detailRow}>
+                        <Ionicons name="person-circle-outline" size={16} color={accent} />
+                        <ThemedText style={styles.detailText} numberOfLines={1}>
+                            {assignmentData?.driverDetails?.driverName || "Unassigned"} •{" "}
+                            {assignmentData?.driverDetails?.driverPhoneNumber || "No phone"}
+                        </ThemedText>
+                    </View>
+
+                    {/* LOAD OWNER (ONLY IF PUBLIC) */}
+                    {assignmentData?.isPublicLoad && assignmentData?.loadOwner && (
+                        <View style={styles.detailRow}>
+                            <Ionicons name="business-outline" size={16} color={accent} />
+                            <ThemedText style={styles.detailText} numberOfLines={1}>
+                                {assignmentData.loadOwner.role || "Owner"} •{" "}
+                                {assignmentData.loadOwner.name || "N/A"} •{" "}
+                                {assignmentData.loadOwner.phone || "N/A"}
+                            </ThemedText>
+                        </View>
+                    )}
+
+                    {/* DATES */}
+                    <View style={styles.detailRow}>
+                        <Ionicons name="calendar-outline" size={16} color={accent} />
                         <ThemedText style={styles.detailText}>
                             Loading: {assignmentData?.pickupDate ? new Date(assignmentData.pickupDate).toLocaleDateString() : 'TBD'}
                         </ThemedText>
                     </View>
 
                     <View style={styles.detailRow}>
-                        <Ionicons name="time" size={16} color={accent} />
+                        <Ionicons name="time-outline" size={16} color={accent} />
                         <ThemedText style={styles.detailText}>
                             Delivery: {assignmentData?.deliveryDate ? new Date(assignmentData.deliveryDate).toLocaleDateString() : 'TBD'}
                         </ThemedText>
                     </View>
 
-                    {!!assignmentData?.coordinator && (
-                        <View style={styles.detailRow}>
-                            <Ionicons name="call" size={16} color={accent} />
-                            <ThemedText style={styles.detailText}>
-                                Coordinator: {assignmentData.coordinator.name || 'N/A'}{' '}
-                                <ThemedText style={styles.detailText}>
-                                    - {assignmentData.coordinator.phoneNumber || 'N/A'}
-                                </ThemedText>
-                            </ThemedText>
-                        </View>
-                    )}
-
-                    <View style={styles.detailRow}>
-                        <Ionicons name="time" size={16} color={accent} />
-                        <ThemedText style={styles.detailText}>
-                            Assigned: {assignmentData?.createdAt?.toDate ? new Intl.DateTimeFormat('en-GB').format(assignmentData.createdAt.toDate()) : "TBD"}
-                        </ThemedText>
-                    </View>
-
-                    {assignmentData.status === 'rejected' && !!assignmentData.rejectionReason && (
-                        <View style={styles.detailRow}>
-                            <Ionicons name="alert-circle" size={16} color="#F44336" />
-                            <ThemedText style={[styles.detailText, { color: '#F44336' }]}>
-                                Rejection reason: {assignmentData.rejectionReason}
-                            </ThemedText>
-                        </View>
-                    )}
                 </View>
 
-                {/* Expanded Details */}
-                {expandedCargo === assignmentData.id && (
-                    <View style={styles.expandedDetails}>
-                        <View style={styles.detailSection}>
-                            <ThemedText style={styles.sectionTitle}>Details</ThemedText>
-                            
-                           
-                           
-                           
-                            
-                           
+                {/* ACTION BUTTONS */}
+                <View style={{
+                    flexDirection: 'row',
+                    gap: wp(2),
+                    marginTop: wp(2),
+                }}>
+
+                    {/* DRIVER */}
+                    <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => { }}
+                    >
+                        <Ionicons name="person-circle-outline" size={16} color={accent} />
+                        <ThemedText style={styles.actionButtonText}>Driver</ThemedText>
+                    </TouchableOpacity>
+
+                    {/* LOAD */}
+                    <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => {
+                            router.push({
+                                pathname: "/Logistics/Loads/Index",
+                                params: { itemId: assignmentData.cargoId },
+                            });
+                        }}
+                    >
+                        <Ionicons name="cube-outline" size={16} color={accent} />
+                        <ThemedText style={styles.actionButtonText}>Load</ThemedText>
+                    </TouchableOpacity>
+
+                    {/* TRUCK */}
+                    <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => {
+                            router.push({
+                                pathname: "/Logistics/Trucks/TruckDetails",
+                                params: { truckId: assignmentData.truckId },
+                            });
+                        }}
+                    >
+                        <Ionicons name="car-sport-outline" size={16} color={accent} />
+                        <ThemedText style={styles.actionButtonText}>Truck</ThemedText>
+                    </TouchableOpacity>
+
+                </View>
+
+                  {/* OPERATION ACTIONS */}
+<View
+    style={{
+        flexDirection: 'row',
+        gap: wp(2),
+        marginTop: wp(2),
+    }}
+>
+
+    {/* VIEW TRACKER */}
+    <TouchableOpacity
+        style={styles.actionButton}
+        
+    >
+        <Ionicons name="navigate-circle-outline" size={16} color={accent} />
+        <ThemedText style={styles.actionButtonText}>
+            Tracker
+        </ThemedText>
+    </TouchableOpacity>
+
+    {/* PROOF OF DELIVERY */}
+    <TouchableOpacity
+        style={styles.actionButton}
+      
+    >
+        <Ionicons name="camera-outline" size={16} color={accent} />
+        <ThemedText style={styles.actionButtonText}>
+            Proof dispute , handle dispute issuehandling
+        </ThemedText>
+    </TouchableOpacity>
+
+    {/* CONFIRM DELIVERY */}
+    <TouchableOpacity
+        style={styles.actionButton}
+        onPress={() => {
+            // confirm logic here
+            console.log("Confirm delivery", assignmentData.id);
+        }}
+    >
+        <Ionicons name="checkmark-done-circle-outline" size={16} color={accent} />
+        <ThemedText style={styles.actionButtonText}>
+            Confirm
+        </ThemedText>
+    </TouchableOpacity>
+
+</View>      
+
+
+
+                {/* NOTES + ISSUE TRIGGER */}
+                <TouchableOpacity
+                    style={{
+                        marginTop: wp(2),
+                        padding: wp(2),
+                        borderRadius: wp(3),
+                        borderWidth: 1,
+                        borderColor: accent,
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: wp(1),
+                    }}
+                    onPress={() => setNoteVisible(true)}
+                >
+                    <Ionicons name="chatbubble-ellipses-outline" size={16} color={accent} />
+                    <ThemedText style={{ color: accent }}>
+                        Add Note / Issue
+                    </ThemedText>
+                </TouchableOpacity>
+
+                {/* SIMPLE NOTE MODAL */}
+                {noteVisible && (
+                    <View style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        backgroundColor: backgroundLight,
+                        padding: wp(4),
+                        borderTopLeftRadius: wp(5),
+                        borderTopRightRadius: wp(5),
+                    }}>
+
+                        {/* TYPE SELECTOR */}
+                        <View style={{ flexDirection: 'row', gap: wp(2), marginBottom: wp(2) }}>
+
+                            <TouchableOpacity onPress={() => setNoteType("NOTE")}>
+                                <ThemedText style={{ color: noteType === "NOTE" ? accent : "#999" }}>
+                                    Note
+                                </ThemedText>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity onPress={() => setNoteType("ISSUE")}>
+                                <ThemedText style={{ color: noteType === "ISSUE" ? "#F44336" : "#999" }}>
+                                    Issue
+                                </ThemedText>
+                            </TouchableOpacity>
+
                         </View>
 
-                        <View style={styles.detailSection}>
-                            <ThemedText style={styles.sectionTitle}>Contact Information</ThemedText>
-                            <View style={styles.detailRow}>
-                                <Ionicons name="person" size={16} color="#2196F3" />
-                                <ThemedText style={styles.detailText}>
-                                    Name: {assignmentData?.coordinator?.name || 'N/A'}
+                        {/* INPUT */}
+                        <Input
+                            placeholder={noteType === "ISSUE" ? "Report issue..." : "Write note..."}
+                            value={noteText}
+                            onChangeText={setNoteText}
+                        />
+
+                        {/* ACTIONS */}
+                        <View style={{ flexDirection: 'row', gap: wp(2), marginTop: wp(2) }}>
+
+                            <TouchableOpacity
+                                style={[styles.actionButton, { flex: 1 }]}
+                                onPress={() => {
+                                    setNoteVisible(false);
+                                    setNoteText("");
+                                }}
+                            >
+                                <ThemedText style={{ color: accent }}>Cancel</ThemedText>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.actionButton, { flex: 1, borderColor: noteType === "ISSUE" ? "#F44336" : accent }]}
+                                onPress={() => {
+                                    const payload = {
+                                        text: noteText,
+                                        type: noteType,
+                                        createdAt: Date.now(),
+                                        assignmentId: assignmentData.id,
+                                    };
+
+                                    // SAVE TO DB HERE
+                                    console.log(payload);
+
+                                    setNoteVisible(false);
+                                    setNoteText("");
+                                }}
+                            >
+                                <ThemedText style={{ color: noteType === "ISSUE" ? "#F44336" : accent }}>
+                                    Save
                                 </ThemedText>
-                            </View>
-                            <View style={styles.detailRow}>
-                                <Ionicons name="business" size={16} color="#2196F3" />
-                                <ThemedText style={styles.detailText}>
-                                    Organization: {assignmentData?.coordinator?.id ? 'Fleet Manager' : 'Load Owner'}
-                                </ThemedText>
-                            </View>
-                            <View style={styles.detailRow}>
-                                <Ionicons name="call" size={16} color="#2196F3" />
-                                <ThemedText style={styles.detailText}>
-                                    Phone: {assignmentData?.coordinator?.phoneNumber || 'N/A'}
-                                </ThemedText>
-                            </View>
+                            </TouchableOpacity>
+
                         </View>
 
-                        
                     </View>
                 )}
 
-
-                {/* Navigation Action Buttons */}
-                <View style={styles.actionButtons}>
-                    <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: '#607D8B' }]}
-                        onPress={() => {
-                            router.push({
-                                pathname: '/Logistics/Trucks/TruckDetails',
-                                params: { truckId: assignmentData.truckId }
-                            });
-                        }}
-                    >
-                        <Ionicons name="car" size={16} color="white" />
-                        <ThemedText style={styles.actionButtonText}>View Truck</ThemedText>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: '#9C27B0' }]}
-                        onPress={() => {
-                            setExpandedCargo(expandedCargo === assignmentData.id ? null : assignmentData.id);
-                        }}
-                    >
-                        <Ionicons name={expandedCargo === assignmentData.id ? "chevron-up" : "chevron-down"} size={16} color="white" />
-                        <ThemedText style={styles.actionButtonText}>
-                            {expandedCargo === assignmentData.id ? 'Less Info' : 'More Info'}
-                        </ThemedText>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: '#2196F3' }]}
-                        onPress={() => {
-                            router.push({
-                                pathname: '/Map/ViewLoadRoutes',
-                                params: { cargoId: assignmentData.cargoId }
-                            });
-                        }}
-                    >
-                        <Ionicons name="map" size={16} color="white" />
-                        <ThemedText style={styles.actionButtonText}>View on Map</ThemedText>
-                    </TouchableOpacity>
-                </View>
             </View>
         );
     };
@@ -614,50 +749,50 @@ function Jobs() {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: background }]} edges={['top']}>
             {/* <CustomHeader pageTitle="Jobs" filterElement={setFilterTypeModalVisible} /> */}
-            <Heading page="My Assignments"  rightComponent={ <View>
+            <Heading page="My Assignments" rightComponent={<View>
                 <TouchableOpacity
-                        style={styles.filterButton}
-                        onPress={() => setFilterTypeModalVisible(true)}
-                    >
-                        <Ionicons name="filter" size={16} color="white" />
-                        <ThemedText style={styles.filterButtonText}>Filter</ThemedText>
-                    </TouchableOpacity>
-                 </View> }/>
+                    style={styles.filterButton}
+                    onPress={() => setFilterTypeModalVisible(true)}
+                >
+                    <Ionicons name="filter" size={16} color="white" />
+                    <ThemedText style={styles.filterButtonText}>Filter</ThemedText>
+                </TouchableOpacity>
+            </View>} />
 
             <View style={styles.content}>
 
-                <View style={{height: 58,marginBottom: 14,marginTop: 8}}>
+                <View style={{ height: 58, marginBottom: 14, marginTop: 8 }}>
 
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.buttonContainer}>
-                    {statusTabs.map((tab) => {
-                        const count =
-                            tab.key === 'all'
-                                ? assignedCargo.length
-                                : assignedCargo.filter((c) => c.status === tab.key).length;
-                        return (
-                            <TouchableOpacity
-                                key={tab.key}
-                                style={[styles.statusButton, activeTab === tab.key && { backgroundColor: accent }]}
-                                onPress={() => setActiveTab(tab.key)}
-                            >
-                                <ThemedText
-                                    type="defaultSemiBold"
-                                    style={[styles.buttonText, activeTab === tab.key && styles.activeButtonText]}
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.buttonContainer}>
+                        {statusTabs.map((tab) => {
+                            const count =
+                                tab.key === 'all'
+                                    ? assignedCargo.length
+                                    : assignedCargo.filter((c) => c.status === tab.key).length;
+                            return (
+                                <TouchableOpacity
+                                    key={tab.key}
+                                    style={[styles.statusButton, activeTab === tab.key && { backgroundColor: accent }]}
+                                    onPress={() => setActiveTab(tab.key)}
                                 >
-                                    {tab.label} ({count})
-                                </ThemedText>
-                            </TouchableOpacity>
-                        );
-                    })}
+                                    <ThemedText
+                                        type="defaultSemiBold"
+                                        style={[styles.buttonText, activeTab === tab.key && styles.activeButtonText]}
+                                    >
+                                        {tab.label} ({count})
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            );
+                        })}
 
-                    <TouchableOpacity
-                        style={styles.filterButton}
-                        onPress={() => setFilterTypeModalVisible(true)}
-                    >
-                        <Ionicons name="filter" size={16} color="white" />
-                        <ThemedText style={styles.filterButtonText}>Filter</ThemedText>
-                    </TouchableOpacity>
-                </ScrollView>
+                        <TouchableOpacity
+                            style={styles.filterButton}
+                            onPress={() => setFilterTypeModalVisible(true)}
+                        >
+                            <Ionicons name="filter" size={16} color="white" />
+                            <ThemedText style={styles.filterButtonText}>Filter</ThemedText>
+                        </TouchableOpacity>
+                    </ScrollView>
                 </View>
 
                 {activeFilterEntries.length > 0 && (
@@ -761,7 +896,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E0E0E0',
     },
-    
+
     buttonText: { fontSize: 14 },
     activeButtonText: { color: 'white' },
     filterButton: {
@@ -821,7 +956,7 @@ const styles = StyleSheet.create({
     statusText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
     cargoDetails: { gap: 8 },
     detailRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    detailText: { fontSize: 14, color: '#666', flex: 1 },
+    detailText: { fontSize: 14, flex: 1 },
     emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 60 },
     emptyStateText: { fontSize: 18, fontWeight: 'bold', color: '#666', marginTop: 16, marginBottom: 8 },
     emptyStateSubtext: { fontSize: 14, color: '#999', textAlign: 'center' },

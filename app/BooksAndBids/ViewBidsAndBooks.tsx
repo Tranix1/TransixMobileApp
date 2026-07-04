@@ -20,7 +20,7 @@ import Divider from "@/components/Divider";
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import { fetchDocuments, } from '@/db/operations';
 
-import { RequestedCargo } from "@/components/CargoYouRequest";
+import { RequestedCargo } from "@/components/LoadRequestCard";
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { getCurrentLocation } from '@/Utilities/utils';
 
