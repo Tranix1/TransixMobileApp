@@ -48,6 +48,7 @@ export default function AssignmentModal({
 
     const [pickupDate, setPickupDate] = useState(initialPickupDate || "");
     const [deliveryDate, setDeliveryDate] = useState(initialDeliveryDate || "");
+    
     const [pickupLocation, setPickupLocation] = useState<SelectLocationProp | null>(initialPickupLocation || null);
     const [deliveryLocation, setDeliveryLocation] = useState<SelectLocationProp | null>(initialDeliveryLocation || null);
     const [dspFromLocation, setDspFromLocation] = useState(false);
@@ -75,10 +76,6 @@ export default function AssignmentModal({
 
     const handleConfirm = () => {
         onConfirm({
-            truckId: truck?.id,
-            driverId: driver?.driverId,
-            loadId: load?.id,
-
             pickupDate,
             deliveryDate,
             pickupLocation,

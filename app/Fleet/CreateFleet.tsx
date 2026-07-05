@@ -16,11 +16,13 @@ import { pickDocument } from '@/Utilities/utils';
 import { takePhoto } from '@/Utilities/imageUtils';
 import { DocumentAsset } from '@/types/types';
 import { useAuth } from '@/context/AuthContext';
-import { addDocument, uploadImage, updateDocument,generateUniqueReferrerCode } from '@/db/operations';
+import { addDocument, uploadImage, updateDocument, generateUniqueReferrerCode } from '@/db/operations';
 import { setDoc, doc } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import CustomHeader from '@/components/CustomHeader';
 import Heading from '@/components/Heading';
+import { LocationSelector } from '@/components/LocationSelector';
+import { SelectLocationProp } from '@/types/types';
 
 const CreateFleet = () => {
     const router = useRouter();
@@ -33,6 +35,18 @@ const CreateFleet = () => {
     const [selectedFleetDocuments, setSelectedFleetDocuments] = useState<DocumentAsset[]>([]);
     const [fleetFileType, setFleetFileType] = useState<('pdf' | 'image' | 'doc' | 'docx')[]>([]);
     const [uploadingFleetD, setUploadingFleetD] = useState(false);
+
+    const [baseAdress, setBaseAdress] = useState<SelectLocationProp | null>(null);
+    const [billingAddress, setbillingAddress] = useState<SelectLocationProp | null>(null);
+    const [dspFromLocation, setDspFromLocation] = useState(false);
+    const [locationPicKERdSP, setPickLocationOnMap] = useState(false);
+    const [dspToLocation, setDspToLocation] = useState(false);
+    const [distance, setDistance] = useState("");
+    const [duration, setDuration] = useState("");
+    const [durationInTraffic, setDurationInTraffic] = useState("");
+
+    const [showPickupDatePicker, setShowPickupDatePicker] = useState(false);
+    const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
 
     const icon = useThemeColor('icon');
     const background = useThemeColor('background');
@@ -63,13 +77,38 @@ const CreateFleet = () => {
     }) => {
         if (!user) {
             Alert.alert('Unable to save fleet', 'You must be signed in to submit fleet verification.');
+
             return;
+        }
+
+        let errors = [];
+
+        if (!fleetName) errors.push('Fleet name');
+        if (!fleetPhone) errors.push('Fleet phone');
+        if (!billingAddress?.description) errors.push('Billing address');
+        if (!baseAdress?.description) errors.push('Base location');
+
+        if (errors.length > 0) {
+            Alert.alert(
+                'Incomplete setup',
+                `Please complete: ${errors.join(', ')}`
+            );
+            return;
+        }
+
+
+        if (fleetData.selectedFleetDocuments.length < 4) {
+            Alert.alert(
+                'Verification incomplete',
+                'Please upload all required documents to complete verification.'
+            );
+            return
         }
 
         setUploadingFleetD(true);
         try {
             const fleetId = `FLT_${Date.now()}_${user.uid}`;
-             const code = await generateUniqueReferrerCode();
+            const code = await generateUniqueReferrerCode();
 
             const uploadPromises = fleetData.selectedFleetDocuments.map(async (docItem: DocumentAsset, index: number) => {
                 if (!docItem) return null;
@@ -81,15 +120,27 @@ const CreateFleet = () => {
             const uploadedUrls = await Promise.all(uploadPromises);
 
             const fleetVerificationData = {
-                fleetId,
+                organizationId: fleetId,
                 userId: user.uid,
                 accType: 'fleet',
-                companyName: fleetData.fleetName,
+                organizationName: fleetData.fleetName,
+
+                organizationEmail: fleetData.fleetEmail,
+
+
                 fleetMainAdminName: user.displayName,
-                fleetMainAdminPhone: fleetData.fleetPhone,
-                fleetMainAdminEmail: fleetData.fleetEmail,
+                organizationAdminPhone: user.phoneNumber,
+                organizationAdminEmail: user.email,
+
                 countryCode: fleetData.fleetCountryCode?.name,
                 typeOfFleet: fleetData.typeOfFleet,
+
+                billingAddress: billingAddress?.description,
+                billingAddressFull: billingAddress,
+
+                baseAdress: billingAddress?.description,
+                baseAdressFull: billingAddress,
+
                 documents: {
                     fleetMainAdminId: uploadedUrls[0],
                     fleetMainAdminIdType: fleetData.fleetFileType[0],
@@ -106,29 +157,31 @@ const CreateFleet = () => {
                 submittedAt: new Date().toISOString(),
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                fleetSize: 0,
-                activeTrucks: [],
-                drivers: [],
-                routes: [],
-                contracts: [],
-                performanceMetrics: {
-                    totalLoads: 0,
-                    completedLoads: 0,
-                    revenue: 0,
-                    rating: 0,
-                },
-                code ,
+
+                code,
             };
             await addDocument('verifiedUsers', fleetVerificationData);
-            
+
 
 
             const fleetCollectionData = {
                 name: fleetData.fleetName,
+                organizationPhone: fleetData.fleetPhone,
+                organizationEmail: fleetData.fleetEmail,
+
+                countryCode: fleetData.fleetCountryCode?.name,
+                typeOfFleet: fleetData.typeOfFleet,
+                billingAddress: billingAddress?.description,
+                billingAddressFull: billingAddress,
+
+                baseAdress: billingAddress?.description,
+                baseAdressFull: billingAddress,
+
                 ownerId: user.uid,
                 fleetId,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
+                referrerCode: code,
             };
 
             await setDoc(doc(db, 'fleets', fleetId), fleetCollectionData);
@@ -138,17 +191,29 @@ const CreateFleet = () => {
                 fleetId,
                 role: 'owner',
                 companyName: fleetData.fleetName,
+                countryCode: fleetData.fleetCountryCode?.name,
+                organizationPhone: fleetData.fleetPhone,
+                organizationEmail: fleetData.fleetEmail,
+
+                typeOfFleet: fleetData.typeOfFleet,
+                    
+                billingAddress: billingAddress?.description,
+                c: billingAddress,
+
+                baseAdress: billingAddress?.description,
+                baseAdressFull: billingAddress,
+                
                 referrerCode: code,
-            };       
+            };
 
             await updateDocument('personalData', user.uid, {
                 fleetVerified: true,
                 fleets: [...existingFleets, newFleetAccess],
                 updatedAt: new Date().toISOString(),
-                verificationStatus :"pending"
+                verificationStatus: "pending"
             });
 
-              const updatedUser = {
+            const updatedUser = {
                 ...user,
                 fleetVerified: true,
                 fleets: [...existingFleets, newFleetAccess],
@@ -157,43 +222,43 @@ const CreateFleet = () => {
             await setupUser(updatedUser);
 
 
-             const contactDetails={   
-                userName : user?.displayName ,
-                email : user?.email ,
-                phoneNumber : user?.phoneNumber ,
-                photoUrl : user?.photoURL ,
-                userId : user?.uid ,    
-                userRole : "owner" ,
-                status : "active",
+            const contactDetails = {
+                userName: user?.displayName,
+                email: user?.email,
+                phoneNumber: user?.phoneNumber,
+                photoUrl: user?.photoURL,
+                userId: user?.uid,
+                userRole: "owner",
+                status: "active",
             }
 
-            const contactRef = doc(db, 'fleets', fleetId, 'Contacts', `OWN_${user?.uid}` );
-            await setDoc(contactRef, contactDetails);   
-            
-                  const referrerData = {
-                    accType : "fleet" ,
-                    organisationId: fleetId, // Use Firebase Auth UID instead of document ID
-                    organisationEmail: fleetData.fleetEmail,
-                    organisationName: fleetData.fleetName,
-                    referrerCode: code,
-                    createdAt: new Date().toISOString(),
-                    isActive: true,
-                    fltOwnerId : user?.uid
-                  };
-            
-                  await addDocument('referrers', referrerData);
+            const contactRef = doc(db, 'fleets', fleetId, 'Contacts', `OWN_${user?.uid}`);
+            await setDoc(contactRef, contactDetails);
 
-                // const fleetRole = {
-                //     role: 'fleet' as const,
-                //     fleetId,
-                //     companyName: fleetData.fleetName,
-                //     userRole: 'owner',
-                //     accType: 'fleet' as const,
-                //     driverId: null,
-                //     fleetMainAdminId: null,
-                //     fleetManagerId: null,
-                //     fleetDispatcherId: null,
-                // };
+            const referrerData = {
+                accType: "fleet",
+                organisationId: fleetId, // Use Firebase Auth UID instead of document ID
+                organisationEmail: fleetData.fleetEmail,
+                organisationName: fleetData.fleetName,
+                referrerCode: code,
+                createdAt: new Date().toISOString(),
+                isActive: true,
+                fltOwnerId: user?.uid
+            };
+
+            await addDocument('referrers', referrerData);
+
+            // const fleetRole = {
+            //     role: 'fleet' as const,
+            //     fleetId,
+            //     companyName: fleetData.fleetName,
+            //     userRole: 'owner',
+            //     accType: 'fleet' as const,
+            //     driverId: null,
+            //     fleetMainAdminId: null,
+            //     fleetManagerId: null,
+            //     fleetDispatcherId: null,
+            // };
 
             await setCurrentRole("fleet");
 
@@ -208,8 +273,8 @@ const CreateFleet = () => {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: background , paddingTop:36 , }} >
-            
+        <View style={{ flex: 1, backgroundColor: background, paddingTop: 36, }} >
+
             <Heading page="Create Fleet" />
 
             <View style={{ margin: hp(3) }}>
@@ -222,7 +287,33 @@ const CreateFleet = () => {
                         onChangeText={setFleetName}
                     />
 
-                    <ThemedText>Fleet Main Phone Number</ThemedText>
+
+                    <LocationSelector
+                        origin={billingAddress}
+                        destination={baseAdress}
+                        setOrigin={setbillingAddress}
+                        setDestination={setBaseAdress}
+                        dspFromLocation={dspFromLocation}
+                        setDspFromLocation={setDspFromLocation}
+                        dspToLocation={dspToLocation}
+                        setDspToLocation={setDspToLocation}
+                        locationPicKERdSP={locationPicKERdSP}
+                        setPickLocationOnMap={setPickLocationOnMap}
+                        distance={distance}
+                        duration={duration}
+                        durationInTraffic={durationInTraffic}
+                        iconColor={'#004d40'}
+                        frstInputtTopic="Billing address"
+                        secondInputTopic="Base location"
+                    />
+
+
+
+
+
+
+
+                    <ThemedText>Fleet Phone Number</ThemedText>
                     <Input
                         Icon={
                             <>
@@ -306,7 +397,7 @@ const CreateFleet = () => {
                         buttonTiitle="Take Live Selfie"
                         onPickDocument={() =>
                             takePhoto(image => {
-                                    setSelectedFleetDocuments(prev => [
+                                setSelectedFleetDocuments(prev => [
                                     prev[0],
                                     prev[1],
                                     {

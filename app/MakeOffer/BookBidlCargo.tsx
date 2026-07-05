@@ -30,7 +30,7 @@ function BookLCargo({ }) {
   const background = useThemeColor("background");
   const backgroundColor = useThemeColor("backgroundLight");
   const { expoPushToken } = usePushNotifications();
-  const [bbVerifiedLoadD, setbbVerifiedLoadD] = React.useState<Truck[] | []>([]);
+  const [bbVerifiedLoadD, setbbVerifiedLoadD] = React.useState<any[] | []>([]);
   const { cargo, contract, bidRate, OperationType } = useLocalSearchParams();
   const loadItem = JSON.parse((cargo || contract) as any);
 
@@ -223,9 +223,6 @@ function BookLCargo({ }) {
               loadOwnerId: loadItem.userId,
 
 
-              fleetId: truckData?.fleetId || null,
-              fleetName: truckData?.CompanyName || null,
-
               bookedBy: {
                 userId: user?.uid || "unknown",
                 name: user?.displayName || "unknown",
@@ -242,6 +239,8 @@ function BookLCargo({ }) {
                 driverLicenseNumber: selectedDriver.licenseNumber || null
 
               },
+
+              fleetDetails : item?.fleetDetails ?? null,
               truckDetails: {
                 truckId: item.id,
                 truckType: item.truckType || null,
@@ -250,9 +249,12 @@ function BookLCargo({ }) {
                 locations: item.locations || [],
                 trackingDeviceId: (item as any).trackingDeviceId || null,
                 numberPlate: item.numberPlate || null,
+                truckName : item.truckName ,
               },
+
               loadItemDetails: {
                 loadId: loadItem.id,
+                contact : loadItem.contact||null ,
                 companyName: loadItem.companyName || null,
                 productName: loadItem.typeofLoad || null,
                 origin: loadItem.origin || null,

@@ -23,9 +23,11 @@ console.log(truck.imageUrl, "truck.imageUrl")
         <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id, dspDetails: "false", fleetId: truck.fleetId || undefined } })} style={[styles.container, { backgroundColor: background, borderColor: backgroundLight }]}>
             <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truck.imageUrl }} style={styles.image} />
             <View style={styles.detailsContainer}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <ThemedText type='subtitle' numberOfLines={1} style={[styles.title, { color: textColor, flex: 1 }]}>{truck.truckName || 'Unamed Truck'}</ThemedText>
+                
+                <View style={{  justifyContent: 'space-between' }}>
+                    <ThemedText type='subtitle' numberOfLines={1} style={[styles.title, { color: textColor, flex: 1 }]}>{truck.truckName || 'Unamed Truck'} </ThemedText>
 
+                    <ThemedText type='tiny' style={{color: coolGray, flex: 1,marginBottom: wp(1), }}>{truck.numberPlate || 'Unamed Plate'}</ThemedText>
                 </View>
                 {/* ADD THE CONDITION HERE!!!!! */}
 
@@ -136,9 +138,9 @@ const styles = StyleSheet.create({
         gap: wp(1)
     },
     title: {
-        fontSize: wp(5),
+        fontSize: wp(4.5),
         fontWeight: 'bold',
-        marginBottom: wp(1),
+        
     },
     subtitle: {
         fontSize: wp(4),

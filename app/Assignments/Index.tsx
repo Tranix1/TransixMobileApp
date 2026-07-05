@@ -459,9 +459,10 @@ function Jobs() {
             <View key={assignmentData.id} style={[styles.cargoItem, { backgroundColor: backgroundLight }]}>
 
                 {/* HEADER */}
+
                 <View style={styles.cargoHeader}>
                     <ThemedText style={styles.cargoTitle}>
-                        {assignmentData?.typeofLoad || 'Load'} - {assignmentData.truckName}
+                        {assignmentData?.loadDetails?.productName || 'Load'} - {assignmentData.truckName}
                     </ThemedText>
 
                     <View style={[styles.statusBadge, { backgroundColor: getStatusColor(assignmentData.status) }]}>
@@ -470,6 +471,8 @@ function Jobs() {
                         </ThemedText>
                     </View>
                 </View>
+
+
 
                 {/* DETAILS */}
                 <View style={styles.cargoDetails}>
@@ -502,16 +505,15 @@ function Jobs() {
                     </View>
 
                     {/* LOAD OWNER (ONLY IF PUBLIC) */}
-                    {assignmentData?.isPublicLoad && assignmentData?.loadOwner && (
-                        <View style={styles.detailRow}>
-                            <Ionicons name="business-outline" size={16} color={accent} />
-                            <ThemedText style={styles.detailText} numberOfLines={1}>
-                                {assignmentData.loadOwner.role || "Owner"} •{" "}
-                                {assignmentData.loadOwner.name || "N/A"} •{" "}
-                                {assignmentData.loadOwner.phone || "N/A"}
-                            </ThemedText>
-                        </View>
-                    )}
+                        {assignmentData?.shipper?.name && (
+                            <View style={styles.detailRow}>
+                                <Ionicons name="business-outline" size={16} color={accent} />
+                                <ThemedText style={styles.detailText} numberOfLines={1}>
+                                    {assignmentData.shipper.name || "Owner"} •{" "}
+                                    {assignmentData.shipper.phone || "N/A"}
+                                </ThemedText>
+                            </View>
+                        )}
 
                     {/* DATES */}
                     <View style={styles.detailRow}>
@@ -603,7 +605,7 @@ function Jobs() {
     >
         <Ionicons name="camera-outline" size={16} color={accent} />
         <ThemedText style={styles.actionButtonText}>
-            Proof dispute , handle dispute issuehandling
+            Proof dispute , handle dispute issuehandling    
         </ThemedText>
     </TouchableOpacity>
 
@@ -772,7 +774,7 @@ function Jobs() {
                             return (
                                 <TouchableOpacity
                                     key={tab.key}
-                                    style={[styles.statusButton, activeTab === tab.key && { backgroundColor: accent }]}
+                                    style={[styles.statusButton, activeTab === tab.key && { backgroundColor: accent ,borderWidth:0 }]}
                                     onPress={() => setActiveTab(tab.key)}
                                 >
                                     <ThemedText

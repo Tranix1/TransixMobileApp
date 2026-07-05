@@ -25,7 +25,9 @@ import { AntDesign } from '@expo/vector-icons'; // or any close icon
 // import { sendPushNotification } from "@/Utilities/pushNotification";
 import { sendPushNotification } from "@/Utilities/pushNotification";
 import Input from "@/components/Input";
-import TruckAvailabilityModal  from "@/components/TruckNotificationSettingsModal";
+import TruckNotificationModal  from "@/components/TruckNotificationSettingsModal";
+
+import TruckAvailabilityModal from "@/components/TruckAvailabilityModal";
 
 import ImageViewing from 'react-native-image-viewing';
 
@@ -335,10 +337,88 @@ const TruckDetails = () => {
     const handleSaveAvailability = async (availabilityData:any) => {
         try {
             // Update truck with availability data
-            await updateDocument('Trucks', truckData.id, {
+            await updateDocument( `fleets/${fleetId}/trucks`, truckData.id, {
                 availability: availabilityData,
                 lastAvailabilityUpdate: new Date().toISOString(),
             });
+
+            // truck_dispatch_profile
+
+
+
+
+
+
+// truck_dispatch_profile: {
+//     truckId: string,
+
+//     // 🚛 LIVE STATUS
+//     status: "AVAILABLE" | "BUSY" | "OFFLINE",
+
+//     offlineReason?: "MAINTENANCE" | "CONTRACTED" | "PARKED" | "SUSPENDED",
+
+//     // 📍 LIVE LOCATION (FROM TRACKER ONLY)
+//     currentLocation: {
+//         lat: number,
+//         lng: number,
+//         heading?: number,
+//         speed?: number,
+//         lastUpdated: Timestamp
+//     },
+
+//     // 🎯 DRIVER PREFERENCE AFTER DELIVERY
+//     destinationPreference: {
+//         type: "SPECIFIC" | "ANY",
+//         location?: {
+//             lat: number,
+//             lng: number,
+//             description?: string
+//         }
+//     },
+
+//     // 💰 MATCHING RULES
+//     notificationSettings: {
+//         minRatePerKm: number,
+//         notifyEnabled: boolean
+//     },
+
+//     // 🚛 CAPABILITIES (FLEET CONTROL)
+//     capabilities: {
+//         international: boolean,
+//         local: boolean,
+//         longDistance: boolean
+//     },
+
+//     // 🧠 MATCHING STATE (SYSTEM CONTROLLED)
+//     matchingState: {
+//         lastMatchedAt?: Timestamp,
+//         activeLoadId?: string,
+//         lastSeenAvailableAt?: Timestamp
+//     },
+
+//     updatedAt: Timestamp
+// }
+
+
+
+
+
+
+
+
+// notificationSettings: {
+//     minRatePerKm: 2,
+
+//     notifyRoles: ["DRIVER", "OWNER"],
+
+//     notifySpecificUsers: [],
+
+//     notifyMode: "ROLE_BASED" | "SPECIFIC" | "BOTH"
+// }
+
+
+
+
 
             // Show success message
             alertBox(
@@ -1072,12 +1152,19 @@ const TruckDetails = () => {
             </Modal>
 
             {/* Truck Availability Modal */}
-            <TruckAvailabilityModal
+             {/* <TruckNotificationModal
                 visible={availabilityModalVisible}
                 onClose={() => setAvailabilityModalVisible(false)}
                 onSave={handleSaveAvailability}
                 truckId={truckData.id}
+            />`` */}
+            <TruckAvailabilityModal
+             visible={availabilityModalVisible}
+                onClose={() => setAvailabilityModalVisible(false)}
+                onSave={handleSaveAvailability}
+                // truckId={truckData.id}
             />
+            
         </ScreenWrapper >
     )
 }

@@ -240,11 +240,6 @@ export const submitLoad = async (params: SubmitLoadParams) => {
 
 
 
-
-
-
-
-
   const writePublicLoad = async () => {
     await setDoc(doc(db, 'Cargo', cargoId), {
         ...commonLoadData,

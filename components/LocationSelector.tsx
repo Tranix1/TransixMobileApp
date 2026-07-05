@@ -23,6 +23,9 @@ interface LocationSelectorProps {
     duration?: string;
     durationInTraffic?: string;
     iconColor?: string;
+    frstInputtTopic?: string;
+    secondInputTopic?: string;
+
 }
 
 export const LocationSelector: React.FC<LocationSelectorProps> = ({
@@ -39,7 +42,9 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
     distance,
     duration,
     durationInTraffic,
-    iconColor
+    iconColor,
+        frstInputtTopic,
+        secondInputTopic
 }) => {
     const icon = useThemeColor('icon');
     const backgroundLight = useThemeColor('backgroundLight');
@@ -48,7 +53,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
     return (
         <View>
             <ThemedText>
-                Origin Location<ThemedText color="red">*</ThemedText>
+                {frstInputtTopic ? frstInputtTopic : "Origin Location"} <ThemedText color="red">*</ThemedText>
             </ThemedText>
 
             {distance && duration && (
@@ -60,6 +65,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                     )}
                 </View>
             )}
+
 
             <TouchableOpacity
                 onPress={() => setDspFromLocation(true)}
@@ -78,7 +84,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                             { color: origin ? icon : '#888' }
                         ]}
                     >
-                        {origin ? origin?.description : "Select Origin"}
+                        {origin?.description || frstInputtTopic ||   "Select Origin"}
                     </ThemedText>
                 </View>
             </TouchableOpacity>
@@ -92,7 +98,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
             />
 
             <ThemedText>
-                Destination Location<ThemedText color="red">*</ThemedText>
+                {secondInputTopic ? secondInputTopic : "Destination Location"} <ThemedText color="red">*</ThemedText>
             </ThemedText>
 
             <TouchableOpacity
@@ -112,7 +118,9 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                             { color: destination ? icon : '#888' }
                         ]}
                     >
-                        {destination ? destination?.description : "Select Destination"}
+
+                        {destination?.description  ||secondInputTopic ||"Select Destination"}
+
                     </ThemedText>
                 </View>
             </TouchableOpacity>

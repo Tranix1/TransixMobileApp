@@ -45,7 +45,8 @@ function AddTrucks() {
     maxloadCapacity: "",
     truckName: "",
     otherCargoArea: "",
-    otherTankerType: ""
+    otherTankerType: "" ,
+    numberPlate:"" ,
   });
 
   const [selectedOwnerDocuments, setSelectedOwnerDocumentS] = useState<DocumentAsset[]>([]);
@@ -94,7 +95,8 @@ function AddTrucks() {
       maxloadCapacity: "",
       truckName: "",
       otherCargoArea: "",
-      otherTankerType: ""
+      otherTankerType: "" ,
+      numberPlate :"" ,
     });
     setImages([]);
     setGitImage([])
@@ -128,6 +130,7 @@ function AddTrucks() {
 
     const missingTruckDetails = [
       !formData.truckName && "Enter Truck Nick Name ",
+      !formData.numberPlate && "Enter Truck Nick Name ",
       !selectedTruckType && "Select Truck Type",
       !selectedCargoArea && "Select Truck Cargo Area",
       selectedCargoArea?.name === "Tanker" && !selectedTankerType && "Select Type of Tanker",
@@ -205,9 +208,13 @@ function AddTrucks() {
       const docRef = doc(collection(db, trucksRefPath));
       const truckId = docRef.id;
       const submitData = {
+        CompanyName: currentRole.companyName || user.displayName,
+        fleetId: currentRole?.accType === 'fleet' ? currentRole.fleetId : null,
+        
         userId: user.uid,
-        CompanyName: user.organisation,
-        contact: user?.phoneNumber || '',
+
+        userContact: user?.phoneNumber || '',
+        
         imageUrl: truckImage,
         truckBookImage: truckBookImage || null,
         trailerBookF: trailerBookF || null,
@@ -251,8 +258,13 @@ function AddTrucks() {
         // Generate unique truck ID
 
         // Associate with fleet if user is a fleet
-        fleetId: currentRole?.accType === 'fleet' ? currentRole.fleetId : null,
-
+         organizationDetails :{
+            id:currentRole.organizationId ||currentRole.fleetId || null ,
+            name : currentRole.companyName || user?.organisation ,
+            phone : currentRole.phone||null ,
+            billingAddress : currentRole.billingAddress ||null,       
+            baseAdress : currentRole.baseAdress ||null,       
+         } ,
         accType: currentRole?.accType || 'Individual', // owner, broker, driver, fleet
           timeStamp: serverTimestamp(),
         
@@ -270,7 +282,7 @@ function AddTrucks() {
       }
      
       clearFormFields()
-      ToastAndroid.show('Truck Added successfully', ToastAndroid.SHORT)
+      ToastAndroid.show("Truck Added successfully", ToastAndroid.SHORT);
 
     } catch (err) {
       console.error(err);
@@ -422,6 +434,15 @@ function AddTrucks() {
               value={formData.truckName}
               placeholder=""
               onChangeText={(text) => handleChange<TruckFormData>(text, 'truckName', setFormData)}
+            />
+
+            <ThemedText>
+              Number Plate<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+            <Input
+              value={formData.numberPlate}
+              placeholder=""
+              onChangeText={(text) => handleChange<TruckFormData>(text, 'numberPlate', setFormData)}
             />
 
             <AddTruckDetails

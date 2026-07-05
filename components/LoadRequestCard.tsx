@@ -6,7 +6,7 @@ import Divider from "@/components/Divider";
 import { router } from 'expo-router'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
-import { addDocument, deleteDocument, } from "@/db/operations";
+import { addDocument, deleteDocument, updateDocument, } from "@/db/operations";
 import { Ionicons } from "@expo/vector-icons";
 import AssignmentModal from "@/components/AssignmentModal";
 
@@ -52,6 +52,7 @@ export const RequestedCargo = ({
   dspRoute: string
   currentLocation?: { latitude: number, longitude: number } | null
 }) => {
+
 
   const textColor = useThemeColor('text')
   const coolGray = "#e5e7eb";
@@ -111,22 +112,10 @@ export const RequestedCargo = ({
     const payload = {
       ...data,
       visibility: "PUBLIC",
-      fleetName: item.fleetDetails?.fleetName || item.companyName,
-      loadOwnerDetails: {
-        id: item.loadOwnerId,
-        name: item.companyName,
-        email: item.loadOwnerEmail,
-        phone: item.loadOwnerPhone,
-      },
 
-      fleetId: item.fleetId,
-      fleetDetails: {
-        id: item.fleetId,
-        name: item.fleetDetails?.fleetName || item.companyName,
-        email: item.fleetDetails?.fleetEmail || item.loadOwnerEmail,
-        phone: item.fleetDetails?.fleetPhone || item.loadOwnerPhone,
-      },
-      loadDetails: item.loadDetails,
+      fleetDetails: item?.organizationDetails ?? null,
+
+      loadDetails: item.loadItemDetails,
       truckDetails: item.truckDetails,
       driverDetails: item.driverDetails,
 
@@ -137,17 +126,39 @@ export const RequestedCargo = ({
     };
 
     // Fleet Owner accepts the request and creates a booking in the "CargoBookings" collection
+    // await addDocument(`fleets/${item.organizationDetails.id}/assignments`, {
+    //   ...payload,
+    //   shipper: item.loadItemDetails.organizationDetails || null 
+    // });
+
     await addDocument(`fleets/${item.fleetId}/assignments`, {
       ...payload,
-      shipper: item.loadDetails.organizationDetails 
+      shipper: item.loadItemDetails.organizationDetails || null
     });
 
     // Cargo Adder Owner can now see the booking in their Assigments section
-    await addDocument(`${item.loadDetails.accType}/${item.loadDetails.organizationId}/assignments`, {
+    await addDocument(`${item.loadItemDetails.accType}/${item.loadItemDetails.organizationId}/assignments`, {
       ...payload,
-      shipper: item.loadDetails.shipper
+      shipper: item.loadItemDetails.shipper || null
     })
 
+    updateDocument("cargoRequests", item.id, {
+      status: "ACCEPTED",
+      ownerDecision: "Accepted",
+      acceptedAt: new Date(),
+
+      // Useful references
+      assignedFleetId: item?.fleetDetails?.id ?? null,
+      assignedTruckId: item.truckDetails.truckId,
+      assignedDriverId: item.driverDetails.driverId,
+
+      assignmentCreated: true,
+    })
+
+    ToastAndroid.show(
+      "Load accepted. It now appears under Assignments.",
+      ToastAndroid.LONG 
+    );
 
     setShowModal(false);
   };
@@ -203,10 +214,10 @@ export const RequestedCargo = ({
         truck={item.truckDetails}
         driver={item.driverDetails}
         load={item}
-        initialPickupLocation={item.loadDetails?.originFull || item.origin}
-        initialDeliveryLocation={item.loadDetails?.destinationFull || item.destination}
-        initialPickupDate={item.loadDetails?.pickupDate || null}
-        initialDeliveryDate={item.loadDetails?.deliveryDate || null}
+        initialPickupLocation={item.loadItemDetails?.originFull || item.origin}
+        initialDeliveryLocation={item.loadItemDetails?.destinationFull || item.destination}
+        initialPickupDate={item.loadItemDetails?.pickupDate || null}
+        initialDeliveryDate={item.loadItemDetails?.deliveryDate || null}
       />
 
 
@@ -236,7 +247,7 @@ export const RequestedCargo = ({
           numberOfLines={1}
         >
           {dspRoute === "Requested Loads"
-            ? (item.fleetDetails?.fleetName || item.companyName)
+            ? (item.fleetDetails?.name || item.companyName)
             : item.companyName}
         </ThemedText>
 

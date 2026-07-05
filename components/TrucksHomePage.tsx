@@ -72,7 +72,7 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
   loadingMore,
   clearFilter,
   filteredPNotAavaialble,
-  isLoading ,
+  isLoading,
   visibilitySelector
 
 }) => {
@@ -102,9 +102,9 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
 
         {/* Visibility Selector */}
 
-        <CustomHeader pageTitle='Trucks' addingNavigate="/Logistics/Trucks/AddTrucks" filterElement={setShowfilter}/>
+        <CustomHeader pageTitle='Trucks' addingNavigate="/Logistics/Trucks/AddTrucks" filterElement={setShowfilter} />
 
-        
+
         {visibilitySelector}
 
 
@@ -192,13 +192,13 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
             </>
           )}
           data={trucks}
-          renderItem={({ item }) => <TruckItemComponent truck={ item} truckContract={ item }  />}
+          renderItem={({ item }) => <TruckItemComponent truck={item} truckContract={item} />}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[accent]} />
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              {isLoading  ? (
+              {isLoading ? (
                 <>
                   <AccentRingLoader color={accent} size={32} dotSize={6} />
                   <ThemedText type='defaultSemiBold' style={styles.emptyText}>
@@ -211,7 +211,7 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
               ) : filteredPNotAavaialble ? (
                 <>
                   <Ionicons name="car-outline" size={wp(8)} color={icon} />
-                <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                  <ThemedText type='defaultSemiBold' style={styles.emptyText}>
                     Specified Truck Not Available!
                   </ThemedText>
                   <ThemedText type='tiny' style={styles.emptySubtext}>
@@ -221,12 +221,20 @@ export const FinalReturnComponent: React.FC<FinalReturnComponentProps> = ({
               ) : (
                 <>
                   <Ionicons name="car-outline" size={wp(8)} color={icon} />
-                <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                  <ThemedText type='defaultSemiBold' style={styles.emptyText}>
                     No Trucks Available
                   </ThemedText>
-                  <ThemedText type='tiny' style={styles.emptySubtext}>
-                    Check back later
-                  </ThemedText>
+                  <TouchableOpacity onPress={() => router.push("/Logistics/Trucks/AddTrucks")} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                    <ThemedText style={{ color: '#666' }}>
+                      Add your first truck to start building your fleet
+                    </ThemedText>
+
+                    <Ionicons name="chevron-forward" size={16} color={accent} style={{ marginLeft: 4 }} />
+                  </TouchableOpacity>
+
+
+
+
                 </>
               )}
             </View>

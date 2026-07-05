@@ -223,20 +223,33 @@ const filteredFleets =
 
 
 
+    
     const handleFleetSelect = async (fleet: any) => {    
-
+        console.log(fleet.referrerCode,  "The refferal code  ")
         if (!fleet) return;
 
         const fleetRole = {
             role: 'fleet' as const,
             fleetId: fleet.fleetId,
             companyName: fleet.companyName || fleet.fleetName,
-            userRole: fleet.userRole || 'owner',
+            userRole  : fleet.userRole || 'owner',
             accType: 'fleet' as const,
             driverId: fleet.driverId || null,
+
             fleetMainAdminId: fleet.fleetMainAdminId || null,
             fleetManagerId: fleet.fleetManagerId || null,
             fleetDispatcherId: fleet.fleetDispatcherId || null,
+
+            referrerCode : fleet.referrerCode || null ,
+
+            organizationName : fleet.companyName || fleet.fleetName ,
+            organizationId : fleet.fleetId ,
+
+            phone : `${fleet.countryCode}${fleet?.organizationPhone}` ,
+            email : fleet.organizationEmail ,
+            billingAddress : fleet?.billingAddressFull ,
+            baseAdress : fleet?.baseAdressFull  
+            
         };
 
     (fleetRole as any);

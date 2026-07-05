@@ -6,53 +6,63 @@ import { getDefaultPaymentTerms } from "@/components/PaymentTerms";
 export type AccountType = 'general' | 'tracking' | 'fleet' | 'brokerage';
 
 export type CurrentRole =
-  | {
-      role: 'general';
-      accType: 'general' | 'tracking';
-      userRole: 'tracking';
-      companyName : string;
-      driverId: string | null;
-      fleetId: string | null;
-      brokerId: string;
-      referrerCode :string | null 
-      organizationId: string | null;
-    
-    }
-  | {
-      role: 'fleet';
-      fleetId: string;
-      companyName: string;
-      userRole: string;
-      accType: 'fleet';
-      driverId: string | null;
-      fleetMainAdminId: string | null;
-      fleetManagerId: string | null;
-      fleetDispatcherId: string | null;
-      brokerId: string;
-      referrerCode :string | null
-      organizationId: string | null;
-
+    | {
+        role: 'general';
+        accType: 'general' | 'tracking';
+        userRole: 'tracking';
+        companyName: string;
+        driverId: string | null;
+        fleetId: string | null;
+        brokerId: string;
+        referrerCode: string | null
+        organizationId: string | null;
+        phone: string | null
+        email: string | null
+        billingAddress: string | null
+        baseAdress: string | null
 
     }
-  | {
-      role: 'brokerage';
-      brokerId: string;
-      companyName: string;
-      userRole: string;
-      accType: 'brokerage';
-      brokerType: string;
-      fleetId: string | null;
-      referrerCode :string | null
-      organizationId: string | null;
+    | {
+        role: 'fleet';
+        fleetId: string;
+        companyName: string;
+        userRole: string;
+        accType: 'fleet';
+        driverId: string | null;
+        fleetMainAdminId: string | null;
+        fleetManagerId: string | null;
+        fleetDispatcherId: string | null;
+        brokerId: string;
+        referrerCode: string | null
+        organizationId: string | null;
+        phone: string | null
+        email: string | null
+        billingAddress: string | null
+        baseAdress: string | null
 
+    }
+    | {
+        role: 'brokerage';
+        brokerId: string;
+        companyName: string;
+        userRole: string;
+        accType: 'brokerage';
+        brokerType: string;
+        fleetId: string | null;
+        referrerCode: string | null
+        organizationId: string | null;
+        phone: string | null
+        email: string | null
+        billingAddress: string | null
+        baseAdress: string | null
 
     };
 
 export type RoleProps =
-  | 'general'
-  | 'fleet'
-  | 'brokerage'
-  | CurrentRole;
+    | 'general'
+    | 'fleet'
+    | 'brokerage'
+    | CurrentRole;
 
 
 export type TruckTypeProps = {
@@ -70,6 +80,7 @@ export type TruckFormData = {
     truckName: string;
     otherCargoArea: string;
     otherTankerType: string;
+    numberPlate : string ;
 }
 export type Truck = {
 
@@ -107,7 +118,7 @@ export type Truck = {
     name: string;
     userId: string;
     withDetails: boolean;
-    numberPlate : string;
+    numberPlate: string;
 
     // Approval system fields
     isApproved?: boolean;
@@ -225,7 +236,7 @@ export type TruckNeededType = {
     capacity: SelectedOption;
     operationCountries: string[];
 }
-export type     Load = {
+export type Load = {
     id: string,
     distance: string,
     duration: string,
@@ -325,7 +336,7 @@ export const Countries = ['Zimbabwe',
 ]
 export type User = {
     uid: string,
-    createdAt ?: number | string; // required
+    createdAt?: number | string; // required
 
     displayName?: string,
     photoURL?: string,

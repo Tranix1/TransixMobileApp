@@ -77,7 +77,7 @@ const Index = () => {
 
                     filters = [
                             where("approvalStatus", "==", "approved"),
-                            where("state", "==", "available"),
+                            where( "state" , "==", "available"),
                             where("expiresAt", ">", Timestamp.now())
                     ];
                     collectionName = "Cargo"
@@ -205,6 +205,7 @@ const Index = () => {
                             onSelect={setLoadVisibility}
                         />
                     }
+                    loadVisibility={loadVisibility}
                 />
             </View>
         </GestureHandlerRootView>

@@ -3,6 +3,8 @@ import { Modal, Pressable, View, TouchableOpacity, TouchableNativeFeedback, Styl
 import { BlurView } from 'expo-blur';
 import { Ionicons, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
 // import * as Clipboard from 'expo-clipboard';
+import { Clipboard } from 'react-native';
+
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { hp, wp } from '@/constants/common';
@@ -49,8 +51,9 @@ export default function UserMenuModal({ visible, onClose, onProfileUpdate }: Use
     const referralCode = currentRole?.referrerCode ;
 
     const handleCopyReferral = async () => {
+        
         if (!referralCode) return;
-        // await Clipboard.se/tStringAsync(referralCode);
+        Clipboard.setString(`${referralCode}`);
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
     };
@@ -324,7 +327,9 @@ export default function UserMenuModal({ visible, onClose, onProfileUpdate }: Use
                             {/* Referral: tap to copy */}
                                 <TouchableNativeFeedback onPress={handleCopyReferral}>
                                     <View style={[styles.referralRow, { backgroundColor: background }]}>
-                                        <Ionicons name="gift-outline" size={wp(4)} color={icon} style={styles.menuIcon} />
+                                        {/* <Ionicons name="gift-outline" size={wp(6)} color={accent}  /> */}
+                                                        <Ionicons name="person-outline" size={wp(4)} color={accent} style={styles.menuIcon} />
+                                        
                                         <View style={styles.referralTextWrap}>
                                             <ThemedText type="default" style={styles.referralLabel}>
                                                 Referral Code

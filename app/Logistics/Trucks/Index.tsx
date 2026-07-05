@@ -33,8 +33,7 @@ const Index = () => {
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-
-    const [hasLoaded, setHasLoaded] = useState(false);
+    
 
     const [operationCountries, setOperationCountries] = useState<string[]>(() => {
         if (!operationCountriesG) return [];
@@ -73,7 +72,7 @@ const Index = () => {
             // If user is in fleet mode and viewing private trucks, fetch from fleet subcollection
             if ( currentRole?.accType === 'fleet' && truckVisibility === 'Private') {
                 collectionName = `fleets/${currentRole.fleetId}/Trucks` ;
-            }else if (currentRole?.role === 'broker' && truckVisibility === 'Private') { 
+            }else if (currentRole?.role === 'brokerage' && truckVisibility === 'Private') { 
                 collectionName = `brokers/${currentRole.brokerId}/trucks`;
             }
 
@@ -217,7 +216,7 @@ useEffect(() => {
             {(!contractId || !userId || !capacityG) && <View style={{ flex: 1 }}>
                 <FinalReturnComponent
                     visibilitySelector={
-                        (currentRole?.role === 'fleet'  || currentRole?.role === 'broker') ? (
+                        (currentRole?.role === 'fleet'  || currentRole?.role === 'brokerage') ? (
                             <View style={{ paddingHorizontal:15}}> 
                             <HorizontalTickComponent
                                 data={[
@@ -249,7 +248,7 @@ useEffect(() => {
                     loadingMore={loadingMore}
                     clearFilter={clearFilter}
                     filteredPNotAavaialble={filteredPNotAavaialble}
-                    isLoading 
+                    isLoading ={isLoading}
                 />
             </View>}
             {(contractId || userId || capacityG) && <ScreenWrapper >
@@ -273,7 +272,7 @@ useEffect(() => {
                     loadingMore={loadingMore}
                     clearFilter={clearFilter}
                     filteredPNotAavaialble={filteredPNotAavaialble}
-                    isLoading
+                    isLoading={isLoading}
                     />
             </ScreenWrapper>}
         </View>

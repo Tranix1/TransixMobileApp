@@ -46,6 +46,7 @@ interface LoadsComponentProps {
     isLoading?: boolean
     error?: string | null
     visibilitySelector?: React.ReactNode;
+    loadVisibility: string
 }
 
 
@@ -71,7 +72,8 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     filteredPNotAavaialble,
     isLoading = false,
     error = null,
-    visibilitySelector
+    visibilitySelector,
+    loadVisibility,
 }) => {
     // Component implementation
     const { user } = useAuth();
@@ -242,9 +244,26 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                                 <ThemedText type='defaultSemiBold' style={styles.emptyText}>
                                     No Loads Available
                                 </ThemedText>
-                                <ThemedText type='tiny' style={styles.emptySubtext}>
+
+
+                                {loadVisibility === "Private" && <TouchableOpacity onPress={() => router.push("/Logistics/Loads/AddLoads")} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}
+                                >
+                                    <ThemedText style={{ color: '#666' }}>
+                                        Create a load to start receiving bids or assignments
+                                    </ThemedText>
+
+                                    <Ionicons
+                                        name="chevron-forward"
+                                        size={16}
+                                        color={accent}
+                                        style={{ marginLeft: 4 }}
+                                    />
+                                </TouchableOpacity>}
+
+
+                                {loadVisibility === "Public" && <ThemedText type='tiny' style={styles.emptySubtext}>
                                     Check back later
-                                </ThemedText>
+                                </ThemedText>}
                             </>
                         )}
                     </View>
@@ -368,7 +387,7 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                                 }
                                 {
                                     <>
-                                       
+
 
                                         {<>
                                             <View>
@@ -378,7 +397,7 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                                                         pathname: '/MakeOffer/BookBidlCargo',
                                                         params: { contract: JSON.stringify(selectedLoad), OperationType: "Book" }
                                                     })}>
-                                                        
+
                                                     <ThemedText color='white'>
                                                         Book Load
                                                     </ThemedText>
@@ -386,10 +405,10 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
 
                                             </View>
                                             <View>
-                                                <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }}  onPress={() => router.push({
-                                                        pathname: '/MakeOffer/BookBidlCargo',
-                                                        params: { cargo: JSON.stringify(selectedLoad), OperationType: "Bid"  }
-                                                    })}>
+                                                <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push({
+                                                    pathname: '/MakeOffer/BookBidlCargo',
+                                                    params: { cargo: JSON.stringify(selectedLoad), OperationType: "Bid" }
+                                                })}>
                                                     <ThemedText color='white'>
                                                         Bid Load
                                                     </ThemedText>

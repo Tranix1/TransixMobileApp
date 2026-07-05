@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, TouchableOpacity, StyleSheet, ToastAndroid, Image,Switch } from "react-native";
+import { View, ScrollView, TouchableOpacity, StyleSheet, ToastAndroid, Image, Switch } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import Input from "@/components/Input";
@@ -23,7 +23,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { StepIndicator } from '@/components/StepIndicator';
 import { LocationSelector } from '@/components/LocationSelector';
 import { RateInput } from '@/components/RateInput';
-import PaymentTerms ,{ getDefaultPaymentTerms,PaymentTermsValue} from '@/components/PaymentTerms';
+import PaymentTerms, { getDefaultPaymentTerms, PaymentTermsValue } from '@/components/PaymentTerms';
 
 import { usePushNotifications } from "@/Utilities/pushNotification";
 import { uploadImage, fetchDocuments } from "@/db/operations";
@@ -194,8 +194,8 @@ const AddLoadDB = () => {
   // const [paymentTerms, setPaymentTerms] = useState(defaultState.paymentTerms);
 
   const [paymentTerms, setPaymentTerms] = useState<PaymentTermsValue>(
-  getDefaultPaymentTerms()
-);
+    getDefaultPaymentTerms()
+  );
 
   const [requirements, setRequirements] = useState(defaultState.requirements)
 
@@ -233,6 +233,9 @@ const AddLoadDB = () => {
 
   // Truck Form Data
   const [formDataTruck, setFormDataTruck] = useState<TruckFormData>(defaultState.formDataTruck);
+
+  const [isReturnLoadEnabled, setIsReturnLoadEnabled] = useState(false);
+  const [isTrackingEnabled, setIsTrackingEnabled] = useState(false);
 
   const [selectedCargoArea, setSelectedCargoArea] = useState<TruckTypeProps | null>(defaultState.selectedCargoArea);
   const [selectedTruckType, setSelectedTruckType] = useState<{ id: number, name: string } | null>(defaultState.selectedTruckType);
@@ -534,7 +537,7 @@ const AddLoadDB = () => {
 
 
       // Additional validation for new fields
-      if ( (loadVisibility==="Public" || loadVisibility==="Both")&& (!numberOfTrucks || numberOfTrucks.trim() === '') ) {
+      if ((loadVisibility === "Public" || loadVisibility === "Both") && (!numberOfTrucks || numberOfTrucks.trim() === '')) {
         validationErrors.push('Number of trucks needed is required');
       }
       if (!deliveryDate || deliveryDate.trim() === '') {
@@ -543,9 +546,9 @@ const AddLoadDB = () => {
 
 
       // Additional validation for fleet users - private and both loads need a private truck assignment.
-    
 
-      if ( (loadVisibility === 'Public' || loadVisibility === 'Both') && trucksNeeded.length === 0) {
+
+      if ((loadVisibility === 'Public' || loadVisibility === 'Both') && trucksNeeded.length === 0) {
         validationErrors.push('Select at least 1 truck requirement for the public load');
       }
 
@@ -658,7 +661,7 @@ const AddLoadDB = () => {
         numberOfTrucks,
         deliveryDate,
         selectedBrokers,
-      }, activeUser, expoPushToken , currentRole);
+      }, activeUser, expoPushToken, currentRole);
 
       await submitLoad({
         currentRole,
@@ -701,7 +704,7 @@ const AddLoadDB = () => {
   };
 
 
-  
+
 
 
   const renderTruckRequirements = (options?: { title?: string; helperText?: string }) => (
@@ -733,1307 +736,1347 @@ const AddLoadDB = () => {
 
 
 
-const [displayedTruckCount, setDisplayedTruckCount] = useState(10);
-const [displayedBrokerTruckCount, setDisplayedBrokerTruckCount] = useState(10);
-
-const [isReturnLoadEnabled, setIsReturnLoadEnabled] = useState(false);
-
-const stepKeys = ['basicInfo', 'loadDetails', 'additionalInfo'];
-if (isReturnLoadEnabled) stepKeys.push('returnLoad');
-stepKeys.push('truckReq');
-
-const stepLabels = ['Basic Info', 'Load Details', 'Additi Info'];
-if (isReturnLoadEnabled) stepLabels.push('Return Load');
-stepLabels.push('Truck Req');
-
-const currentStepKey = stepKeys[step];
+  const [displayedTruckCount, setDisplayedTruckCount] = useState(10);
+  const [displayedBrokerTruckCount, setDisplayedBrokerTruckCount] = useState(10);
 
 
-return (
-  <ScreenWrapper fh={false}>
 
-    <Heading page='Create Load' />
+  const stepKeys = ['basicInfo', 'loadDetails', 'additionalInfo'];
+  if (isReturnLoadEnabled) stepKeys.push('returnLoad');
+  stepKeys.push('truckReq');
 
-    <StepIndicator
-      steps={stepLabels}
-      currentStep={step}
-      onStepPress={setStep}
-    />
+  const stepLabels = ['Basic Info', 'Load Details', 'Additi Info'];
+  if (isReturnLoadEnabled) stepLabels.push('Return Load');
+  stepLabels.push('Truck Req');
 
-    <View style={{ flex: 1, position: 'relative' }}>
+  const currentStepKey = stepKeys[step];
 
-      {/* ============ NEW FIRST STEP: BASIC INFO ============ */}
-      {currentStepKey === 'basicInfo' && (
-        <ScrollView keyboardShouldPersistTaps="always">
-          <View style={styles.viewMainDsp}>
-            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-              Basic Load Info
-            </ThemedText>
-            <Divider />
 
-            <ThemedText>
-              Customer<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-            <CustomerPicker
-              userId={user?.uid || ""}
-              selectedCustomer={selectedCustomer}
-              onSelectCustomer={setSelectedCustomer}
-            />
+  return (
+    <ScreenWrapper fh={false}>
 
-            {(currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage') && (
-              <View style={{ marginTop: wp(3), marginBottom: wp(2) }}>
-                <ThemedText style={{ fontWeight: 'bold', marginBottom: wp(2) }}>Load Visibility</ThemedText>
-                <View style={{ flexDirection: 'row', gap: wp(2) }}>
-                  <TouchableOpacity
-                    onPress={() => setLoadVisibility('Private')}
-                    style={{
-                      flex: 1,
-                      padding: wp(3),
-                      borderRadius: 8,
-                      backgroundColor: loadVisibility === 'Private' ? '#E3F2FD' : backgroundLight,
-                      borderWidth: 1,
-                      borderColor: loadVisibility === 'Private' ? '#2196F3' : '#E0E0E0',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <Ionicons
-                      name="lock-closed"
-                      size={20}
-                      color={loadVisibility === 'Private' ? '#2196F3' : '#666'}
-                      style={{ marginBottom: wp(1) }}
-                    />
-                    <ThemedText style={{
-                      fontWeight: loadVisibility === 'Private' ? 'bold' : 'normal',
-                      color: loadVisibility === 'Private' ? '#2196F3' : '#666'
-                    }}>
-                      Private
-                    </ThemedText>
-                    <ThemedText style={{ fontSize: 12, color: '#666', textAlign: 'center', marginTop: wp(1) }}>
-                      {currentRole?.accType === 'fleet' ? 'Only fleet trucks' : 'Assigned trucks'}
-                    </ThemedText>
-                  </TouchableOpacity>
+      <Heading page='Create Load' />
 
-                  <TouchableOpacity
-                    onPress={() => setLoadVisibility('Public')}
-                    style={{
-                      flex: 1,
-                      padding: wp(3),
-                      borderRadius: 8,
-                      backgroundColor: loadVisibility === 'Public' ? '#E8F5E8' : backgroundLight,
-                      borderWidth: 1,
-                      borderColor: loadVisibility === 'Public' ? '#4CAF50' : '#E0E0E0',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <Ionicons
-                      name="globe"
-                      size={20}
-                      color={loadVisibility === 'Public' ? '#4CAF50' : '#666'}
-                      style={{ marginBottom: wp(1) }}
-                    />
-                    <ThemedText style={{
-                      fontWeight: loadVisibility === 'Public' ? 'bold' : 'normal',
-                      color: loadVisibility === 'Public' ? '#4CAF50' : '#666'
-                    }}>
-                      Public
-                    </ThemedText>
-                    <ThemedText style={{ fontSize: 12, color: '#666', textAlign: 'center', marginTop: wp(1) }}>
-                      All available trucks
-                    </ThemedText>
-                  </TouchableOpacity>
+      <StepIndicator
+        steps={stepLabels}
+        currentStep={step}
+        onStepPress={setStep}
+      />
 
-                  <TouchableOpacity
-                    onPress={() => setLoadVisibility('Both')}
-                    style={{
-                      flex: 1,
-                      padding: wp(3),
-                      borderRadius: 8,
-                      backgroundColor: loadVisibility === 'Both' ? '#FFF3E0' : backgroundLight,
-                      borderWidth: 1,
-                      borderColor: loadVisibility === 'Both' ? '#FB8C00' : '#E0E0E0',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <Ionicons
-                      name="git-branch"
-                      size={20}
-                      color={loadVisibility === 'Both' ? '#FB8C00' : '#666'}
-                      style={{ marginBottom: wp(1) }}
-                    />
-                    <ThemedText style={{
-                      fontWeight: loadVisibility === 'Both' ? 'bold' : 'normal',
-                      color: loadVisibility === 'Both' ? '#FB8C00' : '#666'
-                    }}>
-                      Both
-                    </ThemedText>
-                    <ThemedText style={{ fontSize: 12, color: '#666', textAlign: 'center', marginTop: wp(1) }}>
-                      Fleet and public
-                    </ThemedText>
-                  </TouchableOpacity>
+      <View style={{ flex: 1, position: 'relative' }}>
+
+        {/* ============ NEW FIRST STEP: BASIC INFO ============ */}
+        {currentStepKey === 'basicInfo' && (
+          <ScrollView keyboardShouldPersistTaps="always">
+            <View style={styles.viewMainDsp}>
+              <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
+                Basic Load Info
+              </ThemedText>
+              <Divider />
+
+              <ThemedText>
+                Customer<ThemedText color="red">*</ThemedText>
+              </ThemedText>
+              <CustomerPicker
+                userId={user?.uid || ""}
+                selectedCustomer={selectedCustomer}
+                onSelectCustomer={setSelectedCustomer}
+              />
+
+              {(currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage') && (
+                <View style={{ marginTop: wp(3), marginBottom: wp(2) }}>
+                  <ThemedText style={{ fontWeight: 'bold', marginBottom: wp(2) }}>Load Visibility</ThemedText>
+                  <View style={{ flexDirection: 'row', gap: wp(2) }}>
+                    <TouchableOpacity
+                      onPress={() => setLoadVisibility('Private')}
+                      style={{
+                        flex: 1,
+                        padding: wp(3),
+                        borderRadius: 8,
+                        backgroundColor: loadVisibility === 'Private' ? '#E3F2FD' : backgroundLight,
+                        borderWidth: 1,
+                        borderColor: loadVisibility === 'Private' ? '#2196F3' : '#E0E0E0',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <Ionicons
+                        name="lock-closed"
+                        size={20}
+                        color={loadVisibility === 'Private' ? '#2196F3' : '#666'}
+                        style={{ marginBottom: wp(1) }}
+                      />
+                      <ThemedText style={{
+                        fontWeight: loadVisibility === 'Private' ? 'bold' : 'normal',
+                        color: loadVisibility === 'Private' ? '#2196F3' : '#666'
+                      }}>
+                        Private
+                      </ThemedText>
+                      <ThemedText style={{ fontSize: 12, color: '#666', textAlign: 'center', marginTop: wp(1) }}>
+                        {currentRole?.accType === 'fleet' ? 'Only fleet trucks' : 'Assigned trucks'}
+                      </ThemedText>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => setLoadVisibility('Public')}
+                      style={{
+                        flex: 1,
+                        padding: wp(3),
+                        borderRadius: 8,
+                        backgroundColor: loadVisibility === 'Public' ? '#E8F5E8' : backgroundLight,
+                        borderWidth: 1,
+                        borderColor: loadVisibility === 'Public' ? '#4CAF50' : '#E0E0E0',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <Ionicons
+                        name="globe"
+                        size={20}
+                        color={loadVisibility === 'Public' ? '#4CAF50' : '#666'}
+                        style={{ marginBottom: wp(1) }}
+                      />
+                      <ThemedText style={{
+                        fontWeight: loadVisibility === 'Public' ? 'bold' : 'normal',
+                        color: loadVisibility === 'Public' ? '#4CAF50' : '#666'
+                      }}>
+                        Public
+                      </ThemedText>
+                      <ThemedText style={{ fontSize: 12, color: '#666', textAlign: 'center', marginTop: wp(1) }}>
+                        All available trucks
+                      </ThemedText>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => setLoadVisibility('Both')}
+                      style={{
+                        flex: 1,
+                        padding: wp(3),
+                        borderRadius: 8,
+                        backgroundColor: loadVisibility === 'Both' ? '#FFF3E0' : backgroundLight,
+                        borderWidth: 1,
+                        borderColor: loadVisibility === 'Both' ? '#FB8C00' : '#E0E0E0',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <Ionicons
+                        name="git-branch"
+                        size={20}
+                        color={loadVisibility === 'Both' ? '#FB8C00' : '#666'}
+                        style={{ marginBottom: wp(1) }}
+                      />
+                      <ThemedText style={{
+                        fontWeight: loadVisibility === 'Both' ? 'bold' : 'normal',
+                        color: loadVisibility === 'Both' ? '#FB8C00' : '#666'
+                      }}>
+                        Both
+                      </ThemedText>
+                      <ThemedText style={{ fontSize: 12, color: '#666', textAlign: 'center', marginTop: wp(1) }}>
+                        Fleet and public
+                      </ThemedText>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            )}
+              )}
 
-            <Divider />
+              <Divider />
 
-            <LocationSelector
-              origin={origin}
-              destination={destination}
-              setOrigin={setOrigin}
-              setDestination={setDestination}
-              dspFromLocation={dspFromLocation}
-              setDspFromLocation={setDspFromLocation}
-              dspToLocation={dspToLocation}
-              setDspToLocation={setDspToLocation}
-              locationPicKERdSP={locationPicKERdSP}
-              setPickLocationOnMap={setPickLocationOnMap}
-              distance={distance}
-              duration={duration}
-              durationInTraffic={durationInTraffic}
-              iconColor={accent}
-            />
-
-            <Divider />
-
-            <TouchableOpacity
-              onPress={() => setIsReturnLoadEnabled(!isReturnLoadEnabled)}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: wp(3),
-                borderRadius: 8,
-                backgroundColor: backgroundLight,
-                borderWidth: 1,
-                borderColor: isReturnLoadEnabled ? '#2196F3' : '#E0E0E0',
-                marginTop: wp(2),
-              }}
-            >
-              <View style={{ flex: 1, marginRight: wp(2) }}>
-                <ThemedText style={{ fontWeight: '600' }}>Return Load?</ThemedText>
-                <ThemedText style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
-                  Turn this on if there's a return load for this trip
-                </ThemedText>
-              </View>
-              <Switch
-                value={isReturnLoadEnabled}
-                onValueChange={setIsReturnLoadEnabled}
-                trackColor={{ false: '#ccc', true: '#2196F3' }}
+              <LocationSelector
+                origin={origin}
+                destination={destination}
+                setOrigin={setOrigin}
+                setDestination={setDestination}
+                dspFromLocation={dspFromLocation}
+                setDspFromLocation={setDspFromLocation}
+                dspToLocation={dspToLocation}
+                setDspToLocation={setDspToLocation}
+                locationPicKERdSP={locationPicKERdSP}
+                setPickLocationOnMap={setPickLocationOnMap}
+                distance={distance}
+                duration={duration}
+                durationInTraffic={durationInTraffic}
+                iconColor={accent}
               />
-            </TouchableOpacity>
 
-          </View>
-          <Divider />
-          <View style={styles.viewMainDsp}>
-            <Button onPress={() => setStep(step + 1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
-          </View>
-          <View style={{ height: 100 }} />
-        </ScrollView>
-      )}
 
-      {/* ============ LOAD DETAILS (Customer + Location removed — now on Basic Info) ============ */}
-      {currentStepKey === 'loadDetails' && (
-        <ScrollView keyboardShouldPersistTaps="always">
-          <View style={styles.viewMainDsp}>
-            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-              Load Details
-            </ThemedText>
-            <Divider />
 
-            <ThemedText>
-              Type of Load<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-            <Input
-              value={typeofLoad}
-              onChangeText={setTypeofLoad}
-            />
+              <Divider />
 
-            <RateInput
-              rate={rate}
-              setRate={setRate}
-              selectedCurrency={selectedCurrency}
-              setSelectedCurrency={setSelectedCurrency}
-              selectedModelType={selectedModelType}
-              setSelectedModelType={setSelectedModelType}
-              rateExplanation={rateexplantion}
-              setRateExplanation={setRateExplanation}
-            />
 
-            <Divider />
-
-            <PaymentTerms value={paymentTerms} onChange={setPaymentTerms} />
-
-          </View>
-          <Divider />
-          <View style={styles.viewMainDsp}>
-            <Button onPress={() => setStep(step - 1)} title="Back" />
-            <Button onPress={() => setStep(step + 1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
-          </View>
-          <View style={{ height: 100 }} />
-        </ScrollView>
-      )}
-
-      {/* ============ ADDITIONAL INFO (unchanged) ============ */}
-      {currentStepKey === 'additionalInfo' && (
-        <ScrollView>
-          <View style={styles.viewMainDsp}>
-            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-              Additional Info
-            </ThemedText>
-            <Divider />
-
-            <ThemedText>
-              Loading date <ThemedText color="red">*</ThemedText>
-            </ThemedText>
-
-            <TouchableOpacity onPress={() => setShowLoadingDatePicker(true)}>
-              <Input
-                value={
-                  loadingDate
-                    ? new Date(loadingDate).toLocaleDateString()
-                    : ""
-                }
-                placeholder="Select loading date"
-                editable={false}
-              />
-            </TouchableOpacity>
-
-            {showLoadingDatePicker && (
-              <DateTimePicker
-                value={
-                  loadingDate
-                    ? new Date(loadingDate)
-                    : new Date()
-                }
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowLoadingDatePicker(false);
-                  if (selectedDate) {
-                    setLoadingDate(selectedDate.toISOString());
-                  }
+              <TouchableOpacity
+                onPress={() => setIsTrackingEnabled(!isTrackingEnabled)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: wp(3),
+                  borderRadius: 8,
+                  backgroundColor: backgroundLight,
+                  borderWidth: 1,
+                  borderColor: isTrackingEnabled ? '#2196F3' : '#E0E0E0',
+                  marginTop: wp(2),
                 }}
-              />
-            )}
-
-            <ThemedText>
-              Delivery Date <ThemedText color="red">*</ThemedText>
-            </ThemedText>
-
-            <TouchableOpacity onPress={() => setShowDeliveryDatePicker(true)}>
-              <Input
-                value={
-                  deliveryDate
-                    ? new Date(deliveryDate).toLocaleDateString()
-                    : ""
-                }
-                placeholder="Select delivery date"
-                editable={false}
-              />
-            </TouchableOpacity>
-
-            {showDeliveryDatePicker && (
-              <DateTimePicker
-                value={
-                  deliveryDate
-                    ? new Date(deliveryDate)
-                    : new Date()
-                }
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowDeliveryDatePicker(false);
-                  if (selectedDate) {
-                    setDeliveryDate(selectedDate.toISOString());
-                  }
-                }}
-              />
-            )}
-
-            <ThemedText>
-              Requirements<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-            <Input
-              value={requirements}
-              onChangeText={setRequirements}
-            />
-            <ThemedText>
-              Additional Information<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-            <Input
-              multiline
-              value={additionalInfo}
-              onChangeText={setAdditionalInfo}
-            />
-
-            <ThemedText>
-              Alert Message<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-            <Input
-              value={alertMsg}
-              onChangeText={setAlertMsg}
-            />
-            <ThemedText>
-              Fuel & Tolls Infomation<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-            <Input
-              value={fuelAvai}
-              onChangeText={setFuelAvai}
-            />
-
-            {
-              ((proofImages.length > 0 || proofDocuments.length > 0)) ? (
-                <View>
-                  <ThemedText style={{ marginBottom: wp(2), fontWeight: 'bold' }}>
-                    Proof of Order
+              >
+                <View style={{ flex: 1, marginRight: wp(2) }}>
+                  <ThemedText style={{ fontWeight: '600' }}>
+                    Enable Transix Tracking
                   </ThemedText>
 
+                  <ThemedText style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
+                    Your cargo will be trackable live inside the Transix app using our fleet tracking system
+                  </ThemedText>
+                </View>
+
+                <Switch
+                  value={isTrackingEnabled}
+                  onValueChange={setIsTrackingEnabled}
+                  trackColor={{ false: '#ccc', true: '#2196F3' }}
+                />
+              </TouchableOpacity>
+
+
+
+
+
+              <Divider />
+
+              <TouchableOpacity
+                onPress={() => setIsReturnLoadEnabled(!isReturnLoadEnabled)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: wp(3),
+                  borderRadius: 8,
+                  backgroundColor: backgroundLight,
+                  borderWidth: 1,
+                  borderColor: isReturnLoadEnabled ? '#2196F3' : '#E0E0E0',
+                  marginTop: wp(2),
+                }}
+              >
+                <View style={{ flex: 1, marginRight: wp(2) }}>
+                  <ThemedText style={{ fontWeight: '600' }}>Return Load?</ThemedText>
+                  <ThemedText style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
+                    Turn this on if there's a return load for this trip
+                  </ThemedText>
+                </View>
+                <Switch
+                  value={isReturnLoadEnabled}
+                  onValueChange={setIsReturnLoadEnabled}
+                  trackColor={{ false: '#ccc', true: '#2196F3' }}
+                />
+              </TouchableOpacity>
+
+            </View>
+            <Divider />
+            <View style={styles.viewMainDsp}>
+              <Button onPress={() => setStep(step + 1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
+            </View>
+            <View style={{ height: 100 }} />
+          </ScrollView>
+        )}
+
+        {/* ============ LOAD DETAILS (Customer + Location removed — now on Basic Info) ============ */}
+        {currentStepKey === 'loadDetails' && (
+          <ScrollView keyboardShouldPersistTaps="always">
+            <View style={styles.viewMainDsp}>
+              <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
+                Load Details
+              </ThemedText>
+              <Divider />
+
+              <ThemedText>
+                Type of Load<ThemedText color="red">*</ThemedText>
+              </ThemedText>
+              <Input
+                value={typeofLoad}
+                onChangeText={setTypeofLoad}
+              />
+
+              <RateInput
+                rate={rate}
+                setRate={setRate}
+                selectedCurrency={selectedCurrency}
+                setSelectedCurrency={setSelectedCurrency}
+                selectedModelType={selectedModelType}
+                setSelectedModelType={setSelectedModelType}
+                rateExplanation={rateexplantion}
+                setRateExplanation={setRateExplanation}
+              />
+
+              <Divider />
+
+              <PaymentTerms value={paymentTerms} onChange={setPaymentTerms} />
+
+            </View>
+            <Divider />
+            <View style={styles.viewMainDsp}>
+              <Button onPress={() => setStep(step - 1)} title="Back" />
+              <Button onPress={() => setStep(step + 1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
+            </View>
+            <View style={{ height: 100 }} />
+          </ScrollView>
+        )}
+
+        {/* ============ ADDITIONAL INFO (unchanged) ============ */}
+        {currentStepKey === 'additionalInfo' && (
+          <ScrollView>
+            <View style={styles.viewMainDsp}>
+              <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
+                Additional Info
+              </ThemedText>
+              <Divider />
+
+              <ThemedText>
+                Loading date <ThemedText color="red">*</ThemedText>
+              </ThemedText>
+
+              <TouchableOpacity onPress={() => setShowLoadingDatePicker(true)}>
+                <Input
+                  value={
+                    loadingDate
+                      ? new Date(loadingDate).toLocaleDateString()
+                      : ""
+                  }
+                  placeholder="Select loading date"
+                  editable={false}
+                />
+              </TouchableOpacity>
+
+              {showLoadingDatePicker && (
+                <DateTimePicker
+                  value={
+                    loadingDate
+                      ? new Date(loadingDate)
+                      : new Date()
+                  }
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowLoadingDatePicker(false);
+                    if (selectedDate) {
+                      setLoadingDate(selectedDate.toISOString());
+                    }
+                  }}
+                />
+              )}
+
+              <ThemedText>
+                Delivery Date <ThemedText color="red">*</ThemedText>
+              </ThemedText>
+
+              <TouchableOpacity onPress={() => setShowDeliveryDatePicker(true)}>
+                <Input
+                  value={
+                    deliveryDate
+                      ? new Date(deliveryDate).toLocaleDateString()
+                      : ""
+                  }
+                  placeholder="Select delivery date"
+                  editable={false}
+                />
+              </TouchableOpacity>
+
+              {showDeliveryDatePicker && (
+                <DateTimePicker
+                  value={
+                    deliveryDate
+                      ? new Date(deliveryDate)
+                      : new Date()
+                  }
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowDeliveryDatePicker(false);
+                    if (selectedDate) {
+                      setDeliveryDate(selectedDate.toISOString());
+                    }
+                  }}
+                />
+              )}
+
+              <ThemedText>
+                Requirements<ThemedText color="red">*</ThemedText>
+              </ThemedText>
+              <Input
+                value={requirements}
+                onChangeText={setRequirements}
+              />
+              <ThemedText>
+                Additional Information<ThemedText color="red">*</ThemedText>
+              </ThemedText>
+              <Input
+                multiline
+                value={additionalInfo}
+                onChangeText={setAdditionalInfo}
+              />
+
+              <ThemedText>
+                Alert Message<ThemedText color="red">*</ThemedText>
+              </ThemedText>
+              <Input
+                value={alertMsg}
+                onChangeText={setAlertMsg}
+              />
+              <ThemedText>
+                Fuel & Tolls Infomation<ThemedText color="red">*</ThemedText>
+              </ThemedText>
+              <Input
+                value={fuelAvai}
+                onChangeText={setFuelAvai}
+              />
+
+              {
+                ((proofImages.length > 0 || proofDocuments.length > 0)) ? (
                   <View>
-                    <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
-                      {(proofImages.length + proofDocuments.length)}/6 files uploaded
+                    <ThemedText style={{ marginBottom: wp(2), fontWeight: 'bold' }}>
+                      Proof of Order
                     </ThemedText>
 
-                    {proofImages.length > 0 && (
-                      <View style={{ marginBottom: wp(3) }}>
-                        <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2), color: '#004d40' }}>
-                          Images ({proofImages.length})
-                        </ThemedText>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                          {proofImages.map((image, index) => (
-                            <View
-                              key={`img-${index}`}
-                              style={{
-                                width: wp(30),
-                                marginRight: wp(2),
-                                backgroundColor: '#f9f9f9',
-                                borderRadius: 8,
-                                padding: 10,
-                                shadowColor: '#000',
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.1,
-                                shadowRadius: 2,
-                                elevation: 2,
-                                position: 'relative',
-                              }}
-                            >
-                              <TouchableOpacity
-                                onPress={() => {
-                                  setProofImages(prev => prev.filter((_, i) => i !== index));
-                                }}
-                                style={{
-                                  position: 'absolute',
-                                  top: -5,
-                                  right: -5,
-                                  backgroundColor: 'white',
-                                  borderRadius: 10,
-                                  zIndex: 1,
-                                }}
-                              >
-                                <Ionicons name="close-circle" size={20} color="red" />
-                              </TouchableOpacity>
+                    <View>
+                      <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
+                        {(proofImages.length + proofDocuments.length)}/6 files uploaded
+                      </ThemedText>
 
-                              <Image
-                                source={{ uri: image.uri }}
-                                style={{
-                                  width: '100%',
-                                  height: wp(20),
-                                  borderRadius: 8,
-                                }}
-                                resizeMode="cover"
-                              />
-                              <ThemedText
-                                style={{
-                                  marginTop: 8,
-                                  textAlign: 'center',
-                                  fontSize: 13,
-                                  color: '#004d40',
-                                  fontWeight: '600',
-                                }}
-                              >
-                                Image {index + 1}
-                              </ThemedText>
-                            </View>
-                          ))}
-                        </ScrollView>
-                      </View>
-                    )}
-
-                    {proofDocuments.length > 0 && (
-                      <View style={{ marginBottom: wp(3) }}>
-                        <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2), color: '#004d40' }}>
-                          Documents ({proofDocuments.length})
-                        </ThemedText>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                          {proofDocuments.map((file, index) => (
-                            <View
-                              key={`doc-${index}`}
-                              style={{
-                                width: wp(30),
-                                marginRight: wp(2),
-                                backgroundColor: '#f9f9f9',
-                                borderRadius: 8,
-                                padding: 10,
-                                shadowColor: '#000',
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.1,
-                                shadowRadius: 2,
-                                elevation: 2,
-                                position: 'relative',
-                              }}
-                            >
-                              <TouchableOpacity
-                                onPress={() => {
-                                  setProofDocuments(prev => prev.filter((_, i) => i !== index));
-                                  setProofDocumentTypes(prev => prev.filter((_, i) => i !== index));
-                                }}
-                                style={{
-                                  position: 'absolute',
-                                  top: -5,
-                                  right: -5,
-                                  backgroundColor: 'white',
-                                  borderRadius: 10,
-                                  zIndex: 1,
-                                }}
-                              >
-                                <Ionicons name="close-circle" size={20} color="red" />
-                              </TouchableOpacity>
-
+                      {proofImages.length > 0 && (
+                        <View style={{ marginBottom: wp(3) }}>
+                          <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2), color: '#004d40' }}>
+                            Images ({proofImages.length})
+                          </ThemedText>
+                          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            {proofImages.map((image, index) => (
                               <View
+                                key={`img-${index}`}
                                 style={{
-                                  justifyContent: 'center',
-                                  alignItems: 'center',
-                                  height: wp(20),
-                                  backgroundColor: '#e0f2f1',
+                                  width: wp(30),
+                                  marginRight: wp(2),
+                                  backgroundColor: '#f9f9f9',
                                   borderRadius: 8,
+                                  padding: 10,
+                                  shadowColor: '#000',
+                                  shadowOffset: { width: 0, height: 2 },
+                                  shadowOpacity: 0.1,
+                                  shadowRadius: 2,
+                                  elevation: 2,
+                                  position: 'relative',
                                 }}
                               >
-                                <Ionicons
-                                  name={proofDocumentTypes[index] === 'pdf' ? 'document-text' : 'document'}
-                                  size={40}
-                                  color="#004d40"
-                                />
-                              </View>
-                              <ThemedText
-                                style={{
-                                  marginTop: 8,
-                                  textAlign: 'center',
-                                  fontSize: 13,
-                                  color: '#004d40',
-                                  fontWeight: '600',
-                                }}
-                              >
-                                {file.name}
-                              </ThemedText>
-                            </View>
-                          ))}
-                        </ScrollView>
-                      </View>
-                    )}
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    setProofImages(prev => prev.filter((_, i) => i !== index));
+                                  }}
+                                  style={{
+                                    position: 'absolute',
+                                    top: -5,
+                                    right: -5,
+                                    backgroundColor: 'white',
+                                    borderRadius: 10,
+                                    zIndex: 1,
+                                  }}
+                                >
+                                  <Ionicons name="close-circle" size={20} color="red" />
+                                </TouchableOpacity>
 
-                    {(proofImages.length + proofDocuments.length) < 6 && (
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: wp(2) }}>
-                        <TouchableOpacity
-                          onPress={() => selectManyImages(setProofImages, false, 6 - proofDocuments.length, proofImages.length)}
-                          style={{
-                            backgroundColor: '#1E90FF',
-                            height: 45,
-                            justifyContent: 'center',
-                            paddingHorizontal: 20,
-                            borderRadius: 8,
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.25,
-                            shadowRadius: 3.84,
-                            elevation: 5,
-                          }}
-                        >
+                                <Image
+                                  source={{ uri: image.uri }}
+                                  style={{
+                                    width: '100%',
+                                    height: wp(20),
+                                    borderRadius: 8,
+                                  }}
+                                  resizeMode="cover"
+                                />
+                                <ThemedText
+                                  style={{
+                                    marginTop: 8,
+                                    textAlign: 'center',
+                                    fontSize: 13,
+                                    color: '#004d40',
+                                    fontWeight: '600',
+                                  }}
+                                >
+                                  Image {index + 1}
+                                </ThemedText>
+                              </View>
+                            ))}
+                          </ScrollView>
+                        </View>
+                      )}
+
+                      {proofDocuments.length > 0 && (
+                        <View style={{ marginBottom: wp(3) }}>
+                          <ThemedText style={{ fontSize: 14, fontWeight: 'bold', marginBottom: wp(2), color: '#004d40' }}>
+                            Documents ({proofDocuments.length})
+                          </ThemedText>
+                          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            {proofDocuments.map((file, index) => (
+                              <View
+                                key={`doc-${index}`}
+                                style={{
+                                  width: wp(30),
+                                  marginRight: wp(2),
+                                  backgroundColor: '#f9f9f9',
+                                  borderRadius: 8,
+                                  padding: 10,
+                                  shadowColor: '#000',
+                                  shadowOffset: { width: 0, height: 2 },
+                                  shadowOpacity: 0.1,
+                                  shadowRadius: 2,
+                                  elevation: 2,
+                                  position: 'relative',
+                                }}
+                              >
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    setProofDocuments(prev => prev.filter((_, i) => i !== index));
+                                    setProofDocumentTypes(prev => prev.filter((_, i) => i !== index));
+                                  }}
+                                  style={{
+                                    position: 'absolute',
+                                    top: -5,
+                                    right: -5,
+                                    backgroundColor: 'white',
+                                    borderRadius: 10,
+                                    zIndex: 1,
+                                  }}
+                                >
+                                  <Ionicons name="close-circle" size={20} color="red" />
+                                </TouchableOpacity>
+
+                                <View
+                                  style={{
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    height: wp(20),
+                                    backgroundColor: '#e0f2f1',
+                                    borderRadius: 8,
+                                  }}
+                                >
+                                  <Ionicons
+                                    name={proofDocumentTypes[index] === 'pdf' ? 'document-text' : 'document'}
+                                    size={40}
+                                    color="#004d40"
+                                  />
+                                </View>
+                                <ThemedText
+                                  style={{
+                                    marginTop: 8,
+                                    textAlign: 'center',
+                                    fontSize: 13,
+                                    color: '#004d40',
+                                    fontWeight: '600',
+                                  }}
+                                >
+                                  {file.name}
+                                </ThemedText>
+                              </View>
+                            ))}
+                          </ScrollView>
+                        </View>
+                      )}
+
+                      {(proofImages.length + proofDocuments.length) < 6 && (
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: wp(2) }}>
+                          <TouchableOpacity
+                            onPress={() => selectManyImages(setProofImages, false, 6 - proofDocuments.length, proofImages.length)}
+                            style={{
+                              backgroundColor: '#1E90FF',
+                              height: 45,
+                              justifyContent: 'center',
+                              paddingHorizontal: 20,
+                              borderRadius: 8,
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.25,
+                              shadowRadius: 3.84,
+                              elevation: 5,
+                            }}
+                          >
+                            <ThemedText
+                              style={{
+                                textAlign: 'center',
+                                color: 'white',
+                                fontWeight: '600',
+                                fontSize: 12,
+                              }}
+                            >
+                              Add Images
+                            </ThemedText>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6 - proofImages.length, proofDocuments.length)}
+                            style={{
+                              backgroundColor: '#004d40',
+                              height: 45,
+                              justifyContent: 'center',
+                              paddingHorizontal: 20,
+                              borderRadius: 8,
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.25,
+                              shadowRadius: 3.84,
+                              elevation: 5,
+                            }}
+                          >
+                            <ThemedText
+                              style={{
+                                textAlign: 'center',
+                                color: 'white',
+                                fontWeight: '600',
+                                fontSize: 12,
+                              }}
+                            >
+                              Add Documents
+                            </ThemedText>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
+
+                  </View>
+                ) : (
+                  <View>
+                    <ThemedText style={{ fontSize: 13.6, fontWeight: 'bold', textAlign: "center", color: "#1E90FF", }}>
+                      Upload: Proof of Load Request
+                    </ThemedText>
+                    <ThemedText type="tiny">
+                      Upload images, PDFs, or Word documents proving this load is real and needs a truck. (Max 6 files)
+                    </ThemedText>
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: wp(3) }}>
+                      <TouchableOpacity
+                        onPress={() => selectManyImages(setProofImages, false, 6, proofImages.length)}
+                        style={{
+                          backgroundColor: '#1E90FF',
+                          height: 45,
+                          justifyContent: 'center',
+                          paddingHorizontal: 20,
+                          borderRadius: 8,
+                          shadowColor: '#000',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.25,
+                          shadowRadius: 3.84,
+                          elevation: 5,
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                          <Ionicons name="camera" size={16} color="white" style={{ marginRight: 8 }} />
                           <ThemedText
                             style={{
                               textAlign: 'center',
                               color: 'white',
                               fontWeight: '600',
-                              fontSize: 12,
+                              fontSize: 14,
                             }}
                           >
                             Add Images
                           </ThemedText>
-                        </TouchableOpacity>
+                        </View>
+                      </TouchableOpacity>
 
-                        <TouchableOpacity
-                          onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6 - proofImages.length, proofDocuments.length)}
-                          style={{
-                            backgroundColor: '#004d40',
-                            height: 45,
-                            justifyContent: 'center',
-                            paddingHorizontal: 20,
-                            borderRadius: 8,
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.25,
-                            shadowRadius: 3.84,
-                            elevation: 5,
-                          }}
-                        >
+                      <TouchableOpacity
+                        onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6, proofDocuments.length)}
+                        style={{
+                          backgroundColor: '#004d40',
+                          height: 45,
+                          justifyContent: 'center',
+                          paddingHorizontal: 20,
+                          borderRadius: 8,
+                          shadowColor: '#000',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.25,
+                          shadowRadius: 3.84,
+                          elevation: 5,
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                          <Ionicons name="document-text" size={16} color="white" style={{ marginRight: 8 }} />
                           <ThemedText
                             style={{
                               textAlign: 'center',
                               color: 'white',
                               fontWeight: '600',
-                              fontSize: 12,
+                              fontSize: 14,
                             }}
                           >
                             Add Documents
                           </ThemedText>
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                  </View>
-
-                </View>
-              ) : (
-                <View>
-                  <ThemedText style={{ fontSize: 13.6, fontWeight: 'bold', textAlign: "center", color: "#1E90FF", }}>
-                    Upload: Proof of Load Request
-                  </ThemedText>
-                  <ThemedText type="tiny">
-                    Upload images, PDFs, or Word documents proving this load is real and needs a truck. (Max 6 files)
-                  </ThemedText>
-
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: wp(3) }}>
-                    <TouchableOpacity
-                      onPress={() => selectManyImages(setProofImages, false, 6, proofImages.length)}
-                      style={{
-                        backgroundColor: '#1E90FF',
-                        height: 45,
-                        justifyContent: 'center',
-                        paddingHorizontal: 20,
-                        borderRadius: 8,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 3.84,
-                        elevation: 5,
-                      }}
-                    >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                        <Ionicons name="camera" size={16} color="white" style={{ marginRight: 8 }} />
-                        <ThemedText
-                          style={{
-                            textAlign: 'center',
-                            color: 'white',
-                            fontWeight: '600',
-                            fontSize: 14,
-                          }}
-                        >
-                          Add Images
-                        </ThemedText>
-                      </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      onPress={() => pickDocumentsOnly(setProofDocuments, setProofDocumentTypes, 6, proofDocuments.length)}
-                      style={{
-                        backgroundColor: '#004d40',
-                        height: 45,
-                        justifyContent: 'center',
-                        paddingHorizontal: 20,
-                        borderRadius: 8,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 3.84,
-                        elevation: 5,
-                      }}
-                    >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                        <Ionicons name="document-text" size={16} color="white" style={{ marginRight: 8 }} />
-                        <ThemedText
-                          style={{
-                            textAlign: 'center',
-                            color: 'white',
-                            fontWeight: '600',
-                            fontSize: 14,
-                          }}
-                        >
-                          Add Documents
-                        </ThemedText>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )
-            }
-
-          </View>
-          <Divider />
-          <View style={{ paddingVertical: wp(3), gap: wp(2), borderRadius: 8, shadowColor: "#6a0c0c", shadowOffset: { width: 1, height: 2 }, shadowOpacity: 0.7, shadowRadius: 5, overflow: "hidden", }}>
-            <Button onPress={() => setStep(step - 1)} title="Back" />
-            <Button onPress={() => setStep(step + 1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
-            <View style={{ height: 100 }} />
-          </View>
-        </ScrollView>
-      )}
-
-      {/* ============ RETURN LOAD (only shown when toggle is ON — unchanged content) ============ */}
-      {currentStepKey === 'returnLoad' && (
-        <ScrollView keyboardShouldPersistTaps="always">
-          <View style={styles.viewMainDsp}>
-            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-              Return Load
-            </ThemedText>
-            <Divider />
-
-            <TouchableOpacity style={{ marginTop: wp(3) }} onPress={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: wp(2) }} onTouchEnd={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}>
-
-                <View
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderWidth: 2,
-                    borderColor: useDifferentReturnLocation ? accent : coolGray,
-                    borderRadius: 4,
-                    backgroundColor: useDifferentReturnLocation ? accent : 'transparent',
-                    marginRight: wp(2),
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  }}
-                >
-                  {useDifferentReturnLocation && (
-                    <Ionicons name="checkmark" size={12} color="white" />
-                  )}
-                </View>
-                <ThemedText style={{ flex: 1, fontSize: 14, fontWeight: '600' }}>
-                  Use different return load locations
-                </ThemedText>
-              </View>
-
-              <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
-                Check this if the return load pickup and delivery locations are different from the main load
-              </ThemedText>
-
-              {useDifferentReturnLocation && (
-                <LocationSelector
-                  origin={returnOrigin}
-                  destination={returnDestination}
-                  setOrigin={setReturnOrigin}
-                  setDestination={setReturnDestination}
-                  dspFromLocation={returnDspFromLocation}
-                  setDspFromLocation={setReturnDspFromLocation}
-                  dspToLocation={returnDspToLocation}
-                  setDspToLocation={setReturnDspToLocation}
-                  locationPicKERdSP={returnLocationPicKERdSP}
-                  setPickLocationOnMap={setReturnPickLocationOnMap}
-                  distance={returnDistance}
-                  duration={returnDuration}
-                  durationInTraffic={returnDurationInTraffic}
-                  iconColor="#2196F3"
-                />
-              )}
-            </TouchableOpacity>
-
-            <ThemedText>
-              Return Load<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-            <Input
-              value={returnLoad || ""}
-              onChangeText={(text) => setReturnLoad(text || "")}
-              placeholder="Enter return load details"
-            />
-            <RateInput
-              rate={returnRate || ""}
-              setRate={(rate) => setReturnRate(rate || "")}
-              selectedCurrency={selectedReturnCurrency || { id: 1, name: "USD" }}
-              setSelectedCurrency={setSelectedReturnCurrency}
-              selectedModelType={selectedReturnModelType || { id: 1, name: "Solid" }}
-              setSelectedModelType={setSelectedReturnModelType}
-              rateExplanation={returnTerms || ""}
-              setRateExplanation={(terms) => setReturnTerms(terms || "")}
-              isReturnRate={true}
-            />
-
-            <ThemedText>
-              Return Terms<ThemedText color="red">*</ThemedText>
-            </ThemedText>
-            <Input
-              value={returnTerms || ""}
-              onChangeText={(text) => setReturnTerms(text || "")}
-              placeholder="Enter return load terms"
-            />
-
-          </View>
-          <Divider />
-          <View style={styles.viewMainDsp}>
-            <Button onPress={() => setStep(step - 1)} title="Back" />
-            <Button onPress={() => setStep(step + 1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
-          </View>
-        </ScrollView>
-      )}
-
-      {/* ============ TRUCK REQ (Load Visibility moved out, truck lists now paginated + scrollable) ============ */}
-      {currentStepKey === 'truckReq' && (
-        <ScrollView>
-          <View style={styles.viewMainDsp}>
-            <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
-              {currentRole?.accType === 'fleet' ? 'Select Fleet Trucks & Drivers' : 'Truck Requirements'}
-            </ThemedText>
-            <Divider />
-
-            {/* Load Visibility selector now lives on the Basic Info step — nothing else here changed */}
-
-            {currentRole?.accType === 'fleet' && (loadVisibility === 'Private' || loadVisibility === 'Both') ? (
-              <>
-                <ThemedText>Search Trucks</ThemedText>
-                <Input
-                  value={truckSearchQuery}
-                  onChangeText={(text) => {
-                    setTruckSearchQuery(text);
-                    setDisplayedTruckCount(10); // reset pagination whenever the filter changes
-                    if (text.trim() === '') {
-                      setSearchedTrucks(fleetTrucks);
-                    } else {
-                      const filtered = fleetTrucks.filter(truck =>
-                        truck.truckName?.toLowerCase().includes(text.toLowerCase()) ||
-                        truck.registrationNumber?.toLowerCase().includes(text.toLowerCase()) ||
-                        truck.truckType?.toLowerCase().includes(text.toLowerCase())
-                      );
-                      setSearchedTrucks(filtered);
-                    }
-                  }}
-                  placeholder="Search by registration or type"
-                />
-
-                <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>
-                  Available Trucks ({searchedTrucks.length})
-                </ThemedText>
-
-                <View style={{ maxHeight: hp(48), marginTop: wp(1) }}>
-                  <ScrollView nestedScrollEnabled showsVerticalScrollIndicator keyboardShouldPersistTaps="always">
-                    {searchedTrucks.slice(0, displayedTruckCount).map((truck, index) => {
-                  const truckDrivers = fleetDriversFromTrucks.filter(driver => driver.truckId === truck.id)
-                  const defaultDriver = fleetDriversFromTrucks.find(driver => driver.truckId === truck.id && (driver.role === 'main' || driver.isDefault));
-                  const assignment = assignments.find(a => a.truckId === truck.id);
-
-                  return (
-                    <View key={truck.truckId || index} style={{
-                      marginVertical: wp(1),
-                      borderRadius: 8,
-                      backgroundColor: backgroundLight,
-                      borderWidth: 1,
-                      borderColor: '#E0E0E0',
-                      overflow: 'hidden'
-                    }}>
-                      <TouchableOpacity
-                        onPress={() => {
-                          const exists = selectedFleetTrucks.find(
-                            t => t.id === truck.id
-                          );
-                          if (exists) {
-                            setSelectedFleetTrucks(prev =>
-                              prev.filter(t => t.id !== truck.id)
-                            );
-                            setAssignments(prev =>
-                              prev.filter(a => a.truckId !== truck.id)
-                            );
-                            setExpandedTruckIds(prev => prev.filter(id => id !== truck.id));
-                          } else {
-                            setSelectedFleetTrucks(prev => [
-                              ...prev,
-                              truck
-                            ]);
-                            setExpandedTruckIds(prev => [...prev, truck.id]);
-                          }
-                        }}
-                        style={{
-                          padding: wp(3),
-                          borderBottomWidth: truckDrivers.length > 0 ? 1 : 0,
-                          borderBottomColor: '#E0E0E0',
-                          backgroundColor: selectedFleetTrucks.some(t => t.id === truck.id)
-                            ? 'rgba(33, 150, 243, 0.1)'
-                            : 'transparent',
-                        }}
-                      >
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <Ionicons
-                            name={selectedFleetTrucks.some(t => t.id === truck.id) ? "checkbox" : "square-outline"}
-                            size={20}
-                            color={selectedFleetTrucks.some(t => t.id === truck.id) ? '#2196F3' : '#666'}
-                            style={{ marginRight: wp(2) }}
-                          />
-
-                          <View style={{ flex: 1 }}>
-                            <ThemedText style={{ fontWeight: '600' }}>{truck.truckName}</ThemedText>
-                            <ThemedText style={{ fontSize: 12, color: '#666' }}>{truck.truckType} - {truck.truckCapacity}</ThemedText>
-                          </View>
-                          {truckDrivers.length > 0 && (
-                            <ThemedText style={{ fontSize: 12, color: '#666' }}>
-                              {truckDrivers.length} driver{truckDrivers.length !== 1 ? 's' : ''}
-                            </ThemedText>
-                          )}
                         </View>
                       </TouchableOpacity>
-
-                      {expandedTruckIds.includes(truck.id) && (
-                        <View style={{
-                          padding: wp(3),
-                          borderTopWidth: 1,
-                          borderColor: '#eee'
-                        }}>
-                          <ThemedText
-                            style={{
-                              fontWeight: '700',
-                              marginBottom: wp(2)
-                            }}
-                          >
-                            Assign Driver (Optional)
-                          </ThemedText>
-
-                          <Input
-                            placeholder="Search driver..."
-                            value={
-                              driverSearchQueries[truck.id] || ''
-                            }
-                            onChangeText={(text) => {
-                              setDriverSearchQueries(prev => ({
-                                ...prev,
-                                [truck.id]: text
-                              }))
-                            }}
-                          />
-
-                          {defaultDriver && (
-                            <TouchableOpacity
-                              onPress={() => {
-                                setAssignments(prev => [
-                                  ...prev.filter(
-                                    a => a.truckId !== truck.id
-                                  ),
-                                  {
-                                    truckId: truck.id,
-                                    driverId: defaultDriver.driverId,
-                                    driverName: defaultDriver.fullName,
-                                    pickupDate: loadingDate,
-                                    deliveryDate: deliveryDate,
-                                    pickupLocation: origin,
-                                    deliveryLocation: destination,
-                                    isDefault: true
-                                  }
-                                ])
-                              }}
-                              style={{
-                                marginTop: wp(2),
-                                padding: wp(2),
-                                borderRadius: 8,
-                                backgroundColor: 'rgba(33,150,243,0.15)',
-                                borderWidth: 1,
-                                borderColor: '#2196F3'
-                              }}
-                            >
-                              <ThemedText>
-                                ⭐ Default - {defaultDriver.fullName}
-                              </ThemedText>
-                            </TouchableOpacity>
-                          )}
-
-                          {driverSearchQueries[truck.id]?.length > 0 &&
-                            fleetDrivers
-                              .filter(d =>
-                                d.fullName
-                                  ?.toLowerCase()
-                                  .includes(
-                                    driverSearchQueries[truck.id]
-                                      .toLowerCase()
-                                  )
-                              )
-                              .map(driver => {
-                                const selected =
-                                  assignments.find(
-                                    a =>
-                                      a.driverId === driver.driverId &&
-                                      a.truckId === truck.id
-                                  )
-
-                                return (
-                                  <TouchableOpacity
-                                    key={driver.driverId}
-                                    onPress={() => {
-                                      if (selected) {
-                                        setAssignments(prev =>
-                                          prev.filter(
-                                            a => a.driverId !== driver.driverId ||
-                                              a.truckId !== truck.id
-                                          )
-                                        )
-                                      } else {
-                                        setAssignments(prev => [
-                                          ...prev,
-                                          {
-                                            truckId: truck.id,
-                                            driverId: driver.driverId,
-                                            driverName: driver.fullName,
-                                            pickupDate: loadingDate,
-                                            deliveryDate: deliveryDate,
-                                            pickupLocation: origin,
-                                            deliveryLocation: destination,
-                                            isDefault: false
-                                          }
-                                        ])
-                                      }
-                                    }}
-                                    style={{
-                                      marginTop: wp(1),
-                                      padding: wp(2),
-                                      borderRadius: 8,
-                                      borderWidth: 1,
-                                      backgroundColor: selected
-                                        ? 'rgba(76,175,80,.15)'
-                                        : 'transparent'
-                                    }}
-                                  >
-                                    <View style={{
-                                      flexDirection: 'row',
-                                      alignItems: 'center'
-                                    }}>
-                                      <Ionicons
-                                        name={
-                                          selected
-                                            ? 'checkbox'
-                                            : 'square-outline'
-                                        }
-                                        color={selected ? '#4CAF50' : '#ddd'}
-                                        size={18}
-                                      />
-                                      <ThemedText
-                                        style={{
-                                          marginLeft: wp(2)
-                                        }}
-                                      >
-                                        {driver.fullName}
-                                      </ThemedText>
-                                    </View>
-                                  </TouchableOpacity>
-                                )
-                              })
-                          }
-
-                          {assignments.some(
-                            a => a.truckId === truck.id
-                          ) && (
-                              <View style={{ marginTop: wp(3) }}>
-                                <LocationSelector
-                                  origin={assignment?.pickupLocation || null}
-                                  destination={assignment?.deliveryLocation || null}
-                                  setOrigin={(location) => {
-                                    setAssignments(prev =>
-                                      prev.map(a =>
-                                        a.truckId === truck.id
-                                          ? { ...a, pickupLocation: location }
-                                          : a
-                                      )
-                                    );
-                                  }}
-                                  setDestination={(location) => {
-                                    setAssignments(prev =>
-                                      prev.map(a =>
-                                        a.truckId === truck.id
-                                          ? { ...a, deliveryLocation: location }
-                                          : a
-                                      )
-                                    );
-                                  }}
-                                  dspFromLocation={assignmentDspFromLocation}
-                                  setDspFromLocation={setAssignmentDspFromLocation}
-                                  dspToLocation={assignmentDspToLocation}
-                                  setDspToLocation={setAssignmentDspToLocation}
-                                  locationPicKERdSP={assignmentLocationPicKERdSP}
-                                  setPickLocationOnMap={setAssignmentPickLocationOnMap}
-                                  distance={assignmentDistance}
-                                  duration={assignmentDuration}
-                                  durationInTraffic={assignmentDurationInTraffic}
-                                  iconColor={accent}
-                                />
-
-                                <TouchableOpacity
-                                  onPress={() => setPickupDateTruckId(truck.id)}
-                                  style={{
-                                    borderWidth: 1,
-                                    borderColor: '#ddd',
-                                    borderRadius: 8,
-                                    padding: wp(3),
-                                    marginTop: wp(2),
-                                  }}
-                                >
-                                  <ThemedText>
-                                    {
-                                      assignments.find(a => a.truckId === truck.id)?.pickupDate
-                                        ? new Date(
-                                          assignments.find(a => a.truckId === truck.id)!.pickupDate!
-                                        ).toLocaleDateString()
-                                        : 'Select Pickup Date'
-                                    }
-                                  </ThemedText>
-                                </TouchableOpacity>
-
-                                {pickupDateTruckId === truck.id && (
-                                  <DateTimePicker
-                                    value={
-                                      assignments.find(a => a.truckId === truck.id)?.pickupDate
-                                        ? new Date(
-                                          assignments.find(a => a.truckId === truck.id)!.pickupDate!
-                                        )
-                                        : new Date()
-                                    }
-                                    mode="date"
-                                    display="default"
-                                    onChange={(event, selectedDate) => {
-                                      setPickupDateTruckId(null);
-                                      if (selectedDate) {
-                                        setAssignments(prev =>
-                                          prev.map(a =>
-                                            a.truckId === truck.id
-                                              ? {
-                                                ...a,
-                                                pickupDate: selectedDate.toISOString(),
-                                              }
-                                              : a
-                                          )
-                                        );
-                                      }
-                                    }}
-                                  />
-                                )}
-
-                                <TouchableOpacity
-                                  onPress={() => setDeliveryDateTruckId(truck.id)}
-                                  style={{
-                                    borderWidth: 1,
-                                    borderColor: '#ddd',
-                                    borderRadius: 8,
-                                    padding: wp(3),
-                                    marginTop: wp(2),
-                                  }}
-                                >
-                                  <ThemedText>
-                                    {
-                                      assignments.find(a => a.truckId === truck.id)?.deliveryDate
-                                        ? new Date(
-                                          assignments.find(a => a.truckId === truck.id)!.deliveryDate!
-                                        ).toLocaleDateString()
-                                        : 'Select Delivery Date'
-                                    }
-                                  </ThemedText>
-                                </TouchableOpacity>
-
-                                {deliveryDateTruckId === truck.id && (
-                                  <DateTimePicker
-                                    value={
-                                      assignments.find(a => a.truckId === truck.id)?.deliveryDate
-                                        ? new Date(
-                                          assignments.find(a => a.truckId === truck.id)!.deliveryDate!
-                                        )
-                                        : new Date()
-                                    }
-                                    mode="date"
-                                    display="default"
-                                    onChange={(event, selectedDate) => {
-                                      setDeliveryDateTruckId(null);
-                                      if (selectedDate) {
-                                        setAssignments(prev =>
-                                          prev.map(a =>
-                                            a.truckId === truck.id
-                                              ? {
-                                                ...a,
-                                                deliveryDate: selectedDate.toISOString(),
-                                              }
-                                              : a
-                                          )
-                                        );
-                                      }
-                                    }}
-                                  />
-                                )}
-                              </View>
-                            )}
-                        </View>
-                      )}
                     </View>
-                  );
-                })}
-                  </ScrollView>
+                  </View>
+                )
+              }
+
+            </View>
+            <Divider />
+            <View style={{ paddingVertical: wp(3), gap: wp(2), borderRadius: 8, shadowColor: "#6a0c0c", shadowOffset: { width: 1, height: 2 }, shadowOpacity: 0.7, shadowRadius: 5, overflow: "hidden", }}>
+              <Button onPress={() => setStep(step - 1)} title="Back" />
+              <Button onPress={() => setStep(step + 1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
+              <View style={{ height: 100 }} />
+            </View>
+          </ScrollView>
+        )}
+
+        {/* ============ RETURN LOAD (only shown when toggle is ON — unchanged content) ============ */}
+        {currentStepKey === 'returnLoad' && (
+          <ScrollView keyboardShouldPersistTaps="always">
+            <View style={styles.viewMainDsp}>
+              <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
+                Return Load
+              </ThemedText>
+              <Divider />
+
+              <TouchableOpacity style={{ marginTop: wp(3) }} onPress={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: wp(2) }} onTouchEnd={() => setUseDifferentReturnLocation(!useDifferentReturnLocation)}>
+
+                  <View
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderWidth: 2,
+                      borderColor: useDifferentReturnLocation ? accent : coolGray,
+                      borderRadius: 4,
+                      backgroundColor: useDifferentReturnLocation ? accent : 'transparent',
+                      marginRight: wp(2),
+                      justifyContent: 'center',
+                      alignItems: 'center'
+                    }}
+                  >
+                    {useDifferentReturnLocation && (
+                      <Ionicons name="checkmark" size={12} color="white" />
+                    )}
+                  </View>
+                  <ThemedText style={{ flex: 1, fontSize: 14, fontWeight: '600' }}>
+                    Use different return load locations
+                  </ThemedText>
                 </View>
 
-                {searchedTrucks.length > displayedTruckCount && (
-                  <TouchableOpacity
-                    onPress={() => setDisplayedTruckCount(prev => prev + 10)}
-                    style={{
-                      marginTop: wp(2),
-                      padding: wp(2.5),
-                      borderRadius: 8,
-                      borderWidth: 1,
-                      borderColor: accent,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <ThemedText style={{ color: accent, fontWeight: '600' }}>
-                      Show More ({searchedTrucks.length - displayedTruckCount} remaining)
-                    </ThemedText>
-                  </TouchableOpacity>
-                )}
-
-                {loadVisibility === 'Both' && (
-                  <>
-                    <Divider />
-                    <ThemedText>
-                      Number of Public Trucks Needed<ThemedText color="red">*</ThemedText>
-                    </ThemedText>
-                    <Input
-                      value={numberOfTrucks}
-                      onChangeText={setNumberOfTrucks}
-                      placeholder='e.g., 1, 2, 5'
-                      keyboardType="numeric"
-                    />
-                    {renderTruckRequirements({ title: 'Public Truck Requirements' })}
-                  </>
-                )}
-              </>
-            ) : currentRole?.accType === 'fleet' && loadVisibility === 'Public' ? (
-              <>
-                <ThemedText>
-                  Number of Public Trucks Needed<ThemedText color="red">*</ThemedText>
+                <ThemedText style={{ fontSize: 12, color: '#666', marginBottom: wp(2) }}>
+                  Check this if the return load pickup and delivery locations are different from the main load
                 </ThemedText>
-                <Input
-                  value={numberOfTrucks}
-                  onChangeText={setNumberOfTrucks}
-                  placeholder='e.g., 1, 2, 5'
-                  keyboardType="numeric"
-                />
-                  {renderTruckRequirements({ title: 'Public Truck Requirements' })}
 
-              </>
-            ) : currentRole?.accType === 'brokerage' && (loadVisibility === 'Private' || loadVisibility === 'Both') ? (
-              <>
-                <ThemedText>Search Assigned Trucks</ThemedText>
-                <Input
-                  value={brokerTruckSearchQuery}
-                  onChangeText={(text) => {
-                    setBrokerTruckSearchQuery(text);
-                    setDisplayedBrokerTruckCount(10); // reset pagination whenever the filter changes
-                    if (text.trim() === '') {
-                      setSearchedBrokerTrucks(brokerTrucks);
-                    } else {
-                      const filtered = brokerTrucks.filter(truck =>
-                        truck.truckName?.toLowerCase().includes(text.toLowerCase()) ||
-                        truck.truckType?.toLowerCase().includes(text.toLowerCase())
-                      );
-                      setSearchedBrokerTrucks(filtered);
-                    }
-                  }}
-                  placeholder="Search by truck name or type"
-                />
-
-                <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>
-                  Available Assigned Trucks ({searchedBrokerTrucks.length})
-                </ThemedText>
-                <View style={{ maxHeight: hp(48), marginTop: wp(1) }}>
-                  <ScrollView nestedScrollEnabled showsVerticalScrollIndicator keyboardShouldPersistTaps="always">
-                    {searchedBrokerTrucks.slice(0, displayedBrokerTruckCount).map((truck, index) => (
-                  <TouchableOpacity
-                    key={truck.truckId || index}
-                    onPress={() => {
-                      if (selectedBrokerTrucks.find(t => t.truckId === truck.truckId)) {
-                        setSelectedBrokerTrucks(prev => prev.filter(t => t.truckId !== truck.truckId));
-                      } else {
-                        setSelectedBrokerTrucks(prev => [...prev, truck]);
-                      }
-                    }}
-                    style={{
-                      padding: wp(3),
-                      marginVertical: wp(1),
-                      borderRadius: 8,
-                      backgroundColor: backgroundLight,
-                      borderWidth: 1,
-                      borderColor: selectedBrokerTrucks.some(t => t.truckId === truck.truckId) ? accent : '#E0E0E0',
-                    }}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Ionicons
-                        name={selectedBrokerTrucks.some(t => t.truckId === truck.truckId) ? "checkbox" : "square-outline"}
-                        size={20}
-                        color={selectedBrokerTrucks.some(t => t.truckId === truck.truckId) ? accent : '#666'}
-                        style={{ marginRight: wp(2) }}
-                      />
-                      <View style={{ flex: 1 }}>
-                        <ThemedText style={{ fontWeight: '600' }}>{truck.truckName}</ThemedText>
-                        <ThemedText style={{ fontSize: 12, color: '#666' }}>{truck.truckType} - {truck.truckCapacity}</ThemedText>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-                  </ScrollView>
-                </View>
-
-                {searchedBrokerTrucks.length > displayedBrokerTruckCount && (
-                  <TouchableOpacity
-                    onPress={() => setDisplayedBrokerTruckCount(prev => prev + 10)}
-                    style={{
-                      marginTop: wp(2),
-                      padding: wp(2.5),
-                      borderRadius: 8,
-                      borderWidth: 1,
-                      borderColor: accent,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <ThemedText style={{ color: accent, fontWeight: '600' }}>
-                      Show More ({searchedBrokerTrucks.length - displayedBrokerTruckCount} remaining)
-                    </ThemedText>
-                  </TouchableOpacity>
+                {useDifferentReturnLocation && (
+                  <LocationSelector
+                    origin={returnOrigin}
+                    destination={returnDestination}
+                    setOrigin={setReturnOrigin}
+                    setDestination={setReturnDestination}
+                    dspFromLocation={returnDspFromLocation}
+                    setDspFromLocation={setReturnDspFromLocation}
+                    dspToLocation={returnDspToLocation}
+                    setDspToLocation={setReturnDspToLocation}
+                    locationPicKERdSP={returnLocationPicKERdSP}
+                    setPickLocationOnMap={setReturnPickLocationOnMap}
+                    distance={returnDistance}
+                    duration={returnDuration}
+                    durationInTraffic={returnDurationInTraffic}
+                    iconColor="#2196F3"
+                  />
                 )}
+              </TouchableOpacity>
 
-                {loadVisibility === 'Both' && (
-                  <>
-                    <Divider />
-                    <ThemedText>
-                      Number of Public Trucks Needed<ThemedText color="red">*</ThemedText>
-                    </ThemedText>
-                    <Input
-                      value={numberOfTrucks}
-                      onChangeText={setNumberOfTrucks}
-                      placeholder='e.g., 1, 2, 5'
-                      keyboardType="numeric"
-                    />
-                    {renderTruckRequirements({ title: 'Public Truck Requirements' })}
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-                <ThemedText>
-                  Number of Public Trucks Needed<ThemedText color="red">*</ThemedText>
-                </ThemedText>
-                <Input
-                  value={numberOfTrucks}
-                  onChangeText={setNumberOfTrucks}
-                  placeholder='e.g., 1, 2, 5'
-                  keyboardType="numeric"
-                />
-                {renderTruckRequirements()}
-              </>
-            )}
+              <ThemedText>
+                Return Load<ThemedText color="red">*</ThemedText>
+              </ThemedText>
+              <Input
+                value={returnLoad || ""}
+                onChangeText={(text) => setReturnLoad(text || "")}
+                placeholder="Enter return load details"
+              />
+              <RateInput
+                rate={returnRate || ""}
+                setRate={(rate) => setReturnRate(rate || "")}
+                selectedCurrency={selectedReturnCurrency || { id: 1, name: "USD" }}
+                setSelectedCurrency={setSelectedReturnCurrency}
+                selectedModelType={selectedReturnModelType || { id: 1, name: "Solid" }}
+                setSelectedModelType={setSelectedReturnModelType}
+                rateExplanation={returnTerms || ""}
+                setRateExplanation={(terms) => setReturnTerms(terms || "")}
+                isReturnRate={true}
+              />
 
+              <ThemedText>
+                Return Terms<ThemedText color="red">*</ThemedText>
+              </ThemedText>
+              <Input
+                value={returnTerms || ""}
+                onChangeText={(text) => setReturnTerms(text || "")}
+                placeholder="Enter return load terms"
+              />
+
+            </View>
             <Divider />
             <View style={styles.viewMainDsp}>
               <Button onPress={() => setStep(step - 1)} title="Back" />
-              <Button onPress={handleSubmit} title={isSubmitting ? "Submiting..." : "Submit"} disabled={isSubmitting} loading={isSubmitting} colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{ borderWidth: 1, borderColor: accent }} />
+              <Button onPress={() => setStep(step + 1)} title="Next" colors={{ text: '#0f9d58', bg: '#0f9d5824' }} />
             </View>
-          </View>
-          <View style={{ height: 25 }} />
-        </ScrollView>
-      )}
-    </View>
+          </ScrollView>
+        )}
 
-  </ScreenWrapper>
-);
+        {/* ============ TRUCK REQ (Load Visibility moved out, truck lists now paginated + scrollable) ============ */}
+        {currentStepKey === 'truckReq' && (
+          <ScrollView>
+            <View style={styles.viewMainDsp}>
+              <ThemedText style={{ alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: "#1E90FF" }}>
+                {currentRole?.accType === 'fleet' ? 'Select Fleet Trucks & Drivers' : 'Truck Requirements'}
+              </ThemedText>
+              <Divider />
+
+              {/* Load Visibility selector now lives on the Basic Info step — nothing else here changed */}
+
+              {currentRole?.accType === 'fleet' && (loadVisibility === 'Private' || loadVisibility === 'Both') ? (
+                <>
+                  <ThemedText>Search Trucks</ThemedText>
+                  <Input
+                    value={truckSearchQuery}
+                    onChangeText={(text) => {
+                      setTruckSearchQuery(text);
+                      setDisplayedTruckCount(10); // reset pagination whenever the filter changes
+                      if (text.trim() === '') {
+                        setSearchedTrucks(fleetTrucks);
+                      } else {
+                        const filtered = fleetTrucks.filter(truck =>
+                          truck.truckName?.toLowerCase().includes(text.toLowerCase()) ||
+                          truck.registrationNumber?.toLowerCase().includes(text.toLowerCase()) ||
+                          truck.truckType?.toLowerCase().includes(text.toLowerCase())
+                        );
+                        setSearchedTrucks(filtered);
+                      }
+                    }}
+                    placeholder="Search by registration or type"
+                  />
+
+                  <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>
+                    Available Trucks ({searchedTrucks.length})
+                  </ThemedText>
+
+                  <View style={{ maxHeight: hp(48), marginTop: wp(1) }}>
+                    <ScrollView nestedScrollEnabled showsVerticalScrollIndicator keyboardShouldPersistTaps="always">
+                      {searchedTrucks.slice(0, displayedTruckCount).map((truck, index) => {
+                        const truckDrivers = fleetDriversFromTrucks.filter(driver => driver.truckId === truck.id)
+                        const defaultDriver = fleetDriversFromTrucks.find(driver => driver.truckId === truck.id && (driver.role === 'main' || driver.isDefault));
+                        const assignment = assignments.find(a => a.truckId === truck.id);
+
+                        return (
+                          <View key={truck.truckId || index} style={{
+                            marginVertical: wp(1),
+                            borderRadius: 8,
+                            backgroundColor: backgroundLight,
+                            borderWidth: 1,
+                            borderColor: '#E0E0E0',
+                            overflow: 'hidden'
+                          }}>
+                            <TouchableOpacity
+                              onPress={() => {
+                                const exists = selectedFleetTrucks.find(
+                                  t => t.id === truck.id
+                                );
+                                if (exists) {
+                                  setSelectedFleetTrucks(prev =>
+                                    prev.filter(t => t.id !== truck.id)
+                                  );
+                                  setAssignments(prev =>
+                                    prev.filter(a => a.truckId !== truck.id)
+                                  );
+                                  setExpandedTruckIds(prev => prev.filter(id => id !== truck.id));
+                                } else {
+                                  setSelectedFleetTrucks(prev => [
+                                    ...prev,
+                                    truck
+                                  ]);
+                                  setExpandedTruckIds(prev => [...prev, truck.id]);
+                                }
+                              }}
+                              style={{
+                                padding: wp(3),
+                                borderBottomWidth: truckDrivers.length > 0 ? 1 : 0,
+                                borderBottomColor: '#E0E0E0',
+                                backgroundColor: selectedFleetTrucks.some(t => t.id === truck.id)
+                                  ? 'rgba(33, 150, 243, 0.1)'
+                                  : 'transparent',
+                              }}
+                            >
+                              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Ionicons
+                                  name={selectedFleetTrucks.some(t => t.id === truck.id) ? "checkbox" : "square-outline"}
+                                  size={20}
+                                  color={selectedFleetTrucks.some(t => t.id === truck.id) ? '#2196F3' : '#666'}
+                                  style={{ marginRight: wp(2) }}
+                                />
+
+                                <View style={{ flex: 1 }}>
+                                  <ThemedText style={{ fontWeight: '600' }}>{truck.truckName}</ThemedText>
+                                  <ThemedText style={{ fontSize: 12, color: '#666' }}>{truck.truckType} - {truck.truckCapacity}</ThemedText>
+                                </View>
+                                {truckDrivers.length > 0 && (
+                                  <ThemedText style={{ fontSize: 12, color: '#666' }}>
+                                    {truckDrivers.length} driver{truckDrivers.length !== 1 ? 's' : ''}
+                                  </ThemedText>
+                                )}
+                              </View>
+                            </TouchableOpacity>
+
+                            {expandedTruckIds.includes(truck.id) && (
+                              <View style={{
+                                padding: wp(3),
+                                borderTopWidth: 1,
+                                borderColor: '#eee'
+                              }}>
+                                <ThemedText
+                                  style={{
+                                    fontWeight: '700',
+                                    marginBottom: wp(2)
+                                  }}
+                                >
+                                  Assign Driver (Optional)
+                                </ThemedText>
+
+                                <Input
+                                  placeholder="Search driver..."
+                                  value={
+                                    driverSearchQueries[truck.id] || ''
+                                  }
+                                  onChangeText={(text) => {
+                                    setDriverSearchQueries(prev => ({
+                                      ...prev,
+                                      [truck.id]: text
+                                    }))
+                                  }}
+                                />
+
+                                {defaultDriver && (
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      setAssignments(prev => [
+                                        ...prev.filter(
+                                          a => a.truckId !== truck.id
+                                        ),
+                                        {
+                                          truckId: truck.id,
+                                          driverId: defaultDriver.driverId,
+                                          driverName: defaultDriver.fullName,
+                                          pickupDate: loadingDate,
+                                          deliveryDate: deliveryDate,
+                                          pickupLocation: origin,
+                                          deliveryLocation: destination,
+                                          isDefault: true
+                                        }
+                                      ])
+                                    }}
+                                    style={{
+                                      marginTop: wp(2),
+                                      padding: wp(2),
+                                      borderRadius: 8,
+                                      backgroundColor: 'rgba(33,150,243,0.15)',
+                                      borderWidth: 1,
+                                      borderColor: '#2196F3'
+                                    }}
+                                  >
+                                    <ThemedText>
+                                      ⭐ Default - {defaultDriver.fullName}
+                                    </ThemedText>
+                                  </TouchableOpacity>
+                                )}
+
+                                {driverSearchQueries[truck.id]?.length > 0 &&
+                                  fleetDrivers
+                                    .filter(d =>
+                                      d.fullName
+                                        ?.toLowerCase()
+                                        .includes(
+                                          driverSearchQueries[truck.id]
+                                            .toLowerCase()
+                                        )
+                                    )
+                                    .map(driver => {
+                                      const selected =
+                                        assignments.find(
+                                          a =>
+                                            a.driverId === driver.driverId &&
+                                            a.truckId === truck.id
+                                        )
+
+                                      return (
+                                        <TouchableOpacity
+                                          key={driver.driverId}
+                                          onPress={() => {
+                                            if (selected) {
+                                              setAssignments(prev =>
+                                                prev.filter(
+                                                  a => a.driverId !== driver.driverId ||
+                                                    a.truckId !== truck.id
+                                                )
+                                              )
+                                            } else {
+                                              setAssignments(prev => [
+                                                ...prev,
+                                                {
+                                                  truckId: truck.id,
+                                                  driverId: driver.driverId,
+                                                  driverName: driver.fullName,
+                                                  pickupDate: loadingDate,
+                                                  deliveryDate: deliveryDate,
+                                                  pickupLocation: origin,
+                                                  deliveryLocation: destination,
+                                                  isDefault: false
+                                                }
+                                              ])
+                                            }
+                                          }}
+                                          style={{
+                                            marginTop: wp(1),
+                                            padding: wp(2),
+                                            borderRadius: 8,
+                                            borderWidth: 1,
+                                            backgroundColor: selected
+                                              ? 'rgba(76,175,80,.15)'
+                                              : 'transparent'
+                                          }}
+                                        >
+                                          <View style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center'
+                                          }}>
+                                            <Ionicons
+                                              name={
+                                                selected
+                                                  ? 'checkbox'
+                                                  : 'square-outline'
+                                              }
+                                              color={selected ? '#4CAF50' : '#ddd'}
+                                              size={18}
+                                            />
+                                            <ThemedText
+                                              style={{
+                                                marginLeft: wp(2)
+                                              }}
+                                            >
+                                              {driver.fullName}
+                                            </ThemedText>
+                                          </View>
+                                        </TouchableOpacity>
+                                      )
+                                    })
+                                }
+
+                                {assignments.some(
+                                  a => a.truckId === truck.id
+                                ) && (
+                                    <View style={{ marginTop: wp(3) }}>
+                                      <LocationSelector
+                                        origin={assignment?.pickupLocation || null}
+                                        destination={assignment?.deliveryLocation || null}
+                                        setOrigin={(location) => {
+                                          setAssignments(prev =>
+                                            prev.map(a =>
+                                              a.truckId === truck.id
+                                                ? { ...a, pickupLocation: location }
+                                                : a
+                                            )
+                                          );
+                                        }}
+                                        setDestination={(location) => {
+                                          setAssignments(prev =>
+                                            prev.map(a =>
+                                              a.truckId === truck.id
+                                                ? { ...a, deliveryLocation: location }
+                                                : a
+                                            )
+                                          );
+                                        }}
+                                        dspFromLocation={assignmentDspFromLocation}
+                                        setDspFromLocation={setAssignmentDspFromLocation}
+                                        dspToLocation={assignmentDspToLocation}
+                                        setDspToLocation={setAssignmentDspToLocation}
+                                        locationPicKERdSP={assignmentLocationPicKERdSP}
+                                        setPickLocationOnMap={setAssignmentPickLocationOnMap}
+                                        distance={assignmentDistance}
+                                        duration={assignmentDuration}
+                                        durationInTraffic={assignmentDurationInTraffic}
+                                        iconColor={accent}
+                                      />
+
+                                      <TouchableOpacity
+                                        onPress={() => setPickupDateTruckId(truck.id)}
+                                        style={{
+                                          borderWidth: 1,
+                                          borderColor: '#ddd',
+                                          borderRadius: 8,
+                                          padding: wp(3),
+                                          marginTop: wp(2),
+                                        }}
+                                      >
+                                        <ThemedText>
+                                          {
+                                            assignments.find(a => a.truckId === truck.id)?.pickupDate
+                                              ? new Date(
+                                                assignments.find(a => a.truckId === truck.id)!.pickupDate!
+                                              ).toLocaleDateString()
+                                              : 'Select Pickup Date'
+                                          }
+                                        </ThemedText>
+                                      </TouchableOpacity>
+
+                                      {pickupDateTruckId === truck.id && (
+                                        <DateTimePicker
+                                          value={
+                                            assignments.find(a => a.truckId === truck.id)?.pickupDate
+                                              ? new Date(
+                                                assignments.find(a => a.truckId === truck.id)!.pickupDate!
+                                              )
+                                              : new Date()
+                                          }
+                                          mode="date"
+                                          display="default"
+                                          onChange={(event, selectedDate) => {
+                                            setPickupDateTruckId(null);
+                                            if (selectedDate) {
+                                              setAssignments(prev =>
+                                                prev.map(a =>
+                                                  a.truckId === truck.id
+                                                    ? {
+                                                      ...a,
+                                                      pickupDate: selectedDate.toISOString(),
+                                                    }
+                                                    : a
+                                                )
+                                              );
+                                            }
+                                          }}
+                                        />
+                                      )}
+
+                                      <TouchableOpacity
+                                        onPress={() => setDeliveryDateTruckId(truck.id)}
+                                        style={{
+                                          borderWidth: 1,
+                                          borderColor: '#ddd',
+                                          borderRadius: 8,
+                                          padding: wp(3),
+                                          marginTop: wp(2),
+                                        }}
+                                      >
+                                        <ThemedText>
+                                          {
+                                            assignments.find(a => a.truckId === truck.id)?.deliveryDate
+                                              ? new Date(
+                                                assignments.find(a => a.truckId === truck.id)!.deliveryDate!
+                                              ).toLocaleDateString()
+                                              : 'Select Delivery Date'
+                                          }
+                                        </ThemedText>
+                                      </TouchableOpacity>
+
+                                      {deliveryDateTruckId === truck.id && (
+                                        <DateTimePicker
+                                          value={
+                                            assignments.find(a => a.truckId === truck.id)?.deliveryDate
+                                              ? new Date(
+                                                assignments.find(a => a.truckId === truck.id)!.deliveryDate!
+                                              )
+                                              : new Date()
+                                          }
+                                          mode="date"
+                                          display="default"
+                                          onChange={(event, selectedDate) => {
+                                            setDeliveryDateTruckId(null);
+                                            if (selectedDate) {
+                                              setAssignments(prev =>
+                                                prev.map(a =>
+                                                  a.truckId === truck.id
+                                                    ? {
+                                                      ...a,
+                                                      deliveryDate: selectedDate.toISOString(),
+                                                    }
+                                                    : a
+                                                )
+                                              );
+                                            }
+                                          }}
+                                        />
+                                      )}
+                                    </View>
+                                  )}
+                              </View>
+                            )}
+                          </View>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+
+                  {searchedTrucks.length > displayedTruckCount && (
+                    <TouchableOpacity
+                      onPress={() => setDisplayedTruckCount(prev => prev + 10)}
+                      style={{
+                        marginTop: wp(2),
+                        padding: wp(2.5),
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: accent,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <ThemedText style={{ color: accent, fontWeight: '600' }}>
+                        Show More ({searchedTrucks.length - displayedTruckCount} remaining)
+                      </ThemedText>
+                    </TouchableOpacity>
+                  )}
+
+                  {loadVisibility === 'Both' && (
+                    <>
+                      <Divider />
+                      <ThemedText>
+                        Number of Public Trucks Needed<ThemedText color="red">*</ThemedText>
+                      </ThemedText>
+                      <Input
+                        value={numberOfTrucks}
+                        onChangeText={setNumberOfTrucks}
+                        placeholder='e.g., 1, 2, 5'
+                        keyboardType="numeric"
+                      />
+                      {renderTruckRequirements({ title: 'Public Truck Requirements' })}
+                    </>
+                  )}
+                </>
+              ) : currentRole?.accType === 'fleet' && loadVisibility === 'Public' ? (
+                <>
+                  <ThemedText>
+                    Number of Public Trucks Needed<ThemedText color="red">*</ThemedText>
+                  </ThemedText>
+                  <Input
+                    value={numberOfTrucks}
+                    onChangeText={setNumberOfTrucks}
+                    placeholder='e.g., 1, 2, 5'
+                    keyboardType="numeric"
+                  />
+                  {renderTruckRequirements({ title: 'Public Truck Requirements' })}
+
+                </>
+              ) : currentRole?.accType === 'brokerage' && (loadVisibility === 'Private' || loadVisibility === 'Both') ? (
+                <>
+                  <ThemedText>Search Assigned Trucks</ThemedText>
+                  <Input
+                    value={brokerTruckSearchQuery}
+                    onChangeText={(text) => {
+                      setBrokerTruckSearchQuery(text);
+                      setDisplayedBrokerTruckCount(10); // reset pagination whenever the filter changes
+                      if (text.trim() === '') {
+                        setSearchedBrokerTrucks(brokerTrucks);
+                      } else {
+                        const filtered = brokerTrucks.filter(truck =>
+                          truck.truckName?.toLowerCase().includes(text.toLowerCase()) ||
+                          truck.truckType?.toLowerCase().includes(text.toLowerCase())
+                        );
+                        setSearchedBrokerTrucks(filtered);
+                      }
+                    }}
+                    placeholder="Search by truck name or type"
+                  />
+
+                  <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>
+                    Available Assigned Trucks ({searchedBrokerTrucks.length})
+                  </ThemedText>
+                  <View style={{ maxHeight: hp(48), marginTop: wp(1) }}>
+                    <ScrollView nestedScrollEnabled showsVerticalScrollIndicator keyboardShouldPersistTaps="always">
+                      {searchedBrokerTrucks.slice(0, displayedBrokerTruckCount).map((truck, index) => (
+                        <TouchableOpacity
+                          key={truck.truckId || index}
+                          onPress={() => {
+                            if (selectedBrokerTrucks.find(t => t.truckId === truck.truckId)) {
+                              setSelectedBrokerTrucks(prev => prev.filter(t => t.truckId !== truck.truckId));
+                            } else {
+                              setSelectedBrokerTrucks(prev => [...prev, truck]);
+                            }
+                          }}
+                          style={{
+                            padding: wp(3),
+                            marginVertical: wp(1),
+                            borderRadius: 8,
+                            backgroundColor: backgroundLight,
+                            borderWidth: 1,
+                            borderColor: selectedBrokerTrucks.some(t => t.truckId === truck.truckId) ? accent : '#E0E0E0',
+                          }}
+                        >
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Ionicons
+                              name={selectedBrokerTrucks.some(t => t.truckId === truck.truckId) ? "checkbox" : "square-outline"}
+                              size={20}
+                              color={selectedBrokerTrucks.some(t => t.truckId === truck.truckId) ? accent : '#666'}
+                              style={{ marginRight: wp(2) }}
+                            />
+                            <View style={{ flex: 1 }}>
+                              <ThemedText style={{ fontWeight: '600' }}>{truck.truckName}</ThemedText>
+                              <ThemedText style={{ fontSize: 12, color: '#666' }}>{truck.truckType} - {truck.truckCapacity}</ThemedText>
+                            </View>
+                          </View>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+
+                  {searchedBrokerTrucks.length > displayedBrokerTruckCount && (
+                    <TouchableOpacity
+                      onPress={() => setDisplayedBrokerTruckCount(prev => prev + 10)}
+                      style={{
+                        marginTop: wp(2),
+                        padding: wp(2.5),
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: accent,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <ThemedText style={{ color: accent, fontWeight: '600' }}>
+                        Show More ({searchedBrokerTrucks.length - displayedBrokerTruckCount} remaining)
+                      </ThemedText>
+                    </TouchableOpacity>
+                  )}
+
+                  {loadVisibility === 'Both' && (
+                    <>
+                      <Divider />
+                      <ThemedText>
+                        Number of Public Trucks Needed<ThemedText color="red">*</ThemedText>
+                      </ThemedText>
+                      <Input
+                        value={numberOfTrucks}
+                        onChangeText={setNumberOfTrucks}
+                        placeholder='e.g., 1, 2, 5'
+                        keyboardType="numeric"
+                      />
+                      {renderTruckRequirements({ title: 'Public Truck Requirements' })}
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <ThemedText>
+                    Number of Public Trucks Needed<ThemedText color="red">*</ThemedText>
+                  </ThemedText>
+                  <Input
+                    value={numberOfTrucks}
+                    onChangeText={setNumberOfTrucks}
+                    placeholder='e.g., 1, 2, 5'
+                    keyboardType="numeric"
+                  />
+                  {renderTruckRequirements()}
+                </>
+              )}
+
+              <Divider />
+              <View style={styles.viewMainDsp}>
+                <Button onPress={() => setStep(step - 1)} title="Back" />
+                <Button onPress={handleSubmit} title={isSubmitting ? "Submiting..." : "Submit"} disabled={isSubmitting} loading={isSubmitting} colors={{ text: '#0f9d58', bg: '#0f9d5824' }} style={{ borderWidth: 1, borderColor: accent }} />
+              </View>
+            </View>
+            <View style={{ height: 25 }} />
+          </ScrollView>
+        )}
+      </View>
+
+    </ScreenWrapper>
+  );
 
 
 
