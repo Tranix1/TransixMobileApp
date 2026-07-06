@@ -16,7 +16,7 @@ import { pickDocument } from '@/Utilities/utils';
 import { takePhoto } from '@/Utilities/imageUtils';
 import { DocumentAsset } from '@/types/types';
 import { useAuth } from '@/context/AuthContext';
-import { addDocument, uploadImage, updateDocument, generateUniqueReferrerCode } from '@/db/operations';
+import { addDocument, uploadImage, updateDocument, generateUniqueReferrerCode,addDocumentWithId } from '@/db/operations';
 import { setDoc, doc } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import CustomHeader from '@/components/CustomHeader';
@@ -259,6 +259,18 @@ const CreateFleet = () => {
             //     fleetManagerId: null,
             //     fleetDispatcherId: null,
             // };
+
+
+            await addDocumentWithId(`fleets/${fleetId}/settings`, "config", {
+                        defaultRatePerKm: 2,
+            
+                        notifications: {
+                            loadAssigned: true,
+                            loadAccepted: true,
+                            loadCompleted: true,
+                            rateUpdated: true
+                        }
+                    })
 
             await setCurrentRole("fleet");
 

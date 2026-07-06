@@ -13,49 +13,40 @@ import { ThemedText } from './ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { wp, hp } from '@/constants/common';
 import Input from './Input';
-import Button from './Button';
 
 interface TruckNotificationSettingsModalProps {
     visible: boolean;
     onClose: () => void;
     onSave: (settings: TruckNotificationSettings) => void;
-    truckId: string;
     initialSettings?: Partial<TruckNotificationSettings>;
 }
 
 export interface TruckNotificationSettings {
-    fuelEfficiency: number;            // km/L
-    fuelPrice: number;                 // currency per L
-    minimumProfitPercentage: number;   // %
-
-    emptyReturnPercentage: number;     // 0-100, used for conservative notification calc
-    loadedReturnPercentage: number;    // 0-100, informational / future use
-
-    additionalDistanceBuffer: number;  // km
-
     notificationsEnabled: boolean;
+    notifyRoles: string[];
+    minimumRate: number;
 }
 
 const DEFAULT_SETTINGS: TruckNotificationSettings = {
-    fuelEfficiency: 3,
-    fuelPrice: 1.7,
-    minimumProfitPercentage: 40,
-    emptyReturnPercentage: 100,
-    loadedReturnPercentage: 50,
-    additionalDistanceBuffer: 50,
     notificationsEnabled: true,
+    notifyRoles: ['driver', 'dispatcher'],
+    minimumRate: 2,
 };
+
+const ROLE_OPTIONS: { key: string; label: string }[] = [
+    { key: 'driver', label: 'Driver' },
+    { key: 'dispatcher', label: 'Dispatcher' },
+    { key: 'fleet_owner', label: 'Fleet Owner' },
+];
 
 const TruckNotificationSettingsModal: React.FC<TruckNotificationSettingsModalProps> = ({
     visible,
     onClose,
     onSave,
-    truckId,
     initialSettings,
 }) => {
     const icon = useThemeColor('icon');
     const accent = useThemeColor('accent');
-    const background = useThemeColor('background');
     const backgroundLight = useThemeColor('backgroundLight');
     const coolGray = useThemeColor('coolGray');
 
@@ -68,6 +59,15 @@ const TruckNotificationSettingsModal: React.FC<TruckNotificationSettingsModalPro
         setSettings((prev) => ({ ...prev, [key]: value }));
     };
 
+    const toggleRole = (role: string) => {
+        setSettings(prev => ({
+            ...prev,
+            notifyRoles: prev.notifyRoles.includes(role)
+                ? prev.notifyRoles.filter(r => r !== role)
+                : [...prev.notifyRoles, role],
+        }));
+    };
+
     const resetForm = () => {
         setSettings({ ...DEFAULT_SETTINGS, ...initialSettings });
     };
@@ -78,19 +78,13 @@ const TruckNotificationSettingsModal: React.FC<TruckNotificationSettingsModalPro
     };
 
     const handleSave = () => {
-        onSave(settings);
+        onSave({
+            notificationsEnabled: settings.notificationsEnabled,
+            notifyRoles: settings.notifyRoles,
+            minimumRate: settings.minimumRate,
+        });
         onClose();
     };
-
-    // Quick preview of what a 500km trip + 30km deadhead would look like with current settings,
-    // just so the owner can see the effect of the numbers they're entering.
-    const previewTripDistance = 500;
-    const previewDeadhead = 30;
-    const previewEmptyReturn = (previewTripDistance * settings.emptyReturnPercentage) / 100;
-    const previewTotalDistance =
-        previewDeadhead + previewTripDistance + previewEmptyReturn + settings.additionalDistanceBuffer;
-    const previewFuelUsed = settings.fuelEfficiency > 0 ? previewTotalDistance / settings.fuelEfficiency : 0;
-    const previewFuelCost = previewFuelUsed * settings.fuelPrice;
 
     return (
         <Modal transparent statusBarTranslucent visible={visible} animationType="fade">
@@ -109,10 +103,10 @@ const TruckNotificationSettingsModal: React.FC<TruckNotificationSettingsModalPro
                             </View>
 
                             <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
-                                {/* Master toggle */}
+                                {/* Section 1: Master toggle */}
                                 <View style={styles.section}>
                                     <ThemedText type="subtitle" style={styles.sectionTitle}>
-                                        Load Match Notifications
+                                        Enable Notifications
                                     </ThemedText>
                                     <View style={styles.toggleContainer}>
                                         <TouchableOpacity
@@ -144,141 +138,75 @@ const TruckNotificationSettingsModal: React.FC<TruckNotificationSettingsModalPro
 
                                 {settings.notificationsEnabled && (
                                     <>
-                                        {/* Fuel economics */}
+                                        {/* Section 2: Roles */}
                                         <View style={styles.section}>
                                             <ThemedText type="subtitle" style={styles.sectionTitle}>
-                                                Truck Fuel Economics
+                                                Notify These Roles
                                             </ThemedText>
 
-                                            <View style={styles.fieldRow}>
-                                                <ThemedText type="tiny" style={styles.inputLabel}>
-                                                    Fuel Efficiency (km per liter)
-                                                </ThemedText>
-                                                <Input
-                                                    placeholder="e.g. 3"
-                                                    value={String(settings.fuelEfficiency)}
-                                                    onChangeText={(v) => update('fuelEfficiency', Number(v) || 0)}
-                                                    keyboardType="numeric"
-                                                />
-                                            </View>
-
-                                            <View style={styles.fieldRow}>
-                                                <ThemedText type="tiny" style={styles.inputLabel}>
-                                                    Fuel Price (per liter)
-                                                </ThemedText>
-                                                <Input
-                                                    placeholder="e.g. 1.70"
-                                                    value={String(settings.fuelPrice)}
-                                                    onChangeText={(v) => update('fuelPrice', Number(v) || 0)}
-                                                    keyboardType="numeric"
-                                                />
-                                            </View>
-
-                                            <View style={styles.fieldRow}>
-                                                <ThemedText type="tiny" style={styles.inputLabel}>
-                                                    Additional Distance Buffer (km)
-                                                </ThemedText>
-                                                <Input
-                                                    placeholder="e.g. 50"
-                                                    value={String(settings.additionalDistanceBuffer)}
-                                                    onChangeText={(v) => update('additionalDistanceBuffer', Number(v) || 0)}
-                                                    keyboardType="numeric"
-                                                />
+                                            <View style={styles.roleList}>
+                                                {ROLE_OPTIONS.map((role) => {
+                                                    const isSelected = settings.notifyRoles.includes(role.key);
+                                                    return (
+                                                        <TouchableOpacity
+                                                            key={role.key}
+                                                            style={[
+                                                                styles.roleCard,
+                                                                {
+                                                                    backgroundColor: isSelected ? accent : coolGray,
+                                                                },
+                                                            ]}
+                                                            onPress={() => toggleRole(role.key)}
+                                                        >
+                                                            <Ionicons
+                                                                name={isSelected ? 'checkbox' : 'square-outline'}
+                                                                size={wp(5.5)}
+                                                                color="white"
+                                                            />
+                                                            <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>
+                                                                {role.label}
+                                                            </ThemedText>
+                                                        </TouchableOpacity>
+                                                    );
+                                                })}
                                             </View>
                                         </View>
 
-                                        {/* Profit threshold */}
+                                        {/* Section 3: Minimum Rate */}
                                         <View style={styles.section}>
                                             <ThemedText type="subtitle" style={styles.sectionTitle}>
-                                                Minimum Profit Threshold
+                                                Minimum Rate
                                             </ThemedText>
                                             <View style={styles.fieldRow}>
                                                 <ThemedText type="tiny" style={styles.inputLabel}>
-                                                    Only notify me when profit is at least (%)
+                                                    Only notify this truck when the offered rate is at least this amount.
                                                 </ThemedText>
                                                 <Input
-                                                    placeholder="e.g. 40"
-                                                    value={String(settings.minimumProfitPercentage)}
-                                                    onChangeText={(v) => update('minimumProfitPercentage', Number(v) || 0)}
+                                                    placeholder="1.70"
+                                                    value={String(settings.minimumRate)}
+                                                    onChangeText={(v) => update('minimumRate', Number(v) || 0)}
                                                     keyboardType="numeric"
                                                 />
                                             </View>
-                                        </View>
-
-                                        {/* Return trip assumptions */}
-                                        <View style={styles.section}>
-                                            <ThemedText type="subtitle" style={styles.sectionTitle}>
-                                                Return Trip Assumptions
-                                            </ThemedText>
-                                            <ThemedText style={styles.helperText}>
-                                                Used to estimate fuel cost for the trip back. Empty return is the
-                                                conservative figure used for notifications; loaded return is informational
-                                                until live tracking is in place.
-                                            </ThemedText>
-
-                                            <View style={styles.fieldRow}>
-                                                <ThemedText type="tiny" style={styles.inputLabel}>
-                                                    Empty Return Coverage (%)
-                                                </ThemedText>
-                                                <Input
-                                                    placeholder="e.g. 100"
-                                                    value={String(settings.emptyReturnPercentage)}
-                                                    onChangeText={(v) => update('emptyReturnPercentage', Number(v) || 0)}
-                                                    keyboardType="numeric"
-                                                />
-                                            </View>
-
-                                            <View style={styles.fieldRow}>
-                                                <ThemedText type="tiny" style={styles.inputLabel}>
-                                                    Loaded Return Expectation (%)
-                                                </ThemedText>
-                                                <Input
-                                                    placeholder="e.g. 50"
-                                                    value={String(settings.loadedReturnPercentage)}
-                                                    onChangeText={(v) => update('loadedReturnPercentage', Number(v) || 0)}
-                                                    keyboardType="numeric"
-                                                />
-                                            </View>
-                                        </View>
-
-                                        {/* Live preview */}
-                                        <View style={[styles.routeInfo, { backgroundColor: backgroundLight }]}>
-                                            <ThemedText style={[styles.infoText, { fontWeight: 'bold' }]}>
-                                                Preview (500km trip, 30km deadhead)
-                                            </ThemedText>
-                                            <ThemedText style={styles.infoText}>
-                                                Empty return distance: {previewEmptyReturn.toFixed(0)} km
-                                            </ThemedText>
-                                            <ThemedText style={styles.infoText}>
-                                                Total distance: {previewTotalDistance.toFixed(0)} km
-                                            </ThemedText>
-                                            <ThemedText style={styles.infoText}>
-                                                Estimated fuel cost: {previewFuelCost.toFixed(2)}
-                                            </ThemedText>
                                         </View>
                                     </>
                                 )}
 
                                 {/* Action Buttons */}
-                             
-
                                 <View style={styles.buttonContainer}>
                                     <TouchableOpacity
                                         onPress={handleClose}
                                         style={[styles.button, styles.cancelButton]}
                                     >
-                                        <ThemedText style={{color:"white",fontWeight:"bold"}}>Cancel</ThemedText>
+                                        <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>Cancel</ThemedText>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={handleSave}
                                         style={[styles.button, styles.saveButton]}
                                     >
-                                        <ThemedText style={{color:"white",fontWeight:"bold"}}>Save Settings</ThemedText>
+                                        <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>Save Settings</ThemedText>
                                     </TouchableOpacity>
                                 </View>
-
-
-
                             </ScrollView>
                         </View>
                     </Pressable>
@@ -330,12 +258,6 @@ const styles = StyleSheet.create({
         marginBottom: wp(3),
         fontWeight: 'bold',
     },
-    helperText: {
-        fontSize: wp(3.3),
-        opacity: 0.6,
-        marginBottom: wp(3),
-        lineHeight: wp(4.2),
-    },
     toggleContainer: {
         flexDirection: 'row',
         gap: wp(3),
@@ -348,6 +270,16 @@ const styles = StyleSheet.create({
         padding: wp(3),
         borderRadius: wp(2),
         gap: wp(2),
+    },
+    roleList: {
+        gap: wp(3),
+    },
+    roleCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: wp(3),
+        borderRadius: wp(2),
+        gap: wp(3),
     },
     fieldRow: {
         gap: wp(1),
@@ -373,22 +305,6 @@ const styles = StyleSheet.create({
     },
     saveButton: {
         backgroundColor: '#007bff',
-    },
-    routeInfo: {
-        padding: wp(4),
-        borderRadius: wp(2),
-        marginTop: wp(1),
-        marginBottom: wp(4),
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 5,
-    },
-    infoText: {
-        fontSize: wp(3.5),
-        fontWeight: '500',
-        marginBottom: wp(1),
     },
 });
 

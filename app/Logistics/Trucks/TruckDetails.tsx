@@ -12,7 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 import { BlurView } from 'expo-blur';
 import { Truck, User } from "@/types/types";
-import { deleteDocument, readById, updateDocument, updateDocumentWithAdminTracking } from "@/db/operations";
+import { addDocument, addDocumentWithId, deleteDocument, readById, updateDocument, updateDocumentWithAdminTracking } from "@/db/operations";
 import { ADMIN_ACTIONS } from "@/Utilities/adminActionTracker";
 import { TruckTrackerManager } from "@/components/TruckTrackerManager";
 import { Image } from 'expo-image'
@@ -25,11 +25,13 @@ import { AntDesign } from '@expo/vector-icons'; // or any close icon
 // import { sendPushNotification } from "@/Utilities/pushNotification";
 import { sendPushNotification } from "@/Utilities/pushNotification";
 import Input from "@/components/Input";
-import TruckNotificationModal  from "@/components/TruckNotificationSettingsModal";
+import TruckNotificationModal from "@/components/TruckNotificationSettingsModal";
 
 import TruckAvailabilityModal from "@/components/TruckAvailabilityModal";
+import DriverDefaultModal from "@/components/DriverDefaultModal";
 
 import ImageViewing from 'react-native-image-viewing';
+import { serverTimestamp } from "firebase/firestore";
 
 const TruckDetails = () => {
 
@@ -41,10 +43,13 @@ const TruckDetails = () => {
     const backgroundLight = useThemeColor("backgroundLight");
     const textColor = useThemeColor("text");
 
-    const { truckid,     dspDetails,  fleetId } = useLocalSearchParams();
+    const { truckid, dspDetails, fleetId } = useLocalSearchParams();
     const [truckData, setTruckData] = useState<Truck>({} as Truck)
     const [modalVisible, setModalVisible] = useState(false);
     const [availabilityModalVisible, setAvailabilityModalVisible] = useState(false);
+    const [driverModal, setShowMDriverodal] = useState(false)
+
+    const [notificationModal, setNotificationModal] = useState(false)
     const [refreshing, setRefreshing] = useState(false)
     const [isSaved, setIsSaved] = useState(false);
 
@@ -156,7 +161,6 @@ const TruckDetails = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [viewerIndex, setViewerIndex] = useState(0);   // internal tracking while viewing
 
-    console.log(currentIndex)
 
     //  const images = [
     //   truckData.truckBookImage ? { uri: truckData.truckBookImage } : null,
@@ -220,14 +224,6 @@ const TruckDetails = () => {
 
 
 
-
-
-
-
-    const [reasonForDenail, setReasonForDenial] = React.useState("")
-    const [truckDenialReason, setTruckDenialReason] = React.useState(false)
-
-   
     // Admin approval functions
     const handleAdminApprove = async () => {
         alertBox(
@@ -334,93 +330,94 @@ const TruckDetails = () => {
         }
     };
 
-    const handleSaveAvailability = async (availabilityData:any) => {
+
+    const handleSaveNotification = async (notifictionData: any) => {
+
+
+
+        await updateDocument(`fleets/${fleetId}/trucks`, truckData.id, {
+            truckDispatchProfile: {
+                notificationsEnabled: notifictionData.notificationsEnabled,
+                notifyRoles: notifictionData.notifyRoles,
+                minRatePerKm: notifictionData.minimumRate,
+            },
+            lastAvailabilityUpdate: new Date().toISOString(),
+        });
+
+
+        await updateDocument("truckDispatchProfile", truckData.id, {
+            truckId: truckid,
+            notificationSettings: {
+                notificationsEnabled: notifictionData.notificationsEnabled,
+                notifyRoles: notifictionData.notifyRoles,
+                minRatePerKm: notifictionData.minimumRate,
+            },
+
+            updatedAt: serverTimestamp()
+        }
+        )
+
+    }
+
+    const handleSaveAvailability = async (availabilityData: any) => {
         try {
             // Update truck with availability data
-            await updateDocument( `fleets/${fleetId}/trucks`, truckData.id, {
-                availability: availabilityData,
+            await updateDocument(`fleets/${fleetId}/trucks`, truckData.id, {
+                truckDispatchProfile: {
+
+                    availabilityData: {
+                        status: availabilityData.status,
+                        offlineReason: availabilityData.offlineReason,
+                        matchingState: {
+                            type: availabilityData?.matchType,
+                            lastMatchedAt: "",
+                            activeLoadId: "",
+                            lastSeenAvailableAt: "",
+                        },
+                        currentLocation: availabilityData.currentLocation,
+                        destinationPreference: {
+                            type: "SPECIFIC",
+                            location: availabilityData.destination ?? null,
+                        },
+
+                    },
+                },
+
                 lastAvailabilityUpdate: new Date().toISOString(),
             });
 
             // truck_dispatch_profile
 
 
+            await updateDocument("truckDispatchProfile", truckData.id, {
+                truckId: truckid,
+
+                // 🚛 LIVE STATUS
+                status: availabilityData.status,
+
+                offlineReason: availabilityData.offlineReason,
+
+                // 📍 LIVE LOCATION (FROM TRACKER ONLY)
+                currentLocation: availabilityData.currentLocation,
+
+                // 🎯 DRIVER PREFERENCE AFTER DELIVERY
+                destinationPreference: availabilityData.loction ?? null,
+
+                additionalInfo: availabilityData.additionalInfo,
+
+                // 🧠 MATCHING STATE (SYSTEM CONTROLLED)
+                matchingState: {
+                    type: availabilityData?.matchType,
+                    lastMatchedAt: "",
+                    activeLoadId: "",
+                    lastSeenAvailableAt: "",
+                },
+
+                updatedAt: serverTimestamp()
+            }
+            )
 
 
-
-
-// truck_dispatch_profile: {
-//     truckId: string,
-
-//     // 🚛 LIVE STATUS
-//     status: "AVAILABLE" | "BUSY" | "OFFLINE",
-
-//     offlineReason?: "MAINTENANCE" | "CONTRACTED" | "PARKED" | "SUSPENDED",
-
-//     // 📍 LIVE LOCATION (FROM TRACKER ONLY)
-//     currentLocation: {
-//         lat: number,
-//         lng: number,
-//         heading?: number,
-//         speed?: number,
-//         lastUpdated: Timestamp
-//     },
-
-//     // 🎯 DRIVER PREFERENCE AFTER DELIVERY
-//     destinationPreference: {
-//         type: "SPECIFIC" | "ANY",
-//         location?: {
-//             lat: number,
-//             lng: number,
-//             description?: string
-//         }
-//     },
-
-//     // 💰 MATCHING RULES
-//     notificationSettings: {
-//         minRatePerKm: number,
-//         notifyEnabled: boolean
-//     },
-
-//     // 🚛 CAPABILITIES (FLEET CONTROL)
-//     capabilities: {
-//         international: boolean,
-//         local: boolean,
-//         longDistance: boolean
-//     },
-
-//     // 🧠 MATCHING STATE (SYSTEM CONTROLLED)
-//     matchingState: {
-//         lastMatchedAt?: Timestamp,
-//         activeLoadId?: string,
-//         lastSeenAvailableAt?: Timestamp
-//     },
-
-//     updatedAt: Timestamp
-// }
-
-
-
-
-
-
-
-
-// notificationSettings: {
-//     minRatePerKm: 2,
-
-//     notifyRoles: ["DRIVER", "OWNER"],
-
-//     notifySpecificUsers: [],
-
-//     notifyMode: "ROLE_BASED" | "SPECIFIC" | "BOTH"
-// }
-
-
-
-
-
-            // Show success message
             alertBox(
                 'Success',
                 availabilityData.isAvailable
@@ -442,27 +439,145 @@ const TruckDetails = () => {
                     <BlurView intensity={100} style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center' }}>
 
                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                            <View style={{ backgroundColor: backgroundLight, borderRadius: wp(4), padding: wp(4), width: wp(80), gap: wp(3) }}>
+                            <View
+                                style={{
+                                    backgroundColor: backgroundLight,
+                                    borderRadius: wp(4),
+                                    padding: wp(4),
+                                    width: wp(82),
+                                    gap: wp(3),
+                                }}
+                            >
                                 <View style={{ alignItems: 'flex-end' }}>
                                     <TouchableOpacity onPress={() => setModalVisible(false)}>
                                         <Ionicons name="close-circle" size={wp(6)} color={icon} />
                                     </TouchableOpacity>
                                 </View>
-                                <ThemedText type="title" style={{ textAlign: 'center', marginBottom: wp(4) }}>
+
+                                <ThemedText
+                                    type="title"
+                                    style={{
+                                        textAlign: 'center',
+                                        marginBottom: wp(3),
+                                    }}
+                                >
                                     Manage Truck
                                 </ThemedText>
+
                                 <TouchableOpacity
-                                    style={{ backgroundColor: "#1E90FF", alignItems: 'center', padding: wp(2), borderRadius: wp(4) }}
+                                    style={styles.actionButton}
                                     onPress={() => {
                                         setModalVisible(false);
                                         setAvailabilityModalVisible(true);
                                     }}
                                 >
-                                    <ThemedText color="#fff" type="subtitle">Truck Available</ThemedText>
-                                    {/* <ThemedText color="#fff" type="subtitle">Truck Not Available</ThemedText> */}
+                                    <Ionicons
+                                        name="car-sport-outline"
+                                        size={22}
+                                        color={accent}
+                                    />
+
+                                    <ThemedText type="subtitle">
+                                        Truck Availability
+                                    </ThemedText>
+
+                                    <Ionicons
+                                        name="chevron-forward"
+                                        size={20}
+                                        color={icon}
+                                    />
+                                </TouchableOpacity>
+
+
+                                <TouchableOpacity
+                                    style={styles.actionButton}
+                                    onPress={() => {
+                                        setModalVisible(false);
+                                        setShowMDriverodal(true);
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="person-circle-outline"
+                                        size={22}
+                                        color={accent}
+                                    />
+
+                                    <ThemedText type="subtitle">
+                                        Set Default Driver
+                                    </ThemedText>
+
+                                    <Ionicons
+                                        name="chevron-forward"
+                                        size={20}
+                                        color={icon}
+                                    />
+                                </TouchableOpacity>
+
+
+
+                                <TouchableOpacity
+                                    style={styles.actionButton}
+                                    onPress={() => {
+                                        setModalVisible(false);
+
+                                        router.push({
+                                            pathname: '/Logistics/Trucks/AssignBrokerageScreen',
+                                            params: {
+                                                truckId: truckData?.id,
+                                                truckName: truckData?.name,
+                                                truckType: truckData.truckType,
+                                                cargoArea: truckData.cargoArea,
+                                                operaatingLocations: truckData.locations,
+                                                capacity: truckData?.truckCapacity,
+                                                numberPlate: truckData?.numberPlate,
+                                            },
+                                        });
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="briefcase-outline"
+                                        size={22}
+                                        color={accent}
+                                    />
+
+                                    <ThemedText type="subtitle">
+                                        Set Brokerage
+                                    </ThemedText>
+
+                                    <Ionicons
+                                        name="chevron-forward"
+                                        size={20}
+                                        color={icon}
+                                    />
+                                </TouchableOpacity>
+
+
+                                <TouchableOpacity
+                                    style={styles.actionButton}
+                                    onPress={() => {
+                                        setModalVisible(false);
+                                        setNotificationModal(true);
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="notifications-outline"
+                                        size={22}
+                                        color={accent}
+                                    />
+
+                                    <ThemedText type="subtitle">
+                                        Notification Settings
+                                    </ThemedText>
+
+                                    <Ionicons
+                                        name="chevron-forward"
+                                        size={20}
+                                        color={icon}
+                                    />
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
+                                    style={styles.actionButton}
                                     onPress={() => {
                                         setModalVisible(false);
                                         router.push({
@@ -470,13 +585,29 @@ const TruckDetails = () => {
                                             params: { truckId: truckData.id }
                                         });
                                     }}
-                                    style={{ backgroundColor: accent, alignItems: 'center', padding: wp(2), borderRadius: wp(4) }}
                                 >
-                                    <ThemedText color="#fff" type="subtitle">Edit Truck Images</ThemedText>
+                                    <Ionicons
+                                        name="images-outline"
+                                        size={22}
+                                        color={accent}
+                                    />
+
+                                    <ThemedText type="subtitle">
+                                        Edit Truck Images
+                                    </ThemedText>
+
+                                    <Ionicons
+                                        name="chevron-forward"
+                                        size={20}
+                                        color={icon}
+                                    />
                                 </TouchableOpacity>
+
                                 <TouchableOpacity
+                                    style={styles.deleteButton}
                                     onPress={() => {
                                         setModalVisible(false);
+
                                         alertBox(
                                             "Delete Truck",
                                             "Are you sure you want to delete this truck?",
@@ -485,11 +616,19 @@ const TruckDetails = () => {
                                                     title: "Delete",
                                                     onPress: async () => {
                                                         try {
-                                                            // Add delete logic here
-                                                            await deleteDocument('Trucks', truckData.id)
-                                                            ToastAndroid.show("Success Truck deleted successfully", ToastAndroid.SHORT);
-                                                        } catch (error) {
-                                                            alertBox("Error", "Failed to delete truck", [], "error");
+                                                            await deleteDocument("Trucks", truckData.id);
+
+                                                            ToastAndroid.show(
+                                                                "Truck deleted successfully",
+                                                                ToastAndroid.SHORT
+                                                            );
+                                                        } catch {
+                                                            alertBox(
+                                                                "Error",
+                                                                "Failed to delete truck",
+                                                                [],
+                                                                "error"
+                                                            );
                                                         }
                                                     },
                                                 },
@@ -497,11 +636,26 @@ const TruckDetails = () => {
                                             "destructive"
                                         );
                                     }}
-                                    style={{ backgroundColor: '#FF5252', alignItems: 'center', padding: wp(2), borderRadius: wp(4) }}
                                 >
-                                    <ThemedText color="#fff" type="subtitle">Delete Truck</ThemedText>
-                                </TouchableOpacity>
+                                    <Ionicons
+                                        name="trash-outline"
+                                        size={22}
+                                        color="#EF4444"
+                                    />
 
+                                    <ThemedText
+                                        type="subtitle"
+                                        style={{ color: "#EF4444" }}
+                                    >
+                                        Delete Truck
+                                    </ThemedText>
+
+                                    <Ionicons
+                                        name="chevron-forward"
+                                        size={20}
+                                        color="#EF4444"
+                                    />
+                                </TouchableOpacity>
                             </View>
                         </View>
                     </BlurView>
@@ -511,7 +665,7 @@ const TruckDetails = () => {
 
 
 
-           
+
 
             {showAlert}
             <Heading page={truckData.truckName || "Truck Details"}
@@ -652,7 +806,7 @@ const TruckDetails = () => {
                         paddingBottom: wp(4),
                     }}
                 >
-                   
+
 
                     <View style={{}}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -678,19 +832,7 @@ const TruckDetails = () => {
 
 
                     </View>
-                    <View style={{ flexDirection: 'row' }}>
-                        <View style={{ flex: 1 }}>
-                            <ThemedText type="tiny" style={{}}>
-                                Truck Registered By
-                            </ThemedText>
-                            <ThemedText type="subtitle" style={{}}>
 
-                                {truckData.accType === 'owner' && "Truck Owner"}
-                                {truckData.accType === 'broker' && "Truck Broker"}
-                            </ThemedText>
-                        </View>
-
-                    </View>
 
 
                     <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
@@ -738,7 +880,7 @@ const TruckDetails = () => {
                                 </View>
                             )}
 
-                         
+
 
                             {/* Show actual lists if available */}
                             {truckData.brokers && truckData.brokers.length > 0 && (
@@ -752,7 +894,7 @@ const TruckDetails = () => {
                                 </View>
                             )}
 
-                                                     
+
 
                         </View>
                     ) : null}
@@ -1005,7 +1147,7 @@ const TruckDetails = () => {
                                     </ThemedText>
                                 </View>
                             )}
-                        /> 
+                        />
 
 
                         <Divider />
@@ -1152,19 +1294,28 @@ const TruckDetails = () => {
             </Modal>
 
             {/* Truck Availability Modal */}
-             {/* <TruckNotificationModal
+            <TruckNotificationModal
+                visible={notificationModal}
+                onClose={() => setNotificationModal(false)}
+                onSave={handleSaveNotification}
+            />
+            <TruckAvailabilityModal
                 visible={availabilityModalVisible}
                 onClose={() => setAvailabilityModalVisible(false)}
                 onSave={handleSaveAvailability}
-                truckId={truckData.id}
-            />`` */}
-            <TruckAvailabilityModal
-             visible={availabilityModalVisible}
-                onClose={() => setAvailabilityModalVisible(false)}
-                onSave={handleSaveAvailability}
-                // truckId={truckData.id}
+            // truckId={truckData.id}
             />
-            
+
+            <DriverDefaultModal
+                visible={driverModal}
+                onClose={() => setShowMDriverodal(false)}
+                fleetId={`${fleetId}`}
+                truckId={truckData.id}
+                onAssigned={(driver) => {
+                    console.log("Assigned:", driver);
+                }}
+            />
+
         </ScreenWrapper >
     )
 }
@@ -1203,6 +1354,31 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: wp(3),
         borderRadius: wp(2),
+    },
+    actionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+
+        borderRadius: wp(3),
+        paddingVertical: wp(3.5),
+        paddingHorizontal: wp(4),
+    },
+
+    deleteButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+
+        borderWidth: 1,
+        borderColor: '#EF4444',
+
+        borderRadius: wp(3),
+        paddingVertical: wp(3.5),
+        paddingHorizontal: wp(4),
     },
 });
 

@@ -282,3 +282,46 @@ useEffect(() => {
 export default Index
 
 
+
+
+
+
+{/* <View style={styles.truckCardHeader}>
+                        <View style={[styles.truckIconWrap, { backgroundColor: accent }]}>
+                            <Ionicons name="bus-outline" size={wp(5.5)} color="white" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <ThemedText type="defaultSemiBold" style={styles.truckName}>
+                                {truckName}
+                            </ThemedText>
+                            <ThemedText style={[styles.truckPlate, { color: muted }]}>
+                                {numberPlate || '--'}
+                            </ThemedText>
+                        </View>
+                    </View> */}
+
+                    //  truckCardHeader: {
+                    //         flexDirection: 'row',
+                    //         alignItems: 'center',
+                    //         marginBottom: wp(3),
+                    //         gap: wp(3),
+                    //     },
+
+                    // truckName: {
+                    //         fontSize: wp(4.3),
+                    //     },
+                    //     truckPlate: {
+                    //         fontSize: wp(3.2),
+                    //         marginTop: wp(0.5),
+                    //         fontWeight: '600',
+                    //     },
+
+                    //   truckIconWrap: {
+                    //         width: wp(11),
+                    //         height: wp(11),
+                    //         borderRadius: wp(2.5),
+                    //         alignItems: 'center',
+                    //         justifyContent: 'center',
+                    //     },
+
+

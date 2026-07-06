@@ -26,7 +26,26 @@ import { pickDocument } from "@/Utilities/utils";
 import { DocumentAsset } from "@/types/types";
 import KYCVerificationModal from "@/components/KYCVerificationModal";
 import { db } from "@/db/fireBaseConfig";
-import { doc, collection, getDocs, limit, query, serverTimestamp } from "firebase/firestore";
+import { doc, collection, getDoc, limit, query, serverTimestamp } from "firebase/firestore";
+import { SelectLocationProp } from "@/types/types";
+
+type FleetConfig = {
+
+
+
+  notificationsEnabled: boolean;
+
+  truckDefaults: {
+
+    notification: {
+      ratePerKm: number;
+      roles: string[];
+    };
+
+  }
+
+
+};
 
 function AddTrucks() {
 
@@ -45,15 +64,15 @@ function AddTrucks() {
     maxloadCapacity: "",
     truckName: "",
     otherCargoArea: "",
-    otherTankerType: "" ,
-    numberPlate:"" ,
+    otherTankerType: "",
+    numberPlate: "",
   });
 
   const [selectedOwnerDocuments, setSelectedOwnerDocumentS] = useState<DocumentAsset[]>([]);
   const [ownerFileType, setOwnerFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([])
   const [selectedTruckLease, setSelectedTruckLease] = useState<DocumentAsset[]>([]);
   const [truckLeaseFileType, setTruckLeaseFileType] = React.useState<('pdf' | 'image' | 'doc' | 'docx')[]>([])
-  
+
   // const [images, setImages] = useState([]);
   const [images, setImages] = useState<ImagePickerAsset[]>([]);
   const [gitImage, setGitImage] = useState<ImagePickerAsset[]>([]);
@@ -84,10 +103,31 @@ function AddTrucks() {
   const [spinnerItem, setSpinnerItem] = useState(false);
   const [uploadingImageUpdate, setUploadImageUpdate] = useState("")
 
-  const { user, alertBox , currentRole} = useAuth();  
+  const { user, alertBox, currentRole } = useAuth();
 
 
-   // Function to clear all form fields
+  const [fleetConfig, setFleetConfig] = useState<FleetConfig | null>(null);
+
+  useEffect(() => {
+    const loadConfig = async () => {
+      const snap = await getDoc(
+        doc(db, `fleets/${currentRole.fleetId}/settings/config`)
+      );
+
+      const data = snap.exists() ? snap.data() : null;
+
+      setFleetConfig(data as any);
+    };
+
+    if (currentRole?.fleetId) {
+      loadConfig();
+    }
+  }, [currentRole?.fleetId]);
+
+
+
+
+  // Function to clear all form fields
   const clearFormFields = () => {
     setFormData({
       additionalInfo: "",
@@ -95,8 +135,8 @@ function AddTrucks() {
       maxloadCapacity: "",
       truckName: "",
       otherCargoArea: "",
-      otherTankerType: "" ,
-      numberPlate :"" ,
+      otherTankerType: "",
+      numberPlate: "",
     });
     setImages([]);
     setGitImage([])
@@ -122,7 +162,7 @@ function AddTrucks() {
   const handleSubmit = async () => {
 
     setSpinnerItem(true)
-    if ( !currentRole.fleetId ) {
+    if (!currentRole.fleetId) {
       alert("You must be verified as a professional or fleet owner to add a truck. Please complete the verification process first.")
       setSpinnerItem(false)
       return
@@ -145,7 +185,7 @@ function AddTrucks() {
 
     if (missingTruckDetails.length > 0) {
       // setContractDErr(true);
-            alertBox("Missing Truck Details", missingTruckDetails.join("\n"), [], "error");
+      alertBox("Missing Truck Details", missingTruckDetails.join("\n"), [], "error");
       setSpinnerItem(false)
       return;
     }
@@ -210,11 +250,11 @@ function AddTrucks() {
       const submitData = {
         CompanyName: currentRole.companyName || user.displayName,
         fleetId: currentRole?.accType === 'fleet' ? currentRole.fleetId : null,
-        
+
         userId: user.uid,
 
         userContact: user?.phoneNumber || '',
-        
+
         imageUrl: truckImage,
         truckBookImage: truckBookImage || null,
         trailerBookF: trailerBookF || null,
@@ -255,32 +295,59 @@ function AddTrucks() {
         trackerImei: null,
         trackerName: null,
 
-        // Generate unique truck ID
+        truckDispatchProfile: {
+          notificationSettings: {
+            notificationsEnabled: fleetConfig?.notificationsEnabled,
+            notifyRoles: fleetConfig?.truckDefaults.notification.roles,
+            minRatePerKm: fleetConfig?.truckDefaults.notification.ratePerKm || null,
+          },
+          availabilityData: {
+            status: "AVAILABLE",
+            matchingState: {
+              type: "NEARBY",
+              lastMatchedAt: "",
+              activeLoadId: "",
+              lastSeenAvailableAt: "",
+            }
+
+          },
+        },
 
         // Associate with fleet if user is a fleet
-         organizationDetails :{
-            id:currentRole.organizationId ||currentRole.fleetId || null ,
-            name : currentRole.companyName || user?.organisation ,
-            phone : currentRole.phone||null ,
-            billingAddress : currentRole.billingAddress ||null,       
-            baseAdress : currentRole.baseAdress ||null,       
-         } ,
+        organizationDetails: {
+          id: currentRole.organizationId || currentRole.fleetId || null,
+          name: currentRole.companyName || user?.organisation,
+          phone: currentRole.phone || null,
+          billingAddress: currentRole.billingAddress || null,
+          baseAdress: currentRole.baseAdress || null,
+        },
         accType: currentRole?.accType || 'Individual', // owner, broker, driver, fleet
-          timeStamp: serverTimestamp(),
-        
-      }
+        timeStamp: serverTimestamp(),
 
-      // If user is a fleet and truck is private, add to fleet subcollection only
-      if (currentRole?.accType === 'fleet' && truckType === 'Private') {
-        await addDocumentWithId(`fleets/${currentRole.fleetId}/Trucks`, truckId, submitData);
 
-        // If user is a fleet and truck is public, add to both fleet subcollection and main Trucks collection
-      } else if (currentRole?.accType === 'fleet' && truckType === 'Public') {
-        // Add to fleet subcollection
-        await addDocumentWithId(`fleets/${currentRole.fleetId}/Trucks`, truckId, submitData);
 
       }
-     
+
+      await addDocumentWithId(`fleets/${currentRole.fleetId}/Trucks`, truckId, submitData);
+
+      await addDocumentWithId("truckDispatchProfile", truckId, {
+        truckId: truckId,
+        notificationSettings: {
+          notificationsEnabled: fleetConfig?.notificationsEnabled,
+          notifyRoles: fleetConfig?.truckDefaults.notification.roles,
+          minRatePerKm: fleetConfig?.truckDefaults.notification.ratePerKm || null,
+        },
+        availabilityData: {
+          status: "AVAILABLE",
+          matchingState: {
+            type: "NEARBY",
+
+          }
+
+        },
+
+      })
+
       clearFormFields()
       ToastAndroid.show("Truck Added successfully", ToastAndroid.SHORT);
 
@@ -318,9 +385,9 @@ function AddTrucks() {
 
           </View>
 
-        
 
-           <ThemedText style={{ marginTop: wp(4), fontSize: 16, fontWeight: 'bold', fontStyle: 'italic', }}>
+
+          <ThemedText style={{ marginTop: wp(4), fontSize: 16, fontWeight: 'bold', fontStyle: 'italic', }}>
             Truck Details
           </ThemedText>
 
