@@ -68,8 +68,8 @@ const TruckAvailabilityModal: React.FC<TruckAvailabilityModalProps> = ({
     const [additionalInfo, setAdditionalInfo] = useState('');
 
     // UI STATES
-    const [dspDestination, setDspDestination] = useState(false);
-    const [showMapPicker, setShowMapPicker] = useState(false);
+        const [dspDestination, setDspDestination] = useState(false);
+        const [showMapPicker, setShowMapPicker] = useState(false);
 
     const handleSave = () => {
         const data: TruckAvailabilityData = {
@@ -253,26 +253,26 @@ const TruckAvailabilityModal: React.FC<TruckAvailabilityModalProps> = ({
                 </BlurView>
             </Pressable>
 
-            {/* DESTINATION PICKER ONLY */}
-            <GooglePlaceAutoCompleteComp
-                dspRoute={dspDestination}
-                setDspRoute={setDspDestination}
-                setRoute={setDestination}
-                topic="Select Destination"
-                setPickLocationOnMap={setShowMapPicker}
-            />
+                    {/* DESTINATION PICKER ONLY */}
+                    <GooglePlaceAutoCompleteComp
+                        dspRoute={dspDestination}
+                        setDspRoute={setDspDestination}
+                        setRoute={setDestination}
+                        topic="Select Destination"
+                        setPickLocationOnMap={setShowMapPicker}
+                    />
 
-            {showMapPicker && (
-                <LocationPicker
-                    pickOriginLocation={null}
-                    setPickOriginLocation={() => {}}
-                    pickDestinationLoc={destination}
-                    setPickDestinationLoc={setDestination}
-                    setShowMap={setShowMapPicker}
-                    dspShowMap={showMapPicker}
-                    mode="single"
-                />
-            )}
+                    {showMapPicker && (
+                        <LocationPicker
+                            pickOriginLocation={null}
+                            setPickOriginLocation={() => {}}
+                            pickDestinationLoc={destination}
+                            setPickDestinationLoc={setDestination}
+                            setShowMap={setShowMapPicker}
+                            dspShowMap={showMapPicker}
+                            mode="single"
+                        />
+                    )}
         </Modal>
     );
 };
@@ -330,13 +330,13 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 
-    input: {
-        marginTop: wp(2),
-        padding: wp(3),
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: wp(2),
-    },
+        input: {
+            marginTop: wp(2),
+            padding: wp(3),
+            borderWidth: 1,
+            borderColor: '#ccc',
+            borderRadius: wp(2),
+        },
 
     radioRow: {
         flexDirection: 'row',

@@ -16,7 +16,7 @@ import { pickDocument } from '@/Utilities/utils';
 import { takePhoto } from '@/Utilities/imageUtils';
 import { DocumentAsset } from '@/types/types';
 import { useAuth } from '@/context/AuthContext';
-import { addDocument, uploadImage, updateDocument, generateUniqueReferrerCode,addDocumentWithId } from '@/db/operations';
+import { addDocument, uploadImage, updateDocument, generateUniqueReferrerCode, addDocumentWithId } from '@/db/operations';
 import { setDoc, doc } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import CustomHeader from '@/components/CustomHeader';
@@ -81,29 +81,29 @@ const CreateFleet = () => {
             return;
         }
 
-        let errors = [];
+            let errors = [];
 
-        if (!fleetName) errors.push('Fleet name');
-        if (!fleetPhone) errors.push('Fleet phone');
-        if (!billingAddress?.description) errors.push('Billing address');
-        if (!baseAdress?.description) errors.push('Base location');
+            if (!fleetName) errors.push('Fleet name');
+            if (!fleetPhone) errors.push('Fleet phone');
+            if (!billingAddress?.description) errors.push('Billing address');
+            if (!baseAdress?.description) errors.push('Base location');
 
-        if (errors.length > 0) {
-            Alert.alert(
-                'Incomplete setup',
-                `Please complete: ${errors.join(', ')}`
-            );
-            return;
-        }
+            if (errors.length > 0) {
+                Alert.alert(
+                    'Incomplete setup',
+                    `Please complete: ${errors.join(', ')}`
+                );
+                return;
+            }
 
 
-        if (fleetData.selectedFleetDocuments.length < 4) {
-            Alert.alert(
-                'Verification incomplete',
-                'Please upload all required documents to complete verification.'
-            );
-            return
-        }
+            if (fleetData.selectedFleetDocuments.length < 4) {
+                Alert.alert(
+                    'Verification incomplete',
+                    'Please upload all required documents to complete verification.'
+                );
+                return
+            }
 
         setUploadingFleetD(true);
         try {
@@ -121,12 +121,12 @@ const CreateFleet = () => {
 
             const fleetVerificationData = {
                 organizationId: fleetId,
-                userId: user.uid,
+                userId: user.uid,   
                 accType: 'fleet',
                 organizationName: fleetData.fleetName,
 
                 organizationEmail: fleetData.fleetEmail,
-
+                organizationPhone : fleetData.fleetPhone ,
 
                 fleetMainAdminName: user.displayName,
                 organizationAdminPhone: user.phoneNumber,
@@ -179,6 +179,8 @@ const CreateFleet = () => {
 
                 ownerId: user.uid,
                 fleetId,
+                organizationId: fleetId,
+
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 referrerCode: code,
@@ -196,13 +198,13 @@ const CreateFleet = () => {
                 organizationEmail: fleetData.fleetEmail,
 
                 typeOfFleet: fleetData.typeOfFleet,
-                    
+
                 billingAddress: billingAddress?.description,
-                c: billingAddress,
+                billingAddressFull: billingAddress,
 
                 baseAdress: billingAddress?.description,
                 baseAdressFull: billingAddress,
-                
+
                 referrerCode: code,
             };
 
@@ -262,15 +264,15 @@ const CreateFleet = () => {
 
 
             await addDocumentWithId(`fleets/${fleetId}/settings`, "config", {
-                        defaultRatePerKm: 2,
-            
-                        notifications: {
-                            loadAssigned: true,
-                            loadAccepted: true,
-                            loadCompleted: true,
-                            rateUpdated: true
-                        }
-                    })
+                defaultRatePerKm: 2,
+
+                notifications: {
+                    loadAssigned: true,
+                    loadAccepted: true,
+                    loadCompleted: true,
+                    rateUpdated: true
+                }
+            })
 
             await setCurrentRole("fleet");
 

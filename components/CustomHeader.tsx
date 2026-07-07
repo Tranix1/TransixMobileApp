@@ -162,7 +162,7 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement}
                { (user?.email==="transix16@gmail.com" || user?.email==="kelvinyaya8@gmail.com") &&  <View style={{ overflow: 'hidden', borderRadius: wp(10) , flexDirection:'row'}}>
                
                 
-                    <TouchableNativeFeedback onPress={()=>setDspMenu(true)}>
+                    <TouchableNativeFeedback onPress={()=>set`  DspMenu(true)}>
                         <View style={{ padding: wp(2) }}>
                             <Ionicons name="ellipsis-vertical" size={wp(7)} color={icon} />
                         </View>

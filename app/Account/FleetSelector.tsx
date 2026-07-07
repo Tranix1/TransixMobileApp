@@ -241,13 +241,15 @@ const filteredFleets =
 
             referrerCode : fleet.referrerCode || null ,
 
-            organizationName : fleet.companyName || fleet.fleetName ,
-            organizationId : fleet.fleetId ,
+                organizationName : fleet.companyName || fleet.fleetName ,
+                organizationId : fleet.fleetId ,
 
             phone : `${fleet.countryCode}${fleet?.organizationPhone}` ,
             email : fleet.organizationEmail ,
             billingAddress : fleet?.billingAddress || fleet?.billingAddress  ,
-            baseAdress : fleet.baseAdress  
+            baseAdress : fleet.baseAdress  ,
+            location : fleet?.billingAddressFull || fleet?.baseAdressFull  ,
+
         };
 
     (fleetRole as any);

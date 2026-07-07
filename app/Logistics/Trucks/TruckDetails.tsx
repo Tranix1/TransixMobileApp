@@ -345,17 +345,22 @@ const TruckDetails = () => {
         });
 
 
-        await updateDocument("truckDispatchProfile", truckData.id, {
+        await updateDocument("truckMarketplaceProfile", truckData.id, {
             truckId: truckid,
             notificationSettings: {
                 notificationsEnabled: notifictionData.notificationsEnabled,
                 notifyRoles: notifictionData.notifyRoles,
                 minRatePerKm: notifictionData.minimumRate,
             },
+            // driverId
+            // dispatcherId
+            // truckType,
+            //   capacity,
+            //   cargoArea,
+            //   locations,
 
             updatedAt: serverTimestamp()
-        }
-        )
+        })
 
     }
 
@@ -389,7 +394,7 @@ const TruckDetails = () => {
             // truck_dispatch_profile
 
 
-            await updateDocument("truckDispatchProfile", truckData.id, {
+            await updateDocument("truckMarketplaceProfile", truckData.id, {
                 truckId: truckid,
 
                 // 🚛 LIVE STATUS
@@ -431,6 +436,92 @@ const TruckDetails = () => {
         }
     };
 
+
+    const handleSaveDefaultDriver = async (driver: any) => {
+        await updateDocument(`fleets/${fleetId}/trucks`, truckData.id, {
+            defaultDriver:  driver  ,
+            // add expo push token
+            lastDefaultDriverUpdate: new Date().toISOString(),
+        });
+
+        await updateDocument(`fleets/${fleetId}/truckStaffLinks`, truckData.id, {
+            defaultDriver: driver,
+            updatedAt: new Date().toISOString(),
+            truckId: truckData.id,
+        });
+
+
+
+        await updateDocument("truckMarketplaceProfile", truckData.id, {
+            truckId: truckid,
+
+            notificationSettings: {
+                assignments: {
+                    driver:{
+                        id: driver.driverId,
+                        expoPushToken: driver.driverExpoPushToken,
+                    }
+                }
+            },
+
+
+            updatedAt: serverTimestamp()
+        })
+
+
+
+
+
+        //         {
+        //   truckId: "T1",
+
+        //   driver: {
+        //     id: "D123",
+        //     name: "John Doe",
+        //     phone: "0771234567"
+        //   },
+
+        //   dispatcher: [
+        //     id: "DP456",
+        //     name: "Mary Jane",
+        //     phone: "0788888888"
+        //   ],
+
+        //   broker: [
+        //     id: "B789",
+        //     name: "ABC Logistics"
+        //   ],
+
+        //   updatedAt: 1234567890
+        // }
+
+
+
+
+        // The truck history of assigment 
+        // fleet/{fleetId}/relationship_history/{autoId}
+        // {
+        //   truckId: "T1",
+
+        //   role: "DRIVER" | "DISPATCHER" | "BROKER",
+
+        //   entity: {
+        //     id: "D123",
+        //     name: "John Doe"
+        //   },
+
+        //   action: "ASSIGNED" | "REMOVED" | "CHANGED",
+
+        //   timestamp: 1234567890
+        // }
+
+
+
+
+    }
+
+
+
     const placeholder = require('@/assets/images/failedimage.jpg')
     return (
         <ScreenWrapper>
@@ -448,22 +539,23 @@ const TruckDetails = () => {
                                     gap: wp(3),
                                 }}
                             >
+
+                                {/* CLOSE */}
                                 <View style={{ alignItems: 'flex-end' }}>
                                     <TouchableOpacity onPress={() => setModalVisible(false)}>
                                         <Ionicons name="close-circle" size={wp(6)} color={icon} />
                                     </TouchableOpacity>
                                 </View>
 
+                                {/* TITLE */}
                                 <ThemedText
                                     type="title"
-                                    style={{
-                                        textAlign: 'center',
-                                        marginBottom: wp(3),
-                                    }}
+                                    style={{ textAlign: 'center', marginBottom: wp(3) }}
                                 >
                                     Manage Truck
                                 </ThemedText>
 
+                                {/* 1. AVAILABILITY (MOST USED) */}
                                 <TouchableOpacity
                                     style={styles.actionButton}
                                     onPress={() => {
@@ -471,24 +563,12 @@ const TruckDetails = () => {
                                         setAvailabilityModalVisible(true);
                                     }}
                                 >
-                                    <Ionicons
-                                        name="car-sport-outline"
-                                        size={22}
-                                        color={accent}
-                                    />
-
-                                    <ThemedText type="subtitle">
-                                        Truck Availability
-                                    </ThemedText>
-
-                                    <Ionicons
-                                        name="chevron-forward"
-                                        size={20}
-                                        color={icon}
-                                    />
+                                    <Ionicons name="car-sport-outline" size={22} color={accent} />
+                                    <ThemedText type="subtitle">Truck Availability</ThemedText>
+                                    <Ionicons name="chevron-forward" size={20} color={icon} />
                                 </TouchableOpacity>
 
-
+                                {/* 2. DRIVER (CORE DISPATCH) */}
                                 <TouchableOpacity
                                     style={styles.actionButton}
                                     onPress={() => {
@@ -496,62 +576,37 @@ const TruckDetails = () => {
                                         setShowMDriverodal(true);
                                     }}
                                 >
-                                    <Ionicons
-                                        name="person-circle-outline"
-                                        size={22}
-                                        color={accent}
-                                    />
-
-                                    <ThemedText type="subtitle">
-                                        Set Default Driver
-                                    </ThemedText>
-
-                                    <Ionicons
-                                        name="chevron-forward"
-                                        size={20}
-                                        color={icon}
-                                    />
+                                    <Ionicons name="person-circle-outline" size={22} color={accent} />
+                                    <ThemedText type="subtitle">Set Default Driver</ThemedText>
+                                    <Ionicons name="chevron-forward" size={20} color={icon} />
                                 </TouchableOpacity>
 
-
-
+                                {/* 3. BROKERAGE (BUSINESS LINK) */}
                                 <TouchableOpacity
                                     style={styles.actionButton}
                                     onPress={() => {
                                         setModalVisible(false);
-
                                         router.push({
                                             pathname: '/Logistics/Trucks/AssignBrokerageScreen',
                                             params: {
                                                 truckId: truckData?.id,
-                                                truckName: truckData?.name,
+                                                truckName: truckData?.truckName,
                                                 truckType: truckData.truckType,
                                                 cargoArea: truckData.cargoArea,
                                                 operaatingLocations: truckData.locations,
                                                 capacity: truckData?.truckCapacity,
                                                 numberPlate: truckData?.numberPlate,
+                                                fleetName : truckData.organizationDetails.id ,
                                             },
                                         });
                                     }}
                                 >
-                                    <Ionicons
-                                        name="briefcase-outline"
-                                        size={22}
-                                        color={accent}
-                                    />
-
-                                    <ThemedText type="subtitle">
-                                        Set Brokerage
-                                    </ThemedText>
-
-                                    <Ionicons
-                                        name="chevron-forward"
-                                        size={20}
-                                        color={icon}
-                                    />
+                                    <Ionicons name="briefcase-outline" size={22} color={accent} />
+                                    <ThemedText type="subtitle">Set Brokerage</ThemedText>
+                                    <Ionicons name="chevron-forward" size={20} color={icon} />
                                 </TouchableOpacity>
 
-
+                                {/* 4. NOTIFICATIONS (CONFIG) */}
                                 <TouchableOpacity
                                     style={styles.actionButton}
                                     onPress={() => {
@@ -559,23 +614,12 @@ const TruckDetails = () => {
                                         setNotificationModal(true);
                                     }}
                                 >
-                                    <Ionicons
-                                        name="notifications-outline"
-                                        size={22}
-                                        color={accent}
-                                    />
-
-                                    <ThemedText type="subtitle">
-                                        Notification Settings
-                                    </ThemedText>
-
-                                    <Ionicons
-                                        name="chevron-forward"
-                                        size={20}
-                                        color={icon}
-                                    />
+                                    <Ionicons name="notifications-outline" size={22} color={accent} />
+                                    <ThemedText type="subtitle">Notification Settings</ThemedText>
+                                    <Ionicons name="chevron-forward" size={20} color={icon} />
                                 </TouchableOpacity>
 
+                                {/* 5. EDIT TRUCK */}
                                 <TouchableOpacity
                                     style={styles.actionButton}
                                     onPress={() => {
@@ -586,23 +630,12 @@ const TruckDetails = () => {
                                         });
                                     }}
                                 >
-                                    <Ionicons
-                                        name="images-outline"
-                                        size={22}
-                                        color={accent}
-                                    />
-
-                                    <ThemedText type="subtitle">
-                                        Edit Truck Images
-                                    </ThemedText>
-
-                                    <Ionicons
-                                        name="chevron-forward"
-                                        size={20}
-                                        color={icon}
-                                    />
+                                    <Ionicons name="images-outline" size={22} color={accent} />
+                                    <ThemedText type="subtitle">Edit Truck Images</ThemedText>
+                                    <Ionicons name="chevron-forward" size={20} color={icon} />
                                 </TouchableOpacity>
 
+                                {/* 6. DELETE (DANGER LAST) */}
                                 <TouchableOpacity
                                     style={styles.deleteButton}
                                     onPress={() => {
@@ -637,35 +670,18 @@ const TruckDetails = () => {
                                         );
                                     }}
                                 >
-                                    <Ionicons
-                                        name="trash-outline"
-                                        size={22}
-                                        color="#EF4444"
-                                    />
-
-                                    <ThemedText
-                                        type="subtitle"
-                                        style={{ color: "#EF4444" }}
-                                    >
+                                    <Ionicons name="trash-outline" size={22} color="#EF4444" />
+                                    <ThemedText type="subtitle" style={{ color: "#EF4444" }}>
                                         Delete Truck
                                     </ThemedText>
-
-                                    <Ionicons
-                                        name="chevron-forward"
-                                        size={20}
-                                        color="#EF4444"
-                                    />
+                                    <Ionicons name="chevron-forward" size={20} color="#EF4444" />
                                 </TouchableOpacity>
+
                             </View>
                         </View>
                     </BlurView>
                 </Pressable>
             </Modal>
-
-
-
-
-
 
             {showAlert}
             <Heading page={truckData.truckName || "Truck Details"}

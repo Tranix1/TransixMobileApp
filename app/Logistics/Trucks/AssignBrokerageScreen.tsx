@@ -18,18 +18,27 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { wp, hp } from '@/constants/common';
 import Input from '@/components/Input';
 import { ThemedText } from '@/components/ThemedText';
+import { fetchDocuments } from '@/db/operations';
+import { collection, getDocs } from "firebase/firestore";
+import { db } from '@/db/fireBaseConfig';
+import { SelectLocationProp } from '@/types/types';
+import { writeBatch, doc } from "firebase/firestore";
 
 // -----------------------------------------------------------------------------
 // Types
 // -----------------------------------------------------------------------------
 
+export interface DefaultFleet {
+    fleetId: string;
+    fleetName: string;
+}
+
 export interface Brokerage {
     id: string;
     name: string;
-    type: 'Local' | 'International' | 'Partner' | string;
-    location?: string;
-    fleetId: string;
-    isDefault: boolean;
+    brokerType: string;
+    location?: SelectLocationProp;
+    defaultFleets: DefaultFleet[];
 }
 
 interface TruckRouteParams {
@@ -41,6 +50,7 @@ interface TruckRouteParams {
     capacity?: string;
     numberPlate?: string;
     fleetId?: string;
+    fleetName?: string
 }
 
 type Mode = 'other' | 'default';
@@ -49,16 +59,30 @@ type Mode = 'other' | 'default';
 // Data layer (swap the body of these for real Firestore/API calls)
 // -----------------------------------------------------------------------------
 
-async function fetchBrokeragesByFleet(fleetId: string): Promise<Brokerage[]> {
+async function fetchBrokeragesByFleet(): Promise<Brokerage[]> {
     // TODO: replace with real query, e.g.
     // const snap = await firestore().collection('brokerages').where('fleetId', '==', fleetId).get();
     await new Promise((resolve) => setTimeout(resolve, 600));
-    return [
-        { id: 'brk_1', name: 'Atlas Freight Partners', type: 'International', location: 'Durban, ZA', fleetId, isDefault: true },
-        { id: 'brk_2', name: 'Karoo Logistics', type: 'Local', location: 'Bloemfontein, ZA', fleetId, isDefault: true },
-        { id: 'brk_3', name: 'Continental Cargo Co.', type: 'Partner', location: 'Gaborone, BW', fleetId, isDefault: false },
-        { id: 'brk_4', name: 'Savanna Route Brokers', type: 'Local', location: 'Harare, ZW', fleetId, isDefault: false },
-    ];
+
+    const snapshot = await getDocs(collection(db, "brokerages"));
+
+    const brokerages = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+    })) as Brokerage[];
+
+    return brokerages;
+
+
+    // return [
+    //     { id: 'brk_1', name: 'Atlas Freight Partners', type: 'International', location: 'Durban, ZA', fleetId, isDefault: true },
+    //     { id: 'brk_2', name: 'Karoo Logistics', type: 'Local', location: 'Bloemfontein, ZA', fleetId, isDefault: true },
+    //     { id: 'brk_3', name: 'Continental Cargo Co.', type: 'Partner', location: 'Gaborone, BW', fleetId, isDefault: false },
+    //     { id: 'brk_4', name: 'Savanna Route Brokers', type: 'Local', location: 'Harare, ZW', fleetId, isDefault: false },
+    // ];
+}
+async function getBrokeragesNotAssignedToFleet(fleetId: string) {
+    fetchDocuments("brokerages",)
 }
 
 async function fetchTruckAssignedBrokerageId(truckId: string): Promise<string | null> {
@@ -67,22 +91,118 @@ async function fetchTruckAssignedBrokerageId(truckId: string): Promise<string | 
     return null;
 }
 
-async function createBrokerage(fleetId: string, name: string, type: string, isDefault: boolean): Promise<Brokerage> {
+// async function createBrokerage(fleetId: string, name: string, brokerType: string, defaultFleets: DefaultFleet[]): Promise<Brokerage> {
+//     // TODO: replace with real create call.
+//     await new Promise((resolve) => setTimeout(resolve, 500));
+//     return { id: `brk_${Date.now()}`, name, brokerType, defaultFleets };
+// }
+
+
+async function createBrokerage(fleetId: string, name: string, brokerType: string, defaultFleets: DefaultFleet[]) {
     // TODO: replace with real create call.
     await new Promise((resolve) => setTimeout(resolve, 500));
-    return { id: `brk_${Date.now()}`, name, type, fleetId, isDefault };
+    return { id: `brk_${Date.now()}`, name, brokerType, defaultFleets };
 }
 
-async function setBrokerageDefault(fleetId: string, brokerageId: string, isDefault: boolean): Promise<void> {
+
+
+async function setBrokerageDefault(fleetId: string, brokerageId: string, defaultFleets: DefaultFleet[]): Promise<void> {
     // TODO: replace with real update, e.g.
     // firestore().collection('brokerages').doc(brokerageId).update({ isDefault })
     await new Promise((resolve) => setTimeout(resolve, 300));
 }
 
-async function saveTruckBrokerage(truckId: string, brokerageId: string): Promise<void> {
-    // TODO: replace with real update call, e.g.
-    // await firestore().collection('trucks').doc(truckId).update({ brokerageId });
-    await new Promise((resolve) => setTimeout(resolve, 500));
+async function saveTruckBrokerage(
+    truckId: string,
+    brokerageId: string,
+    brokerageName: string,
+    fleetId: string,
+    fleetName: string,
+    truckName: string,
+    truckType: string,
+    cargoArea: string,
+    capacity: string,
+    numberPlate: string,
+    operatingLocations: string[]
+): Promise<void> {
+
+    const batch = writeBatch(db);
+
+    const assignedAt = new Date().toISOString();
+
+    // Fleet side
+    // fleets
+    //  └── fleetId
+    //       └── trucks
+    //            └── truckId
+    //                 └── assignments
+    //                      └── brokerageId
+
+    const truckAssignmentRef = doc(
+        db,
+        "fleets",
+        fleetId,
+        "trucks",
+        truckId,
+        "assignments",
+        brokerageId
+    );
+
+    batch.set(truckAssignmentRef, {
+        brokerageId,
+        brokerageName,
+
+        fleetId,
+        fleetName,
+
+        truckId,
+        truckName,
+        truckType,
+        cargoArea,
+        capacity,
+        numberPlate,
+        operatingLocations,
+
+        status: "active",
+        assignedAt
+    });
+
+
+    // Brokerage side
+    // brokerages
+    //  └── brokerageId
+    //       └── trucks
+    //            └── truckId
+
+    const brokerageTruckRef = doc(
+        db,
+        "brokerages",
+        brokerageId,
+        "trucks",
+        truckId
+    );
+
+    batch.set(brokerageTruckRef, {
+        brokerageId,
+        brokerageName,
+
+        fleetId,
+        fleetName,
+
+        truckId,
+        truckName,
+        truckType,
+        cargoArea,
+        capacity,
+        numberPlate,
+        operatingLocations,
+
+        status: "active",
+        assignedAt
+    });
+
+
+    await batch.commit();
 }
 
 // -----------------------------------------------------------------------------
@@ -258,6 +378,21 @@ const SelectableBrokerageRow: React.FC<SelectableBrokerageRowProps> = ({
         Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 40, bounciness: 6 }).start();
     };
 
+    const formatLocation = (location?: SelectLocationProp) => {
+        if (!location) return "";
+
+        const description = location.description;
+
+        // Ignore plus codes / short Google generated addresses
+        const hasPlusCode = /^[A-Z0-9]+\+[A-Z0-9]+/.test(description);
+
+        if (description && !hasPlusCode) {
+            return description;
+        }
+
+        return `${location.city}, ${location.country}`;
+    };
+
     return (
         <Animated.View style={{ transform: [{ scale }] }}>
             <TouchableOpacity
@@ -287,12 +422,12 @@ const SelectableBrokerageRow: React.FC<SelectableBrokerageRowProps> = ({
                     </ThemedText>
                     <View style={styles.tagRow}>
                         <View style={[styles.tag, { borderColor: border }]}>
-                            <ThemedText style={[styles.tagText, { color: muted }]}>{brokerage.type}</ThemedText>
+                            <ThemedText style={[styles.tagText, { color: muted }]}>{brokerage.brokerType}</ThemedText>
                         </View>
                         {!!brokerage.location && (
                             <View style={styles.locationRow}>
                                 <Ionicons name="location-outline" size={wp(3.4)} color={muted} />
-                                <ThemedText style={[styles.tagText, { color: muted }]}>{brokerage.location}</ThemedText>
+                                <ThemedText style={[styles.tagText, { color: muted }]}>{formatLocation(brokerage.location)}</ThemedText>
                             </View>
                         )}
                     </View>
@@ -313,6 +448,7 @@ interface DefaultToggleRowProps {
     backgroundLight: string;
     border: string;
     muted: string;
+    fleetId: string
 }
 
 const DefaultToggleRow: React.FC<DefaultToggleRowProps> = ({
@@ -322,62 +458,89 @@ const DefaultToggleRow: React.FC<DefaultToggleRowProps> = ({
     backgroundLight,
     border,
     muted,
-}) => (
-    <View
-        style={[
-            styles.card,
-            {
-                backgroundColor: backgroundLight,
-                borderColor: brokerage.isDefault ? accent : border,
-                borderWidth: brokerage.isDefault ? 2 : 1,
-            },
-        ]}
-    >
-        <View style={styles.cardLeft}>
-            <View style={styles.cardTopRow}>
-                <ThemedText type="defaultSemiBold" style={styles.cardName}>
-                    {brokerage.name}
-                </ThemedText>
-                {brokerage.isDefault && (
-                    <View style={[styles.defaultBadge, { backgroundColor: accent }]}>
-                        <Ionicons name="star" size={wp(3)} color="white" />
-                        <ThemedText style={styles.defaultBadgeText}>Default</ThemedText>
-                    </View>
-                )}
-            </View>
-            <View style={styles.tagRow}>
-                <View style={[styles.tag, { borderColor: border }]}>
-                    <ThemedText style={[styles.tagText, { color: muted }]}>{brokerage.type}</ThemedText>
-                </View>
-                {!!brokerage.location && (
-                    <View style={styles.locationRow}>
-                        <Ionicons name="location-outline" size={wp(3.4)} color={muted} />
-                        <ThemedText style={[styles.tagText, { color: muted }]}>{brokerage.location}</ThemedText>
-                    </View>
-                )}
-            </View>
-        </View>
+    fleetId,
+}) => {
+    const isDefault = (brokerage.defaultFleets ?? []).some(fleet => fleet.fleetId === fleetId);
+    const formatLocation = (location?: SelectLocationProp) => {
+        if (!location) return "";
 
-        <Switch
-            value={brokerage.isDefault}
-            onValueChange={onToggle}
-            trackColor={{ false: border, true: accent }}
-            thumbColor="white"
-        />
-    </View>
-);
+        const description = location.description;
+
+        // Ignore plus codes / short Google generated addresses
+        const hasPlusCode = /^[A-Z0-9]+\+[A-Z0-9]+/.test(description);
+
+        if (description && !hasPlusCode) {
+            return description;
+        }
+
+        return `${location.city}, ${location.country}`;
+    };
+
+    (
+        <View
+            style={[
+                styles.card,
+                {
+                    backgroundColor: backgroundLight,
+                    borderColor: isDefault ? accent : border,
+                    borderWidth: isDefault ? 2 : 1,
+                },
+            ]}
+        >
+            <View style={styles.cardLeft}>
+                <View style={styles.cardTopRow}>
+                    <ThemedText type="defaultSemiBold" style={styles.cardName}>
+                        {brokerage.name}
+                    </ThemedText>
+                    {(brokerage.defaultFleets ?? []).some(
+                        fleet => fleet.fleetId === fleetId
+                    ) && (
+                            <View style={[styles.defaultBadge, { backgroundColor: accent }]}>
+                                <Ionicons name="star" size={wp(3)} color="white" />
+                                <ThemedText style={styles.defaultBadgeText}>
+                                    Default
+                                </ThemedText>
+                            </View>
+                        )}
+                </View>
+                <View style={styles.tagRow}>
+                    <View style={[styles.tag, { borderColor: border }]}>
+                        <ThemedText style={[styles.tagText, { color: muted }]}>{brokerage.brokerType}</ThemedText>
+                    </View>
+                    {!!brokerage.location && (
+                        <View style={styles.locationRow}>
+                            <Ionicons name="location-outline" size={wp(3.4)} color={muted} />
+                            <ThemedText>
+                                {formatLocation(brokerage.location)}
+                            </ThemedText>
+                        </View>
+                    )}
+                </View>
+            </View>
+
+            <Switch
+                value={isDefault}
+                onValueChange={onToggle}
+                trackColor={{ false: border, true: accent }}
+                thumbColor="white"
+            />
+        </View>
+    )
+};
 
 // -----------------------------------------------------------------------------
 // Main screen
 // -----------------------------------------------------------------------------
 
 const AssignBrokerageScreen: React.FC = () => {
+
     const params = useLocalSearchParams() as unknown as TruckRouteParams;
     const router = useRouter();
     const insets = useSafeAreaInsets();
 
     const truckId = params.truckId ?? '';
     const fleetId = params.fleetId ?? 'default_fleet';
+    const fleetName = params.fleetName ?? "default_Fleet"
     const truckName = params.truckName ?? 'Unnamed Truck';
     const truckType = params.truckType ?? '';
     const cargoArea = params.cargoArea ?? '';
@@ -398,6 +561,8 @@ const AssignBrokerageScreen: React.FC = () => {
     const [mode, setMode] = useState<Mode>('other');
     const [loading, setLoading] = useState(true);
     const [brokerages, setBrokerages] = useState<Brokerage[]>([]);
+
+    const [brokeragesNotAssignedToFleet, setBrokeragesNotAssignedToFleet] = useState([])
     const [query, setQuery] = useState('');
     const [selectedOtherId, setSelectedOtherId] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
@@ -412,7 +577,8 @@ const AssignBrokerageScreen: React.FC = () => {
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const all = await fetchBrokeragesByFleet(fleetId);
+            const all = await fetchBrokeragesByFleet();
+
             const assignedId = await fetchTruckAssignedBrokerageId(truckId);
             setBrokerages(all);
             setSelectedOtherId(assignedId);
@@ -421,6 +587,11 @@ const AssignBrokerageScreen: React.FC = () => {
             Animated.timing(listFade, { toValue: 1, duration: 320, useNativeDriver: true }).start();
         }
     }, [fleetId, truckId, listFade]);
+
+
+
+
+
 
     useEffect(() => {
         load();
@@ -436,7 +607,7 @@ const AssignBrokerageScreen: React.FC = () => {
 
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
-        const source = mode === 'other' ? brokerages.filter((b) => !b.isDefault) : brokerages;
+        const source = mode === 'other' ? brokerages.filter((b) => !b.defaultFleets.some(fleet => fleet.fleetId === fleetId)) : brokerages;
         if (!q) return source;
         return source.filter((b) => b.name.toLowerCase().includes(q));
     }, [brokerages, query, mode]);
@@ -457,9 +628,19 @@ const AssignBrokerageScreen: React.FC = () => {
                         text: 'Remove',
                         style: 'destructive',
                         onPress: async () => {
-                            await setBrokerageDefault(fleetId, brokerage.id, false);
+                            await setBrokerageDefault(fleetId, brokerage.id, [{ fleetId, fleetName }]);
+
                             setBrokerages((prev) =>
-                                prev.map((b) => (b.id === brokerage.id ? { ...b, isDefault: false } : b))
+                                prev.map((b) =>
+                                    b.id === brokerage.id
+                                        ? {
+                                            ...b,
+                                            defaultFleets: b.defaultFleets.filter(
+                                                fleet => fleet.fleetId !== fleetId
+                                            )
+                                        }
+                                        : b
+                                )
                             );
                         },
                     },
@@ -467,15 +648,37 @@ const AssignBrokerageScreen: React.FC = () => {
             );
             return;
         }
-        await setBrokerageDefault(fleetId, brokerage.id, true);
-        setBrokerages((prev) => prev.map((b) => (b.id === brokerage.id ? { ...b, isDefault: true } : b)));
+        await setBrokerageDefault(fleetId, brokerage.id, [{ fleetId, fleetName }]);
+
+
+        setBrokerages((prev) =>
+            prev.map((b) =>
+                b.id === brokerage.id
+                    ? {
+                        ...b,
+                        defaultFleets: b.defaultFleets.some(
+                            fleet => fleet.fleetId === fleetId
+                        )
+                            ? b.defaultFleets
+                            : [
+                                ...b.defaultFleets,
+                                {
+                                    fleetId,
+                                    fleetName,
+                                },
+                            ],
+                    }
+                    : b
+            )
+        );
     };
 
     const handleCreate = async () => {
         if (!newName.trim()) return;
         setCreating(true);
         try {
-            const created = await createBrokerage(fleetId, newName.trim(), newType, mode === 'default');
+            const created = await createBrokerage(fleetId, newName.trim(), newType, mode === 'default' ? [{ fleetId, fleetName }] : []);
+
             setBrokerages((prev) => [created, ...prev]);
             if (mode === 'other') setSelectedOtherId(created.id);
             setShowCreate(false);
@@ -490,7 +693,21 @@ const AssignBrokerageScreen: React.FC = () => {
         if (!selectedOtherBrokerage) return;
         setSaving(true);
         try {
-            await saveTruckBrokerage(truckId, selectedOtherBrokerage.id);
+
+
+            await saveTruckBrokerage(
+    truckId,
+    selectedOtherBrokerage.id,
+    selectedOtherBrokerage.name,
+    fleetId,
+    fleetName,
+    truckName,
+    truckType,
+    cargoArea,
+    capacity,
+    numberPlate,
+    operatingLocations
+);
             router.back();
         } finally {
             setSaving(false);
@@ -523,7 +740,7 @@ const AssignBrokerageScreen: React.FC = () => {
                     <View style={styles.backButton} />
                 </View>
 
-                <ModeSwitch mode={mode} onChange={setMode} accent={accent} coolGray={coolGray} />
+                <ModeSwitch mode={mode} onChange={setMode} accent={accent} coolGray={backgroundLight} />
 
                 {mode === 'other' && (
                     <TruckCard
@@ -681,6 +898,7 @@ const AssignBrokerageScreen: React.FC = () => {
                                     backgroundLight={backgroundLight}
                                     border={border}
                                     muted={muted}
+                                    fleetId={fleetId}
                                 />
                             )
                         }

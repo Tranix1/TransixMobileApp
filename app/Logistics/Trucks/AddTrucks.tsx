@@ -330,12 +330,27 @@ function AddTrucks() {
 
       await addDocumentWithId(`fleets/${currentRole.fleetId}/Trucks`, truckId, submitData);
 
-      await addDocumentWithId("truckDispatchProfile", truckId, {
+      await addDocumentWithId("truckMarketplaceProfile", truckId, {
         truckId: truckId,
+        
+
+        locations: operationCountries,
+        truckType: selectedTruckType?.name,
+        cargoArea: selectedCargoArea.name,
+        truckCapacity: selectedTruckCapacity?.name,
+        tankerType: selectedTankerType ? selectedTankerType?.name : null,
+
         notificationSettings: {
           notificationsEnabled: fleetConfig?.notificationsEnabled,
           notifyRoles: fleetConfig?.truckDefaults.notification.roles,
           minRatePerKm: fleetConfig?.truckDefaults.notification.ratePerKm || null,
+          assignments : {
+            dispatcher: {
+            id: user.uid,
+            name: user.displayName ,
+            expoPushToken: expoPushToken || user?.expoPushToken
+          }
+          } ,
         },
         availabilityData: {
           status: "AVAILABLE",

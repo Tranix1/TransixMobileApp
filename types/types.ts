@@ -141,6 +141,13 @@ export type Truck = {
     loadTypes?: string[];
 
     fleetId?: string;
+      organizationDetails: {
+          id: string ;
+          name: string ; 
+          phone: string
+          billingAddress: SelectLocationProp
+          baseAdress: SelectLocationProp ;
+        },
 } & TruckFormData;
 
 

@@ -224,7 +224,7 @@ export default function UserMenuModal({ visible, onClose, onProfileUpdate }: Use
             icon: 'swap-horizontal',
             iconFamily: Ionicons,
             onPress: () => {
-                // router.push('/Account/SwitchAccount');
+                router.push('/Account/SwitchRoleSelector/Index');
                 onClose();
             },
         },

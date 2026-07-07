@@ -25,9 +25,8 @@ function BrokerageSelector() {
     const icon = useThemeColor('icon');
 
     const ownedBrokerages = Array.isArray(user?.brokergePDetails) ? user.brokergePDetails : [];
-    const fleetBrokerages = ownedBrokerages.length;
+    const brokerages = ownedBrokerages.length;
     const hasReferral = !!user?.referrerId || !!user?.referrerCode;
-
   
     useEffect(() => {
         if (user) {
@@ -90,9 +89,17 @@ function BrokerageSelector() {
         const brokerageRole = {
             role: 'brokerage' as const,
             brokerageId: brokerage.brokerageId,
-            companyName: brokerage.companyName || brokerage.brokerage,
+            companyName: brokerage.name || brokerage.brokerage,
+            
             userRole: brokerage.userRole || 'owner',
             accType: 'brokerage' as const,
+            
+            referrerCode : brokerage.referrerCode || null ,
+            organizationName : brokerage.name,
+            organizationId : brokerage.id ,
+            phone : `${brokerage.countryCode}${brokerage?.organizationPhone}` ,
+            email : brokerage.organizationEmail ,
+            location : brokerage?.location  ,
         };
 
     (brokerageRole as any);
@@ -130,19 +137,19 @@ function BrokerageSelector() {
                     <ThemedText style={styles.sectionTitle}>Brokerage</ThemedText>
                 </View>
                 <ThemedText style={[styles.sectionDescription, { fontSize: 12 }]}>
-                    {fleetBrokerages > 0
-                        ? `Access your ${fleetBrokerages} fleet${fleetBrokerages > 1 ? 's' : ''} - Manage trucks, drivers, and operations`
+                    {brokerages > 0
+                        ? `Access your ${brokerages} fleet${brokerages > 1 ? 's' : ''} - Manage trucks, drivers, and operations`
                         : 'Brokerages found. Create a fleet to start managing trucks and drivers.'
                     }
                 </ThemedText>
 
-                {fleetBrokerages > 0 ? (
+                {brokerages > 0 ? (
                     <View style={{ marginTop: 12 }}>
-                        {ownedBrokerages.map((fleet: any) => (
-                            <TouchableNativeFeedback key={fleet.fleetId || fleet.companyName} onPress={() => handleBrokerageSelect(fleet)}>
+                        {ownedBrokerages.map((brokerage: any) => (
+                            <TouchableNativeFeedback key={brokerage.organizationId || brokerage.name} onPress={() => handleBrokerageSelect(brokerage)}>
                                 <View style={[styles.fleetCard, { backgroundColor: backgroundLight, borderColor: accent + '20' }]}>
-                                    <ThemedText style={styles.fleetName}>{fleet.companyName || 'Brokerage'}</ThemedText>
-                                    <ThemedText style={{fontSize:12,color:icon}}>Role: {fleet.role || 'owner'}</ThemedText>
+                                    <ThemedText style={styles.fleetName}>{brokerage.name || 'Brokerage'}</ThemedText>
+                                    <ThemedText style={{fontSize:12,color:icon}}>Role: {brokerage.role || 'owner'}</ThemedText>
                                 </View>
                             </TouchableNativeFeedback>
                         ))}

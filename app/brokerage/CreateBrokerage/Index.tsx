@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Modal,Alert } from 'react-native';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import Input from '@/components/Input';
@@ -22,6 +22,9 @@ import { uploadImage } from '@/db/operations';
 import { setDoc, doc } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import { addDocument } from '@/db/operations';
+import { LocationPicker } from '@/components/LocationPicker';
+import { SelectLocationProp } from '@/types/types';
+import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplete';
 
 const CreaterBrokerage = ({ }) => {
   const icon = useThemeColor('icon');
@@ -30,9 +33,12 @@ const CreaterBrokerage = ({ }) => {
 
   // Broker verification state
   const [typeOfBroker, setTypeOfBroker] = useState('');
-  const [brokerName, setBrokerName] = useState(user?.displayName || '');
-  const [brokerPhone, setBrokerPhone] = useState(user?.phoneNumber || '');
-  const [brokerEmail, setBrokerEmail] = useState(user?.email || '');
+  const [brokerName, setBrokerName] = useState( '');
+  const [brokerPhone, setBrokerPhone] = useState( '');
+  const [brokerEmail, setBrokerEmail] = useState( '');
+
+  const [locationFull, setLocationFull] = useState<SelectLocationProp | null>(null);
+
   const [brokerCountryCode, setBrokerCountryCode] = useState({ id: 0, name: '' });
   const [selectedBrokerDocuments, setSelectedBrokerDocuments] = useState<DocumentAsset[]>([
     user?.idDocument ? { name: 'ID Document', uri: user.idDocument, size: 0, mimeType: user.idDocumentType || 'image/jpeg' } : null,
@@ -50,6 +56,42 @@ const CreaterBrokerage = ({ }) => {
 
   const handleBrokerSave = async (brokerData: any) => {
     setUploadingBrokerD(true);
+
+
+      let errors = [];
+    
+            if (!brokerName) errors.push('Brokerage name');
+            if (!brokerPhone) errors.push('Brokerage phone');
+            if (!locationFull?.description) errors.push('Brokerage address');
+
+            if(!typeOfBroker) errors.push("Type of broker`")
+
+            if (errors.length > 0) {
+                Alert.alert(
+                    'Incomplete setup',
+                    `Please complete: ${errors.join('\n')}`
+                );
+                return;
+            }
+    
+    
+            if (selectedBrokerDocuments.length < 3&& typeOfBroker==="Individual Broker") {
+                Alert.alert(
+                    'Verification incomplete',
+                    'Please upload all required documents to complete verification.'
+                );
+                return
+            }
+               if (selectedBrokerDocuments.length < 5&& typeOfBroker==="Company Broker") {
+                Alert.alert(
+                    'Verification incomplete',
+                    'Please upload all required documents to complete verification.'
+                );
+                return
+            }
+
+
+
     try {
       // Upload documents to Firebase Storage and get URLs
       const uploadPromises = brokerData.selectedBrokerDocuments.map(async (doc: DocumentAsset, index: number) => {
@@ -67,13 +109,23 @@ const CreaterBrokerage = ({ }) => {
       // Prepare broker verification data
       const brokerVerificationData = {
         userId: user?.uid,
-        brokerId: brokerageId,
+        organizationId: brokerageId,
         accType: 'brokerage',
-        fullName: brokerData.brokerName,
-        phoneNumber: brokerData.brokerPhone,
-        email: brokerData.brokerEmail,
-        countryCode: brokerData.brokerCountryCode?.name,
-        typeOfBroker: brokerData.typeOfBroker,
+
+        organizationName: brokerName,
+        phoneNumber: brokerPhone,
+        email: brokerEmail,
+        countryCode: brokerCountryCode?.name,
+        organizationPhone: brokerPhone,
+
+        location: locationFull,
+
+
+        organizationAdminPhone: user?.phoneNumber,
+        organizationAdminEmail: user?.email,
+        organizationMainAdminName: user?.displayName,
+
+        typeOfBroker: typeOfBroker,
         documents: {
           nationalId: uploadedUrls[0],
           nationalIdType: brokerData.brokerFileType[0],
@@ -108,17 +160,21 @@ const CreaterBrokerage = ({ }) => {
 
       // Create fleet document in fleets collection
       const brokerCollectionData = {
-        name: brokerData.brokerName,
+        name: brokerName,
+         organizationPhone: brokerPhone,
+        organizationEmail: brokerEmail,
+
         ownerId: user?.uid, // link to verifiedUsers
-        brokerId: brokerageId,
+        id: brokerageId,
+        location: locationFull,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        brokerType: brokerData.typeOfBroker,
-        brokerEmail: brokerData.brokerEmail,
-        countryCode: brokerData.brokerCountryCode?.name,
-        brokerPhone: brokerData.brokerPhone,
+        brokerType: typeOfBroker,
         referrerCode: code,
-        
+        defaultFleets: [],
+        verificationStatus: "pending",
+        organizationId: brokerageId,
+   
       };
 
       await setDoc(doc(db, "brokerages", brokerageId), brokerCollectionData);
@@ -127,14 +183,8 @@ const CreaterBrokerage = ({ }) => {
       const existingAccs = user?.brokerDetails || [];
 
       const newBroker = {
-        brokerageId: brokerageId,
         role: 'owner', // owner for the broker creator
-        companyName: brokerData.brokerName,
-        brokerType: brokerData.typeOfBroker,
-        verificationStatus: "pending",
-        referrerCode: code,
-
-
+        ...brokerCollectionData
       };
 
       // Update user profile to reflect broker verification status
@@ -161,8 +211,8 @@ const CreaterBrokerage = ({ }) => {
       const referrerData = {
         accType: "brokerage",
         organisationId: brokerageId, // Use Firebase Auth UID instead of document ID
-        organisationEmail: brokerData.brokerEmail,
-        organisationName: brokerData.brokerName,
+        organisationEmail: brokerEmail,
+        organisationName: brokerName,
         referrerCode: code,
         createdAt: new Date().toISOString(),
         isActive: true,
@@ -181,8 +231,9 @@ const CreaterBrokerage = ({ }) => {
       alert('Error submitting broker verification. Please try again.');
     }
   };
-
-
+  // UI STATES
+  const [showMapPicker, setShowMapPicker] = useState(false);
+  const [dsplocation, setDspDspLocation] = useState(false);
 
   return (
     <ScreenWrapper>
@@ -190,11 +241,9 @@ const CreaterBrokerage = ({ }) => {
 
       <View style={{ gap: wp(2) }}>
 
-
         <ScrollView>
 
-
-          <ThemedText>Full Name</ThemedText>
+          <ThemedText>Name</ThemedText>
           <Input
             placeholder="Enter your full name"
             value={brokerName}
@@ -238,7 +287,9 @@ const CreaterBrokerage = ({ }) => {
                     <Divider />
                   </>
                 )}
+                
               />
+
               <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
             </>}
             value={brokerPhone}
@@ -252,6 +303,39 @@ const CreaterBrokerage = ({ }) => {
             value={brokerEmail}
             onChangeText={setBrokerEmail}
           />
+
+           <TouchableOpacity
+                                                  style={styles.input}
+                                                  onPress={() => setDspDspLocation(true)}
+                                              >
+                                                  <ThemedText>
+                                                      {locationFull?.description ||
+                                                          'Select destination'}
+                                                  </ThemedText>
+                                              </TouchableOpacity> 
+
+
+         {/* DESTINATION PICKER ONLY */}
+                   <GooglePlaceAutoCompleteComp
+                       dspRoute={dsplocation}
+                       setDspRoute={setDspDspLocation}
+                       setRoute={setLocationFull}
+                       topic="Select Destination"
+                       setPickLocationOnMap={setShowMapPicker}
+                   />
+       
+                   {showMapPicker && (
+                       <LocationPicker
+                           pickOriginLocation={null}
+                           setPickOriginLocation={() => {}}
+                           pickDestinationLoc={locationFull}
+                           setPickDestinationLoc={setLocationFull}
+                           setShowMap={setShowMapPicker}
+                           dspShowMap={showMapPicker}
+                           mode="single"
+                       />
+                   )}
+
 
           <ThemedText>Type of Broker</ThemedText>
           <HorizontalTickComponent
@@ -367,4 +451,11 @@ const styles = {
     borderRadius: wp(1),
     marginBottom: 5,
   },
+    input: {
+        marginTop: wp(2),
+        padding: wp(3),
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: wp(2),
+    },
 };
