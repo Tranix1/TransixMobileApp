@@ -378,6 +378,28 @@ export const sendBookingWithTrackerNotification = async (
   }
 };
 
+export const sendUserNotification = async (
+    userToken: string,
+    title: string,
+    body: string,
+    route: any,
+    data: Record<string, any> = {}
+) => {
+
+    if (!userToken) {
+        console.log("No notification token");
+        return;
+    }
+
+    await sendPushNotification(
+        userToken,
+        title,
+        body,
+        route,
+        data
+    );
+};
+
 
 import { router, } from "expo-router";
 import { getAdminUser, updateAdminExpoPushToken } from './adminPermissions';

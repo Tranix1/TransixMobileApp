@@ -19,10 +19,12 @@ import { wp, hp } from '@/constants/common';
 import Input from '@/components/Input';
 import { ThemedText } from '@/components/ThemedText';
 import { fetchDocuments } from '@/db/operations';
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, setDoc } from "firebase/firestore";
 import { db } from '@/db/fireBaseConfig';
 import { SelectLocationProp } from '@/types/types';
 import { writeBatch, doc } from "firebase/firestore";
+import { sendUserNotification, sendBookingWithTrackerNotification } from "@/Utilities/pushNotification";
+
 
 // -----------------------------------------------------------------------------
 // Types
@@ -39,6 +41,7 @@ export interface Brokerage {
     brokerType: string;
     location?: SelectLocationProp;
     defaultFleets: DefaultFleet[];
+    expoPushToken: string
 }
 
 interface TruckRouteParams {
@@ -98,24 +101,42 @@ async function fetchTruckAssignedBrokerageId(truckId: string): Promise<string | 
 // }
 
 
-async function createBrokerage(fleetId: string, name: string, brokerType: string, defaultFleets: DefaultFleet[]) {
+async function createBrokerage(fleetId: string, name: string, brokerType: string, defaultFleets: DefaultFleet[],) {
     // TODO: replace with real create call.
     await new Promise((resolve) => setTimeout(resolve, 500));
-    return { id: `brk_${Date.now()}`, name, brokerType, defaultFleets };
+    return { id: `brk_${Date.now()}`, name, brokerType, defaultFleets,expoPushToken:"" };
 }
 
 
 
-async function setBrokerageDefault(fleetId: string, brokerageId: string, defaultFleets: DefaultFleet[]): Promise<void> {
-    // TODO: replace with real update, e.g.
-    // firestore().collection('brokerages').doc(brokerageId).update({ isDefault })
-    await new Promise((resolve) => setTimeout(resolve, 300));
+
+async function setBrokerageDefault(
+    fleetId: string,
+    brokerageId: string,
+    brokerageName: string
+): Promise<void> {
+
+    const trustedBrokerRef = doc(
+        db,
+        "fleets",
+        fleetId,
+        "trustedBrokers",
+        brokerageId
+    );
+
+    await setDoc(trustedBrokerRef, {
+        brokerageId,
+        brokerageName,
+        addedAt: new Date().toISOString(),
+        status: "active"
+    });
 }
 
 async function saveTruckBrokerage(
     truckId: string,
     brokerageId: string,
     brokerageName: string,
+    brokerToken: string,
     fleetId: string,
     fleetName: string,
     truckName: string,
@@ -203,6 +224,28 @@ async function saveTruckBrokerage(
 
 
     await batch.commit();
+
+
+    if (brokerToken) {
+        await sendUserNotification(
+            brokerToken,
+            "New Truck Access 🚛",
+            `${truckName} has been shared with your brokerage`,
+            {
+                pathname: "/Brokerage/TruckDetails",
+                params: {
+                    truckId
+                }
+            },
+            {
+                type: "truck_access",
+                truckId,
+                brokerageId
+            }
+        );
+    } else {
+        console.warn('⚠️ No expoPushToken found in loadItem, skipping notification');
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -628,7 +671,9 @@ const AssignBrokerageScreen: React.FC = () => {
                         text: 'Remove',
                         style: 'destructive',
                         onPress: async () => {
-                            await setBrokerageDefault(fleetId, brokerage.id, [{ fleetId, fleetName }]);
+                            if (!selectedOtherBrokerage) return
+
+                            await setBrokerageDefault(fleetId, selectedOtherBrokerage.id, selectedOtherBrokerage.name);
 
                             setBrokerages((prev) =>
                                 prev.map((b) =>
@@ -648,7 +693,9 @@ const AssignBrokerageScreen: React.FC = () => {
             );
             return;
         }
-        await setBrokerageDefault(fleetId, brokerage.id, [{ fleetId, fleetName }]);
+        if (!selectedOtherBrokerage) return
+
+        await setBrokerageDefault(fleetId, selectedOtherBrokerage.id, selectedOtherBrokerage.name);
 
 
         setBrokerages((prev) =>
@@ -696,18 +743,19 @@ const AssignBrokerageScreen: React.FC = () => {
 
 
             await saveTruckBrokerage(
-    truckId,
-    selectedOtherBrokerage.id,
-    selectedOtherBrokerage.name,
-    fleetId,
-    fleetName,
-    truckName,
-    truckType,
-    cargoArea,
-    capacity,
-    numberPlate,
-    operatingLocations
-);
+                truckId,
+                selectedOtherBrokerage.id,
+                selectedOtherBrokerage.name,
+                selectedOtherBrokerage.expoPushToken,
+                fleetId,
+                fleetName,
+                truckName,
+                truckType,
+                cargoArea,
+                capacity,
+                numberPlate,
+                operatingLocations
+            );
             router.back();
         } finally {
             setSaving(false);
