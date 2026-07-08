@@ -331,7 +331,8 @@ export const getDefaultFormState = () => ({
         maxloadCapacity: "",
         truckName: "",
         otherCargoArea: "",
-        otherTankerType: ""
+        otherTankerType: "" ,
+        numberPlate:"" ,
     },
     selectedCargoArea: null,
     selectedTruckType: null,

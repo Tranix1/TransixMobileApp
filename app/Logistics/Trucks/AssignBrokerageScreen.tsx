@@ -18,30 +18,28 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { wp, hp } from '@/constants/common';
 import Input from '@/components/Input';
 import { ThemedText } from '@/components/ThemedText';
-import { fetchDocuments } from '@/db/operations';
-import { collection, getDocs, setDoc } from "firebase/firestore";
+import {
+    collection,
+    getDocs,
+    doc,
+    query,
+    where,
+    writeBatch,
+} from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import { SelectLocationProp } from '@/types/types';
-import { writeBatch, doc } from "firebase/firestore";
-import { sendUserNotification, sendBookingWithTrackerNotification } from "@/Utilities/pushNotification";
-
+import { sendUserNotification } from '@/Utilities/pushNotification';
 
 // -----------------------------------------------------------------------------
 // Types
 // -----------------------------------------------------------------------------
-
-export interface DefaultFleet {
-    fleetId: string;
-    fleetName: string;
-}
 
 export interface Brokerage {
     id: string;
     name: string;
     brokerType: string;
     location?: SelectLocationProp;
-    defaultFleets: DefaultFleet[];
-    expoPushToken: string
+    expoPushToken: string;
 }
 
 interface TruckRouteParams {
@@ -53,86 +51,115 @@ interface TruckRouteParams {
     capacity?: string;
     numberPlate?: string;
     fleetId?: string;
-    fleetName?: string
+    fleetName?: string;
 }
 
 type Mode = 'other' | 'default';
 
 // -----------------------------------------------------------------------------
-// Data layer (swap the body of these for real Firestore/API calls)
+// Data layer
 // -----------------------------------------------------------------------------
 
-async function fetchBrokeragesByFleet(): Promise<Brokerage[]> {
-    // TODO: replace with real query, e.g.
-    // const snap = await firestore().collection('brokerages').where('fleetId', '==', fleetId).get();
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    const snapshot = await getDocs(collection(db, "brokerages"));
-
-    const brokerages = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as Brokerage[];
-
-    return brokerages;
-
-
-    // return [
-    //     { id: 'brk_1', name: 'Atlas Freight Partners', type: 'International', location: 'Durban, ZA', fleetId, isDefault: true },
-    //     { id: 'brk_2', name: 'Karoo Logistics', type: 'Local', location: 'Bloemfontein, ZA', fleetId, isDefault: true },
-    //     { id: 'brk_3', name: 'Continental Cargo Co.', type: 'Partner', location: 'Gaborone, BW', fleetId, isDefault: false },
-    //     { id: 'brk_4', name: 'Savanna Route Brokers', type: 'Local', location: 'Harare, ZW', fleetId, isDefault: false },
-    // ];
-}
-async function getBrokeragesNotAssignedToFleet(fleetId: string) {
-    fetchDocuments("brokerages",)
+/** All brokerages in the system. Nothing here is filtered by fleet. */
+async function fetchAllBrokerages(): Promise<Brokerage[]> {
+    const snapshot = await getDocs(collection(db, 'brokerages'));
+    return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Brokerage[];
 }
 
-async function fetchTruckAssignedBrokerageId(truckId: string): Promise<string | null> {
-    // TODO: replace with real fetch of this truck's currently assigned "other" brokerage.
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return null;
+/**
+ * Fleet defaults are mirrored in two places, written together in one batch:
+ *   - brokerages/{brokerageId}/fleets/{fleetId}   (per-brokerage history)
+ *   - fleets/{fleetId}/defaultBrokerages/{brokerageId}  (fast lookup, e.g.
+ *     when creating a new truck and auto-attaching the fleet's defaults)
+ *
+ * Reading defaults for a fleet only ever needs the second one — a single
+ * query, no per-brokerage reads, no composite index.
+ */
+async function fetchDefaultBrokerageIdsForFleet(fleetId: string): Promise<Set<string>> {
+    if (!fleetId) return new Set();
+    try {
+        const q = query(collection(db, 'fleets', fleetId, 'defaultBrokerages'), where('status', '==', 'active'));
+        const snapshot = await getDocs(q);
+        const ids = new Set<string>();
+        snapshot.forEach((d) => ids.add(d.id));
+        return ids;
+    } catch (e) {
+        console.warn('Could not read default brokerages for fleet', e);
+        return new Set();
+    }
 }
 
-// async function createBrokerage(fleetId: string, name: string, brokerType: string, defaultFleets: DefaultFleet[]): Promise<Brokerage> {
-//     // TODO: replace with real create call.
-//     await new Promise((resolve) => setTimeout(resolve, 500));
-//     return { id: `brk_${Date.now()}`, name, brokerType, defaultFleets };
-// }
-
-
-async function createBrokerage(fleetId: string, name: string, brokerType: string, defaultFleets: DefaultFleet[],) {
-    // TODO: replace with real create call.
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return { id: `brk_${Date.now()}`, name, brokerType, defaultFleets,expoPushToken:"" };
+/** Currently active (non-removed) brokerage assigned directly to this truck. */
+async function fetchTruckAssignedBrokerageId(fleetId: string, truckId: string): Promise<string | null> {
+    if (!fleetId || !truckId) return null;
+    try {
+        const q = query(
+            collection(db, 'fleets', fleetId, 'trucks', truckId, 'brokerages'),
+            where('status', '==', 'active')
+        );
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) return null;
+        return snapshot.docs[0].id;
+    } catch (e) {
+        console.warn('Could not read truck-assigned brokerage', e);
+        return null;
+    }
 }
 
-
-
-
-async function setBrokerageDefault(
-    fleetId: string,
+/** Mark a brokerage as an active default for a fleet (writes both mirrors). */
+async function setBrokerageDefaultForFleet(
     brokerageId: string,
-    brokerageName: string
+    brokerageName: string,
+    fleetId: string,
+    fleetName: string
 ): Promise<void> {
+    const batch = writeBatch(db);
+    const addedAt = new Date().toISOString();
 
-    const trustedBrokerRef = doc(
-        db,
-        "fleets",
+    const brokerageFleetRef = doc(db, 'brokerages', brokerageId, 'fleets', fleetId);
+    batch.set(brokerageFleetRef, {
         fleetId,
-        "trustedBrokers",
-        brokerageId
-    );
+        fleetName,
+        status: 'active',
+        addedAt,
+    });
 
-    await setDoc(trustedBrokerRef, {
+    const fleetDefaultRef = doc(db, 'fleets', fleetId, 'defaultBrokerages', brokerageId);
+    batch.set(fleetDefaultRef, {
         brokerageId,
         brokerageName,
-        addedAt: new Date().toISOString(),
-        status: "active"
+        status: 'active',
+        addedAt,
     });
+
+    await batch.commit();
 }
 
-async function saveTruckBrokerage(
+/**
+ * Soft-remove a brokerage's default status for a fleet in both mirrors.
+ * Docs are kept, never deleted, and stamped with a reason + removedAt.
+ */
+async function removeBrokerageDefaultForFleet(
+    brokerageId: string,
+    brokerageName: string,
+    fleetId: string,
+    fleetName: string,
+    reason: string
+): Promise<void> {
+    const batch = writeBatch(db);
+    const removedAt = new Date().toISOString();
+
+    const brokerageFleetRef = doc(db, 'brokerages', brokerageId, 'fleets', fleetId);
+    batch.set(brokerageFleetRef, { fleetId, fleetName, status: 'removed', reason, removedAt }, { merge: true });
+
+    const fleetDefaultRef = doc(db, 'fleets', fleetId, 'defaultBrokerages', brokerageId);
+    batch.set(fleetDefaultRef, { brokerageId, brokerageName, status: 'removed', reason, removedAt }, { merge: true });
+
+    await batch.commit();
+}
+
+/** Assign a (non-default) brokerage directly to a truck. */
+async function assignTruckBrokerage(
     truckId: string,
     brokerageId: string,
     brokerageName: string,
@@ -146,70 +173,27 @@ async function saveTruckBrokerage(
     numberPlate: string,
     operatingLocations: string[]
 ): Promise<void> {
-
     const batch = writeBatch(db);
-
     const assignedAt = new Date().toISOString();
 
-    // Fleet side
-    // fleets
-    //  └── fleetId
-    //       └── trucks
-    //            └── truckId
-    //                 └── assignments
-    //                      └── brokerageId
-
-    const truckAssignmentRef = doc(
-        db,
-        "fleets",
-        fleetId,
-        "trucks",
-        truckId,
-        "assignments",
-        brokerageId
-    );
-
+    // fleets/{fleetId}/trucks/{truckId}/brokerages/{brokerageId}
+    const truckAssignmentRef = doc(db, 'fleets', fleetId, 'trucks', truckId, 'brokerages', brokerageId);
     batch.set(truckAssignmentRef, {
         brokerageId,
         brokerageName,
-
         fleetId,
         fleetName,
-
-        truckId,
-        truckName,
-        truckType,
-        cargoArea,
-        capacity,
-        numberPlate,
-        operatingLocations,
-
-        status: "active",
-        assignedAt
+        status: 'active',
+        assignedAt,
     });
 
-
-    // Brokerage side
-    // brokerages
-    //  └── brokerageId
-    //       └── trucks
-    //            └── truckId
-
-    const brokerageTruckRef = doc(
-        db,
-        "brokerages",
-        brokerageId,
-        "trucks",
-        truckId
-    );
-
+    // brokerages/{brokerageId}/trucks/{truckId}
+    const brokerageTruckRef = doc(db, 'brokerages', brokerageId, 'trucks', truckId);
     batch.set(brokerageTruckRef, {
         brokerageId,
         brokerageName,
-
         fleetId,
         fleetName,
-
         truckId,
         truckName,
         truckType,
@@ -217,35 +201,52 @@ async function saveTruckBrokerage(
         capacity,
         numberPlate,
         operatingLocations,
-
-        status: "active",
-        assignedAt
+        status: 'active',
+        assignedAt,
     });
 
-
     await batch.commit();
-
 
     if (brokerToken) {
         await sendUserNotification(
             brokerToken,
-            "New Truck Access 🚛",
+            'New Truck Access 🚛',
             `${truckName} has been shared with your brokerage`,
             {
-                pathname: "/Brokerage/TruckDetails",
-                params: {
-                    truckId
-                }
+                pathname: '/Brokerage/TruckDetails',
+                params: { truckId },
             },
             {
-                type: "truck_access",
+                type: 'truck_access',
                 truckId,
-                brokerageId
+                brokerageId,
             }
         );
     } else {
-        console.warn('⚠️ No expoPushToken found in loadItem, skipping notification');
+        console.warn('⚠️ No expoPushToken found for brokerage, skipping notification');
     }
+}
+
+/**
+ * Soft-remove a truck's assignment to a brokerage. Records are kept, never
+ * deleted, and stamped with a reason + removedAt.
+ */
+async function unassignTruckBrokerage(
+    fleetId: string,
+    truckId: string,
+    brokerageId: string,
+    reason: string
+): Promise<void> {
+    const batch = writeBatch(db);
+    const removedAt = new Date().toISOString();
+
+    const truckAssignmentRef = doc(db, 'fleets', fleetId, 'trucks', truckId, 'brokerages', brokerageId);
+    batch.set(truckAssignmentRef, { status: 'removed', reason, removedAt }, { merge: true });
+
+    const brokerageTruckRef = doc(db, 'brokerages', brokerageId, 'trucks', truckId);
+    batch.set(brokerageTruckRef, { status: 'removed', reason, removedAt }, { merge: true });
+
+    await batch.commit();
 }
 
 // -----------------------------------------------------------------------------
@@ -259,6 +260,15 @@ function parseLocations(value?: string | string[]): string[] {
         .split(',')
         .map((v) => v.trim())
         .filter(Boolean);
+}
+
+function formatLocation(location?: SelectLocationProp): string {
+    if (!location) return '';
+    const description = location.description;
+    // Ignore plus codes / short Google generated addresses
+    const hasPlusCode = /^[A-Z0-9]+\+[A-Z0-9]+/.test(description ?? '');
+    if (description && !hasPlusCode) return description;
+    return `${location.city}, ${location.country}`;
 }
 
 // -----------------------------------------------------------------------------
@@ -421,21 +431,6 @@ const SelectableBrokerageRow: React.FC<SelectableBrokerageRowProps> = ({
         Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 40, bounciness: 6 }).start();
     };
 
-    const formatLocation = (location?: SelectLocationProp) => {
-        if (!location) return "";
-
-        const description = location.description;
-
-        // Ignore plus codes / short Google generated addresses
-        const hasPlusCode = /^[A-Z0-9]+\+[A-Z0-9]+/.test(description);
-
-        if (description && !hasPlusCode) {
-            return description;
-        }
-
-        return `${location.city}, ${location.country}`;
-    };
-
     return (
         <Animated.View style={{ transform: [{ scale }] }}>
             <TouchableOpacity
@@ -470,7 +465,9 @@ const SelectableBrokerageRow: React.FC<SelectableBrokerageRowProps> = ({
                         {!!brokerage.location && (
                             <View style={styles.locationRow}>
                                 <Ionicons name="location-outline" size={wp(3.4)} color={muted} />
-                                <ThemedText style={[styles.tagText, { color: muted }]}>{formatLocation(brokerage.location)}</ThemedText>
+                                <ThemedText style={[styles.tagText, { color: muted }]}>
+                                    {formatLocation(brokerage.location)}
+                                </ThemedText>
                             </View>
                         )}
                     </View>
@@ -486,40 +483,24 @@ const SelectableBrokerageRow: React.FC<SelectableBrokerageRowProps> = ({
 
 interface DefaultToggleRowProps {
     brokerage: Brokerage;
+    isDefault: boolean;
     onToggle: (next: boolean) => void;
     accent: string;
     backgroundLight: string;
     border: string;
     muted: string;
-    fleetId: string
 }
 
 const DefaultToggleRow: React.FC<DefaultToggleRowProps> = ({
     brokerage,
+    isDefault,
     onToggle,
     accent,
     backgroundLight,
     border,
     muted,
-    fleetId,
 }) => {
-    const isDefault = (brokerage.defaultFleets ?? []).some(fleet => fleet.fleetId === fleetId);
-    const formatLocation = (location?: SelectLocationProp) => {
-        if (!location) return "";
-
-        const description = location.description;
-
-        // Ignore plus codes / short Google generated addresses
-        const hasPlusCode = /^[A-Z0-9]+\+[A-Z0-9]+/.test(description);
-
-        if (description && !hasPlusCode) {
-            return description;
-        }
-
-        return `${location.city}, ${location.country}`;
-    };
-
-    (
+    return (
         <View
             style={[
                 styles.card,
@@ -535,16 +516,12 @@ const DefaultToggleRow: React.FC<DefaultToggleRowProps> = ({
                     <ThemedText type="defaultSemiBold" style={styles.cardName}>
                         {brokerage.name}
                     </ThemedText>
-                    {(brokerage.defaultFleets ?? []).some(
-                        fleet => fleet.fleetId === fleetId
-                    ) && (
-                            <View style={[styles.defaultBadge, { backgroundColor: accent }]}>
-                                <Ionicons name="star" size={wp(3)} color="white" />
-                                <ThemedText style={styles.defaultBadgeText}>
-                                    Default
-                                </ThemedText>
-                            </View>
-                        )}
+                    {isDefault && (
+                        <View style={[styles.defaultBadge, { backgroundColor: accent }]}>
+                            <Ionicons name="star" size={wp(3)} color="white" />
+                            <ThemedText style={styles.defaultBadgeText}>Default</ThemedText>
+                        </View>
+                    )}
                 </View>
                 <View style={styles.tagRow}>
                     <View style={[styles.tag, { borderColor: border }]}>
@@ -553,7 +530,7 @@ const DefaultToggleRow: React.FC<DefaultToggleRowProps> = ({
                     {!!brokerage.location && (
                         <View style={styles.locationRow}>
                             <Ionicons name="location-outline" size={wp(3.4)} color={muted} />
-                            <ThemedText>
+                            <ThemedText style={[styles.tagText, { color: muted }]}>
                                 {formatLocation(brokerage.location)}
                             </ThemedText>
                         </View>
@@ -568,7 +545,7 @@ const DefaultToggleRow: React.FC<DefaultToggleRowProps> = ({
                 thumbColor="white"
             />
         </View>
-    )
+    );
 };
 
 // -----------------------------------------------------------------------------
@@ -576,14 +553,13 @@ const DefaultToggleRow: React.FC<DefaultToggleRowProps> = ({
 // -----------------------------------------------------------------------------
 
 const AssignBrokerageScreen: React.FC = () => {
-
     const params = useLocalSearchParams() as unknown as TruckRouteParams;
     const router = useRouter();
     const insets = useSafeAreaInsets();
 
-    const truckId = params.truckId ?? '';
     const fleetId = params.fleetId ?? 'default_fleet';
-    const fleetName = params.fleetName ?? "default_Fleet"
+    const fleetName = params.fleetName ?? 'default_Fleet';
+    const truckId = params.truckId ?? '';
     const truckName = params.truckName ?? 'Unnamed Truck';
     const truckType = params.truckType ?? '';
     const cargoArea = params.cargoArea ?? '';
@@ -604,37 +580,44 @@ const AssignBrokerageScreen: React.FC = () => {
     const [mode, setMode] = useState<Mode>('other');
     const [loading, setLoading] = useState(true);
     const [brokerages, setBrokerages] = useState<Brokerage[]>([]);
+    const [defaultBrokerageIds, setDefaultBrokerageIds] = useState<Set<string>>(new Set());
 
-    const [brokeragesNotAssignedToFleet, setBrokeragesNotAssignedToFleet] = useState([])
-    const [query, setQuery] = useState('');
+    const [query_, setQuery] = useState('');
+
+    // The brokerage currently persisted as this truck's "other" assignment.
+    const [assignedOtherId, setAssignedOtherId] = useState<string | null>(null);
+    // The brokerage the user has selected in the UI (may differ until saved).
     const [selectedOtherId, setSelectedOtherId] = useState<string | null>(null);
-    const [saving, setSaving] = useState(false);
 
-    const [showCreate, setShowCreate] = useState(false);
-    const [newName, setNewName] = useState('');
-    const [newType, setNewType] = useState('Local');
-    const [creating, setCreating] = useState(false);
+    const [saving, setSaving] = useState(false);
 
     const listFade = useRef(new Animated.Value(0)).current;
 
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const all = await fetchBrokeragesByFleet();
-
-            const assignedId = await fetchTruckAssignedBrokerageId(truckId);
+            // Fetch the brokerage list first — everything else depends on
+            // knowing which ids to check, and we don't want a failure in
+            // the default/assignment lookups to hide brokerages that did
+            // load successfully.
+            const all = await fetchAllBrokerages();
             setBrokerages(all);
+
+            const [defaultIds, assignedId] = await Promise.all([
+                fetchDefaultBrokerageIdsForFleet(fleetId),
+                fetchTruckAssignedBrokerageId(fleetId, truckId),
+            ]);
+            setDefaultBrokerageIds(defaultIds);
+            setAssignedOtherId(assignedId);
             setSelectedOtherId(assignedId);
+        } catch (e) {
+            console.error('Failed to load brokerages', e);
+            Alert.alert('Error', 'Could not load brokerages. Please try again.');
         } finally {
             setLoading(false);
             Animated.timing(listFade, { toValue: 1, duration: 320, useNativeDriver: true }).start();
         }
     }, [fleetId, truckId, listFade]);
-
-
-
-
-
 
     useEffect(() => {
         load();
@@ -643,24 +626,28 @@ const AssignBrokerageScreen: React.FC = () => {
     useEffect(() => {
         // Reset transient UI state and re-fade the list whenever the tab changes.
         setQuery('');
-        setShowCreate(false);
         listFade.setValue(0);
         Animated.timing(listFade, { toValue: 1, duration: 260, useNativeDriver: true }).start();
     }, [mode, listFade]);
 
     const filtered = useMemo(() => {
-        const q = query.trim().toLowerCase();
-        const source = mode === 'other' ? brokerages.filter((b) => !b.defaultFleets.some(fleet => fleet.fleetId === fleetId)) : brokerages;
+        const q = query_.trim().toLowerCase();
+        const source =
+            mode === 'other' ? brokerages.filter((b) => !defaultBrokerageIds.has(b.id)) : brokerages;
         if (!q) return source;
         return source.filter((b) => b.name.toLowerCase().includes(q));
-    }, [brokerages, query, mode]);
+    }, [brokerages, query_, mode, defaultBrokerageIds]);
 
     const selectedOtherBrokerage = useMemo(
         () => brokerages.find((b) => b.id === selectedOtherId) ?? null,
         [brokerages, selectedOtherId]
     );
 
-    const handleToggleDefault = async (brokerage: Brokerage, next: boolean) => {
+    const hasUnsavedOtherChange = selectedOtherId !== assignedOtherId;
+
+    // ---- Default (fleet-wide) toggling ----------------------------------
+
+    const handleToggleDefault = (brokerage: Brokerage, next: boolean) => {
         if (!next) {
             Alert.alert(
                 'Remove default brokerage',
@@ -671,92 +658,77 @@ const AssignBrokerageScreen: React.FC = () => {
                         text: 'Remove',
                         style: 'destructive',
                         onPress: async () => {
-                            if (!selectedOtherBrokerage) return
-
-                            await setBrokerageDefault(fleetId, selectedOtherBrokerage.id, selectedOtherBrokerage.name);
-
-                            setBrokerages((prev) =>
-                                prev.map((b) =>
-                                    b.id === brokerage.id
-                                        ? {
-                                            ...b,
-                                            defaultFleets: b.defaultFleets.filter(
-                                                fleet => fleet.fleetId !== fleetId
-                                            )
-                                        }
-                                        : b
-                                )
-                            );
+                            const previous = defaultBrokerageIds;
+                            const nextIds = new Set(previous);
+                            nextIds.delete(brokerage.id);
+                            setDefaultBrokerageIds(nextIds);
+                            try {
+                                await removeBrokerageDefaultForFleet(
+                                    brokerage.id,
+                                    brokerage.name,
+                                    fleetId,
+                                    fleetName,
+                                    'Manually removed by fleet manager'
+                                );
+                            } catch (e) {
+                                setDefaultBrokerageIds(previous);
+                                Alert.alert('Error', 'Could not remove default brokerage. Please try again.');
+                            }
                         },
                     },
                 ]
             );
             return;
         }
-        if (!selectedOtherBrokerage) return
 
-        await setBrokerageDefault(fleetId, selectedOtherBrokerage.id, selectedOtherBrokerage.name);
-
-
-        setBrokerages((prev) =>
-            prev.map((b) =>
-                b.id === brokerage.id
-                    ? {
-                        ...b,
-                        defaultFleets: b.defaultFleets.some(
-                            fleet => fleet.fleetId === fleetId
-                        )
-                            ? b.defaultFleets
-                            : [
-                                ...b.defaultFleets,
-                                {
-                                    fleetId,
-                                    fleetName,
-                                },
-                            ],
-                    }
-                    : b
-            )
-        );
+        const previous = defaultBrokerageIds;
+        const nextIds = new Set(previous);
+        nextIds.add(brokerage.id);
+        setDefaultBrokerageIds(nextIds);
+        setBrokerageDefaultForFleet(brokerage.id, brokerage.name, fleetId, fleetName).catch(() => {
+            setDefaultBrokerageIds(previous);
+            Alert.alert('Error', 'Could not set default brokerage. Please try again.');
+        });
     };
 
-    const handleCreate = async () => {
-        if (!newName.trim()) return;
-        setCreating(true);
-        try {
-            const created = await createBrokerage(fleetId, newName.trim(), newType, mode === 'default' ? [{ fleetId, fleetName }] : []);
-
-            setBrokerages((prev) => [created, ...prev]);
-            if (mode === 'other') setSelectedOtherId(created.id);
-            setShowCreate(false);
-            setNewName('');
-            setNewType('Local');
-        } finally {
-            setCreating(false);
-        }
-    };
+    // ---- Truck ("other") assignment --------------------------------------
 
     const handleSaveOther = async () => {
-        if (!selectedOtherBrokerage) return;
+        if (!hasUnsavedOtherChange) {
+            router.back();
+            return;
+        }
+
         setSaving(true);
         try {
+            // Was there a previous assignment being replaced or cleared?
+            if (assignedOtherId) {
+                const reason = selectedOtherId
+                    ? 'Reassigned to a different brokerage'
+                    : 'Removed from truck by fleet manager';
+                await unassignTruckBrokerage(fleetId, truckId, assignedOtherId, reason);
+            }
 
+            if (selectedOtherBrokerage) {
+                await assignTruckBrokerage(
+                    truckId,
+                    selectedOtherBrokerage.id,
+                    selectedOtherBrokerage.name,
+                    selectedOtherBrokerage.expoPushToken,
+                    fleetId,
+                    fleetName,
+                    truckName,
+                    truckType,
+                    cargoArea,
+                    capacity,
+                    numberPlate,
+                    operatingLocations
+                );
+            }
 
-            await saveTruckBrokerage(
-                truckId,
-                selectedOtherBrokerage.id,
-                selectedOtherBrokerage.name,
-                selectedOtherBrokerage.expoPushToken,
-                fleetId,
-                fleetName,
-                truckName,
-                truckType,
-                cargoArea,
-                capacity,
-                numberPlate,
-                operatingLocations
-            );
             router.back();
+        } catch (e) {
+            Alert.alert('Error', 'Could not save brokerage assignment. Please try again.');
         } finally {
             setSaving(false);
         }
@@ -813,7 +785,7 @@ const AssignBrokerageScreen: React.FC = () => {
                         placeholder={
                             mode === 'other' ? 'Search brokerage by name…' : 'Search brokerages to set as default…'
                         }
-                        value={query}
+                        value={query_}
                         onChangeText={setQuery}
                         style={styles.searchInput}
                     />
@@ -826,99 +798,13 @@ const AssignBrokerageScreen: React.FC = () => {
                     <ActivityIndicator size="large" color={accent} />
                     <ThemedText style={[styles.loadingText, { color: muted }]}>Loading brokerages…</ThemedText>
                 </View>
-            ) : showCreate ? (
-                <View style={styles.createForm}>
-                    <ThemedText type="subtitle" style={styles.createFormTitle}>
-                        New Brokerage
-                    </ThemedText>
-
-                    <View style={styles.fieldRow}>
-                        <ThemedText type="tiny" style={styles.inputLabel}>
-                            Brokerage name
-                        </ThemedText>
-                        <Input placeholder="e.g. Atlas Freight Partners" value={newName} onChangeText={setNewName} />
-                    </View>
-
-                    <View style={styles.fieldRow}>
-                        <ThemedText type="tiny" style={styles.inputLabel}>
-                            Type
-                        </ThemedText>
-                        <View style={styles.typeRow}>
-                            {['Local', 'International', 'Partner'].map((t) => (
-                                <TouchableOpacity
-                                    key={t}
-                                    onPress={() => setNewType(t)}
-                                    style={[
-                                        styles.typeChip,
-                                        {
-                                            backgroundColor: newType === t ? accent : 'transparent',
-                                            borderColor: newType === t ? accent : border,
-                                        },
-                                    ]}
-                                >
-                                    <ThemedText
-                                        style={{
-                                            color: newType === t ? 'white' : muted,
-                                            fontWeight: '600',
-                                            fontSize: wp(3.3),
-                                        }}
-                                    >
-                                        {t}
-                                    </ThemedText>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    </View>
-
-                    {mode === 'default' && (
-                        <View style={[styles.createDefaultNotice, { borderColor: border }]}>
-                            <Ionicons name="star-outline" size={wp(4)} color={accent} />
-                            <ThemedText style={[styles.createDefaultNoticeText, { color: muted }]}>
-                                This brokerage will be added as a fleet default and auto-assigned to new trucks.
-                            </ThemedText>
-                        </View>
-                    )}
-
-                    <View style={styles.createFormButtons}>
-                        <TouchableOpacity
-                            style={[styles.button, styles.cancelButton]}
-                            onPress={() => {
-                                setShowCreate(false);
-                                setNewName('');
-                                setNewType('Local');
-                            }}
-                        >
-                            <ThemedText style={styles.buttonTextWhite}>Cancel</ThemedText>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[
-                                styles.button,
-                                { backgroundColor: accent, opacity: newName.trim() && !creating ? 1 : 0.5 },
-                            ]}
-                            onPress={handleCreate}
-                            disabled={!newName.trim() || creating}
-                        >
-                            {creating ? (
-                                <ActivityIndicator size="small" color="white" />
-                            ) : (
-                                <ThemedText style={styles.buttonTextWhite}>
-                                    {mode === 'other' ? 'Create & Assign' : 'Create & Set Default'}
-                                </ThemedText>
-                            )}
-                        </TouchableOpacity>
-                    </View>
-                </View>
             ) : filtered.length === 0 ? (
                 <View style={styles.centerFill}>
                     <Ionicons name="business-outline" size={wp(12)} color={muted} />
                     <ThemedText style={[styles.emptyTitle, { color: text }]}>No brokerages found</ThemedText>
                     <ThemedText style={[styles.emptySubtitle, { color: muted }]}>
-                        Try a different search, or add one for this fleet.
+                        Try a different search.
                     </ThemedText>
-                    <TouchableOpacity style={[styles.createButton, { backgroundColor: accent }]} onPress={() => setShowCreate(true)}>
-                        <Ionicons name="add" size={wp(4.6)} color="white" />
-                        <ThemedText style={styles.createButtonText}>Create New Brokerage</ThemedText>
-                    </TouchableOpacity>
                 </View>
             ) : (
                 <Animated.View style={{ flex: 1, opacity: listFade }}>
@@ -941,29 +827,21 @@ const AssignBrokerageScreen: React.FC = () => {
                             ) : (
                                 <DefaultToggleRow
                                     brokerage={item}
+                                    isDefault={defaultBrokerageIds.has(item.id)}
                                     onToggle={(next) => handleToggleDefault(item, next)}
                                     accent={accent}
                                     backgroundLight={backgroundLight}
                                     border={border}
                                     muted={muted}
-                                    fleetId={fleetId}
                                 />
                             )
-                        }
-                        ListFooterComponent={
-                            <TouchableOpacity style={styles.addAnotherRow} onPress={() => setShowCreate(true)}>
-                                <Ionicons name="add-circle-outline" size={wp(5)} color={accent} />
-                                <ThemedText style={[styles.addAnotherText, { color: accent }]}>
-                                    Create New Brokerage
-                                </ThemedText>
-                            </TouchableOpacity>
                         }
                     />
                 </Animated.View>
             )}
 
             {/* Bottom action bar */}
-            {!showCreate && !loading && (
+            {!loading && (
                 <View
                     style={[
                         styles.bottomBar,
@@ -974,9 +852,9 @@ const AssignBrokerageScreen: React.FC = () => {
                         <TouchableOpacity
                             style={[
                                 styles.assignButton,
-                                { backgroundColor: accent, opacity: selectedOtherBrokerage && !saving ? 1 : 0.45 },
+                                { backgroundColor: accent, opacity: !saving && hasUnsavedOtherChange ? 1 : 0.45 },
                             ]}
-                            disabled={!selectedOtherBrokerage || saving}
+                            disabled={!hasUnsavedOtherChange || saving}
                             onPress={handleSaveOther}
                         >
                             {saving ? (
@@ -985,6 +863,8 @@ const AssignBrokerageScreen: React.FC = () => {
                                 <ThemedText style={styles.assignButtonText}>
                                     {selectedOtherBrokerage
                                         ? `Assign ${selectedOtherBrokerage.name}`
+                                        : assignedOtherId
+                                        ? 'Remove Assignment'
                                         : 'Assign Brokerage'}
                                 </ThemedText>
                             )}
@@ -1202,17 +1082,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: wp(1),
     },
-    addAnotherRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: wp(2),
-        paddingVertical: wp(4),
-    },
-    addAnotherText: {
-        fontWeight: '700',
-        fontSize: wp(3.6),
-    },
     centerFill: {
         flex: 1,
         alignItems: 'center',
@@ -1234,79 +1103,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: wp(2),
     },
-    createButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: wp(2),
-        paddingHorizontal: wp(5),
-        paddingVertical: wp(3),
-        borderRadius: wp(3),
-        marginTop: wp(2),
-    },
-    createButtonText: {
-        color: 'white',
-        fontWeight: '700',
-        fontSize: wp(3.6),
-    },
-    createForm: {
-        paddingHorizontal: wp(4),
-        paddingTop: wp(2),
-        gap: wp(2),
-    },
-    createFormTitle: {
-        marginBottom: wp(1),
-    },
-    fieldRow: {
-        gap: wp(1),
-        marginBottom: wp(3),
-    },
-    inputLabel: {
-        fontWeight: '600',
-        marginBottom: wp(1),
-    },
-    typeRow: {
-        flexDirection: 'row',
-        gap: wp(2.5),
-    },
-    typeChip: {
-        borderWidth: 1.5,
-        borderRadius: wp(3),
-        paddingHorizontal: wp(3.5),
-        paddingVertical: wp(2),
-    },
-    createDefaultNotice: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: wp(2),
-        borderWidth: 1,
-        borderRadius: wp(2.5),
-        padding: wp(3),
-        marginBottom: wp(1),
-    },
-    createDefaultNoticeText: {
-        flex: 1,
-        fontSize: wp(3),
-        lineHeight: wp(4),
-    },
-    createFormButtons: {
-        flexDirection: 'row',
-        gap: wp(3),
-        marginTop: wp(2),
-    },
-    button: {
-        flex: 1,
-        paddingVertical: wp(3.4),
-        borderRadius: wp(2.5),
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    cancelButton: {
-        backgroundColor: '#6c757d',
-    },
-    buttonTextWhite: {
-        color: 'white',
-        fontWeight: '700',
-    },
     bottomBar: {
         borderTopWidth: 1,
         paddingHorizontal: wp(4),
@@ -1326,3 +1122,4 @@ const styles = StyleSheet.create({
 });
 
 export default AssignBrokerageScreen;
+    

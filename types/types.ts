@@ -80,8 +80,8 @@ export type TruckFormData = {
     truckName: string;
     otherCargoArea: string;
     otherTankerType: string;
-    numberPlate : string ;
-}
+    numberPlate: string;
+}   
 export type Truck = {
 
     created_at: string,
@@ -148,6 +148,11 @@ export type Truck = {
           billingAddress: SelectLocationProp
           baseAdress: SelectLocationProp ;
         },
+        defaultDriver :{
+            driverId : string 
+            driverName : string ;
+
+        }
 } & TruckFormData;
 
 

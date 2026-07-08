@@ -32,6 +32,7 @@ import DriverDefaultModal from "@/components/DriverDefaultModal";
 
 import ImageViewing from 'react-native-image-viewing';
 import { serverTimestamp } from "firebase/firestore";
+import DefaultDriverCard from "@/components/DefaultDriverCard";
 
 const TruckDetails = () => {
 
@@ -439,7 +440,7 @@ const TruckDetails = () => {
 
     const handleSaveDefaultDriver = async (driver: any) => {
         await updateDocument(`fleets/${fleetId}/trucks`, truckData.id, {
-            defaultDriver:  driver  ,
+            defaultDriver: driver,
             // add expo push token
             lastDefaultDriverUpdate: new Date().toISOString(),
         });
@@ -457,7 +458,7 @@ const TruckDetails = () => {
 
             notificationSettings: {
                 assignments: {
-                    driver:{
+                    driver: {
                         id: driver.driverId,
                         expoPushToken: driver.driverExpoPushToken,
                     }
@@ -589,6 +590,8 @@ const TruckDetails = () => {
                                         router.push({
                                             pathname: '/Logistics/Trucks/AssignBrokerageScreen',
                                             params: {
+                                                fleetName: truckData.organizationDetails.name,
+                                                fleetId: truckData.organizationDetails.id,
                                                 truckId: truckData?.id,
                                                 truckName: truckData?.truckName,
                                                 truckType: truckData.truckType,
@@ -596,7 +599,7 @@ const TruckDetails = () => {
                                                 operaatingLocations: truckData.locations,
                                                 capacity: truckData?.truckCapacity,
                                                 numberPlate: truckData?.numberPlate,
-                                                fleetName : truckData.organizationDetails.id ,
+
                                             },
                                         });
                                     }}
@@ -999,6 +1002,13 @@ const TruckDetails = () => {
                         </View>
                     }
 
+                 { truckData?.defaultDriver?.driverId&&  <DefaultDriverCard
+
+                        driver={truckData.defaultDriver}
+
+                        onPress={() => router.push(
+                            { pathname: "/", params: { driverId: truckData.defaultDriver.driverId } })} />}
+
                     {/* Tracker Status Section */}
                     {user?.uid === truckData.userId && <View style={{
                         backgroundColor: backgroundLight,
@@ -1325,8 +1335,9 @@ const TruckDetails = () => {
             <DriverDefaultModal
                 visible={driverModal}
                 onClose={() => setShowMDriverodal(false)}
-                fleetId={`${fleetId}`}
+                fleetId={truckData?.organizationDetails?.id}
                 truckId={truckData.id}
+                numberPlate={truckData.numberPlate}
                 onAssigned={(driver) => {
                     console.log("Assigned:", driver);
                 }}

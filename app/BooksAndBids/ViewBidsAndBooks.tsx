@@ -84,8 +84,6 @@ function BookingsandBiddings({ }) {
       filters.push(where("loadOwnerId", "==", auth.currentUser?.uid));
     }
 
-    console.log('🔍 Loading with filters:', { dspRoute, requestType, filters: filters.length });
-
     // Debug: Check all requests in database
     await debugLoadRequests();
 

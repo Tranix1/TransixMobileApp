@@ -21,12 +21,12 @@ import Button from "@/components/Button";
 import { TruckFormData } from "@/types/types";
 import { AddTruckDetails } from "@/components/AddTruckDetails";
 import { HorizontalTickComponent } from "@/components/SlctHorizonzalTick";
-import { usePushNotifications, notifyTruckApprovalAdmins } from "@/Utilities/pushNotification";
+import { usePushNotifications, notifyTruckApprovalAdmins, sendUserNotification } from "@/Utilities/pushNotification";
 import { pickDocument } from "@/Utilities/utils";
 import { DocumentAsset } from "@/types/types";
 import KYCVerificationModal from "@/components/KYCVerificationModal";
 import { db } from "@/db/fireBaseConfig";
-import { doc, collection, getDoc, limit, query, serverTimestamp } from "firebase/firestore";
+import { doc, collection, getDoc, getDocs, query, where, limit, serverTimestamp, writeBatch } from "firebase/firestore";
 import { SelectLocationProp } from "@/types/types";
 
 type FleetConfig = {
@@ -46,6 +46,111 @@ type FleetConfig = {
 
 
 };
+
+// -----------------------------------------------------------------------------
+// Default brokerage auto-assignment
+// -----------------------------------------------------------------------------
+
+/**
+ * Reads the fleet's active default brokerages from
+ * fleets/{fleetId}/defaultBrokerages (the fast-lookup mirror kept in sync by
+ * the Assign Brokerage screen) and attaches every one of them to a newly
+ * created truck, mirroring the same two locations used everywhere else:
+ *   - fleets/{fleetId}/trucks/{truckId}/brokerages/{brokerageId}
+ *   - brokerages/{brokerageId}/trucks/{truckId}
+ *
+ * Each assigned brokerage is notified, same as a manual assignment. Never
+ * throws — a problem here shouldn't undo a truck that was already created.
+ */
+async function assignDefaultBrokeragesToTruck(
+  fleetId: string,
+  fleetName: string,
+  truckId: string,
+  truckName: string,
+  truckType: string,
+  cargoArea: string,
+  capacity: string,
+  numberPlate: string,
+  operatingLocations: string[]
+): Promise<void> {
+  try {
+    const defaultsSnap = await getDocs(
+      query(collection(db, "fleets", fleetId, "defaultBrokerages"), where("status", "==", "active"))
+    );
+
+    if (defaultsSnap.empty) return;
+
+    // We need each brokerage's push token to notify them, which isn't
+    // stored on the default-mirror doc, so fetch the brokerage docs too.
+    const brokerageSnaps = await Promise.all(
+      defaultsSnap.docs.map((d) => getDoc(doc(db, "brokerages", d.id)))
+    );
+
+    const assignedAt = new Date().toISOString();
+    const batch = writeBatch(db);
+
+    defaultsSnap.docs.forEach((defaultDoc, index) => {
+      const brokerageId = defaultDoc.id;
+      const brokerageName = defaultDoc.data()?.brokerageName ?? "";
+      const brokerageSnap = brokerageSnaps[index];
+      const expoPushToken = brokerageSnap.exists() ? (brokerageSnap.data()?.expoPushToken as string | undefined) : undefined;
+
+      const truckAssignmentRef = doc(db, "fleets", fleetId, "trucks", truckId, "brokerages", brokerageId);
+      batch.set(truckAssignmentRef, {
+        brokerageId,
+        brokerageName,
+        fleetId,
+        fleetName,
+        status: "active",
+        source: "default",
+        assignedAt,
+      });
+
+      const brokerageTruckRef = doc(db, "brokerages", brokerageId, "trucks", truckId);
+      batch.set(brokerageTruckRef, {
+        brokerageId,
+        brokerageName,
+        fleetId,
+        fleetName,
+        truckId,
+        truckName,
+        truckType,
+        cargoArea,
+        capacity,
+        numberPlate,
+        operatingLocations,
+        status: "active",
+        source: "default",
+        assignedAt,
+      });
+
+      if (expoPushToken) {
+        sendUserNotification(
+          expoPushToken,
+          "New Truck Access 🚛",
+          `${truckName} has been shared with your brokerage`,
+          {
+            pathname: "/Brokerage/TruckDetails",
+            params: { truckId },
+          },
+          {
+            type: "truck_access",
+            truckId,
+            brokerageId,
+          }
+        ).catch((e) => console.warn(`Failed to notify default brokerage ${brokerageId}`, e));
+      } else {
+        console.warn(`⚠️ No expoPushToken found for default brokerage ${brokerageId}, skipping notification`);
+      }
+    });
+
+    await batch.commit();
+  } catch (e) {
+    // A truck was already successfully created at this point — don't let a
+    // default-brokerage hiccup surface as a failure to the user.
+    console.warn("Could not auto-assign default brokerages to new truck", e);
+  }
+}
 
 function AddTrucks() {
 
@@ -362,6 +467,20 @@ function AddTrucks() {
         },
 
       })
+
+      // Auto-attach the fleet's active default brokerages to this new
+      // truck and notify them — mirrors the manual "Other Brokers" flow.
+      await assignDefaultBrokeragesToTruck(
+        currentRole.fleetId,
+        currentRole.companyName || user.displayName || "",
+        truckId,
+        formData.truckName,
+        selectedTruckType?.name || "",
+        selectedCargoArea.name,
+        selectedTruckCapacity?.name || "",
+        formData.numberPlate,
+        operationCountries
+      );
 
       clearFormFields()
       ToastAndroid.show("Truck Added successfully", ToastAndroid.SHORT);

@@ -28,7 +28,6 @@ type SubmitLoadParams = {
   selectedModelType: any;
   selectedCurrency: any;
   selectedCustomer: Customer | null;
-
 };
 
 const buildNotificationLoadItem = (params: SubmitLoadParams) => ({
@@ -57,8 +56,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     origin,
     destination,
     trucksNeeded,
-    selectedCustomer ,
-
+    selectedCustomer,
   } = params;
 
   const roleAny = currentRole as any;
@@ -72,32 +70,102 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     phoneNumber: user.phoneNumber || '',
   };
 
+  // Visibility tag used inside each nested assignment doc.
+  // (Your pasted snippet hardcoded "PUBLIC" — here it tracks the real loadVisibility instead,
+  // since submitLoad can also write Private/Both loads.)
+  const visibilityTag = loadVisibility === 'Public' ? 'PUBLIC' : 'PRIVATE';
+
+  // ── Shared load-level details, nested the same way as `loadItemDetails` in your booking flow ──
+  const baseLoadDetails = {
+    loadId: cargoId,
+    contact: loadData?.contact || null,
+    companyName: loadData?.companyName || user.organisation || null,
+    productName: loadData?.typeofLoad || null,
+    origin: origin || null,
+    originFull: loadData?.originFull || null,
+    destination: destination || null,
+    destinationFull: loadData?.destinationFull || null,
+    originCoordinates: loadData?.originCoordinates || null,
+    destinationCoordinates: loadData?.destinationCoordinates || null,
+    rate: loadData?.rate || null,
+    currency: loadData?.currency || null,
+    model: loadData?.model || null,
+    paymentTerms: loadData?.paymentTerms || null,
+    loadingDate: loadingDate || null,
+    deliveryDate: deliveryDate || null,
+    shipper: selectedCustomer,
+  };
+
+  // ── One nested payload per truck/driver assignment ──────────────────
+  // Mirrors your new shape: { truckDetails, driverDetails, loadDetails, fleetDetails, driverId, status }
   const assignmentDetails = assignments.map((assignment) => {
     const truck = selectedFleetTrucks.find((item) => item.id === assignment.truckId);
-    const driver = fleetDrivers.find((item) => item.driverId === assignment.driverId || item.id === assignment.driverId);
+    const driver = fleetDrivers.find(
+      (item) => item.driverId === assignment.driverId || item.id === assignment.driverId
+    );
 
-    return {
-      cargoId,
-      truckId: assignment.truckId || '',
-      truckName: truck?.truckName || '',
-      registrationNumber: truck?.registrationNumber || '',
-      truckType: truck?.truckType || '',
-      truckCapacity: truck?.truckCapacity || '',
-      driverId: assignment.driverId || null,
+    const truckDetails = {
+      truckId: assignment.truckId || truck?.id || null,
+      truckName: truck?.truckName || null,
+      registrationNumber: truck?.registrationNumber || truck?.numberPlate || null,
+      numberPlate: truck?.numberPlate || null,
+      truckType: truck?.truckType || null,
+      truckCapacity: truck?.truckCapacity || null,
+      cargoArea: truck?.cargoArea || null,
+      locations: truck?.locations || [],
+      trackingDeviceId: truck?.trackingDeviceId || null,
+    };
+
+    const driverDetails = {
+      driverId: assignment.driverId || driver?.driverId || driver?.id || null,
       driverDocId: driver?.docId || driver?.id || assignment.driverId || null,
       driverName: assignment.driverName || driver?.fullName || null,
-      driverPhone: driver?.phoneNumber || driver?.phone || null,
-      role: driver?.role || assignment.role || (assignment.isDefault ? 'main' : 'assigned'),
+      driverPhone: assignment.driverPhone || driver?.phoneNumber || driver?.phone || null,
+      profilePhoto: assignment.profilePhoto || driver?.profilePhoto || null,
+      email: driver?.email || null,
+      licenseNumber: driver?.licenseNumber || null,
+      role: assignment.isDefault ? 'main' : assignment.role || 'assigned',
+      isDefault: Boolean(assignment.isDefault),
+    };
+
+    const loadDetails = {
+      ...baseLoadDetails,
       pickupDate: assignment.pickupDate || loadingDate || null,
       deliveryDate: assignment.deliveryDate || deliveryDate || null,
       pickupLocation: assignment.pickupLocation || origin || null,
       deliveryLocation: assignment.deliveryLocation || destination || null,
-      isDefault: Boolean(assignment.isDefault),
-      status: 'pending',
-      selectedCustomer       
+    };
+
+    return {
+      cargoId,
+      loadId: cargoId,
+      fleetId,
+      truckId: assignment.truckId || null,
+      driverId: driverDetails.driverId,
+      visibility: visibilityTag,
+      // The truck's own owning fleet/org (not necessarily the poster of the load — relevant
+      // when a broker assigns a truck that belongs to a different fleet).
+      fleetDetails: truck?.organizationDetails ?? truck?.fleetDetails ?? null,
+      loadDetails,
+      truckDetails,
+      driverDetails,
+      status: 'ASSIGNED',
+      acceptedBy: null,
+      coordinator,
+      createdAt: new Date(),
     };
   });
 
+
+
+
+
+
+
+
+
+
+  
   const fleetTruckSummary = selectedFleetTrucks.map((truck) => ({
     truckId: truck.id,
     truckName: truck.truckName || '',
@@ -108,20 +176,21 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     assignment: assignmentDetails.find((assignment) => assignment.truckId === truck.id) || null,
   }));
 
+  // Flat summary kept for the load doc itself (cheap to query/list without reading nested objects)
   const assignmentSummary = assignmentDetails.map((assignment) => ({
     truckId: assignment.truckId,
-    truckName: assignment.truckName,
-    registrationNumber: assignment.registrationNumber,
-    truckType: assignment.truckType,
-    truckCapacity: assignment.truckCapacity,
+    truckName: assignment.truckDetails.truckName,
+    registrationNumber: assignment.truckDetails.registrationNumber,
+    truckType: assignment.truckDetails.truckType,
+    truckCapacity: assignment.truckDetails.truckCapacity,
     driverId: assignment.driverId,
-    driverName: assignment.driverName,
-    driverPhone: assignment.driverPhone,
-    role: assignment.role,
-    pickupDate: assignment.pickupDate,
-    deliveryDate: assignment.deliveryDate,
-    pickupLocation: assignment.pickupLocation,
-    deliveryLocation: assignment.deliveryLocation,
+    driverName: assignment.driverDetails.driverName,
+    driverPhone: assignment.driverDetails.driverPhone,
+    role: assignment.driverDetails.role,
+    pickupDate: assignment.loadDetails.pickupDate,
+    deliveryDate: assignment.loadDetails.deliveryDate,
+    pickupLocation: assignment.loadDetails.pickupLocation,
+    deliveryLocation: assignment.loadDetails.deliveryLocation,
     status: assignment.status,
   }));
 
@@ -152,68 +221,10 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       trucks: fleetTruckSummary,
     });
 
-    // Truck centric approach 
-
-    // for (const truck of selectedFleetTrucks) {
-    //   const truckAssignments = assignmentDetails.filter((assignment) => assignment.truckId === truck.id);
-    //   const assignmentDocId = `${cargoId}_${truck.id}`;
-    //   const assignmentPayload = {
-    //     cargoId,
-    //     loadId: cargoId,
-    //     fleetId,
-    //     truckId: truck.id,
-    //     truckName: truck.truckName || '',
-    //     registrationNumber: truck.registrationNumber || '',
-    //     assignedDrivers: truckAssignments.map((assignment) => ({
-    //       driverId: assignment.driverId,
-    //       driverDocId: assignment.driverDocId,
-    //       role: assignment.role,
-    //       fullName: assignment.driverName,
-    //       phoneNumber: assignment.driverPhone,
-    //       status: 'pending',
-    //     })),
-    //     driverIds: truckAssignments.map((assignment) => assignment.driverId),
-    //     mainDriver: truckAssignments.find((assignment) => assignment.role === 'main')?.driverId || '',
-    //     pickupDate: truckAssignments[0]?.pickupDate || loadingDate || null,
-    //     deliveryDate: truckAssignments[0]?.deliveryDate || deliveryDate || null,
-    //     pickupLocation: truckAssignments[0]?.pickupLocation || origin || null,
-    //     deliveryLocation: truckAssignments[0]?.deliveryLocation || destination || null,
-    //     status: 'pending',
-    //     acceptedBy: null,
-    //     createdAt: new Date(),
-    //     coordinator,
-
-    //   };
-
-    //   // await addDocumentWithId(`${fleetCargoPath}/${cargoId}/assignments`, assignmentDocId, assignmentPayload);
-    //   await addDocumentWithId(`fleets/${fleetId}/assignments`, assignmentDocId, assignmentPayload);
-    // }
-
-    for (const assignment of assignments) {
-
-      const assignmentDocId =
-        `${cargoId}_${assignment.truckId}_${assignment.driverId}`;
-
-
-      const payload = {
-        cargoId,
-        loadId: cargoId,
-        fleetId,
-
-        status: "pending",
-        createdAt: new Date(),
-
-
-        acceptedBy: null,
-        coordinator,
-        ...assignment,
-      };
-
-
-      await addDocumentWithId( `fleets/${fleetId}/assignments`, assignmentDocId, payload);
+    for (const assignment of assignmentDetails) {
+      const assignmentDocId = `${cargoId}_${assignment.truckId}_${assignment.driverId}`;
+      await addDocumentWithId(`fleets/${fleetId}/assignments`, assignmentDocId, assignment);
     }
-
-
 
     for (const selectedBrokerId of selectedBrokers) {
       await addDocumentWithId(`brokerages/${selectedBrokerId}/cargo`, `${cargoId}_${selectedBrokerId}`, {
@@ -236,26 +247,17 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     }
   };
 
-
-
-
-
   const writePublicLoad = async () => {
     await setDoc(doc(db, 'Cargo', cargoId), {
-        ...commonLoadData,
-        loadVisibility: 'Public',
-        expiresAt: Timestamp.fromDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)),
-        trucksNeeded: numberOfTrucks, 
-        trucksRemaining: numberOfTrucks,
-        privateFleetCargoId: currentRole?.accType === 'fleet' && loadVisibility === 'Both' ? cargoId : null,
-        state :"available",
+      ...commonLoadData,
+      loadVisibility: 'Public',
+      expiresAt: Timestamp.fromDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)),
+      trucksNeeded: numberOfTrucks,
+      trucksRemaining: numberOfTrucks,
+      privateFleetCargoId: currentRole?.accType === 'fleet' && loadVisibility === 'Both' ? cargoId : null,
+      state: 'available',
     });
   };
-
-
-
-
-
 
   const writeBrokerPrivateLoad = async () => {
     await setDoc(doc(db, `brokerages/${brokerId}/Cargo`, cargoId), {
@@ -269,65 +271,50 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     });
 
     for (const truck of selectedBrokerTrucks) {
-      await addDocumentWithId(`fleets/${truck.fleetId}/fleetManagers/FLTMGR${truck.fleetId}/brokerLoads`, `${cargoId}_${truck.truckId}`, {
-        loadId: cargoId,
-        cargoId,
-        loadStatus: 'pending',
-        loadVisibility: 'Private',
-        truckId: truck.truckId,
-        truckName: truck.truckName,
-        brokerId,
-        brokerName: user.organisation || user.displayName || 'Broker',
-        origin,
-        destination,
-        loadingDate,
-        deliveryDate,
-        assignmentSummary,
-        createdAt: new Date(),
-        coordinator,
-      });
+      await addDocumentWithId(
+        `fleets/${truck.fleetId}/fleetManagers/FLTMGR${truck.fleetId}/brokerLoads`,
+        `${cargoId}_${truck.truckId}`,
+        {
+          loadId: cargoId,
+          cargoId,
+          loadStatus: 'pending',
+          loadVisibility: 'Private',
+          truckId: truck.truckId,
+          truckName: truck.truckName,
+          brokerId,
+          brokerName: user.organisation || user.displayName || 'Broker',
+          origin,
+          destination,
+          loadingDate,
+          deliveryDate,
+          assignmentSummary,
+          createdAt: new Date(),
+          coordinator,
+        }
+      );
     }
   };
 
-
-
-
-
-
-
-
-
   if (currentRole?.accType === 'fleet') {
-    if (loadVisibility === 'Both') {
-      await writeFleetPrivateLoad();
-
-      await writePublicLoad();
-
-    }
+    // NOTE: fixed a bug from the previous version — "Both" used to call
+    // writeFleetPrivateLoad() twice (once explicitly, once via the || check below it).
     if (loadVisibility === 'Private' || loadVisibility === 'Both') {
       await writeFleetPrivateLoad();
-    } else if (loadVisibility === 'Public')
-      if (loadVisibility === 'Public') {
-        await writePublicLoad();
-        // await notifyTrucksByFilters({
-        //   trucksNeeded,
-        //   loadItem: buildNotificationLoadItem(params),
-        // });
-      }
+    }
+    if (loadVisibility === 'Public' || loadVisibility === 'Both') {
+      await writePublicLoad();
+      // await notifyTrucksByFilters({ trucksNeeded, loadItem: buildNotificationLoadItem(params) });
+    }
     return;
   }
 
-
   if (currentRole?.accType === 'brokerages') {
     if (loadVisibility === 'Private') {
-
       await writeBrokerPrivateLoad();
     }
     if (loadVisibility === 'Public' || loadVisibility === 'Both') {
       await writePublicLoad();
-
     }
-
     return;
   }
 
