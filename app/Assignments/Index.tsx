@@ -22,6 +22,7 @@ import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import Heading from '@/components/Heading';
 import { wp } from '@/constants/common';
 import Input from '@/components/Input';
+import { getRelativeTime } from '@/Utilities/getDateRelativeTime';
 
 // ---------------------------------------------------------------------------
 // Independent Assignments page for Fleet / Broker use.
@@ -107,6 +108,10 @@ function SelectorModal({
 }) {
     const accent = useThemeColor("accent");
     const backgroundLight = useThemeColor("backgroundLight");
+
+    const theIcon = useThemeColor("icon")
+
+
     const [search, setSearch] = useState('');
     const [items, setItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -144,6 +149,10 @@ function SelectorModal({
             return label.includes(s) || sub.includes(s);
         });
     }, [items, search, type]);
+
+
+
+
 
     if (!type) return null;
     const config = SELECTOR_CONFIG[type];
@@ -221,11 +230,7 @@ function SelectorModal({
 // ---------------------------------------------------------------------------
 // Filter Type picker modal (Load / Truck / Driver / Customer)
 // ---------------------------------------------------------------------------
-function FilterTypeModal({
-    visible,
-    onClose,
-    onPick,
-}: {
+function FilterTypeModal({ visible, onClose, onPick, }: {
     visible: boolean;
     onClose: () => void;
     onPick: (type: FilterType) => void;
@@ -462,7 +467,7 @@ function Jobs() {
 
                 <View style={styles.cargoHeader}>
                     <ThemedText style={styles.cargoTitle}>
-                        {assignmentData?.loadDetails?.productName || 'Load'} - {assignmentData.truckName}
+                        {assignmentData?.loadDetails?.productName || 'Load'} - {assignmentData.truckDetails.truckName}
                     </ThemedText>
 
                     <View style={[styles.statusBadge, { backgroundColor: getStatusColor(assignmentData.status) }]}>
@@ -481,7 +486,8 @@ function Jobs() {
                     <View style={styles.detailRow}>
                         <Ionicons name="location-outline" size={16} color={accent} />
                         <ThemedText style={styles.detailText}>
-                            {assignmentData?.pickupLocation?.description || 'Origin'} → {assignmentData?.deliveryLocation?.description || 'Destination'}
+                            {assignmentData?.loadDetails?.pickupLocation?.description || "Origin"} →{" "}
+                            {assignmentData?.loadDetails?.deliveryLocation?.description || "Destination"}
                         </ThemedText>
                     </View>
 
@@ -500,33 +506,53 @@ function Jobs() {
                         <Ionicons name="person-circle-outline" size={16} color={accent} />
                         <ThemedText style={styles.detailText} numberOfLines={1}>
                             {assignmentData?.driverDetails?.driverName || "Unassigned"} •{" "}
-                            {assignmentData?.driverDetails?.driverPhoneNumber || "No phone"}
+                            {assignmentData?.driverDetails?.driverPhone || "No phone"}
                         </ThemedText>
                     </View>
 
-                    {/* LOAD OWNER (ONLY IF PUBLIC) */}
-                        {assignmentData?.shipper?.name && (
-                            <View style={styles.detailRow}>
-                                <Ionicons name="business-outline" size={16} color={accent} />
-                                <ThemedText style={styles.detailText} numberOfLines={1}>
-                                    {assignmentData.shipper.name || "Owner"} •{" "}
-                                    {assignmentData.shipper.phone || "N/A"}
-                                </ThemedText>
-                            </View>
-                        )}
+                    {/* SHIPPER */}
+                    {assignmentData?.shipper?.name && (
+                        <View style={styles.detailRow}>
+                            <Ionicons name="business-outline" size={16} color={accent} />
+                            <ThemedText style={styles.detailText} numberOfLines={1}>
+                                {assignmentData.shipper.name} •{" "}
+                                {assignmentData.shipper.phone || "N/A"}
+                            </ThemedText>
+                        </View>
+                    )}
 
-                    {/* DATES */}
+                    {/* LOADING DATE */}
                     <View style={styles.detailRow}>
                         <Ionicons name="calendar-outline" size={16} color={accent} />
                         <ThemedText style={styles.detailText}>
-                            Loading: {assignmentData?.pickupDate ? new Date(assignmentData.pickupDate).toLocaleDateString() : 'TBD'}
+                            Loading:{" "}
+                            {assignmentData?.loadDetails?.pickupDate
+                                ? new Date(assignmentData.loadDetails.pickupDate).toLocaleDateString()
+                                : "TBD"}
                         </ThemedText>
                     </View>
 
+                    {/* DELIVERY DATE */}
                     <View style={styles.detailRow}>
                         <Ionicons name="time-outline" size={16} color={accent} />
                         <ThemedText style={styles.detailText}>
-                            Delivery: {assignmentData?.deliveryDate ? new Date(assignmentData.deliveryDate).toLocaleDateString() : 'TBD'}
+                            Delivery:{" "}
+                            {assignmentData?.loadDetails?.deliveryDate
+                                ? new Date(assignmentData.loadDetails.deliveryDate).toLocaleDateString()
+                                : "TBD"}
+                        </ThemedText>
+                    </View>
+
+                    {/* CREATED */}
+
+                    <View style={styles.metaRow}>
+                        <Ionicons
+                            name="time-outline"
+                            size={14}
+                            color={"#777"}
+                        />
+                        <ThemedText style={{ marginLeft: 6, fontSize: 12, color: "#777", }}>
+                            Assigned {assignmentData.createdAt ? getRelativeTime(parseInt(assignmentData.createdAt)) : 'N/A'}
                         </ThemedText>
                     </View>
 
@@ -554,7 +580,7 @@ function Jobs() {
                         onPress={() => {
                             router.push({
                                 pathname: "/Logistics/Loads/Index",
-                                params: { itemId: assignmentData.cargoId },
+                                params: { itemId: assignmentData.loadDetails.cargoId ||assignmentData.loadDetails.loadId },
                             });
                         }}
                     >
@@ -565,12 +591,13 @@ function Jobs() {
                     {/* TRUCK */}
                     <TouchableOpacity
                         style={styles.actionButton}
-                        onPress={() => {
-                            router.push({
-                                pathname: "/Logistics/Trucks/TruckDetails",
-                                params: { truckId: assignmentData.truckId },
-                            });
-                        }}
+
+                        onPress={() => router.push({
+                            pathname: "/Logistics/Trucks/TruckDetails",
+                            params: { truckid: assignmentData.truckDetails.truckId, dspDetails: "false", fleetId: assignmentData.fleetDetails.id || undefined }
+                        })}
+
+
                     >
                         <Ionicons name="car-sport-outline" size={16} color={accent} />
                         <ThemedText style={styles.actionButtonText}>Truck</ThemedText>
@@ -578,52 +605,52 @@ function Jobs() {
 
                 </View>
 
-                  {/* OPERATION ACTIONS */}
-<View
-    style={{
-        flexDirection: 'row',
-        gap: wp(2),
-        marginTop: wp(2),
-    }}
->
+                {/* OPERATION ACTIONS */}
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        gap: wp(2),
+                        marginTop: wp(2),
+                    }}
+                >
 
-    {/* VIEW TRACKER */}
-    <TouchableOpacity
-        style={styles.actionButton}
-        
-    >
-        <Ionicons name="navigate-circle-outline" size={16} color={accent} />
-        <ThemedText style={styles.actionButtonText}>
-            Tracker
-        </ThemedText>
-    </TouchableOpacity>
+                    {/* VIEW TRACKER */}
+                    <TouchableOpacity
+                        style={styles.actionButton}
 
-    {/* PROOF OF DELIVERY */}
-    <TouchableOpacity
-        style={styles.actionButton}
-      
-    >
-        <Ionicons name="camera-outline" size={16} color={accent} />
-        <ThemedText style={styles.actionButtonText}>
-            Proof dispute , handle dispute issuehandling    
-        </ThemedText>
-    </TouchableOpacity>
+                    >
+                        <Ionicons name="navigate-circle-outline" size={16} color={accent} />
+                        <ThemedText style={styles.actionButtonText}>
+                            Tracker
+                        </ThemedText>
+                    </TouchableOpacity>
 
-    {/* CONFIRM DELIVERY */}
-    <TouchableOpacity
-        style={styles.actionButton}
-        onPress={() => {
-            // confirm logic here
-            console.log("Confirm delivery", assignmentData.id);
-        }}
-    >
-        <Ionicons name="checkmark-done-circle-outline" size={16} color={accent} />
-        <ThemedText style={styles.actionButtonText}>
-            Confirm
-        </ThemedText>
-    </TouchableOpacity>
+                    {/* PROOF OF DELIVERY */}
+                    <TouchableOpacity
+                        style={styles.actionButton}
 
-</View>      
+                    >
+                        <Ionicons name="camera-outline" size={16} color={accent} />
+                        <ThemedText style={styles.actionButtonText}>
+                            Proof dispute , handle dispute issuehandling
+                        </ThemedText>
+                    </TouchableOpacity>
+
+                    {/* CONFIRM DELIVERY */}
+                    <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => {
+                            // confirm logic here
+                            console.log("Confirm delivery", assignmentData.id);
+                        }}
+                    >
+                        <Ionicons name="checkmark-done-circle-outline" size={16} color={accent} />
+                        <ThemedText style={styles.actionButtonText}>
+                            Confirm
+                        </ThemedText>
+                    </TouchableOpacity>
+
+                </View>
 
 
 
@@ -774,7 +801,7 @@ function Jobs() {
                             return (
                                 <TouchableOpacity
                                     key={tab.key}
-                                    style={[styles.statusButton, activeTab === tab.key && { backgroundColor: accent ,borderWidth:0 }]}
+                                    style={[styles.statusButton, activeTab === tab.key && { backgroundColor: accent, borderWidth: 0 }]}
                                     onPress={() => setActiveTab(tab.key)}
                                 >
                                     <ThemedText
@@ -1061,4 +1088,16 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     rejectButtonsRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
+
+
+    metaRow: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+
+    metaText: {
+        marginLeft: 6,
+        fontSize: 12,
+        color: "#777",
+    },
 });

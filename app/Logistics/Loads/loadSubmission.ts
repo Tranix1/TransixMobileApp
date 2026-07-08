@@ -95,6 +95,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     deliveryDate: deliveryDate || null,
     shipper: selectedCustomer,
   };
+  
 
   // ── One nested payload per truck/driver assignment ──────────────────
   // Mirrors your new shape: { truckDetails, driverDetails, loadDetails, fleetDetails, driverId, status }
@@ -103,6 +104,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     const driver = fleetDrivers.find(
       (item) => item.driverId === assignment.driverId || item.id === assignment.driverId
     );
+
+const isDefaultDriver =truck?.defaultDriver?.driverId === (assignment.driverId || driver?.driverId || driver?.id);
 
     const truckDetails = {
       truckId: assignment.truckId || truck?.id || null,
@@ -123,9 +126,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       driverPhone: assignment.driverPhone || driver?.phoneNumber || driver?.phone || null,
       profilePhoto: assignment.profilePhoto || driver?.profilePhoto || null,
       email: driver?.email || null,
-      licenseNumber: driver?.licenseNumber || null,
-      role: assignment.isDefault ? 'main' : assignment.role || 'assigned',
-      isDefault: Boolean(assignment.isDefault),
+      role: isDefaultDriver ? 'main' : assignment.role || 'assigned',
+      isDefault: isDefaultDriver
     };
 
     const loadDetails = {
@@ -149,23 +151,17 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       loadDetails,
       truckDetails,
       driverDetails,
-      status: 'ASSIGNED',
+      status: 'PENDING',
       acceptedBy: null,
       coordinator,
-      createdAt: new Date(),
+      createdAt: Date.now().toString(),
+      shipper:selectedCustomer ,
+      
     };
   });
 
 
 
-
-
-
-
-
-
-
-  
   const fleetTruckSummary = selectedFleetTrucks.map((truck) => ({
     truckId: truck.id,
     truckName: truck.truckName || '',

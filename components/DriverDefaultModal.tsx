@@ -73,41 +73,22 @@ export default function DriverDefaultModal({
     const loadStaff = async () => {
 
         try {
-
             setLoading(true);
 
-
-            const driversRef = collection(
-                db,
-                "fleets",
-                fleetId,
-                "Drivers"
-            );
-
+            const driversRef = collection(db,"fleets",fleetId,"Drivers");
 
             const snap = await getDocs(driversRef);
 
-
             const list: any[] = [];
 
-
             snap.forEach((item) => {
-
                 const data = item.data();
 
-
-                list.push({
-                    id: item.id,
-                    ...data
-                });
-
+                list.push({id: item.id,...data});
             });
-
-
 
             setStaff(list);
             setFiltered(list);
-
 
         } catch (err) {
 
@@ -118,7 +99,6 @@ export default function DriverDefaultModal({
             setLoading(false);
 
         }
-
     };
 
 
@@ -127,16 +107,11 @@ export default function DriverDefaultModal({
     const handleSearch = (text: string) => {
 
         setSearch(text);
-
-
         if (!text) {
 
             setFiltered(staff);
             return;
-
         }
-
-
         const result = staff.filter((driver) =>
 
             driver.fullName
@@ -144,8 +119,6 @@ export default function DriverDefaultModal({
                 .includes(text.toLowerCase())
 
         );
-
-
         setFiltered(result);
 
     };
@@ -155,16 +128,10 @@ export default function DriverDefaultModal({
 
 
     const setDefaultDriver = async () => {
-
-
         if (!selected) return;
-
-
 
         const oldTruck =
             selected.defaultTruck?.truckNumberPlate;
-
-
 
         if (
             oldTruck &&
@@ -196,9 +163,6 @@ export default function DriverDefaultModal({
     };
 
 
-
-
-
     const saveDriver = async () => {
 
         try {
@@ -206,15 +170,7 @@ export default function DriverDefaultModal({
             const batch = writeBatch(db);
 
 
-            const driverRef = doc(
-                db,
-                "fleets",
-                fleetId,
-                "Drivers",
-                selected.id
-            );
-
-
+            const driverRef = doc(db,"fleets",fleetId,"Drivers",selected.id);
             // If driver was already assigned to another truck
             if (
                 selected.defaultTruck?.truckId &&
@@ -222,24 +178,12 @@ export default function DriverDefaultModal({
             ) {
 
 
-                const oldTruckRef = doc(
-                    db,
-                    "fleets",
-                    fleetId,
-                    "Trucks",
-                    selected.defaultTruck.truckId
-                );
+          const oldTruckRef = doc(db,"fleets",fleetId,"Trucks",selected.defaultTruck.truckId);
 
 
-                batch.update(oldTruckRef, {
-
-                    defaultDriver: null
-
-                });
+                batch.update(oldTruckRef, {defaultDriver: null});
 
             }
-
-
 
             // Update driver
             batch.update(driverRef, {
@@ -261,14 +205,7 @@ export default function DriverDefaultModal({
 
             // Update new truck
             const newTruckRef = doc(
-                db,
-                "fleets",
-                fleetId,
-                "Trucks",
-                truckId
-            );
-
-
+                db,"fleets",fleetId,"Trucks",truckId);
 
             batch.update(newTruckRef, {
 

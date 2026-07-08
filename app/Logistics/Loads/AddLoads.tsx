@@ -52,7 +52,6 @@ const AddLoadDB = () => {
   const { user, alertBox, currentRole } = useAuth();
 
   const [assignments, setAssignments] = useState<any[]>([]);
-console.log(assignments, "assigments data ......" )
 
   const [pickupDateTruckId, setPickupDateTruckId] = useState<string | null>(null);
   const [deliveryDateTruckId, setDeliveryDateTruckId] = useState<string | null>(null);
@@ -991,6 +990,7 @@ console.log(assignments, "assigments data ......" )
               <RateInput
                 rate={rate}
                 setRate={setRate}
+                distance={distance}
                 selectedCurrency={selectedCurrency}
                 setSelectedCurrency={setSelectedCurrency}
                 selectedModelType={selectedModelType}
@@ -1483,6 +1483,7 @@ console.log(assignments, "assigments data ......" )
               <RateInput
                 rate={returnRate || ""}
                 setRate={(rate) => setReturnRate(rate || "")}
+                distance ={returnDistance}
                 selectedCurrency={selectedReturnCurrency || { id: 1, name: "USD" }}
                 setSelectedCurrency={setSelectedReturnCurrency}
                 selectedModelType={selectedReturnModelType || { id: 1, name: "Solid" }}

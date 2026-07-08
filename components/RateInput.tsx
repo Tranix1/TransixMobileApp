@@ -6,10 +6,12 @@ import { DropDownItem } from "@/components/DropDown";
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { wp, hp } from "@/constants/common";
 import { CURRENCY_OPTIONS, MODEL_OPTIONS } from '@/Utilities/loadUtils';
+import { calculateRatePerKm } from '@/Utilities/calculateRatePerKm';
 
 interface RateInputProps {
     rate: string;
     setRate: (rate: string) => void;
+    distance: string;
     selectedCurrency: { id: number, name: string };
     setSelectedCurrency: (currency: { id: number, name: string }) => void;
     selectedModelType: { id: number, name: string };
@@ -32,6 +34,7 @@ interface RateInputProps {
 export const RateInput: React.FC<RateInputProps> = ({
     rate,
     setRate,
+    distance,
     selectedCurrency,
     setSelectedCurrency,
     selectedModelType,
@@ -54,27 +57,31 @@ export const RateInput: React.FC<RateInputProps> = ({
     const model = isReturnRate ? (returnModelType || selectedReturnModelType) : selectedModelType;
     const setModel = isReturnRate ? (setReturnModelType || setSelectedReturnModelType) : setSelectedModelType;
 
+
+    const [ratePerKm, setRatePerKm] = React.useState(0);
+
+    const handleRateChange = (value: string) => {
+        setRate(value);
+
+        const calculatedRate = calculateRatePerKm(
+            Number(value),
+            distance
+        );
+
+        setRatePerKm(calculatedRate);
+    };
+
     // Ensure we have valid setter functions
     const safeSetCurrency = setCurrency || (() => { });
     const safeSetModel = setModel || (() => { });
-    const rateLabel = isReturnRate ? "Return Rate" : "Rate";
+    const rateLabel = isReturnRate ? "Return Price" : "Price";
     const explanationLabel = isReturnRate ? "Return Terms" : "Explain rate";
 
     // Ensure currency and model have valid defaults
     const safeCurrency = currency && currency.id && currency.name ? currency : { id: 1, name: 'USD' };
     const safeModel = model && model.id && model.name ? model : { id: 1, name: 'Solid' };
 
-    // Debug logging for return rate
-    if (isReturnRate) {
-        console.log('RateInput Return Rate Debug:', {
-            currency: currency,
-            safeCurrency: safeCurrency,
-            model: model,
-            safeModel: safeModel,
-            selectedReturnCurrency: selectedReturnCurrency,
-            selectedReturnModelType: selectedReturnModelType
-        });
-    }
+
 
     // Auto-sync return currency with main currency when main currency changes
     useEffect(() => {
@@ -117,10 +124,39 @@ export const RateInput: React.FC<RateInputProps> = ({
                     </ThemedText>
                     <Input
                         value={rate}
-                        onChangeText={setRate}
+                        onChangeText={handleRateChange}
                         style={{ height: 45.5 }}
                         keyboardType='numeric'
                     />
+
+
+                    <View style={{ flexDirection: "row", alignItems: "center", position:"absolute", left :-15, bottom:-7 ,  }}>
+                        <ThemedText
+                            style={{
+                                fontSize: 12,
+                                fontWeight: "500",
+                                marginRight: 6,
+                            }}
+                        >
+                            Calc: price ÷ (distance × 2)
+                        </ThemedText>
+
+                        <ThemedText
+                            style={{
+                                fontSize: 14,
+                                fontWeight: "600",
+                                color:
+                                    ratePerKm < 2
+                                        ? '#EF4444'
+                                        : ratePerKm < 2.5
+                                            ? '#EAB308'
+                                            : '#22C55E',
+                            }}
+                        >
+                            ${ratePerKm.toFixed(2)}/km
+                        </ThemedText>
+                    </View>
+
                 </View>
                 <View style={{ width: wp(28), marginLeft: wp(2) }}>
                     <ThemedText type="defaultSemiBold">Model</ThemedText>
