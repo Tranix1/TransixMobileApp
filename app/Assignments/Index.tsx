@@ -18,7 +18,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { router } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/db/fireBaseConfig';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, addDoc, query, orderBy, increment } from 'firebase/firestore';
 import Heading from '@/components/Heading';
 import { wp } from '@/constants/common';
 import Input from '@/components/Input';
@@ -38,7 +38,12 @@ import { getRelativeTime } from '@/Utilities/getDateRelativeTime';
 //    Update SELECTOR_CONFIG below to point at your real collections, or swap
 //    the fetch call inside SelectorModal for your existing selector screens.
 // 4. Each assignment doc has a top-level `status` field, updated directly.
+// 5. Activity (notes/issues) live at `fleets/{fleetDetails.id}/Assignments/{assignmentId}/activity`,
+//    matching assignmentData.fleetDetails.id used elsewhere in this file for
+//    the Truck action button. Update ACTIVITY_SUBCOLLECTION below if it differs.
 // ---------------------------------------------------------------------------
+
+const ACTIVITY_SUBCOLLECTION = 'activity';
 
 interface CargoItem {
     id: string;
@@ -322,6 +327,188 @@ function RejectReasonModal({
 }
 
 // ---------------------------------------------------------------------------
+// Notes / Issues panel for a single assignment. Replaces the old
+// "Add Note / Issue" button + inline bottom-sheet. Persists to Firestore
+// under fleets/{fleetId}/Assignments/{assignmentId}/activity, keeps a
+// running list per type, and bumps notesCount/issuesCount on the parent doc.
+// ---------------------------------------------------------------------------
+function AssignmentActivityPanel({
+    assignmentId,
+    fleetId,
+    initialNotesCount,
+    initialIssuesCount,
+    accent,
+    backgroundLight,
+}: {
+    assignmentId: string;
+    fleetId: string | undefined;
+    initialNotesCount?: number;
+    initialIssuesCount?: number;
+    accent: string;
+    backgroundLight: string;
+}) {
+    const { user } = useAuth();
+
+    const [activityView, setActivityView] = useState<"NOTE" | "ISSUE" | null>(null);
+    const [activityText, setActivityText] = useState("");
+    const [assignmentActivity, setAssignmentActivity] = useState<any[]>([]);
+    const [loadingActivity, setLoadingActivity] = useState(false);
+    const [savingActivity, setSavingActivity] = useState(false);
+    const [counts, setCounts] = useState({
+        notesCount: initialNotesCount || 0,
+        issuesCount: initialIssuesCount || 0,
+    });
+
+    const activityCollectionRef = useCallback(() => {
+        return collection(db, "fleets", fleetId as string, "Assignments", assignmentId, ACTIVITY_SUBCOLLECTION);
+    }, [fleetId, assignmentId]);
+
+    const loadAssignmentActivity = async () => {
+        if (!fleetId) return;
+        try {
+            setLoadingActivity(true);
+            const snap = await getDocs(query(activityCollectionRef(), orderBy("createdAt", "desc")));
+            const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+            setAssignmentActivity(data);
+        } catch (error) {
+            console.log("Activity error", error);
+        } finally {
+            setLoadingActivity(false);
+        }
+    };
+
+    const openPanel = (type: "NOTE" | "ISSUE") => {
+        setActivityView(type);
+        loadAssignmentActivity();
+    };
+
+    const saveActivity = async () => {
+        if (!activityText.trim() || !activityView || !fleetId) return;
+
+        try {
+            setSavingActivity(true);
+
+            // The note/issue itself is the important write — this is the only
+            // thing that can fail the save.
+            await addDoc(activityCollectionRef(), {
+                type: activityView,
+                text: activityText.trim(),
+                createdAt: Date.now(),
+                createdBy: user?.uid || "",
+                createdByName: user?.displayName || "User",
+                status: activityView === "ISSUE" ? "OPEN" : null,
+            });
+
+            setActivityText("");
+            loadAssignmentActivity();
+            setCounts((prev) => ({
+                notesCount: prev.notesCount + (activityView === "NOTE" ? 1 : 0),
+                issuesCount: prev.issuesCount + (activityView === "ISSUE" ? 1 : 0),
+            }));
+
+            // Bumping the count on the parent assignment doc is best-effort —
+            // if this fails (e.g. the doc path doesn't match), the note has
+            // already been saved, so we shouldn't show a "failed" error.
+            try {
+                await updateDoc(doc(db, "fleets", fleetId, "Assignments", assignmentId), {
+                    notesCount: increment(activityView === "NOTE" ? 1 : 0),
+                    issuesCount: increment(activityView === "ISSUE" ? 1 : 0),
+                });
+            } catch (countError) {
+                console.log("Could not update assignment counts", countError);
+            }
+        } catch (error) {
+            console.log(error);
+            Alert.alert('Error', 'Failed to save. Please try again.');
+        } finally {
+            setSavingActivity(false);
+        }
+    };
+
+    return (
+        <View>
+            {/* NOTES + ISSUES TRIGGERS */}
+            <View style={{ flexDirection: "row", gap: wp(2), marginTop: wp(2) }}>
+                <TouchableOpacity style={styles.actionButton} onPress={() => openPanel("NOTE")}>
+                    <Ionicons name="chatbubble-outline" size={16} color={accent} />
+                    <ThemedText style={{ color: accent }}>Notes ({counts.notesCount})</ThemedText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.actionButton, { borderColor: "#F44336" }]}
+                    onPress={() => openPanel("ISSUE")}
+                >
+                    <Ionicons name="warning-outline" size={16} color="#F44336" />
+                    <ThemedText style={{ color: "#F44336" }}>Issues ({counts.issuesCount})</ThemedText>
+                </TouchableOpacity>
+            </View>
+
+            {/* DROPDOWN PANEL */}
+            {activityView && (
+                <View style={{
+                    marginTop: wp(3),
+                    padding: wp(3),
+                    borderRadius: wp(3),
+                    backgroundColor: backgroundLight,
+                }}>
+
+                    {/* HEADER + CLOSE */}
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: wp(2) }}>
+                        <ThemedText style={{ fontSize: 16, fontWeight: '700', color: activityView === "ISSUE" ? "#F44336" : accent }}>
+                            {activityView === "ISSUE" ? "Reported Issues" : "Notes"}
+                        </ThemedText>
+                        <TouchableOpacity onPress={() => setActivityView(null)}>
+                            <Ionicons name="close-circle-outline" size={22} color="#777" />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* EXISTING ACTIVITY */}
+                    {loadingActivity ? (
+                        <ActivityIndicator size="small" color={accent} style={{ marginVertical: wp(2) }} />
+                    ) : assignmentActivity.filter((x) => x.type === activityView).length === 0 ? (
+                        <ThemedText style={{ fontSize: 12, color: "#999", marginBottom: wp(2) }}>
+                            No {activityView === "ISSUE" ? "issues" : "notes"} yet.
+                        </ThemedText>
+                    ) : (
+                        assignmentActivity
+                            .filter((x) => x.type === activityView)
+                            .map((item) => (
+                                <View
+                                    key={item.id}
+                                    style={{ padding: wp(2), marginBottom: wp(2), borderRadius: wp(2), backgroundColor: "#eee" }}
+                                >
+                                    <ThemedText>{item.text}</ThemedText>
+                                    <ThemedText style={{ fontSize: 11, color: "#777" }}>
+                                        {new Date(item.createdAt).toLocaleString()}
+                                    </ThemedText>
+                                </View>
+                            ))
+                    )}
+
+                    {/* INPUT */}
+                    <Input
+                        placeholder={activityView === "ISSUE" ? "Describe issue..." : "Write note..."}
+                        value={activityText}
+                        onChangeText={setActivityText}
+                    />
+
+                    <TouchableOpacity
+                        style={[styles.actionButton, { marginTop: wp(2), justifyContent: 'center' }]}
+                        disabled={savingActivity || !activityText.trim()}
+                        onPress={saveActivity}
+                    >
+                        <ThemedText style={{ color: activityView === "ISSUE" ? "#F44336" : accent }}>
+                            {savingActivity ? "Saving..." : `Add ${activityView === "ISSUE" ? "Issue" : "Note"}`}
+                        </ThemedText>
+                    </TouchableOpacity>
+
+                </View>
+            )}
+        </View>
+    );
+}
+
+// ---------------------------------------------------------------------------
 // Main Assignments page (Fleet / Broker only — independent, no driver logic)
 // ---------------------------------------------------------------------------
 function Jobs() {
@@ -346,11 +533,6 @@ function Jobs() {
     // ---- Reject flow state ----
     const [rejectModalVisible, setRejectModalVisible] = useState(false);
     const [rejectTarget, setRejectTarget] = useState<{ cargoId: string; assignmentDocId: string } | null>(null);
-
-    // NOTE STATE (place at top of component)
-    const [noteVisible, setNoteVisible] = useState(false);
-    const [noteText, setNoteText] = useState("");
-    const [noteType, setNoteType] = useState<"NOTE" | "ISSUE">("NOTE");
 
     const getAssignmentsPath = useCallback(() => {
         if (accType === 'brokerage') return `brokerages/${scopeId}/assignments`;
@@ -580,7 +762,8 @@ function Jobs() {
                         onPress={() => {
                             router.push({
                                 pathname: "/Logistics/Loads/Index",
-                                params: { itemId: assignmentData.loadDetails.cargoId ||assignmentData.loadDetails.loadId },
+                                params: { cargoId: assignmentData.loadDetails.cargoId || assignmentData.loadDetails.loadId ,
+                                     cargoVisibilityG  : assignmentData.visibility ||null   },
                             });
                         }}
                     >
@@ -611,146 +794,125 @@ function Jobs() {
                         flexDirection: 'row',
                         gap: wp(2),
                         marginTop: wp(2),
+                        flexWrap: 'wrap'
                     }}
                 >
 
-                    {/* VIEW TRACKER */}
-                    <TouchableOpacity
-                        style={styles.actionButton}
+                    {/* TRACKER - Everyone */}
+                        <TouchableOpacity
+                            style={styles.actionButton}
+                            onPress={() => {
+                                console.log("Open tracker");
+                            }}
+                        >
+                            <Ionicons name="navigate-circle-outline" size={16} color={accent} />
+                            <ThemedText style={styles.actionButtonText}>
+                                Tracker
+                            </ThemedText>
+                        </TouchableOpacity>
+                    
 
-                    >
-                        <Ionicons name="navigate-circle-outline" size={16} color={accent} />
-                        <ThemedText style={styles.actionButtonText}>
-                            Tracker
-                        </ThemedText>
-                    </TouchableOpacity>
 
-                    {/* PROOF OF DELIVERY */}
-                    <TouchableOpacity
-                        style={styles.actionButton}
+                    {/* DRIVER ACTION */}
+                    {currentRole.accType === "driver" && (
+                        <TouchableOpacity
+                            style={styles.actionButton}
+                            onPress={() => {
 
-                    >
-                        <Ionicons name="camera-outline" size={16} color={accent} />
-                        <ThemedText style={styles.actionButtonText}>
-                            Proof dispute , handle dispute issuehandling
-                        </ThemedText>
-                    </TouchableOpacity>
+                                if (assignmentData.status === "pending") {
+                                    console.log("Start trip");
+                                    // pending -> in_transit
+                                }
 
-                    {/* CONFIRM DELIVERY */}
-                    <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => {
-                            // confirm logic here
-                            console.log("Confirm delivery", assignmentData.id);
-                        }}
-                    >
-                        <Ionicons name="checkmark-done-circle-outline" size={16} color={accent} />
-                        <ThemedText style={styles.actionButtonText}>
-                            Confirm
-                        </ThemedText>
-                    </TouchableOpacity>
+                                else if (assignmentData.status === "in_transit") {
+                                    console.log("Upload proof");
+                                    // open proof upload
+                                }
+
+                            }}
+                        >
+                            <Ionicons
+                                name={
+                                    assignmentData.status === "pending"
+                                        ? "play-circle-outline"
+                                        : "camera-outline"
+                                }
+                                size={16}
+                                color={accent}
+                            />
+
+                            <ThemedText style={styles.actionButtonText}>
+
+                                {assignmentData.status === "pending"
+                                    ? "Start Trip"
+                                    : assignmentData.status === "in_transit"
+                                        ? "Upload Proof"
+                                        : "Waiting Approval"
+                                }
+
+                            </ThemedText>
+
+                        </TouchableOpacity>
+                    )}
+
+
+
+                    {/* OWNER / BROKER CONFIRM */}
+                    {(currentRole.accType === "fleet" || currentRole.accType === "brokerage") &&
+                        assignmentData.status === "delivery_submitted" && (
+                            <TouchableOpacity
+                                style={styles.actionButton}
+                                onPress={() => {
+                                    console.log("Confirm delivery");
+                                }}
+                            >
+                                <Ionicons
+                                    name="checkmark-done-circle-outline"
+                                    size={16}
+                                    color={accent}
+                                />
+
+                                <ThemedText style={styles.actionButtonText}>
+                                    Confirm
+                                </ThemedText>
+
+                            </TouchableOpacity>
+                        )}
+
+
+
+                    {/* HANDLE ISSUES */}
+                    {(currentRole.accType === "fleet" || currentRole.accType === "brokerage") && (
+                        <TouchableOpacity
+                            style={styles.actionButton}
+                            onPress={() => {
+                                console.log("Open dispute");
+                            }}
+                        >
+                            <Ionicons
+                                name="alert-circle-outline"
+                                size={16}
+                                color={accent}
+                            />
+
+                            <ThemedText style={styles.actionButtonText}>
+                               reolve Issues
+                            </ThemedText>
+
+                        </TouchableOpacity>
+                    )}
 
                 </View>
 
-
-
-                {/* NOTES + ISSUE TRIGGER */}
-                <TouchableOpacity
-                    style={{
-                        marginTop: wp(2),
-                        padding: wp(2),
-                        borderRadius: wp(3),
-                        borderWidth: 1,
-                        borderColor: accent,
-                        flexDirection: 'row',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        gap: wp(1),
-                    }}
-                    onPress={() => setNoteVisible(true)}
-                >
-                    <Ionicons name="chatbubble-ellipses-outline" size={16} color={accent} />
-                    <ThemedText style={{ color: accent }}>
-                        Add Note / Issue
-                    </ThemedText>
-                </TouchableOpacity>
-
-                {/* SIMPLE NOTE MODAL */}
-                {noteVisible && (
-                    <View style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        backgroundColor: backgroundLight,
-                        padding: wp(4),
-                        borderTopLeftRadius: wp(5),
-                        borderTopRightRadius: wp(5),
-                    }}>
-
-                        {/* TYPE SELECTOR */}
-                        <View style={{ flexDirection: 'row', gap: wp(2), marginBottom: wp(2) }}>
-
-                            <TouchableOpacity onPress={() => setNoteType("NOTE")}>
-                                <ThemedText style={{ color: noteType === "NOTE" ? accent : "#999" }}>
-                                    Note
-                                </ThemedText>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity onPress={() => setNoteType("ISSUE")}>
-                                <ThemedText style={{ color: noteType === "ISSUE" ? "#F44336" : "#999" }}>
-                                    Issue
-                                </ThemedText>
-                            </TouchableOpacity>
-
-                        </View>
-
-                        {/* INPUT */}
-                        <Input
-                            placeholder={noteType === "ISSUE" ? "Report issue..." : "Write note..."}
-                            value={noteText}
-                            onChangeText={setNoteText}
-                        />
-
-                        {/* ACTIONS */}
-                        <View style={{ flexDirection: 'row', gap: wp(2), marginTop: wp(2) }}>
-
-                            <TouchableOpacity
-                                style={[styles.actionButton, { flex: 1 }]}
-                                onPress={() => {
-                                    setNoteVisible(false);
-                                    setNoteText("");
-                                }}
-                            >
-                                <ThemedText style={{ color: accent }}>Cancel</ThemedText>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.actionButton, { flex: 1, borderColor: noteType === "ISSUE" ? "#F44336" : accent }]}
-                                onPress={() => {
-                                    const payload = {
-                                        text: noteText,
-                                        type: noteType,
-                                        createdAt: Date.now(),
-                                        assignmentId: assignmentData.id,
-                                    };
-
-                                    // SAVE TO DB HERE
-                                    console.log(payload);
-
-                                    setNoteVisible(false);
-                                    setNoteText("");
-                                }}
-                            >
-                                <ThemedText style={{ color: noteType === "ISSUE" ? "#F44336" : accent }}>
-                                    Save
-                                </ThemedText>
-                            </TouchableOpacity>
-
-                        </View>
-
-                    </View>
-                )}
+                {/* NOTES + ISSUES (persisted to Firestore, per-assignment) */}
+                <AssignmentActivityPanel
+                    assignmentId={assignmentData.id}
+                    fleetId={assignmentData?.fleetDetails?.id}
+                    initialNotesCount={assignmentData.notesCount}
+                    initialIssuesCount={assignmentData.issuesCount}
+                    accent={accent}
+                    backgroundLight={backgroundLight}
+                />
 
             </View>
         );
@@ -1101,3 +1263,145 @@ const styles = StyleSheet.create({
         color: "#777",
     },
 });
+
+
+
+
+
+
+    // Start from the code I provided above.
+
+    // Do not change my UI, layout, styles, spacing, buttons design, or component structure.
+
+    // The current UI is already correct. Your job is only to complete and refine the functionality from this exact point.
+
+    // Make only the following fixes:
+
+    // 1. Keep the existing assignment card and buttons exactly as they are.
+
+    // Do not:
+
+    // * redesign the card
+    // * remove buttons
+    // * add new UI sections
+    // * create new screens
+    // * change styling
+
+    // Only connect the correct logic behind the existing UI.
+
+    // 2. Fix assignmentActivities.
+
+    // The current activity implementation is wrong because it uses:
+
+    // fleets/{fleetId}/Assignments/{assignmentId}/activity
+
+    // Change it to a global top-level Firestore collection:
+
+    // assignmentActivities
+
+    // It must be used for both:
+
+    // * private assignments
+    // * public assignments
+
+    // Each document should include:
+
+    // assignmentId
+    // loadId
+    // assignmentType
+
+    // type:
+    // NOTE
+    // ISSUE
+    // STATUS
+    // PROOF
+    // CONFIRMATION
+
+    // text
+
+    // createdBy
+    // createdByName
+    // createdByRole
+    // createdAt
+
+    // status:
+    // OPEN
+    // RESOLVED
+
+    // resolvedBy
+    // resolvedByName
+    // resolvedAt
+
+    // 3. Keep the current Notes and Issues UI.
+
+    // Do not remove the existing Notes button or Issue button.
+
+    // Notes:
+
+    // * anyone involved in the assignment can add notes
+    // * keep history
+
+    // Issues:
+
+    // * anyone involved can create issues
+    // * display pending issue count only
+    // * resolved issues stay in history
+
+    // Add resolving logic:
+
+    // * fleet owner can resolve issues
+    // * save who fixed it
+    // * save when it was fixed
+    // * mark issue resolved
+
+    // 4. Complete the current operation buttons logic.
+
+    // Keep the existing buttons.
+
+    // Driver:
+    // Tracker
+    // Lifecycle button:
+
+    // pending:
+    // Start Trip
+
+    // in_transit:
+    // Upload Proof
+
+    // delivery_submitted:
+    // Waiting Approval
+
+    // Fleet owner:
+    // Tracker
+    // Confirm
+    // Resolve Issues
+
+    // Broker:
+    // Tracker
+    // Confirm
+    // Resolve Issues
+
+    // 5. Complete delivery confirmation.
+
+    // Do not remove confirmation.
+
+    // Private assignment:
+    // Fleet owner confirms delivery.
+
+    // Public assignment:
+    // Broker confirms delivery.
+
+    // 6. Complete status updates:
+
+    // pending
+    // → in_transit
+    // → delivery_submitted
+    // → completed
+
+    // 7. Only modify the missing functionality.
+
+    // Do not spend time analyzing or rewriting existing UI.
+
+    // The goal is:
+    // Take my current working UI and make the logic production ready without changing how it looks.
+

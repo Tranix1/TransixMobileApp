@@ -186,6 +186,7 @@ const AddLoadDB = () => {
   const [locationPicKERdSP, setPickLocationOnMap] = useState(false);
   const [dspToLocation, setDspToLocation] = useState(false);
   const [rate, setRate] = useState(defaultState.rate);
+  const [ratePerKm, setRatePerKm] = React.useState(0);
   const [rateexplantion, setRateExplanation] = useState(defaultState.rateexplantion);
   // const [paymentTerms, setPaymentTerms] = useState(defaultState.paymentTerms);
 
@@ -677,9 +678,11 @@ const AddLoadDB = () => {
         trucksNeeded,
         typeofLoad,
         rate,
+        ratePerKm ,
         selectedModelType,
         selectedCurrency,
         selectedCustomer,
+        isTrackingEnabled ,
 
       });
 
@@ -993,6 +996,8 @@ const AddLoadDB = () => {
                 distance={distance}
                 selectedCurrency={selectedCurrency}
                 setSelectedCurrency={setSelectedCurrency}
+                ratePerKm={ratePerKm}
+                setRatePerKm={setRatePerKm}
                 selectedModelType={selectedModelType}
                 setSelectedModelType={setSelectedModelType}
                 rateExplanation={rateexplantion}
@@ -1483,9 +1488,11 @@ const AddLoadDB = () => {
               <RateInput
                 rate={returnRate || ""}
                 setRate={(rate) => setReturnRate(rate || "")}
-                distance ={returnDistance}
+                distance={returnDistance}
                 selectedCurrency={selectedReturnCurrency || { id: 1, name: "USD" }}
                 setSelectedCurrency={setSelectedReturnCurrency}
+                ratePerKm={ratePerKm}
+                setRatePerKm={setRatePerKm}
                 selectedModelType={selectedReturnModelType || { id: 1, name: "Solid" }}
                 setSelectedModelType={setSelectedReturnModelType}
                 rateExplanation={returnTerms || ""}
@@ -1551,322 +1558,322 @@ const AddLoadDB = () => {
                   <View style={{ maxHeight: hp(48), marginTop: wp(1) }}>
 
 
-                   <ScrollView
-  nestedScrollEnabled
-  showsVerticalScrollIndicator
-  keyboardShouldPersistTaps="always"
->
-  {searchedTrucks.slice(0, displayedTruckCount).map((truck, index) => {
-    const truckDrivers = fleetDriversFromTrucks.filter(driver => driver.truckId === truck.id);
-    const defaultDriver = truck.defaultDriver || null;
+                    <ScrollView
+                      nestedScrollEnabled
+                      showsVerticalScrollIndicator
+                      keyboardShouldPersistTaps="always"
+                    >
+                      {searchedTrucks.slice(0, displayedTruckCount).map((truck, index) => {
+                        const truckDrivers = fleetDriversFromTrucks.filter(driver => driver.truckId === truck.id);
+                        const defaultDriver = truck.defaultDriver || null;
 
-    const isTruckSelected = selectedFleetTrucks.some(t => t.id === truck.id);
-    const isExpanded = expandedTruckIds.includes(truck.id);
+                        const isTruckSelected = selectedFleetTrucks.some(t => t.id === truck.id);
+                        const isExpanded = expandedTruckIds.includes(truck.id);
 
-    const assignment = assignments.find(a => a.truckId === truck.id);
-    const assignedDriverId = assignment?.driverId;
+                        const assignment = assignments.find(a => a.truckId === truck.id);
+                        const assignedDriverId = assignment?.driverId;
 
-    const filteredDrivers = driverSearchQueries[truck.id]?.length > 0
-      ? fleetDrivers.filter(d =>
-          d.fullName?.toLowerCase().includes(driverSearchQueries[truck.id].toLowerCase())
-        )
-      : [];
+                        const filteredDrivers = driverSearchQueries[truck.id]?.length > 0
+                          ? fleetDrivers.filter(d =>
+                            d.fullName?.toLowerCase().includes(driverSearchQueries[truck.id].toLowerCase())
+                          )
+                          : [];
 
-    return (
-      <View key={truck.id || index} style={ [styles.truckCard,{backgroundColor:backgroundLight}] }>
+                        return (
+                          <View key={truck.id || index} style={[styles.truckCard, { backgroundColor: backgroundLight }]}>
 
-        {/* ── Truck header / select ───────────────────────── */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => {
-            const exists = selectedFleetTrucks.find(t => t.id === truck.id);
-            if (exists) {
-              setSelectedFleetTrucks(prev => prev.filter(t => t.id !== truck.id));
-              setAssignments(prev => prev.filter(a => a.truckId !== truck.id));
-              setExpandedTruckIds(prev => prev.filter(id => id !== truck.id));
-            } else {
-              setSelectedFleetTrucks(prev => [...prev, truck]);
-              setExpandedTruckIds(prev => [...prev, truck.id]);
-            }
-          }}
-          style={[
-            styles.truckHeader,
-            isTruckSelected && styles.truckHeaderSelected,
-          ]}
-        >
-          <View style={[styles.checkbox, isTruckSelected && styles.checkboxSelected]}>
-            {isTruckSelected && <Ionicons name="checkmark" size={14} color="#fff" />}
-          </View>
+                            {/* ── Truck header / select ───────────────────────── */}
+                            <TouchableOpacity
+                              activeOpacity={0.7}
+                              onPress={() => {
+                                const exists = selectedFleetTrucks.find(t => t.id === truck.id);
+                                if (exists) {
+                                  setSelectedFleetTrucks(prev => prev.filter(t => t.id !== truck.id));
+                                  setAssignments(prev => prev.filter(a => a.truckId !== truck.id));
+                                  setExpandedTruckIds(prev => prev.filter(id => id !== truck.id));
+                                } else {
+                                  setSelectedFleetTrucks(prev => [...prev, truck]);
+                                  setExpandedTruckIds(prev => [...prev, truck.id]);
+                                }
+                              }}
+                              style={[
+                                styles.truckHeader,
+                                isTruckSelected && styles.truckHeaderSelected,
+                              ]}
+                            >
+                              <View style={[styles.checkbox, isTruckSelected && styles.checkboxSelected]}>
+                                {isTruckSelected && <Ionicons name="checkmark" size={14} color="#fff" />}
+                              </View>
 
-          <View style={styles.truckIconWrap}>
-            <Ionicons name="bus-outline" size={20} color={accent} />
-          </View>
+                              <View style={styles.truckIconWrap}>
+                                <Ionicons name="bus-outline" size={20} color={accent} />
+                              </View>
 
-          <View style={{ flex: 1 }}>
-            <ThemedText style={styles.truckName}>{truck.truckName}</ThemedText>
-            <ThemedText style={styles.truckMeta}>
-              {truck.truckType} • {truck.truckCapacity}
-            </ThemedText>
-          </View>
+                              <View style={{ flex: 1 }}>
+                                <ThemedText style={styles.truckName}>{truck.truckName}</ThemedText>
+                                <ThemedText style={styles.truckMeta}>
+                                  {truck.truckType} • {truck.truckCapacity}
+                                </ThemedText>
+                              </View>
 
-          {truckDrivers.length > 0 && (
-            <View style={styles.driverCountBadge}>
-              <Ionicons name="people-outline" size={12} color={accent} />
-              <ThemedText style={styles.driverCountText}>{truckDrivers.length}</ThemedText>
-            </View>
-          )}
+                              {truckDrivers.length > 0 && (
+                                <View style={styles.driverCountBadge}>
+                                  <Ionicons name="people-outline" size={12} color={accent} />
+                                  <ThemedText style={styles.driverCountText}>{truckDrivers.length}</ThemedText>
+                                </View>
+                              )}
 
-          <Ionicons
-            name={isExpanded ? 'chevron-up' : 'chevron-down'}
-            size={18}
-            color="#999"
-            style={{ marginLeft: wp(2) }}
-          />
-        </TouchableOpacity>
+                              <Ionicons
+                                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                                size={18}
+                                color="#999"
+                                style={{ marginLeft: wp(2) }}
+                              />
+                            </TouchableOpacity>
 
-        {/* ── Expanded: driver assignment ─────────────────── */}
-        {isExpanded && (
-          <View style={styles.driverSection}>
-            <View style={styles.sectionTitleRow}>
-              <Ionicons name="person-add-outline" size={15} color={accent} />
-              <ThemedText style={styles.sectionTitle}>Assign Driver (Optional)</ThemedText>
-            </View>
+                            {/* ── Expanded: driver assignment ─────────────────── */}
+                            {isExpanded && (
+                              <View style={styles.driverSection}>
+                                <View style={styles.sectionTitleRow}>
+                                  <Ionicons name="person-add-outline" size={15} color={accent} />
+                                  <ThemedText style={styles.sectionTitle}>Assign Driver (Optional)</ThemedText>
+                                </View>
 
-            <View style={styles.searchWrap}>
-              <View style={{ alignItems:"center",justifyContent:"center", height:48,width:35,marginBottom:10,marginLeft:-3}}>
+                                <View style={styles.searchWrap}>
+                                  <View style={{ alignItems: "center", justifyContent: "center", height: 48, width: 35, marginBottom: 10, marginLeft: -3 }}>
 
-              <Ionicons name="search-outline" size={16} color="#999" style={{ marginRight: wp(2) }} />
-              </View>
-              <Input
-                placeholder="Search driver by name..."
-                value={driverSearchQueries[truck.id] || ''}
-                onChangeText={(text) =>
-                  setDriverSearchQueries(prev => ({ ...prev, [truck.id]: text }))
-                }
-                // containerStyle={{ flex: 1, borderWidth: 0 }}
-              />
-            </View>
+                                    <Ionicons name="search-outline" size={16} color="#999" style={{ marginRight: wp(2) }} />
+                                  </View>
+                                  <Input
+                                    placeholder="Search driver by name..."
+                                    value={driverSearchQueries[truck.id] || ''}
+                                    onChangeText={(text) =>
+                                      setDriverSearchQueries(prev => ({ ...prev, [truck.id]: text }))
+                                    }
+                                  // containerStyle={{ flex: 1, borderWidth: 0 }}
+                                  />
+                                </View>
 
-            {/* Default driver card */}
-            {defaultDriver && (
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => {
-                  const isSelected = assignedDriverId === defaultDriver.driverId;
-                  if (isSelected) {
-                    setAssignments(prev => prev.filter(a => a.truckId !== truck.id));
-                  } else {
-                    setAssignments(prev => [
-                      ...prev.filter(a => a.truckId !== truck.id),
-                      {
-                        truckId: truck.id,
-                        driverId: defaultDriver.driverId,
-                        driverName: defaultDriver.driverName,
-                        driverPhone: defaultDriver.driverPhone,
-                        profilePhoto: defaultDriver.profilePhoto || null,
-                        pickupDate: loadingDate,
-                        deliveryDate: deliveryDate,
-                        pickupLocation: origin,
-                        deliveryLocation: destination,
-                        isDefault: true,
-                      },
-                    ]);
-                  }
-                }}
-                style={[
-                  styles.card,
-                  { marginTop: wp(2) },
-                  assignedDriverId === defaultDriver.driverId && {borderWidth: 2,backgroundColor: 'rgba(33, 150, 243, 0.05)', borderColor:accent},
-                ]}
-              >
-                {defaultDriver.profilePhoto ? (
-                  <Image source={{ uri: defaultDriver.profilePhoto }} style={styles.profileImage} />
-                ) : (
-                  <Ionicons name="person-circle-outline" size={46} color={accent} />
-                )}
+                                {/* Default driver card */}
+                                {defaultDriver && (
+                                  <TouchableOpacity
+                                    activeOpacity={0.8}
+                                    onPress={() => {
+                                      const isSelected = assignedDriverId === defaultDriver.driverId;
+                                      if (isSelected) {
+                                        setAssignments(prev => prev.filter(a => a.truckId !== truck.id));
+                                      } else {
+                                        setAssignments(prev => [
+                                          ...prev.filter(a => a.truckId !== truck.id),
+                                          {
+                                            truckId: truck.id,
+                                            driverId: defaultDriver.driverId,
+                                            driverName: defaultDriver.driverName,
+                                            driverPhone: defaultDriver.driverPhone,
+                                            profilePhoto: defaultDriver.profilePhoto || null,
+                                            pickupDate: loadingDate,
+                                            deliveryDate: deliveryDate,
+                                            pickupLocation: origin,
+                                            deliveryLocation: destination,
+                                            isDefault: true,
+                                          },
+                                        ]);
+                                      }
+                                    }}
+                                    style={[
+                                      styles.card,
+                                      { marginTop: wp(2) },
+                                      assignedDriverId === defaultDriver.driverId && { borderWidth: 2, backgroundColor: 'rgba(33, 150, 243, 0.05)', borderColor: accent },
+                                    ]}
+                                  >
+                                    {defaultDriver.profilePhoto ? (
+                                      <Image source={{ uri: defaultDriver.profilePhoto }} style={styles.profileImage} />
+                                    ) : (
+                                      <Ionicons name="person-circle-outline" size={46} color={accent} />
+                                    )}
 
-                <View style={{ flex: 1, marginLeft: wp(3) }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <ThemedText type="subtitle">{defaultDriver.driverName}</ThemedText>
-                    <View style={styles.defaultBadge}>
-                      <Ionicons name="star" size={9} color="#fff" />
-                      <ThemedText style={styles.defaultBadgeText}>Default</ThemedText>
-                    </View>
-                  </View>
+                                    <View style={{ flex: 1, marginLeft: wp(3) }}>
+                                      <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+                                        <ThemedText type="subtitle">{defaultDriver.driverName}</ThemedText>
+                                        <View style={styles.defaultBadge}>
+                                          <Ionicons name="star" size={9} color="#fff" />
+                                          <ThemedText style={styles.defaultBadgeText}>Default</ThemedText>
+                                        </View>
+                                      </View>
 
-                  <View style={styles.infoRow}>
-                    <Ionicons name="call-outline" size={15} color={accent} />
-                    <ThemedText style={styles.infoText}>
-                      {defaultDriver.driverPhone || 'No phone'}
-                    </ThemedText>
-                  </View>
-                </View>
+                                      <View style={styles.infoRow}>
+                                        <Ionicons name="call-outline" size={15} color={accent} />
+                                        <ThemedText style={styles.infoText}>
+                                          {defaultDriver.driverPhone || 'No phone'}
+                                        </ThemedText>
+                                      </View>
+                                    </View>
 
-                {assignedDriverId === defaultDriver.driverId && (
-                  <Ionicons name="checkmark-circle" size={24} color={accent} />
-                )}
-              </TouchableOpacity>
-            )}
+                                    {assignedDriverId === defaultDriver.driverId && (
+                                      <Ionicons name="checkmark-circle" size={24} color={accent} />
+                                    )}
+                                  </TouchableOpacity>
+                                )}
 
-            {/* Search results */}
-            {driverSearchQueries[truck.id]?.length > 0 && (
-              <View style={{ marginTop: wp(1) }}>
-                {filteredDrivers.length === 0 ? (
-                  <ThemedText style={styles.emptyText}>No drivers found</ThemedText>
-                ) : (
-                  filteredDrivers.map(driver => {
-                    const isSelected = assignedDriverId === driver.driverId;
+                                {/* Search results */}
+                                {driverSearchQueries[truck.id]?.length > 0 && (
+                                  <View style={{ marginTop: wp(1) }}>
+                                    {filteredDrivers.length === 0 ? (
+                                      <ThemedText style={styles.emptyText}>No drivers found</ThemedText>
+                                    ) : (
+                                      filteredDrivers.map(driver => {
+                                        const isSelected = assignedDriverId === driver.driverId;
 
-                    return (
-                      <TouchableOpacity
-                        key={driver.driverId}
-                        activeOpacity={0.8}
-                        onPress={() => {
-                          if (isSelected) {
-                            setAssignments(prev => prev.filter(a => a.truckId !== truck.id));
-                          } else {
-                            setAssignments(prev => [
-                              ...prev.filter(a => a.truckId !== truck.id),
-                              {
-                                truckId: truck.id,
-                                driverId: driver.driverId,
-                                driverName: driver.fullName,
-                                driverPhone: driver.phoneNumber,
-                                profilePhoto: driver.profilePhoto || null,
-                                pickupDate: loadingDate,
-                                deliveryDate: deliveryDate,
-                                pickupLocation: origin,
-                                deliveryLocation: destination,
-                                isDefault: false,
-                              },
-                            ]);
-                          }
-                        }}
-                        style={[styles.card, { marginTop: wp(2) }, isSelected && {borderWidth: 2,backgroundColor: 'rgba(33, 150, 243, 0.05)', borderColor:accent} ]}
-                      >
-                        {driver.profilePhoto ? (
-                          <Image source={{ uri: driver.profilePhoto }} style={styles.profileImage} />
-                        ) : (
-                          <Ionicons name="person-circle-outline" size={46} color={accent} />
-                        )}
+                                        return (
+                                          <TouchableOpacity
+                                            key={driver.driverId}
+                                            activeOpacity={0.8}
+                                            onPress={() => {
+                                              if (isSelected) {
+                                                setAssignments(prev => prev.filter(a => a.truckId !== truck.id));
+                                              } else {
+                                                setAssignments(prev => [
+                                                  ...prev.filter(a => a.truckId !== truck.id),
+                                                  {
+                                                    truckId: truck.id,
+                                                    driverId: driver.driverId,
+                                                    driverName: driver.fullName,
+                                                    driverPhone: driver.phoneNumber,
+                                                    profilePhoto: driver.profilePhoto || null,
+                                                    pickupDate: loadingDate,
+                                                    deliveryDate: deliveryDate,
+                                                    pickupLocation: origin,
+                                                    deliveryLocation: destination,
+                                                    isDefault: false,
+                                                  },
+                                                ]);
+                                              }
+                                            }}
+                                            style={[styles.card, { marginTop: wp(2) }, isSelected && { borderWidth: 2, backgroundColor: 'rgba(33, 150, 243, 0.05)', borderColor: accent }]}
+                                          >
+                                            {driver.profilePhoto ? (
+                                              <Image source={{ uri: driver.profilePhoto }} style={styles.profileImage} />
+                                            ) : (
+                                              <Ionicons name="person-circle-outline" size={46} color={accent} />
+                                            )}
 
-                        <View style={{ flex: 1, marginLeft: wp(3) }}>
-                          <ThemedText type="subtitle">{driver.fullName}</ThemedText>
-                          <View style={styles.infoRow}>
-                            <Ionicons name="call-outline" size={15} color={accent} />
-                            <ThemedText style={styles.infoText}>
-                              {driver.phoneNumber || 'No phone'}
-                            </ThemedText>
+                                            <View style={{ flex: 1, marginLeft: wp(3) }}>
+                                              <ThemedText type="subtitle">{driver.fullName}</ThemedText>
+                                              <View style={styles.infoRow}>
+                                                <Ionicons name="call-outline" size={15} color={accent} />
+                                                <ThemedText style={styles.infoText}>
+                                                  {driver.phoneNumber || 'No phone'}
+                                                </ThemedText>
+                                              </View>
+                                            </View>
+
+                                            {isSelected && <Ionicons name="checkmark-circle" size={24} color={accent} />}
+                                          </TouchableOpacity>
+                                        );
+                                      })
+                                    )}
+                                  </View>
+                                )}
+
+                                {/* Pickup/delivery details once a driver is assigned */}
+                                {assignment && (
+                                  <View style={styles.assignmentDetails}>
+                                    <LocationSelector
+                                      origin={assignment?.pickupLocation || null}
+                                      destination={assignment?.deliveryLocation || null}
+                                      setOrigin={(location) => {
+                                        setAssignments(prev =>
+                                          prev.map(a => (a.truckId === truck.id ? { ...a, pickupLocation: location } : a))
+                                        );
+                                      }}
+                                      setDestination={(location) => {
+                                        setAssignments(prev =>
+                                          prev.map(a => (a.truckId === truck.id ? { ...a, deliveryLocation: location } : a))
+                                        );
+                                      }}
+                                      dspFromLocation={assignmentDspFromLocation}
+                                      setDspFromLocation={setAssignmentDspFromLocation}
+                                      dspToLocation={assignmentDspToLocation}
+                                      setDspToLocation={setAssignmentDspToLocation}
+                                      locationPicKERdSP={assignmentLocationPicKERdSP}
+                                      setPickLocationOnMap={setAssignmentPickLocationOnMap}
+                                      distance={assignmentDistance}
+                                      duration={assignmentDuration}
+                                      durationInTraffic={assignmentDurationInTraffic}
+                                      iconColor={accent}
+                                    />
+
+                                    <TouchableOpacity
+                                      onPress={() => setPickupDateTruckId(truck.id)}
+                                      style={styles.dateButton}
+                                    >
+                                      <Ionicons name="calendar-outline" size={16} color={accent} />
+                                      <ThemedText style={styles.dateButtonText}>
+                                        {assignment?.pickupDate
+                                          ? new Date(assignment.pickupDate).toLocaleDateString()
+                                          : 'Select Pickup Date'}
+                                      </ThemedText>
+                                    </TouchableOpacity>
+
+                                    {pickupDateTruckId === truck.id && (
+                                      <DateTimePicker
+                                        value={assignment?.pickupDate ? new Date(assignment.pickupDate) : new Date()}
+                                        mode="date"
+                                        display="default"
+                                        onChange={(event, selectedDate) => {
+                                          setPickupDateTruckId(null);
+                                          if (selectedDate) {
+                                            setAssignments(prev =>
+                                              prev.map(a =>
+                                                a.truckId === truck.id
+                                                  ? { ...a, pickupDate: selectedDate.toISOString() }
+                                                  : a
+                                              )
+                                            );
+                                          }
+                                        }}
+                                      />
+                                    )}
+
+                                    <TouchableOpacity
+                                      onPress={() => setDeliveryDateTruckId(truck.id)}
+                                      style={styles.dateButton}
+                                    >
+                                      <Ionicons name="calendar-outline" size={16} color={accent} />
+                                      <ThemedText style={styles.dateButtonText}>
+                                        {assignment?.deliveryDate
+                                          ? new Date(assignment.deliveryDate).toLocaleDateString()
+                                          : 'Select Delivery Date'}
+                                      </ThemedText>
+                                    </TouchableOpacity>
+
+                                    {deliveryDateTruckId === truck.id && (
+                                      <DateTimePicker
+                                        value={assignment?.deliveryDate ? new Date(assignment.deliveryDate) : new Date()}
+                                        mode="date"
+                                        display="default"
+                                        onChange={(event, selectedDate) => {
+                                          setDeliveryDateTruckId(null);
+                                          if (selectedDate) {
+                                            setAssignments(prev =>
+                                              prev.map(a =>
+                                                a.truckId === truck.id
+                                                  ? { ...a, deliveryDate: selectedDate.toISOString() }
+                                                  : a
+                                              )
+                                            );
+                                          }
+                                        }}
+                                      />
+                                    )}
+                                  </View>
+                                )}
+                              </View>
+                            )}
                           </View>
-                        </View>
-
-                        {isSelected && <Ionicons name="checkmark-circle" size={24} color={accent} />}
-                      </TouchableOpacity>
-                    );
-                  })
-                )}
-              </View>
-            )}
-
-            {/* Pickup/delivery details once a driver is assigned */}
-            {assignment && (
-              <View style={styles.assignmentDetails}>
-                <LocationSelector
-                  origin={assignment?.pickupLocation || null}
-                  destination={assignment?.deliveryLocation || null}
-                  setOrigin={(location) => {
-                    setAssignments(prev =>
-                      prev.map(a => (a.truckId === truck.id ? { ...a, pickupLocation: location } : a))
-                    );
-                  }}
-                  setDestination={(location) => {
-                    setAssignments(prev =>
-                      prev.map(a => (a.truckId === truck.id ? { ...a, deliveryLocation: location } : a))
-                    );
-                  }}
-                  dspFromLocation={assignmentDspFromLocation}
-                  setDspFromLocation={setAssignmentDspFromLocation}
-                  dspToLocation={assignmentDspToLocation}
-                  setDspToLocation={setAssignmentDspToLocation}
-                  locationPicKERdSP={assignmentLocationPicKERdSP}
-                  setPickLocationOnMap={setAssignmentPickLocationOnMap}
-                  distance={assignmentDistance}
-                  duration={assignmentDuration}
-                  durationInTraffic={assignmentDurationInTraffic}
-                  iconColor={accent}
-                />
-
-                <TouchableOpacity
-                  onPress={() => setPickupDateTruckId(truck.id)}
-                  style={styles.dateButton}
-                >
-                  <Ionicons name="calendar-outline" size={16} color={accent} />
-                  <ThemedText style={styles.dateButtonText}>
-                    {assignment?.pickupDate
-                      ? new Date(assignment.pickupDate).toLocaleDateString()
-                      : 'Select Pickup Date'}
-                  </ThemedText>
-                </TouchableOpacity>
-
-                {pickupDateTruckId === truck.id && (
-                  <DateTimePicker
-                    value={assignment?.pickupDate ? new Date(assignment.pickupDate) : new Date()}
-                    mode="date"
-                    display="default"
-                    onChange={(event, selectedDate) => {
-                      setPickupDateTruckId(null);
-                      if (selectedDate) {
-                        setAssignments(prev =>
-                          prev.map(a =>
-                            a.truckId === truck.id
-                              ? { ...a, pickupDate: selectedDate.toISOString() }
-                              : a
-                          )
                         );
-                      }
-                    }}
-                  />
-                )}
-
-                <TouchableOpacity
-                  onPress={() => setDeliveryDateTruckId(truck.id)}
-                  style={styles.dateButton}
-                >
-                  <Ionicons name="calendar-outline" size={16} color={accent} />
-                  <ThemedText style={styles.dateButtonText}>
-                    {assignment?.deliveryDate
-                      ? new Date(assignment.deliveryDate).toLocaleDateString()
-                      : 'Select Delivery Date'}
-                  </ThemedText>
-                </TouchableOpacity>
-
-                {deliveryDateTruckId === truck.id && (
-                  <DateTimePicker
-                    value={assignment?.deliveryDate ? new Date(assignment.deliveryDate) : new Date()}
-                    mode="date"
-                    display="default"
-                    onChange={(event, selectedDate) => {
-                      setDeliveryDateTruckId(null);
-                      if (selectedDate) {
-                        setAssignments(prev =>
-                          prev.map(a =>
-                            a.truckId === truck.id
-                              ? { ...a, deliveryDate: selectedDate.toISOString() }
-                              : a
-                          )
-                        );
-                      }
-                    }}
-                  />
-                )}
-              </View>
-            )}
-          </View>
-        )}
-      </View>
-    );
-  })}
-</ScrollView>
+                      })}
+                    </ScrollView>
 
 
 
@@ -2121,7 +2128,7 @@ const styles = StyleSheet.create({
   },
   selectedTextStyle: {
     fontSize: 16,
-  } , truckCard: {
+  }, truckCard: {
     marginVertical: wp(1.5),
     borderRadius: 12,
     borderWidth: 1,
@@ -2220,7 +2227,7 @@ const styles = StyleSheet.create({
     // paddingHorizontal: wp(3),
     // backgroundColor: '#fff',
     // paddingRight:4 ,
-    marginRight:30 ,
+    marginRight: 30,
   },
 
   cardSelected: {
@@ -2270,35 +2277,35 @@ const styles = StyleSheet.create({
   dateButtonText: {
     fontSize: 13,
   }, card: {
-          flexDirection: "row",
-          alignItems: "center",
-          paddingVertical: wp(2.5),
-          paddingHorizontal: wp(3),
-          borderRadius: wp(4),
-          marginBottom: wp(2),
-      },
-  
-  
-      profileImage: {
-          width: 46,
-          height: 46,
-          borderRadius: 23,
-      },
-  
-  
-      infoRow: {
-          flexDirection: "row",
-          alignItems: "center",
-          marginTop: wp(1),
-      },
-  
-  
-      infoText: {
-          marginLeft: wp(1.5),
-          opacity: 0.65,
-          fontSize: 13
-      },
-  
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: wp(2.5),
+    paddingHorizontal: wp(3),
+    borderRadius: wp(4),
+    marginBottom: wp(2),
+  },
+
+
+  profileImage: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+  },
+
+
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: wp(1),
+  },
+
+
+  infoText: {
+    marginLeft: wp(1.5),
+    opacity: 0.65,
+    fontSize: 13
+  },
+
 });
 
 

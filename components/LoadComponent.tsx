@@ -15,6 +15,7 @@ import { WebView } from 'react-native-webview';
 import { router } from 'expo-router';
 import { parseCoordinateString, isValidCoordinate, DEFAULT_COORDINATES } from '@/Utilities/coordinateUtils';
 import DocumentSelectionModal from './DocumentSelectionModal';
+import { TruckNeededType } from '@/types/types'
 
 interface DspAllLoadsProps {
   item: Load;
@@ -147,6 +148,19 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
     }
   }, [expandID])
 
+const rateStatus = useMemo(() => {
+  const rate = Number(item.ratePerKm);
+
+  if (!rate) return null;
+
+  if (rate >= 2 && rate < 2.5) return "Good Rate";
+
+  if (rate >= 2.5 && rate < 3) return "Better Rate";
+
+  if (rate >= 3) return "Premium Rate";
+
+  return null;
+}, [item.ratePerKm]);
 
   return (
     <View>
@@ -199,7 +213,7 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
           >
             <Ionicons name="checkmark-circle" size={wp(3.5)} color="white" />
             <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(0.5), fontSize: wp(3.5) }}>Respond</ThemedText>
-          </TouchableOpacity> 
+          </TouchableOpacity>
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
@@ -278,42 +292,88 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
           </View>
         </View>
 
-        <View style={{ backgroundColor: backgroundLight, padding: wp(2), }}>
+       <View style={{ backgroundColor: backgroundLight, padding: wp(2) }}>
 
+  <View style={styles.detailRow}>
+    <ThemedText type='default' style={{ flex: 2 }}>
+      Price {item.model}
+    </ThemedText>
 
-          <View style={styles.detailRow}>
-            <ThemedText type='default' style={{ flex: 2 }}>
-              Rate {item.model}
-            </ThemedText>
-            <ThemedText type='subtitle' style={[{ color: textColor, fontSize: wp(4.5), lineHeight: wp(5), flex: 2 }]}>
-              {item.currency} {item.rate}
-            </ThemedText>
+    <View style={{ flex: 2 }}>
+      <ThemedText 
+        type='subtitle' 
+        style={{
+          color: textColor,
+          fontSize: wp(4.5),
+          lineHeight: wp(5),
+        }}
+      >
+        {item.currency} {item.rate}
+      </ThemedText>
 
-          </View>
-          {item.rateexplantion && <View style={styles.detailRow}>
-            <ThemedText type='default' style={{ flex: 2 }}>
-              Rate Exlantion
-            </ThemedText>
-            <ThemedText type='subtitle' style={[{ color: textColor, fontSize: wp(4.5), lineHeight: wp(5), flex: 2 }]}>
-              {item.rateexplantion}
-            </ThemedText>
+      {item.ratePerKm && (
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginTop: wp(0.5),
+          gap: wp(1)
+        }}>
+          <ThemedText 
+            type='tiny'
+            style={{ color: textColor }}
+          >
+           $ {Number(item.ratePerKm).toFixed(2)}/km
+          </ThemedText>
 
-          </View>}
-
+      {rateStatus && (
+        <ThemedText
+          type='tiny'
+          style={{ color: accent ,fontWeight:"bold" }}
+        >
+          ✓ {rateStatus}
+        </ThemedText>
+      )}
         </View>
+      )}
+
+    </View>
+
+  </View>
+
+  {item.rateexplantion && 
+    <View style={styles.detailRow}>
+      <ThemedText type='default' style={{ flex: 2 }}>
+        Rate Explanation
+      </ThemedText>
+
+      <ThemedText 
+        type='subtitle' 
+        style={{
+          color: textColor,
+          fontSize: wp(4.5),
+          lineHeight: wp(5),
+          flex: 2
+        }}
+      >
+        {item.rateexplantion}
+      </ThemedText>
+    </View>
+  }
+
+</View>
 
 
 
         <View style={{ backgroundColor: backgroundLight, padding: wp(2), borderRadius: wp(2), marginTop: wp(1) }}>
           <ThemedText type='default' style={{ flex: 2 }}>
-            Payment Terms <ThemedText color='#6D28D9' style={{fontWeight:"bold"}}> - </ThemedText>
-          {item.paymentTerms?.type}</ThemedText>
+            Payment Terms <ThemedText color='#6D28D9' style={{ fontWeight: "bold" }}> - </ThemedText>
+            {item.paymentTerms?.type === "full" && " 100%"} {item.paymentTerms?.type}</ThemedText>
 
 
-          <ThemedText style={{alignSelf:"center"}}>
+          <ThemedText style={{ alignSelf: "center" }}>
             {item.paymentTerms?.timing}:{" "}
             {item.paymentTerms?.firstAmount}
-            {item.paymentTerms?.amountType === "percent" ? "%" : ""}
+            {(item.paymentTerms?.amountType === "percent" && item.paymentTerms?.type !== "full") ? "%" : ""}
 
             {item.paymentTerms?.secondAmount && (
               <>
@@ -386,6 +446,20 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
               </ThemedText>
             </View>
           )}
+          {item.isTrackingEnabled &&
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginTop: wp(1) }}>
+              <ThemedText type='default' style={{ flex: 2 }}>
+                Transix Tracker
+              </ThemedText>
+
+              <ThemedText
+                type='defaultSemiBold'
+                style={{ flex: 2, color: accent }}
+              >
+                Required
+              </ThemedText>
+            </View>
+          }
           {item.requirements &&
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, }}>
               <ThemedText type='default' style={{ flex: 2 }}>
@@ -421,7 +495,7 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
 
 
               <Divider style={{ marginTop: wp(2) }} />
-              {item.returnLoad && (
+              {(item.returnLoad !== "No return load") && (
                 <View style={{ marginTop: wp(2), gap: wp(2) }}>
                   <ThemedText type='tiny' style={{ marginBottom: wp(1) }}>
                     Return Load
@@ -464,36 +538,99 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
 
 
               <View style={{ marginTop: wp(2), gap: wp(2) }}>
-                <ThemedText type='tiny' style={{ marginBottom: wp(1) }}>Trucks Required</ThemedText>
 
-                {item.trucksRequired && item.trucksRequired.length > 0 ? (
-                  item.trucksRequired.map((neededTruck: any, index: number) => (
-                    <View style={{ flexDirection: "row", justifyContent: 'space-evenly' }} key={index}>
-                      <ThemedText>
-                        {typeof neededTruck.truckType === 'string'
-                          ? neededTruck.truckType
-                          : neededTruck.truckType?.name || 'N/A'
-                        }
+                {/* PRIVATE TRUCKS */}
+                {item.privateTrucks && item.privateTrucks.length > 0 && (
+                  <View>
+                    <ThemedText type="tiny" style={{ marginBottom: wp(1) }}>
+                      Fleet Trucks
+                    </ThemedText>
+
+                    {item.privateTrucks.map((truck: any) => (
+                      <TouchableOpacity
+                        key={truck.truckId}
+                        // onPress={() => handleTruckSelect(truck)}
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          padding: wp(2),
+                        }}
+                      >
+                        <ThemedText>
+                          {truck.truckName || "Unnamed Truck"}
+                        </ThemedText>
+
+                        <ThemedText>
+                          {truck.registrationNumber}
+                        </ThemedText>
+
+                        <ThemedText>
+                          {truck.truckCapacity}
+                        </ThemedText>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
+
+                {/* PUBLIC TRUCK REQUIREMENTS */}
+                {item.publicTrucks && item.publicTrucks.length > 0 && (
+                  <View style={{ marginTop: wp(2) }}>
+
+                    <View style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: wp(1)
+                    }}>
+                      <ThemedText type="tiny">
+                        Trucks Required
                       </ThemedText>
-                      <ThemedText>
-                        {typeof neededTruck.capacity === 'string'
-                          ? neededTruck.capacity
-                          : neededTruck.capacity?.name || 'N/A'
-                        }
-                      </ThemedText>
-                      <ThemedText>
-                        {typeof neededTruck.cargoArea === 'string'
-                          ? neededTruck.cargoArea
-                          : neededTruck.cargoArea?.name || 'N/A'
-                        }
+
+                      <ThemedText type="tiny">
+                        {item.publicTrucks.length} Needed
                       </ThemedText>
                     </View>
-                  ))
-                ) : (
-                  <ThemedText type='tiny' style={{ color: coolGray, textAlign: 'center' }}>
-                    No truck requirements specified
-                  </ThemedText>
+
+
+                    {item.publicTrucks.map((neededTruck: TruckNeededType, index: number) => (
+                      <View
+                        key={index}
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-evenly",
+                          paddingVertical: wp(1)
+                        }}
+                      >
+
+                        <ThemedText>
+                          {typeof neededTruck.truckType === "string"
+                            ? neededTruck.truckType
+                            : neededTruck.truckType?.name || "N/A"
+                          }
+                        </ThemedText>
+
+
+                        <ThemedText>
+                          {typeof neededTruck.capacity === "string"
+                            ? neededTruck.capacity
+                            : neededTruck.capacity?.name || "N/A"
+                          }
+                        </ThemedText>
+
+
+                        <ThemedText>
+                          {typeof neededTruck.cargoArea === "string"
+                            ? neededTruck.cargoArea
+                            : neededTruck.cargoArea?.name || "N/A"
+                          }
+                        </ThemedText>
+
+                      </View>
+                    ))}
+
+                  </View>
                 )}
+
               </View>
 
               <Divider style={{ marginTop: wp(2) }} />

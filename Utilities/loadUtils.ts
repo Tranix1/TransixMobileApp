@@ -230,6 +230,7 @@ export const prepareLoadData = (
 
         // Professional user fields
         rate: userType === 'professional' ? (formData.rate || '') : (formData.budget || ''),
+        
         rateexplantion: userType === 'professional' ? (formData.rateexplantion || '') : '',
         currency: userType === 'professional' ? (formData.selectedCurrency?.name || 'USD') : (formData.budgetCurrency?.name || 'USD'),
         model: userType === 'professional' ? (formData.selectedModelType?.name || 'Solid') : 'Solid',
@@ -348,8 +349,8 @@ export const getDefaultFormState = () => ({
 // Currency options
 export const CURRENCY_OPTIONS = [
     { id: 1, name: "USD" },
-    { id: 2, name: "RSA" },
-    { id: 3, name: "ZWG" }
+    { id: 2, name: "ZAR" },
+
 ];
 
 // Model options

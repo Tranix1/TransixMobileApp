@@ -56,7 +56,24 @@ export type CurrentRole =
         billingAddress: string | null
         baseAdress: string | null
 
+    } | {
+        role: 'driver';
+        driverId: string;
+        driverName: string;
+        userRole: string;
+        accType: 'driver';
+        brokerType: string;
+        fleetId: string | null;
+        referrerCode: string | null
+        organizationId: string | null;
+        phone: string | null
+        email: string | null
+        billingAddress: string | null
+        baseAdress: string | null
+
     };
+    
+    
 
 export type RoleProps =
     | 'general'
@@ -81,7 +98,7 @@ export type TruckFormData = {
     otherCargoArea: string;
     otherTankerType: string;
     numberPlate: string;
-}   
+}
 export type Truck = {
 
     created_at: string,
@@ -141,18 +158,18 @@ export type Truck = {
     loadTypes?: string[];
 
     fleetId?: string;
-      organizationDetails: {
-          id: string ;
-          name: string ; 
-          phone: string
-          billingAddress: SelectLocationProp
-          baseAdress: SelectLocationProp ;
-        },
-        defaultDriver :{
-            driverId : string 
-            driverName : string ;
+    organizationDetails: {
+        id: string;
+        name: string;
+        phone: string
+        billingAddress: SelectLocationProp
+        baseAdress: SelectLocationProp;
+    },
+    defaultDriver: {
+        driverId: string
+        driverName: string;
 
-        }
+    }
 } & TruckFormData;
 
 
@@ -248,6 +265,17 @@ export type TruckNeededType = {
     capacity: SelectedOption;
     operationCountries: string[];
 }
+export type PrivateTruckType = {
+  truckId: string;
+  truckName: string;
+  registrationNumber: string;
+  truckType: string;
+  truckCapacity: string;
+  cargoArea: TruckTypeProps | null;
+  operationCountries: string[];
+  truckStatus: string;
+  assignment: any;
+};
 export type Load = {
     id: string,
     distance: string,
@@ -332,6 +360,11 @@ export type Load = {
     returnRoutePolyline?: string;
     returnDistance?: string;
     returnDuration?: string;
+
+    privateTrucks?: PrivateTruckType[]
+    publicTrucks?: TruckNeededType[]
+    isTrackingEnabled?:boolean[]
+    ratePerKm:number 
 
 } & LoadFormData;
 

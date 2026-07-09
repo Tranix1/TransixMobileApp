@@ -19,7 +19,7 @@ const Index = () => {
 
     const { user } = useAuth();
 
-    const { userId } = useLocalSearchParams();
+    const { userId, cargoId, cargoVisibilityG } = useLocalSearchParams();
 
     const [refreshing, setRefreshing] = useState(false)
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
@@ -62,29 +62,87 @@ const Index = () => {
             setIsLoading(true)
             setError(null)
 
-            let filters: any[] = [];
-            let collectionName = "nothing";
-            // Apply filters based on load visibility and user role
-            if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
-                // Fetch private loads from fleet subcollection
-                collectionName = `fleets/${currentRole.fleetId}/Cargo`;
 
-            } else if (currentRole?.accType === "brokerage" && loadVisibility === 'Private') {
-                collectionName = `brokers/${currentRole.brokerId}/Cargo`;
-            } else {
-                // Fetch public loads from main collection
-                if (loadVisibility === "Public") {
+            let filters: any[] = [];
+            let collectionName: string | null = null;
+
+
+            // =============================
+            // CARGO ID MODE (EXACT LOAD)
+            // =============================
+            if (cargoId) {
+
+                if (cargoVisibilityG === 'PUBLIC') {
 
                     filters = [
-                            where("approvalStatus", "==", "approved"),
-                            where( "state" , "==", "available"),
-                            where("expiresAt", ">", Timestamp.now())
+                        where("approvalStatus", "==", "approved"),
+                        where("cargoId", "==", cargoId),
                     ];
-                    collectionName = "Cargo"
+                    // Public cargo always lives here
+                    collectionName = "Cargo";
+
+                } else if (cargoVisibilityG === 'PRIVATE') {
+                    filters = [
+                        where("cargoId", "==", cargoId),
+                    ];
+                    // Private cargo belongs to owner
+                    if (currentRole?.accType === "fleet") {
+                        collectionName = `fleets/${currentRole.fleetId}/Cargo`;
+
+                    } else if (currentRole?.accType === "brokerage") {
+                        collectionName = `brokers/${currentRole.brokerId}/Cargo`;
+                    }
+                }
+
+
+            }
+            // =============================
+            // NORMAL LIST MODE
+            // =============================
+            else {
+
+                if (currentRole?.accType === "fleet" && loadVisibility === "Private") {
+
+                    collectionName = `fleets/${currentRole.fleetId}/Cargo`;
+
+
+
+                } else if (
+                    currentRole?.accType === "brokerage" &&
+                    loadVisibility === "Private"
+                ) {
+
+                    collectionName = `brokers/${currentRole.brokerId}/Cargo`;
+
+
+
+                } else {
+
+                    collectionName = "Cargo";
+
+                    filters = [
+                        where("approvalStatus", "==", "approved"),
+                        where("state", "==", "available"),
+                        where("expiresAt", ">", Timestamp.now()),
+                    ];
                 }
             }
 
-            const maLoads = await fetchDocuments(collectionName, 50, undefined, filters);
+
+            // Safety
+            if (!collectionName) {
+                console.log("No cargo source found");
+                return [];
+            }
+
+
+            const maLoads = await fetchDocuments(
+                collectionName,
+                50,
+                undefined,
+                filters
+            );
+
 
 
             if (maLoads.data.length) {
@@ -130,7 +188,8 @@ const Index = () => {
             setError(null);
 
             let filters: any[] = [];
-            let collectionName = "";
+            let collectionName: string | null = null;
+
 
             // Apply same filters as in LoadTructs for pagination
             if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
@@ -152,7 +211,12 @@ const Index = () => {
                 }
             }
 
+            if (!collectionName) {
+                throw new Error("Collection name is required");
+            }
+
             const result = await fetchDocuments(collectionName, 10, lastVisible, filters);
+
             if (result) {
                 setLoads([...Loads, ...result.data as Load[]]);
                 setLastVisible(result.lastVisible);
@@ -195,6 +259,7 @@ const Index = () => {
                     isLoading={isLoading}
                     error={error}
                     visibilitySelector={
+                        !cargoVisibilityG ?
                         <HorizontalTickComponent
                             data={[
                                 { topic: "Private", value: "Private" },
@@ -203,9 +268,10 @@ const Index = () => {
                             ]}
                             condition={loadVisibility}
                             onSelect={setLoadVisibility}
-                        />
+                        /> : null
                     }
                     loadVisibility={loadVisibility}
+                    cargoVisibilityG={`${cargoVisibilityG}`}
                 />
             </View>
         </GestureHandlerRootView>

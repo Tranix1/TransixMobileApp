@@ -7,6 +7,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { wp, hp } from "@/constants/common";
 import { CURRENCY_OPTIONS, MODEL_OPTIONS } from '@/Utilities/loadUtils';
 import { calculateRatePerKm } from '@/Utilities/calculateRatePerKm';
+import { convertToUSD } from '@/Utilities/convertToUSD';
 
 interface RateInputProps {
     rate: string;
@@ -14,6 +15,8 @@ interface RateInputProps {
     distance: string;
     selectedCurrency: { id: number, name: string };
     setSelectedCurrency: (currency: { id: number, name: string }) => void;
+    ratePerKm : number
+    setRatePerKm :(rate: number) => void;
     selectedModelType: { id: number, name: string };
     setSelectedModelType: (model: { id: number, name: string }) => void;
     rateExplanation: string;
@@ -37,6 +40,8 @@ export const RateInput: React.FC<RateInputProps> = ({
     distance,
     selectedCurrency,
     setSelectedCurrency,
+    ratePerKm ,
+    setRatePerKm ,
     selectedModelType,
     setSelectedModelType,
     rateExplanation,
@@ -57,14 +62,17 @@ export const RateInput: React.FC<RateInputProps> = ({
     const model = isReturnRate ? (returnModelType || selectedReturnModelType) : selectedModelType;
     const setModel = isReturnRate ? (setReturnModelType || setSelectedReturnModelType) : setSelectedModelType;
 
-
-    const [ratePerKm, setRatePerKm] = React.useState(0);
-
-    const handleRateChange = (value: string) => {
+    
+    const handleRateChange = async (value: string) => {
         setRate(value);
 
-        const calculatedRate = calculateRatePerKm(
+        const usdPrice = await convertToUSD(
             Number(value),
+            selectedCurrency.name
+        );
+
+        const calculatedRate = calculateRatePerKm(
+            usdPrice,
             distance
         );
 
@@ -130,7 +138,7 @@ export const RateInput: React.FC<RateInputProps> = ({
                     />
 
 
-                    <View style={{ flexDirection: "row", alignItems: "center", position:"absolute", left :-15, bottom:-7 ,  }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", position:"absolute", left :-17, bottom:-7 ,  }}>
                         <ThemedText
                             style={{
                                 fontSize: 12,

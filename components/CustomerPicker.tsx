@@ -44,7 +44,7 @@ export default function CustomerPicker({
   const { currentRole } = useAuth();
   const background = useThemeColor('background')
   const backgroundLight = useThemeColor('backgroundLight')
-
+const accent = useThemeColor("accent")
 
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -133,7 +133,7 @@ export default function CustomerPicker({
           style={{
             padding: wp(3.7),
             paddingHorizontal: wp(5.5),
-            backgroundColor: '#4CAF50',
+            backgroundColor: accent,
             borderEndEndRadius: 8,
             borderEndStartRadius: 8,
             marginLeft: wp(-3),

@@ -79,7 +79,6 @@ export default function Index() {
   } = useAppUpdate();
 
   const { currentRole } = useAuth();
-  console.log(currentRole)
 
   // Check if profile details are missing
   const isProfileIncomplete = isAuthenticated && user !== undefined && (user === null || !user.phoneNumber || !user.organisation);

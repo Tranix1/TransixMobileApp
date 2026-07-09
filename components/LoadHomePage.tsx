@@ -18,6 +18,7 @@ import { deleteDocument } from '@/db/operations';
 import { Share, Alert } from 'react-native';
 import AccentRingLoader from '@/components/AccentRingLoader';
 import CustomHeader from './CustomHeader';
+import Heading from './Heading';
 
 interface LoadsComponentProps {
     Loads: Load[];
@@ -47,6 +48,7 @@ interface LoadsComponentProps {
     error?: string | null
     visibilitySelector?: React.ReactNode;
     loadVisibility: string
+    cargoVisibilityG : string
 }
 
 
@@ -74,6 +76,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     error = null,
     visibilitySelector,
     loadVisibility,
+    cargoVisibilityG ,
 }) => {
     // Component implementation
     const { user } = useAuth();
@@ -171,15 +174,19 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
         // For now, we'll just show a toast
         ToastAndroid.show('Link copied to clipboard', ToastAndroid.SHORT);
     };
-
+    let whenIdHeaderName = `${cargoVisibilityG} Loads`
     return (
 
         <View style={[styles.container, { backgroundColor: background, flex: 1 }]}>
             {/* Visibility Selector */}
 
 
-            <CustomHeader pageTitle="Loads" addingNavigate="/Logistics/Loads/AddLoads" filterElement={setShowfilter} />
+          {(cargoVisibilityG === "undefined") ?  <CustomHeader pageTitle="Loads" addingNavigate="/Logistics/Loads/AddLoads" filterElement={setShowfilter} /> :
+          <View style={{paddingTop:20}}> 
 
+              <Heading page={whenIdHeaderName} />
+          </View>
+            }
 
             {visibilitySelector}
 
