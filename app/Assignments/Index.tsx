@@ -18,11 +18,16 @@ import { ThemedText } from '@/components/ThemedText';
 import { router } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/db/fireBaseConfig';
-import { collection, getDocs, doc, updateDoc, addDoc, query, orderBy, increment } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, addDoc, query, orderBy, increment, getDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import Heading from '@/components/Heading';
-import { wp } from '@/constants/common';
+import { wp, hp } from '@/constants/common';
 import Input from '@/components/Input';
 import { getRelativeTime } from '@/Utilities/getDateRelativeTime';
+import { updateDocument, uploadImage } from '@/db/operations';
+import * as ImagePicker from "expo-image-picker";
+import { takePhoto, selectMultipleImages } from '@/Utilities/photoPickerUtils';
+import { Image } from 'expo-image';
+import { ImagePickerAsset } from 'expo-image-picker';
 
 // ---------------------------------------------------------------------------
 // Independent Assignments page for Fleet / Broker use.
@@ -43,14 +48,13 @@ import { getRelativeTime } from '@/Utilities/getDateRelativeTime';
 //    the Truck action button. Update ACTIVITY_SUBCOLLECTION below if it differs.
 // ---------------------------------------------------------------------------
 
-const ACTIVITY_SUBCOLLECTION = 'activity';
 
 interface CargoItem {
     id: string;
     cargoId: string;
     truckId: string;
     truckName: string;
-    status: 'pending' | 'active' | 'completed' | 'accepted' | 'rejected';
+    status: 'PENDING' | 'active' | 'COMPLETED' | 'accepted' | 'rejected';
     assignedAt: string;
     loadData?: any;
     createdAt: string;
@@ -59,7 +63,7 @@ interface CargoItem {
     customerId?: string;
 }
 
-type StatusTab = 'active' | 'pending' | 'completed' | 'rejected' | 'all';
+type StatusTab = 'IN_TRANSIT' | 'PENDING' | 'COMPLETED' | 'rejected' | 'all';
 type FilterType = 'truck' | 'driver' | 'customer' | 'load';
 
 interface FilterValue {
@@ -339,6 +343,7 @@ function AssignmentActivityPanel({
     initialIssuesCount,
     accent,
     backgroundLight,
+    icon,
 }: {
     assignmentId: string;
     fleetId: string | undefined;
@@ -346,8 +351,9 @@ function AssignmentActivityPanel({
     initialIssuesCount?: number;
     accent: string;
     backgroundLight: string;
+    icon: string
 }) {
-    const { user } = useAuth();
+    const { user, currentRole } = useAuth();
 
     const [activityView, setActivityView] = useState<"NOTE" | "ISSUE" | null>(null);
     const [activityText, setActivityText] = useState("");
@@ -359,16 +365,54 @@ function AssignmentActivityPanel({
         issuesCount: initialIssuesCount || 0,
     });
 
-    const activityCollectionRef = useCallback(() => {
-        return collection(db, "fleets", fleetId as string, "Assignments", assignmentId, ACTIVITY_SUBCOLLECTION);
-    }, [fleetId, assignmentId]);
+
+
+    const loadActivityCounts = async () => {
+        if (!assignmentId) return;
+
+        try {
+            const activityDoc = await getDoc(
+                doc(db, "assignmentActivity", assignmentId)
+            );
+
+            if (activityDoc.exists()) {
+                const data = activityDoc.data();
+
+                setCounts({
+                    notesCount: data.notesCount || 0,
+                    issuesCount: data.issuesCount || 0,
+                });
+            }
+        } catch (error) {
+            console.log("Count loading error", error);
+        }
+    };
+    useEffect(() => {
+        loadActivityCounts();
+    }, [assignmentId]);
 
     const loadAssignmentActivity = async () => {
-        if (!fleetId) return;
+        if (!assignmentId) return;
+
         try {
             setLoadingActivity(true);
-            const snap = await getDocs(query(activityCollectionRef(), orderBy("createdAt", "desc")));
-            const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+            const activityRef = collection(
+                db,
+                "assignmentActivity",
+                assignmentId,
+                "activity"
+            );
+
+            const snap = await getDocs(
+                query(activityRef, orderBy("createdAt", "desc"))
+            );
+
+            const data = snap.docs.map((d) => ({
+                id: d.id,
+                ...d.data(),
+            }));
+
             setAssignmentActivity(data);
         } catch (error) {
             console.log("Activity error", error);
@@ -387,15 +431,20 @@ function AssignmentActivityPanel({
 
         try {
             setSavingActivity(true);
+            const activityCollection = collection(db, "assignmentActivity", assignmentId, "activity");
 
             // The note/issue itself is the important write — this is the only
             // thing that can fail the save.
-            await addDoc(activityCollectionRef(), {
-                type: activityView,
+            await addDoc(activityCollection, {
+                type: activityView, // NOTE or ISSUE
                 text: activityText.trim(),
+
                 createdAt: Date.now(),
-                createdBy: user?.uid || "",
-                createdByName: user?.displayName || "User",
+
+                createdBy: user?.uid ?? "",
+                createdByName: user?.displayName ?? "User",
+                createdByRole: currentRole.userRole, // Driver, Broker, Dispatcher, Consignee...
+                createdByAccRole: currentRole.accType,
                 status: activityView === "ISSUE" ? "OPEN" : null,
             });
 
@@ -410,7 +459,7 @@ function AssignmentActivityPanel({
             // if this fails (e.g. the doc path doesn't match), the note has
             // already been saved, so we shouldn't show a "failed" error.
             try {
-                await updateDoc(doc(db, "fleets", fleetId, "Assignments", assignmentId), {
+                await updateDoc(doc(db, "assignmentActivity", assignmentId), {
                     notesCount: increment(activityView === "NOTE" ? 1 : 0),
                     issuesCount: increment(activityView === "ISSUE" ? 1 : 0),
                 });
@@ -424,6 +473,50 @@ function AssignmentActivityPanel({
             setSavingActivity(false);
         }
     };
+    const resolveIssue = async (activityId: string) => {
+        if (!assignmentId) return;
+
+        try {
+            await updateDoc(
+                doc(
+                    db,
+                    "assignmentActivity",
+                    assignmentId,
+                    "activity",
+                    activityId
+                ),
+                {
+                    status: "RESOLVED",
+
+                    resolvedBy: user?.uid ?? "",
+                    resolvedByName: user?.displayName ?? "User",
+                    resolvedByRole: currentRole.userRole,
+                    resolvedByAccRole: currentRole.accType,
+
+                    resolvedAt: Date.now(),
+                }
+            );
+
+            loadAssignmentActivity();
+
+        } catch (error) {
+            console.log("Resolve issue error:", error);
+        }
+    };
+
+
+
+
+
+
+
+
+
+
+
+    const [issueFilter, setIssueFilter] = useState<"OPEN" | "RESOLVED">("OPEN");
+
+
 
     return (
         <View>
@@ -449,18 +542,89 @@ function AssignmentActivityPanel({
                     marginTop: wp(3),
                     padding: wp(3),
                     borderRadius: wp(3),
-                    backgroundColor: backgroundLight,
                 }}>
 
                     {/* HEADER + CLOSE */}
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: wp(2) }}>
-                        <ThemedText style={{ fontSize: 16, fontWeight: '700', color: activityView === "ISSUE" ? "#F44336" : accent }}>
+
+
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: wp(2),
+                        }}
+                    >
+                        <ThemedText
+                            style={{
+                                fontSize: 16,
+                                fontWeight: '700',
+                                color: activityView === "ISSUE" ? "#F44336" : accent,
+                            }}
+                        >
                             {activityView === "ISSUE" ? "Reported Issues" : "Notes"}
                         </ThemedText>
+
                         <TouchableOpacity onPress={() => setActivityView(null)}>
                             <Ionicons name="close-circle-outline" size={22} color="#777" />
                         </TouchableOpacity>
                     </View>
+
+                    {activityView === "ISSUE" && (
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                marginBottom: wp(2),
+                                backgroundColor: backgroundLight,
+                                borderRadius: wp(2),
+                                padding: 4,
+                            }}
+                        >
+                            <TouchableOpacity
+                                onPress={() => setIssueFilter("OPEN")}
+                                style={{
+                                    flex: 1,
+                                    paddingVertical: wp(2),
+                                    borderRadius: wp(2),
+                                    alignItems: "center",
+                                    backgroundColor:
+                                        issueFilter === "OPEN" ? "#F44336" : "transparent",
+                                }}
+                            >
+                                <ThemedText
+                                    style={{
+                                        color: issueFilter === "OPEN" ? "#fff" : "#777",
+                                        fontWeight: "700",
+                                    }}
+                                >
+                                    Open
+                                </ThemedText>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => setIssueFilter("RESOLVED")}
+                                style={{
+                                    flex: 1,
+                                    paddingVertical: wp(2),
+                                    borderRadius: wp(2),
+                                    alignItems: "center",
+                                    backgroundColor:
+                                        issueFilter === "RESOLVED" ? "#4CAF50" : "transparent",
+                                }}
+                            >
+                                <ThemedText
+                                    style={{
+                                        color: issueFilter === "RESOLVED" ? "#fff" : "#777",
+                                        fontWeight: "700",
+                                    }}
+                                >
+                                    Resolved
+                                </ThemedText>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+
 
                     {/* EXISTING ACTIVITY */}
                     {loadingActivity ? (
@@ -471,16 +635,174 @@ function AssignmentActivityPanel({
                         </ThemedText>
                     ) : (
                         assignmentActivity
-                            .filter((x) => x.type === activityView)
+                            .filter((item) => {
+                                if (activityView === "NOTE") {
+                                    return item.type === "NOTE";
+                                }
+
+                                if (activityView === "ISSUE") {
+                                    return (
+                                        item.type === "ISSUE" &&
+                                        item.status === issueFilter
+                                    );
+                                }
+
+                                return false;
+                            })
                             .map((item) => (
                                 <View
                                     key={item.id}
-                                    style={{ padding: wp(2), marginBottom: wp(2), borderRadius: wp(2), backgroundColor: "#eee" }}
+                                    style={{
+                                        padding: wp(3.5),
+                                        marginBottom: wp(2.5),
+                                        borderRadius: wp(3),
+                                        backgroundColor: backgroundLight,
+                                        borderWidth: 1,
+                                        borderColor: "rgba(128,128,128,0.25)",
+                                        shadowColor: "#000",
+                                        shadowOffset: { width: 0, height: 1 },
+                                        shadowOpacity: 0.04,
+                                        shadowRadius: 3,
+                                        elevation: 1,
+                                    }}
                                 >
-                                    <ThemedText>{item.text}</ThemedText>
-                                    <ThemedText style={{ fontSize: 11, color: "#777" }}>
+                                    <View
+                                        style={{
+                                            flexDirection: "row",
+                                            justifyContent: "space-between",
+                                            alignItems: "flex-start",
+                                            marginBottom: wp(2),
+                                        }}
+                                    >
+                                        <View style={{ flexDirection: "row", flex: 1 }}>
+                                            {/* Avatar */}
+                                            <View
+                                                style={{
+                                                    width: wp(9),
+                                                    height: wp(9),
+                                                    borderRadius: wp(4.5),
+                                                    backgroundColor: "#E0E7FF",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    marginRight: wp(2.5),
+                                                }}
+                                            >
+                                                <ThemedText style={{ fontSize: 13, fontWeight: "700", color: "#4338CA" }}>
+                                                    {(item.createdByName || "U").charAt(0).toUpperCase()}
+                                                </ThemedText>
+                                            </View>
+
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText style={{ fontWeight: "700", fontSize: 14 }}>
+                                                    {item.createdByName || "Unknown User"}
+                                                </ThemedText>
+
+                                                <ThemedText style={{ fontSize: 11, color: "#8A8A8E", marginTop: 2 }}>
+                                                    {item.createdByRole || "User"}
+                                                    {item.createdByAccRole ? ` • ${item.createdByAccRole}` : ""}
+                                                </ThemedText>
+                                            </View>
+                                        </View>
+
+                                        {item.type === "ISSUE" && (
+                                            <View
+                                                style={{
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
+                                                    paddingHorizontal: wp(2),
+                                                    paddingVertical: wp(0.8),
+                                                    borderRadius: wp(3),
+                                                    backgroundColor: item.status === "OPEN" ? "#FDECEA" : "#E8F5E9",
+                                                    marginLeft: wp(2),
+                                                }}
+                                            >
+                                                <View
+                                                    style={{
+                                                        width: 6,
+                                                        height: 6,
+                                                        borderRadius: 3,
+                                                        backgroundColor: item.status === "OPEN" ? "#D32F2F" : "#2E7D32",
+                                                        marginRight: 5,
+                                                    }}
+                                                />
+                                                <ThemedText
+                                                    style={{
+                                                        fontSize: 10.5,
+                                                        fontWeight: "700",
+                                                        color: item.status === "OPEN" ? "#D32F2F" : "#2E7D32",
+                                                    }}
+                                                >
+                                                    {item.status === "OPEN" ? "Open Issue" : "Resolved"}
+                                                </ThemedText>
+                                            </View>
+                                        )}
+                                    </View>
+
+                                    <ThemedText style={{ fontSize: 14, lineHeight: 20, marginLeft: wp(11.5) }}>
+                                        {item.text}
+                                    </ThemedText>
+
+                                    <ThemedText
+                                        style={{
+                                            marginTop: wp(2),
+                                            marginLeft: wp(11.5),
+                                            fontSize: 11,
+                                            color: "#8A8A8E",
+                                        }}
+                                    >
                                         {new Date(item.createdAt).toLocaleString()}
                                     </ThemedText>
+
+                                    {/* Resolve action */}
+                                    {item.type === "ISSUE" && item.status === "OPEN" && (
+                                        <TouchableOpacity
+                                            onPress={() => resolveIssue(item.id)}
+                                            activeOpacity={0.7}
+                                            style={{
+                                                marginTop: wp(3),
+                                                marginLeft: wp(11.5),
+                                                alignSelf: "flex-start",
+                                                flexDirection: "row",
+                                                alignItems: "center",
+                                                paddingHorizontal: wp(3.5),
+                                                paddingVertical: wp(1.5),
+                                                borderRadius: wp(5),
+                                                backgroundColor: "#2E7D32",
+                                            }}
+                                        >
+                                            <ThemedText style={{ color: "#FFF", fontSize: 12, fontWeight: "700" }}>
+                                                ✓ Mark as Resolved
+                                            </ThemedText>
+                                        </TouchableOpacity>
+                                    )}
+
+                                    {/* Resolved info panel */}
+                                    {item.type === "ISSUE" && item.status === "RESOLVED" && (
+                                        <View
+                                            style={{
+                                                marginTop: wp(3),
+                                                marginLeft: wp(11.5),
+                                                padding: wp(2.5),
+                                                borderRadius: wp(2.5),
+                                                backgroundColor: "#F1F8F2",
+                                                borderWidth: 1,
+                                                borderColor: "#D5EAD7",
+                                            }}
+                                        >
+                                            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 3 }}>
+                                                <ThemedText style={{ fontSize: 13, marginRight: 5 }}>✅</ThemedText>
+                                                <ThemedText style={{ fontSize: 12, color: "#2E7D32", fontWeight: "700" }}>
+                                                    Resolved by {item.resolvedByName || "User"}
+                                                </ThemedText>
+                                            </View>
+
+                                            <ThemedText style={{ fontSize: 10.5, color: "#6B8E6D", marginLeft: 18 }}>
+                                                {item.resolvedByRole || "User"}
+                                                {item.resolvedByAccRole ? ` • ${item.resolvedByAccRole}` : ""}
+                                                {item.resolvedAt ? ` • ${new Date(item.resolvedAt).toLocaleString()}` : ""}
+                                            </ThemedText>
+                                        </View>
+                                    )}
                                 </View>
                             ))
                     )}
@@ -515,8 +837,9 @@ function Jobs() {
     const background = useThemeColor("background");
     const accent = useThemeColor("accent");
     const backgroundLight = useThemeColor("backgroundLight");
+    const icon = useThemeColor("icon")
 
-    const { currentRole } = useAuth();
+    const { currentRole, user } = useAuth();
     const accType = currentRole?.accType; // 'fleet' | 'brokerage'
     const scopeId = accType === 'brokerage' ? currentRole?.brokerId : currentRole?.fleetId;
 
@@ -535,8 +858,10 @@ function Jobs() {
     const [rejectTarget, setRejectTarget] = useState<{ cargoId: string; assignmentDocId: string } | null>(null);
 
     const getAssignmentsPath = useCallback(() => {
+
         if (accType === 'brokerage') return `brokerages/${scopeId}/assignments`;
         return `fleets/${scopeId}/assignments`;
+
     }, [accType, scopeId]);
 
     useEffect(() => {
@@ -546,6 +871,7 @@ function Jobs() {
             try {
                 setLoading(true);
                 const path = getAssignmentsPath();
+
                 const snapshot = await getDocs(collection(db, path));
                 const results = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
                 setAssignedCargo(results as any);
@@ -647,6 +973,85 @@ function Jobs() {
 
                 {/* HEADER */}
 
+
+
+
+                {(proofTargetId === assignmentData.id) && (
+                    <View
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0,0,0,0.4)',
+                            justifyContent: 'flex-end',
+                            zIndex: 999,
+                        }}
+                    >
+                        <View
+                            style={{
+                                backgroundColor: backgroundLight || '#1c1c1e',
+                                padding: wp(6),
+                                paddingBottom: 0,
+                                borderTopLeftRadius: wp(6),
+                                borderTopRightRadius: wp(6),
+                            }}
+                        >
+                            <ThemedText style={{ fontSize: 18, fontWeight: "700", marginBottom: wp(4) }}>
+                                Upload Delivery Proof
+                            </ThemedText>
+
+                            <TouchableOpacity
+                                style={styles.proofOption}
+                                onPress={() => {
+                                    const targetId = proofTargetId;
+                                    setProofTargetId(null);
+                                    takePhoto((image) => {
+                                        if (!targetId) return;
+                                        setProofImages(prev => ({
+                                            ...prev,
+                                            [targetId]: [...(prev[targetId] || []), image],
+                                        }));
+                                    });
+                                }}
+                            >
+                                <Ionicons name="camera-outline" size={24} color={accent} />
+                                <ThemedText>Take Photo</ThemedText>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.proofOption}
+                                onPress={() => {
+                                    const targetId = proofTargetId;
+                                    setProofTargetId(null);
+                                    selectMultipleImages((images) => {
+                                        if (!targetId) return;
+                                        setProofImages(prev => ({
+                                            ...prev,
+                                            [targetId]: [...(prev[targetId] || []), ...images],
+                                        }));
+                                    });
+                                }}
+                            >
+                                <Ionicons name="images-outline" size={24} color={accent} />
+                                <ThemedText>Choose from Gallery</ThemedText>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.proofOption, { marginTop: wp(2) }]}
+                                onPress={() => setProofTargetId(null)}
+                            >
+                                <Ionicons name="close-outline" size={24} color="#F44336" />
+                                <ThemedText>Cancel</ThemedText>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
+
+
+
+
                 <View style={styles.cargoHeader}>
                     <ThemedText style={styles.cargoTitle}>
                         {assignmentData?.loadDetails?.productName || 'Load'} - {assignmentData.truckDetails.truckName}
@@ -738,6 +1143,52 @@ function Jobs() {
                         </ThemedText>
                     </View>
 
+
+                 {  <View style={styles.imageContainer}>
+                        {(assignmentData.proofOfDelivery?.files || []).map(
+                            (image: string, index: number) => (
+                                <View key={index} style={styles.imageWrapper}>
+                                    <Image
+                                        source={{ uri: image }}
+                                        style={styles.thumbnail}
+                                    />
+                                </View>
+                            )
+                        )}
+                    </View>}
+
+
+                    <View style={styles.imageContainer}>
+                        {(proofImages[assignmentData.id] || []).map((image, index) => (
+                            <View key={index} style={styles.imageWrapper}>
+
+                                <Image
+                                    source={{ uri: image.uri }}
+                                    style={styles.thumbnail}
+                                />
+
+                                <TouchableOpacity
+                                    style={styles.removeButton}
+                                    onPress={() => {
+                                        setProofImages(prev => ({
+                                            ...prev,
+                                            [assignmentData.id]: prev[assignmentData.id].filter(
+                                                (_, i) => i !== index
+                                            )
+                                        }));
+                                    }}
+                                >
+                                    <ThemedText style={styles.removeText}>
+                                        ×
+                                    </ThemedText>
+                                </TouchableOpacity>
+
+                            </View>
+                        ))}
+                    </View>
+
+
+
                 </View>
 
                 {/* ACTION BUTTONS */}
@@ -762,8 +1213,10 @@ function Jobs() {
                         onPress={() => {
                             router.push({
                                 pathname: "/Logistics/Loads/Index",
-                                params: { cargoId: assignmentData.loadDetails.cargoId || assignmentData.loadDetails.loadId ,
-                                     cargoVisibilityG  : assignmentData.visibility ||null   },
+                                params: {
+                                    cargoId: assignmentData.loadDetails.cargoId || assignmentData.loadDetails.loadId,
+                                    cargoVisibilityG: assignmentData.visibility || null
+                                },
                             });
                         }}
                     >
@@ -799,18 +1252,18 @@ function Jobs() {
                 >
 
                     {/* TRACKER - Everyone */}
-                        <TouchableOpacity
-                            style={styles.actionButton}
-                            onPress={() => {
-                                console.log("Open tracker");
-                            }}
-                        >
-                            <Ionicons name="navigate-circle-outline" size={16} color={accent} />
-                            <ThemedText style={styles.actionButtonText}>
-                                Tracker
-                            </ThemedText>
-                        </TouchableOpacity>
-                    
+                    <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => {
+                            console.log("Open tracker");
+                        }}
+                    >
+                        <Ionicons name="navigate-circle-outline" size={16} color={accent} />
+                        <ThemedText style={styles.actionButtonText}>
+                            Tracker
+                        </ThemedText>
+                    </TouchableOpacity>
+
 
 
                     {/* DRIVER ACTION */}
@@ -819,42 +1272,58 @@ function Jobs() {
                             style={styles.actionButton}
                             onPress={() => {
 
-                                if (assignmentData.status === "pending") {
-                                    console.log("Start trip");
-                                    // pending -> in_transit
+                                if (assignmentData.status === "PENDING") {
+                                    startTrip(assignmentData.id);
                                 }
 
-                                else if (assignmentData.status === "in_transit") {
-                                    console.log("Upload proof");
-                                    // open proof upload
+                                else if (assignmentData.status === "IN_TRANSIT") {
+                                    // uploadProof(assignmentData.id);
+                                    // pickProofImage();
+                                    setProofTargetId(assignmentData.id);
+
+
+
                                 }
 
                             }}
                         >
                             <Ionicons
                                 name={
-                                    assignmentData.status === "pending"
+                                    assignmentData.status === "PENDING"
                                         ? "play-circle-outline"
-                                        : "camera-outline"
+                                        : assignmentData.status === "IN_TRANSIT"
+                                            ? "camera-outline"
+                                            : "checkmark-circle-outline"
                                 }
                                 size={16}
                                 color={accent}
                             />
 
                             <ThemedText style={styles.actionButtonText}>
-
-                                {assignmentData.status === "pending"
-                                    ? "Start Trip"
-                                    : assignmentData.status === "in_transit"
-                                        ? "Upload Proof"
-                                        : "Waiting Approval"
+                                {
+                                    assignmentData.status === "PENDING"
+                                        ? "Start Trip"
+                                        : assignmentData.status === "IN_TRANSIT"
+                                            ? "Upload Proof"
+                                            : "Completed"
                                 }
-
                             </ThemedText>
 
                         </TouchableOpacity>
                     )}
 
+                    {(proofImages[assignmentData.id]?.length || 0) > 0 && (
+                        <TouchableOpacity
+                            style={styles.actionButton}
+                            activeOpacity={0.7}
+                            onPress={() => finishTrip(assignmentData.id)}
+                        >
+                            <Ionicons name="checkmark-circle-outline" size={18} color="#FFF" />
+                            <ThemedText style={styles.actionButtonText}>
+                                Complete
+                            </ThemedText>
+                        </TouchableOpacity>
+                    )}
 
 
                     {/* OWNER / BROKER CONFIRM */}
@@ -896,7 +1365,7 @@ function Jobs() {
                             />
 
                             <ThemedText style={styles.actionButtonText}>
-                               reolve Issues
+                                reolve Issues
                             </ThemedText>
 
                         </TouchableOpacity>
@@ -912,17 +1381,23 @@ function Jobs() {
                     initialIssuesCount={assignmentData.issuesCount}
                     accent={accent}
                     backgroundLight={backgroundLight}
+                    icon={icon}
                 />
 
             </View>
         );
     };
 
+    // remove: const [proofModalVisible, setProofModalVisible] = useState(false);
+    const [proofTargetId, setProofTargetId] = useState<string | null>(null);
+    const [proofImages, setProofImages] = useState<Record<string, ImagePickerAsset[]>>({});
+
+
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'active': return '#4CAF50';
-            case 'pending': return '#FF9800';
-            case 'completed': return '#2196F3';
+            case 'IN_TRANSIT': return '#4CAF50';
+            case 'PENDING': return '#FF9800';
+            case 'COMPLETED': return '#2196F3';
             case 'rejected': return '#F44336';
             case 'accepted': return '#8BC34A';
             default: return '#666';
@@ -931,16 +1406,165 @@ function Jobs() {
 
     const statusTabs: { key: StatusTab; label: string }[] = [
         { key: 'all', label: 'All' },
-        { key: 'pending', label: 'Pending' },
-        { key: 'active', label: 'Active' },
-        { key: 'completed', label: 'Completed' },
+        { key: 'PENDING', label: 'Pending' },
+        { key: 'IN_TRANSIT', label: 'Active' },
+        { key: 'COMPLETED', label: 'Completed' },
         { key: 'rejected', label: 'Rejected' },
     ];
 
+
+    const startTrip = async (assignmentId: string) => {
+        try {
+            await updateDocument(
+                `fleets/${scopeId}/assignments`,
+                assignmentId,
+                {
+                    status: "IN_TRANSIT",
+
+                    updatedAt: Date.now(),
+                    updatedBy: user?.uid ?? "",
+                    updatedByName: user?.displayName ?? "User",
+                    updatedByRole: currentRole?.userRole ?? "",
+                    updatedByAcc: currentRole?.accType ?? "",
+
+                    statusHistory: arrayUnion({
+                        fromStatus: "PENDING",
+                        toStatus: "IN_TRANSIT",
+
+                        changedAt: Date.now(),
+
+                        changedBy: user?.uid ?? "",
+                        changedByName: user?.displayName ?? "User",
+                        changedByRole: currentRole?.userRole ?? "",
+                        changedByAcc: currentRole?.accType ?? "",
+                    })
+                }
+            );
+
+        } catch (error) {
+            console.log("Start trip error:", error);
+        }
+    };
+
+
+
+
+    const [uploadingImageUpdate, setUploadImageUpdate] = useState("")
+
+
+
+
+    const finishTrip = async (assignmentId: string) => {
+        try {
+            const images = proofImages[assignmentId] || [];
+
+            // Upload all images in parallel
+            const uploadedUrls = await Promise.all(
+                images.map(image =>
+                    uploadImage(
+                        image,
+                        `assignments/${assignmentId}/proof`,
+                        setUploadImageUpdate,
+                        "Proof"
+                    )
+                )
+            );
+
+            // Remove any failed uploads
+            const proofFiles = uploadedUrls.filter(
+                (url): url is string => url !== null
+            );
+
+            await updateDocument(
+                `fleets/${scopeId}/assignments`,
+                assignmentId,
+                {
+                    status: "COMPLETED",
+
+                    completedAt: Date.now(),
+                    completedBy: user?.uid ?? "",
+                    completedByName: user?.displayName ?? "User",
+                    completedByRole: currentRole?.userRole ?? "",
+
+                    proofOfDelivery: {
+                        uploaded: proofFiles.length > 0,
+                        files: proofFiles,
+                    },
+
+                    updatedAt: Date.now(),
+                    updatedBy: user?.uid ?? "",
+
+                    statusHistory: arrayUnion({
+                        fromStatus: "IN_TRANSIT",
+                        toStatus: "AWAITING_OWNER_CONFIRMATION",
+
+                        changedAt: Date.now(),
+
+                        changedBy: user?.uid ?? "",
+                        changedByName: user?.displayName ?? "User",
+                        changedByRole: currentRole?.userRole ?? "",
+                        changedByAcc: currentRole?.accType ?? "",
+                    }),
+                }
+            );
+
+            // Clear local images for this assignment
+            setProofImages(prev => {
+                const updated = { ...prev };
+                delete updated[assignmentId];
+                return updated;
+            });
+
+        } catch (error) {
+            console.log("Proof upload error:", error);
+        }
+    };
+
+
+
+
+
+    const cargoOwnerConfirmation = async (assignmentId: string) => {
+        try {
+            await updateDocument(
+                `fleets/${scopeId}/assignments`,
+                assignmentId,
+                {
+                    status: "IN_TRANSIT",
+
+                    updatedAt: Date.now(),
+                    updatedBy: user?.uid ?? "",
+                    updatedByName: user?.displayName ?? "User",
+                    updatedByRole: currentRole?.userRole ?? "",
+                    updatedByAcc: currentRole?.accType ?? "",
+
+                    statusHistory: arrayUnion({
+                        fromStatus: "AWAITING_OWNER_CONFIRMATION",
+                        toStatus: "COMPLETED",
+
+                        changedAt: Date.now(),
+
+                        changedBy: user?.uid ?? "",
+                        changedByName: user?.displayName ?? "User",
+                        changedByRole: currentRole?.userRole ?? "",
+                        changedByAcc: currentRole?.accType ?? "",
+                    })
+                }
+            );
+
+        } catch (error) {
+            console.log("Start trip error:", error);
+        }
+    };
+
+
+
+
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: background }]} edges={['top']}>
+        <View style={[styles.container, { backgroundColor: background }]} >
+
             {/* <CustomHeader pageTitle="Jobs" filterElement={setFilterTypeModalVisible} /> */}
-            <Heading page="My Assignments" rightComponent={<View>
+            {currentRole.accType !== "driver" && <Heading page="My Assignments" rightComponent={<View>
                 <TouchableOpacity
                     style={styles.filterButton}
                     onPress={() => setFilterTypeModalVisible(true)}
@@ -948,7 +1572,9 @@ function Jobs() {
                     <Ionicons name="filter" size={16} color="white" />
                     <ThemedText style={styles.filterButtonText}>Filter</ThemedText>
                 </TouchableOpacity>
-            </View>} />
+            </View>} />}
+
+            <CustomHeader pageTitle='Jobs' />
 
             <View style={styles.content}>
 
@@ -1025,8 +1651,8 @@ function Jobs() {
                                 <ThemedText style={styles.emptyStateSubtext}>
                                     {activeFilterEntries.length > 0
                                         ? 'Try adjusting or clearing your filters'
-                                        : activeTab === 'pending' ? 'New assignments will appear here' :
-                                            activeTab === 'active' ? 'Active jobs will be shown here' :
+                                        : activeTab === 'PENDING' ? 'New assignments will appear here' :
+                                            activeTab === 'IN_TRANSIT' ? 'Active jobs will be shown here' :
                                                 activeTab === 'rejected' ? 'Rejected jobs will appear here' :
                                                     'Completed jobs will appear here'}
                                 </ThemedText>
@@ -1061,7 +1687,7 @@ function Jobs() {
                 }}
                 onConfirm={confirmReject}
             />
-        </SafeAreaView>
+        </View>
     );
 }
 
@@ -1262,146 +1888,50 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: "#777",
     },
+    proofOption: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: wp(3),
+        paddingVertical: hp(2),
+        borderBottomWidth: 1,
+        borderColor: "rgba(128,128,128,0.2)",
+    },
+    imageContainer: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 10,
+    },
+
+    imageWrapper: {
+        position: "relative",
+    },
+
+    thumbnail: {
+        width: 80,
+        height: 80,
+        borderRadius: 8,
+    },
+
+    removeButton: {
+        position: "absolute",
+        top: -8,
+        right: -8,
+        width: 22,
+        height: 22,
+        borderRadius: 11,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "red",
+    },
+
+    removeText: {
+        color: "white",
+        fontSize: 18,
+        fontWeight: "bold",
+    },
 });
 
 
 
 
-
-
-    // Start from the code I provided above.
-
-    // Do not change my UI, layout, styles, spacing, buttons design, or component structure.
-
-    // The current UI is already correct. Your job is only to complete and refine the functionality from this exact point.
-
-    // Make only the following fixes:
-
-    // 1. Keep the existing assignment card and buttons exactly as they are.
-
-    // Do not:
-
-    // * redesign the card
-    // * remove buttons
-    // * add new UI sections
-    // * create new screens
-    // * change styling
-
-    // Only connect the correct logic behind the existing UI.
-
-    // 2. Fix assignmentActivities.
-
-    // The current activity implementation is wrong because it uses:
-
-    // fleets/{fleetId}/Assignments/{assignmentId}/activity
-
-    // Change it to a global top-level Firestore collection:
-
-    // assignmentActivities
-
-    // It must be used for both:
-
-    // * private assignments
-    // * public assignments
-
-    // Each document should include:
-
-    // assignmentId
-    // loadId
-    // assignmentType
-
-    // type:
-    // NOTE
-    // ISSUE
-    // STATUS
-    // PROOF
-    // CONFIRMATION
-
-    // text
-
-    // createdBy
-    // createdByName
-    // createdByRole
-    // createdAt
-
-    // status:
-    // OPEN
-    // RESOLVED
-
-    // resolvedBy
-    // resolvedByName
-    // resolvedAt
-
-    // 3. Keep the current Notes and Issues UI.
-
-    // Do not remove the existing Notes button or Issue button.
-
-    // Notes:
-
-    // * anyone involved in the assignment can add notes
-    // * keep history
-
-    // Issues:
-
-    // * anyone involved can create issues
-    // * display pending issue count only
-    // * resolved issues stay in history
-
-    // Add resolving logic:
-
-    // * fleet owner can resolve issues
-    // * save who fixed it
-    // * save when it was fixed
-    // * mark issue resolved
-
-    // 4. Complete the current operation buttons logic.
-
-    // Keep the existing buttons.
-
-    // Driver:
-    // Tracker
-    // Lifecycle button:
-
-    // pending:
-    // Start Trip
-
-    // in_transit:
-    // Upload Proof
-
-    // delivery_submitted:
-    // Waiting Approval
-
-    // Fleet owner:
-    // Tracker
-    // Confirm
-    // Resolve Issues
-
-    // Broker:
-    // Tracker
-    // Confirm
-    // Resolve Issues
-
-    // 5. Complete delivery confirmation.
-
-    // Do not remove confirmation.
-
-    // Private assignment:
-    // Fleet owner confirms delivery.
-
-    // Public assignment:
-    // Broker confirms delivery.
-
-    // 6. Complete status updates:
-
-    // pending
-    // → in_transit
-    // → delivery_submitted
-    // → completed
-
-    // 7. Only modify the missing functionality.
-
-    // Do not spend time analyzing or rewriting existing UI.
-
-    // The goal is:
-    // Take my current working UI and make the logic production ready without changing how it looks.
 

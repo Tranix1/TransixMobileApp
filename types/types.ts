@@ -3,7 +3,7 @@ import { ImagePickerAsset } from "expo-image-picker";
 import { GetDerivedStateFromError } from "react";
 import { getDefaultPaymentTerms } from "@/components/PaymentTerms";
 
-export type AccountType = 'general' | 'tracking' | 'fleet' | 'brokerage';
+export type AccountType = 'general' | 'tracking' | 'fleet' | 'brokerage' | 'driver';
 
 export type CurrentRole =
     | {
@@ -70,7 +70,6 @@ export type CurrentRole =
         email: string | null
         billingAddress: string | null
         baseAdress: string | null
-
     };
     
     

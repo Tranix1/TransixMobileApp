@@ -75,6 +75,14 @@ const DEFAULT_FLEET_ROLE: CurrentRole = {
     fleetManagerId: null,
     fleetDispatcherId: null,
 };
+const DEFAULT_Driver_ROLE: CurrentRole = {
+    role: 'driver',
+    fleetId: "",
+    userRole: "",
+    accType: 'driver',
+    driverId: "",
+    driverName : ""
+};
 
 const DEFAULT_BROKER_ROLE: CurrentRole = {
     role: 'brokerage',
@@ -117,6 +125,10 @@ const normalizeAccountType = (roleInput: CurrentRole | AccountType | null | unde
             return { ...DEFAULT_GENERAL_ROLE, accType: 'general' };
         case 'fleet':
             return DEFAULT_FLEET_ROLE;
+
+            case 'driver':
+            return DEFAULT_Driver_ROLE
+
         case 'brokerage':
             return DEFAULT_BROKER_ROLE;
         default:

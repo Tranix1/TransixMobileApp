@@ -10,7 +10,8 @@ import Loads from "./Logistics/Loads/Index";
 import Store from "./Transport/Store/Index";
 import LogisticsTrucks from "./Logistics/Trucks/Index";
 import Wallet from "./Wallet/Index";
-import Jobs from "./Fleet/DriverScreens/Jobs/Index";
+// import Jobs from "./Fleet/DriverScreens/Jobs/Index";
+import Jobs from "./Assignments/Index"
 import Trucks from "./Fleet/DriverScreens/Trucks/Index";
 import Earnings from "./Fleet/DriverScreens/Earnings/Index";
 import DriverProfile from "./Fleet/DriverScreens/Profile/Index";
@@ -38,6 +39,7 @@ import {
 import { hp, wp } from "@/constants/common";
 import NetInfo from '@react-native-community/netinfo';
 import FleetSelector from "./Fleet/FleetSelector/Index";
+import DriverSelector from "./Driver/DriverSelector/Index"
 import BrokerageSelector from "./brokerage/BrokerageSelector/Index";
 
 import Login from "./Account/Login";
@@ -261,41 +263,10 @@ export default function Index() {
                 <Tab.Screen name="Chat" component={ChatIndex} />
                 <Tab.Screen name="Wallet" component={Wallet} />
               </>
-            ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'driver') ? (
-              <>
-                <Tab.Screen name="Jobs" component={Jobs} />
-                <Tab.Screen name="Trucks" component={Trucks} />
-                <Tab.Screen name="Chat" component={ChatIndex} />
-                <Tab.Screen name="Earnings" component={Earnings} />
-              </>
-            ) : (typeof currentRole === 'object' && currentRole.role === 'fleet') ?
+            ) : 
+               (typeof currentRole === 'object' && currentRole.role === 'fleet') ?
               (<>
                 <Tab.Screen name="Home " component={FleetSelector} />
-                <Tab.Screen name="About " component={About} />
-              </>)   
-
-
-
-
-
-
-
-
-
-
-
-
-
-: (typeof currentRole === 'object' && currentRole.role === 'brokerage' && currentRole.userRole === 'owner') ? (
-              <>
-                <Tab.Screen name="Loads" component={Loads} />
-                <Tab.Screen name="Trucks" component={LogisticsTrucks} />
-                <Tab.Screen name="Chat" component={ChatIndex} />
-                <Tab.Screen name="Wallet" component={Wallet} />
-              </>
-            ) :  (typeof currentRole === 'object' && currentRole.role === 'brokerage') ?
-              (<>
-                <Tab.Screen name="Home " component={BrokerageSelector} />
                 <Tab.Screen name="About " component={About} />
               </>)
 
@@ -305,24 +276,45 @@ export default function Index() {
 
 
 
+                : (typeof currentRole === 'object' && currentRole.role === 'driver' && currentRole.userRole === 'driver') ? (
+              <>
+                <Tab.Screen name="Jobs" component={Jobs} />
+                <Tab.Screen name="Trucks" component={Trucks} />
+                <Tab.Screen name="Chat" component={ChatIndex} />
+                <Tab.Screen name="Earnings" component={Earnings} />
+              </>
+            ) : (typeof currentRole === 'object' && currentRole.role === 'driver') ?
+              (<>
+                <Tab.Screen name="Home " component={DriverSelector} />
+                <Tab.Screen name="About " component={About} />
+              </>)
 
 
 
-
-
-
-
-
-
-
-
-
-              : (
+              : (typeof currentRole === 'object' && currentRole.role === 'brokerage' && currentRole.userRole === 'owner') ? (
                 <>
-                  {/* <Tab.Screen name="Home " component={Login} /> */}
-                  <Tab.Screen name="About " component={About} />
+                  <Tab.Screen name="Loads" component={Loads} />
+                  <Tab.Screen name="Trucks" component={LogisticsTrucks} />
+                  <Tab.Screen name="Chat" component={ChatIndex} />
+                  <Tab.Screen name="Wallet" component={Wallet} />
                 </>
-              )}
+              ) : (typeof currentRole === 'object' && currentRole.role === 'brokerage') ?
+                (<>
+                  <Tab.Screen name="Home " component={BrokerageSelector} />
+                  <Tab.Screen name="About " component={About} />
+                </>)
+
+
+
+
+
+
+                : (
+                  <>
+                    {/* <Tab.Screen name="Home " component={Login} /> */}
+                    <Tab.Screen name="About " component={About} />
+                  </>
+                )}
         </Tab.Navigator>
 
         <UpdateModal visible={showUpdateModal} onClose={dismissUpdate} currentVersion={currentVersion} latestVersion={latestVersion} updateUrl="https://play.google.com/store/apps/details?id=com.yayapana.TransixNewVersion" isForceUpdate={isForceUpdate} />

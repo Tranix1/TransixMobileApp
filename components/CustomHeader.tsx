@@ -40,7 +40,7 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement}
                 <View>
 
 
-                    {typeof currentRole === 'object' && (currentRole.role === 'fleet' || currentRole.role === 'brokerage') ? (
+                    {typeof currentRole === 'object' && (currentRole.role === 'fleet' || currentRole.role === 'brokerage'|| currentRole.accType==="driver" ) ? (
                         <>
                             {currentRole.userRole === '' ?
                                 <View style={{flexDirection :"row" , justifyContent:"space-between", alignItems:"center",
@@ -54,7 +54,7 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement}
                                 </View>
                                 :
                                 <View
-                                style={{
+                                style={{        
                                     backgroundColor: background,
                                     paddingHorizontal: wp(2),
                                     paddingVertical: wp(1),
