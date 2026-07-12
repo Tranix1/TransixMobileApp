@@ -143,7 +143,7 @@ const AddLoadDB = () => {
       if (currentRole && currentRole.accType === 'brokerage') {
         try {
           // Use getDocs to fetch broker assigned trucks directly
-          const brokerTrucksQuery = query(collection(db, `brokers/${currentRole.brokerId}/trucks`));
+          const brokerTrucksQuery = query(collection(db, `brokerages/${currentRole.organizationId}/trucks`));
           const brokerTrucksSnapshot = await getDocs(brokerTrucksQuery);
 
           const brokerTrucksData = brokerTrucksSnapshot.docs.map(doc => ({

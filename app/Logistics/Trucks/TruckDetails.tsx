@@ -599,6 +599,8 @@ const TruckDetails = () => {
                                                 operaatingLocations: truckData.locations,
                                                 capacity: truckData?.truckCapacity,
                                                 numberPlate: truckData?.numberPlate,
+                                                imageUrl : truckData?.imageUrl ,
+                                                truckAssigments : truckData?.assignments
 
                                             },
                                         });

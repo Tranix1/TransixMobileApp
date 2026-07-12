@@ -25,6 +25,7 @@ import {
     query,
     where,
     writeBatch,
+    serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import { SelectLocationProp } from '@/types/types';
@@ -52,6 +53,8 @@ interface TruckRouteParams {
     numberPlate?: string;
     fleetId?: string;
     fleetName?: string;
+    imageUrl ?: string 
+    truckAssigments ?: any
 }
 
 type Mode = 'other' | 'default';
@@ -171,7 +174,9 @@ async function assignTruckBrokerage(
     cargoArea: string,
     capacity: string,
     numberPlate: string,
-    operatingLocations: string[]
+    operatingLocations: string[] ,
+    imageUrl : string ,
+    truckAssigments : any ,
 ): Promise<void> {
     const batch = writeBatch(db);
     const assignedAt = new Date().toISOString();
@@ -198,11 +203,15 @@ async function assignTruckBrokerage(
         truckName,
         truckType,
         cargoArea,
-        capacity,
+        truckCapacity: capacity,
         numberPlate,
         operatingLocations,
         status: 'active',
         assignedAt,
+        timeStamp:serverTimestamp() ,   
+        imageUrl  ,
+        accType : "Broker"  ,   
+        assignments  : truckAssigments 
     });
 
     await batch.commit();
@@ -566,6 +575,8 @@ const AssignBrokerageScreen: React.FC = () => {
     const capacity = params.capacity ?? '';
     const numberPlate = params.numberPlate ?? '';
     const operatingLocations = parseLocations(params.operaatingLocations);
+    const imageUrl  =  params.imageUrl  || "" 
+    const truckAssigments = params.truckAssigments || {}
 
     const background = useThemeColor('background');
     const backgroundLight = useThemeColor('backgroundLight');
@@ -722,7 +733,9 @@ const AssignBrokerageScreen: React.FC = () => {
                     cargoArea,
                     capacity,
                     numberPlate,
-                    operatingLocations
+                    operatingLocations ,
+                    imageUrl  ,
+                    truckAssigments ,
                 );
             }
 

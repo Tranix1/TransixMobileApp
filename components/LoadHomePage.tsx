@@ -48,7 +48,7 @@ interface LoadsComponentProps {
     error?: string | null
     visibilitySelector?: React.ReactNode;
     loadVisibility: string
-    cargoVisibilityG : string
+    cargoVisibilityG: string
 }
 
 
@@ -76,7 +76,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     error = null,
     visibilitySelector,
     loadVisibility,
-    cargoVisibilityG ,
+    cargoVisibilityG,
 }) => {
     // Component implementation
     const { user } = useAuth();
@@ -181,11 +181,11 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
             {/* Visibility Selector */}
 
 
-          {(cargoVisibilityG === "undefined") ?  <CustomHeader pageTitle="Loads" addingNavigate="/Logistics/Loads/AddLoads" filterElement={setShowfilter} /> :
-          <View style={{paddingTop:20}}> 
+            {(cargoVisibilityG === "undefined") ? <CustomHeader pageTitle="Loads" addingNavigate="/Logistics/Loads/AddLoads" filterElement={setShowfilter} /> :
+                <View style={{ paddingTop: 20 }}>
 
-              <Heading page={whenIdHeaderName} />
-          </View>
+                    <Heading page={whenIdHeaderName} />
+                </View>
             }
 
             {visibilitySelector}

@@ -16,6 +16,7 @@ import { router } from 'expo-router';
 import { parseCoordinateString, isValidCoordinate, DEFAULT_COORDINATES } from '@/Utilities/coordinateUtils';
 import DocumentSelectionModal from './DocumentSelectionModal';
 import { TruckNeededType } from '@/types/types'
+import { useAuth } from '@/context/AuthContext'
 
 interface DspAllLoadsProps {
   item: Load;
@@ -34,7 +35,7 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
 
   const [expand, setExpand] = useState(false)
 
-
+const {currentRole}  = useAuth()
 
   const [dspProofImage, setDspProofImage] = useState(false);
   const [showProofSelectionModal, setShowProofSelectionModal] = useState(false);
@@ -206,14 +207,14 @@ const rateStatus = useMemo(() => {
           </View>
 
           {/* Booking Button */}
-          <TouchableOpacity
+         {item.loadVisibility ==="Public"&&currentRole.accType==="fleet"  &&  <TouchableOpacity
             style={[styles.bookingButton, { backgroundColor: accent }]}
             onPress={ondetailsPress}
             activeOpacity={0.8}
           >
             <Ionicons name="checkmark-circle" size={wp(3.5)} color="white" />
             <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(0.5), fontSize: wp(3.5) }}>Respond</ThemedText>
-          </TouchableOpacity>
+          </TouchableOpacity>}
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>

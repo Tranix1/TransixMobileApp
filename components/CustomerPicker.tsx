@@ -63,7 +63,15 @@ const accent = useThemeColor("accent")
 
   const loadCustomers = async () => {
     try {
-      const result = await fetchDocuments(`fleets/${currentRole?.organizationId}/Customers`, 100);
+
+      let result
+      if(currentRole.accType ==="fleet"){
+
+       result= await fetchDocuments(`fleets/${currentRole?.organizationId}/Customers`, 100);
+      }else if(currentRole.accType ==="brokerage"){
+
+       result= await fetchDocuments(`brokerages/${currentRole?.organizationId}/Customers`, 100);
+      }
       if (result && result.data && Array.isArray(result.data)) {
         setCustomers(result.data as Customer[]);
       }
@@ -71,6 +79,7 @@ const accent = useThemeColor("accent")
       console.error('Error fetching customers:', error);
     }
   };
+
 
   const displayedCustomers: Customer[] =
     searchQuery.length > 0
@@ -98,7 +107,15 @@ const accent = useThemeColor("accent")
       };
 
       // addDocument returns the new document's id as a string
-      const newId = await addDocument(`fleets/${currentRole?.organizationId}/Customers`, customerData);
+      let newId;
+
+        if(currentRole.accType ==="fleet"){
+
+       newId= await addDocument(`fleets/${currentRole?.organizationId}/Customers`, customerData);
+      }else if(currentRole.accType ==="brokerage"){
+       newId = await addDocument(`brokerages/${currentRole?.organizationId}/Customers`, customerData);
+
+      }
 
       if (newId) {
         await loadCustomers();

@@ -17,7 +17,7 @@ import { Timestamp } from 'firebase/firestore';
 
 const Index = () => {
 
-    const { user } = useAuth();
+    const { user ,currentRole} = useAuth();
 
     const { userId, cargoId, cargoVisibilityG } = useLocalSearchParams();
 
@@ -40,22 +40,9 @@ const Index = () => {
 
     const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
     const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public'>('Private');
-    const [currentRole, setCurrentRole] = useState<any>(null);
+    // const [currentRole, setCurrentRole] = useState<any>(null);
 
-    useEffect(() => {
-        const getCurrentRole = async () => {
-            try {
-                const roleData = await AsyncStorage.getItem('currentRole');
-                if (roleData) {
-                    const parsedRole = JSON.parse(roleData);
-                    setCurrentRole(parsedRole);
-                }
-            } catch (error) {
-                console.error('Error getting current role:', error);
-            }
-        };
-        getCurrentRole();
-    }, []);
+   
 
     const LoadTructs = async () => {
         try {
@@ -65,7 +52,6 @@ const Index = () => {
 
             let filters: any[] = [];
             let collectionName: string | null = null;
-
 
             // =============================
             // CARGO ID MODE (EXACT LOAD)
@@ -86,7 +72,7 @@ const Index = () => {
                         where("cargoId", "==", cargoId),
                     ];
                     // Private cargo belongs to owner
-                    if (currentRole?.accType === "fleet") {
+                    if (currentRole?.accType === "fleet" || currentRole.accType ==="driver" ) {
                         collectionName = `fleets/${currentRole.fleetId}/Cargo`;
 
                     } else if (currentRole?.accType === "brokerage") {
@@ -111,9 +97,7 @@ const Index = () => {
                     currentRole?.accType === "brokerage" &&
                     loadVisibility === "Private"
                 ) {
-
-                    collectionName = `brokers/${currentRole.brokerId}/Cargo`;
-
+                    collectionName = `brokerages/${currentRole.organizationId}/Cargo`;
 
 
                 } else {

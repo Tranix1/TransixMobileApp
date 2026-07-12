@@ -74,20 +74,25 @@ function BookingsandBiddings({ }) {
     }
 
     if (dspRoute === "Requested by Carriers") {
-      // Show loads where current user is the truck owner (carrier)
-      // filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
-    } else if (dspRoute === "Requested Loads") {
+     
       // Show loads where current user is the truck owner (truck owner requests)
+      
+      filters.push( where("loadOwnerId", "==", auth.currentUser?.uid) );
+
+    } else if (dspRoute === "Requested Loads") {
+       // Show loads where current user is the truck owner (carrier)
+      // filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
+
       filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
     } else {
+      filters.push( where("loadOwnerId", "==", auth.currentUser?.uid) );
       // Default to "My Loads" - show loads where current user is the load owner (booked loads)
-      filters.push(where("loadOwnerId", "==", auth.currentUser?.uid));
     }
 
     // Debug: Check all requests in database
     await debugLoadRequests();
 
-    const result = await fetchDocuments('cargoRequests', 10, lastVisible, );
+    const result = await fetchDocuments('cargoRequests', 10, lastVisible, filters );
 
     if (result) {
       console.log('📊 Fetched documents:', result.data.length);

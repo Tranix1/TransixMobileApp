@@ -14,6 +14,7 @@ import AssignmentModal from "@/components/AssignmentModal";
 import { LoadTracker } from "@/components/LoadTracker";
 import { useAuth } from '@/context/AuthContext';
 import { getRelativeTime } from "@/Utilities/getDateRelativeTime";
+import { serverTimestamp } from "firebase/firestore";
 // Function to get relative time (e.g., "1 hr ago", "4 seconds ago")
 
 
@@ -83,6 +84,7 @@ export const RequestedCargo = ({
   };
 
   const handleConfirm = async (data: any) => {
+    console.log("heie e")
     const payload = {
       ...data,
       visibility: "PUBLIC",
@@ -105,15 +107,21 @@ export const RequestedCargo = ({
     //   shipper: item.loadItemDetails.organizationDetails || null 
     // });
 
-    await addDocument(`fleets/${item.fleetId}/assignments`, {
+
+    const assigmentId = `${item.loadItemDetails.loadId}_${item.truckDetails.truckId}`
+
+    await addDocument(`fleets/${item.fleetDetails.id}/assignments`,  {
       ...payload,
-      shipper: item.loadItemDetails.organizationDetails || null
+      shipper: item.loadItemDetails.organizationDetails || null ,
+      timeStamp: serverTimestamp() ,
     });
 
     // Cargo Adder Owner can now see the booking in their Assigments section
-    await addDocument(`${item.loadItemDetails.accType}/${item.loadItemDetails.organizationId}/assignments`, {
+    await addDocument(`${item.loadItemDetails.postedBy.accType}/${item.loadItemDetails.postedBy.organizationId}/assignments`, {
       ...payload,
-      shipper: item.loadItemDetails.shipper || null
+      shipper: item.loadItemDetails.shipper || null ,
+      timeStamp: serverTimestamp() ,
+
     })
 
     updateDocument("cargoRequests", item.id, {
@@ -131,7 +139,7 @@ export const RequestedCargo = ({
 
     ToastAndroid.show(
       "Load accepted. It now appears under Assignments.",
-      ToastAndroid.LONG 
+      ToastAndroid.LONG
     );
 
     setShowModal(false);
@@ -190,7 +198,7 @@ export const RequestedCargo = ({
         load={item}
         initialPickupLocation={item.loadItemDetails?.originFull || item.origin}
         initialDeliveryLocation={item.loadItemDetails?.destinationFull || item.destination}
-        initialPickupDate={item.loadItemDetails?.pickupDate || null}
+        initialPickupDate={item.loadItemDetails?.loadingDate || null}
         initialDeliveryDate={item.loadItemDetails?.deliveryDate || null}
       />
 
@@ -308,11 +316,13 @@ export const RequestedCargo = ({
 
           {/* VIEW TRUCK */}
           <TouchableOpacity
-            onPress={() =>
-              router.push({
-                pathname: "/Logistics/Trucks/TruckDetails",
-              })
-            }
+
+
+
+            onPress={() => router.push({
+              pathname: "/Logistics/Trucks/TruckDetails",
+              params: { truckid: item.truckDetails.truckId, dspDetails: "false", fleetId: item.fleetDetails.id || undefined }
+            })}
             style={{
               flex: 1,
               flexDirection: 'row',
@@ -355,12 +365,16 @@ export const RequestedCargo = ({
 
           {/* VIEW LOAD */}
           <TouchableOpacity
-            onPress={() =>
+
+            onPress={() => {
               router.push({
                 pathname: "/Logistics/Loads/Index",
-                params: { itemId: item.loadId },
-              })
-            }
+                params: {
+                  cargoId: item.loadItemDetails.cargoId || item.loadItemDetails.loadId,
+                  cargoVisibilityG: 'PUBLIC'
+                },
+              });
+            }}
             style={{
               flex: 1,
               flexDirection: 'row',

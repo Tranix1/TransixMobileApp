@@ -73,8 +73,10 @@ const Index = () => {
             if ( currentRole?.accType === 'fleet' && truckVisibility === 'Private') {
                 collectionName = `fleets/${currentRole.fleetId}/Trucks` ;
             }else if (currentRole?.role === 'brokerage' && truckVisibility === 'Private') { 
-                collectionName = `brokers/${currentRole.brokerId}/trucks`;
+                collectionName = `brokerages/${currentRole.organizationId}/trucks`;
+
             }
+
 
             const maTrucks = await fetchDocuments(collectionName, 10, undefined, filters);
 
@@ -149,7 +151,6 @@ useEffect(() => {
 
     const loadMoreTrucks = async () => {
         if (loadingMore || !lastVisible) return;
-                console.log("START loading");
 
         let filters: any[] = [];
 

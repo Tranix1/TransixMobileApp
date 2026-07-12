@@ -156,7 +156,7 @@ function BookLCargo({ }) {
   let renderElements = bbVerifiedLoadD.map((item) => {
 
 
-
+console.log(item.organizationDetails)
 
 
 
@@ -240,7 +240,7 @@ function BookLCargo({ }) {
 
               },
 
-              fleetDetails : item?.fleetDetails ?? null,
+              fleetDetails :   item.organizationDetails??null,
               truckDetails: {
                 truckId: item.id,
                 truckType: item.truckType || null,
@@ -274,16 +274,17 @@ function BookLCargo({ }) {
                 organizationId: loadItem.organizationId,
                 shipper : loadItem.shipper ,                
                 organizationDetails : loadItem.organizationDetails ,
+                postedBy : loadItem.postedBy ?? null ,  
               },
               
-
-
               truckHasTracker: hasTracker,
               trackerStatus: trackerStatus,
               routePolyline: loadItem.routePolyline || null,
               bounds: loadItem.bounds || null,
               distance: loadItem.distance || null,
-              duration: loadItem.duration || null
+              duration: loadItem.duration || null ,
+              timeStamp: serverTimestamp() ,
+              
             }
             addDocument("cargoRequests", theData)
 

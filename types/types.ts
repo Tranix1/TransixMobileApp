@@ -168,7 +168,8 @@ export type Truck = {
         driverId: string
         driverName: string;
 
-    }
+    } ,
+    assignments : any
 } & TruckFormData;
 
 

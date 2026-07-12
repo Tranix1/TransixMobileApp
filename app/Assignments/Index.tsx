@@ -841,7 +841,7 @@ function Jobs() {
 
     const { currentRole, user } = useAuth();
     const accType = currentRole?.accType; // 'fleet' | 'brokerage'
-    const scopeId = accType === 'brokerage' ? currentRole?.brokerId : currentRole?.fleetId;
+    const scopeId = accType === 'brokerage' ? currentRole?.organizationId : currentRole?.fleetId;
 
     const [assignedCargo, setAssignedCargo] = useState<CargoItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -872,7 +872,11 @@ function Jobs() {
                 setLoading(true);
                 const path = getAssignmentsPath();
 
-                const snapshot = await getDocs(collection(db, path));
+
+
+                const q = query(collection(db, path), orderBy("timestamp", "desc"));
+
+                const snapshot = await getDocs(q);
                 const results = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
                 setAssignedCargo(results as any);
             } catch (error) {
@@ -1144,7 +1148,7 @@ function Jobs() {
                     </View>
 
 
-                 {  <View style={styles.imageContainer}>
+                    {<View style={styles.imageContainer}>
                         {(assignmentData.proofOfDelivery?.files || []).map(
                             (image: string, index: number) => (
                                 <View key={index} style={styles.imageWrapper}>
@@ -1564,17 +1568,18 @@ function Jobs() {
         <View style={[styles.container, { backgroundColor: background }]} >
 
             {/* <CustomHeader pageTitle="Jobs" filterElement={setFilterTypeModalVisible} /> */}
-            {currentRole.accType !== "driver" && <Heading page="My Assignments" rightComponent={<View>
-                <TouchableOpacity
-                    style={styles.filterButton}
-                    onPress={() => setFilterTypeModalVisible(true)}
-                >
-                    <Ionicons name="filter" size={16} color="white" />
-                    <ThemedText style={styles.filterButtonText}>Filter</ThemedText>
-                </TouchableOpacity>
-            </View>} />}
+            {(currentRole.accType !== "driver") &&
+                <View style={{ paddingTop: 30 }}> <Heading page="My Assignments" rightComponent={<View>
+                    <TouchableOpacity
+                        style={styles.filterButton}
+                        onPress={() => setFilterTypeModalVisible(true)}
+                    >
+                        <Ionicons name="filter" size={16} color="white" />
+                        <ThemedText style={styles.filterButtonText}>Filter</ThemedText>
+                    </TouchableOpacity>
+                </View>} /> </View>}
 
-            <CustomHeader pageTitle='Jobs' />
+            {currentRole.accType === "driver" && <CustomHeader pageTitle='Jobs' />}
 
             <View style={styles.content}>
 
