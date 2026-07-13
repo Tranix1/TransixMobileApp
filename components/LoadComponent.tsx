@@ -1,4 +1,4 @@
-import { StyleSheet, TouchableOpacity, View, TouchableHighlight, Linking, Modal } from 'react-native'
+import { StyleSheet, TouchableOpacity, View, TouchableHighlight, Linking, Modal,ToastAndroid } from 'react-native'
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { Load } from '@/types/types'
 import { wp } from '@/constants/common'
@@ -17,15 +17,19 @@ import { parseCoordinateString, isValidCoordinate, DEFAULT_COORDINATES } from '@
 import DocumentSelectionModal from './DocumentSelectionModal';
 import { TruckNeededType } from '@/types/types'
 import { useAuth } from '@/context/AuthContext'
+import { updateDocument } from '@/db/operations'
+import { serverTimestamp, Timestamp } from 'firebase/firestore'
+import { formatDate } from '@/services/services'
 
 interface DspAllLoadsProps {
   item: Load;
   expandID: string;
   expandId: (id: string) => void;
   ondetailsPress: () => void;
+  expireAvailableLoads: string
 }
 
-const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, ondetailsPress = () => { } }: DspAllLoadsProps) => {
+const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, ondetailsPress = () => { }, expireAvailableLoads }: DspAllLoadsProps) => {
   const backgroundLight = useThemeColor('backgroundLight')
   const background = useThemeColor('background')
   const coolGray = useThemeColor('coolGray')
@@ -35,7 +39,7 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
 
   const [expand, setExpand] = useState(false)
 
-const {currentRole}  = useAuth()
+  const { currentRole } = useAuth()
 
   const [dspProofImage, setDspProofImage] = useState(false);
   const [showProofSelectionModal, setShowProofSelectionModal] = useState(false);
@@ -149,19 +153,19 @@ const {currentRole}  = useAuth()
     }
   }, [expandID])
 
-const rateStatus = useMemo(() => {
-  const rate = Number(item.ratePerKm);
+  const rateStatus = useMemo(() => {
+    const rate = Number(item.ratePerKm);
 
-  if (!rate) return null;
+    if (!rate) return null;
 
-  if (rate >= 2 && rate < 2.5) return "Good Rate";
+    if (rate >= 2 && rate < 2.5) return "Good Rate";
 
-  if (rate >= 2.5 && rate < 3) return "Better Rate";
+    if (rate >= 2.5 && rate < 3) return "Better Rate";
 
-  if (rate >= 3) return "Premium Rate";
+    if (rate >= 3) return "Premium Rate";
 
-  return null;
-}, [item.ratePerKm]);
+    return null;
+  }, [item.ratePerKm]);
 
   return (
     <View>
@@ -201,19 +205,48 @@ const rateStatus = useMemo(() => {
             )}
             {item.duration && (
               <ThemedText type="tiny" style={styles.distanceInfo}>
-                Time: {item.duration}
+                Posted: {formatDate(item.created_at)}
               </ThemedText>
             )}
           </View>
 
           {/* Booking Button */}
-         {item.loadVisibility ==="Public"&&currentRole.accType==="fleet"  &&  <TouchableOpacity
+          {item.loadVisibility === "Public" && currentRole.accType === "fleet" && expireAvailableLoads === "ALL" && <TouchableOpacity
             style={[styles.bookingButton, { backgroundColor: accent }]}
             onPress={ondetailsPress}
             activeOpacity={0.8}
           >
             <Ionicons name="checkmark-circle" size={wp(3.5)} color="white" />
             <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(0.5), fontSize: wp(3.5) }}>Respond</ThemedText>
+          </TouchableOpacity>}
+
+          {item.loadVisibility === "Public" && expireAvailableLoads === "EXPIRED" && <TouchableOpacity
+            style={[styles.bookingButton, { backgroundColor: "#0f766e" }]}
+            onPress={async () => {
+              try {
+                await updateDocument("Cargo", item.id, {
+                  expiresAt: Timestamp.fromDate(
+                    new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
+                  ),
+                        timeStamp: serverTimestamp() ,
+                  
+                });
+
+                ToastAndroid.show(
+                  "Load renewed successfully",
+                  ToastAndroid.SHORT
+                );
+              } catch (error) {
+                ToastAndroid.show(
+                  "Failed to renew load",
+                  ToastAndroid.SHORT
+                );
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="refresh-circle" size={wp(3.5)} color="white" />
+            <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(0.5), fontSize: wp(3.5) }}>Renew</ThemedText>
           </TouchableOpacity>}
         </View>
 
@@ -293,75 +326,75 @@ const rateStatus = useMemo(() => {
           </View>
         </View>
 
-       <View style={{ backgroundColor: backgroundLight, padding: wp(2) }}>
+        <View style={{ backgroundColor: backgroundLight, padding: wp(2) }}>
 
-  <View style={styles.detailRow}>
-    <ThemedText type='default' style={{ flex: 2 }}>
-      Price {item.model}
-    </ThemedText>
+          <View style={styles.detailRow}>
+            <ThemedText type='default' style={{ flex: 2 }}>
+              Price {item.model}
+            </ThemedText>
 
-    <View style={{ flex: 2 }}>
-      <ThemedText 
-        type='subtitle' 
-        style={{
-          color: textColor,
-          fontSize: wp(4.5),
-          lineHeight: wp(5),
-        }}
-      >
-        {item.currency} {item.rate}
-      </ThemedText>
+            <View style={{ flex: 2 }}>
+              <ThemedText
+                type='subtitle'
+                style={{
+                  color: textColor,
+                  fontSize: wp(4.5),
+                  lineHeight: wp(5),
+                }}
+              >
+                {item.currency} {item.rate}
+              </ThemedText>
 
-      {item.ratePerKm && (
-        <View style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          marginTop: wp(0.5),
-          gap: wp(1)
-        }}>
-          <ThemedText 
-            type='tiny'
-            style={{ color: textColor }}
-          >
-           $ {Number(item.ratePerKm).toFixed(2)}/km
-          </ThemedText>
+              {item.ratePerKm && (
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginTop: wp(0.5),
+                  gap: wp(1)
+                }}>
+                  <ThemedText
+                    type='tiny'
+                    style={{ color: textColor }}
+                  >
+                    $ {Number(item.ratePerKm).toFixed(2)}/km
+                  </ThemedText>
 
-      {rateStatus && (
-        <ThemedText
-          type='tiny'
-          style={{ color: accent ,fontWeight:"bold" }}
-        >
-          ✓ {rateStatus}
-        </ThemedText>
-      )}
+                  {rateStatus && (
+                    <ThemedText
+                      type='tiny'
+                      style={{ color: accent, fontWeight: "bold" }}
+                    >
+                      ✓ {rateStatus}
+                    </ThemedText>
+                  )}
+                </View>
+              )}
+
+            </View>
+
+          </View>
+
+          {item.rateexplantion &&
+            <View style={styles.detailRow}>
+              <ThemedText type='default' style={{ flex: 2 }}>
+                Rate Explanation
+              </ThemedText>
+
+              <ThemedText
+                type='subtitle'
+                style={{
+                  color: textColor,
+                  fontSize: wp(4.5),
+                  lineHeight: wp(5),
+                  flex: 2
+                }}
+              >
+                {item.rateexplantion}
+              </ThemedText>
+            </View>
+          }
+
         </View>
-      )}
-
-    </View>
-
-  </View>
-
-  {item.rateexplantion && 
-    <View style={styles.detailRow}>
-      <ThemedText type='default' style={{ flex: 2 }}>
-        Rate Explanation
-      </ThemedText>
-
-      <ThemedText 
-        type='subtitle' 
-        style={{
-          color: textColor,
-          fontSize: wp(4.5),
-          lineHeight: wp(5),
-          flex: 2
-        }}
-      >
-        {item.rateexplantion}
-      </ThemedText>
-    </View>
-  }
-
-</View>
 
 
 

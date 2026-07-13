@@ -140,7 +140,7 @@ async function assignDefaultBrokeragesToTruck(
           }
         ).catch((e) => console.warn(`Failed to notify default brokerage ${brokerageId}`, e));
       } else {
-        console.warn(`⚠️ No expoPushToken found for default brokerage ${brokerageId}, skipping notification`);
+        alert(`⚠️ No expoPushToken found for default brokerage ${brokerageId}, skipping notification`);
       }
     });
 
@@ -151,6 +151,13 @@ async function assignDefaultBrokeragesToTruck(
     console.warn("Could not auto-assign default brokerages to new truck", e);
   }
 }
+
+
+
+
+
+
+
 
 function AddTrucks() {
 
@@ -429,15 +436,13 @@ function AddTrucks() {
         accType: currentRole?.accType || 'Individual', // owner, broker, driver, fleet
         timeStamp: serverTimestamp(),
 
-
-
       }
 
       await addDocumentWithId(`fleets/${currentRole.fleetId}/Trucks`, truckId, submitData);
 
       await addDocumentWithId("truckMarketplaceProfile", truckId, {
         truckId: truckId,
-        
+
 
         locations: operationCountries,
         truckType: selectedTruckType?.name,
@@ -449,13 +454,13 @@ function AddTrucks() {
           notificationsEnabled: fleetConfig?.notificationsEnabled,
           notifyRoles: fleetConfig?.truckDefaults.notification.roles,
           minRatePerKm: fleetConfig?.truckDefaults.notification.ratePerKm || null,
-          assignments : {
+          assignments: {
             dispatcher: {
-            id: user.uid,
-            name: user.displayName ,
-            expoPushToken: expoPushToken || user?.expoPushToken
-          }
-          } ,
+              id: user.uid,
+              name: user.displayName,
+              expoPushToken: expoPushToken || user?.expoPushToken
+            }
+          },
         },
         availabilityData: {
           status: "AVAILABLE",

@@ -69,7 +69,8 @@ export type CurrentRole =
         phone: string | null
         email: string | null
         billingAddress: string | null
-        baseAdress: string | null
+        baseAdress: string | null   
+        companyName : string 
     };
     
     

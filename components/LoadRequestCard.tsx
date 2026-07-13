@@ -125,7 +125,7 @@ export const RequestedCargo = ({
     })
 
     updateDocument("cargoRequests", item.id, {
-      status: "ACCEPTED",
+      requestStatus: "ACCEPTED",
       ownerDecision: "Accepted",
       acceptedAt: new Date(),
 
@@ -230,7 +230,7 @@ export const RequestedCargo = ({
         >
           {dspRoute === "Requested Loads"
             ? (item.fleetDetails?.name || item.companyName)
-            : item.companyName}
+            : item.companyName  }
         </ThemedText>
 
         {/* RIGHT CHEVRON */}
@@ -245,15 +245,15 @@ export const RequestedCargo = ({
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
           <ThemedText style={{ width: 100, color: accent, fontWeight: "bold" }}>Commodity</ThemedText>
-          <ThemedText style={{ flex: 1, flexWrap: 'wrap' }}>{item.productName} </ThemedText>
+          <ThemedText style={{ flex: 1, flexWrap: 'wrap' }}>{item.loadItemDetails.productName} </ThemedText>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
           <ThemedText style={{ width: 100, color: accent, fontWeight: "bold" }}>Rate {item.model} </ThemedText>
-          <ThemedText style={{ flex: 1, flexWrap: 'wrap' }}> {item.currency} {item.rate}  </ThemedText>
+          <ThemedText style={{ flex: 1, flexWrap: 'wrap' }}> {item.currency} {item.loadItemDetails.rate}  </ThemedText>
         </View>
         <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 10 }}>
           <ThemedText style={{ width: 100, color: accent, fontWeight: "bold" }}>Route</ThemedText>
-          <ThemedText style={{ flex: 1, flexWrap: 'wrap' }}>From {item.origin} To {item.destination} </ThemedText>
+          <ThemedText style={{ flex: 1, flexWrap: 'wrap' }}>From {item.loadItemDetails.origin} To {item.loadItemDetails.destination} </ThemedText>
         </View>
 
 
@@ -264,7 +264,7 @@ export const RequestedCargo = ({
           </ThemedText>
 
           <ThemedText style={{ flex: 1, flexWrap: 'wrap' }}>
-            {item.truckCapacity} • {item.truckDetails?.cargoArea} • Plate: {item.truckDetails?.numberPlate || "N/A"}
+            {item.truckDetails?.truckCapacity} • {item.truckDetails?.cargoArea} • Plate: {item.truckDetails?.numberPlate || "N/A"}
           </ThemedText>
         </View>
 

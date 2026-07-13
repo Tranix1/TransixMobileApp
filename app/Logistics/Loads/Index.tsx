@@ -17,7 +17,7 @@ import { Timestamp } from 'firebase/firestore';
 
 const Index = () => {
 
-    const { user ,currentRole} = useAuth();
+    const { user, currentRole } = useAuth();
 
     const { userId, cargoId, cargoVisibilityG } = useLocalSearchParams();
 
@@ -41,8 +41,8 @@ const Index = () => {
     const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
     const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public'>('Private');
     // const [currentRole, setCurrentRole] = useState<any>(null);
+    const [expireAvailableLoads, setExpiredAvailableLods] = React.useState<"ALL" | "AVAILABLE" | "EXPIRED">("ALL")
 
-   
 
     const LoadTructs = async () => {
         try {
@@ -56,6 +56,7 @@ const Index = () => {
             // =============================
             // CARGO ID MODE (EXACT LOAD)
             // =============================
+
             if (cargoId) {
 
                 if (cargoVisibilityG === 'PUBLIC') {
@@ -72,7 +73,7 @@ const Index = () => {
                         where("cargoId", "==", cargoId),
                     ];
                     // Private cargo belongs to owner
-                    if (currentRole?.accType === "fleet" || currentRole.accType ==="driver" ) {
+                    if (currentRole?.accType === "fleet" || currentRole.accType === "driver") {
                         collectionName = `fleets/${currentRole.fleetId}/Cargo`;
 
                     } else if (currentRole?.accType === "brokerage") {
@@ -103,12 +104,31 @@ const Index = () => {
                 } else {
 
                     collectionName = "Cargo";
+                    if (expireAvailableLoads === "ALL") {
 
-                    filters = [
-                        where("approvalStatus", "==", "approved"),
-                        where("state", "==", "available"),
-                        where("expiresAt", ">", Timestamp.now()),
-                    ];
+                        filters = [
+                            where("approvalStatus", "==", "approved"),
+                            where("state", "==", "available"),
+                            where("expiresAt", ">", Timestamp.now()),
+                        ];
+                    } else if (expireAvailableLoads === "AVAILABLE") {
+
+                        filters = [
+                            where("approvalStatus", "==", "approved"),
+                            where("state", "==", "available"),
+                            where("expiresAt", ">", Timestamp.now()),
+                            where("organizationId", "==", currentRole.organizationId),
+                        ];
+                    } else if (expireAvailableLoads === "EXPIRED") {
+
+                        filters = [
+                            where("approvalStatus", "==", "approved"),
+                            where("state", "==", "available"),
+                            where("expiresAt", "<=", Timestamp.now()),
+                            where("organizationId", "==", currentRole.organizationId),
+                        ];
+                    }
+
                 }
             }
 
@@ -148,7 +168,7 @@ const Index = () => {
     }
     useEffect(() => {
         LoadTructs();
-    }, [loadVisibility, currentRole])
+    }, [loadVisibility, currentRole, expireAvailableLoads])
 
     const onRefresh = async () => {
         try {
@@ -244,16 +264,19 @@ const Index = () => {
                     error={error}
                     visibilitySelector={
                         !cargoVisibilityG ?
-                        <HorizontalTickComponent
-                            data={[
-                                { topic: "Private", value: "Private" },
-                                { topic: "Public", value: "Public" },
-                                { topic: "Network", value: "Network" },
-                            ]}
-                            condition={loadVisibility}
-                            onSelect={setLoadVisibility}
-                        /> : null
+                            <HorizontalTickComponent
+                                data={[
+                                    { topic: "Private", value: "Private" },
+                                    { topic: "Public", value: "Public" },
+                                    { topic: "Network", value: "Network" },
+                                ]}
+                                condition={loadVisibility}
+                                onSelect={setLoadVisibility}
+
+                            /> : null
                     }
+                    setExpiredAvailableLods={setExpiredAvailableLods}
+                    expireAvailableLoads={expireAvailableLoads}
                     loadVisibility={loadVisibility}
                     cargoVisibilityG={`${cargoVisibilityG}`}
                 />

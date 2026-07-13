@@ -49,6 +49,8 @@ interface LoadsComponentProps {
     visibilitySelector?: React.ReactNode;
     loadVisibility: string
     cargoVisibilityG: string
+    setExpiredAvailableLods: React.Dispatch<React.SetStateAction<"ALL" | "AVAILABLE" | "EXPIRED">>
+    expireAvailableLoads: string
 }
 
 
@@ -77,6 +79,8 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     visibilitySelector,
     loadVisibility,
     cargoVisibilityG,
+    setExpiredAvailableLods,
+    expireAvailableLoads,
 }) => {
     // Component implementation
     const { user } = useAuth();
@@ -85,7 +89,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     const coolGray = useThemeColor('coolGray')
     const icon = useThemeColor('icon')
     const background = useThemeColor('background')
-    const backgroundLight = useThemeColor('background')
+    const backgroundLight = useThemeColor('backgroundLight')
     const textColor = useThemeColor('text')
 
 
@@ -175,6 +179,7 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
         ToastAndroid.show('Link copied to clipboard', ToastAndroid.SHORT);
     };
     let whenIdHeaderName = `${cargoVisibilityG} Loads`
+
     return (
 
         <View style={[styles.container, { backgroundColor: background, flex: 1 }]}>
@@ -196,14 +201,74 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                 keyExtractor={(item) => item.id.toString()}
                 contentContainerStyle={{}}
                 data={Loads}
+
+
+
+
+                ListHeaderComponent={
+                    <>
+                        {loadVisibility === "Public" && (
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    backgroundColor: backgroundLight,
+                                    borderRadius: 999,
+                                    padding: 3,
+                                }}
+                            >
+                                {[
+                                    { key: "ALL", label: "All", color: accent },
+                                    { key: "AVAILABLE", label: "Available", color: accent },
+                                    { key: "EXPIRED", label: "Expired", color: "#ef4444" },
+                                ].map((item) => (
+                                    <TouchableOpacity
+                                        key={item.key}
+                                        activeOpacity={0.8}
+                                        onPress={() => setExpiredAvailableLods(item.key as any)}
+                                        style={{
+                                            flex: 1,
+                                            paddingVertical: 8,
+                                            borderRadius: 999,
+                                            backgroundColor:
+                                                expireAvailableLoads === item.key
+                                                    ? item.color
+                                                    : "transparent",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <ThemedText
+                                            type="tiny"
+                                            style={{
+                                                fontWeight: "600",
+                                                color:
+                                                    expireAvailableLoads === item.key
+                                                        ? "#fff"
+                                                        : item.color,
+                                            }}
+                                        >
+                                            {item.label}
+                                        </ThemedText>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
+                    </>
+                }
+
+
                 renderItem={({ item }) => (
-                    <LoadComponent item={item} expandID={expandId} expandId={(s) => setExpandID(s)} ondetailsPress={() => {
-                        setSelectedLoad(item);
-                        setShowSheet(true);
-                        setTimeout(() => {
-                            bottomSheetRef.current?.expand();
-                        }, 10);
-                    }} />
+                        <LoadComponent item={item} expandID={expandId} expandId={(s) => setExpandID(s)} ondetailsPress={() => {
+                            setSelectedLoad(item);
+                            setShowSheet(true);
+                            setTimeout(() => {
+                                bottomSheetRef.current?.expand();
+                            }, 10);
+                        }} 
+                              expireAvailableLoads={expireAvailableLoads}
+
+                        
+                        />
                 )}
                 refreshControl={
                     <RefreshControl

@@ -70,7 +70,10 @@ function BookingsandBiddings({ }) {
     let filters: any[] = [];
 
     if (requestType) {
-      filters.push(where("status", "==", requestType));
+      filters.push(where("status", "==", requestType) , 
+      where("requestStatus", "==", "PENDING")
+      
+    );
     }
 
     if (dspRoute === "Requested by Carriers") {
@@ -95,10 +98,8 @@ function BookingsandBiddings({ }) {
     const result = await fetchDocuments('cargoRequests', 10, lastVisible, filters );
 
     if (result) {
-      console.log('📊 Fetched documents:', result.data.length);
       if (filters.length > 0 && result.data.length === 0) {
         setFilteredPNotAavaialble(true);
-        console.log('❌ No documents found with current filters');
       } else {
         setFilteredPNotAavaialble(false);
       }
@@ -148,7 +149,9 @@ function BookingsandBiddings({ }) {
 
     if (dspRoute === "Requested by Carriers") {
       // Show loads where current user is the truck owner (carrier)
-      filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
+      filters.push( 
+        where("truckOwnerId", "==", auth.currentUser?.uid) , 
+      );
     } else if (dspRoute === "Requested Loads") {
       // Show loads where current user is the truck owner (truck owner requests)
       filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));

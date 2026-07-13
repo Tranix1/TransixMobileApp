@@ -1,9 +1,12 @@
 import { collection, doc, serverTimestamp, setDoc, Timestamp, writeBatch } from 'firebase/firestore';
+import { ToastAndroid, Alert, Platform } from "react-native";
 
 import { db } from '@/db/fireBaseConfig';
 import { addDocumentWithId } from '@/db/operations';
 import { notifyTrucksByFilters } from '@/Utilities/notifyTruckByFilters';
 import { Customer } from '@/components/CustomerPicker';
+import { sendPushNotification } from '@/Utilities/pushNotification';
+
 
 export type LoadVisibility = 'Private' | 'Public' | 'Both';
 
@@ -135,7 +138,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       profilePhoto: assignment.profilePhoto || driver?.profilePhoto || null,
       email: driver?.email || null,
       role: isDefaultDriver ? 'main' : assignment.role || 'assigned',
-      isDefault: isDefaultDriver
+      isDefault: isDefaultDriver,
+      expoPushToken: driver?.expoPushToken || null,
     };
 
     const loadDetails = {
@@ -164,8 +168,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       coordinator,
       createdAt: Date.now().toString(),
       shipper: selectedCustomer,
-      timeStamp: serverTimestamp() ,
-      };
+      timeStamp: serverTimestamp(),
+    };
   });
 
 
@@ -239,14 +243,14 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     shipper: selectedCustomer,
     isTrackingEnabled: isTrackingEnabled,
     ratePerKm: ratePerKm || null,
-     postedBy:{
-      accType : currentRole.accType ,
-      userRole : currentRole.userRole ,
-      usserId : user.uid ,
-      userName : user.user.displayName  ,
-    
-      organizationId : currentRole.organizationId 
-     }
+    postedBy: {
+      accType: currentRole.accType,
+      userRole: currentRole.userRole,
+      usserId: user.uid,
+      userName: user.displayName,
+
+      organizationId: currentRole.organizationId
+    }
   };
 
   const writeFleetPrivateLoad = async () => {
@@ -270,6 +274,48 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       const assignmentDocId = `${cargoId}_${assignment.truckId}_${assignment.driverId}`;
       await addDocumentWithId(`fleets/${fleetId}/assignments`, assignmentDocId, assignment);
     }
+
+
+    for (const assignment of assignmentDetails) {
+
+      if (assignment.driverDetails?.expoPushToken) {
+
+        try {
+          await sendPushNotification(
+            assignment.driverDetails.expoPushToken,
+            "New Load Assignment 🚛",
+            `You have been assigned a load from ${assignment.loadDetails.origin.description} to ${assignment.loadDetails.destination.description}`,
+            {
+              pathname: "/Driver/AssignmentDetails",
+              params: {
+                cargoId,
+                assignmentId: `${cargoId}_${assignment.truckId}_${assignment.driverId}`,
+              }
+            }
+          );
+
+        } catch (error) {
+          Alert.alert(
+            "Notification Failed",
+            `Load was assigned to ${assignment.driverDetails.driverName}, but notification failed.`
+          );
+
+          console.log(
+            "Driver notification error:",
+            error
+          );
+        }
+
+      }
+    }
+
+    if (Platform.OS === "android") {
+      ToastAndroid.show(
+        "Private load assigned successfully 🚛",
+        ToastAndroid.SHORT
+      );
+    }
+
 
     for (const selectedBrokerId of selectedBrokers) {
       await addDocumentWithId(`brokerages/${selectedBrokerId}/cargo`, `${cargoId}_${selectedBrokerId}`, {
@@ -305,6 +351,11 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     });
   };
 
+
+
+
+
+
   const writeBrokerPrivateLoad = async () => {
     await setDoc(doc(db, `brokerages/${brokerId}/Cargo`, cargoId), {
       ...commonLoadData,
@@ -331,17 +382,17 @@ export const submitLoad = async (params: SubmitLoadParams) => {
         brokerTruckSummary,
       };
 
-        const loadDetails = {
-      ...baseLoadDetails,
-            pickupDate: loadingDate || null,
-      deliveryDate:  deliveryDate || null,
-      pickupLocation:  origin || null,
-      deliveryLocation:  destination || null,
-      
-    };
+      const loadDetails = {
+        ...baseLoadDetails,
+        pickupDate: loadingDate || null,
+        deliveryDate: deliveryDate || null,
+        pickupLocation: origin || null,
+        deliveryLocation: destination || null,
+
+      };
 
 
-    
+
 
       const assignment = {
         cargoId,
@@ -350,7 +401,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
         truckId: truck.id || null,
         driverId: null,
         visibility: visibilityTag,
-        loadDetails : loadDetails ,
+        loadDetails: loadDetails,
         source: "Broker",
         // The truck's own owning fleet/org (not necessarily the poster of the load — relevant
         // when a broker assigns a truck that belongs to a different fleet).
@@ -365,6 +416,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
             organizationId: truck.fleetId || null,
             name: truck.assignments.dispatcher.name || '',
             phoneNumber: truck.assignments.dispatcher.phoneNumber || '',
+            expoPushToken: truck.assignments.dispatcher.expoPushToken || null,
           }
           : null,
         brokerageCoordinator: coordinator
@@ -384,8 +436,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       batch.set(brokerageAssignmentRef, {
         ...assignment,
         shipper: selectedCustomer,
-              timeStamp: serverTimestamp() ,
-        
+        timeStamp: serverTimestamp(),
+
       });
 
       const fleetAssignmentRef = doc(
@@ -403,14 +455,59 @@ export const submitLoad = async (params: SubmitLoadParams) => {
           billingAddress: currentRole.location.description,
           createdBy: user?.uid,
         },
-              timeStamp: serverTimestamp() ,
-        
+        timeStamp: serverTimestamp(),
+
       });
 
       await batch.commit();
 
+
+
+const dispatcherToken =
+  truck.assignments?.dispatcher?.expoPushToken;
+
+
+if (dispatcherToken) {
+  try {
+    await sendPushNotification(
+      dispatcherToken,
+      "New Load Assigned 🚛",
+      `${truck.truckName} has been assigned a new load from ${origin.description} to ${destination.description}`,
+      {
+        pathname: "/Dispatcher/AssignmentDetails",
+        params: {
+          cargoId,
+          truckId: truck.id,
+        },
+      },
+      {
+        type: "private_load_assigned",
+        cargoId,
+        truckId: truck.id,
+      }
+    );
+
+  } catch (error) {
+    Alert.alert(
+      "Notification Failed",
+      "Load assigned but dispatcher notification failed."
+    );
+
+    console.log(
+      "Dispatcher notification error:",
+      error
+    );
+  }
+}
+
     }
   };
+
+
+
+
+
+
 
 
 

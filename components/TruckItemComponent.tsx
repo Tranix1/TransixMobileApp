@@ -16,9 +16,7 @@ const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contrac
     const icon = useThemeColor('icon')
     const textColor = useThemeColor('text')
     const accent = useThemeColor('accent')
-
     const placeholder = require('@/assets/images/failedimage.jpg')
-console.log(truck.imageUrl, "truck.imageUrl")
     return (
         <TouchableOpacity onPress={() => router.push({ pathname: "/Logistics/Trucks/TruckDetails", params: { truckid: truck.id, dspDetails: "false", fleetId: truck.fleetId || undefined } })} style={[styles.container, { backgroundColor: background, borderColor: backgroundLight }]}>
             <Image placeholderContentFit='cover' transition={400} contentFit='cover' placeholder={placeholder} source={{ uri: truck.imageUrl }} style={styles.image} />

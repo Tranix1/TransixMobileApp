@@ -10,6 +10,7 @@ import {
     Platform,
     Switch,
     Alert,
+    ToastAndroid
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -53,8 +54,8 @@ interface TruckRouteParams {
     numberPlate?: string;
     fleetId?: string;
     fleetName?: string;
-    imageUrl ?: string 
-    truckAssigments ?: any
+    imageUrl?: string
+    truckAssigments?: any
 }
 
 type Mode = 'other' | 'default';
@@ -97,7 +98,7 @@ async function fetchTruckAssignedBrokerageId(fleetId: string, truckId: string): 
     if (!fleetId || !truckId) return null;
     try {
         const q = query(
-            collection(db, 'fleets', fleetId, 'trucks', truckId, 'brokerages'),
+            collection(db, 'fleets', fleetId, 'Trucks', truckId, 'brokerages'),
             where('status', '==', 'active')
         );
         const snapshot = await getDocs(q);
@@ -110,34 +111,108 @@ async function fetchTruckAssignedBrokerageId(fleetId: string, truckId: string): 
 }
 
 /** Mark a brokerage as an active default for a fleet (writes both mirrors). */
+
 async function setBrokerageDefaultForFleet(
     brokerageId: string,
     brokerageName: string,
     fleetId: string,
-    fleetName: string
+    fleetName: string,
+    brokerToken?: string
 ): Promise<void> {
-    const batch = writeBatch(db);
-    const addedAt = new Date().toISOString();
 
-    const brokerageFleetRef = doc(db, 'brokerages', brokerageId, 'fleets', fleetId);
-    batch.set(brokerageFleetRef, {
-        fleetId,
-        fleetName,
-        status: 'active',
-        addedAt,
-    });
+    try {
+        const batch = writeBatch(db);
+        const addedAt = new Date().toISOString();
 
-    const fleetDefaultRef = doc(db, 'fleets', fleetId, 'defaultBrokerages', brokerageId);
-    batch.set(fleetDefaultRef, {
-        brokerageId,
-        brokerageName,
-        status: 'active',
-        addedAt,
-    });
+        const brokerageFleetRef = doc(
+            db,
+            "brokerages",
+            brokerageId,
+            "fleets",
+            fleetId
+        );
 
-    await batch.commit();
+        batch.set(brokerageFleetRef, {
+            fleetId,
+            fleetName,
+            status: "active",
+            addedAt,
+        });
+
+
+        const fleetDefaultRef = doc(
+            db,
+            "fleets",
+            fleetId,
+            "defaultBrokerages",
+            brokerageId
+        );
+
+        batch.set(fleetDefaultRef, {
+            brokerageId,
+            brokerageName,
+            status: "active",
+            addedAt,
+        });
+
+
+        await batch.commit();
+
+
+        ToastAndroid.show(
+            "Brokerage added successfully",
+            ToastAndroid.SHORT
+        );
+
+
+        if (brokerToken) {
+            try {
+
+                await sendUserNotification(
+                    brokerToken,
+                    "Default Partnership Added 🚛",
+                    `${fleetName} added your brokerage as a default partner`,
+                    {
+                        pathname: "/Brokerage/Fleets",
+                        params: {
+                            fleetId,
+                        },
+                    },
+                    {
+                        type: "default_brokerage_added",
+                        fleetId,
+                        brokerageId,
+                    }
+                );
+
+            } catch (error) {
+
+                Alert.alert(
+                    "Notification Failed",
+                    "Brokerage was added but notification could not be sent."
+                );
+
+            }
+
+        } else {
+
+            console.warn(
+                "No brokerage push token found"
+            );
+
+        }
+
+
+    } catch (error) {
+
+        ToastAndroid.show(
+            "Failed to add brokerage",
+            ToastAndroid.SHORT
+        );
+
+        throw error;
+    }
 }
-
 /**
  * Soft-remove a brokerage's default status for a fleet in both mirrors.
  * Docs are kept, never deleted, and stamped with a reason + removedAt.
@@ -147,18 +222,104 @@ async function removeBrokerageDefaultForFleet(
     brokerageName: string,
     fleetId: string,
     fleetName: string,
-    reason: string
+    reason: string,
+    brokerToken?: string
 ): Promise<void> {
-    const batch = writeBatch(db);
-    const removedAt = new Date().toISOString();
 
-    const brokerageFleetRef = doc(db, 'brokerages', brokerageId, 'fleets', fleetId);
-    batch.set(brokerageFleetRef, { fleetId, fleetName, status: 'removed', reason, removedAt }, { merge: true });
+    try {
+        const batch = writeBatch(db);
+        const removedAt = new Date().toISOString();
 
-    const fleetDefaultRef = doc(db, 'fleets', fleetId, 'defaultBrokerages', brokerageId);
-    batch.set(fleetDefaultRef, { brokerageId, brokerageName, status: 'removed', reason, removedAt }, { merge: true });
+        const brokerageFleetRef = doc(
+            db,
+            "brokerages",
+            brokerageId,
+            "fleets",
+            fleetId
+        );
 
-    await batch.commit();
+        batch.set(
+            brokerageFleetRef,
+            {
+                fleetId,
+                fleetName,
+                status: "removed",
+                reason,
+                removedAt
+            },
+            { merge: true }
+        );
+
+
+        const fleetDefaultRef = doc(
+            db,
+            "fleets",
+            fleetId,
+            "defaultBrokerages",
+            brokerageId
+        );
+
+        batch.set(
+            fleetDefaultRef,
+            {
+                brokerageId,
+                brokerageName,
+                status: "removed",
+                reason,
+                removedAt
+            },
+            { merge: true }
+        );
+
+
+        await batch.commit();
+
+
+        ToastAndroid.show(
+            "Brokerage removed from defaults",
+            ToastAndroid.SHORT
+        );
+
+
+        if (brokerToken) {
+            try {
+                await sendUserNotification(
+                    brokerToken,
+                    "Default Partnership Removed",
+                    `${fleetName} removed your brokerage as a default partner`,
+                    {
+                        pathname: "/Brokerage/Fleets",
+                    },
+                    {
+                        type: "default_brokerage_removed",
+                        fleetId,
+                        brokerageId,
+                    }
+                );
+
+            } catch (error) {
+                Alert.alert(
+                    "Notification Failed",
+                    "Brokerage was removed but notification could not be sent."
+                );
+            }
+
+        } else {
+            console.warn(
+                "No brokerage push token found"
+            );
+        }
+
+
+    } catch (error) {
+
+        ToastAndroid.show(
+            "Failed to remove brokerage",
+            ToastAndroid.SHORT
+        );
+
+        throw error;
+    }
 }
 
 /** Assign a (non-default) brokerage directly to a truck. */
@@ -174,15 +335,16 @@ async function assignTruckBrokerage(
     cargoArea: string,
     capacity: string,
     numberPlate: string,
-    operatingLocations: string[] ,
-    imageUrl : string ,
-    truckAssigments : any ,
+    operatingLocations: string[],
+    imageUrl: string,
+    truckAssigments: any,
 ): Promise<void> {
     const batch = writeBatch(db);
     const assignedAt = new Date().toISOString();
-
+ 
+    
     // fleets/{fleetId}/trucks/{truckId}/brokerages/{brokerageId}
-    const truckAssignmentRef = doc(db, 'fleets', fleetId, 'trucks', truckId, 'brokerages', brokerageId);
+    const truckAssignmentRef = doc(db, 'fleets', fleetId, 'Trucks', truckId, 'brokerages', brokerageId);
     batch.set(truckAssignmentRef, {
         brokerageId,
         brokerageName,
@@ -193,7 +355,7 @@ async function assignTruckBrokerage(
     });
 
     // brokerages/{brokerageId}/trucks/{truckId}
-    const brokerageTruckRef = doc(db, 'brokerages', brokerageId, 'trucks', truckId);
+    const brokerageTruckRef = doc(db, 'brokerages', brokerageId, 'Trucks', truckId);
     batch.set(brokerageTruckRef, {
         brokerageId,
         brokerageName,
@@ -205,16 +367,23 @@ async function assignTruckBrokerage(
         cargoArea,
         truckCapacity: capacity,
         numberPlate,
-        operatingLocations,
+       locations:  operatingLocations,
         status: 'active',
         assignedAt,
-        timeStamp:serverTimestamp() ,   
-        imageUrl  ,
-        accType : "Broker"  ,   
-        assignments  : truckAssigments 
+        timeStamp: serverTimestamp(),
+        imageUrl: imageUrl.replace("/o/Trucks/", "/o/Trucks%2F"),
+        accType: "Broker",
+        assignments: truckAssigments ,
+        approvalStatus :'approved' ,
     });
 
     await batch.commit();
+
+    ToastAndroid.show(
+        "Truck assigned successfully 🚛",
+        ToastAndroid.SHORT
+    );
+
 
     if (brokerToken) {
         await sendUserNotification(
@@ -244,18 +413,95 @@ async function unassignTruckBrokerage(
     fleetId: string,
     truckId: string,
     brokerageId: string,
-    reason: string
+    reason: string,
+    truckName: string,
+    brokerToken?: string
 ): Promise<void> {
-    const batch = writeBatch(db);
-    const removedAt = new Date().toISOString();
+    try {
+        const batch = writeBatch(db);
+        const removedAt = new Date().toISOString();
 
-    const truckAssignmentRef = doc(db, 'fleets', fleetId, 'trucks', truckId, 'brokerages', brokerageId);
-    batch.set(truckAssignmentRef, { status: 'removed', reason, removedAt }, { merge: true });
+        const truckAssignmentRef = doc(
+            db,
+            "fleets",
+            fleetId,
+            "Trucks",
+            truckId,
+            "brokerages",
+            brokerageId
+        );
 
-    const brokerageTruckRef = doc(db, 'brokerages', brokerageId, 'trucks', truckId);
-    batch.set(brokerageTruckRef, { status: 'removed', reason, removedAt }, { merge: true });
+        batch.set(
+            truckAssignmentRef,
+            {
+                status: "removed",
+                reason,
+                removedAt,
+            },
+            { merge: true }
+        );
 
-    await batch.commit();
+
+        const brokerageTruckRef = doc(
+            db,
+            "brokerages",
+            brokerageId,
+            "Trucks",
+            truckId
+        );
+
+        batch.set(
+            brokerageTruckRef,
+            {
+                status: "removed",
+                reason,
+                removedAt,
+            },
+            { merge: true }
+        );
+
+
+        await batch.commit();
+
+
+        ToastAndroid.show(
+            "Truck access removed",
+            ToastAndroid.SHORT
+        );
+
+
+        if (brokerToken) {
+            try {
+                await sendUserNotification(
+                    brokerToken,
+                    "Truck Access Removed 🚛",
+                    `${truckName} is no longer available in your brokerage`,
+                    {
+                        pathname: "/Brokerage/Trucks",
+                    },
+                    {
+                        type: "truck_access_removed",
+                        truckId,
+                        brokerageId,
+                    }
+                );
+
+            } catch (error) {
+                Alert.alert(
+                    "Notification Failed",
+                    "Access was removed but the brokerage was not notified."
+                );
+            }
+        }
+
+    } catch (error) {
+        ToastAndroid.show(
+            "Failed to remove truck access",
+            ToastAndroid.SHORT
+        );
+
+        throw error;
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -575,8 +821,11 @@ const AssignBrokerageScreen: React.FC = () => {
     const capacity = params.capacity ?? '';
     const numberPlate = params.numberPlate ?? '';
     const operatingLocations = parseLocations(params.operaatingLocations);
-    const imageUrl  =  params.imageUrl  || "" 
+    const imageUrl = params.imageUrl || ""
     const truckAssigments = params.truckAssigments || {}
+
+
+   
 
     const background = useThemeColor('background');
     const backgroundLight = useThemeColor('backgroundLight');
@@ -679,7 +928,8 @@ const AssignBrokerageScreen: React.FC = () => {
                                     brokerage.name,
                                     fleetId,
                                     fleetName,
-                                    'Manually removed by fleet manager'
+                                    'Manually removed by fleet manager',
+                                    selectedOtherBrokerage?.expoPushToken
                                 );
                             } catch (e) {
                                 setDefaultBrokerageIds(previous);
@@ -696,7 +946,7 @@ const AssignBrokerageScreen: React.FC = () => {
         const nextIds = new Set(previous);
         nextIds.add(brokerage.id);
         setDefaultBrokerageIds(nextIds);
-        setBrokerageDefaultForFleet(brokerage.id, brokerage.name, fleetId, fleetName).catch(() => {
+        setBrokerageDefaultForFleet(brokerage.id, brokerage.name, fleetId, fleetName ,selectedOtherBrokerage?.expoPushToken).catch(() => {
             setDefaultBrokerageIds(previous);
             Alert.alert('Error', 'Could not set default brokerage. Please try again.');
         });
@@ -705,6 +955,7 @@ const AssignBrokerageScreen: React.FC = () => {
     // ---- Truck ("other") assignment --------------------------------------
 
     const handleSaveOther = async () => {
+
         if (!hasUnsavedOtherChange) {
             router.back();
             return;
@@ -717,7 +968,15 @@ const AssignBrokerageScreen: React.FC = () => {
                 const reason = selectedOtherId
                     ? 'Reassigned to a different brokerage'
                     : 'Removed from truck by fleet manager';
-                await unassignTruckBrokerage(fleetId, truckId, assignedOtherId, reason);
+
+                await unassignTruckBrokerage(
+                    fleetId,
+                    truckId,
+                    assignedOtherId,
+                    reason,
+                    truckName,
+                    selectedOtherBrokerage?.expoPushToken
+                );
             }
 
             if (selectedOtherBrokerage) {
@@ -733,9 +992,9 @@ const AssignBrokerageScreen: React.FC = () => {
                     cargoArea,
                     capacity,
                     numberPlate,
-                    operatingLocations ,
-                    imageUrl  ,
-                    truckAssigments ,
+                    operatingLocations,
+                    imageUrl,
+                    truckAssigments,
                 );
             }
 
@@ -877,8 +1136,8 @@ const AssignBrokerageScreen: React.FC = () => {
                                     {selectedOtherBrokerage
                                         ? `Assign ${selectedOtherBrokerage.name}`
                                         : assignedOtherId
-                                        ? 'Remove Assignment'
-                                        : 'Assign Brokerage'}
+                                            ? 'Remove Assignment'
+                                            : 'Assign Brokerage'}
                                 </ThemedText>
                             )}
                         </TouchableOpacity>
@@ -1135,4 +1394,3 @@ const styles = StyleSheet.create({
 });
 
 export default AssignBrokerageScreen;
-    

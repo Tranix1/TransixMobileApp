@@ -18,7 +18,7 @@ import { wp, hp } from "@/constants/common";
 import Heading from "@/components/Heading";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { formatCurrency } from '@/services/services'
-  import { usePushNotifications, sendPushNotification, sendBookingWithTrackerNotification } from "@/Utilities/pushNotification";
+import { usePushNotifications, sendPushNotification, sendBookingWithTrackerNotification } from "@/Utilities/pushNotification";
 import { useAuth } from "@/context/AuthContext";
 
 function BookLCargo({ }) {
@@ -156,7 +156,7 @@ function BookLCargo({ }) {
   let renderElements = bbVerifiedLoadD.map((item) => {
 
 
-console.log(item.organizationDetails)
+    console.log(item.organizationDetails)
 
 
 
@@ -188,29 +188,14 @@ console.log(item.organizationDetails)
 
           if (!existingBBDoc) {
             const theData = {
-              truckId: item.id,
-              truckCapacity: item.truckCapacity,
-              truckType: item.truckType,
-              cargoArea: item.cargoArea,
-              locations: item.locations || [],
-              trackingDeviceId: (item as any).trackingDeviceId || null,
-              driverId: selectedDriver.id,
-              driverName: selectedDriver.fullName || null,
-              driverPhoneNumber: selectedDriver.phoneNumber || null,
+              requestStatus: "PENDING",
               created_at: Date.now().toString(),
               requestId: `${userId}${loadItem.id}${item.timeStamp}`,
               cargoId: loadItem.id,
               companyName: loadItem.companyName,
               onwerId: loadItem.userId,
               productName: loadItem.typeofLoad,
-              origin: loadItem.origin,
-              destination: loadItem.destination,
-              originCoordinates: loadItem.originCoordinates || null,
-              destinationCoordinates: loadItem.destinationCoordinates || null,
               // CHANGED: use the typed bid amount when bidding, otherwise the posted rate
-              rate: OperationType === "Bid" ? Number(bidAmount) : loadItem.rate,
-              currency: loadItem.currency,
-              model: loadItem.model,
               ownerDecision: "Pending",
               // CHANGED: status now driven by OperationType, not a bidRate param
               status: OperationType === "Bid" ? "Bidded" : "Booked",
@@ -240,7 +225,7 @@ console.log(item.organizationDetails)
 
               },
 
-              fleetDetails :   item.organizationDetails??null,
+              fleetDetails: item.organizationDetails ?? null,
               truckDetails: {
                 truckId: item.id,
                 truckType: item.truckType || null,
@@ -248,13 +233,17 @@ console.log(item.organizationDetails)
                 cargoArea: item.cargoArea || null,
                 locations: item.locations || [],
                 trackingDeviceId: (item as any).trackingDeviceId || null,
+                trackerStatus: trackerStatus,
+                truckHasTracker: hasTracker,
+
                 numberPlate: item.numberPlate || null,
-                truckName : item.truckName ,
+                truckName: item.truckName,
+
               },
 
               loadItemDetails: {
                 loadId: loadItem.id,
-                contact : loadItem.contact||null ,
+                contact: loadItem.contact || null,
                 companyName: loadItem.companyName || null,
                 productName: loadItem.typeofLoad || null,
                 origin: loadItem.origin || null,
@@ -266,25 +255,24 @@ console.log(item.organizationDetails)
                 rate: OperationType === "Bid" ? Number(bidAmount) : loadItem.rate,
                 currency: loadItem.currency || null,
                 model: loadItem.model || null,
-                paymentTerms : loadItem.paymentTerms||null ,
+                paymentTerms: loadItem.paymentTerms || null,
                 loadingDate: loadItem.loadingDate || null,
                 deliveryDate: loadItem.deliveryDate || null,
                 accType: loadItem.accType,
                 userRole: loadItem.userRole,
                 organizationId: loadItem.organizationId,
-                shipper : loadItem.shipper ,                
-                organizationDetails : loadItem.organizationDetails ,
-                postedBy : loadItem.postedBy ?? null ,  
+                shipper: loadItem.shipper,
+                organizationDetails: loadItem.organizationDetails,
+                postedBy: loadItem.postedBy ?? null,
+                routePolyline: loadItem.routePolyline || null,
+                bounds: loadItem.bounds || null,
+                distance: loadItem.distance || null,
+                duration: loadItem.duration || null,
               },
-              
-              truckHasTracker: hasTracker,
-              trackerStatus: trackerStatus,
-              routePolyline: loadItem.routePolyline || null,
-              bounds: loadItem.bounds || null,
-              distance: loadItem.distance || null,
-              duration: loadItem.duration || null ,
-              timeStamp: serverTimestamp() ,
-              
+
+
+              timeStamp: serverTimestamp(),
+
             }
             addDocument("cargoRequests", theData)
 

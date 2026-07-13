@@ -73,7 +73,7 @@ const Index = () => {
             if ( currentRole?.accType === 'fleet' && truckVisibility === 'Private') {
                 collectionName = `fleets/${currentRole.fleetId}/Trucks` ;
             }else if (currentRole?.role === 'brokerage' && truckVisibility === 'Private') { 
-                collectionName = `brokerages/${currentRole.organizationId}/trucks`;
+                collectionName = `brokerages/${currentRole.organizationId}/Trucks`;
 
             }
 

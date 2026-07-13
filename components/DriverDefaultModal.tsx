@@ -7,7 +7,7 @@ import {
     ActivityIndicator,
     Pressable,
     StyleSheet,
-    Alert,
+    Alert, ToastAndroid,
 } from "react-native";
 
 import { BlurView } from "expo-blur";
@@ -27,6 +27,9 @@ import Input from "@/components/Input";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { wp, hp } from "@/constants/common";
 import { Image } from "expo-image";
+import { sendUserNotification } from "@/Utilities/pushNotification";
+import { updateDocument } from "@/db/operations";
+import { useAuth } from "@/context/AuthContext";
 
 type Props = {
     visible: boolean;
@@ -35,6 +38,11 @@ type Props = {
     truckId: string;
     numberPlate: string;
     onAssigned?: (driver: any) => void;
+
+    typeOfAction?: string
+    assignmentId?: string
+    brokerageId?: string
+    assignmentSource?: string
 };
 
 
@@ -45,9 +53,13 @@ export default function DriverDefaultModal({
     truckId,
     numberPlate,
     onAssigned,
+    typeOfAction,
+    assignmentId,
+    brokerageId,
+    assignmentSource,
 }: Props) {
 
-
+console.log(assignmentId)
     const accent = useThemeColor("accent");
     const backgroundLight = useThemeColor("backgroundLight");
     const icon = useThemeColor("icon");
@@ -60,6 +72,7 @@ export default function DriverDefaultModal({
     const [loading, setLoading] = useState(false);
     const [selected, setSelected] = useState<any | null>(null);
 
+    const { currentRole } = useAuth()
 
 
     useEffect(() => {
@@ -75,7 +88,7 @@ export default function DriverDefaultModal({
         try {
             setLoading(true);
 
-            const driversRef = collection(db,"fleets",fleetId,"Drivers");
+            const driversRef = collection(db, "fleets", fleetId, "Drivers");
 
             const snap = await getDocs(driversRef);
 
@@ -84,7 +97,7 @@ export default function DriverDefaultModal({
             snap.forEach((item) => {
                 const data = item.data();
 
-                list.push({id: item.id,...data});
+                list.push({ id: item.id, ...data });
             });
 
             setStaff(list);
@@ -124,7 +137,100 @@ export default function DriverDefaultModal({
     };
 
 
+    const setDriverToAssigment = async () => {
 
+
+        if (!assignmentId) return
+        try {
+
+            if (assignmentSource === "Broker") {
+                updateDocument(`brokerages/${brokerageId}/assignments`, assignmentId, {
+                    
+                    status : "PENDING",
+                    driverDetails: {
+                        driverId: selected.driverId || selected?.id || null,
+                        driverDocId: selected?.docId || selected?.id || selected.driverId || null,
+                        driverName: selected.driverName || selected?.fullName || null,
+                        driverPhone: selected.driverPhone || selected?.phoneNumber || selected?.phone || null,
+                        profilePhoto: selected.profilePhoto || selected?.profilePhoto || null,
+                        email: selected?.email || null,
+                        role: selected ? 'main' : selected.role || 'assigned',
+                        //   isDefault: isDefaultDriver,
+                        expoPushToken: selected?.expoPushToken || null,
+                    }
+
+                })
+
+
+                updateDocument(`fleets/${fleetId}/assignments`, assignmentId, {
+                    
+                    status : "PENDING",
+                    driverDetails: {
+                        driverId: selected.driverId || selected?.id || null,
+                        driverDocId: selected?.docId || selected?.id || selected.driverId || null,
+                        driverName: selected.driverName || selected?.fullName || null,
+                        driverPhone: selected.driverPhone || selected?.phoneNumber || selected?.phone || null,
+                        profilePhoto: selected.profilePhoto || selected?.profilePhoto || null,
+                        email: selected?.email || null,
+                        role: selected ? 'main' : selected.role || 'assigned',
+                        //   isDefault: isDefaultDriver,
+                        expoPushToken: selected?.expoPushToken || null,
+                    }
+
+                })
+            } else if (assignmentSource === "Fleet") {
+
+                updateDocument(`fleets/${fleetId}/assignments`, assignmentId, {
+
+                    status : "PENDING",
+                    driverDetails: {
+                        driverId: selected.driverId || selected?.id || null,
+                        driverDocId: selected?.docId || selected?.id || selected.driverId || null,
+                        driverName: selected.driverName || selected?.fullName || null,
+                        driverPhone: selected.driverPhone || selected?.phoneNumber || selected?.phone || null,
+                        profilePhoto: selected.profilePhoto || selected?.profilePhoto || null,
+                        email: selected?.email || null,
+                        role: selected ? 'main' : selected.role || 'assigned',
+                        //   isDefault: isDefaultDriver,
+                        expoPushToken: selected?.expoPushToken || null,
+                    }
+
+                })
+            }
+
+            if (selected.expoPushToken) {
+                await sendUserNotification(
+                    selected.expoPushToken,
+                    "New Load Assignment 📦",
+                    `You have been assigned a new load with ${numberPlate}. Please review and accept or reject it.`,
+                    {
+                        pathname: "/Driver/AssignmentDetails",
+                        params: {
+                            assignmentId,
+                        },
+                    },
+                    {
+                        type: "load_assignment",
+                        assignmentId,
+                        truckId,
+                        fleetId,
+                    }
+                );
+            } else {
+                alert("Driver has no push token");
+            }
+
+            ToastAndroid.show(
+                `${selected.fullName} assigned to the load successfully`,
+                ToastAndroid.SHORT
+            );
+
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    
 
 
     const setDefaultDriver = async () => {
@@ -170,7 +276,7 @@ export default function DriverDefaultModal({
             const batch = writeBatch(db);
 
 
-            const driverRef = doc(db,"fleets",fleetId,"Drivers",selected.id);
+            const driverRef = doc(db, "fleets", fleetId, "Drivers", selected.id);
             // If driver was already assigned to another truck
             if (
                 selected.defaultTruck?.truckId &&
@@ -178,10 +284,10 @@ export default function DriverDefaultModal({
             ) {
 
 
-          const oldTruckRef = doc(db,"fleets",fleetId,"Trucks",selected.defaultTruck.truckId);
+                const oldTruckRef = doc(db, "fleets", fleetId, "Trucks", selected.defaultTruck.truckId);
 
 
-                batch.update(oldTruckRef, {defaultDriver: null});
+                batch.update(oldTruckRef, { defaultDriver: null });
 
             }
 
@@ -205,7 +311,7 @@ export default function DriverDefaultModal({
 
             // Update new truck
             const newTruckRef = doc(
-                db,"fleets",fleetId,"Trucks",truckId);
+                db, "fleets", fleetId, "Trucks", truckId);
 
             batch.update(newTruckRef, {
 
@@ -226,7 +332,36 @@ export default function DriverDefaultModal({
 
 
 
+            // Notify driver AFTER successful save
+            if (selected.expoPushToken) {
+                await sendUserNotification(
+                    selected.expoPushToken,
+                    "New Truck Assignment 🚛",
+                    `You have been assigned to ${numberPlate}`,
+                    {
+                        pathname: "/Driver/TruckDetails",
+                        params: {
+                            truckId,
+                        },
+                    },
+                    {
+                        type: "truck_assignment",
+                        truckId,
+                        fleetId,
+                    }
+                );
+            } else {
+                alert("Driver has no push token");
+            }
+
+            ToastAndroid.show(
+                `${selected.fullName} assigned successfully`,
+                ToastAndroid.SHORT
+            );
+
             onAssigned?.(selected);
+
+
 
             onClose();
 
@@ -283,7 +418,7 @@ export default function DriverDefaultModal({
 
 
                             <ThemedText type="title">
-                                Default Driver
+                                {typeOfAction === "Assign Driver" ? "Assign Driver" : "Default Driver"}
                             </ThemedText>
 
 
@@ -471,7 +606,7 @@ export default function DriverDefaultModal({
 
                             disabled={!selected}
 
-                            onPress={setDefaultDriver}
+                            onPress={typeOfAction === "Assign Driver" ? setDriverToAssigment : setDefaultDriver}
 
 
                             style={[
@@ -495,7 +630,7 @@ export default function DriverDefaultModal({
                                 }}
                             >
 
-                                Set Default Driver
+                                {typeOfAction === "Assign Driver" ? "Assign Driver": "Set Default Driver"}
 
                             </ThemedText>
 

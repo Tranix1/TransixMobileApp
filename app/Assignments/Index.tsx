@@ -28,6 +28,7 @@ import * as ImagePicker from "expo-image-picker";
 import { takePhoto, selectMultipleImages } from '@/Utilities/photoPickerUtils';
 import { Image } from 'expo-image';
 import { ImagePickerAsset } from 'expo-image-picker';
+import DriverDefaultModal from '@/components/DriverDefaultModal';
 
 // ---------------------------------------------------------------------------
 // Independent Assignments page for Fleet / Broker use.
@@ -874,7 +875,7 @@ function Jobs() {
 
 
 
-                const q = query(collection(db, path), orderBy("timestamp", "desc"));
+                const q = query(collection(db, path), orderBy("timeStamp", "desc"));
 
                 const snapshot = await getDocs(q);
                 const results = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -971,14 +972,35 @@ function Jobs() {
     const filteredCargo = getFilteredCargo();
     const activeFilterEntries = Object.entries(filters) as [FilterType, FilterValue][];
 
+    const [dspAssignDriverModaal, setDspAssignDriverModal] = useState(false)
+
     const renderCargoItem = (assignmentData: any) => {
         return (
             <View key={assignmentData.id} style={[styles.cargoItem, { backgroundColor: backgroundLight }]}>
 
+
+
+
+                <DriverDefaultModal
+                    visible={dspAssignDriverModaal}
+                    onClose={() => setDspAssignDriverModal(false)}
+                    fleetId={currentRole.organizationId ? currentRole.organizationId : ""}
+                    truckId={assignmentData?.truckDetails?.truckId}
+                    numberPlate={assignmentData?.truckDetails?.numberPlate}
+                    onAssigned={(driver) => {
+                        console.log("Assigned:", driver);
+                    }}
+                    typeOfAction="Assign Driver"
+                    assignmentId={assignmentData.id}
+                    brokerageId={assignmentData.brokerageCoordinator.organizationId}
+                    assignmentSource={assignmentData.source}
+                />
+
+
+
+
+
                 {/* HEADER */}
-
-
-
 
                 {(proofTargetId === assignmentData.id) && (
                     <View
@@ -1262,7 +1284,27 @@ function Jobs() {
                             console.log("Open tracker");
                         }}
                     >
-                        <Ionicons name="navigate-circle-outline" size={16} color={accent} />
+                        <Ionicons name="navigate-circle-outline" size={16} color={accent}
+                            onPress={() => {
+                                router.push({
+                                    pathname: "/Map/VehicleTrackingMap",
+                                    params: {
+                                        vehicleId: assignmentData.truckDetails.trackingDeviceId,
+
+                                        pickupLati: assignmentData.loadDetails.pickupLocation.latitud,
+                                        pickupLongi: assignmentData.loadDetails.pickupLocation.longitude,
+                                        pickupName: assignmentData.loadDetails.pickupLocation.description,
+
+                                        dropoffLati: assignmentData.loadDetails.deliveryLocation.latitude,
+                                        dropoffLongi: assignmentData.loadDetails.deliveryLocation.longitude,
+                                        dropoffName: assignmentData.loadDetails.deliveryLocation.description,
+
+                                        plannedRoutePolyline: assignmentData.loadDetails.deliveryLocation,
+                                    },
+                                });
+                            }}
+
+                        />
                         <ThemedText style={styles.actionButtonText}>
                             Tracker
                         </ThemedText>
@@ -1355,7 +1397,7 @@ function Jobs() {
 
 
                     {/* HANDLE ISSUES */}
-                    {(currentRole.accType === "fleet" || currentRole.accType === "brokerage") && (
+                    {assignmentData.status === "IN_TRANSIT" && (currentRole.accType === "fleet" || currentRole.accType === "brokerage") && (
                         <TouchableOpacity
                             style={styles.actionButton}
                             onPress={() => {
@@ -1374,6 +1416,41 @@ function Jobs() {
 
                         </TouchableOpacity>
                     )}
+
+                    {assignmentData.status === 'ASSIGNED' && currentRole.accType === "fleet" && <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => setDspAssignDriverModal(true)}
+                    >
+                        <Ionicons
+                            name="alert-circle-outline"
+                            size={16}
+                            color={accent}
+                        />
+
+                        <ThemedText style={styles.actionButtonText}>
+                            Assign Driver
+                        </ThemedText>
+
+                    </TouchableOpacity>}
+
+                    {assignmentData.status === 'ASSIGNED' && currentRole.accType === "fleet" && <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => {
+                            console.log("Open dispute");
+                        }}
+                    >
+                        <Ionicons
+                            name="alert-circle-outline"
+                            size={16}
+                            color={accent}
+                        />
+
+                        <ThemedText style={styles.actionButtonText}>
+                            Reject Load
+                        </ThemedText>
+
+                    </TouchableOpacity>}
+
 
                 </View>
 

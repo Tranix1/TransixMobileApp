@@ -174,7 +174,7 @@ const CreaterBrokerage = ({ }) => {
         defaultFleets: [],
         verificationStatus: "pending",
         organizationId: brokerageId,
-        expoPushToke: user?.expoPushToken|| null ,
+      expoPushToken  : user?.expoPushToken|| null ,
    
       };
 
