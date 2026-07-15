@@ -432,6 +432,8 @@ function AddTrucks() {
           phone: currentRole.phone || null,
           billingAddress: currentRole.billingAddress || null,
           baseAdress: currentRole.baseAdress || null,
+          accType: currentRole?.accType ,
+          location:currentRole.billingAddress ||currentRole.baseAdress|| null
         },
         accType: currentRole?.accType || 'Individual', // owner, broker, driver, fleet
         timeStamp: serverTimestamp(),

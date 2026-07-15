@@ -29,6 +29,7 @@ import { takePhoto, selectMultipleImages } from '@/Utilities/photoPickerUtils';
 import { Image } from 'expo-image';
 import { ImagePickerAsset } from 'expo-image-picker';
 import DriverDefaultModal from '@/components/DriverDefaultModal';
+import FinancePanel from '@/components/FinancePanel';
 
 // ---------------------------------------------------------------------------
 // Independent Assignments page for Fleet / Broker use.
@@ -338,6 +339,7 @@ function RejectReasonModal({
 // running list per type, and bumps notesCount/issuesCount on the parent doc.
 // ---------------------------------------------------------------------------
 function AssignmentActivityPanel({
+    
     assignmentId,
     fleetId,
     initialNotesCount,
@@ -360,6 +362,9 @@ function AssignmentActivityPanel({
     const [activityText, setActivityText] = useState("");
     const [assignmentActivity, setAssignmentActivity] = useState<any[]>([]);
     const [loadingActivity, setLoadingActivity] = useState(false);
+
+    const [financeView ,setFinanceView] = useState(false)
+
     const [savingActivity, setSavingActivity] = useState(false);
     const [counts, setCounts] = useState({
         notesCount: initialNotesCount || 0,
@@ -392,7 +397,7 @@ function AssignmentActivityPanel({
         loadActivityCounts();
     }, [assignmentId]);
 
-    const loadAssignmentActivity = async () => {
+const loadAssignmentActivity = async () => {
         if (!assignmentId) return;
 
         try {
@@ -422,10 +427,16 @@ function AssignmentActivityPanel({
         }
     };
 
+
     const openPanel = (type: "NOTE" | "ISSUE") => {
         setActivityView(type);
         loadAssignmentActivity();
     };
+
+    const openFincialView = () => {
+        
+    }
+
 
     const saveActivity = async () => {
         if (!activityText.trim() || !activityView || !fleetId) return;
@@ -507,6 +518,7 @@ function AssignmentActivityPanel({
 
 
 
+ 
 
 
 
@@ -518,11 +530,14 @@ function AssignmentActivityPanel({
     const [issueFilter, setIssueFilter] = useState<"OPEN" | "RESOLVED">("OPEN");
 
 
-
     return (
         <View>
             {/* NOTES + ISSUES TRIGGERS */}
             <View style={{ flexDirection: "row", gap: wp(2), marginTop: wp(2) }}>
+                  <TouchableOpacity style={styles.actionButton} onPress={()=>setFinanceView(true)}>
+                    <Ionicons name="chatbubble-outline" size={16} color={accent} />
+                    <ThemedText style={{ color: accent }}>Finance ({counts.notesCount})</ThemedText>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton} onPress={() => openPanel("NOTE")}>
                     <Ionicons name="chatbubble-outline" size={16} color={accent} />
                     <ThemedText style={{ color: accent }}>Notes ({counts.notesCount})</ThemedText>
@@ -536,6 +551,13 @@ function AssignmentActivityPanel({
                     <ThemedText style={{ color: "#F44336" }}>Issues ({counts.issuesCount})</ThemedText>
                 </TouchableOpacity>
             </View>
+
+
+
+
+
+
+
 
             {/* DROPDOWN PANEL */}
             {activityView && (
@@ -827,6 +849,21 @@ function AssignmentActivityPanel({
 
                 </View>
             )}
+
+
+<FinancePanel
+  visible={financeView}
+  onClose={() => setFinanceView(false)}
+  assignmentId={assignmentId}
+  accent={accent}          // optional, defaults to a purple
+  icon={icon}               // optional
+  backgroundLight={backgroundLight} // optional
+/>
+
+
+
+
+
         </View>
     );
 }
@@ -1327,8 +1364,6 @@ function Jobs() {
                                     // pickProofImage();
                                     setProofTargetId(assignmentData.id);
 
-
-
                                 }
 
                             }}
@@ -1450,6 +1485,46 @@ function Jobs() {
                         </ThemedText>
 
                     </TouchableOpacity>}
+
+
+                         {assignmentData.status === "COMPLETED"&&assignmentData.externalLoad && currentRole.accType === "brokerage" && <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => cargoOwnerConfirmation(
+                            assignmentData.id , 
+                            assignmentData.shipper)}
+                    >
+                        <Ionicons
+                            name="alert-circle-outline"
+                            size={16}
+                            color={accent}
+                        />
+
+                        <ThemedText style={styles.actionButtonText}>
+                            Confrim Delivered
+                        </ThemedText>
+
+                    </TouchableOpacity>}
+
+
+                      {assignmentData.status === "COMPLETED"&&assignmentData.source=== "Fleet" && currentRole.accType === "fleet" && <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => {
+                            
+                        }}
+                    >
+                        <Ionicons
+                            name="alert-circle-outline"
+                            size={16}
+                            color={accent}
+                        />
+
+                        <ThemedText style={styles.actionButtonText}>
+                            Confrim Delivered
+                        </ThemedText>
+
+                    </TouchableOpacity>}   
+
+
 
 
                 </View>
@@ -1577,7 +1652,7 @@ function Jobs() {
 
                     statusHistory: arrayUnion({
                         fromStatus: "IN_TRANSIT",
-                        toStatus: "AWAITING_OWNER_CONFIRMATION",
+                        toStatus: "AWAITING_OWNER_CONFIRMATION", 
 
                         changedAt: Date.now(),
 
@@ -1605,13 +1680,16 @@ function Jobs() {
 
 
 
-    const cargoOwnerConfirmation = async (assignmentId: string) => {
+    const cargoOwnerConfirmation = async (assignmentId: string  , shipper?:any) => {
         try {
+
+            if(!shipper ){
+
             await updateDocument(
                 `fleets/${scopeId}/assignments`,
                 assignmentId,
                 {
-                    status: "IN_TRANSIT",
+                    status: "COMPLETED",
 
                     updatedAt: Date.now(),
                     updatedBy: user?.uid ?? "",
@@ -1632,6 +1710,64 @@ function Jobs() {
                     })
                 }
             );
+            }else if(shipper){
+
+                let path =  shipper.accType ==="fleet" ? `fleets/${shipper.organizationId}/assignments`: `brokerages/${shipper.organizationId}/assignments`
+
+                 await updateDocument(
+                path,
+                assignmentId,
+                {
+                    status: "COMPLETED",
+
+                    updatedAt: Date.now(),
+                    updatedBy: user?.uid ?? "",
+                    updatedByName: user?.displayName ?? "User",
+                    updatedByRole: currentRole?.userRole ?? "",
+                    updatedByAcc: currentRole?.accType ?? "",
+
+                    statusHistory: arrayUnion({
+                        fromStatus: "AWAITING_OWNER_CONFIRMATION",
+                        toStatus: "COMPLETED",
+
+                        changedAt: Date.now(),
+
+                        changedBy: user?.uid ?? "",
+                        changedByName: user?.displayName ?? "User",
+                        changedByRole: currentRole?.userRole ?? "",
+                        changedByAcc: currentRole?.accType ?? "",
+                    })
+                }
+            );
+
+             await updateDocument(
+                `fleets/${scopeId}/assignments`,
+                assignmentId,
+                {
+                    status: "COMPLETED",
+
+                    updatedAt: Date.now(),
+                    updatedBy: user?.uid ?? "",
+                    updatedByName: user?.displayName ?? "User",
+                    updatedByRole: currentRole?.userRole ?? "",
+                    updatedByAcc: currentRole?.accType ?? "",
+
+                    statusHistory: arrayUnion({
+                        fromStatus: "AWAITING_OWNER_CONFIRMATION",
+                        toStatus: "COMPLETED",
+
+                        changedAt: Date.now(),
+
+                        changedBy: user?.uid ?? "",
+                        changedByName: user?.displayName ?? "User",
+                        changedByRole: currentRole?.userRole ?? "",
+                        changedByAcc: currentRole?.accType ?? "",
+                    })
+                }
+            );
+            }
+
+
 
         } catch (error) {
             console.log("Start trip error:", error);

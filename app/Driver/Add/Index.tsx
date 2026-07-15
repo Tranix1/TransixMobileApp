@@ -10,7 +10,7 @@ import Input from '@/components/Input';
 import { selectImage } from '@/Utilities/imageUtils';
 import { ImagePickerAsset } from 'expo-image-picker';
 import { useAuth } from '@/context/AuthContext';
-import { addDocument, addDocumentWithId, uploadImage, getUsers, updateDocument, readById, fetchDocuments } from '@/db/operations';
+import { addDocument, addDocumentWithId, uploadImage, getUsers, updateDocument, readById, fetchDocuments, generateUniqueReferrerCode } from '@/db/operations';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePushNotifications } from '@/Utilities/pushNotification';
@@ -18,7 +18,9 @@ import ImageUploadCard from '@/components/ImageUploadCard';
 import { takePhoto } from '@/Utilities/imageUtils';
 import Button from '@/components/Button';
 import { getDriverLevel } from '@/Utilities/DriverLevelVerification';
-
+import { SelectLocationProp } from '@/types/types';
+import { LocationPicker, } from '@/components/LocationPicker';
+import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplete';
 export default function AddDriver() {
     const background = useThemeColor('background');
     const backgroundLight = useThemeColor('backgroundLight');
@@ -30,6 +32,8 @@ export default function AddDriver() {
 
     const [fullName, setFullName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
+    const [locationFull, setLocationFull] = useState<SelectLocationProp | null>(null);
+
     const [selfieImage, setSelfieImage] = useState<ImagePickerAsset | null>(null);
     const [driverLicense, setDriverLicense] = useState<ImagePickerAsset | null>(null);
     const [nationalId, setNationalId] = useState<ImagePickerAsset | null>(null);
@@ -45,7 +49,7 @@ export default function AddDriver() {
 
 
     const { expoPushToken } = usePushNotifications();
-    
+
     const handleAddDriver = async () => {
 
         if (!user?.uid) {
@@ -101,13 +105,53 @@ export default function AddDriver() {
             });
 
 
-
             // Create driver data
             const fixedDriverId = `DRV_${user.uid}`;
+            const code = await generateUniqueReferrerCode();
+
+            const driverVerificationData = {
+                organizationId: fixedDriverId,
+                userId: user.uid,
+                accType: 'driver',
+                organizationName: fullName,
+
+                organizationPhone: phoneNumber,
+
+                fleetMainAdminName: user.displayName,
+                organizationAdminPhone: user.phoneNumber,
+                organizationAdminEmail: user.email,
+
+                driverVerificcationTier: driverVerificationTiers,
+
+
+                location: locationFull,
+
+                documents: {
+                    selfieImage: selfieImageUrl,
+                    nationalIdUrl: nationalIdUrl,
+                    driverLicenseUrl: licenseUrl,
+                    passportUrl: passportUrl,
+                    medicalCertificateUrl: medicalCertUrl,
+                    proofOfResidenceUrl: proofOfResidenceUrl,
+                    internationalPermitUrl: permitUrl,
+                    // truckRegistrationBookType: fleetData.fleetFileType[4],
+                },
+                verificationStatus: 'pending',
+                submittedAt: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+
+                referrerCode: code,
+
+            };
+
+            await addDocumentWithId('verifiedUsers', fixedDriverId, driverVerificationData);
+
 
             const driverData = {
                 fullName: fullName.trim(),
                 phoneNumber: phoneNumber.trim(),
+
                 selfieImage: selfieImageUrl,
                 nationalIdUrl: nationalIdUrl,
                 driverLicenseUrl: licenseUrl,
@@ -120,10 +164,13 @@ export default function AddDriver() {
                 docId: fixedDriverId, // Will be set after document creation
                 createdAt: new Date().toISOString(),
                 status: 'active',
-                expoPushToken: expoPushToken,
+                expoPushToken: expoPushToken || user?.expoPushToken,
                 updatedAt: new Date().toISOString(),
-                driverVerificationTier: driverVerificationTiers,
-                email: user?.email
+                driverVerificcationTier: driverVerificationTiers,
+                email: user?.email,
+                referrerCode: code,
+                location: locationFull,
+
             };
 
             // Add to Fleet collection under fleetId as subcollection with fixed ID
@@ -131,10 +178,25 @@ export default function AddDriver() {
 
             await updateDocument('personalData', user.uid, {
                 // fleets: [...existingFleets, newFleetAccess],
-                            
+
                 driverProfile: driverData,
                 updatedAt: new Date().toISOString()
             });
+
+            const referrerData = {
+                accType: "driver",
+                organisationId: fixedDriverId, // Use Firebase Auth UID instead of document ID
+                organisationEmail: user.email,
+                organisationName: fullName,
+                referrerCode: code,
+                createdAt: new Date().toISOString(),
+                isActive: true,
+                organizationOwner: user?.uid
+            };
+
+            await addDocument('referrers', referrerData);
+
+
 
             ToastAndroid.show('Driver added successfully', ToastAndroid.SHORT);
             router.back();
@@ -205,6 +267,12 @@ export default function AddDriver() {
         }
     };
 
+
+
+    const [showMapPicker, setShowMapPicker] = useState(false);
+    const [dsplocation, setDspDspLocation] = useState(false);
+
+
     return (
         <ScreenWrapper>
             <Heading page={isEditMode ? "Edit Driver" : "Add Driver"} />
@@ -229,6 +297,54 @@ export default function AddDriver() {
                     keyboardType="phone-pad"
                 />
 
+
+
+
+
+
+
+
+                <TouchableOpacity
+                    style={styles.input}
+                    onPress={() => setDspDspLocation(true)}
+                >
+                    <ThemedText>
+                        {locationFull?.description ||
+                            'Select destination'}
+                    </ThemedText>
+                </TouchableOpacity>
+
+
+                {/* DESTINATION PICKER ONLY */}
+                <GooglePlaceAutoCompleteComp
+                    dspRoute={dsplocation}
+                    setDspRoute={setDspDspLocation}
+                    setRoute={setLocationFull}
+                    topic="Select Destination"
+                    setPickLocationOnMap={setShowMapPicker}
+                />
+
+                {showMapPicker && (
+                    <LocationPicker
+                        pickOriginLocation={null}
+                        setPickOriginLocation={() => { }}
+                        pickDestinationLoc={locationFull}
+                        setPickDestinationLoc={setLocationFull}
+                        setShowMap={setShowMapPicker}
+                        dspShowMap={showMapPicker}
+                        mode="single"
+                    />
+                )}
+
+
+                <ThemedText>Location<ThemedText color="red">*</ThemedText></ThemedText>
+
+                <Input
+                    placeholder="Enter driver's phone number"
+                    value={phoneNumber}
+                    onChangeText={setPhoneNumber}
+                    keyboardType="phone-pad"
+                />
 
 
                 <View>
@@ -362,7 +478,7 @@ export default function AddDriver() {
                     disabled={isSubmitting}
                     title={isSubmitting ? (isEditMode ? 'Updating...' : 'Adding...') : (isEditMode ? 'Update Driver' : 'Add Driver')}
                     colors={{ text: '#0f9d58', bg: '#0f9d5824' }}
-                    style={{ height: 44 ,width:200 , margin:8 , borderRadius:5}}
+                    style={{ height: 44, width: 200, margin: 8, borderRadius: 5 }}
                 />
 
                 <View style={{ height: 10, }} />
@@ -403,5 +519,12 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: '600',
+    },
+    input: {
+        marginTop: wp(2),
+        padding: wp(3),
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: wp(2),
     },
 });

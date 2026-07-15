@@ -156,12 +156,6 @@ function BookLCargo({ }) {
   let renderElements = bbVerifiedLoadD.map((item) => {
 
 
-    console.log(item.organizationDetails)
-
-
-
-
-
     async function handleSubmitDetails() {
       try {
         if (auth.currentUser) {
@@ -226,6 +220,7 @@ function BookLCargo({ }) {
               },
 
               fleetDetails: item.organizationDetails ?? null,
+              
               truckDetails: {
                 truckId: item.id,
                 truckType: item.truckType || null,

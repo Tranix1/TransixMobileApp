@@ -217,7 +217,7 @@ const CreaterBrokerage = ({ }) => {
         referrerCode: code,
         createdAt: new Date().toISOString(),
         isActive: true,
-        brkOwnerId: user?.uid
+        organizationOwner: user?.uid
       };
 
       await addDocument('referrers', referrerData);

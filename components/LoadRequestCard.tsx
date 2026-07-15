@@ -6,7 +6,7 @@ import Divider from "@/components/Divider";
 import { router } from 'expo-router'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
-import { addDocument, deleteDocument, updateDocument, } from "@/db/operations";
+import { addDocument, addDocumentWithId, deleteDocument, updateDocument, } from "@/db/operations";
 import { Ionicons } from "@expo/vector-icons";
 import AssignmentModal from "@/components/AssignmentModal";
 
@@ -96,6 +96,7 @@ export const RequestedCargo = ({
       driverDetails: item.driverDetails,
 
       driverId: item.driverDetails?.driverId || null,
+        externalLoad: true,
 
       status: "ASSIGNED",
       createdAt: new Date(),
@@ -110,14 +111,14 @@ export const RequestedCargo = ({
 
     const assigmentId = `${item.loadItemDetails.loadId}_${item.truckDetails.truckId}`
 
-    await addDocument(`fleets/${item.fleetDetails.id}/assignments`,  {
+    await addDocumentWithId(`fleets/${item.fleetDetails.id}/assignments`, assigmentId , {
       ...payload,
       shipper: item.loadItemDetails.organizationDetails || null ,
       timeStamp: serverTimestamp() ,
     });
 
     // Cargo Adder Owner can now see the booking in their Assigments section
-    await addDocument(`${item.loadItemDetails.postedBy.accType}/${item.loadItemDetails.postedBy.organizationId}/assignments`, {
+    await addDocumentWithId(`${item.loadItemDetails.postedBy.accType}/${item.loadItemDetails.postedBy.organizationId}/assignments`,assigmentId, {
       ...payload,
       shipper: item.loadItemDetails.shipper || null ,
       timeStamp: serverTimestamp() ,

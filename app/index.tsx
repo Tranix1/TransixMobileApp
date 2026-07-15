@@ -4,6 +4,8 @@ import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from "expo-router";
 
+import Dashboard from "./Dashboard/Index";
+
 import Home from "./Home/Index";
 import About from "./About/Index";
 import Loads from "./Logistics/Loads/Index";
@@ -261,7 +263,7 @@ export default function Index() {
                 <Tab.Screen name="Loads" component={Loads} />
                 <Tab.Screen name="Trucks" component={LogisticsTrucks} />
                 <Tab.Screen name="Chat" component={ChatIndex} />
-                <Tab.Screen name="Wallet" component={Wallet} />
+                <Tab.Screen name="Wallet" component={Dashboard} />
               </>
             ) : 
                (typeof currentRole === 'object' && currentRole.role === 'fleet') ?

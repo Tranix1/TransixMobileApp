@@ -65,7 +65,17 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement}
                                 }}
                             >
 
-                                <TouchableNativeFeedback onPress={() => router.push("/Fleet/FleetProfile")}  >
+                                <TouchableNativeFeedback onPress={() => router.push("/brokerage/Profile/Index")}  >
+                                    <View style={{ padding: wp(2) }}>
+                                        <FontAwesome6 name="user" size={wp(7)} color={icon} />;
+                                    </View>
+                                </TouchableNativeFeedback>
+                                  <TouchableNativeFeedback onPress={() => router.push("/Fleet/Profile/Index")}  >
+                                    <View style={{ padding: wp(2) }}>
+                                        <FontAwesome6 name="user" size={wp(7)} color={icon} />;
+                                    </View>
+                                </TouchableNativeFeedback>
+                                  <TouchableNativeFeedback onPress={() => router.push("/Driver/Profile/Index")}  >
                                     <View style={{ padding: wp(2) }}>
                                         <FontAwesome6 name="user" size={wp(7)} color={icon} />;
                                     </View>

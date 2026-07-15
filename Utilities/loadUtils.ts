@@ -203,7 +203,8 @@ export const prepareLoadData = (
             id:currentRole.organizationId || null ,
             name : currentRole.companyName || user?.organisation ,
             phone : currentRole.phone||null ,
-            billingAddress : currentRole.organizationBillingAddress ||null,       
+            location : currentRole.location||  currentRole.organizationBillingAddress ||null,   
+            accType : currentRole.accType ||null   
          },       
         userRole: currentRole?.userRole || 'general',
         accType: currentRole?.accType || 'general',

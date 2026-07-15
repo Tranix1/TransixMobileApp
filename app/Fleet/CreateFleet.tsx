@@ -138,8 +138,10 @@ const CreateFleet = () => {
                 billingAddress: billingAddress?.description,
                 billingAddressFull: billingAddress,
 
-                baseAdress: billingAddress?.description,
-                baseAdressFull: billingAddress,
+                baseAdress: baseAdress?.description,
+                baseAdressFull: baseAdress,
+
+                location:billingAddress || baseAdress ,
 
                 documents: {
                     fleetMainAdminId: uploadedUrls[0],
@@ -158,7 +160,7 @@ const CreateFleet = () => {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
 
-                code,
+                referrerCode :code,
             };
             await addDocument('verifiedUsers', fleetVerificationData);
 
@@ -245,7 +247,7 @@ const CreateFleet = () => {
                 referrerCode: code,
                 createdAt: new Date().toISOString(),
                 isActive: true,
-                fltOwnerId: user?.uid
+                organizationOwner: user?.uid
             };
 
             await addDocument('referrers', referrerData);

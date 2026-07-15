@@ -402,10 +402,17 @@ export const submitLoad = async (params: SubmitLoadParams) => {
         driverId: null,
         visibility: visibilityTag,
         loadDetails: loadDetails,
-        source: "Broker",
+        externalLoad: true,   
         // The truck's own owning fleet/org (not necessarily the poster of the load — relevant
         // when a broker assigns a truck that belongs to a different fleet).
         fleetDetails: truck?.organizationDetails ?? truck?.fleetDetails ?? null,
+        shipper : {
+          id: currentRole.organizationId || currentRole.fleetId || null,
+          name: currentRole.companyName || user?.organisation,
+          phone: currentRole.phone || null,
+          location: currentRole.billingAddress || currentRole.location || null,
+          accType: currentRole.accType || null ,
+        },
         truckDetails,
         driverDetails: null,
         status: 'ASSIGNED',
@@ -419,8 +426,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
             expoPushToken: truck.assignments.dispatcher.expoPushToken || null,
           }
           : null,
-        brokerageCoordinator: coordinator
-        ,
+        brokerageCoordinator: coordinator,
         createdAt: Date.now().toString(),
       }
 
