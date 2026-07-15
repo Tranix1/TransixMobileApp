@@ -19,6 +19,11 @@ import { wp, hp } from '@/constants/common';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 
+import TodayCard from '@/components/DashboardTodayCard';
+import FinanceCard from '@/components/DashboardFinanceCard';
+import VehicleHealthCard from '@/components/DashboardVehicleHealthCard';
+import AttentionCard from '@/components/AttentionCard';
+import MyActivityCard from '@/components/DashboardMyActivtyCard';
 // ---------------------------------------------------------------------------
 // Brand palette (kept local to this screen so it doesn't depend on theme
 // keys that may not exist yet in the design system).
@@ -302,6 +307,15 @@ const QuickAction = ({ label, iconElement, iconBg, onPress, background, border, 
     </TouchableOpacity>
 );
 
+
+
+
+
+
+
+
+
+
 // ---------------------------------------------------------------------------
 // Main screen
 // ---------------------------------------------------------------------------
@@ -376,6 +390,163 @@ export default function TransixDashboard() {
                     </TouchableOpacity>
                 </View>
 
+
+
+
+
+                {/* ======================= AttentionCard ======================= */}
+
+
+
+<>
+<SectionHeader
+    title="Needs Attention"
+    actionLabel="View All"
+    textlight={textlight}
+    accent={accent}
+/>
+
+<AttentionCard
+    title="Drivers"
+    subtitle="Awaiting trip acceptance"
+    count={3}
+    icon="people-outline"
+    color={BRAND.amber}
+    background={background}
+    border={border}
+    textlight={textlight}
+    onPress={() => router.push('/Driver/DriverSelector/Index')}
+/>
+
+<AttentionCard
+    title="Loads"
+    subtitle="Waiting approval"
+    count={5}
+    icon="cube-outline"
+    color={BRAND.teal}
+    background={background}
+    border={border}
+    textlight={textlight}
+    onPress={() => router.push('/Logistics/Loads/AddLoads')}
+/>
+
+<AttentionCard
+    title="Fleet"
+    subtitle="Vehicles need servicing"
+    count={2}
+    icon="car-sport-outline"
+    color={BRAND.bad}
+    background={background}
+    border={border}
+    textlight={textlight}
+    onPress={() => router.push('/Fleet/Admin')}
+ />
+
+<AttentionCard
+    title="Assignments"
+    subtitle="Pending confirmation"
+    count={4}
+    icon="clipboard-outline"
+    color={BRAND.navy}
+    background={background}
+    border={border}
+    textlight={textlight}
+    onPress={() => router.push('/Assignments/Index')}
+/>
+
+<AttentionCard
+    title="Finance"
+    subtitle="Overdue payments"
+    count={1}
+    icon="wallet-outline"
+    color={BRAND.good}
+    background={background}
+    border={border}
+    textlight={textlight}
+    onPress={() => router.push('/Wallet/WalletHistory')}
+/>
+</>
+
+
+
+<>
+
+<SectionHeader
+    title="My Activity"
+    actionLabel="View All"
+    textlight={textlight}
+    accent={accent}
+/>
+
+
+<MyActivityCard
+    title="My Loads"
+    subtitle="Loads created and managed by you"
+    value="24"
+    icon="cube-outline"
+    color={BRAND.teal}
+    background={background}
+    border={border}
+    textlight={textlight}
+    onPress={() => router.push('/Logistics/AddHome')}
+/>
+
+
+<MyActivityCard
+    title="Booked Trucks"
+    subtitle="Trucks currently booked"
+    value="8"
+    icon="truck-outline"
+    color={BRAND.navy}
+    background={background}
+    border={border}
+    textlight={textlight}
+    onPress={() => router.push('/Fleet/Admin/Index')}
+/>
+
+
+<MyActivityCard
+    title="My Assignments"
+    subtitle="Assignments you manage"
+    value="15"
+    icon="clipboard-outline"
+    color={BRAND.amber}
+    background={background}
+    border={border}
+    textlight={textlight}
+    onPress={() => router.push('/Assignments/Index')}
+/>
+
+
+<MyActivityCard
+    title="My Trips"
+    subtitle="Active trips in progress"
+    value="6"
+    icon="map-marker-path"
+    color={BRAND.good}
+    background={background}
+    border={border}
+    textlight={textlight}
+    onPress={() => router.push('/Tracking/Index')}
+/>
+
+
+</>
+
+
+                {/* ======================= Today Card ======================= */}
+
+
+
+    <TodayCard
+                    background={background}
+                    backgroundLight={backgroundColor}
+                    border={border}
+                    textlight={textlight}
+                />
+
+
+
                 {/* ======================= BUSINESS OVERVIEW ======================= */}
                 <SectionHeader title="Business Overview" textlight={textlight} accent={accent} />
                 <View style={styles.overviewGrid}>
@@ -388,6 +559,8 @@ export default function TransixDashboard() {
                         rows={[
                             { label: 'Available', value: 41, dotColor: BRAND.good },
                             { label: 'On Trip', value: 79, dotColor: BRAND.teal },
+                            { label: 'Maintance', value: 22, dotColor: BRAND.good },
+
                         ]}
                         background={background}
                         backgroundLight={backgroundColor}
@@ -442,42 +615,53 @@ export default function TransixDashboard() {
                         border={border}
                         textlight={textlight}
                     />
+
+
+                    <OverviewCard
+                        title="Drivers"
+                        iconElement={<Ionicons name="cash-outline" size={wp(4)} color={BRAND.good} />}
+                        iconBg={`${BRAND.good}1A`}
+                        primaryValue="$184,320"
+                        primaryLabel="Net profit this month"
+                        rows={[
+                            { label: 'Revenue', value: '$412,900', dotColor: BRAND.good },
+                            { label: 'Expenses', value: '$228,580', dotColor: BRAND.bad },
+                        ]}
+                        background={background}
+                        backgroundLight={backgroundColor}
+                        border={border}
+                        textlight={textlight}
+                    />
+                    <OverviewCard
+                        title="Trailers"
+                        iconElement={<Ionicons name="cash-outline" size={wp(4)} color={BRAND.good} />}
+                        iconBg={`${BRAND.good}1A`}
+                        primaryValue="$184,320"
+                        primaryLabel="Net profit this month"
+                        rows={[
+                            { label: 'Revenue', value: '$412,900', dotColor: BRAND.good },
+                            { label: 'Expenses', value: '$228,580', dotColor: BRAND.bad },
+                        ]}
+                        background={background}
+                        backgroundLight={backgroundColor}
+                        border={border}
+                        textlight={textlight}
+                    />
+
+
+
                 </View>
 
-                {/* ========================= OPERATIONS CENTRE ========================= */}
-                <SectionHeader title="Operations Centre" textlight={textlight} accent={accent} />
-                <View style={styles.operationsGrid}>
-                    <OperationsCard
-                        title="Assignments"
-                        subtitle="29 active"
-                        iconElement={<MaterialCommunityIcons name="clipboard-check-outline" size={wp(4.6)} color={BRAND.navy} />}
-                        iconBg={`${BRAND.navy}1A`}
-                        onPress={() => router.push('/Assignments/Index')}
-                        background={background}
-                        border={border}
-                        textlight={textlight}
-                    />
-                    <OperationsCard
-                        title="Bookings"
-                        subtitle="12 pending"
-                        iconElement={<Ionicons name="calendar-outline" size={wp(4.6)} color={BRAND.teal} />}
-                        iconBg={`${BRAND.teal}1A`}
-                        onPress={() => router.push('/BooksAndBids/ViewBidsAndBooks')}
-                        background={background}
-                        border={border}
-                        textlight={textlight}
-                    />
-                    <OperationsCard
-                        title="Biddings"
-                        subtitle="5 new bids"
-                        iconElement={<MaterialCommunityIcons name="gavel" size={wp(4.6)} color={BRAND.amber} />}
-                        iconBg={`${BRAND.amber}1A`}
-                        onPress={() => router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dspRoute: 'Requested Loads' } })}
-                        background={background}
-                        border={border}
-                        textlight={textlight}
-                    />
-                </View>
+             
+
+
+
+
+
+
+            
+
+
 
                 {/* Loads pipeline */}
                 <View style={[styles.pipelineCard, { backgroundColor: background, borderColor: border }]}>
@@ -519,7 +703,16 @@ export default function TransixDashboard() {
                     </View>
                 </View>
 
+
+
+
+                <VehicleHealthCard
+                    background={background}
+                    border={border}
+                />
+
                 {/* ============================ FINANCE CENTRE ============================ */}
+
                 <SectionHeader
                     title="Finance Centre"
                     actionLabel="View all"
@@ -527,43 +720,13 @@ export default function TransixDashboard() {
                     textlight={textlight}
                     accent={accent}
                 />
-                <View style={[styles.financeCard, { backgroundColor: background, borderColor: border }]}>
-                    <View style={styles.financeSummaryRow}>
-                        <View>
-                            <ThemedText type="tiny" style={{ color: textlight }}>
-                                Profit Summary
-                            </ThemedText>
-                            <ThemedText style={[styles.financeProfit, { color: BRAND.good }]}>$184,320</ThemedText>
-                        </View>
-                        <View style={[styles.financeTrendPill, { backgroundColor: `${BRAND.good}1A` }]}>
-                            <Ionicons name="trending-up" size={wp(3.4)} color={BRAND.good} />
-                            <ThemedText type="tiny" style={{ color: BRAND.good, fontWeight: '700', marginLeft: wp(1) }}>
-                                +12.4%
-                            </ThemedText>
-                        </View>
-                    </View>
 
-                    <View style={styles.financeGrid}>
-                        <View style={[styles.financeGridItem, { borderColor: border }]}>
-                            <ThemedText type="tiny" style={{ color: textlight }}>
-                                Income
-                            </ThemedText>
-                            <ThemedText style={styles.financeGridValue}>$412,900</ThemedText>
-                        </View>
-                        <View style={[styles.financeGridItem, { borderColor: border }]}>
-                            <ThemedText type="tiny" style={{ color: textlight }}>
-                                Expenses
-                            </ThemedText>
-                            <ThemedText style={styles.financeGridValue}>$228,580</ThemedText>
-                        </View>
-                        <View style={[styles.financeGridItem, { borderColor: border, borderRightWidth: 0 }]}>
-                            <ThemedText type="tiny" style={{ color: textlight }}>
-                                Pending Payments
-                            </ThemedText>
-                            <ThemedText style={[styles.financeGridValue, { color: BRAND.amber }]}>$18,240</ThemedText>
-                        </View>
-                    </View>
-                </View>
+
+                <FinanceCard
+                    background={background}
+                    border={border}
+                    textlight={textlight}
+                />
 
                 {/* ========================= PERFORMANCE OVERVIEW ========================= */}
                 <SectionHeader title="Performance Overview" textlight={textlight} accent={accent} />
@@ -610,75 +773,6 @@ export default function TransixDashboard() {
                     />
                 </View>
 
-                {/* ========================== ATTENTION REQUIRED ========================== */}
-                <SectionHeader title="Attention Required" textlight={textlight} accent={accent} />
-                <View style={[styles.listCard, { backgroundColor: background, borderColor: border }]}>
-                    <AttentionItem
-                        iconElement={<MaterialCommunityIcons name="account-clock-outline" size={wp(4.2)} color={BRAND.amber} />}
-                        iconBg={`${BRAND.amber}1A`}
-                        title="3 drivers awaiting trip acceptance"
-                        subtitle="Assigned more than 2 hours ago"
-                        actionLabel="Review"
-                        primary
-                        onPress={() => router.push('/Assignments/Index')}
-                        border={border}
-                        textlight={textlight}
-                        accent={accent}
-                        background={backgroundColor}
-                    />
-                    <AttentionItem
-                        iconElement={<MaterialCommunityIcons name="clipboard-check-outline" size={wp(4.2)} color={BRAND.teal} />}
-                        iconBg={`${BRAND.teal}1A`}
-                        title="5 loads waiting on approval"
-                        subtitle="Submitted by regional dispatch"
-                        actionLabel="Approve"
-                        onPress={() => router.push('/Logistics/Loads/AddLoads')}
-                        border={border}
-                        textlight={textlight}
-                        accent={accent}
-                        background={backgroundColor}
-                    />
-                    <AttentionItem
-                        iconElement={<MaterialCommunityIcons name="gavel" size={wp(4.2)} color={BRAND.navy} />}
-                        iconBg={`${BRAND.navy}1A`}
-                        title="2 new carrier bids received"
-                        subtitle="Route: Harare to Beira corridor"
-                        actionLabel="View bids"
-                        onPress={() =>
-                            
-                                router.push({ pathname: '/BooksAndBids/ViewBidsAndBooks', params: { dspRoute: 'Requested Loads' } })
-                            
-                        }
-                        border={border}
-                        textlight={textlight}
-                        accent={accent}
-                        background={backgroundColor}
-                    />
-                    <AttentionItem
-                        iconElement={<Ionicons name="cash-outline" size={wp(4.2)} color={BRAND.bad} />}
-                        iconBg={`${BRAND.bad}1A`}
-                        title="1 payment reminder overdue"
-                        subtitle="Invoice #TX-4471, 6 days past due"
-                        actionLabel="Remind"
-                        onPress={() => router.push('/Wallet/DepositAndWithdraw')}
-                        border={border}
-                        textlight={textlight}
-                        accent={accent}
-                        background={backgroundColor}
-                    />
-                    <AttentionItem
-                        iconElement={<Ionicons name="alert-circle-outline" size={wp(4.2)} color={BRAND.bad} />}
-                        iconBg={`${BRAND.bad}1A`}
-                        title="Delivery delay reported on TX-8810"
-                        subtitle="Driver flagged a route issue"
-                        actionLabel="Details"
-                        onPress={() => router.push('/Tracking/Index')}
-                        border={border}
-                        textlight={textlight}
-                        accent={accent}
-                        background={backgroundColor}
-                    />
-                </View>
 
                 {/* ============================ RECENT ACTIVITY ============================ */}
                 <SectionHeader title="Recent Activity" textlight={textlight} accent={accent} />
@@ -732,7 +826,7 @@ export default function TransixDashboard() {
                         label="Add Load"
                         iconElement={<FontAwesome6 name="box" size={wp(4.4)} color={BRAND.navy} />}
                         iconBg={`${BRAND.navy}1A`}
-                        onPress={()=> router.push('/Logistics/Loads/AddLoads')}
+                        onPress={() => router.push('/Logistics/Loads/AddLoads')}
                         background={background}
                         border={border}
                         textlight={textlight}
@@ -1156,5 +1250,30 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontWeight: '600',
         fontSize: wp(2.9),
+    }, miniContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '50%',
+        marginBottom: hp(1.8),
     },
+
+    miniIcon: {
+        width: wp(8),
+        height: wp(8),
+        borderRadius: wp(2),
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: wp(2),
+    },
+
+    miniValue: {
+        fontSize: wp(3.8),
+        fontWeight: '700',
+    },
+
+    miniLabel: {
+        fontSize: wp(3),
+        opacity: 0.6,
+    },
+
 });

@@ -10,7 +10,7 @@ import { validateReferrerCode, setDocuments, updateDocument } from "@/db/operati
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { hp, wp } from "@/constants/common";
-
+import SubscriptionPaymentModal from "@/components/SubscriptionPaymentModal";
 
 
 function BrokerageSelector() {
@@ -120,6 +120,21 @@ function BrokerageSelector() {
         <View style={[, styles.container, { backgroundColor: background }]}>
             <CustomHeader pageTitle="Brokerage Selector" />
 
+
+
+
+
+
+{/* 
+        <SubscriptionPaymentModal
+  isVisible={showModal}
+  onClose={() => setShowModal(false)}
+  loadVehicles={loadVehicles}
+  vehicleId={selectedTruck.id}
+  vehicleName={selectedTruck.name}
+  subscriptionType="truck"      // or "broker" / "tracking"
+  payerUserId={currentUser.id}
+/> */}
 
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingHorizontal: 13, marginTop: hp(4) }}>
