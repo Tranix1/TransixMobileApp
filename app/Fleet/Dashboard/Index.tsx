@@ -61,6 +61,8 @@ interface OverviewCardProps {
     backgroundLight: string;
     border: string;
     textlight: string;
+        onPress?: () => void;
+
 }
 
 interface OperationsCardProps {
@@ -173,99 +175,65 @@ const OverviewCard = ({
     backgroundLight,
     border,
     textlight,
-}: OverviewCardProps) => (
-    <View style={[styles.overviewCard, { backgroundColor: background, borderColor: border }]}>
-        <View style={styles.overviewCardHead}>
-            <View style={[styles.overviewIconWrap, { backgroundColor: iconBg }]}>{iconElement}</View>
-            <ThemedText type="tiny" style={styles.overviewCardTitle}>
-                {title}
-            </ThemedText>
-        </View>
-
-        <ThemedText style={styles.overviewPrimaryValue}>{primaryValue}</ThemedText>
-        <ThemedText type="tiny" style={{ color: textlight, marginBottom: hp(1) }}>
-            {primaryLabel}
-        </ThemedText>
-
-        <View>
-            {rows.map((row, index) => (
-                <MiniStatRow
-                    key={`${title}-${row.label}-${index}`}
-                    label={row.label}
-                    value={row.value}
-                    dotColor={row.dotColor}
-                    border={border}
-                    textlight={textlight}
-                />
-            ))}
-        </View>
-    </View>
-);
-
-const OperationsCard = ({
-    title,
-    subtitle,
-    iconElement,
-    iconBg,
     onPress,
-    background,
-    border,
-    textlight,
-}: OperationsCardProps) => (
+}: OverviewCardProps) => (
     <TouchableOpacity
+        activeOpacity={0.85}
         onPress={onPress}
-        activeOpacity={0.75}
-        style={[styles.operationsCard, { backgroundColor: background, borderColor: border }]}
+        disabled={!onPress}
+        style={[
+            styles.overviewCard,
+            {
+                backgroundColor: background,
+                borderColor: border,
+            },
+        ]}
     >
-        <View style={[styles.operationsIconWrap, { backgroundColor: iconBg }]}>{iconElement}</View>
-        <ThemedText type="tiny" style={styles.operationsTitle}>
-            {title}
-        </ThemedText>
-        <ThemedText type="tiny" style={{ color: textlight }}>
-            {subtitle}
-        </ThemedText>
+        <View>
+            <View style={styles.overviewCardHead}>
+                <View
+                    style={[
+                        styles.overviewIconWrap,
+                        { backgroundColor: iconBg },
+                    ]}
+                >
+                    {iconElement}
+                </View>
+
+                <ThemedText type="tiny" style={styles.overviewCardTitle}>
+                    {title}
+                </ThemedText>
+            </View>
+
+            <ThemedText style={styles.overviewPrimaryValue}>
+                {primaryValue}
+            </ThemedText>
+
+            <ThemedText
+                type="tiny"
+                style={{ color: textlight, marginBottom: hp(1) }}
+            >
+                {primaryLabel}
+            </ThemedText>
+
+            <View>
+                {rows.map((row, index) => (
+                    <MiniStatRow
+                        key={`${title}-${row.label}-${index}`}
+                        label={row.label}
+                        value={row.value}
+                        dotColor={row.dotColor}
+                        border={border}
+                        textlight={textlight}
+                    />
+                ))}
+            </View>
+        </View>
     </TouchableOpacity>
 );
 
-const AttentionItem = ({
-    iconElement,
-    iconBg,
-    title,
-    subtitle,
-    actionLabel,
-    onPress,
-    primary,
-    border,
-    textlight,
-    accent,
-    background,
-}: AttentionItemProps) => (
-    <View style={[styles.attentionItem, { borderBottomColor: border }]}>
-        <View style={[styles.attentionIconWrap, { backgroundColor: iconBg }]}>{iconElement}</View>
-        <View style={styles.attentionBody}>
-            <ThemedText type="tiny" style={styles.attentionTitle} numberOfLines={2}>
-                {title}
-            </ThemedText>
-            <ThemedText type="tiny" style={{ color: textlight, marginTop: hp(0.2) }}>
-                {subtitle}
-            </ThemedText>
-        </View>
-        <TouchableOpacity
-            onPress={onPress}
-            activeOpacity={0.75}
-            style={[
-                styles.attentionBtn,
-                primary
-                    ? { backgroundColor: BRAND.navy, borderColor: BRAND.navy }
-                    : { backgroundColor: background, borderColor: border },
-            ]}
-        >
-            <ThemedText type="tiny" style={{ color: primary ? '#fff' : textlight, fontWeight: '700' }}>
-                {actionLabel}
-            </ThemedText>
-        </TouchableOpacity>
-    </View>
-);
+
+
 
 const ActivityItem = ({ text, time, dotColor, isLast, border, textlight }: ActivityItemProps) => (
     <View style={styles.activityItem}>
@@ -348,7 +316,7 @@ export default function TransixDashboard() {
     ];
 
     return (
-        <SafeAreaView style={[styles.safeArea, { backgroundColor: background }]}>
+        <View style={[styles.safeArea, { backgroundColor: background }]}>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 {/* ============================= HEADER ============================= */}
                 <View style={styles.headerRow}>
@@ -599,6 +567,7 @@ export default function TransixDashboard() {
                         backgroundLight={backgroundColor}
                         border={border}
                         textlight={textlight}
+                        onPress={()=>router.push("/Assignments/Index")}
                     />
                     <OverviewCard
                         title="Finance"
@@ -614,6 +583,8 @@ export default function TransixDashboard() {
                         backgroundLight={backgroundColor}
                         border={border}
                         textlight={textlight}
+                            onPress={() => router.push("/Fleet/Finance/Index")}
+
                     />
 
 
@@ -869,7 +840,7 @@ export default function TransixDashboard() {
                     />
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 

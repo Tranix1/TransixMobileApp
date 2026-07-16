@@ -70,7 +70,7 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement}
                                         <FontAwesome6 name="user" size={wp(7)} color={icon} />;
                                     </View>
                                 </TouchableNativeFeedback>
-                                  <TouchableNativeFeedback onPress={() => router.push("/Fleet/Profile/Index")}  >
+                                  {/* <TouchableNativeFeedback onPress={() => router.push("/Fleet/Profile/Index")}  >
                                     <View style={{ padding: wp(2) }}>
                                         <FontAwesome6 name="user" size={wp(7)} color={icon} />;
                                     </View>
@@ -79,7 +79,7 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement}
                                     <View style={{ padding: wp(2) }}>
                                         <FontAwesome6 name="user" size={wp(7)} color={icon} />;
                                     </View>
-                                </TouchableNativeFeedback>
+                                </TouchableNativeFeedback> */}
 
                                 <View style={{}}>
                                     <View style={{}}>

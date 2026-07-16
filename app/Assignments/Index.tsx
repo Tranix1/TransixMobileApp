@@ -339,31 +339,49 @@ function RejectReasonModal({
 // running list per type, and bumps notesCount/issuesCount on the parent doc.
 // ---------------------------------------------------------------------------
 function AssignmentActivityPanel({
-    
+
     assignmentId,
     fleetId,
     initialNotesCount,
     initialIssuesCount,
+    cargoRate,
+    cargoRateCurrency,
+    cargoRateModel,
+    cargoRatePerKm,
+    cargoPaymentTerms,
     accent,
     backgroundLight,
     icon,
+
 }: {
     assignmentId: string;
     fleetId: string | undefined;
     initialNotesCount?: number;
     initialIssuesCount?: number;
+    cargoRate: string,
+    cargoRateCurrency: string;
+    cargoRateModel: string;
+    cargoRatePerKm: string;
+    cargoPaymentTerms: [];
     accent: string;
     backgroundLight: string;
     icon: string
 }) {
     const { user, currentRole } = useAuth();
 
+
+    console.log(cargoRate,
+        cargoRateCurrency,
+        cargoRateModel,
+        cargoRatePerKm,
+        cargoPaymentTerms,)
+
     const [activityView, setActivityView] = useState<"NOTE" | "ISSUE" | null>(null);
     const [activityText, setActivityText] = useState("");
     const [assignmentActivity, setAssignmentActivity] = useState<any[]>([]);
     const [loadingActivity, setLoadingActivity] = useState(false);
 
-    const [financeView ,setFinanceView] = useState(false)
+    const [financeView, setFinanceView] = useState(false)
 
     const [savingActivity, setSavingActivity] = useState(false);
     const [counts, setCounts] = useState({
@@ -397,7 +415,7 @@ function AssignmentActivityPanel({
         loadActivityCounts();
     }, [assignmentId]);
 
-const loadAssignmentActivity = async () => {
+    const loadAssignmentActivity = async () => {
         if (!assignmentId) return;
 
         try {
@@ -433,9 +451,6 @@ const loadAssignmentActivity = async () => {
         loadAssignmentActivity();
     };
 
-    const openFincialView = () => {
-        
-    }
 
 
     const saveActivity = async () => {
@@ -518,11 +533,6 @@ const loadAssignmentActivity = async () => {
 
 
 
- 
-
-
-
-
 
 
 
@@ -534,7 +544,7 @@ const loadAssignmentActivity = async () => {
         <View>
             {/* NOTES + ISSUES TRIGGERS */}
             <View style={{ flexDirection: "row", gap: wp(2), marginTop: wp(2) }}>
-                  <TouchableOpacity style={styles.actionButton} onPress={()=>setFinanceView(true)}>
+                <TouchableOpacity style={styles.actionButton} onPress={() => setFinanceView(true)}>
                     <Ionicons name="chatbubble-outline" size={16} color={accent} />
                     <ThemedText style={{ color: accent }}>Finance ({counts.notesCount})</ThemedText>
                 </TouchableOpacity>
@@ -851,16 +861,16 @@ const loadAssignmentActivity = async () => {
             )}
 
 
-<FinancePanel
-  visible={financeView}
-  onClose={() => setFinanceView(false)}
-  assignmentId={assignmentId}
-  accent={accent}          // optional, defaults to a purple
-  icon={icon}               // optional
-  backgroundLight={backgroundLight} // optional
-/>
-
-
+            <FinancePanel
+                visible={financeView}
+                onClose={() => setFinanceView(false)}
+                assignmentId={assignmentId}
+                rate={Number(cargoRate)}
+                cargoRateCurrency={cargoRateCurrency}
+                cargoRateModel={cargoRateModel}
+                ratePerKm={Number(cargoRatePerKm)}
+                paymentTerms={cargoPaymentTerms}
+            />
 
 
 
@@ -1487,10 +1497,10 @@ function Jobs() {
                     </TouchableOpacity>}
 
 
-                         {assignmentData.status === "COMPLETED"&&assignmentData.externalLoad && currentRole.accType === "brokerage" && <TouchableOpacity
+                    {assignmentData.status === "COMPLETED" && assignmentData.externalLoad && currentRole.accType === "brokerage" && <TouchableOpacity
                         style={styles.actionButton}
                         onPress={() => cargoOwnerConfirmation(
-                            assignmentData.id , 
+                            assignmentData.id,
                             assignmentData.shipper)}
                     >
                         <Ionicons
@@ -1506,10 +1516,10 @@ function Jobs() {
                     </TouchableOpacity>}
 
 
-                      {assignmentData.status === "COMPLETED"&&assignmentData.source=== "Fleet" && currentRole.accType === "fleet" && <TouchableOpacity
+                    {assignmentData.status === "COMPLETED" && assignmentData.source === "Fleet" && currentRole.accType === "fleet" && <TouchableOpacity
                         style={styles.actionButton}
                         onPress={() => {
-                            
+
                         }}
                     >
                         <Ionicons
@@ -1522,7 +1532,7 @@ function Jobs() {
                             Confrim Delivered
                         </ThemedText>
 
-                    </TouchableOpacity>}   
+                    </TouchableOpacity>}
 
 
 
@@ -1535,6 +1545,11 @@ function Jobs() {
                     fleetId={assignmentData?.fleetDetails?.id}
                     initialNotesCount={assignmentData.notesCount}
                     initialIssuesCount={assignmentData.issuesCount}
+                    cargoRate={assignmentData.loadDetails.rate}
+                    cargoRateCurrency={assignmentData.loadDetails.currency}
+                    cargoRateModel={assignmentData.loadDetails.model}
+                    cargoRatePerKm={assignmentData.loadDetails.ratePerKm}
+                    cargoPaymentTerms={assignmentData.loadDetails.paymentTerms}
                     accent={accent}
                     backgroundLight={backgroundLight}
                     icon={icon}
@@ -1652,7 +1667,7 @@ function Jobs() {
 
                     statusHistory: arrayUnion({
                         fromStatus: "IN_TRANSIT",
-                        toStatus: "AWAITING_OWNER_CONFIRMATION", 
+                        toStatus: "AWAITING_OWNER_CONFIRMATION",
 
                         changedAt: Date.now(),
 
@@ -1680,91 +1695,91 @@ function Jobs() {
 
 
 
-    const cargoOwnerConfirmation = async (assignmentId: string  , shipper?:any) => {
+    const cargoOwnerConfirmation = async (assignmentId: string, shipper?: any) => {
         try {
 
-            if(!shipper ){
+            if (!shipper) {
 
-            await updateDocument(
-                `fleets/${scopeId}/assignments`,
-                assignmentId,
-                {
-                    status: "COMPLETED",
+                await updateDocument(
+                    `fleets/${scopeId}/assignments`,
+                    assignmentId,
+                    {
+                        status: "COMPLETED",
 
-                    updatedAt: Date.now(),
-                    updatedBy: user?.uid ?? "",
-                    updatedByName: user?.displayName ?? "User",
-                    updatedByRole: currentRole?.userRole ?? "",
-                    updatedByAcc: currentRole?.accType ?? "",
+                        updatedAt: Date.now(),
+                        updatedBy: user?.uid ?? "",
+                        updatedByName: user?.displayName ?? "User",
+                        updatedByRole: currentRole?.userRole ?? "",
+                        updatedByAcc: currentRole?.accType ?? "",
 
-                    statusHistory: arrayUnion({
-                        fromStatus: "AWAITING_OWNER_CONFIRMATION",
-                        toStatus: "COMPLETED",
+                        statusHistory: arrayUnion({
+                            fromStatus: "AWAITING_OWNER_CONFIRMATION",
+                            toStatus: "COMPLETED",
 
-                        changedAt: Date.now(),
+                            changedAt: Date.now(),
 
-                        changedBy: user?.uid ?? "",
-                        changedByName: user?.displayName ?? "User",
-                        changedByRole: currentRole?.userRole ?? "",
-                        changedByAcc: currentRole?.accType ?? "",
-                    })
-                }
-            );
-            }else if(shipper){
+                            changedBy: user?.uid ?? "",
+                            changedByName: user?.displayName ?? "User",
+                            changedByRole: currentRole?.userRole ?? "",
+                            changedByAcc: currentRole?.accType ?? "",
+                        })
+                    }
+                );
+            } else if (shipper) {
 
-                let path =  shipper.accType ==="fleet" ? `fleets/${shipper.organizationId}/assignments`: `brokerages/${shipper.organizationId}/assignments`
+                let path = shipper.accType === "fleet" ? `fleets/${shipper.organizationId}/assignments` : `brokerages/${shipper.organizationId}/assignments`
 
-                 await updateDocument(
-                path,
-                assignmentId,
-                {
-                    status: "COMPLETED",
+                await updateDocument(
+                    path,
+                    assignmentId,
+                    {
+                        status: "COMPLETED",
 
-                    updatedAt: Date.now(),
-                    updatedBy: user?.uid ?? "",
-                    updatedByName: user?.displayName ?? "User",
-                    updatedByRole: currentRole?.userRole ?? "",
-                    updatedByAcc: currentRole?.accType ?? "",
+                        updatedAt: Date.now(),
+                        updatedBy: user?.uid ?? "",
+                        updatedByName: user?.displayName ?? "User",
+                        updatedByRole: currentRole?.userRole ?? "",
+                        updatedByAcc: currentRole?.accType ?? "",
 
-                    statusHistory: arrayUnion({
-                        fromStatus: "AWAITING_OWNER_CONFIRMATION",
-                        toStatus: "COMPLETED",
+                        statusHistory: arrayUnion({
+                            fromStatus: "AWAITING_OWNER_CONFIRMATION",
+                            toStatus: "COMPLETED",
 
-                        changedAt: Date.now(),
+                            changedAt: Date.now(),
 
-                        changedBy: user?.uid ?? "",
-                        changedByName: user?.displayName ?? "User",
-                        changedByRole: currentRole?.userRole ?? "",
-                        changedByAcc: currentRole?.accType ?? "",
-                    })
-                }
-            );
+                            changedBy: user?.uid ?? "",
+                            changedByName: user?.displayName ?? "User",
+                            changedByRole: currentRole?.userRole ?? "",
+                            changedByAcc: currentRole?.accType ?? "",
+                        })
+                    }
+                );
 
-             await updateDocument(
-                `fleets/${scopeId}/assignments`,
-                assignmentId,
-                {
-                    status: "COMPLETED",
+                await updateDocument(
+                    `fleets/${scopeId}/assignments`,
+                    assignmentId,
+                    {
+                        status: "COMPLETED",
 
-                    updatedAt: Date.now(),
-                    updatedBy: user?.uid ?? "",
-                    updatedByName: user?.displayName ?? "User",
-                    updatedByRole: currentRole?.userRole ?? "",
-                    updatedByAcc: currentRole?.accType ?? "",
+                        updatedAt: Date.now(),
+                        updatedBy: user?.uid ?? "",
+                        updatedByName: user?.displayName ?? "User",
+                        updatedByRole: currentRole?.userRole ?? "",
+                        updatedByAcc: currentRole?.accType ?? "",
 
-                    statusHistory: arrayUnion({
-                        fromStatus: "AWAITING_OWNER_CONFIRMATION",
-                        toStatus: "COMPLETED",
+                        statusHistory: arrayUnion({
+                            fromStatus: "AWAITING_OWNER_CONFIRMATION",
+                            toStatus: "COMPLETED",
 
-                        changedAt: Date.now(),
+                            changedAt: Date.now(),
 
-                        changedBy: user?.uid ?? "",
-                        changedByName: user?.displayName ?? "User",
-                        changedByRole: currentRole?.userRole ?? "",
-                        changedByAcc: currentRole?.accType ?? "",
-                    })
-                }
-            );
+                            changedBy: user?.uid ?? "",
+                            changedByName: user?.displayName ?? "User",
+                            changedByRole: currentRole?.userRole ?? "",
+                            changedByAcc: currentRole?.accType ?? "",
+                        })
+                    }
+                );
             }
 
 

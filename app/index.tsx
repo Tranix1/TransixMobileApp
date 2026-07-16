@@ -4,7 +4,7 @@ import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from "expo-router";
 
-import Dashboard from "./Dashboard/Index";
+import Dashboard from "./Fleet/Dashboard/Index";
 
 import Home from "./Home/Index";
 import About from "./About/Index";
