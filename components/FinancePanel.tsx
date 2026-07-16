@@ -390,7 +390,7 @@ export default function FinancePanel({
                 marginTop: wp(3),
                 padding: wp(3.5),
                 borderRadius: wp(3),
-                backgroundColor: backgroundLight,
+                backgroundColor: background,
                 borderWidth: 1,
                 borderColor: "rgba(128,128,128,0.2)",
                 shadowColor: "#000",
@@ -410,7 +410,7 @@ export default function FinancePanel({
 
             {/* RATE INFO */}
             {(rate > 0 || !!ratePerKm) && (
-                <View style={[styles.rateBar, { backgroundColor: background }]}>
+                <View style={[styles.rateBar, { backgroundColor: backgroundLight }]}>
                     {rate > 0 ? (
                         <ThemedText style={{ fontSize: 12, color: "#8A8A8E" }}>
                             Rate <ThemedText style={{ fontSize: 12, fontWeight: "700", color: icon }}>{cargoRateCurrency} {rate.toFixed(2)} {cargoRateModel} </ThemedText>
@@ -443,7 +443,7 @@ export default function FinancePanel({
                             marginRight: idx < 2 ? wp(2) : 0,
                             padding: wp(2.5),
                             borderRadius: wp(2.5),
-                            backgroundColor: background,
+                            backgroundColor: backgroundLight,
                             alignItems: "center",
                         }}
                     >
@@ -464,7 +464,7 @@ export default function FinancePanel({
                         style={[
                             styles.tabButton,
                             {
-                                backgroundColor: tab === t ? accent : background,
+                                backgroundColor: tab === t ? accent : backgroundLight,
                                 marginRight: t === "INCOME" ? wp(2) : 0,
                             },
                         ]}
@@ -503,20 +503,20 @@ export default function FinancePanel({
                                     style={[
                                         styles.milestoneChip,
                                         {
-                                            borderColor: isDone ? "#2E7D32" : isSelected ? accent : "rgba(128,128,128,0.3)",
+                                            borderColor: isDone ? accent : isSelected ? accent : "rgba(128,128,128,0.3)",
                                             backgroundColor: isDone ? "rgba(46,125,50,0.08)" : isSelected ? accent : "transparent",
                                         },
                                     ]}
                                 >
                                     {isDone && (
-                                        <Ionicons name="checkmark-circle" size={14} color="#2E7D32" style={{ marginRight: 4 }} />
+                                        <Ionicons name="checkmark-circle" size={14} color={accent} style={{ marginRight: 4 }} />
                                     )}
                                     <View>
                                         <ThemedText
                                             style={{
                                                 fontSize: 12,
                                                 fontWeight: "bold",
-                                                color: isDone ? "#2E7D32" : isSelected ? backgroundLight : icon,
+                                                color: isDone ? accent : isSelected ? backgroundLight : icon,
                                             }}
                                         >
                                             {m.label} • {m.percent}%
@@ -525,7 +525,7 @@ export default function FinancePanel({
                                             <ThemedText
                                                 style={{
                                                     fontSize: 10.5,
-                                                    color: isDone ? "#2E7D32" : isSelected ? backgroundLight : "#8A8A8E",
+                                                    color: isDone ? accent : isSelected ? backgroundLight : "#8A8A8E",
                                                 }}
                                             >
                                                 ${milestoneAmount.toFixed(2)}

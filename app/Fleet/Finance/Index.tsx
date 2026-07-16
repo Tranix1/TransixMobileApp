@@ -1416,21 +1416,15 @@ export default function FleetFinanceScreen() {
     // ============================================================
 
     return (
-        <View
-            style={{
-                borderRadius: wp(3),
-                backgroundColor: background,
-                borderWidth: 1,
-                borderColor: "rgba(128,128,128,0.2)",
-                flex : 1
-            }}
-        >
-          
+        <View style={{backgroundColor: background,flex : 1}}>
+          <View style={{paddingTop:30}}>
+
         <Heading page="Finance" />
+          </View>
 
 
 
-<View>
+<View style={{marginTop :15 , padding}}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: wp(3) }}>
                 <TabButton tab="OVERVIEW" label="Overview" iconName="stats-chart-outline" />
                 <TabButton tab="TRIP" label="Trip Expenses" iconName="car-outline" />

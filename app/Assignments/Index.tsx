@@ -370,11 +370,8 @@ function AssignmentActivityPanel({
     const { user, currentRole } = useAuth();
 
 
-    console.log(cargoRate,
-        cargoRateCurrency,
-        cargoRateModel,
-        cargoRatePerKm,
-        cargoPaymentTerms,)
+   
+
 
     const [activityView, setActivityView] = useState<"NOTE" | "ISSUE" | null>(null);
     const [activityText, setActivityText] = useState("");
@@ -449,6 +446,7 @@ function AssignmentActivityPanel({
     const openPanel = (type: "NOTE" | "ISSUE") => {
         setActivityView(type);
         loadAssignmentActivity();
+        setFinanceView(false)
     };
 
 
@@ -543,24 +541,79 @@ function AssignmentActivityPanel({
     return (
         <View>
             {/* NOTES + ISSUES TRIGGERS */}
-            <View style={{ flexDirection: "row", gap: wp(2), marginTop: wp(2) }}>
-                <TouchableOpacity style={styles.actionButton} onPress={() => setFinanceView(true)}>
-                    <Ionicons name="chatbubble-outline" size={16} color={accent} />
-                    <ThemedText style={{ color: accent }}>Finance ({counts.notesCount})</ThemedText>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton} onPress={() => openPanel("NOTE")}>
-                    <Ionicons name="chatbubble-outline" size={16} color={accent} />
-                    <ThemedText style={{ color: accent }}>Notes ({counts.notesCount})</ThemedText>
-                </TouchableOpacity>
+           <View style={{ flexDirection: "row", gap: wp(2), marginTop: wp(2) }}>
 
-                <TouchableOpacity
-                    style={[styles.actionButton, { borderColor: "#F44336" }]}
-                    onPress={() => openPanel("ISSUE")}
-                >
-                    <Ionicons name="warning-outline" size={16} color="#F44336" />
-                    <ThemedText style={{ color: "#F44336" }}>Issues ({counts.issuesCount})</ThemedText>
-                </TouchableOpacity>
-            </View>
+    {/* FINANCE */}
+    <TouchableOpacity
+        style={[
+            styles.actionButton,
+            {
+                borderColor: "#1E8E5A",
+                backgroundColor: "#1E8E5A25",
+            },
+        ]}
+        activeOpacity={0.8}
+        onPress={() => {setActivityView(null) ; setFinanceView(true)} }
+    >
+        <Ionicons
+            name="wallet-outline"
+            size={16}
+            color="#1E8E5A"
+        />
+
+        <ThemedText
+            style={{
+                color: "#1E8E5A",
+                fontWeight: "600",
+            }}
+        >
+            Finance
+        </ThemedText>
+    </TouchableOpacity>
+
+
+    {/* NOTES */}
+    <TouchableOpacity
+        style={styles.actionButton}
+        onPress={() => openPanel("NOTE")}
+        activeOpacity={0.8}
+    >
+        <Ionicons
+            name="chatbubble-outline"
+            size={16}
+            color={accent}
+        />
+
+        <ThemedText style={{ color: accent }}>
+            Notes ({counts.notesCount})
+        </ThemedText>
+    </TouchableOpacity>
+
+
+    {/* ISSUES */}
+    <TouchableOpacity
+        style={[
+            styles.actionButton,
+            {
+                borderColor: "#F44336",
+                backgroundColor: "#F4433612",
+            },
+        ]}
+        onPress={() => openPanel("ISSUE")}
+        activeOpacity={0.8}
+    >
+        <Ionicons
+            name="warning-outline"
+            size={16}
+            color="#F44336"
+        />
+
+        <ThemedText style={{ color: "#F44336" }}>
+            Issues ({counts.issuesCount})
+        </ThemedText>
+    </TouchableOpacity>
+
+</View>
 
 
 
@@ -877,6 +930,9 @@ function AssignmentActivityPanel({
         </View>
     );
 }
+
+
+
 
 // ---------------------------------------------------------------------------
 // Main Assignments page (Fleet / Broker only — independent, no driver logic)
