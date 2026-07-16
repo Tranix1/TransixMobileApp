@@ -978,7 +978,7 @@ function Jobs() {
 
 
 
-                const q = query(collection(db, path), orderBy("timeStamp", "desc"));
+                const q = query(collection(db, path), orderBy("timeStamp", "desc"));    
 
                 const snapshot = await getDocs(q);
                 const results = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -992,6 +992,9 @@ function Jobs() {
 
         fetchAssignments();
     }, [accType, scopeId]);
+
+
+
 
     const updateCargoStatus = async (
         cargoId: string,

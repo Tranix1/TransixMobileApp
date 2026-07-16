@@ -44,7 +44,9 @@ import {
     ActivityIndicator,
     Alert,
     StyleSheet,
-    Platform,
+    Platform,ToastAndroid,
+    FlatList,
+    RefreshControl
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
@@ -68,6 +70,12 @@ import { useAuth } from "@/context/AuthContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import CustomHeader from "@/components/CustomHeader";
 import Heading from "@/components/Heading";
+import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import { fetchDocuments } from "@/db/operations";
+import AccentRingLoader from "@/components/AccentRingLoader";
+import { FleetTripTaransactionCard } from "@/components/fleetTripTaransactionCard";
+import { hp } from "@/constants/common";
+
 // ------------------------------------------------------
 //
 // ⚠️ NEW DEPENDENCY for the tyre purchase-date picker below:
@@ -78,7 +86,7 @@ import Heading from "@/components/Heading";
 // TYPES
 // ============================================================
 
-type TopTab = "OVERVIEW" | "TRIP" | "CATEGORIES" | "TYRES" | "DRIVER_PAY";
+type TopTab = "OVERVIEW" | "Fleet_Operations" | "CATEGORIES" | "TYRES" | "DRIVER_PAY";
 type Recurrence = "WEEKLY" | "MONTHLY" | "ONE_OFF";
 type PayFrequency = "MONTHLY" | "PER_TRIP";
 type EntryFlow = "COST" | "INCOME"; // Income category is the only INCOME flow
@@ -284,6 +292,7 @@ export default function FleetFinanceScreen() {
     const icon = useThemeColor("icon")
     const accent = useThemeColor("accent")
     const background = useThemeColor("background")
+    const textColor = useThemeColor("text")
 
     const fleetId = currentRole.organizationId|| currentRole.fleetId || ""
 
@@ -291,8 +300,20 @@ export default function FleetFinanceScreen() {
 
     // ---------- entries ----------
     const [entries, setEntries] = useState<FleetFinanceEntry[]>([]);
+    const [assignments , setAssigments ] = useState([])
     const [loadingEntries, setLoadingEntries] = useState(false);
     const [savingEntry, setSavingEntry] = useState(false);
+const [refreshing, setRefreshing] = useState(false)
+    const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [fleetOpererations, setFleetOperation] = useState<any[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+
+
+
+
 
     // ---------- tyres ----------
     const [tyres, setTyres] = useState<TyreRecord[]>([]);
@@ -345,6 +366,118 @@ export default function FleetFinanceScreen() {
     // LOADERS
     // ============================================================
 
+
+const onRefresh = async () => {
+        try {
+            setRefreshing(true);
+            setError(null);
+            await LoadFleetOperations();
+        } catch (error) {
+            console.error('Error refreshing loads:', error);
+            setError('Failed to refresh loads. Please try again.');
+            ToastAndroid.show('Failed to refresh loads', ToastAndroid.SHORT);
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
+
+
+
+  const LoadFleetOperations = async () => {
+        try {
+            setIsLoading(true)
+            setError(null)
+
+
+            let filters: any[] = [];
+            let collectionName: string | null = null;
+
+            if(currentRole.accType==="fleet"){
+            collectionName= `fleets/${currentRole.organizationId}/assignments`;
+            }
+          
+
+
+            // Safety
+            if (!collectionName) {
+                console.log("No cargo source found");
+                return [];
+            }
+
+
+            const maOperation = await fetchDocuments(
+                collectionName,
+                50,
+                undefined,
+                filters
+            );
+
+
+
+            if (maOperation.data.length) {
+                setFleetOperation(maOperation.data as [])
+                console.log('Loads fetched:', maOperation.data);
+                setLastVisible(maOperation.lastVisible)
+            } else {
+                setFleetOperation([])
+                setLastVisible(null)
+            }
+        } catch (error) {
+            console.error('Error loading loads:', error)
+            setError('Failed to load loads. Please try again.')
+            ToastAndroid.show('Failed to load loads', ToastAndroid.SHORT)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+
+
+
+
+    const loadMoreFleetOperations = async () => {
+            if (loadingMore || !lastVisible) return;
+    
+            try {
+                setLoadingMore(true);
+                setError(null);
+    
+                let filters: any[] = [];
+                let collectionName: string | null = null;
+    
+    
+                // Apply same filters as in LoadTructs for pagination
+                if(currentRole.accType==="fleet"){
+            collectionName= `fleets/${currentRole.organizationId}/assignments`;
+            }
+          
+       // Safety
+            if (!collectionName) {
+                console.log("No cargo source found");
+                return [];
+            }
+
+    
+                const result = await fetchDocuments(collectionName, 10, lastVisible, filters);
+    
+                if (result) {
+                    setFleetOperation([...fleetOpererations, ...result.data as []]);
+                    setLastVisible(result.lastVisible);
+                }
+            } catch (error) {
+                console.error('Error loading more loads:', error);
+                setError('Failed to load more loads. Please try again.');
+                ToastAndroid.show('Failed to load more loads', ToastAndroid.SHORT);
+            } finally {
+                setLoadingMore(false);
+            }
+        };
+
+
+
+
+
     const loadEntries = async () => {
         if (!fleetId) return;
         try {
@@ -358,6 +491,12 @@ export default function FleetFinanceScreen() {
             setLoadingEntries(false);
         }
     };
+
+
+
+
+
+
 
     const loadTyres = async () => {
         if (!fleetId) return;
@@ -388,6 +527,7 @@ export default function FleetFinanceScreen() {
     };
 
     useEffect(() => {
+        LoadFleetOperations()
         loadEntries();
         loadTyres();
         loadDriverPay();
@@ -465,46 +605,7 @@ export default function FleetFinanceScreen() {
         }
     };
 
-    // ============================================================
-    // SAVE: trip expense entry
-    // ============================================================
-
-    const saveTripEntry = async () => {
-        const numericAmount = parseFloat(tripAmount);
-        if (!numericAmount || numericAmount <= 0 || !fleetId) return;
-
-        try {
-            setSavingEntry(true);
-            const ref = collection(db, "fleetFinance", fleetId, "entries");
-            const payload: Omit<FleetFinanceEntry, "id"> = {
-                scope: "TRIP",
-                categoryKey: "TRIPS",
-                categoryLabel: "Trips",
-                subcategory: tripSubcategory,
-                amount: numericAmount,
-                flow: "COST",
-                tripRef: tripRef.trim() || undefined,
-                note: tripNote.trim() || undefined,
-                createdAt: Date.now(),
-                createdBy: user?.uid ?? "",
-                createdByName: user?.displayName ?? "User",
-                createdByRole: currentRole?.userRole ?? "User",
-            };
-
-            await addDoc(ref, payload);
-
-            setTripAmount("");
-            setTripNote("");
-            setTripRef("");
-            loadEntries();
-        } catch (error) {
-            console.log("Trip expense save error", error);
-            Alert.alert("Error", "Failed to save trip expense. Please try again.");
-        } finally {
-            setSavingEntry(false);
-        }
-    };
-
+  
     // ============================================================
     // DELETE entry
     // ============================================================
@@ -697,8 +798,8 @@ export default function FleetFinanceScreen() {
                 style={{
                     fontSize: 10.5,
                     marginTop: 2,
-                    fontWeight: "600",
-                    color: activeTab === tab ?background : icon,
+                    fontWeight: "bold",
+                    color: activeTab === tab ?textColor : icon,
                 }}
             >
                 {label}
@@ -897,11 +998,12 @@ export default function FleetFinanceScreen() {
         </View>
     );
 
-    const renderTripExpenses = () => (
-        <View>
-            <ThemedText style={{ fontSize: 13, fontWeight: "700", marginBottom: wp(2) }}>
-                Trip Expenses
+    const renderFleetOperations = () => (
+        <View >
+            <ThemedText style={{ fontSize: 13,  marginBottom: wp(2) ,color :accent , fontWeight:"bold"}}>
+                Fleet Operations
             </ThemedText>
+
             <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: wp(2.5) }}>
                 {TRIP_SUBCATEGORIES.map((s) => (
                     <TouchableOpacity
@@ -931,44 +1033,85 @@ export default function FleetFinanceScreen() {
                 ))}
             </View>
 
-            <Input
-                placeholder="Trip / assignment reference (optional)"
-                value={tripRef}
-                onChangeText={setTripRef}
-            />
-            <Input
-                placeholder="Amount"
-                value={tripAmount}
-                onChangeText={setTripAmount}
-                keyboardType="decimal-pad"
-                style={{ marginTop: wp(1.5) }}
-            />
-            <Input
-                placeholder="Note (optional)"
-                value={tripNote}
-                onChangeText={setTripNote}
-                style={{ marginTop: wp(1.5) }}
+
+            
+
+                 <FlatList
+                keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={{}}
+                data={fleetOpererations}
+
+
+
+
+                renderItem={({ item }) => (<FleetTripTaransactionCard assignmentData={item} />)}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[accent]}
+                    />
+                }
+                onEndReached={loadMoreFleetOperations}
+                onEndReachedThreshold={.5}
+                ListEmptyComponent={
+                    <View style={styles.emptyContainer}>
+                        {isLoading ? (
+                            <>
+                                <AccentRingLoader color={accent} size={32} dotSize={6} />
+                                <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                                    Loading Loads…
+                                </ThemedText>
+                                <ThemedText type='tiny' style={styles.emptySubtext}>
+                                    Please Wait
+                                </ThemedText>
+                            </>
+                        ) : error ? (
+                            <>
+                                <Ionicons name="alert-circle-outline" size={wp(8)} color="#ef4444" />
+                                <ThemedText type='defaultSemiBold' style={[styles.emptyText, { color: '#ef4444' }]}>
+                                    {error}
+                                </ThemedText>
+                                <ThemedText type='tiny' style={styles.emptySubtext}>
+                                    Pull to refresh
+                                </ThemedText>
+                            </>
+                        ) : (
+                            <>
+                                
+                            </>
+                        )}
+                    </View>
+                }
+                ListFooterComponent={
+                    <View style={{ marginBottom: wp(10), marginTop: wp(6) }}>
+                        {
+                            loadingMore ?
+                                <View style={{ flexDirection: "row", gap: wp(4), alignItems: 'center', justifyContent: 'center' }}>
+                                    <ThemedText type='tiny' style={{ color: icon }}>Loading More</ThemedText>
+                                    <AccentRingLoader color={accent} size={20} dotSize={4} />
+                                </View>
+                                :
+                                (!lastVisible && fleetOpererations.length > 0) ?
+                                    <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                                        <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>No more Loads to Load
+                                        </ThemedText>
+                                        <Ionicons color={icon} style={{}} name='alert-circle-outline' size={wp(6)} />
+
+                                    </View>
+                                    : null
+                        }
+
+                    </View>
+                }
             />
 
-            <TouchableOpacity
-                style={[styles.actionButton, { marginTop: wp(2.5), justifyContent: "center" }]}
-                disabled={savingEntry || !tripAmount.trim()}
-                onPress={saveTripEntry}
-            >
-                <ThemedText style={{ color: accent, fontWeight: "700" }}>
-                    {savingEntry ? "Saving..." : "Add Trip Expense"}
-                </ThemedText>
-            </TouchableOpacity>
+            
 
-            <View style={{ marginTop: wp(3) }}>
-                {loadingEntries ? (
-                    <ActivityIndicator size="small" color={accent} />
-                ) : (
-                    entries
-                        .filter((e) => e.scope === "TRIP")
-                        .map((item) => <EntryRow key={item.id} item={item} />)
-                )}
-            </View>
+            
+
+
+
         </View>
     );
 
@@ -1416,18 +1559,19 @@ export default function FleetFinanceScreen() {
     // ============================================================
 
     return (
-        <View style={{backgroundColor: background,flex : 1}}>
+        <View style={{backgroundColor: background,flex : 1, paddingHorizontal: wp(2) }}>
+          
           <View style={{paddingTop:30}}>
-
         <Heading page="Finance" />
+
           </View>
 
 
 
-<View style={{marginTop :15 , padding}}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: wp(3) }}>
+<View style={{marginTop:10 , }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: wp(6) }}>
                 <TabButton tab="OVERVIEW" label="Overview" iconName="stats-chart-outline" />
-                <TabButton tab="TRIP" label="Trip Expenses" iconName="car-outline" />
+                <TabButton tab="Fleet_Operations" label="Fleet Operations" iconName="car-outline" />
                 <TabButton tab="CATEGORIES" label="Categories" iconName="albums-outline" />
                 <TabButton tab="TYRES" label="Tyres" iconName="disc-outline" />
                 <TabButton tab="DRIVER_PAY" label="Driver Pay" iconName="people-outline" />
@@ -1436,7 +1580,7 @@ export default function FleetFinanceScreen() {
 
 
             {activeTab === "OVERVIEW" && renderOverview()}
-            {activeTab === "TRIP" && renderTripExpenses()}
+            {activeTab === "Fleet_Operations" && renderFleetOperations()}
             {activeTab === "CATEGORIES" && renderCategories()}
             {activeTab === "TYRES" && renderTyres()}
             {activeTab === "DRIVER_PAY" && renderDriverPay()}
@@ -1455,4 +1599,53 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "rgba(128,128,128,0.25)",
     },
+
+        container: {
+            padding: wp(2)
+        }, countryButton: {
+            padding: wp(2),
+            paddingHorizontal: wp(4),
+            borderRadius: wp(4)
+    
+        }, countryButtonSelected: {
+            backgroundColor: '#73c8a9'
+        }, detailRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginTop: wp(1),
+        },
+        contactOptions: {
+            paddingVertical: wp(4),
+            flexDirection: 'row',
+            gap: wp(5),
+            marginTop: 'auto',
+            justifyContent: 'space-around'
+        },
+        contactOption: {
+            alignItems: 'center'
+        },
+        contactButton: {
+            height: wp(12),
+            width: wp(12),
+            borderRadius: wp(90),
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: wp(1)
+        },
+        ownerActions: {
+            paddingVertical: wp(4),
+            flexDirection: 'row',
+            gap: wp(5),
+            marginTop: 'auto'
+        }, emptySubtext: {
+            textAlign: 'center',
+            marginTop: wp(2)
+        }, emptyText: {
+            textAlign: 'center'
+        }, emptyContainer: {
+            minHeight: hp(80),
+            justifyContent: 'center',
+            alignItems: 'center'
+        },
+    
 });

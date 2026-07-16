@@ -20,7 +20,7 @@ import { wp,hp } from "@/constants/common";
         }
     };
 
-export const fleetTripTaransactionCard = (assignmentData: any) => {
+export const FleetTripTaransactionCard = (assignmentData: any) => {
     const backgroundLight = useThemeColor("backgroundLight")
     const accent = useThemeColor("accent")
 
@@ -28,14 +28,14 @@ export const fleetTripTaransactionCard = (assignmentData: any) => {
 
 
         return (
-            <View key={assignmentData.id} style={[styles.cargoItem, { backgroundColor: backgroundLight }]}>
+            <View  style={[styles.cargoItem, { backgroundColor: backgroundLight }]}>
 
 
 
 
                 <View style={styles.cargoHeader}>
                     <ThemedText style={styles.cargoTitle}>
-                        {assignmentData?.loadDetails?.productName || 'Load'} - {assignmentData.truckDetails.truckName}
+                        {assignmentData?.loadDetails?.productName || 'Load'} - {assignmentData?.truckDetails?.truckName }
                     </ThemedText>
 
                     <View style={[styles.statusBadge, { backgroundColor: getStatusColor(assignmentData.status) }]}>
