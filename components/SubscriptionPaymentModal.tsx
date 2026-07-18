@@ -31,7 +31,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
   vehicleId,
   vehicleName,
   subscriptionType,
-  payerUserId,
+  payerUserId: payerOrganizationId,
 }) => {
   const accent = useThemeColor('accent');
   const background = useThemeColor('background');
@@ -59,6 +59,8 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
     setCardPollUrl(null);
   };
 
+
+
   const finalizeSuccess = async () => {
     const expiryDate = new Date();
     expiryDate.setMonth(expiryDate.getMonth() + 1);
@@ -75,8 +77,11 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
       paymentType: 'Subscription',
     });
 
+
+    let totalTruckSubscriptions ,commissionAmount = 0
+
     // Referral commission — isolated in referrals/referralService.ts
-    await creditReferralIfEligible(payerUserId, subscriptionType);
+    await creditReferralIfEligible(payerOrganizationId, subscriptionType,commissionAmount ,totalTruckSubscriptions );
 
     if(loadVehicles)
     loadVehicles();
@@ -91,6 +96,9 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
     resetState();
     onClose();
   };
+
+
+  
 
   const handleEcocashConfirm = async () => {
     if (!phoneNumber) {

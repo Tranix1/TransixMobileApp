@@ -54,9 +54,7 @@ export default function AddTrackedVehicle() {
 
   const fetchUserTrucks = async () => {
     try {
-      console.log("started loading")
       const trucks = await fetchDocuments(`fleets/${currentRole.fleetId}/Trucks`, 50, undefined, );
-      console.log("finished loading")    
       setUserTrucks(trucks.data || []);
       setShowUserTrucks(true);
     } catch (error) {

@@ -75,8 +75,8 @@ interface ReferralCreditResult {
 export async function creditReferralIfEligible(
   payerOrganizationId: string,
   subscriptionType: SubscriptionType,
-  subscriberId: string,
   commissionAmount: number,
+  totalTruckSubscriptions ?: number ,
 ): Promise<ReferralCreditResult> {
 
   try {
@@ -159,6 +159,7 @@ export async function creditReferralIfEligible(
         referredOrganizationId: payerOrganizationId,
 
         subscriptionType,
+        totalTruckSubscriptions :totalTruckSubscriptions|| 0 , 
 
         amount: commissionAmount,
 

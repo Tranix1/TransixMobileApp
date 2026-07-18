@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Image, StyleSheet, ScrollView, ToastAndroid, ActivityIndicator } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ImagePickerAsset } from 'expo-image-picker';
-import { addDocument, getDocById, setDocuments, getUsers, fetchDocuments, updateDocument, addDocumentWithId } from "@/db/operations";
+import { addDocument, getDocById, setDocuments, getUsers, fetchDocuments, updateDocument, addDocumentWithId, checkDocumentExists } from "@/db/operations";
 import { uploadImage } from "@/db/operations";
 import { handleChange } from "@/Utilities/utils";
 import { selectImageNoCrop, selectImageWithCrop } from "@/Utilities/imageUtils";
@@ -354,11 +354,130 @@ function AddTrucks() {
       return;
     }
 
+    const trialStartAt = Date.now();
+
+    const trialEndAt = new Date(trialStartAt);
+    trialEndAt.setDate(trialEndAt.getDate() + 30);
+
+    const subscriptionData = {
+      trialStartAt: trialStartAt.toString(),
+      trialEndAt: trialEndAt.getTime().toString(),
+    };
+
     try {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       // Generate unique truck ID
       const trucksRefPath = `fleets/${currentRole.fleetId}/Trucks`;
       const docRef = doc(collection(db, trucksRefPath));
       const truckId = docRef.id;
+
+
+
+      const trialAlreadyUsed = await checkDocumentExists(
+        "subscriptions",
+        [
+          where("type", "==", "truck"),
+          where("numberPlate", "==", formData.numberPlate),
+          where("isTrial", "==", true),
+        ]
+      );
+
+
+      let subscriptionData;
+
+
+      if (!trialAlreadyUsed) {
+
+        const trialStartAt = Date.now();
+
+        const trialEndDate = new Date(trialStartAt);
+        trialEndDate.setDate(
+          trialEndDate.getDate() + 30
+        );
+
+        const trialEndAt = trialEndDate.getTime();
+
+
+        subscriptionData = {
+
+          status: "trial",
+
+          trialDays: 30,
+
+          trialStartAt,
+
+          trialEndAt,
+
+          nextBillingAt: trialEndAt,
+
+        };
+
+
+        // Save trial history
+        await addDocument("subscriptions", {
+
+          type: "truck",
+
+          truckId,
+
+          numberPlate: formData.numberPlate,
+
+          userId: user.uid,
+
+          status: "trial",
+
+          isTrial: true,
+
+          trialStartAt,
+
+          trialEndAt,
+
+          createdAt: Date.now(),
+
+        });
+
+
+      } else {
+
+
+        subscriptionData = {
+
+          status: "pending",
+
+          trialDays: 0,
+
+          trialStartAt: null,
+
+          trialEndAt: null,
+
+          nextBillingAt: null,
+
+        };
+
+      }
+
+
+
+
+
+
+
+
       const submitData = {
         CompanyName: currentRole.companyName || user.displayName,
         fleetId: currentRole?.accType === 'fleet' ? currentRole.fleetId : null,
@@ -432,9 +551,23 @@ function AddTrucks() {
           phone: currentRole.phone || null,
           billingAddress: currentRole.billingAddress || null,
           baseAdress: currentRole.baseAdress || null,
-          accType: currentRole?.accType ,
-          location:currentRole.billingAddress ||currentRole.baseAdress|| null
+          accType: currentRole?.accType,
+          location: currentRole.billingAddress || currentRole.baseAdress || null
         },
+
+        subscription: {
+          status: "trial",
+          trialDays: 30,
+          trialStartAt: trialStartAt,
+
+          trialEndAt: trialEndAt,
+          nextBillingAt: trialEndAt,
+          isTrial: true,
+        },
+
+
+
+
         accType: currentRole?.accType || 'Individual', // owner, broker, driver, fleet
         timeStamp: serverTimestamp(),
 
