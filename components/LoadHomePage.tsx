@@ -405,7 +405,7 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                             </TouchableOpacity>
                         </View>
                         {selectedLoad ? (
-                            <>
+                            <>  
 
                                 {bottomMode === '' &&
                                     <View style={{ padding: wp(2), borderWidth: .5, borderRadius: wp(6), borderColor: backgroundLight }}>

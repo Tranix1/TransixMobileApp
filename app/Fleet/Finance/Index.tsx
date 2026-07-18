@@ -73,7 +73,7 @@ import Heading from "@/components/Heading";
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import { fetchDocuments } from "@/db/operations";
 import AccentRingLoader from "@/components/AccentRingLoader";
-import { FleetTripTaransactionCard } from "@/components/fleetTripTaransactionCard";
+import { FleetTripTaransactionCard } from "@/components/FleetTripTaransactionCard";
 import { hp } from "@/constants/common";
 
 // ------------------------------------------------------
@@ -999,39 +999,12 @@ const onRefresh = async () => {
     );
 
     const renderFleetOperations = () => (
-        <View >
+        <View style={{flex:1 , marginBottom:10}} >
             <ThemedText style={{ fontSize: 13,  marginBottom: wp(2) ,color :accent , fontWeight:"bold"}}>
                 Fleet Operations
             </ThemedText>
 
-            <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: wp(2.5) }}>
-                {TRIP_SUBCATEGORIES.map((s) => (
-                    <TouchableOpacity
-                        key={s}
-                        onPress={() => setTripSubcategory(s)}
-                        style={{
-                            paddingHorizontal: wp(3),
-                            paddingVertical: wp(1.5),
-                            borderRadius: wp(5),
-                            borderWidth: 1,
-                            borderColor: tripSubcategory === s ? accent : "rgba(128,128,128,0.3)",
-                            backgroundColor: tripSubcategory === s ? backgroundLight : background,
-                            marginRight: wp(2),
-                            marginBottom: wp(2),
-                        }}
-                    >
-                        <ThemedText
-                            style={{
-                                fontSize: 12,
-                                fontWeight: "600",
-                                color: tripSubcategory === s ? accent : icon,
-                            }}
-                        >
-                            {s}
-                        </ThemedText>
-                    </TouchableOpacity>
-                ))}
-            </View>
+       
 
 
             
@@ -1045,6 +1018,8 @@ const onRefresh = async () => {
 
 
                 renderItem={({ item }) => (<FleetTripTaransactionCard assignmentData={item} />)}
+
+
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -1108,7 +1083,6 @@ const onRefresh = async () => {
 
             
 
-            
 
 
 

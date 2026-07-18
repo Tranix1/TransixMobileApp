@@ -413,7 +413,7 @@ export default function FinancePanel({
                 <View style={[styles.rateBar, { backgroundColor: backgroundLight }]}>
                     {rate > 0 ? (
                         <ThemedText style={{ fontSize: 12, color: "#8A8A8E" }}>
-                            Rate <ThemedText style={{ fontSize: 12, fontWeight: "700", color: icon }}>{cargoRateCurrency} {rate.toFixed(2)} {cargoRateModel} </ThemedText>
+                            Rate <ThemedText style={{ fontSize: 12, fontWeight: "700", color: icon }}>{cargoRateCurrency} {rate } {cargoRateModel} </ThemedText>
                         </ThemedText>
                     ) : (
                         <View />
