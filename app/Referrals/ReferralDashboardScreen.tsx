@@ -121,19 +121,19 @@ const ReferralDashboardScreen: React.FC<ReferralDashboardScreenProps> = ({ refer
     );
   }
 
-  if (!data) {
-    return (
-      <SafeAreaView style={[styles.flex, styles.centered, { backgroundColor: background }]}>
-        <Ionicons name="alert-circle-outline" size={wp(10)} color={mutedColor} />
-        <ThemedText style={{ color: mutedColor, marginTop: wp(2) }}>
-          Couldn't load your referral data.
-        </ThemedText>
-        <TouchableOpacity onPress={loadData} style={{ marginTop: wp(3) }}>
-          <ThemedText style={{ color: accent, fontWeight: '600' }}>Retry</ThemedText>
-        </TouchableOpacity>
-      </SafeAreaView>
-    );
-  }
+  // if (!data) {
+  //   return (
+  //     <SafeAreaView style={[styles.flex, styles.centered, { backgroundColor: background }]}>
+  //       <Ionicons name="alert-circle-outline" size={wp(10)} color={mutedColor} />
+  //       <ThemedText style={{ color: mutedColor, marginTop: wp(2) }}>
+  //         Couldn't load your referral data.
+  //       </ThemedText>
+  //       <TouchableOpacity onPress={loadData} style={{ marginTop: wp(3) }}>
+  //         <ThemedText style={{ color: accent, fontWeight: '600' }}>Retry</ThemedText>
+  //       </TouchableOpacity>
+  //     </SafeAreaView>
+  //   );
+  // }
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: background }]} edges={['top']}>
@@ -150,35 +150,35 @@ const ReferralDashboardScreen: React.FC<ReferralDashboardScreenProps> = ({ refer
             </ThemedText>
 
             {/* Balance card */}
-            <View style={[styles.balanceCard, { backgroundColor: accent }]}>
+            <View style={[styles.balanceCard, { borderColor: accent, borderWidth:1 }]}>
               <View style={styles.balanceTopRow}>
-                <ThemedText style={styles.balanceLabel}>Available Balance</ThemedText>
+                <ThemedText style={[styles.balanceLabel,]}>Available Balance</ThemedText>
                 <TouchableOpacity onPress={() => setHistoryVisible(true)} hitSlop={8}>
                   <Ionicons name="information-circle-outline" size={wp(5)} color="white" />
                 </TouchableOpacity>
               </View>
 
-              <ThemedText style={styles.balanceAmount}>${data.availableBalance.toFixed(2)}</ThemedText>
+              <ThemedText style={[styles.balanceAmount,{color:accent}]}>${data?.availableBalance.toFixed(2)}</ThemedText>
 
               <View style={styles.balanceStatsRow}>
                 <View style={styles.balanceStat}>
                   <ThemedText style={styles.balanceStatLabel}>Total Earned</ThemedText>
-                  <ThemedText style={styles.balanceStatValue}>${data.totalEarned.toFixed(2)}</ThemedText>
+                  <ThemedText style={[,{color:accent}]}>${data?.totalEarned.toFixed(2)}</ThemedText>
                 </View>
                 <View style={styles.balanceStatDivider} />
                 <View style={styles.balanceStat}>
                   <ThemedText style={styles.balanceStatLabel}>Withdrawn</ThemedText>
-                  <ThemedText style={styles.balanceStatValue}>${data.totalWithdrawn.toFixed(2)}</ThemedText>
+                  <ThemedText style={[styles.balanceStatValue,{color:accent}]}>${data?.totalWithdrawn.toFixed(2)}</ThemedText>
                 </View>
               </View>
 
               <TouchableOpacity
-                style={[styles.withdrawButton, { opacity: data.availableBalance > 0 ? 1 : 0.5 }]}
+                style={[styles.withdrawButton, {backgroundColor:accent}, { opacity: data?.availableBalance ||0 > 0 ? 1 : 0.5 }]}
                 onPress={() => setWithdrawVisible(true)}
-                disabled={data.availableBalance <= 0}
+                // disabled={data?.availableBalance  <= 0}
               >
                 <Ionicons name="arrow-down-circle-outline" size={wp(4.5)} color={accent} />
-                <ThemedText style={[styles.withdrawButtonText, { color: accent }]}>Withdraw</ThemedText>
+                <ThemedText style={[styles.withdrawButtonText, ]}>Withdraw</ThemedText>
               </TouchableOpacity>
             </View>
 
@@ -274,7 +274,7 @@ const ReferralDashboardScreen: React.FC<ReferralDashboardScreenProps> = ({ refer
       <WithdrawModal
         isVisible={withdrawVisible}
         onClose={() => setWithdrawVisible(false)}
-        availableBalance={data.availableBalance}
+        availableBalance={data?.availableBalance ||0}
         referrerUserId={referrerUserId}
         onWithdrawSuccess={loadData}
       />
@@ -297,7 +297,7 @@ const ReferralDashboardScreen: React.FC<ReferralDashboardScreenProps> = ({ refer
             </ThemedText>
 
             <FlatList
-              data={data.earningsHistory}
+              data={data?.earningsHistory}
               keyExtractor={(item) => item.id}
               contentContainerStyle={{ paddingBottom: wp(4) }}
               renderItem={({ item }) => (
@@ -391,13 +391,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: wp(1.5),
-    backgroundColor: 'white',
+    
     paddingVertical: wp(3),
     borderRadius: wp(2.5),
   },
   withdrawButtonText: {
     fontSize: wp(4),
-    fontWeight: '700',
+    fontWeight: "bold",
   },
 
   // Tabs

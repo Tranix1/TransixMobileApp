@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ScrollView, TouchableOpacity, Modal,Alert } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Modal, Alert } from 'react-native';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import Input from '@/components/Input';
@@ -33,9 +33,9 @@ const CreaterBrokerage = ({ }) => {
 
   // Broker verification state
   const [typeOfBroker, setTypeOfBroker] = useState('');
-  const [brokerName, setBrokerName] = useState( '');
-  const [brokerPhone, setBrokerPhone] = useState( '');
-  const [brokerEmail, setBrokerEmail] = useState( '');
+  const [brokerName, setBrokerName] = useState('');
+  const [brokerPhone, setBrokerPhone] = useState('');
+  const [brokerEmail, setBrokerEmail] = useState('');
 
   const [locationFull, setLocationFull] = useState<SelectLocationProp | null>(null);
 
@@ -58,37 +58,37 @@ const CreaterBrokerage = ({ }) => {
     setUploadingBrokerD(true);
 
 
-      let errors = [];
-    
-            if (!brokerName) errors.push('Brokerage name');
-            if (!brokerPhone) errors.push('Brokerage phone');
-            if (!locationFull?.description) errors.push('Brokerage address');
+    let errors = [];
 
-            if(!typeOfBroker) errors.push("Type of broker`")
+    if (!brokerName) errors.push('Brokerage name');
+    if (!brokerPhone) errors.push('Brokerage phone');
+    if (!locationFull?.description) errors.push('Brokerage address');
 
-            if (errors.length > 0) {
-                Alert.alert(
-                    'Incomplete setup',
-                    `Please complete: ${errors.join('\n')}`
-                );
-                return;
-            }
-    
-    
-            if (selectedBrokerDocuments.length < 3&& typeOfBroker==="Individual Broker") {
-                Alert.alert(
-                    'Verification incomplete',
-                    'Please upload all required documents to complete verification.'
-                );
-                return
-            }
-               if (selectedBrokerDocuments.length < 5&& typeOfBroker==="Company Broker") {
-                Alert.alert(
-                    'Verification incomplete',
-                    'Please upload all required documents to complete verification.'
-                );
-                return
-            }
+    if (!typeOfBroker) errors.push("Type of broker`")
+
+    if (errors.length > 0) {
+      Alert.alert(
+        'Incomplete setup',
+        `Please complete: ${errors.join('\n')}`
+      );
+      return;
+    }
+
+
+    if (selectedBrokerDocuments.length < 3 && typeOfBroker === "Individual Broker") {
+      Alert.alert(
+        'Verification incomplete',
+        'Please upload all required documents to complete verification.'
+      );
+      return
+    }
+    if (selectedBrokerDocuments.length < 5 && typeOfBroker === "Company Broker") {
+      Alert.alert(
+        'Verification incomplete',
+        'Please upload all required documents to complete verification.'
+      );
+      return
+    }
 
 
 
@@ -161,7 +161,7 @@ const CreaterBrokerage = ({ }) => {
       // Create fleet document in fleets collection
       const brokerCollectionData = {
         name: brokerName,
-         organizationPhone: brokerPhone,
+        organizationPhone: brokerPhone,
         organizationEmail: brokerEmail,
 
         ownerId: user?.uid, // link to verifiedUsers
@@ -174,8 +174,8 @@ const CreaterBrokerage = ({ }) => {
         defaultFleets: [],
         verificationStatus: "pending",
         organizationId: brokerageId,
-      expoPushToken  : user?.expoPushToken|| null ,
-   
+        expoPushToken: user?.expoPushToken || null,
+
       };
 
       await setDoc(doc(db, "brokerages", brokerageId), brokerCollectionData);
@@ -209,18 +209,18 @@ const CreaterBrokerage = ({ }) => {
       const contactRef = doc(db, 'brokerages', brokerageId, 'Contacts', `OWN_${user?.uid}`);
       await setDoc(contactRef, contactDetails);
 
-      const referrerData = {
-        accType: "brokerage",
-        organisationId: brokerageId, // Use Firebase Auth UID instead of document ID
-        organisationEmail: brokerEmail,
-        organisationName: brokerName,
-        referrerCode: code,
-        createdAt: new Date().toISOString(),
-        isActive: true,
-        organizationOwner: user?.uid
-      };
+        const referrerData = {
+          userId: user?.uid,
+          email: user?.email,
+          name: user?.displayName ?? "Unknown",
 
-      await addDocument('referrers', referrerData);
+          referrerCode: code.trim().toUpperCase(),
+
+          createdAt: new Date().toISOString(),
+          isActive: true,
+        };
+
+        await addDocument('referrers', referrerData);
 
       // Close modal and show success
       setUploadingBrokerD(false);
@@ -288,7 +288,7 @@ const CreaterBrokerage = ({ }) => {
                     <Divider />
                   </>
                 )}
-                
+
               />
 
               <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
@@ -305,37 +305,37 @@ const CreaterBrokerage = ({ }) => {
             onChangeText={setBrokerEmail}
           />
 
-           <TouchableOpacity
-                                                  style={styles.input}
-                                                  onPress={() => setDspDspLocation(true)}
-                                              >
-                                                  <ThemedText>
-                                                      {locationFull?.description ||
-                                                          'Select destination'}
-                                                  </ThemedText>
-                                              </TouchableOpacity> 
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => setDspDspLocation(true)}
+          >
+            <ThemedText>
+              {locationFull?.description ||
+                'Select destination'}
+            </ThemedText>
+          </TouchableOpacity>
 
 
-         {/* DESTINATION PICKER ONLY */}
-                   <GooglePlaceAutoCompleteComp
-                       dspRoute={dsplocation}
-                       setDspRoute={setDspDspLocation}
-                       setRoute={setLocationFull}
-                       topic="Select Destination"
-                       setPickLocationOnMap={setShowMapPicker}
-                   />
-       
-                   {showMapPicker && (
-                       <LocationPicker
-                           pickOriginLocation={null}
-                           setPickOriginLocation={() => {}}
-                           pickDestinationLoc={locationFull}
-                           setPickDestinationLoc={setLocationFull}
-                           setShowMap={setShowMapPicker}
-                           dspShowMap={showMapPicker}
-                           mode="single"
-                       />
-                   )}
+          {/* DESTINATION PICKER ONLY */}
+          <GooglePlaceAutoCompleteComp
+            dspRoute={dsplocation}
+            setDspRoute={setDspDspLocation}
+            setRoute={setLocationFull}
+            topic="Select Destination"
+            setPickLocationOnMap={setShowMapPicker}
+          />
+
+          {showMapPicker && (
+            <LocationPicker
+              pickOriginLocation={null}
+              setPickOriginLocation={() => { }}
+              pickDestinationLoc={locationFull}
+              setPickDestinationLoc={setLocationFull}
+              setShowMap={setShowMapPicker}
+              dspShowMap={showMapPicker}
+              mode="single"
+            />
+          )}
 
 
           <ThemedText>Type of Broker</ThemedText>
@@ -452,11 +452,11 @@ const styles = {
     borderRadius: wp(1),
     marginBottom: 5,
   },
-    input: {
-        marginTop: wp(2),
-        padding: wp(3),
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: wp(2),
-    },
+  input: {
+    marginTop: wp(2),
+    padding: wp(3),
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: wp(2),
+  },
 };

@@ -535,25 +535,46 @@ export const validateReferrer = async (referrerEmail: string) => {
 
 export const validateReferrerCode = async (referrerCode: string) => {
     try {
-        const q = query(collection(db, "referrers"), where("referrerCode", "==", referrerCode));
+        const q = query(
+            collection(db, "referrers"),
+            where("referrerCode", "==", referrerCode)
+        );
+
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            return { exists: false, referrerId: null, referrerData: null };
+            return {
+                exists: false,
+                referrerId: null,
+                referrerData: undefined
+            };
         }
 
         const referrerDoc = querySnapshot.docs[0];
+        const data = referrerDoc.data();
+
         return {
             exists: true,
-            referrerId: referrerDoc.id,
-            referrerData: { id: referrerDoc.id, ...referrerDoc.data() }
+            referrerId: data.userId,
+
+            referrerData: {
+                userId: data.userId,
+                name: data.name ?? "Unknown",
+                email: data.email ?? "",
+                referralCode: data.referralCode,
+                joinedAt: data.createdAt ?? new Date().toISOString(),
+            }
         };
+
     } catch (error) {
-        console.error("Error validating referrer code:", error);
+        console.error(
+            "Error validating referrer code:",
+            error
+        );
+
         throw error;
     }
 };
-
 export const getReferrerByCode = async (referrerCode: string) => {
     try {
         const q = query(collection(db, "referrers"), where("referrerCode", "==", referrerCode));

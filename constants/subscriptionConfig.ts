@@ -3,7 +3,7 @@
 // Keep this in sync any time pricing changes — the modal, the payment handlers,
 // and the referral service all read from here so nothing drifts out of sync.
 
-export type SubscriptionType = 'truck' | 'broker' | 'tracking';
+export type SubscriptionType = 'truck' | 'brokerage' | 'tracking';
 
 export interface SubscriptionPricing {
   amount: number;            // USD amount charged to the subscriber
@@ -19,10 +19,10 @@ export const SUBSCRIPTION_PRICING: Record<SubscriptionType, SubscriptionPricing>
     label: 'Truck Subscription',
     icon: 'bus-outline',
   },
-  broker: {
+  brokerage: {
     amount: 10,
     referralCommission: 5,
-    label: 'Broker Subscription',
+    label: 'Brokerage Subscription',
     icon: 'briefcase-outline',
   },
   tracking: {

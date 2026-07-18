@@ -11,7 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { hp, wp } from "@/constants/common";
 import { db } from "@/db/fireBaseConfig";
-import { setDoc,doc,updateDoc, arrayUnion } from "firebase/firestore";
+import { setDoc, doc, updateDoc, arrayUnion } from "firebase/firestore";
 
 interface FleetAccess {
     fleetId: string;
@@ -36,48 +36,99 @@ function FleetSelector() {
     const fleetCount = ownedFleets.length;
     const hasReferral = !!user?.referrerId || !!user?.referrerCode;
 
-  
+
     useEffect(() => {
         if (user) {
             setShowReferralModal(!hasReferral);
         }
     }, [user, hasReferral]);
 
+
+
+
     const handleSubmitReferralCode = async (code: string) => {
         if (!code || !code.trim()) {
-            ToastAndroid.show('Please enter a referral code.', ToastAndroid.SHORT);
+            ToastAndroid.show(
+                'Please enter a referral code.',
+                ToastAndroid.SHORT
+            );
             return;
         }
 
         setIsSubmitting(true);
+
         try {
             const normalizedCode = code.trim().toUpperCase();
+
             const validation = await validateReferrerCode(normalizedCode);
 
+
             if (!validation.exists || !validation.referrerId) {
-                ToastAndroid.show('Invalid referral code. Please check and try again.', ToastAndroid.LONG);
+                ToastAndroid.show(
+                    'Invalid referral code. Please check and try again.',
+                    ToastAndroid.LONG
+                );
                 return;
             }
 
-            const saved = await setDocuments('personalData', { referrerId: validation.referrerId });
+
+
+            const saved = await setDocuments(
+                'personalData',
+                {
+                    referredBy: validation.referrerData
+                }
+            );
+
+
             if (!saved) {
-                ToastAndroid.show('Unable to save referral code. Please try again.', ToastAndroid.LONG);
+                ToastAndroid.show(
+                    'Unable to save referral information. Please try again.',
+                    ToastAndroid.LONG
+                );
                 return;
             }
 
-            if (user) {
-                await setupUser({ ...user, referrerId: validation.referrerId });
+
+            if (user && validation.referrerData) {
+                await setupUser({
+                    ...user,
+                    referredBy: validation.referrerData
+                });
             }
+
 
             setReferralCode(normalizedCode);
             setShowReferralModal(false);
-            ToastAndroid.show('Referral code accepted.', ToastAndroid.SHORT);
+
+
+            ToastAndroid.show(
+                'Referral code accepted.',
+                ToastAndroid.SHORT
+            );
+
+
         } catch (error) {
-            ToastAndroid.show('Referral validation failed. Please try again.', ToastAndroid.LONG);
+
+            console.error(
+                "Referral validation error:",
+                error
+            );
+
+            ToastAndroid.show(
+                'Referral validation failed. Please try again.',
+                ToastAndroid.LONG
+            );
+
         } finally {
+
             setIsSubmitting(false);
+
         }
     };
+
+
+
 
     const handleRefresh = async () => {
         if (user) {
@@ -138,14 +189,14 @@ function FleetSelector() {
 
 
 
-const filteredFleets =
-    fleetFilter === 'active'
-        ? activeFleets
-        : fleetFilter === 'pending'
-        ? pendingFleets
-        : accessibleFleets.filter(
-            fleet => fleet.status === 'ended' || fleet.status === 'declined'
-          );
+    const filteredFleets =
+        fleetFilter === 'active'
+            ? activeFleets
+            : fleetFilter === 'pending'
+                ? pendingFleets
+                : accessibleFleets.filter(
+                    fleet => fleet.status === 'ended' || fleet.status === 'declined'
+                );
 
 
 
@@ -155,83 +206,83 @@ const filteredFleets =
     // }
 
     const handleDriverDecision = async (fleet: any, decision: 'active' | 'declined') => {
-    try {
-        if(user?.uid){
+        try {
+            if (user?.uid) {
 
-        // setRefreshing(true); // Assuming you have a loading state
+                // setRefreshing(true); // Assuming you have a loading state
 
-        // 1. Update the user's document
-        // We need to find the specific fleet in the array and update its 'accepted' status
-        const userRef = doc(db, 'personalData', user?.uid); // Ensure you have the current userId
-        const updatedAccessibleFleetss = accessibleFleets.map((f: any) => 
-            f.fleetId === fleet.fleetId ? { ...f, status: decision } : f
-        );
+                // 1. Update the user's document
+                // We need to find the specific fleet in the array and update its 'accepted' status
+                const userRef = doc(db, 'personalData', user?.uid); // Ensure you have the current userId
+                const updatedAccessibleFleetss = accessibleFleets.map((f: any) =>
+                    f.fleetId === fleet.fleetId ? { ...f, status: decision } : f
+                );
 
-        await updateDoc(userRef, { accesibleFleets: updatedAccessibleFleetss });
+                await updateDoc(userRef, { accesibleFleets: updatedAccessibleFleetss });
 
 
-        // 2. Update the Fleet's 'Drivers' sub-collection
-        // If accepted, we might want to ensure the driver exists there
-        if (decision === 'active') {
+                // 2. Update the Fleet's 'Drivers' sub-collection
+                // If accepted, we might want to ensure the driver exists there
+                if (decision === 'active') {
 
-            const driverRef = doc(db, 'fleets', fleet.fleetId, 'Drivers', `DRV_${user?.uid}` );
-            await setDoc(driverRef, {
-                status: 'active',
-                joinedAt: new Date().toISOString(),
-                // Add any other default fields needed
-            }, { merge: true });
+                    const driverRef = doc(db, 'fleets', fleet.fleetId, 'Drivers', `DRV_${user?.uid}`);
+                    await setDoc(driverRef, {
+                        status: 'active',
+                        joinedAt: new Date().toISOString(),
+                        // Add any other default fields needed
+                    }, { merge: true });
 
-           const contactDetails={   
-                userName : user?.displayName ,
-                email : user?.email ,
-                phoneNumber : user?.phoneNumber ,
-                photoUrl : user?.photoURL ,
-                userId : user?.uid ,    
-                userRole : "driver" ,
-                status : "active",
+                    const contactDetails = {
+                        userName: user?.displayName,
+                        email: user?.email,
+                        phoneNumber: user?.phoneNumber,
+                        photoUrl: user?.photoURL,
+                        userId: user?.uid,
+                        userRole: "driver",
+                        status: "active",
+                    }
+
+                    const contactRef = doc(db, 'fleets', fleet.fleetId, 'Contacts', `DRV_${user?.uid}`);
+                    await setDoc(contactRef, contactDetails);
+
+
+
+                } else {
+                    // If declined, we remove them from the fleet's active list
+
+                    const driverRef = doc(db, 'fleets', fleet?.fleetId, 'Drivers', user.uid);
+
+                    await setDoc(driverRef, {
+                        status: 'declined',
+                        joinedAt: new Date().toISOString(),
+                        // Add any other default fields needed
+                    }, { merge: true });
+
+                }
+
+                // Optionally refresh your local state
+                ToastAndroid.show(`Fleet invitation ${decision} successfully!`, ToastAndroid.SHORT);
+
             }
 
-            const contactRef = doc(db, 'fleets', fleet.fleetId, 'Contacts', `DRV_${user?.uid}` );
-            await setDoc(contactRef, contactDetails);
-
-
-
-        } else  {
-            // If declined, we remove them from the fleet's active list
-            
-                const driverRef = doc(db, 'fleets', fleet?.fleetId, 'Drivers', user.uid);
-
-                await setDoc(driverRef, {
-                    status: 'declined',
-                    joinedAt: new Date().toISOString(),
-                    // Add any other default fields needed
-                }, { merge: true });
-
+        } catch (error) {
+            console.error("Error updating fleet decision:", error);
+        } finally {
+            // setRefreshing(false);
         }
-
-        // Optionally refresh your local state
-              ToastAndroid.show( `Fleet invitation ${decision} successfully!`, ToastAndroid.SHORT);
-        
-        }
-
-    } catch (error) {
-        console.error("Error updating fleet decision:", error);
-    } finally {
-        // setRefreshing(false);
-    }
-};
+    };
 
 
 
-    const handleFleetSelect = async (fleet: any) => {    
-        console.log(fleet.referrerCode,  "The refferal code  ")
+    const handleFleetSelect = async (fleet: any) => {
+        console.log(fleet.referrerCode, "The refferal code  ")
         if (!fleet) return;
 
         const fleetRole = {
             role: 'fleet' as const,
             fleetId: fleet.fleetId,
             companyName: fleet.companyName || fleet.fleetName,
-            userRole  : fleet.userRole || 'owner',
+            userRole: fleet.userRole || 'owner',
             accType: 'fleet' as const,
             driverId: fleet.driverId || null,
 
@@ -239,25 +290,25 @@ const filteredFleets =
             fleetManagerId: fleet.fleetManagerId || null,
             fleetDispatcherId: fleet.fleetDispatcherId || null,
 
-            referrerCode : fleet.referrerCode || null ,
+            referrerCode: fleet.referrerCode || null,
 
-                organizationName : fleet.companyName || fleet.fleetName ,
-                organizationId : fleet.fleetId ,
+            organizationName: fleet.companyName || fleet.fleetName,
+            organizationId: fleet.fleetId,
 
-            phone : `${fleet.countryCode}${fleet?.organizationPhone}` ,
-            email : fleet.organizationEmail ,
-            billingAddress : fleet?.billingAddress || fleet?.billingAddress  ,
-            baseAdress : fleet.baseAdress  ,
-            location : fleet?.billingAddressFull || fleet?.baseAdressFull  ,
+            phone: `${fleet.countryCode}${fleet?.organizationPhone}`,
+            email: fleet.organizationEmail,
+            billingAddress: fleet?.billingAddress || fleet?.billingAddress,
+            baseAdress: fleet.baseAdress,
+            location: fleet?.billingAddressFull || fleet?.baseAdressFull,
 
         };
 
-    (fleetRole as any);
+        (fleetRole as any);
         await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
         setCurrentRole("fleet")
         router.replace('/');
     };
-    
+
     if (!user) {
         return (
             <View style={styles.centered}>
@@ -299,7 +350,7 @@ const filteredFleets =
                             <TouchableNativeFeedback key={fleet.fleetId || fleet.companyName} onPress={() => handleFleetSelect(fleet)}>
                                 <View style={[styles.fleetCard, { backgroundColor: backgroundLight, borderColor: accent + '20' }]}>
                                     <ThemedText style={styles.fleetName}>{fleet.companyName || 'Fleet'}</ThemedText>
-                                    <ThemedText style={{fontSize:12,color:icon}}>Role: {fleet.role || 'owner'}</ThemedText>
+                                    <ThemedText style={{ fontSize: 12, color: icon }}>Role: {fleet.role || 'owner'}</ThemedText>
                                 </View>
                             </TouchableNativeFeedback>
                         ))}
@@ -327,254 +378,254 @@ const filteredFleets =
             </View>
 
 
-          <View style={{ marginTop: wp(2) }}>
+            <View style={{ marginTop: wp(2) }}>
 
 
-</View>
+            </View>
 
 
 
-<View
-    style={{
-        flexDirection: 'row',
-        gap: wp(2),
-        marginTop: wp(2),
-        marginBottom: wp(3),
-        paddingLeft:15
-    }}
->
-
-    {[
-        {
-            id: 'pending',
-            label: 'Pending',
-            count: pendingCount,
-        },
-        {
-            id: 'active',
-            label: 'Active',
-            count: approvedCount,
-        },
-        
-        {
-            id: 'removed',
-            label: 'Inactive',
-            count: removedCount + rejectedCount,
-        },
-    ].map(item => {
-
-        const selected = fleetFilter === item.id;
-
-        return (
-            <TouchableOpacity
-                key={item.id}
-                onPress={() => setFleetFilter(item.id as any)}
+            <View
                 style={{
-                    paddingHorizontal: wp(3),
-                    paddingVertical: wp(1.5),
-                    borderRadius: wp(5),
-                    backgroundColor: selected ? accent : backgroundLight,
+                    flexDirection: 'row',
+                    gap: wp(2),
+                    marginTop: wp(2),
+                    marginBottom: wp(3),
+                    paddingLeft: 15
                 }}
             >
 
-                <ThemedText
-                    style={{
-                        color: selected ? '#fff' : icon,
-                        fontSize: wp(3.2),
-                        fontWeight: '600',
-                    }}
-                >
-                    {item.label} {item.count}
-                </ThemedText>
-
-            </TouchableOpacity>
-        );
-    })}
-
-</View>
-
-
-
-
-
-
-{filteredFleets.length > 0 ? (
-
-    <View>
-
-        {filteredFleets.map((driver) => (
-
-            <View
-                key={driver.fleetId}
-                style={[
-                    styles.sectionCard,
+                {[
                     {
-                        backgroundColor: background,
-                        borderColor: backgroundLight,
-                        marginBottom: wp(3),
-                    }
-                ]}
-            >
+                        id: 'pending',
+                        label: 'Pending',
+                        count: pendingCount,
+                    },
+                    {
+                        id: 'active',
+                        label: 'Active',
+                        count: approvedCount,
+                    },
 
-                <View
-                    style={{
-                        flexDirection:'row',
-                        justifyContent:'space-between',
-                        alignItems:'center'
-                    }}
-                >
+                    {
+                        id: 'removed',
+                        label: 'Inactive',
+                        count: removedCount + rejectedCount,
+                    },
+                ].map(item => {
 
-                    <TouchableOpacity
-                        // onPress={() => fleetProfile(fleet)}`
-                            onPress={() => driver.status === 'active' && handleFleetSelect(driver)}
+                    const selected = fleetFilter === item.id;
 
-                        style={{flex:1}}
-                    >
-
-                        <ThemedText
-                            style={{
-                                fontWeight:'700',
-                                fontSize:wp(4)
-                            }}
-                        >
-                            {driver.fleetName}
-                        </ThemedText>
-
-
-                        <ThemedText
-                            style={{
-                                fontSize:12,
-                                color:icon
-                            }}
-                        >
-                            Fleet connection
-                        </ThemedText>
-
-
-                    </TouchableOpacity>
-
-
-                    <View
-                        style={{
-                            backgroundColor:
-                                driver.status === 'pending'
-                                ? '#FFF3E0'
-                                : driver.status === 'active'
-                                ? '#E8F5E9'
-                                : '#FFEBEE',
-                            paddingHorizontal:wp(2),
-                            paddingVertical:wp(1),
-                            borderRadius:wp(4)
-                        }}
-                    >
-
-                        <ThemedText
-                            style={{
-                                fontSize:11,
-                                fontWeight:'700',
-                                color:
-                                driver.status === 'pending'
-                                ? '#EF6C00'
-                                : driver.status === 'active'
-                                ? '#2E7D32'
-                                : '#C62828'
-                            }}
-                        >
-                            {driver.status.toUpperCase()}
-                        </ThemedText>
-
-                    </View>
-
-
-                </View>
-
-
-
-                {driver.status === 'pending' && (
-
-                    <View
-                        style={{
-                            flexDirection:'row',
-                            gap:wp(2),
-                            marginTop:wp(3)
-                        }}
-                    >
-
+                    return (
                         <TouchableOpacity
-                            onPress={() =>handleDriverDecision(driver,'declined')}
+                            key={item.id}
+                            onPress={() => setFleetFilter(item.id as any)}
                             style={{
-                                flex:1,
-                                padding:wp(2),
-                                borderRadius:wp(2),
-                                borderWidth:1,
-                                borderColor:backgroundLight,
-                                alignItems:'center'
-                            }}
-                        >
-
-                            <ThemedText>
-                                Decline
-                            </ThemedText>
-
-                        </TouchableOpacity>
-
-
-
-                        <TouchableOpacity
-                            onPress={() =>handleDriverDecision(driver,'active')}
-                            style={{
-                                flex:1,
-                                padding:wp(2),
-                                borderRadius:wp(2),
-                                backgroundColor:'#E8F5E9',
-                                alignItems:'center'
+                                paddingHorizontal: wp(3),
+                                paddingVertical: wp(1.5),
+                                borderRadius: wp(5),
+                                backgroundColor: selected ? accent : backgroundLight,
                             }}
                         >
 
                             <ThemedText
                                 style={{
-                                    color:'#2E7D32',
-                                    fontWeight:'700'
+                                    color: selected ? '#fff' : icon,
+                                    fontSize: wp(3.2),
+                                    fontWeight: '600',
                                 }}
                             >
-                                Accept
+                                {item.label} {item.count}
                             </ThemedText>
 
                         </TouchableOpacity>
-
-
-                    </View>
-
-                )}
-
+                    );
+                })}
 
             </View>
 
-        ))}
 
 
-    </View>
-
-) : (
-
-<View
-    style={[
-        styles.sectionCard,
-        {
-            backgroundColor:background,
-            borderColor:backgroundLight
-        }
-    ]}
->
-
-<ThemedText style={{fontSize:12,color:icon}}>
-    No {fleetFilter} fleet records found.
-</ThemedText>
 
 
-</View>
 
-)}
+            {filteredFleets.length > 0 ? (
+
+                <View>
+
+                    {filteredFleets.map((driver) => (
+
+                        <View
+                            key={driver.fleetId}
+                            style={[
+                                styles.sectionCard,
+                                {
+                                    backgroundColor: background,
+                                    borderColor: backgroundLight,
+                                    marginBottom: wp(3),
+                                }
+                            ]}
+                        >
+
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }}
+                            >
+
+                                <TouchableOpacity
+                                    // onPress={() => fleetProfile(fleet)}`
+                                    onPress={() => driver.status === 'active' && handleFleetSelect(driver)}
+
+                                    style={{ flex: 1 }}
+                                >
+
+                                    <ThemedText
+                                        style={{
+                                            fontWeight: '700',
+                                            fontSize: wp(4)
+                                        }}
+                                    >
+                                        {driver.fleetName}
+                                    </ThemedText>
+
+
+                                    <ThemedText
+                                        style={{
+                                            fontSize: 12,
+                                            color: icon
+                                        }}
+                                    >
+                                        Fleet connection
+                                    </ThemedText>
+
+
+                                </TouchableOpacity>
+
+
+                                <View
+                                    style={{
+                                        backgroundColor:
+                                            driver.status === 'pending'
+                                                ? '#FFF3E0'
+                                                : driver.status === 'active'
+                                                    ? '#E8F5E9'
+                                                    : '#FFEBEE',
+                                        paddingHorizontal: wp(2),
+                                        paddingVertical: wp(1),
+                                        borderRadius: wp(4)
+                                    }}
+                                >
+
+                                    <ThemedText
+                                        style={{
+                                            fontSize: 11,
+                                            fontWeight: '700',
+                                            color:
+                                                driver.status === 'pending'
+                                                    ? '#EF6C00'
+                                                    : driver.status === 'active'
+                                                        ? '#2E7D32'
+                                                        : '#C62828'
+                                        }}
+                                    >
+                                        {driver.status.toUpperCase()}
+                                    </ThemedText>
+
+                                </View>
+
+
+                            </View>
+
+
+
+                            {driver.status === 'pending' && (
+
+                                <View
+                                    style={{
+                                        flexDirection: 'row',
+                                        gap: wp(2),
+                                        marginTop: wp(3)
+                                    }}
+                                >
+
+                                    <TouchableOpacity
+                                        onPress={() => handleDriverDecision(driver, 'declined')}
+                                        style={{
+                                            flex: 1,
+                                            padding: wp(2),
+                                            borderRadius: wp(2),
+                                            borderWidth: 1,
+                                            borderColor: backgroundLight,
+                                            alignItems: 'center'
+                                        }}
+                                    >
+
+                                        <ThemedText>
+                                            Decline
+                                        </ThemedText>
+
+                                    </TouchableOpacity>
+
+
+
+                                    <TouchableOpacity
+                                        onPress={() => handleDriverDecision(driver, 'active')}
+                                        style={{
+                                            flex: 1,
+                                            padding: wp(2),
+                                            borderRadius: wp(2),
+                                            backgroundColor: '#E8F5E9',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+
+                                        <ThemedText
+                                            style={{
+                                                color: '#2E7D32',
+                                                fontWeight: '700'
+                                            }}
+                                        >
+                                            Accept
+                                        </ThemedText>
+
+                                    </TouchableOpacity>
+
+
+                                </View>
+
+                            )}
+
+
+                        </View>
+
+                    ))}
+
+
+                </View>
+
+            ) : (
+
+                <View
+                    style={[
+                        styles.sectionCard,
+                        {
+                            backgroundColor: background,
+                            borderColor: backgroundLight
+                        }
+                    ]}
+                >
+
+                    <ThemedText style={{ fontSize: 12, color: icon }}>
+                        No {fleetFilter} fleet records found.
+                    </ThemedText>
+
+
+                </View>
+
+            )}
 
             <ReferralCodeModal
                 visible={showReferralModal}

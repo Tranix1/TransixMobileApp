@@ -24,6 +24,7 @@ import FinanceCard from '@/components/DashboardFinanceCard';
 import VehicleHealthCard from '@/components/DashboardVehicleHealthCard';
 import AttentionCard from '@/components/AttentionCard';
 import MyActivityCard from '@/components/DashboardMyActivtyCard';
+import CustomHeader from '@/components/CustomHeader';
 // ---------------------------------------------------------------------------
 // Brand palette (kept local to this screen so it doesn't depend on theme
 // keys that may not exist yet in the design system).
@@ -315,50 +316,97 @@ export default function TransixDashboard() {
         { label: 'Delivered', count: 9, done: false },
     ];
 
+    const [showFilter , setShowfilter]= React.useState(false)
     return (
         <View style={[styles.safeArea, { backgroundColor: background }]}>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 {/* ============================= HEADER ============================= */}
-                <View style={styles.headerRow}>
-                    <View style={styles.headerLeft}>
-                        {profileUri ? (
-                            <Image source={{ uri: profileUri }} style={styles.avatarImage} />
-                        ) : (
-                            <View style={[styles.avatarFallback, { backgroundColor: BRAND.navy }]}>
-                                <ThemedText style={styles.avatarInitials}>{initials || 'TX'}</ThemedText>
-                            </View>
-                        )}
-                        <View style={{ flexShrink: 1 }}>
-                            <ThemedText type="subtitle" style={styles.headerName} numberOfLines={1}>
-                                {companyName}
-                            </ThemedText>
-                            <View style={styles.headerMetaRow}>
-                                <View style={styles.ratingWrap}>
-                                    <Ionicons name="star" size={wp(3.2)} color={BRAND.amber} />
-                                    <ThemedText type="tiny" style={{ color: textlight, marginLeft: wp(1) }}>
-                                        4.8
-                                    </ThemedText>
-                                </View>
-                                <View style={[styles.statusPill, { backgroundColor: `${BRAND.good}1F` }]}>
-                                    <View style={[styles.statusDot, { backgroundColor: BRAND.good }]} />
-                                    <ThemedText type="tiny" style={{ color: BRAND.good, fontWeight: '700' }}>
-                                        Active
-                                    </ThemedText>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
+             
 
-                    <TouchableOpacity
-                        activeOpacity={0.75}
-                        style={[styles.notifBtn, { backgroundColor: backgroundColor, borderColor: border }]}
-                    >
-                        <Ionicons name="notifications-outline" size={wp(5)} color={icon} />
-                        <View style={[styles.notifDot, { borderColor: background }]} />
-                    </TouchableOpacity>
+<CustomHeader pageTitle="Dashboard" addingNavigate="/Logistics/Loads/AddLoads" filterElement={setShowfilter} />
+
+
+
+
+                {/* ======================= BUSINESS OVERVIEW ======================= */}
+                <SectionHeader title="Business Overview" textlight={textlight} accent={accent} />
+                <View style={styles.overviewGrid}>
+                    
+                    <OverviewCard
+                        title="Assignments"
+                        iconElement={
+                            <MaterialCommunityIcons name="clipboard-list-outline" size={wp(4)} color={BRAND.amber} />
+                        }
+                        iconBg={`${BRAND.amber}1A`}
+                        primaryValue={57}
+                        primaryLabel="Tracked this week"
+                        rows={[
+                            { label: 'Pending Approval', value: 6, dotColor: BRAND.amber },
+                            { label: 'Active Trips', value: 29, dotColor: BRAND.teal },
+                            { label: 'Completed', value: 22, dotColor: BRAND.good },
+                        ]}
+                        background={background}
+                        backgroundLight={backgroundColor}
+                        border={border}
+                        textlight={textlight}
+                        onPress={()=>router.push("/Assignments/Index")}
+                    />
+                    <OverviewCard
+                        title="Finance"
+                        iconElement={<Ionicons name="cash-outline" size={wp(4)} color={BRAND.good} />}
+                        iconBg={`${BRAND.good}1A`}
+                        primaryValue="$184,320"
+                        primaryLabel="Net profit this month"
+                        rows={[
+                            { label: 'Revenue', value: '$412,900', dotColor: BRAND.good },
+                            { label: 'Expenses', value: '$228,580', dotColor: BRAND.bad },
+                        ]}
+                        background={background}
+                        backgroundLight={backgroundColor}
+                        border={border}
+                        textlight={textlight}
+                            onPress={() => router.push("/Fleet/Finance/Index")}
+
+                    />
+                    
+
+
+                    <OverviewCard
+                        title="Drivers"
+                        iconElement={<Ionicons name="cash-outline" size={wp(4)} color={BRAND.good} />}
+                        iconBg={`${BRAND.good}1A`}
+                        primaryValue="$184,320"
+                        primaryLabel="Net profit this month"
+                        rows={[
+                            { label: 'Revenue', value: '$412,900', dotColor: BRAND.good },
+                            { label: 'Expenses', value: '$228,580', dotColor: BRAND.bad },
+                        ]}
+                        background={background}
+                        backgroundLight={backgroundColor}
+                        border={border}
+                        textlight={textlight}
+                    />
+                    <OverviewCard
+                        title="My Referrals"
+                        iconElement={<Ionicons name="cash-outline" size={wp(4)} color={BRAND.good} />}
+                        iconBg={`${BRAND.good}1A`}
+                        primaryValue="$184,320"
+                        primaryLabel="Net profit this month"
+                        rows={[
+                            { label: 'Revenue', value: '$412,900', dotColor: BRAND.good },
+                            { label: 'Expenses', value: '$228,580', dotColor: BRAND.bad },
+                        ]}
+                        background={background}
+                        backgroundLight={backgroundColor}
+                        border={border}
+                        textlight={textlight}
+                        onPress={()=>router.push("/Referrals/ReferralDashboardScreen")}
+                    />
+                    
+
+
+
                 </View>
-
-
 
 
 
@@ -515,113 +563,6 @@ export default function TransixDashboard() {
 
 
 
-                {/* ======================= BUSINESS OVERVIEW ======================= */}
-                <SectionHeader title="Business Overview" textlight={textlight} accent={accent} />
-                <View style={styles.overviewGrid}>
-                    <OverviewCard
-                        title="Trucks"
-                        iconElement={<Fontisto name="truck" size={wp(4)} color={BRAND.navy} />}
-                        iconBg={`${BRAND.navy}1A`}
-                        primaryValue={128}
-                        primaryLabel="Total fleet size"
-                        rows={[
-                            { label: 'Available', value: 41, dotColor: BRAND.good },
-                            { label: 'On Trip', value: 79, dotColor: BRAND.teal },
-                            { label: 'Maintance', value: 22, dotColor: BRAND.good },
-
-                        ]}
-                        background={background}
-                        backgroundLight={backgroundColor}
-                        border={border}
-                        textlight={textlight}
-                    />
-                    <OverviewCard
-                        title="Loads"
-                        iconElement={<FontAwesome6 name="box" size={wp(4)} color={BRAND.teal} />}
-                        iconBg={`${BRAND.teal}1A`}
-                        primaryValue={36}
-                        primaryLabel="In the system today"
-                        rows={[
-                            { label: 'Active', value: 24, dotColor: BRAND.teal },
-                            { label: 'Pending', value: 12, dotColor: BRAND.amber },
-                        ]}
-                        background={background}
-                        backgroundLight={backgroundColor}
-                        border={border}
-                        textlight={textlight}
-                    />
-                    <OverviewCard
-                        title="Assignments"
-                        iconElement={
-                            <MaterialCommunityIcons name="clipboard-list-outline" size={wp(4)} color={BRAND.amber} />
-                        }
-                        iconBg={`${BRAND.amber}1A`}
-                        primaryValue={57}
-                        primaryLabel="Tracked this week"
-                        rows={[
-                            { label: 'Pending Approval', value: 6, dotColor: BRAND.amber },
-                            { label: 'Active Trips', value: 29, dotColor: BRAND.teal },
-                            { label: 'Completed', value: 22, dotColor: BRAND.good },
-                        ]}
-                        background={background}
-                        backgroundLight={backgroundColor}
-                        border={border}
-                        textlight={textlight}
-                        onPress={()=>router.push("/Assignments/Index")}
-                    />
-                    <OverviewCard
-                        title="Finance"
-                        iconElement={<Ionicons name="cash-outline" size={wp(4)} color={BRAND.good} />}
-                        iconBg={`${BRAND.good}1A`}
-                        primaryValue="$184,320"
-                        primaryLabel="Net profit this month"
-                        rows={[
-                            { label: 'Revenue', value: '$412,900', dotColor: BRAND.good },
-                            { label: 'Expenses', value: '$228,580', dotColor: BRAND.bad },
-                        ]}
-                        background={background}
-                        backgroundLight={backgroundColor}
-                        border={border}
-                        textlight={textlight}
-                            onPress={() => router.push("/Fleet/Finance/Index")}
-
-                    />
-
-
-                    <OverviewCard
-                        title="Drivers"
-                        iconElement={<Ionicons name="cash-outline" size={wp(4)} color={BRAND.good} />}
-                        iconBg={`${BRAND.good}1A`}
-                        primaryValue="$184,320"
-                        primaryLabel="Net profit this month"
-                        rows={[
-                            { label: 'Revenue', value: '$412,900', dotColor: BRAND.good },
-                            { label: 'Expenses', value: '$228,580', dotColor: BRAND.bad },
-                        ]}
-                        background={background}
-                        backgroundLight={backgroundColor}
-                        border={border}
-                        textlight={textlight}
-                    />
-                    <OverviewCard
-                        title="Trailers"
-                        iconElement={<Ionicons name="cash-outline" size={wp(4)} color={BRAND.good} />}
-                        iconBg={`${BRAND.good}1A`}
-                        primaryValue="$184,320"
-                        primaryLabel="Net profit this month"
-                        rows={[
-                            { label: 'Revenue', value: '$412,900', dotColor: BRAND.good },
-                            { label: 'Expenses', value: '$228,580', dotColor: BRAND.bad },
-                        ]}
-                        background={background}
-                        backgroundLight={backgroundColor}
-                        border={border}
-                        textlight={textlight}
-                    />
-
-
-
-                </View>
 
              
 

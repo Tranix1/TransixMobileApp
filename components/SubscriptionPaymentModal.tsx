@@ -15,10 +15,10 @@ interface SubscriptionPaymentModalProps {
   isVisible: boolean;
   onClose: () => void;
   onCancel?: () => void;
-  loadVehicles: () => void;
+  loadVehicles?: () => void;
 
-  vehicleId: string;
-  vehicleName: string;
+  vehicleId?: string;
+  vehicleName?: string;
   subscriptionType: SubscriptionType; // 'truck' | 'broker' | 'tracking'
   payerUserId: string; // needed to resolve referral commissions
 }
@@ -65,6 +65,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
 
     const { updateDocument } = await import('@/db/operations');
 
+    if(vehicleId)
     await updateDocument('TrackedVehicles', vehicleId, {
       subscription: {
         status: 'active',
@@ -77,6 +78,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
     // Referral commission — isolated in referrals/referralService.ts
     await creditReferralIfEligible(payerUserId, subscriptionType);
 
+    if(loadVehicles)
     loadVehicles();
 
     Alert.alert(
@@ -268,7 +270,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
                   onPress={method === 'ecocash' ? handleEcocashConfirm : handleCardConfirm}
                 >
                   <ThemedText style={[styles.buttonText, styles.confirmText]}>
-                    {method === 'ecocash' ? 'Pay Now' : 'Continue to Checkout'}
+                    {method === 'ecocash' ? 'Pay Now' : 'Checkout'}
                   </ThemedText>
                 </TouchableOpacity>
               </View>
@@ -327,8 +329,8 @@ const styles = StyleSheet.create({
   modalContent: {
     borderRadius: wp(4),
     padding: wp(6),
-    width: '90%',
-    maxWidth: wp(85),
+    width: wp(85),   // fixed width
+
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

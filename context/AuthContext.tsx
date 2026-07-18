@@ -11,9 +11,10 @@ import { createContext, ReactElement, useContext, useEffect, useState } from "re
 import { Alert, ToastAndroid } from "react-native";
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 import { auth } from "@/db/fireBaseConfig";
-import { readById, setDocuments, validateReferrerCode } from "@/db/operations";
+import { addDocumentWithId, generateUniqueReferrerCode, getReferralCodeByUserId, readById, setDocuments, validateReferrerCode } from "@/db/operations";
 import { AccountType, CurrentRole, User } from "@/types/types";
 import { updateUserTokenInAllCollections } from "@/Utilities/pushNotification";
+import { setDoc } from "firebase/firestore";
 
 type AlertType = "default" | "error" | "success" | "laoding" | "destructive";
 
@@ -231,6 +232,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             console.error('Error saving current role:', error);
         }
     };
+    
 
     const setupUser = async (userData: User | null) => {
         if (userData) {
@@ -257,6 +259,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await AsyncStorage.removeItem('user');
         await AsyncStorage.removeItem('currentUser');
     };
+
 
     const Login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
         try {
@@ -404,52 +407,131 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    const updateAccount = async (credentials: User): Promise<UpdateAccountResponse> => {
-        try {
-            const currentUser = auth.currentUser;
+ const updateAccount = async (
+    credentials: User
+): Promise<UpdateAccountResponse> => {
+    try {
+        const currentUser = auth.currentUser;
 
-            if (!isSignedIn || !currentUser || !credentials.uid) {
-                return { success: false, error: "User not signed in." };
-            }
+        if (!isSignedIn || !currentUser || !credentials.uid) {
+            return {
+                success: false,
+                error: "User not signed in.",
+            };
+        }
 
-            await updateProfile(currentUser, {
-                displayName: credentials.organisation || credentials.displayName || "",
-                photoURL: credentials.photoURL || null,
-            });
+        await updateProfile(currentUser, {
+            displayName:
+                credentials.organisation ||
+                credentials.displayName ||
+                "",
+            photoURL: credentials.photoURL || null,
+        });
 
-            if (!currentUser.emailVerified) {
-                await sendEmailVerification(currentUser).catch(() => { });
-                    ToastAndroid.show('Verification Email Sent. Please check your inbox.', ToastAndroid.LONG);
+        if (!currentUser.emailVerified) {
+            await sendEmailVerification(currentUser).catch(() => {});
 
-            }
+            ToastAndroid.show(
+                "Verification Email Sent. Please check your inbox.",
+                ToastAndroid.LONG
+            );
+        }
 
-            const fullUser: User = {
-                ...credentials,
-                displayName: credentials.organisation || credentials.displayName || "",
-                accountType: currentRole.accType,
-                role: currentRole.role,
-                expoPushToken: credentials.expoPushToken || "",
+        // Existing personal data
+        const existingUser = await readById(
+            "personalData",
+            credentials.uid
+        );
+
+        // Generate only once
+        let referralCode = user?.referralCode;
+
+        if (!referralCode) {
+            referralCode = await generateUniqueReferrerCode();
+
+            const referrerData = {
+                userId: credentials.uid,
+                name:
+                    credentials.organisation ||
+                    credentials.displayName ||
+                    "Unknown",
+                email: credentials.email ?? "",
+                referralCode,
+                createdAt: new Date().toISOString(),
+                isActive: true,
             };
 
-            await setDocuments("personalData", fullUser);
-            await AsyncStorage.setItem("user", JSON.stringify(fullUser));
-            await AsyncStorage.setItem("currentUser", JSON.stringify(fullUser));
-            await AsyncStorage.setItem(`profile_${fullUser.uid}`, JSON.stringify(fullUser));
-            await AsyncStorage.setItem(`personalData_${fullUser.uid}`, JSON.stringify(fullUser));
-
-            setUser(fullUser);
-            setIsSignedIN(true);
-            setIsAppReady(true);
-
-            if (fullUser.expoPushToken) {
-                await updateUserTokenInAllCollections(fullUser.uid, fullUser.expoPushToken);
-            }
-            return { success: true, user: fullUser };
-        } catch (error) {
-            console.log("Update Error >", error);
-            return { error: (error as Error).message, success: false };
+            // One document per user
+            await addDocumentWithId(
+                "referrers",
+                credentials.uid,
+                referrerData
+            );
         }
-    };
+
+        const fullUser: User = {
+            ...credentials,
+            displayName:
+                credentials.organisation ||
+                credentials.displayName ||
+                "",
+            accountType: currentRole.accType,
+            role: currentRole.role,
+            expoPushToken: credentials.expoPushToken || "",
+
+            referralCode,
+            referredBy: user?.referredBy,
+        };
+
+        await setDocuments("personalData", fullUser);
+
+        await AsyncStorage.setItem(
+            "user",
+            JSON.stringify(fullUser)
+        );
+
+        await AsyncStorage.setItem(
+            "currentUser",
+            JSON.stringify(fullUser)
+        );
+
+        await AsyncStorage.setItem(
+            `profile_${fullUser.uid}`,
+            JSON.stringify(fullUser)
+        );
+
+        await AsyncStorage.setItem(
+            `personalData_${fullUser.uid}`,
+            JSON.stringify(fullUser)
+        );
+
+        setUser(fullUser);
+        setIsSignedIN(true);
+        setIsAppReady(true);
+
+        if (fullUser.expoPushToken) {
+            await updateUserTokenInAllCollections(
+                fullUser.uid,
+                fullUser.expoPushToken
+            );
+        }
+
+        return {
+            success: true,
+            user: fullUser,
+        };
+
+    } catch (error) {
+        console.log("Update Error >", error);
+
+        return {
+            success: false,
+            error: (error as Error).message,
+        };
+    }
+};
+
+
 
     function alertBox(title: string, message: string, buttons?: Alertbutton[], type?: AlertType) {
         setshowAlert(

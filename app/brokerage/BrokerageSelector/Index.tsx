@@ -27,7 +27,7 @@ function BrokerageSelector() {
     const ownedBrokerages = Array.isArray(user?.brokergePDetails) ? user.brokergePDetails : [];
     const brokerages = ownedBrokerages.length;
     const hasReferral = !!user?.referrerId || !!user?.referrerCode;
-  
+
     useEffect(() => {
         if (user) {
             setShowReferralModal(!hasReferral);
@@ -82,7 +82,7 @@ function BrokerageSelector() {
     };
 
 
-    const handleBrokerageSelect = async (brokerage: any) => {    
+    const handleBrokerageSelect = async (brokerage: any) => {
 
         if (!brokerage) return;
 
@@ -90,24 +90,24 @@ function BrokerageSelector() {
             role: 'brokerage' as const,
             brokerageId: brokerage.brokerageId,
             companyName: brokerage.name || brokerage.brokerage,
-            
+
             userRole: brokerage.userRole || 'owner',
             accType: 'brokerage' as const,
-            
-            referrerCode : brokerage.referrerCode || null ,
-            organizationName : brokerage.name,
-            organizationId : brokerage.id ,
-            phone : `${brokerage.countryCode}${brokerage?.organizationPhone}` ,
-            email : brokerage.organizationEmail ,
-            location : brokerage?.location  ,
+
+            referrerCode: brokerage.referrerCode || null,
+            organizationName: brokerage.name,
+            organizationId: brokerage.id,
+            phone: `${brokerage.countryCode}${brokerage?.organizationPhone}`,
+            email: brokerage.organizationEmail,
+            location: brokerage?.location,
         };
 
-    (brokerageRole as any);
+        (brokerageRole as any);
         await AsyncStorage.setItem('currentRole', JSON.stringify(brokerageRole));
         setCurrentRole(brokerageRole as any)
         router.replace('/');
     };
-    
+
     if (!user) {
         return (
             <View style={styles.centered}>
@@ -116,25 +116,18 @@ function BrokerageSelector() {
         );
     }
 
+    const [showModal, setShowModal] = useState(true)
+
     return (
         <View style={[, styles.container, { backgroundColor: background }]}>
             <CustomHeader pageTitle="Brokerage Selector" />
 
-
-
-
-
-
-{/* 
-        <SubscriptionPaymentModal
-  isVisible={showModal}
-  onClose={() => setShowModal(false)}
-  loadVehicles={loadVehicles}
-  vehicleId={selectedTruck.id}
-  vehicleName={selectedTruck.name}
-  subscriptionType="truck"      // or "broker" / "tracking"
-  payerUserId={currentUser.id}
-/> */}
+            <SubscriptionPaymentModal
+                isVisible={showModal}
+                onClose={() => setShowModal(false)}
+                subscriptionType="brokerage"      // or "broker" / "tracking"
+                payerUserId={user.uid}
+            />
 
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingHorizontal: 13, marginTop: hp(4) }}>
@@ -164,11 +157,11 @@ function BrokerageSelector() {
                             <TouchableNativeFeedback key={brokerage.organizationId || brokerage.name} onPress={() => handleBrokerageSelect(brokerage)}>
                                 <View style={[styles.fleetCard, { backgroundColor: backgroundLight, borderColor: accent + '20' }]}>
                                     <ThemedText style={styles.fleetName}>{brokerage.name || 'Brokerage'}</ThemedText>
-                                    <ThemedText style={{fontSize:12,color:icon}}>Role: {brokerage.role || 'owner'}</ThemedText>
+                                    <ThemedText style={{ fontSize: 12, color: icon }}>Role: {brokerage.role || 'owner'}</ThemedText>
                                 </View>
                             </TouchableNativeFeedback>
                         ))}
-                    </View>  
+                    </View>
                 ) : (
                     <TouchableNativeFeedback onPress={() => router.push('/brokerage/CreateBrokerage/Index')}>
                         <View style={styles.emptyCard}>

@@ -69,11 +69,11 @@ export type CurrentRole =
         phone: string | null
         email: string | null
         billingAddress: string | null
-        baseAdress: string | null   
-        companyName : string 
+        baseAdress: string | null
+        companyName: string
     };
-    
-    
+
+
 
 export type RoleProps =
     | 'general'
@@ -169,8 +169,8 @@ export type Truck = {
         driverId: string
         driverName: string;
 
-    } ,
-    assignments : any
+    },
+    assignments: any
 } & TruckFormData;
 
 
@@ -267,15 +267,15 @@ export type TruckNeededType = {
     operationCountries: string[];
 }
 export type PrivateTruckType = {
-  truckId: string;
-  truckName: string;
-  registrationNumber: string;
-  truckType: string;
-  truckCapacity: string;
-  cargoArea: TruckTypeProps | null;
-  operationCountries: string[];
-  truckStatus: string;
-  assignment: any;
+    truckId: string;
+    truckName: string;
+    registrationNumber: string;
+    truckType: string;
+    truckCapacity: string;
+    cargoArea: TruckTypeProps | null;
+    operationCountries: string[];
+    truckStatus: string;
+    assignment: any;
 };
 export type Load = {
     id: string,
@@ -364,8 +364,8 @@ export type Load = {
 
     privateTrucks?: PrivateTruckType[]
     publicTrucks?: TruckNeededType[]
-    isTrackingEnabled?:boolean[]
-    ratePerKm:number 
+    isTrackingEnabled?: boolean[]
+    ratePerKm: number
 
 } & LoadFormData;
 
@@ -393,6 +393,13 @@ export type User = {
     country?: string,
     address?: string,
     referrerId?: string, // ID of the user who referred this user
+    referredBy?: {
+        userId: string ;
+        name: string ;
+        email: string ;
+        referralCode: string ;
+        joinedAt: string ;
+    };
     expoPushToken?: string, // Push notification token
     [key: string]: any; // To allow additional properties
 }

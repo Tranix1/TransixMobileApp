@@ -206,6 +206,7 @@ export default function Index() {
                 case "Trucks": return <Fontisto name="truck" size={size} color={color} />;
                 case "Store": return <Entypo name="shop" size={size} color={color} />;
                 case "Wallet": return <FontAwesome6 name="wallet" size={size} color={color} />;
+
                 case "Jobs": return <FontAwesome6 name="briefcase" size={size} color={color} />;
                 case "Earnings": return <FontAwesome6 name="dollar-sign" size={size} color={color} />;
                 case "Chat": return <FontAwesome6 name="comments" size={size} color={color} />;
@@ -260,10 +261,10 @@ export default function Index() {
               </>
             ) : (typeof currentRole === 'object' && currentRole.role === 'fleet' && currentRole.userRole === 'owner') ? (
               <>
+                <Tab.Screen name="Home " component={Dashboard} />
                 <Tab.Screen name="Loads" component={Loads} />
-                <Tab.Screen name="Trucks" component={LogisticsTrucks} />
                 <Tab.Screen name="Chat" component={ChatIndex} />
-                <Tab.Screen name="Wallet" component={Dashboard} />
+                <Tab.Screen name="Trucks" component={LogisticsTrucks} />
               </>
             ) : 
                (typeof currentRole === 'object' && currentRole.role === 'fleet') ?
@@ -271,12 +272,6 @@ export default function Index() {
                 <Tab.Screen name="Home " component={FleetSelector} />
                 <Tab.Screen name="About " component={About} />
               </>)
-
-
-
-
-
-
 
                 : (typeof currentRole === 'object' && currentRole.role === 'driver' && currentRole.userRole === 'driver') ? (
               <>

@@ -20,8 +20,10 @@
 //     createdAt: string
 //   }
 
-import {  readById, updateDocument, addDocument } from '@/db/operations';
+import { readById, updateDocument, addDocument } from '@/db/operations';
 import { SubscriptionType, SUBSCRIPTION_PRICING, REFERRAL_ELIGIBLE_PAYMENTS } from '@/constants/subscriptionConfig';
+import { getDocs, where, query, collection } from 'firebase/firestore';
+import { db } from '@/db/fireBaseConfig';
 
 interface ReferralCreditResult {
   credited: boolean;
@@ -36,48 +38,156 @@ interface ReferralCreditResult {
  * REFERRAL_ELIGIBLE_PAYMENTS quota — credits the referrer's wallet with
  * the commission for that subscription type.
  */
+
+
+
+
+
+
+
+// Subscription happens
+//         |
+//         ↓
+// verifiedUsers (organization)
+//         |
+//         ↓
+// Get business owner userId
+//         |
+//         ↓
+// personalData/{ownerId}
+//         |
+//         ↓
+// referredBy.userId
+//         |
+//         ↓
+// referralWallet/{referrerUserId}
+//         |
+//         ↓
+// Add commission
+
+
+
+
+
+
+
+
 export async function creditReferralIfEligible(
-  payerUserId: string,
-  subscriptionType: SubscriptionType
+  payerOrganizationId: string,
+  subscriptionType: SubscriptionType,
+  subscriberId: string,
+  commissionAmount: number,
 ): Promise<ReferralCreditResult> {
+
   try {
-    const payer = await readById('Users', payerUserId);
-    const referrerId: string | null = payer?.referredBy ?? null;
 
-    if (!referrerId) {
-      return { credited: false, reason: 'no_referrer' };
+    // Get verified business account
+    const verifiedUser = await readById(
+      'verifiedUsers',
+      payerOrganizationId
+    );
+
+
+    if (!verifiedUser?.userId) {
+      return {
+        credited: false,
+        reason: 'owner_not_found'
+      };
     }
 
-    const creditsGiven: number = payer?.referralCreditsGiven ?? 0;
-    if (creditsGiven >= REFERRAL_ELIGIBLE_PAYMENTS) {
-      return { credited: false, reason: 'limit_reached' };
+
+    // Business owner
+    const ownerId = verifiedUser.userId;
+
+
+    // Get owner's referral information
+    const personalData = await readById(
+      'personalData',
+      ownerId
+    );
+
+
+    const referredBy = personalData?.referredBy;
+
+
+    if (!referredBy?.userId) {
+      return {
+        credited: false,
+        reason: 'no_referrer'
+      };
     }
 
-    const commission = SUBSCRIPTION_PRICING[subscriptionType].referralCommission;
 
-    const referrer = await readById('Users', referrerId);
-    const currentBalance: number = referrer?.walletBalance ?? 0;
+    // The person who earns the commission
+    const referrerId = referredBy.userId;
 
-    await updateDocument('Users', referrerId, {
-      walletBalance: currentBalance + commission,
-    });
 
-    await updateDocument('Users', payerUserId, {
-      referralCreditsGiven: creditsGiven + 1,
-    });
+    // Get referral wallet
+    const wallet = await readById(
+      'referralWallet',
+      referrerId
+    );
 
-    await addDocument('ReferralEarnings', {
+
+    const currentBalance = wallet?.balance ?? 0;
+    const currentEarned = wallet?.totalEarned ?? 0;
+
+
+    const newBalance = currentBalance + commissionAmount;
+
+
+    // Update referral wallet
+    await updateDocument(
+      'referralWallet',
       referrerId,
-      fromUserId: payerUserId,
-      subscriptionType,
-      amount: commission,
-      createdAt: new Date().toISOString(),
-    });
+      {
+        balance: newBalance,
+        totalEarned: currentEarned + commissionAmount,
+        updatedAt: new Date().toISOString(),
+      }
+    );
 
-    return { credited: true, referrerId, amount: commission };
+
+    // Store earning history
+    await addDocument(
+      'referralWalletTransactions',
+      {
+        referrerId,
+
+        referredUserId: ownerId,
+
+        referredOrganizationId: payerOrganizationId,
+
+        subscriptionType,
+
+        amount: commissionAmount,
+
+        type: 'commission',
+
+        createdAt: new Date().toISOString(),
+      }
+    );
+
+
+    return {
+      credited: true,
+      referrerId,
+      amount: commissionAmount,
+    };
+
+
   } catch (error) {
-    console.error('Error crediting referral commission:', error);
-    return { credited: false, reason: 'error' };
+
+    console.error(
+      'Error crediting referral commission:',
+      error
+    );
+
+
+    return {
+      credited: false,
+      reason: 'error'
+    };
   }
 }
 
