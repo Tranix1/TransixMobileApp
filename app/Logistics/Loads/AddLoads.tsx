@@ -561,13 +561,13 @@ const AddLoadDB = () => {
         }
       }
 
-      if (validationErrors.length > 0) {
-        alert(validationErrors.join("\n"),)
-        // alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
+        if (validationErrors.length > 0) {
+          alert(validationErrors.join("\n"),)
+          // alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
 
-        setIsSubmitting(false)
-        return;
-      }
+          setIsSubmitting(false)
+          return;
+        }
 
       // Show payment confirmation modal
       confirmLoadPaymentAndSubmit()

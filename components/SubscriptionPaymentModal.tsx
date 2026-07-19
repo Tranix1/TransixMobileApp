@@ -13,17 +13,28 @@ import { SubscriptionType, SUBSCRIPTION_PRICING, PaymentMethod } from '../consta
 import { addDocument, readById } from '@/db/operations';
 import { useAuth } from '@/context/AuthContext';
 
+type SelectedTruck = {
+  id: string;
+  name?: string;
+  numberPlate?: string;
+  type?: string;
+  capacity?: string;
+};
+
 interface SubscriptionPaymentModalProps {
   isVisible: boolean;
   onClose: () => void;
   onCancel?: () => void;
   loadVehicles?: () => void;
 
-  vehicleId?: string;
-  vehicleName?: string;
+  trackingVehicleId?: string;
+
+  selectedTrucks?: SelectedTruck[]
+
+
   subscriptionType: SubscriptionType; // 'truck' | 'broker' | 'tracking'
   payerOrganizationId: string; // needed to resolve referral commissions
-  payerOrganizationName : string ;
+  payerOrganizationName: string;
 }
 
 const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
@@ -32,11 +43,11 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
   onCancel,
 
   loadVehicles,
-  vehicleId,
-  vehicleName,
+  trackingVehicleId,
+  selectedTrucks,
   subscriptionType,
   payerOrganizationId,
-  payerOrganizationName ,
+  payerOrganizationName,
 }) => {
   const accent = useThemeColor('accent');
   const background = useThemeColor('background');
@@ -78,18 +89,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
     let totalTruckSubscriptions = 0
 
 
-    if (vehicleId && subscriptionType === "tracking") {
-
-      await updateDocument('TrackedVehicles', vehicleId, {
-        subscription: {
-          status: 'active',
-          expiryDate: expiryDate.toISOString(),
-          type: subscriptionType,
-        },
-        paymentType: 'Subscription',
-      });
-
-    } else if (subscriptionType === "brokerage") {
+    if (subscriptionType === "tracking" && trackingVehicleId) {
 
       const now = Date.now();
 
@@ -99,40 +99,99 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
       const expiresAt = expiryDate.getTime();
 
 
-      // 1. Save subscription payment history
-      await addDocument("subscriptions", {
+      // Update tracked vehicle
+      await updateDocument(
+        "TrackedVehicles",
+        trackingVehicleId,
+        {
+          subscription: {
+            active: true,
+            expiresAt,
+            type: subscriptionType,
+          },
 
-        type: "brokerage",
+          paymentType: "Subscription",
 
-        organizationId: payerOrganizationId,
-
-        userId: user?.uid,
-
-        plan: "Brokerage Monthly",
-
-        isTrial: false,
-
-        amount: 15,
-
-        billedAt: now,
-
-        expiresAt,
-
-        // paymentReference,
-
-        paymentMethod: paymentMethod,
-
-        createdAt: now,
-
-      });
+        }
+      );
 
 
-      // 2. Update brokerage document
+      // Save subscription history
+      await addDocument(
+        "subscriptions",
+        {
+
+          type: "tracking",
+
+          vehicleId: trackingVehicleId,
+
+          userId: user?.uid,
+
+          plan: "Tracking Monthly",
+
+          amount: 15,
+
+          billedAt: now,
+
+          expiresAt,
+
+          paymentMethod,
+
+          createdAt: now,
+
+        }
+      );
+
+
+
+    } else if (subscriptionType === "brokerage") {
+
+
+      const now = Date.now();
+
+      const expiryDate = new Date(now);
+      expiryDate.setDate(expiryDate.getDate() + 30);
+
+      const expiresAt = expiryDate.getTime();
+
+
+
+      // Save subscription history
+      await addDocument(
+        "subscriptions",
+        {
+
+          type: "brokerage",
+
+          organizationId: payerOrganizationId,
+
+          userId: user?.uid,
+
+          plan: "Broker Monthly",
+
+          amount: 15,
+
+          billedAt: now,
+
+          expiresAt,
+
+          paymentMethod,
+
+          createdAt: now,
+
+        }
+      );
+
+
+
+      // Update brokerage
       await updateDocument(
         "brokerages",
         payerOrganizationId,
         {
+
           subscription: {
+
             plan: "Broker Monthly",
 
             active: true,
@@ -147,41 +206,50 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
 
           },
 
+
           updatedAt: now,
+
         }
       );
 
 
-      // 3. Update user's cached brokerageDetails array
+
+      // Update personal cache
+
+      const updatedBrokerages =
+        user?.brokerageDetails?.map(
+          (broker: any) => {
+
+            if (
+              broker.organizationId === payerOrganizationId
+            ) {
+
+              return {
+
+                ...broker,
+
+                subscription: {
+
+                  plan: "Broker Monthly",
+
+                  active: true,
+
+                  isTrial: false,
+
+                  expiresAt,
+
+                }
+
+              };
+
+            }
 
 
-
-      const updatedBrokerages = user?.brokerageDetails.map(
-        (broker: any) => {
-
-          if (broker.organizationId === payerOrganizationId) {
-
-            return {
-              ...broker,
-
-              subscription: {
-                plan: "Broker Monthly",
-
-                active: true,
-
-                isTrial: false,
-
-                expiresAt,
-
-              }
-            };
+            return broker;
 
           }
+        );
 
-          return broker;
-
-        }
-      );
 
 
       await updateDocument(
@@ -192,22 +260,122 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
         }
       );
 
-    }else if()
+
+
+    } else if (subscriptionType === "truck") {
+
+      const now = Date.now();
+
+      const expiryDate = new Date(now);
+      expiryDate.setDate(expiryDate.getDate() + 30);
+
+      const expiresAt = expiryDate.getTime();
+
+
+      // Selected trucks must be array of objects
+      if (!selectedTrucks || selectedTrucks.length === 0) {
+
+        throw new Error(
+          "No trucks selected"
+        );
+
+      }
+
+
+      // Update each truck subscription
+      for (const truck of selectedTrucks) {
+
+        await updateDocument(
+          `fleets/${payerOrganizationId}/trucks`,
+          truck.id,
+          {
+
+            subscription: {
+
+              active: true,
+
+              type: "truck",
+
+              expiresAt,
+
+            },
+
+            updatedAt: now,
+
+          }
+        );
+
+      }
+
+
+
+      // Save subscription history
+
+      await addDocument(
+        "subscriptions",
+        {
+
+          type: "truck",
+
+          organizationId: payerOrganizationId,
+
+          userId: user?.uid,
+
+
+          // Snapshot of trucks subscribed
+          selectedTrucks: selectedTrucks.map(
+            (truck) => ({
+
+              id: truck.id,
+
+              name: truck.name || null,
+
+              numberPlate: truck.numberPlate || null,
+
+              type: truck.type || null,
+
+              capacity: truck.capacity || null,
+
+            })
+          ),
+
+
+          totalTruckSubscriptions:
+            selectedTrucks.length,
+
+
+          plan: "Truck Monthly",
+
+
+          amount:
+            selectedTrucks.length * 15,
+
+
+          billedAt: now,
+
+
+          expiresAt,
+
+
+          paymentMethod,
+
+
+          createdAt: now,
+
+        }
+      );
+
+
+    }
 
 
 
     // Referral commission — isolated in referrals/referralService.ts
-    await creditReferralIfEligible(payerOrganizationId,payerOrganizationName ,subscriptionType, pricing.referralCommission, totalTruckSubscriptions);
+    await creditReferralIfEligible(payerOrganizationId, payerOrganizationName, subscriptionType, pricing.referralCommission, totalTruckSubscriptions);
 
     if (loadVehicles)
       loadVehicles();
 
-    Alert.alert(
-      'Subscription Successful',
-      `${pricing.label} activated for ${vehicleName}.`,
-      [{ text: 'OK', onPress: () => { } }]
-    );
-    ToastAndroid.show(`${vehicleName} subscribed successfully.`, ToastAndroid.SHORT);
 
     resetState();
     onClose();
@@ -308,7 +476,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
 
             {/* Message */}
             <ThemedText style={styles.message}>
-              {`Subscribe ${vehicleName} for $${pricing.amount}/month`}
+              {`Subscribe Truck${(selectedTrucks?.length ?? 0) > 1 ? "s" : ""} for $${pricing.amount}/month`}
             </ThemedText>
 
             {!loading && !awaitingCardConfirm && (

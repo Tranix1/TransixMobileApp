@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import {
     View,
@@ -6,7 +6,7 @@ import {
     StyleSheet,
     ScrollView,
     ActivityIndicator,
-    Alert,
+    Alert, Keyboard
 } from 'react-native';
 import Input from '@/components/Input';
 import {
@@ -21,19 +21,20 @@ import { ThemedText } from '@/components/ThemedText';
 import { Image } from 'expo-image';
 import { useAuth } from '@/context/AuthContext';
 import { AccountType } from '@/types/types';
+import { router } from 'expo-router';
 
 const ACCOUNT_TYPES: {
     key: AccountType;
     label: string;
     icon: (color: string) => React.ReactNode;
 }[] = [
-    { key: 'tracking', label: 'Tracking', icon: (c) => <Ionicons name="location" size={20} color={c} /> },
-    { key: 'fleet', label: 'Fleet', icon: (c) => <FontAwesome5 name="truck" size={17} color={c} /> },
-    { key: 'driver', label: 'Driver', icon: (c) => <Ionicons name="person" size={20} color={c} /> },
-    { key: 'brokerage', label: 'Broker', icon: (c) => <MaterialCommunityIcons name="briefcase-outline" size={20} color={c} /> },
-];
+        { key: 'tracking', label: 'Tracking', icon: (c) => <Ionicons name="location" size={20} color={c} /> },
+        { key: 'fleet', label: 'Fleet', icon: (c) => <FontAwesome5 name="truck" size={17} color={c} /> },
+        { key: 'driver', label: 'Driver', icon: (c) => <Ionicons name="person" size={20} color={c} /> },
+        { key: 'brokerage', label: 'Broker', icon: (c) => <MaterialCommunityIcons name="briefcase-outline" size={20} color={c} /> },
+    ];
 
-const Index = ({ setDspLoginOrSignup }: any) => {
+const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
     const [fullname, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -48,34 +49,69 @@ const Index = ({ setDspLoginOrSignup }: any) => {
     const accent = useThemeColor('accent');
     const coolGray = useThemeColor('coolGray');
 
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+    useEffect(() => {
+        const showSub = Keyboard.addListener("keyboardDidShow", () => {
+            setKeyboardVisible(true);
+        });
+
+        const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+            setKeyboardVisible(false);
+        });
+
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
+
     const { signUp } = useAuth();
 
     const handleAccountSelect = (type: AccountType) => setSelectedAccount(type);
 
+
     const onsubmit = async () => {
         if (!email || !password || !fullname) {
-            setError('Please fill in all fields');
+            setError("Please fill in all fields");
             return;
         }
+
         if (!acceptTerms) {
-            setError('You must accept the terms and privacy policy');
+            setError("You must accept the terms and privacy policy");
             return;
         }
 
         setError(null);
+
         try {
             setLoading(true);
-            await signUp({
+            setIsSigningUp(true);
+
+            const result = await signUp({
                 email,
                 password,
                 referrerCode,
                 accountType: selectedAccount,
                 displayName: fullname,
             });
+
+            if (result.success) {
+                router.replace({
+                    pathname: "/Account/Profile",
+                    params: {
+                        operation: "create",
+                        accountType: result.accountRole.accType,
+                    },
+                });
+            }
+
         } catch (err: any) {
-            setError(err.message || 'Sign up failed. Please try again.');
+            setError(err.message || "Signup failed. Please try again.");
+
         } finally {
             setLoading(false);
+            setIsSigningUp(false);
         }
     };
 
@@ -181,7 +217,7 @@ const Index = ({ setDspLoginOrSignup }: any) => {
 
                     {(selectedAccount === 'fleet' || selectedAccount === 'brokerage') && (
                         <View>
-                            <ThemedText style={styles.label}>Referrer Code (Optional)</ThemedText>
+                            <ThemedText style={styles.label}>Referral Code (Optional)</ThemedText>
                             <Input
                                 containerStyles={styles.input}
                                 placeholder="Enter referrer code"
@@ -238,7 +274,12 @@ const Index = ({ setDspLoginOrSignup }: any) => {
                         </ThemedText>
                     </TouchableOpacity>
 
-                    <View style={{ height: hp(5) }} />
+                    {!keyboardVisible && (
+                        <View style={{ height: hp(8) }} />
+                    )}
+                    {keyboardVisible && (
+                        <View style={{ height: hp(50) }} />
+                    )}
                 </View>
             </ScrollView>
         </ScreenWrapper>

@@ -166,7 +166,7 @@ export default function AddTrackedVehicle() {
         category: vehicleCategory.name,
         subType: vehicleSubType?.name || null,
         paymentType: paymentType?.name || null,
-        userId: selectedUser.userId,
+        userId: selectedUser.uid || selectedUser.userId,
         userEmail: selectedUser.email,
         userName: selectedUser.displayName || selectedUser.email,
         salesmanId: salesman?.uid,

@@ -44,7 +44,7 @@ interface UpdateAccountResponse {
 }
 
 interface AuthContextValue {
-    signUp: (credentials: SignUpCredentials) => Promise<void>;
+    signUp: (credentials: SignUpCredentials) => Promise<{ success: boolean; accountRole?: any }>;
     Login: (credentials: LoginCredentials) => Promise<LoginResponse>;
     isSignedIn: boolean;
     user: User | null | undefined;
@@ -82,7 +82,7 @@ const DEFAULT_Driver_ROLE: CurrentRole = {
     userRole: "",
     accType: 'driver',
     driverId: "",
-    driverName : ""
+    driverName: ""
 };
 
 const DEFAULT_BROKER_ROLE: CurrentRole = {
@@ -95,7 +95,7 @@ const DEFAULT_BROKER_ROLE: CurrentRole = {
 };
 
 const AuthContext = createContext<AuthContextValue>({
-    signUp: async () => { },
+    signUp: async () => {return {success: false,};},
     Login: async () => ({ success: false, message: "" }),
     isSignedIn: false,
     user: null,
@@ -127,7 +127,7 @@ const normalizeAccountType = (roleInput: CurrentRole | AccountType | null | unde
         case 'fleet':
             return DEFAULT_FLEET_ROLE;
 
-            case 'driver':
+        case 'driver':
             return DEFAULT_Driver_ROLE
 
         case 'brokerage':
@@ -232,7 +232,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             console.error('Error saving current role:', error);
         }
     };
-    
+
 
     const setupUser = async (userData: User | null) => {
         if (userData) {
@@ -315,24 +315,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    const signUp = async (credentials: SignUpCredentials): Promise<void> => {
+    const signUp = async (credentials: SignUpCredentials): Promise<{ success: boolean; accountRole?: any }> => {
         try {
-            let referrerId: string | null = null;
+            let referredBy: User["referredBy"] | undefined;
 
-            if (credentials.referrerCode && credentials.referrerCode.trim() !== '') {
-                const referrerValidation = await validateReferrerCode(credentials.referrerCode.trim().toUpperCase());
+            if (credentials.referrerCode?.trim()) {
+                const validation = await validateReferrerCode(
+                    credentials.referrerCode.trim().toUpperCase()
+                );
 
-                if (!referrerValidation.exists) {
-                    ToastAndroid.show('Invalid referrer code. Please check the code or leave it blank.', ToastAndroid.LONG);
-                    return;
+                if (!validation.exists || !validation.referrerData) {
+                    ToastAndroid.show(
+                        "Invalid referral code. Please check the code or leave it blank.",
+                        ToastAndroid.LONG
+                    );
+                    return {
+                        success: false,
+                    };
                 }
 
-                referrerId = referrerValidation.referrerId;
+                referredBy = validation.referrerData;
             }
 
-            const userCredential = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
+            const userCredential = await createUserWithEmailAndPassword(
+                auth,
+                credentials.email,
+                credentials.password
+            );
+
             const firebaseUser = userCredential.user;
-            const accountRole = normalizeAccountType(credentials.accountType || 'tracking');
+
+            const accountRole = normalizeAccountType(
+                credentials.accountType || "tracking"
+            );
 
             await updateProfile(firebaseUser, {
                 displayName: credentials.displayName,
@@ -342,41 +357,80 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email ?? undefined,
                 displayName: credentials.displayName,
-                referrerId: referrerId || undefined,
+
+                ...(referredBy && {
+                    referredBy
+                }),
+
                 accountType: accountRole.accType,
                 role: accountRole.role,
                 createdAt: Date.now().toString(),
             };
 
-            const saved = await setDocuments("personalData", userData);
+            const saved = await setDocuments(
+                "personalData",
+                userData
+            );
 
             if (!saved) {
-                ToastAndroid.show('Unable to create profile. Please try again.', ToastAndroid.LONG);
-                return;
+                ToastAndroid.show(
+                    "Unable to create profile. Please try again.",
+                    ToastAndroid.LONG
+                );
+                return {
+                    success: false,
+                };
             }
 
-            const fullUser = { ...userData };
-
-            setUser(fullUser);
+            setUser(userData);
             setIsSignedIN(true);
             setIsAppReady(true);
-            await AsyncStorage.setItem('user', JSON.stringify(fullUser));
-            await AsyncStorage.setItem('currentUser', JSON.stringify(fullUser));
-            await AsyncStorage.setItem(`personalData_${firebaseUser.uid}`, JSON.stringify(userData));
+
+            await AsyncStorage.setItem(
+                "user",
+                JSON.stringify(userData)
+            );
+
+            await AsyncStorage.setItem(
+                "currentUser",
+                JSON.stringify(userData)
+            );
+
+            await AsyncStorage.setItem(
+                `personalData_${firebaseUser.uid}`,
+                JSON.stringify(userData)
+            );
+
             await saveCurrentRole(accountRole);
 
             await sendEmailVerification(firebaseUser).catch(() => { });
 
-            ToastAndroid.show('Account created successfully!', ToastAndroid.SHORT);
-            await router.replace({
-                pathname: '/Account/Profile',
-                params: { operation: 'create', accountType: accountRole.accType },
-            });
+            ToastAndroid.show(
+                "Account created successfully!",
+                ToastAndroid.SHORT
+            );
+
+           
+
+            return {
+                success: true,
+                accountRole,
+            };
+
         } catch (error) {
-            console.error('Sign up failed:', error);
-            ToastAndroid.show(getFirebaseErrorMessage(error), ToastAndroid.LONG);
+            console.error("Sign up failed:", error);
+
+            ToastAndroid.show(
+                getFirebaseErrorMessage(error),
+                ToastAndroid.LONG
+            );
+
+            return{
+              success :false  
+            } ;
         }
     };
+
 
     const Logout = async () => {
         try {
@@ -407,7 +461,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
- const updateAccount = async (
+    const updateAccount = async (
     credentials: User
 ): Promise<UpdateAccountResponse> => {
     try {
@@ -437,92 +491,147 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             );
         }
 
-        // Existing personal data
+        // Get existing user data
         const existingUser = await readById(
             "personalData",
             credentials.uid
-        );
+        ) as Partial<User> | null;
 
-        // Generate only once
-        let referralCode = user?.referralCode;
 
+        // Keep existing referral code
+        let referralCode =
+            existingUser?.referralCode ||
+            user?.referralCode;
+
+
+        // Create referral profile only once
         if (!referralCode) {
+
             referralCode = await generateUniqueReferrerCode();
 
-            const referrerData = {
-                userId: credentials.uid,
-                name:
-                    credentials.organisation ||
-                    credentials.displayName ||
-                    "Unknown",
-                email: credentials.email ?? "",
-                referralCode,
-                createdAt: new Date().toISOString(),
-                isActive: true,
-            };
-
-            // One document per user
             await addDocumentWithId(
                 "referrers",
                 credentials.uid,
-                referrerData
+                {
+                    userId: credentials.uid,
+
+                    name:
+                        credentials.organisation ||
+                        credentials.displayName ||
+                        "Unknown",
+
+                    email:
+                        credentials.email ||
+                        currentUser.email ||
+                        "",
+
+                    referralCode,
+
+                    createdAt:
+                        new Date().toISOString(),
+
+                    isActive: true,
+                }
             );
         }
 
+
         const fullUser: User = {
+            ...(existingUser as User),
             ...credentials,
+
+            uid: credentials.uid,
+
             displayName:
                 credentials.organisation ||
                 credentials.displayName ||
                 "",
+
             accountType: currentRole.accType,
+
             role: currentRole.role,
-            expoPushToken: credentials.expoPushToken || "",
+
+            expoPushToken:
+                credentials.expoPushToken ||
+                existingUser?.expoPushToken ||
+                "",
 
             referralCode,
-            referredBy: user?.referredBy,
+
+            // Preserve referral object from signup
+            ...(existingUser?.referredBy || user?.referredBy
+                ? {
+                    referredBy:
+                        existingUser?.referredBy ||
+                        user?.referredBy
+                }
+                : {}),
         };
 
-        await setDocuments("personalData", fullUser);
+
+        // Remove undefined values before Firebase
+        const cleanUser = Object.fromEntries(
+            Object.entries(fullUser)
+                .filter(([_, value]) => value !== undefined)
+        ) as User;
+
+
+        await setDocuments(
+            "personalData",
+            cleanUser
+        );
+
 
         await AsyncStorage.setItem(
             "user",
-            JSON.stringify(fullUser)
+            JSON.stringify(cleanUser)
         );
 
         await AsyncStorage.setItem(
             "currentUser",
-            JSON.stringify(fullUser)
+            JSON.stringify(cleanUser)
         );
 
         await AsyncStorage.setItem(
-            `profile_${fullUser.uid}`,
-            JSON.stringify(fullUser)
+            `profile_${cleanUser.uid}`,
+            JSON.stringify(cleanUser)
         );
 
         await AsyncStorage.setItem(
-            `personalData_${fullUser.uid}`,
-            JSON.stringify(fullUser)
+            `personalData_${cleanUser.uid}`,
+            JSON.stringify(cleanUser)
         );
 
-        setUser(fullUser);
+
+        setUser(cleanUser);
+
         setIsSignedIN(true);
+
         setIsAppReady(true);
 
-        if (fullUser.expoPushToken) {
+
+        if (cleanUser.expoPushToken) {
+
             await updateUserTokenInAllCollections(
-                fullUser.uid,
-                fullUser.expoPushToken
+                cleanUser.uid,
+                cleanUser.expoPushToken
             );
+
         }
+
 
         return {
             success: true,
-            user: fullUser,
+            user: cleanUser,
         };
 
+
     } catch (error) {
-        console.log("Update Error >", error);
+
+        console.log(
+            "Update Error >",
+            error
+        );
 
         return {
             success: false,
@@ -530,6 +639,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         };
     }
 };
+
+
+    
 
 
 

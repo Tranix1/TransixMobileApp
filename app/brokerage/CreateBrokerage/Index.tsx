@@ -17,14 +17,16 @@ import { takePhoto } from '@/Utilities/imageUtils';
 import { DocumentAsset } from '@/types/types';
 import Heading from '@/components/Heading';
 import { useAuth } from '@/context/AuthContext';
-import { updateDocument, generateUniqueReferrerCode, checkDocumentExists } from '@/db/operations';
+import { updateDocument, generateUniqueReferrerCode, checkDocumentExists, addDocumentWithId } from '@/db/operations';
 import { uploadImage } from '@/db/operations';
-import { setDoc, doc, where } from 'firebase/firestore';
+import { setDoc, doc, where, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import { addDocument } from '@/db/operations';
 import { LocationPicker } from '@/components/LocationPicker';
 import { SelectLocationProp } from '@/types/types';
 import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplete';
+import { FontAwesome } from '@expo/vector-icons';
+import { Countries } from '@/types/types';
 
 const CreaterBrokerage = ({ }) => {
   const icon = useThemeColor('icon');
@@ -36,6 +38,9 @@ const CreaterBrokerage = ({ }) => {
   const [brokerName, setBrokerName] = useState('');
   const [brokerPhone, setBrokerPhone] = useState('');
   const [brokerEmail, setBrokerEmail] = useState('');
+
+  const [operationCountries, setOperationCountries] = useState<string[]>([]);
+  const [showCountries, setShowCountries] = useState(false);
 
   const [locationFull, setLocationFull] = useState<SelectLocationProp | null>(null);
 
@@ -119,7 +124,7 @@ const CreaterBrokerage = ({ }) => {
         organizationPhone: brokerPhone,
 
         location: locationFull,
-
+        operationCountries,
 
         organizationAdminPhone: user?.phoneNumber,
         organizationAdminEmail: user?.email,
@@ -165,95 +170,95 @@ const CreaterBrokerage = ({ }) => {
       // ===============================
 
       const trialAlreadyUsed = await checkDocumentExists(
-  "subscriptions",
-  [
-    where("type", "==", "broker"),
-    where("userId", "==", user?.uid),
-    where("isTrial", "==", true),
-  ]
-);
+        "subscriptions",
+        [
+          where("type", "==", "broker"),
+          where("userId", "==", user?.uid),
+          where("isTrial", "==", true),
+        ]
+      );
 
-let subscriptionData;
+      let subscriptionData;
 
-const createdAt = Date.now();
+      const createdAt = Date.now();
 
-if (!trialAlreadyUsed) {
+      if (!trialAlreadyUsed) {
 
-  // 30 Day Trial
-  const trialEndDate = new Date(createdAt);
-  trialEndDate.setDate(trialEndDate.getDate() + 30);
+        // 30 Day Trial
+        const trialEndDate = new Date(createdAt);
+        trialEndDate.setDate(trialEndDate.getDate() + 30);
 
-  const trialEndsAt = trialEndDate.getTime();
+        const trialEndsAt = trialEndDate.getTime();
 
-  subscriptionData = {
-    plan: "Broker Trial",
+        subscriptionData = {
+          plan: "Broker Trial",
 
-    active: true,
+          active: true,
 
-    isTrial: true,
+          isTrial: true,
 
-    trialEndsAt,
+          trialEndsAt,
 
-    billedAt: null,
+          billedAt: null,
 
-    expiresAt: trialEndsAt,
-  };
-
-
-  // Save trial history
-  await addDocument("subscriptions", {
-
-    type: "broker",
-
-    brokerageId,
-
-    userId: user?.uid,
-
-    plan: "Broker Trial",
-
-    isTrial: true,
-
-    trialStartedAt: createdAt,
-
-    trialEndsAt,
-
-    billedAt: null,
-
-    expiresAt: trialEndsAt,
-
-    amount: 0,
-
-    createdAt,
-
-  });
+          expiresAt: trialEndsAt,
+        };
 
 
-} else {
+        // Save trial history
+        await addDocument("subscriptions", {
 
-  // No trial available - subscription required
-  const expiresDate = new Date(createdAt);
-  expiresDate.setDate(expiresDate.getDate() + 30);
+          type: "broker",
 
-  const expiresAt = expiresDate.getTime();
+          brokerageId,
+
+          userId: user?.uid,
+
+          plan: "Broker Trial",
+
+          isTrial: true,
+
+          trialStartedAt: createdAt,
+
+          trialEndsAt,
+
+          billedAt: null,
+
+          expiresAt: trialEndsAt,
+
+          amount: 0,
+
+          createdAt,
+
+        });
 
 
-  subscriptionData = {
+      } else {
 
-    plan: "Broker Monthly",
+        // No trial available - subscription required
+        const expiresDate = new Date(createdAt);
+        expiresDate.setDate(expiresDate.getDate() + 30);
 
-    active: false,
+        const expiresAt = expiresDate.getTime();
 
-    isTrial: false,
 
-    trialEndsAt: null,
+        subscriptionData = {
 
-    billedAt: createdAt,
+          plan: "Broker Monthly",
 
-    expiresAt,
+          active: false,
 
-  };
+          isTrial: false,
 
-}
+          trialEndsAt: null,
+
+          billedAt: createdAt,
+
+          expiresAt,
+
+        };
+
+      }
 
 
       const brokerCollectionData = {
@@ -264,6 +269,7 @@ if (!trialAlreadyUsed) {
         ownerId: user?.uid,
         id: brokerageId,
         location: locationFull,
+        operationCountries,
 
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -300,6 +306,7 @@ if (!trialAlreadyUsed) {
         ownerId: user?.uid,
         id: brokerageId,
         location: locationFull,
+        operationCountries,
 
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -328,14 +335,26 @@ if (!trialAlreadyUsed) {
       });
 
 
+      await addDocumentWithId(`organizationProfiles`, brokerageId, {
+        organizationId: brokerageId,
+        type: "fleet", // or "fleet"
 
+        name: brokerName,
+        profilePhoto: user?.photoURL || null,
+        coverPhoto: null,
+        description: "",
+        ownerId: user?.uid,
+        ownerName: user?.displayName || user?.organisation,
 
+        location: locationFull,
+        operationCountries,
 
+        verificationStatus: "pending",
 
+        createdAt: Date.now()
+      }
 
-
-
-
+      )
 
 
 
@@ -352,16 +371,7 @@ if (!trialAlreadyUsed) {
       const contactRef = doc(db, 'brokerages', brokerageId, 'Contacts', `OWN_${user?.uid}`);
       await setDoc(contactRef, contactDetails);
 
-      const referrerData = {
-        userId: user?.uid,
-        email: user?.email,
-        name: user?.displayName ?? "Unknown",
 
-        createdAt: new Date().toISOString(),
-        isActive: true,
-      };
-
-      await addDocument('referrers', referrerData);
 
       // Close modal and show success
       setUploadingBrokerD(false);
@@ -477,6 +487,70 @@ if (!trialAlreadyUsed) {
               mode="single"
             />
           )}
+
+
+
+          <>
+
+            <ThemedText style={{ marginBottom: wp(4) }}>
+              {operationCountries?.join(', ') || '--'}
+            </ThemedText>
+
+            <ThemedText>
+              Permitted countries<ThemedText color="red">*</ThemedText>
+            </ThemedText>
+
+            <View style={{
+              paddingVertical: wp(1),
+
+              gap: wp(1),
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 12,
+              paddingHorizontal: 16,
+              marginBottom: 16,
+            }}>
+              <TouchableOpacity
+                onPress={() => { setShowCountries(!showCountries); }}
+
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}>
+                <ThemedText style={{ minHeight: hp(5), textAlignVertical: 'center' }}>
+                  Select Countrie(s)
+                </ThemedText>
+
+                <Ionicons name={showCountries ? 'chevron-up-outline' : "chevron-down"} size={wp(4)} color={icon} />
+              </TouchableOpacity>
+              {showCountries &&
+                <View>
+                  <Divider />
+                  {Countries.map((item) => {
+
+                    const active = operationCountries.some(x => x === item);
+
+                    return (
+                      <TouchableOpacity onPress={() => active ? setOperationCountries(operationCountries.filter(x => x !== item)) : setOperationCountries([...operationCountries, item])} style={{ padding: wp(2), marginVertical: wp(1), flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <ThemedText type="subtitle">
+                          {item}
+                        </ThemedText>
+
+                        <FontAwesome name={active ? 'check-square' : "square-o"} size={wp(5)} color={active ? '#0f9d58' : icon} />
+                      </TouchableOpacity>
+                    )
+                  }
+                  )}
+
+                </View>
+              }
+
+            </View>
+          </>
+
+
+
 
 
           <ThemedText>Type of Broker</ThemedText>

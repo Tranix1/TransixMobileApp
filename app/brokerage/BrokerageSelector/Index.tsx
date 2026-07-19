@@ -14,7 +14,7 @@ import SubscriptionPaymentModal from "@/components/SubscriptionPaymentModal";
 
 
 function BrokerageSelector() {
-    const { user, Logout, setupUser, setCurrentRole , currentRole } = useAuth();
+    const { user, Logout, setupUser, setCurrentRole, currentRole } = useAuth();
     const [showReferralModal, setShowReferralModal] = useState(false);
     const [referralCode, setReferralCode] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,7 +26,7 @@ function BrokerageSelector() {
 
     const ownedBrokerages = Array.isArray(user?.brokergePDetails) ? user.brokergePDetails : [];
     const brokerages = ownedBrokerages.length;
-    const hasReferral = !!user?.referrerId || !!user?.referrerCode;
+    const hasReferral = !!user?.referredBy?.userId;
 
     useEffect(() => {
         if (user) {
@@ -34,37 +34,67 @@ function BrokerageSelector() {
         }
     }, [user, hasReferral]);
 
+
+
+
     const handleSubmitReferralCode = async (code: string) => {
         if (!code || !code.trim()) {
-            ToastAndroid.show('Please enter a referral code.', ToastAndroid.SHORT);
+            ToastAndroid.show(
+                "Please enter a referral code.",
+                ToastAndroid.SHORT
+            );
             return;
         }
 
         setIsSubmitting(true);
+
         try {
             const normalizedCode = code.trim().toUpperCase();
+
             const validation = await validateReferrerCode(normalizedCode);
 
-            if (!validation.exists || !validation.referrerId) {
-                ToastAndroid.show('Invalid referral code. Please check and try again.', ToastAndroid.LONG);
+            if (!validation.exists || !validation.referrerId || !validation.referrerData) {
+                ToastAndroid.show(
+                    "Invalid referral code. Please check and try again.",
+                    ToastAndroid.LONG
+                );
                 return;
             }
 
-            const saved = await setDocuments('personalData', { referrerId: validation.referrerId });
-            if (!saved) {
-                ToastAndroid.show('Unable to save referral code. Please try again.', ToastAndroid.LONG);
-                return;
-            }
+            await updateDocument(
+                "personalData",
+                user?.uid || "",
+                {
+                    referredBy: validation.referrerData
+                }
+            );
 
             if (user) {
-                await setupUser({ ...user, referrerId: validation.referrerId });
+                await setupUser({
+                    ...user,
+                    referredBy: validation.referrerData
+                });
             }
 
             setReferralCode(normalizedCode);
             setShowReferralModal(false);
-            ToastAndroid.show('Referral code accepted.', ToastAndroid.SHORT);
+
+            ToastAndroid.show(
+                "Referral code accepted.",
+                ToastAndroid.SHORT
+            );
+
         } catch (error) {
-            ToastAndroid.show('Referral validation failed. Please try again.', ToastAndroid.LONG);
+            console.error(
+                "Referral validation error:",
+                error
+            );
+
+            ToastAndroid.show(
+                "Referral validation failed. Please try again.",
+                ToastAndroid.LONG
+            );
+
         } finally {
             setIsSubmitting(false);
         }
@@ -118,25 +148,25 @@ function BrokerageSelector() {
 
     const [showModal, setShowModal] = useState(true)
     const brokerage = user?.brokerageDetails?.find(
-  (item:any) =>
-    item.organizationId === currentRole.organizationId
-);
+        (item: any) =>
+            item.organizationId === currentRole.organizationId
+    );
 
 
-const shouldShowBrokerageSubscription =
-  brokerage &&
-  (
-    !brokerage.subscription ||
-    !brokerage.subscription.active ||
-    Date.now() > brokerage.subscription.expiresAt
-  );
-  useEffect(() => {
+    const shouldShowBrokerageSubscription =
+        brokerage &&
+        (
+            !brokerage.subscription ||
+            !brokerage.subscription.active ||
+            Date.now() > brokerage.subscription.expiresAt
+        );
+    useEffect(() => {
 
-  if (shouldShowBrokerageSubscription) {
-    // setShowModal(true);  
-  }
+        if (shouldShowBrokerageSubscription) {
+            // setShowModal(true);  
+        }
 
-}, [shouldShowBrokerageSubscription]);
+    }, [shouldShowBrokerageSubscription]);
 
     return (
         <View style={[, styles.container, { backgroundColor: background }]}>
@@ -146,8 +176,8 @@ const shouldShowBrokerageSubscription =
                 isVisible={showModal}
                 onClose={() => setShowModal(false)}
                 subscriptionType="brokerage"      // or "broker" / "tracking"
-                 payerOrganizationId={currentRole.organizationId || ""}
-                 payerOrganizationName = {currentRole.companyName || " "}
+                payerOrganizationId={currentRole.organizationId || ""}
+                payerOrganizationName={currentRole.companyName || " "}
             />
 
 

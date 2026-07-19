@@ -17,6 +17,18 @@ import { uploadImage } from "@/db/operations";
 import Divider from "@/components/Divider";
 import { countryCodes, } from "@/data/appConstants";
 import { usePushNotifications } from '@/Utilities/pushNotification';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import * as Location from "expo-location";
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+type LocationData = {
+    description: string;
+    placeId: string;
+    latitude: number | null;
+    longitude: number | null;
+    country: string;
+    city: string;
+};
 
 
 const Edit = () => {
@@ -42,7 +54,58 @@ const Edit = () => {
 
     const [countryCode, setCountryCode] = useState<{ id: number, name: string }>({ id: 0, name: '+263' })
 
-    const countries = Countries.map((item) => ({ value: item, label: item }))
+    const [location, setLocation] = useState<LocationData> ({
+        description: "",
+        placeId: "",
+        latitude: null,
+        longitude: null,
+        country: "",
+        city: "",
+    });
+    const [loadingLocation, setLoadingLocation] = useState(false);
+
+    const getCurrentLocation = async () => {
+    try {
+        setLoadingLocation(true);
+
+        const { status } = await Location.requestForegroundPermissionsAsync();
+
+        if (status !== "granted") {
+            return;
+        }
+
+        const current = await Location.getCurrentPositionAsync({});
+
+        const latitude = current.coords.latitude;
+        const longitude = current.coords.longitude;
+
+        const address = await Location.reverseGeocodeAsync({
+            latitude,
+            longitude,
+        });
+
+        const place = address[0];
+
+        const city = place.city || place.subregion || place.district || "";
+        const country = place.country || "";
+
+        setLocation({
+            description: `${city}${country ? `, ${country}` : ""}`,
+            placeId: "",
+            latitude,
+            longitude,
+            country,
+            city,
+        });
+
+    } catch (error) {
+        console.log("Location error:", error);
+
+    } finally {
+        setLoadingLocation(false);
+    }
+};
+
     useEffect(() => {
         if (!user) {
             router.back();
@@ -105,8 +168,9 @@ const Edit = () => {
 
         const logoImage = imagelogo ? await uploadImage(imagelogo, "Profiles", () => { }, "Logo") : null;
         const data = {
-            country: selectedValue.value,
-            address: address,
+
+
+            location: location,
             phoneNumber: `${countryCode.name}${phoneNumber}`,
             number: phoneNumber,
             countryCode: countryCode,
@@ -149,7 +213,7 @@ const Edit = () => {
 
             <View style={styles.container}>
 
-                <ScrollView>
+                <View>
 
                     {imagelogo && <Image source={{ uri: imagelogo.uri }} style={{ width: wp(40), height: wp(40), margin: 'auto', marginBottom: 9, borderRadius: wp(4) }} />}
                     {!imagelogo && !user?.photoURL && <TouchableOpacity
@@ -170,69 +234,15 @@ const Edit = () => {
                     </TouchableOpacity>}
 
 
-                    <ThemedText style={styles.label}>Organisation Name</ThemedText>
+                    <ThemedText style={styles.label}>User Name</ThemedText>
                     <Input
                         containerStyles={styles.input}
                         placeholder="Your Organisation"
                         value={organisation}
                         onChangeText={setOrganisation}
                     />
-                    <ThemedText style={styles.label}>Country</ThemedText>
-                    <Dropdown
-                        style={[styles.dropdown,]}
-                        placeholderStyle={[styles.placeholderStyle, { color: backgroundLight }]}
-                        selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
-                        data={countries}
-                        maxHeight={hp(60)}
-                        labelField="label"
-                        valueField="value"
-                        placeholder="Select Country"
-                        value={selectedValue.value}
-                        itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-                        activeColor={backgroundLight}
-                        containerStyle={{
-                            borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                            shadowOffset: {
-                                width: 0,
-                                height: 9,
-                            },
-                            shadowOpacity: 0.50,
-                            shadowRadius: 12.35,
 
-                            elevation: 19,
-                            paddingVertical: wp(1)
-                        }}
-                        onChange={item => {
-                            setSelectedValue(item);
-                        }}
-
-                        renderLeftIcon={() => <></>}
-                        renderRightIcon={() => <Entypo name="chevron-thin-down" size={wp(4)} color={icon} />}
-                        renderItem={((item) =>
-                            <View style={[styles.item, item.value === selectedValue.value && {}]}>
-                                <ThemedText style={[{ textAlign: 'left', flex: 1 }, item.value === selectedValue.value && { color: accent }]}>{item.value}</ThemedText>
-                                {item.value === selectedValue.value && (
-                                    <Ionicons
-                                        color={icon}
-                                        name='checkmark-outline'
-                                        size={wp(5)}
-                                    />
-                                )}
-                            </View>
-                        )}
-
-                    />
-
-                    <ThemedText style={styles.label}>Address</ThemedText>
-                    <Input
-                        containerStyles={styles.input}
-                        placeholder="Your Address"
-                        value={address}
-                        onChangeText={setAddress}
-                    />
-                    <ThemedText style={styles.label}>Phone Number</ThemedText>
-
-
+  <ThemedText style={styles.label}>Phone Number</ThemedText>
 
                     <Input
                         Icon={<>
@@ -297,6 +307,140 @@ const Edit = () => {
 
 
 
+
+
+
+                        {location.city && location.country && (
+    
+    <View style={[styles.selectedLocation ]}>
+    <View style={styles.selectedLocationIcon}>
+        <MaterialCommunityIcons
+            name="map-marker-check"
+            size={22}
+            color={accent}
+        />
+    </View>
+
+    <View style={{ marginLeft: 12 }}>
+        <ThemedText style={styles.selectedCity}>
+            {location.city}
+        </ThemedText>
+
+        <ThemedText style={styles.selectedCountry}>
+            {location.country}
+        </ThemedText>
+    </View>
+</View>
+
+)}
+
+<ThemedText style={styles.label} >Where are you based (city/country)? </ThemedText>
+
+                    <TouchableOpacity
+                        onPress={getCurrentLocation}
+                        style={[styles.locationButton, {borderColor:accent} ]}
+                    >
+                        
+                        <MaterialCommunityIcons
+                            name="crosshairs-gps"
+                            size={20}
+                            color={accent}
+                        />
+
+                        <ThemedText style={{ marginLeft: 8 }}>
+                            {     loadingLocation
+                                ? "Getting location..."
+                                : "Use current location"}
+                        </ThemedText>
+                    </TouchableOpacity>
+
+<ThemedText style={styles.label}>Or search your city</ThemedText>
+
+
+                    <GooglePlacesAutocomplete
+                        placeholder="Search your city"
+                        fetchDetails={true}
+                        predefinedPlaces={[]}
+                        minLength={2}
+                        debounce={300}
+                        timeout={10000}
+                        keepResultsAfterBlur={false}
+                        enablePoweredByContainer={false}
+                        keyboardShouldPersistTaps="always"
+
+                        onPress={(data, details = null) => {
+                            if (!details) return;
+
+                            const components = details.address_components || [];
+
+                            const countryComponent = components.find((c: any) =>
+                                c.types?.includes("country")
+                            );
+
+                            const cityComponent = components.find((c: any) =>
+                                c.types?.includes("locality") ||
+                                c.types?.includes("administrative_area_level_2") ||
+                                c.types?.includes("sublocality")
+                            );
+
+                            setLocation({
+                                description: data.description || "",
+                                placeId: data.place_id || "",
+                                latitude: details.geometry?.location?.lat || null,
+                                longitude: details.geometry?.location?.lng || null,
+                                country: countryComponent?.long_name || "",
+                                city: cityComponent?.long_name || "",
+                            });
+                        }}
+
+                        query={{
+                            key: "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4",
+                            language: "en",
+                            types: "(cities)",
+                        }}
+
+                        textInputProps={{
+                            onFocus: () => console.log("focused"),
+                        }}
+
+                        onFail={(error) => {
+                            console.log("Google Places Error:", error);
+                        }}
+
+                        styles={{
+                            container: {
+                                flex: 0,
+                            },
+                            textInputContainer: {
+                                width: "100%",
+                            },
+                            textInput: {
+                                height: 50,
+                                borderRadius: 10,
+                                paddingHorizontal: 15,
+                                fontSize: 15,
+                            },
+                            listView: {
+                                backgroundColor: "white",
+                                borderRadius: 10,
+                                marginTop: 5,
+                            },
+                            row: {
+                                padding: 13,
+                            },
+                        }}
+                    />
+
+
+
+
+
+                  
+
+
+
+
+
                     <TouchableOpacity onPress={() => Submit()} style={[styles.signUpButton, { backgroundColor: accent }]} disabled={loading}>
                         <ThemedText color='#fff' type='subtitle'>{loading ? "Saving..." : "Save"} </ThemedText>
                     </TouchableOpacity>
@@ -304,7 +448,7 @@ const Edit = () => {
                     <View style={{ height: 300 }}>
 
                     </View>
-                </ScrollView>
+                </View>
 
             </View>
         </ScreenWrapper>
@@ -379,6 +523,7 @@ const styles = StyleSheet.create({
         borderRadius: 999,
         alignItems: 'center',
         marginBottom: 24,
+        marginTop:10
     },
     dividerText: {
         textAlign: 'center',
@@ -436,5 +581,65 @@ const styles = StyleSheet.create({
     },
     iconStyle: {
         marginRight: wp(2)
-    },
+    }, 
+    
+   locationButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    backgroundColor: "rgba(0,0,0,0.03)",
+},
+
+locationIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+},
+
+locationTitle: {
+    fontWeight: "600",
+    fontSize: 15,
+},
+
+locationSubtitle: {
+    marginTop: 3,
+    fontSize: 12,
+    opacity: 0.6,
+},
+    selectedLocation: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    borderRadius: 14,
+    marginTop: 12,
+    borderWidth: 1,
+    backgroundColor: "rgba(0, 150, 136, 0.26)",
+    marginBottom:7 ,
+},
+
+selectedLocationIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0, 150, 136, 0.15)",
+},
+
+selectedCity: {
+    fontWeight: "700",
+    fontSize: 15,
+},
+
+selectedCountry: {
+    marginTop: 3,
+    opacity: 0.65,
+    fontSize: 13,
+},
 });

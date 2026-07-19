@@ -34,46 +34,73 @@ function FleetSelector() {
 
     const ownedFleets = Array.isArray(user?.fleets) ? user.fleets : [];
     const fleetCount = ownedFleets.length;
-    const hasReferral = !!user?.referrerId || !!user?.referrerCode;
+    const hasReferral = !!user?.referredBy?.userId;
 
-  
     useEffect(() => {
         if (user) {
             setShowReferralModal(!hasReferral);
         }
     }, [user, hasReferral]);
 
+    
     const handleSubmitReferralCode = async (code: string) => {
         if (!code || !code.trim()) {
-            ToastAndroid.show('Please enter a referral code.', ToastAndroid.SHORT);
+            ToastAndroid.show(
+                "Please enter a referral code.",
+                ToastAndroid.SHORT
+            );
             return;
         }
 
         setIsSubmitting(true);
+
         try {
             const normalizedCode = code.trim().toUpperCase();
+
             const validation = await validateReferrerCode(normalizedCode);
 
-            if (!validation.exists || !validation.referrerId) {
-                ToastAndroid.show('Invalid referral code. Please check and try again.', ToastAndroid.LONG);
+            if (!validation.exists || !validation.referrerId || !validation.referrerData) {
+                ToastAndroid.show(
+                    "Invalid referral code. Please check and try again.",
+                    ToastAndroid.LONG
+                );
                 return;
             }
 
-            const saved = await setDocuments('personalData', { referrerId: validation.referrerId });
-            if (!saved) {
-                ToastAndroid.show('Unable to save referral code. Please try again.', ToastAndroid.LONG);
-                return;
-            }
+            await updateDocument(
+                "personalData",
+                user?.uid || "",
+                {
+                    referredBy: validation.referrerData
+                }
+            );
 
             if (user) {
-                await setupUser({ ...user, referrerId: validation.referrerId });
+                await setupUser({
+                    ...user,
+                    referredBy: validation.referrerData
+                });
             }
 
             setReferralCode(normalizedCode);
             setShowReferralModal(false);
-            ToastAndroid.show('Referral code accepted.', ToastAndroid.SHORT);
+
+            ToastAndroid.show(
+                "Referral code accepted.",
+                ToastAndroid.SHORT
+            );
+
         } catch (error) {
-            ToastAndroid.show('Referral validation failed. Please try again.', ToastAndroid.LONG);
+            console.error(
+                "Referral validation error:",
+                error
+            );
+
+            ToastAndroid.show(
+                "Referral validation failed. Please try again.",
+                ToastAndroid.LONG
+            );
+
         } finally {
             setIsSubmitting(false);
         }

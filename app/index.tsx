@@ -64,6 +64,7 @@ export default function Index() {
   const versionCheckRun = useRef(false);
 
   const [dspLoginOrSignup, setDspLoginOrSignup] = useState(true);
+  const [isSigningUp, setIsSigningUp] = useState(false);
 
   const {
     isLoading: authLoading,
@@ -85,7 +86,13 @@ export default function Index() {
   const { currentRole } = useAuth();
 
   // Check if profile details are missing
-  const isProfileIncomplete = isAuthenticated && user !== undefined && (user === null || !user.phoneNumber || !user.organisation);
+  const isProfileIncomplete =
+  !isSigningUp &&   
+    isAuthenticated &&
+    user !== undefined &&
+    (user === null ||
+    !user.phoneNumber ||
+    !user.organisation);
   const isAuthReady = !authLoading && user !== undefined;
 
   useEffect(() => {
@@ -124,7 +131,7 @@ export default function Index() {
         return;
       }
 
-      if (needsEmailVerification && !isProfileIncomplete) {
+      if (needsEmailVerification && !isProfileIncomplete && !isSigningUp) {
         setDspVerifyAcc(true);
       }
     }, 300);
@@ -159,6 +166,18 @@ export default function Index() {
       </ScreenWrapper>
     );
   }
+
+ if (isSigningUp) {
+    return (
+        <ScreenWrapper>
+            <View style={{ flex: 1, backgroundColor: background }}>
+                <AppLoadingScreen
+                    message="Creating your Transix account..."
+                />
+            </View>
+        </ScreenWrapper>
+    );
+}
 
   if (authError) {
     return (
@@ -244,6 +263,7 @@ export default function Index() {
                     <SignUp
                       {...props}
                       setDspLoginOrSignup={setDspLoginOrSignup}
+                      setIsSigningUp={setIsSigningUp}
                     />
                   )
                 }
@@ -286,8 +306,6 @@ export default function Index() {
                 <Tab.Screen name="About " component={About} />
               </>)
 
-
-
               : (typeof currentRole === 'object' && currentRole.role === 'brokerage' && currentRole.userRole === 'owner') ? (
                 <>
                   <Tab.Screen name="Loads" component={Loads} />
@@ -300,11 +318,6 @@ export default function Index() {
                   <Tab.Screen name="Home " component={BrokerageSelector} />
                   <Tab.Screen name="About " component={About} />
                 </>)
-
-
-
-
-
 
                 : (
                   <>

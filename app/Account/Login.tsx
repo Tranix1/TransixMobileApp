@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import {
     View,
@@ -6,7 +6,7 @@ import {
     StyleSheet,
     ActivityIndicator,
     ScrollView,
-    Alert,
+    Alert,Keyboard
 } from 'react-native';
 import Input from '@/components/Input';
 import { hp, wp } from '@/constants/common';
@@ -45,6 +45,23 @@ const Login = ({ setDspLoginOrSignup }: any) => {
     const icon = useThemeColor('icon');
     const accent = useThemeColor('accent');
     const coolGray = useThemeColor('coolGray');
+
+       const [keyboardVisible, setKeyboardVisible] = useState(false);
+    
+    useEffect(() => {
+        const showSub = Keyboard.addListener("keyboardDidShow", () => {
+            setKeyboardVisible(true);
+        });
+    
+        const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+            setKeyboardVisible(false);
+        });
+    
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
 
     const { Login: loginUser } = useAuth();
     const auth = getAuth();
@@ -251,7 +268,13 @@ const Login = ({ setDspLoginOrSignup }: any) => {
                         </ThemedText>
                     </TouchableOpacity>
                 </View>
-                <View style={{ height: hp(25) }} />
+
+                {!keyboardVisible && (
+                    <View style={{ height: hp(8) }} />
+                )}
+                {keyboardVisible && (
+                    <View style={{ height: hp(45) }} />
+                )}
             </ScrollView>
         </ScreenWrapper>
     );

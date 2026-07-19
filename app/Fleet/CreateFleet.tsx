@@ -17,12 +17,14 @@ import { takePhoto } from '@/Utilities/imageUtils';
 import { DocumentAsset } from '@/types/types';
 import { useAuth } from '@/context/AuthContext';
 import { addDocument, uploadImage, updateDocument, generateUniqueReferrerCode, addDocumentWithId } from '@/db/operations';
-import { setDoc, doc } from 'firebase/firestore';
+import { setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import CustomHeader from '@/components/CustomHeader';
 import Heading from '@/components/Heading';
 import { LocationSelector } from '@/components/LocationSelector';
 import { SelectLocationProp } from '@/types/types';
+import { FontAwesome } from '@expo/vector-icons';
+import { Countries } from '@/types/types';
 
 const CreateFleet = () => {
     const router = useRouter();
@@ -35,6 +37,10 @@ const CreateFleet = () => {
     const [selectedFleetDocuments, setSelectedFleetDocuments] = useState<DocumentAsset[]>([]);
     const [fleetFileType, setFleetFileType] = useState<('pdf' | 'image' | 'doc' | 'docx')[]>([]);
     const [uploadingFleetD, setUploadingFleetD] = useState(false);
+
+    const [operationCountries, setOperationCountries] = useState<string[]>([]);
+    const [showCountries, setShowCountries] = useState(false);
+
 
     const [baseAdress, setBaseAdress] = useState<SelectLocationProp | null>(null);
     const [billingAddress, setbillingAddress] = useState<SelectLocationProp | null>(null);
@@ -78,34 +84,33 @@ const CreateFleet = () => {
             return;
         }
 
-            let errors = [];
+        let errors = [];
 
-            if (!fleetName) errors.push('Fleet name');
-            if (!fleetPhone) errors.push('Fleet phone');
-            if (!billingAddress?.description) errors.push('Billing address');
-            if (!baseAdress?.description) errors.push('Base location');
+        if (!fleetName) errors.push('Fleet name');
+        if (!fleetPhone) errors.push('Fleet phone');
+        if (!billingAddress?.description) errors.push('Billing address');
+        if (!baseAdress?.description) errors.push('Base location');
 
-            if (errors.length > 0) {
-                Alert.alert(
-                    'Incomplete setup',
-                    `Please complete: ${errors.join(', ')}`
-                );
-                return;
-            }
+        if (errors.length > 0) {
+            Alert.alert(
+                'Incomplete setup',
+                `Please complete: ${errors.join(', ')}`
+            );
+            return;
+        }
 
 
-            if (fleetData.selectedFleetDocuments.length < 4) {
-                Alert.alert(
-                    'Verification incomplete',
-                    'Please upload all required documents to complete verification.'
-                );
-                return
-            }
+        if (fleetData.selectedFleetDocuments.length < 4) {
+            Alert.alert(
+                'Verification incomplete',
+                'Please upload all required documents to complete verification.'
+            );
+            return
+        }
 
         setUploadingFleetD(true);
         try {
             const fleetId = `FLT_${Date.now()}_${user.uid}`;
-            const code = await generateUniqueReferrerCode();
 
             const uploadPromises = fleetData.selectedFleetDocuments.map(async (docItem: DocumentAsset, index: number) => {
                 if (!docItem) return null;
@@ -118,12 +123,12 @@ const CreateFleet = () => {
 
             const fleetVerificationData = {
                 organizationId: fleetId,
-                userId: user.uid,   
+                userId: user.uid,
                 accType: 'fleet',
                 organizationName: fleetData.fleetName,
 
                 organizationEmail: fleetData.fleetEmail,
-                organizationPhone : fleetData.fleetPhone ,
+                organizationPhone: fleetData.fleetPhone,
 
                 fleetMainAdminName: user.displayName,
                 organizationAdminPhone: user.phoneNumber,
@@ -137,8 +142,8 @@ const CreateFleet = () => {
 
                 baseAdress: baseAdress?.description,
                 baseAdressFull: baseAdress,
-
-                location:billingAddress || baseAdress ,
+                operationCountries,
+                location: billingAddress || baseAdress,
 
                 documents: {
                     fleetMainAdminId: uploadedUrls[0],
@@ -157,7 +162,6 @@ const CreateFleet = () => {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
 
-                referrerCode :code,
             };
             await addDocument('verifiedUsers', fleetVerificationData);
 
@@ -167,6 +171,7 @@ const CreateFleet = () => {
                 name: fleetData.fleetName,
                 organizationPhone: fleetData.fleetPhone,
                 organizationEmail: fleetData.fleetEmail,
+                operationCountries,
 
                 countryCode: fleetData.fleetCountryCode?.name,
                 typeOfFleet: fleetData.typeOfFleet,
@@ -175,6 +180,7 @@ const CreateFleet = () => {
 
                 baseAdress: billingAddress?.description,
                 baseAdressFull: billingAddress,
+                location: billingAddress || baseAdress,
 
                 ownerId: user.uid,
                 fleetId,
@@ -182,7 +188,6 @@ const CreateFleet = () => {
 
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                referrerCode: code,
             };
 
             await setDoc(doc(db, 'fleets', fleetId), fleetCollectionData);
@@ -198,13 +203,16 @@ const CreateFleet = () => {
 
                 typeOfFleet: fleetData.typeOfFleet,
 
+                operationCountries,
+
                 billingAddress: billingAddress?.description,
                 billingAddressFull: billingAddress,
 
-                baseAdress: billingAddress?.description,
-                baseAdressFull: billingAddress,
+                baseAdress: baseAdress?.description,
+                baseAdressFull: baseAdress,
+                location: billingAddress || baseAdress,
 
-                referrerCode: code,
+
             };
 
             await updateDocument('personalData', user.uid, {
@@ -223,6 +231,32 @@ const CreateFleet = () => {
             await setupUser(updatedUser);
 
 
+
+
+
+
+            await addDocumentWithId(`organizationProfiles`, fleetId, {
+                organizationId: fleetId,
+                type: "fleet", // or "fleet"
+
+                name: fleetData.fleetName,
+                profilePhoto: user.photoURL || null,
+                coverPhoto: null,
+                description: "",
+                ownerId: user.uid,
+                ownerName: user.displayName || user.organisation,
+
+                location: billingAddress || baseAdress,
+                operationCountries,
+
+                verificationStatus: "pending",
+
+                createdAt: Date.now() ,
+            }
+
+            )
+
+
             const contactDetails = {
                 userName: user?.displayName,
                 email: user?.email,
@@ -236,7 +270,7 @@ const CreateFleet = () => {
             const contactRef = doc(db, 'fleets', fleetId, 'Contacts', `OWN_${user?.uid}`);
             await setDoc(contactRef, contactDetails);
 
-          
+
 
             // const fleetRole = {
             //     role: 'fleet' as const,
@@ -261,6 +295,10 @@ const CreateFleet = () => {
                     rateUpdated: true
                 }
             })
+
+
+
+
 
             await setCurrentRole("fleet");
 
@@ -310,7 +348,64 @@ const CreateFleet = () => {
                     />
 
 
+                    <>
 
+                        <ThemedText style={{ marginBottom: wp(4) }}>
+                            {operationCountries?.join(', ') || '--'}
+                        </ThemedText>
+
+                        <ThemedText>
+                            Permitted countries<ThemedText color="red">*</ThemedText>
+                        </ThemedText>
+
+                        <View style={{
+                            paddingVertical: wp(1),
+
+                            gap: wp(1),
+                            borderWidth: 1,
+                            borderColor: '#ccc',
+                            borderRadius: 12,
+                            paddingHorizontal: 16,
+                            marginBottom: 16,
+                        }}>
+                            <TouchableOpacity
+                                onPress={() => { setShowCountries(!showCountries); }}
+
+                                style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                }}>
+                                <ThemedText style={{ minHeight: hp(5), textAlignVertical: 'center' }}>
+                                    Select Countrie(s)
+                                </ThemedText>
+
+                                <Ionicons name={showCountries ? 'chevron-up-outline' : "chevron-down"} size={wp(4)} color={icon} />
+                            </TouchableOpacity>
+                            {showCountries &&
+                                <View>
+                                    <Divider />
+                                    {Countries.map((item) => {
+
+                                        const active = operationCountries.some(x => x === item);
+
+                                        return (
+                                            <TouchableOpacity onPress={() => active ? setOperationCountries(operationCountries.filter(x => x !== item)) : setOperationCountries([...operationCountries, item])} style={{ padding: wp(2), marginVertical: wp(1), flexDirection: 'row', justifyContent: 'space-between' }}>
+                                                <ThemedText type="subtitle">
+                                                    {item}
+                                                </ThemedText>
+
+                                                <FontAwesome name={active ? 'check-square' : "square-o"} size={wp(5)} color={active ? '#0f9d58' : icon} />
+                                            </TouchableOpacity>
+                                        )
+                                    }
+                                    )}
+
+                                </View>
+                            }
+
+                        </View>
+                    </>
 
 
 

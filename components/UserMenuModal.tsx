@@ -48,7 +48,7 @@ export default function UserMenuModal({ visible, onClose, onProfileUpdate }: Use
         // switchFleet?.(fleetId);//
     };
 
-    const referralCode = currentRole?.referrerCode ;
+    const referralCode = user?.referralCode ;
 
     const handleCopyReferral = async () => {
         

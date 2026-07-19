@@ -11,7 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { hp, wp } from "@/constants/common";
 import { db } from "@/db/fireBaseConfig";
-import { setDoc,doc,updateDoc, arrayUnion } from "firebase/firestore";
+import { setDoc, doc, updateDoc, arrayUnion } from "firebase/firestore";
 
 interface FleetAccess {
     fleetId: string;
@@ -34,50 +34,82 @@ function FleetSelector() {
 
     const ownedFleets = Array.isArray(user?.fleets) ? user.fleets : [];
     const fleetCount = ownedFleets.length;
-    const hasReferral = !!user?.referrerId || !!user?.referrerCode;
+    const hasReferral = !!user?.referredBy?.userId;
 
-  
     useEffect(() => {
         if (user) {
             setShowReferralModal(!hasReferral);
         }
     }, [user, hasReferral]);
 
+
+
+
     const handleSubmitReferralCode = async (code: string) => {
         if (!code || !code.trim()) {
-            ToastAndroid.show('Please enter a referral code.', ToastAndroid.SHORT);
+            ToastAndroid.show(
+                "Please enter a referral code.",
+                ToastAndroid.SHORT
+            );
             return;
         }
 
         setIsSubmitting(true);
+
         try {
             const normalizedCode = code.trim().toUpperCase();
+
             const validation = await validateReferrerCode(normalizedCode);
 
-            if (!validation.exists || !validation.referrerId) {
-                ToastAndroid.show('Invalid referral code. Please check and try again.', ToastAndroid.LONG);
+            if (!validation.exists || !validation.referrerId || !validation.referrerData) {
+                ToastAndroid.show(
+                    "Invalid referral code. Please check and try again.",
+                    ToastAndroid.LONG
+                );
                 return;
             }
 
-            const saved = await setDocuments('personalData', { referrerId: validation.referrerId });
-            if (!saved) {
-                ToastAndroid.show('Unable to save referral code. Please try again.', ToastAndroid.LONG);
-                return;
-            }
+            await updateDocument(
+                "personalData",
+                user?.uid || "",
+                {
+                    referredBy: validation.referrerData
+                }
+            );
 
             if (user) {
-                await setupUser({ ...user, referrerId: validation.referrerId });
+                await setupUser({
+                    ...user,
+                    referredBy: validation.referrerData
+                });
             }
 
             setReferralCode(normalizedCode);
             setShowReferralModal(false);
-            ToastAndroid.show('Referral code accepted.', ToastAndroid.SHORT);
+
+            ToastAndroid.show(
+                "Referral code accepted.",
+                ToastAndroid.SHORT
+            );
+
         } catch (error) {
-            ToastAndroid.show('Referral validation failed. Please try again.', ToastAndroid.LONG);
+            console.error(
+                "Referral validation error:",
+                error
+            );
+
+            ToastAndroid.show(
+                "Referral validation failed. Please try again.",
+                ToastAndroid.LONG
+            );
+
         } finally {
             setIsSubmitting(false);
         }
     };
+
+
+
 
     const handleRefresh = async () => {
         if (user) {
@@ -91,16 +123,16 @@ function FleetSelector() {
     };
 
 
-    
-    const handleFleetSelect = async (fleet: any) => {    
-        console.log(fleet.referrerCode,  "The refferal code  ")
+
+    const handleFleetSelect = async (fleet: any) => {
+        console.log(fleet.referrerCode, "The refferal code  ")
         if (!fleet) return;
 
         const fleetRole = {
             role: 'fleet' as const,
             fleetId: fleet.fleetId,
             companyName: fleet.companyName || fleet.fleetName,
-            userRole  : fleet.userRole || 'owner',
+            userRole: fleet.userRole || 'owner',
             accType: 'fleet' as const,
             driverId: fleet.driverId || null,
 
@@ -108,24 +140,24 @@ function FleetSelector() {
             fleetManagerId: fleet.fleetManagerId || null,
             fleetDispatcherId: fleet.fleetDispatcherId || null,
 
-            referrerCode : fleet.referrerCode || null ,
+            referrerCode: fleet.referrerCode || null,
 
-            organizationName : fleet.companyName || fleet.fleetName ,
-            organizationId : fleet.fleetId ,
+            organizationName: fleet.companyName || fleet.fleetName,
+            organizationId: fleet.fleetId,
 
-            phone : `${fleet.countryCode}${fleet?.organizationPhone}` ,
-            email : fleet.organizationEmail ,
-            billingAddress : fleet?.billingAddressFull ,
-            baseAdress : fleet?.baseAdressFull  
-            
+            phone: `${fleet.countryCode}${fleet?.organizationPhone}`,
+            email: fleet.organizationEmail,
+            billingAddress: fleet?.billingAddressFull,
+            baseAdress: fleet?.baseAdressFull
+
         };
 
-    (fleetRole as any);
+        (fleetRole as any);
         await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
         setCurrentRole(fleetRole as any)
         router.replace('/');
     };
-    
+
     if (!user) {
         return (
             <View style={styles.centered}>
@@ -167,7 +199,7 @@ function FleetSelector() {
                             <TouchableNativeFeedback key={fleet.fleetId || fleet.companyName} onPress={() => handleFleetSelect(fleet)}>
                                 <View style={[styles.fleetCard, { backgroundColor: backgroundLight, borderColor: accent + '20' }]}>
                                     <ThemedText style={styles.fleetName}>{fleet.companyName || 'Fleet'}</ThemedText>
-                                    <ThemedText style={{fontSize:12,color:icon}}>Role: {fleet.role || 'owner'}</ThemedText>
+                                    <ThemedText style={{ fontSize: 12, color: icon }}>Role: {fleet.role || 'owner'}</ThemedText>
                                 </View>
                             </TouchableNativeFeedback>
                         ))}
@@ -181,7 +213,7 @@ function FleetSelector() {
                 )}
             </View>
 
-          
+
 
 
 

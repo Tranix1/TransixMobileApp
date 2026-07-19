@@ -45,11 +45,10 @@ function FleetSelector() {
 
 
 
-
     const handleSubmitReferralCode = async (code: string) => {
         if (!code || !code.trim()) {
             ToastAndroid.show(
-                'Please enter a referral code.',
+                "Please enter a referral code.",
                 ToastAndroid.SHORT
             );
             return;
@@ -62,68 +61,50 @@ function FleetSelector() {
 
             const validation = await validateReferrerCode(normalizedCode);
 
-
-            if (!validation.exists || !validation.referrerId) {
+            if (!validation.exists || !validation.referrerId || !validation.referrerData) {
                 ToastAndroid.show(
-                    'Invalid referral code. Please check and try again.',
+                    "Invalid referral code. Please check and try again.",
                     ToastAndroid.LONG
                 );
                 return;
             }
 
-
-
-            const saved = await setDocuments(
-                'personalData',
+            await updateDocument(
+                "personalData",
+                user?.uid || "",
                 {
                     referredBy: validation.referrerData
                 }
             );
 
-
-            if (!saved) {
-                ToastAndroid.show(
-                    'Unable to save referral information. Please try again.',
-                    ToastAndroid.LONG
-                );
-                return;
-            }
-
-
-            if (user && validation.referrerData) {
+            if (user) {
                 await setupUser({
                     ...user,
                     referredBy: validation.referrerData
                 });
             }
 
-
             setReferralCode(normalizedCode);
             setShowReferralModal(false);
 
-
             ToastAndroid.show(
-                'Referral code accepted.',
+                "Referral code accepted.",
                 ToastAndroid.SHORT
             );
 
-
         } catch (error) {
-
             console.error(
                 "Referral validation error:",
                 error
             );
 
             ToastAndroid.show(
-                'Referral validation failed. Please try again.',
+                "Referral validation failed. Please try again.",
                 ToastAndroid.LONG
             );
 
         } finally {
-
             setIsSubmitting(false);
-
         }
     };
 
