@@ -45,9 +45,6 @@ const CreateFleet = () => {
     const [duration, setDuration] = useState("");
     const [durationInTraffic, setDurationInTraffic] = useState("");
 
-    const [showPickupDatePicker, setShowPickupDatePicker] = useState(false);
-    const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState(false);
-
     const icon = useThemeColor('icon');
     const background = useThemeColor('background');
 
@@ -239,18 +236,7 @@ const CreateFleet = () => {
             const contactRef = doc(db, 'fleets', fleetId, 'Contacts', `OWN_${user?.uid}`);
             await setDoc(contactRef, contactDetails);
 
-            const referrerData = {
-                accType: "fleet",
-                organisationId: fleetId, // Use Firebase Auth UID instead of document ID
-                organisationEmail: fleetData.fleetEmail,
-                organisationName: fleetData.fleetName,
-                referrerCode: code,
-                createdAt: new Date().toISOString(),
-                isActive: true,
-                organizationOwner: user?.uid
-            };
-
-            await addDocument('referrers', referrerData);
+          
 
             // const fleetRole = {
             //     role: 'fleet' as const,

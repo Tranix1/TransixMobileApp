@@ -117,6 +117,26 @@ function BrokerageSelector() {
     }
 
     const [showModal, setShowModal] = useState(true)
+    const brokerage = user?.brokerageDetails?.find(
+  (item:any) =>
+    item.organizationId === currentRole.organizationId
+);
+
+
+const shouldShowBrokerageSubscription =
+  brokerage &&
+  (
+    !brokerage.subscription ||
+    !brokerage.subscription.active ||
+    Date.now() > brokerage.subscription.expiresAt
+  );
+  useEffect(() => {
+
+  if (shouldShowBrokerageSubscription) {
+    // setShowModal(true);  
+  }
+
+}, [shouldShowBrokerageSubscription]);
 
     return (
         <View style={[, styles.container, { backgroundColor: background }]}>
@@ -127,7 +147,7 @@ function BrokerageSelector() {
                 onClose={() => setShowModal(false)}
                 subscriptionType="brokerage"      // or "broker" / "tracking"
                  payerOrganizationId={currentRole.organizationId || ""}
-                 payerOrganizationName = {currentRole.companyName || ""}
+                 payerOrganizationName = {currentRole.companyName || " "}
             />
 
 
