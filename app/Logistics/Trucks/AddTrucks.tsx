@@ -359,27 +359,9 @@ function AddTrucks() {
     const trialEndAt = new Date(trialStartAt);
     trialEndAt.setDate(trialEndAt.getDate() + 30);
 
-    const subscriptionData = {
-      trialStartAt: trialStartAt.toString(),
-      trialEndAt: trialEndAt.getTime().toString(),
-    };
+  
 
     try {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
       // Generate unique truck ID
       const trucksRefPath = `fleets/${currentRole.fleetId}/Trucks`;
@@ -395,7 +377,7 @@ function AddTrucks() {
           where("numberPlate", "==", formData.numberPlate),
           where("isTrial", "==", true),
         ]
-      );
+      );  
 
 
       let subscriptionData;
@@ -439,15 +421,13 @@ function AddTrucks() {
 
           userId: user.uid,
 
-          status: "trial",
-
-          isTrial: true,
-
           trialStartAt,
 
           trialEndAt,
 
           createdAt: Date.now(),
+              lastPaymentAt: null
+
 
         });
 
@@ -457,7 +437,6 @@ function AddTrucks() {
 
         subscriptionData = {
 
-          status: "pending",
 
           trialDays: 0,
 
@@ -466,13 +445,12 @@ function AddTrucks() {
           trialEndAt: null,
 
           nextBillingAt: null,
+              lastPaymentAt: null
+
 
         };
 
       }
-
-
-
 
 
 
@@ -555,18 +533,7 @@ function AddTrucks() {
           location: currentRole.billingAddress || currentRole.baseAdress || null
         },
 
-        subscription: {
-          status: "trial",
-          trialDays: 30,
-          trialStartAt: trialStartAt,
-
-          trialEndAt: trialEndAt,
-          nextBillingAt: trialEndAt,
-          isTrial: true,
-        },
-
-
-
+        subscription: subscriptionData,
 
         accType: currentRole?.accType || 'Individual', // owner, broker, driver, fleet
         timeStamp: serverTimestamp(),

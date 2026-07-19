@@ -10,6 +10,8 @@ import Input from './Input';
 import { handleEcocashPayment, handleCardPayment, confirmCardPayment } from '../app/Payments/paymentHandlers';
 import { creditReferralIfEligible } from '../app/Referrals/referralService';
 import { SubscriptionType, SUBSCRIPTION_PRICING, PaymentMethod } from '../constants/subscriptionConfig';
+import { addDocument, readById } from '@/db/operations';
+import { useAuth } from '@/context/AuthContext';
 
 interface SubscriptionPaymentModalProps {
   isVisible: boolean;
@@ -20,27 +22,32 @@ interface SubscriptionPaymentModalProps {
   vehicleId?: string;
   vehicleName?: string;
   subscriptionType: SubscriptionType; // 'truck' | 'broker' | 'tracking'
-  payerUserId: string; // needed to resolve referral commissions
+  payerOrganizationId: string; // needed to resolve referral commissions
+  payerOrganizationName : string ;
 }
 
 const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
   isVisible,
   onClose,
   onCancel,
+
   loadVehicles,
   vehicleId,
   vehicleName,
   subscriptionType,
-  payerUserId: payerOrganizationId,
+  payerOrganizationId,
+  payerOrganizationName ,
 }) => {
   const accent = useThemeColor('accent');
   const background = useThemeColor('background');
   const backgroundLight = useThemeColor('backgroundLight');
   const iconColorTheme = useThemeColor('icon');
 
+  const { user } = useAuth()
+
   const pricing = SUBSCRIPTION_PRICING[subscriptionType];
 
-  const [method, setMethod] = useState<PaymentMethod>('ecocash');
+  const [paymentMethod, setMethod] = useState<PaymentMethod>('ecocash');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [paymentUpdate, setPaymentUpdate] = useState('');
   const [loading, setLoading] = useState(false);
@@ -62,34 +69,143 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
 
 
   const finalizeSuccess = async () => {
+
+
     const expiryDate = new Date();
     expiryDate.setMonth(expiryDate.getMonth() + 1);
 
     const { updateDocument } = await import('@/db/operations');
-
-    if(vehicleId)
-    await updateDocument('TrackedVehicles', vehicleId, {
-      subscription: {
-        status: 'active',
-        expiryDate: expiryDate.toISOString(),
-        type: subscriptionType,
-      },
-      paymentType: 'Subscription',
-    });
+    let totalTruckSubscriptions = 0
 
 
-    let totalTruckSubscriptions ,commissionAmount = 0
+    if (vehicleId && subscriptionType === "tracking") {
+
+      await updateDocument('TrackedVehicles', vehicleId, {
+        subscription: {
+          status: 'active',
+          expiryDate: expiryDate.toISOString(),
+          type: subscriptionType,
+        },
+        paymentType: 'Subscription',
+      });
+
+    } else if (subscriptionType === "brokerage") {
+
+      const now = Date.now();
+
+      const expiryDate = new Date(now);
+      expiryDate.setDate(expiryDate.getDate() + 30);
+
+      const expiresAt = expiryDate.getTime();
+
+
+      // 1. Save subscription payment history
+      await addDocument("subscriptions", {
+
+        type: "brokerage",
+
+        organizationId: payerOrganizationId,
+
+        userId: user?.uid,
+
+        plan: "Brokerage Monthly",
+
+        isTrial: false,
+
+        amount: 15,
+
+        billedAt: now,
+
+        expiresAt,
+
+        // paymentReference,
+
+        paymentMethod: paymentMethod,
+
+        createdAt: now,
+
+      });
+
+
+      // 2. Update brokerage document
+      await updateDocument(
+        "brokerages",
+        payerOrganizationId,
+        {
+          subscription: {
+            plan: "Broker Monthly",
+
+            active: true,
+
+            isTrial: false,
+
+            trialEndsAt: null,
+
+            billedAt: now,
+
+            expiresAt,
+
+          },
+
+          updatedAt: now,
+        }
+      );
+
+
+      // 3. Update user's cached brokerageDetails array
+
+
+
+      const updatedBrokerages = user?.brokerageDetails.map(
+        (broker: any) => {
+
+          if (broker.organizationId === payerOrganizationId) {
+
+            return {
+              ...broker,
+
+              subscription: {
+                plan: "Broker Monthly",
+
+                active: true,
+
+                isTrial: false,
+
+                expiresAt,
+
+              }
+            };
+
+          }
+
+          return broker;
+
+        }
+      );
+
+
+      await updateDocument(
+        "personalData",
+        user?.uid || "",
+        {
+          brokerageDetails: updatedBrokerages
+        }
+      );
+
+    }else if()
+
+
 
     // Referral commission — isolated in referrals/referralService.ts
-    await creditReferralIfEligible(payerOrganizationId, subscriptionType,commissionAmount ,totalTruckSubscriptions );
+    await creditReferralIfEligible(payerOrganizationId,payerOrganizationName ,subscriptionType, pricing.referralCommission, totalTruckSubscriptions);
 
-    if(loadVehicles)
-    loadVehicles();
+    if (loadVehicles)
+      loadVehicles();
 
     Alert.alert(
       'Subscription Successful',
       `${pricing.label} activated for ${vehicleName}.`,
-      [{ text: 'OK', onPress: () => {} }]
+      [{ text: 'OK', onPress: () => { } }]
     );
     ToastAndroid.show(`${vehicleName} subscribed successfully.`, ToastAndroid.SHORT);
 
@@ -98,7 +214,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
   };
 
 
-  
+
 
   const handleEcocashConfirm = async () => {
     if (!phoneNumber) {
@@ -202,19 +318,19 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
                   <TouchableOpacity
                     style={[
                       styles.methodOption,
-                      method === 'ecocash' && { backgroundColor: accent },
+                      paymentMethod === 'ecocash' && { backgroundColor: accent },
                     ]}
                     onPress={() => setMethod('ecocash')}
                   >
                     <Ionicons
                       name="phone-portrait-outline"
                       size={wp(4.5)}
-                      color={method === 'ecocash' ? 'white' : iconColorTheme}
+                      color={paymentMethod === 'ecocash' ? 'white' : iconColorTheme}
                     />
                     <ThemedText
                       style={[
                         styles.methodText,
-                        { color: method === 'ecocash' ? 'white' : iconColorTheme },
+                        { color: paymentMethod === 'ecocash' ? 'white' : iconColorTheme },
                       ]}
                     >
                       Ecocash
@@ -224,19 +340,19 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
                   <TouchableOpacity
                     style={[
                       styles.methodOption,
-                      method === 'card' && { backgroundColor: accent },
+                      paymentMethod === 'card' && { backgroundColor: accent },
                     ]}
                     onPress={() => setMethod('card')}
                   >
                     <Ionicons
                       name="card-outline"
                       size={wp(4.5)}
-                      color={method === 'card' ? 'white' : iconColorTheme}
+                      color={paymentMethod === 'card' ? 'white' : iconColorTheme}
                     />
                     <ThemedText
                       style={[
                         styles.methodText,
-                        { color: method === 'card' ? 'white' : iconColorTheme },
+                        { color: paymentMethod === 'card' ? 'white' : iconColorTheme },
                       ]}
                     >
                       Visa / Mastercard
@@ -244,7 +360,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
                   </TouchableOpacity>
                 </View>
 
-                {method === 'ecocash' ? (
+                {paymentMethod === 'ecocash' ? (
                   <Input
                     value={phoneNumber}
                     onChangeText={setPhoneNumber}
@@ -275,10 +391,11 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
 
                 <TouchableOpacity
                   style={[styles.button, styles.confirmButton, { backgroundColor: accent }]}
-                  onPress={method === 'ecocash' ? handleEcocashConfirm : handleCardConfirm}
+                  // onPress={method === 'ecocash' ? handleEcocashConfirm : handleCardConfirm}
+                  onPress={finalizeSuccess}
                 >
                   <ThemedText style={[styles.buttonText, styles.confirmText]}>
-                    {method === 'ecocash' ? 'Pay Now' : 'Checkout'}
+                    {paymentMethod === 'ecocash' ? 'Pay Now' : 'Checkout'}
                   </ThemedText>
                 </TouchableOpacity>
               </View>

@@ -17,9 +17,9 @@ import { takePhoto } from '@/Utilities/imageUtils';
 import { DocumentAsset } from '@/types/types';
 import Heading from '@/components/Heading';
 import { useAuth } from '@/context/AuthContext';
-import { updateDocument, generateUniqueReferrerCode } from '@/db/operations';
+import { updateDocument, generateUniqueReferrerCode, checkDocumentExists } from '@/db/operations';
 import { uploadImage } from '@/db/operations';
-import { setDoc, doc } from 'firebase/firestore';
+import { setDoc, doc, where } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import { addDocument } from '@/db/operations';
 import { LocationPicker } from '@/components/LocationPicker';
@@ -144,7 +144,6 @@ const CreaterBrokerage = ({ }) => {
         submittedAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        referrerCode: code,
 
         // Additional scalable fields
         performanceMetrics: {
@@ -158,41 +157,185 @@ const CreaterBrokerage = ({ }) => {
       await addDocument('verifiedUsers', brokerVerificationData);
 
 
-      // Create fleet document in fleets collection
+
+
+
+      // ===============================
+      // Check if broker trial was used
+      // ===============================
+
+      const trialAlreadyUsed = await checkDocumentExists(
+  "subscriptions",
+  [
+    where("type", "==", "broker"),
+    where("userId", "==", user?.uid),
+    where("isTrial", "==", true),
+  ]
+);
+
+let subscriptionData;
+
+const createdAt = Date.now();
+
+if (!trialAlreadyUsed) {
+
+  // 30 Day Trial
+  const trialEndDate = new Date(createdAt);
+  trialEndDate.setDate(trialEndDate.getDate() + 30);
+
+  const trialEndsAt = trialEndDate.getTime();
+
+  subscriptionData = {
+    plan: "Broker Trial",
+
+    active: true,
+
+    isTrial: true,
+
+    trialEndsAt,
+
+    billedAt: null,
+
+    expiresAt: trialEndsAt,
+  };
+
+
+  // Save trial history
+  await addDocument("subscriptions", {
+
+    type: "broker",
+
+    brokerageId,
+
+    userId: user?.uid,
+
+    plan: "Broker Trial",
+
+    isTrial: true,
+
+    trialStartedAt: createdAt,
+
+    trialEndsAt,
+
+    billedAt: null,
+
+    expiresAt: trialEndsAt,
+
+    amount: 0,
+
+    createdAt,
+
+  });
+
+
+} else {
+
+  // No trial available - subscription required
+  const expiresDate = new Date(createdAt);
+  expiresDate.setDate(expiresDate.getDate() + 30);
+
+  const expiresAt = expiresDate.getTime();
+
+
+  subscriptionData = {
+
+    plan: "Broker Monthly",
+
+    active: false,
+
+    isTrial: false,
+
+    trialEndsAt: null,
+
+    billedAt: createdAt,
+
+    expiresAt,
+
+  };
+
+}
+
+
       const brokerCollectionData = {
         name: brokerName,
         organizationPhone: brokerPhone,
         organizationEmail: brokerEmail,
 
-        ownerId: user?.uid, // link to verifiedUsers
+        ownerId: user?.uid,
         id: brokerageId,
         location: locationFull,
+
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+
         brokerType: typeOfBroker,
-        referrerCode: code,
         defaultFleets: [],
+
         verificationStatus: "pending",
         organizationId: brokerageId,
+
         expoPushToken: user?.expoPushToken || null,
 
+        subscription: subscriptionData,
       };
+
+
+
+
 
       await setDoc(doc(db, "brokerages", brokerageId), brokerCollectionData);
 
       // Store in verifiedUsers collection
       const existingAccs = user?.brokerDetails || [];
 
+
+
+
       const newBroker = {
-        role: 'owner', // owner for the broker creator
-        ...brokerCollectionData
+
+        name: brokerName,
+        organizationPhone: brokerPhone,
+        organizationEmail: brokerEmail,
+
+        ownerId: user?.uid,
+        id: brokerageId,
+        location: locationFull,
+
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+
+        brokerType: typeOfBroker,
+        defaultFleets: [],
+
+        verificationStatus: "pending",
+        organizationId: brokerageId,
+
+        expoPushToken: user?.expoPushToken || null,
+        role: "Owner",
+
+        subscription: {
+          active: subscriptionData.active,
+          plan: subscriptionData.plan,
+          expiresAt: subscriptionData.expiresAt,
+          isTrial: subscriptionData.isTrial,
+        },
       };
 
       // Update user profile to reflect broker verification status
       await updateDocument('personalData', user?.uid!, {
-        brokergePDetails: [...existingAccs, newBroker],
+        brokergeDetails: [...existingAccs, newBroker],
         updatedAt: new Date().toISOString()
       });
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -209,18 +352,16 @@ const CreaterBrokerage = ({ }) => {
       const contactRef = doc(db, 'brokerages', brokerageId, 'Contacts', `OWN_${user?.uid}`);
       await setDoc(contactRef, contactDetails);
 
-        const referrerData = {
-          userId: user?.uid,
-          email: user?.email,
-          name: user?.displayName ?? "Unknown",
+      const referrerData = {
+        userId: user?.uid,
+        email: user?.email,
+        name: user?.displayName ?? "Unknown",
 
-          referrerCode: code.trim().toUpperCase(),
+        createdAt: new Date().toISOString(),
+        isActive: true,
+      };
 
-          createdAt: new Date().toISOString(),
-          isActive: true,
-        };
-
-        await addDocument('referrers', referrerData);
+      await addDocument('referrers', referrerData);
 
       // Close modal and show success
       setUploadingBrokerD(false);

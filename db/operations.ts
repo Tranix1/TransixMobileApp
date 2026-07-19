@@ -349,7 +349,7 @@ export const getDocById = async (
 
 
 
-export const readById = async (collectionName: string = 'laods', id: string) => {
+export const readById = async (collectionName: string , id: string) => {
     try {
         // Reference to the document by ID
         const postRef = doc(db, collectionName, id);

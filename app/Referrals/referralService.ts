@@ -27,7 +27,7 @@ import { db } from '@/db/fireBaseConfig';
 
 interface ReferralCreditResult {
   credited: boolean;
-  reason?: 'no_referrer' | 'limit_reached' | 'error';
+  reason?: | "no_referrer" | "limit_reached" | "owner_not_found" | "error";
   referrerId?: string;
   amount?: number;
 }
@@ -74,9 +74,10 @@ interface ReferralCreditResult {
 
 export async function creditReferralIfEligible(
   payerOrganizationId: string,
+  payerOrganizationName: string,
   subscriptionType: SubscriptionType,
   commissionAmount: number,
-  totalTruckSubscriptions ?: number ,
+  totalTruckSubscriptions?: number,
 ): Promise<ReferralCreditResult> {
 
   try {
@@ -85,7 +86,10 @@ export async function creditReferralIfEligible(
     const verifiedUser = await readById(
       'verifiedUsers',
       payerOrganizationId
-    );
+    ) as {
+      id: string;
+      userId: string;
+    };
 
 
     if (!verifiedUser?.userId) {
@@ -102,9 +106,17 @@ export async function creditReferralIfEligible(
 
     // Get owner's referral information
     const personalData = await readById(
-      'personalData',
+      "personalData",
       ownerId
-    );
+    ) as {
+      referredBy?: {
+        userId: string;
+        name: string;
+        email: string;
+        referralCode: string;
+        joinedAt: string;
+      };
+    };
 
 
     const referredBy = personalData?.referredBy;
@@ -122,52 +134,129 @@ export async function creditReferralIfEligible(
     const referrerId = referredBy.userId;
 
 
-    // Get referral wallet
-    const wallet = await readById(
-      'referralWallet',
-      referrerId
+
+
+
+    // Check previous referral commission
+    const transactionsRef = collection(
+      db,
+      `referrers/${referrerId}/transactions`
     );
 
 
-    const currentBalance = wallet?.balance ?? 0;
-    const currentEarned = wallet?.totalEarned ?? 0;
+    const q = query(
+      transactionsRef,
+      where("organizationId", "==", payerOrganizationId),
+      where("subscriptionType", "==", subscriptionType)
+    );
+
+
+    const snapshot = await getDocs(q);
+
+
+    const previousTransactions = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+
+    const timesEarned =
+      previousTransactions.length;
+
+
+    const maxTimes = 6;
+
+
+    // Stop after 6 payments
+    if (timesEarned >= maxTimes) {
+      return {
+        credited: false,
+        reason: "limit_reached"
+      };
+    }
+
+
+    const newTimesEarned = timesEarned + 1;
+
+    const timesLeft = maxTimes - newTimesEarned;
+
+
+    // Get referrer
+    const referrer = await readById(
+      "referrers",
+      referrerId
+    ) as {
+      id: string;
+
+      wallet?: {
+        balance?: number;
+        totalEarned?: number;
+        totalWithdrawn?: number;
+        updatedAt?: string;
+      };
+    };
+
+
+    const currentBalance = referrer?.wallet?.balance ?? 0;
+    const currentEarned = referrer?.wallet?.totalEarned ?? 0;
 
 
     const newBalance = currentBalance + commissionAmount;
 
 
-    // Update referral wallet
+    // Update referrer wallet
     await updateDocument(
-      'referralWallet',
+      "referrers",
       referrerId,
       {
-        balance: newBalance,
-        totalEarned: currentEarned + commissionAmount,
-        updatedAt: new Date().toISOString(),
+        wallet: {
+          balance: newBalance,
+
+          totalEarned: currentEarned + commissionAmount,
+
+          updatedAt: new Date().toISOString(),
+        }
       }
     );
 
 
-    // Store earning history
+    // Store earning transaction history
     await addDocument(
-      'referralWalletTransactions',
+      `referrers/${referrerId}/transactions`,
       {
-        referrerId,
 
-        referredUserId: ownerId,
-
-        referredOrganizationId: payerOrganizationId,
-
-        subscriptionType,
-        totalTruckSubscriptions :totalTruckSubscriptions|| 0 , 
+        type: "commission",
 
         amount: commissionAmount,
 
-        type: 'commission',
+
+        referredUserId: ownerId,
+
+
+        organizationId: payerOrganizationId,
+
+        organizationName: payerOrganizationName,
+
+
+        subscriptionType,
+
+
+        ...(subscriptionType === "truck" && {
+          totalTruckSubscriptions: totalTruckSubscriptions || 0,
+        }),
+
+
+        timesEarned: newTimesEarned,
+
+        timesLeft,
+
 
         createdAt: new Date().toISOString(),
+
       }
     );
+
+
 
 
     return {
@@ -192,25 +281,5 @@ export async function creditReferralIfEligible(
   }
 }
 
-/**
- * Utility for a "your referral code" screen — resolves a user's own
- * referral code so they can share it (assumes it's just their uid;
- * swap for a shorter generated code if you have one).
- */
-export async function getMyReferralCode(userId: string): Promise<string> {
-  return userId;
-}
 
-/**
- * Look up how many of a user's referrals are still earning them
- * commissions vs. exhausted, useful for a referral dashboard.
- */
-export async function getReferralStatusForInvitee(inviteeUserId: string) {
-  const invitee = await readById('Users', inviteeUserId);
-  const creditsGiven: number = invitee?.referralCreditsGiven ?? 0;
-  return {
-    creditsGiven,
-    remaining: Math.max(0, REFERRAL_ELIGIBLE_PAYMENTS - creditsGiven),
-    exhausted: creditsGiven >= REFERRAL_ELIGIBLE_PAYMENTS,
-  };
-}
+

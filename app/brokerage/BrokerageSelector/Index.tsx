@@ -14,7 +14,7 @@ import SubscriptionPaymentModal from "@/components/SubscriptionPaymentModal";
 
 
 function BrokerageSelector() {
-    const { user, Logout, setupUser, setCurrentRole } = useAuth();
+    const { user, Logout, setupUser, setCurrentRole , currentRole } = useAuth();
     const [showReferralModal, setShowReferralModal] = useState(false);
     const [referralCode, setReferralCode] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -126,7 +126,8 @@ function BrokerageSelector() {
                 isVisible={showModal}
                 onClose={() => setShowModal(false)}
                 subscriptionType="brokerage"      // or "broker" / "tracking"
-                payerUserId={user.uid}
+                 payerOrganizationId={currentRole.organizationId || ""}
+                 payerOrganizationName = {currentRole.companyName || ""}
             />
 
 

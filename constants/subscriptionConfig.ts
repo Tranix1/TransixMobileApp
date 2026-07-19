@@ -17,7 +17,7 @@ export const SUBSCRIPTION_PRICING: Record<SubscriptionType, SubscriptionPricing>
     amount: 15,
     referralCommission: 3,
     label: 'Truck Subscription',
-    icon: 'bus-outline',
+    icon: 'bus-outline',  
   },
   brokerage: {
     amount: 10,
