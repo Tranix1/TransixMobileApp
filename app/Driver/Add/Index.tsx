@@ -107,7 +107,6 @@ export default function AddDriver() {
 
             // Create driver data
             const fixedDriverId = `DRV_${user.uid}`;
-            const code = await generateUniqueReferrerCode();
 
             const driverVerificationData = {
                 organizationId: fixedDriverId,
@@ -141,7 +140,6 @@ export default function AddDriver() {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
 
-                referrerCode: code,
 
             };
 
@@ -168,7 +166,6 @@ export default function AddDriver() {
                 updatedAt: new Date().toISOString(),
                 driverVerificcationTier: driverVerificationTiers,
                 email: user?.email,
-                referrerCode: code,
                 location: locationFull,
 
             };
@@ -183,19 +180,27 @@ export default function AddDriver() {
                 updatedAt: new Date().toISOString()
             });
 
-            const referrerData = {
-                accType: "driver",
-                organisationId: fixedDriverId, // Use Firebase Auth UID instead of document ID
-                organisationEmail: user.email,
-                organisationName: fullName,
-                referrerCode: code,
-                createdAt: new Date().toISOString(),
-                isActive: true,
-                organizationOwner: user?.uid
-            };
 
-            await addDocument('referrers', referrerData);
-
+            await addDocumentWithId(`organizationProfiles`, fixedDriverId, {
+                    organizationId: fixedDriverId,
+                    type: "driver", // or "fleet"
+            
+                    name: fullName.trim(),
+                    profilePhoto: user?.photoURL || null,
+                    coverPhoto: null,
+                    description: "",
+                    ownerId: user?.uid,
+                    ownerName: user?.displayName || user?.organisation,
+            
+                    location: locationFull,
+            
+                    verificationStatus: "pending",
+            
+                    createdAt: Date.now()
+                  }
+            
+                  )
+            
 
 
             ToastAndroid.show('Driver added successfully', ToastAndroid.SHORT);
@@ -297,11 +302,9 @@ export default function AddDriver() {
                     keyboardType="phone-pad"
                 />
 
+             
 
-
-
-
-
+                <ThemedText>Home Location <ThemedText color="red">*</ThemedText></ThemedText>
 
 
                 <TouchableOpacity
@@ -310,7 +313,7 @@ export default function AddDriver() {
                 >
                     <ThemedText>
                         {locationFull?.description ||
-                            'Select destination'}
+                            'Select Home Location'}
                     </ThemedText>
                 </TouchableOpacity>
 
@@ -337,14 +340,7 @@ export default function AddDriver() {
                 )}
 
 
-                <ThemedText>Location<ThemedText color="red">*</ThemedText></ThemedText>
 
-                <Input
-                    placeholder="Enter driver's phone number"
-                    value={phoneNumber}
-                    onChangeText={setPhoneNumber}
-                    keyboardType="phone-pad"
-                />
 
 
                 <View>
@@ -481,7 +477,7 @@ export default function AddDriver() {
                     style={{ height: 44, width: 200, margin: 8, borderRadius: 5 }}
                 />
 
-                <View style={{ height: 10, }} />
+                <View style={{ height: 74, }} />
 
             </ScrollView>
 
@@ -526,5 +522,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: wp(2),
+        width:wp(90) ,
+        marginBottom:hp(3)
     },
 });

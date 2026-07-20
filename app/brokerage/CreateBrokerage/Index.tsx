@@ -167,7 +167,7 @@ const CreaterBrokerage = ({ }) => {
         }
       };
 
-      await addDocument('verifiedUsers', brokerVerificationData);
+      await addDocumentWithId('verifiedUsers',brokerageId ,brokerVerificationData);
 
 
 

@@ -163,7 +163,7 @@ const CreateFleet = () => {
                 updatedAt: new Date().toISOString(),
 
             };
-            await addDocument('verifiedUsers', fleetVerificationData);
+            await addDocumentWithId('verifiedUsers',fleetId ,fleetVerificationData);
 
 
 

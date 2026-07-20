@@ -132,7 +132,9 @@ export const ADMIN_ACTIONS = {
     APPROVE_LOAD: 'approve_load',
     DECLINE_LOAD: 'decline_load',
     EDIT_LOAD: 'edit_load',
-    DELETE_LOAD: 'delete_load'
+    DELETE_LOAD: 'delete_load' ,
+    APPROVE_DRIVER : "approve_driver"
+
 } as const;
 
 /**
