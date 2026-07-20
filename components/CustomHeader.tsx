@@ -133,19 +133,17 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement}
                                     justifyContent: 'space-between',
                                     alignItems: 'center',
                                     marginBottom: wp(1),
-                                    marginTop:-35        /* adding negaive margin to pull it up for the tracking page to have good header`*/
+                                    paddingRight:15
                                 }}
                             >
 
-                                <View style={{}}>
                                     <View style={{}}>
                                         <ThemedText type="title" >{pageTitle}</ThemedText>
-                                        <ThemedText type='default' >Role: {currentRole.accType}
-                                        </ThemedText>
+                                      {pageTitle==="Tracking"&&  <ThemedText type='default' >Role: {currentRole.accType}
+                                        </ThemedText>}
                                     </View>
-                                </View>
 
-                                    <TouchableNativeFeedback onPress={()=>setDspMenu(true)} style={{marginRight:6}} >
+                                    <TouchableNativeFeedback onPress={()=>setDspMenu(true)} style={{marginLeft:10}} >
                                         <View >
                                             <Ionicons name="ellipsis-vertical" size={wp(6)} color={icon} />
                                         </View>

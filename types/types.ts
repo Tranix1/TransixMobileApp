@@ -514,16 +514,16 @@ export type DocumentAsset = {
 
 export type ProofFileType = 'pdf' | 'image' | 'doc' | 'docx';
 
-export type SelectLocationProp = {
+    export type SelectLocationProp = {
 
-    description: string;
-    placeId: string;
-    latitude: number;
-    longitude: number;
-    country: string | null;
-    city: string | null;
+        description: string;
+        placeId: string;
+        latitude: number;
+        longitude: number;
+        country: string | null;
+        city: string | null;
 
-}
+    }
 
 export interface FuelItem {
     fuelType: string;

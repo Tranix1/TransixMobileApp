@@ -19,6 +19,7 @@ import { Share, Alert } from 'react-native';
 import AccentRingLoader from '@/components/AccentRingLoader';
 import CustomHeader from './CustomHeader';
 import Heading from './Heading';
+import ProfileItemComponent from './ProfileItemComponent';
 
 interface LoadsComponentProps {
     Loads: Load[];
@@ -51,6 +52,8 @@ interface LoadsComponentProps {
     cargoVisibilityG: string
     setExpiredAvailableLods: React.Dispatch<React.SetStateAction<"ALL" | "AVAILABLE" | "EXPIRED">>
     expireAvailableLoads: string
+    setSelectedAccountType: React.Dispatch<React.SetStateAction<"ALL" | "BROKERAGE" | "Fleet" | "DRIVER">>
+    selectedAccountType: string
 }
 
 
@@ -81,6 +84,8 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     cargoVisibilityG,
     setExpiredAvailableLods,
     expireAvailableLoads,
+    selectedAccountType,
+    setSelectedAccountType,
 }) => {
     // Component implementation
     const { user } = useAuth();
@@ -253,22 +258,111 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                                 ))}
                             </View>
                         )}
+
+                        {loadVisibility === "Network" && (
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    backgroundColor: background,
+                                    borderRadius: 999,
+                                    padding: wp(0.5),
+                                    borderWidth: 1,
+                                    borderColor: backgroundLight,
+                                    shadowColor: "#000",
+                                    shadowOffset: {
+                                        width: 0,
+                                        height: 2,
+                                    },
+                                    shadowOpacity: 0.08,
+                                    shadowRadius: 4,
+                                    elevation: 3,
+                                }}
+                            >
+                                {[
+                                    { key: "ALL", label: "All" },
+                                    { key: "BROKERAGE", label: "Brokerage" },
+                                    { key: "FLEET", label: "Fleet" },
+                                    { key: "DRIVER", label: "Driver" },
+                                ].map((item) => {
+
+                                    const selected = selectedAccountType === item.key;
+
+                                    return (
+                                        <TouchableOpacity
+                                            key={item.key}
+                                            activeOpacity={0.85}
+                                            onPress={() => setSelectedAccountType(item.key as any)}
+                                            style={{
+                                                flex: 1,
+                                                paddingVertical: wp(2),
+                                                borderRadius: 999,
+
+                                                backgroundColor: selected
+                                                    ? backgroundLight
+                                                    : "transparent",
+
+                                                borderWidth: selected ? 1 : 0,
+                                                borderColor: selected
+                                                    ? accent
+                                                    : "transparent",
+
+                                                alignItems: "center",
+                                                justifyContent: "center",
+
+                                                shadowColor: selected ? accent : "transparent",
+                                                shadowOffset: {
+                                                    width: 0,
+                                                    height: 2,
+                                                },
+                                                shadowOpacity: selected ? 0.18 : 0,
+                                                shadowRadius: 4,
+                                                elevation: selected ? 2 : 0,
+                                            }}
+                                        >
+
+                                            <ThemedText
+                                                type="tiny"
+                                                style={{
+                                                    fontWeight: selected ? "800" : "600",
+
+                                                    color: selected
+                                                        ? accent
+                                                        : coolGray,
+
+                                                    fontSize: 13,
+                                                }}
+                                            >
+                                                {item.label}
+                                            </ThemedText>
+
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        )}
                     </>
                 }
 
 
                 renderItem={({ item }) => (
-                        <LoadComponent item={item} expandID={expandId} expandId={(s) => setExpandID(s)} ondetailsPress={() => {
-                            setSelectedLoad(item);
-                            setShowSheet(true);
-                            setTimeout(() => {
-                                bottomSheetRef.current?.expand();
-                            }, 10);
-                        }} 
-                              expireAvailableLoads={expireAvailableLoads}
 
-                        
-                        />
+                    <>
+                        {loadVisibility === "Network" ?
+                            <ProfileItemComponent profile={item as any} />
+                            :
+                            <LoadComponent item={item} expandID={expandId} expandId={(s) => setExpandID(s)} ondetailsPress={() => {
+                                setSelectedLoad(item);
+                                setShowSheet(true);
+                                setTimeout(() => {
+                                    bottomSheetRef.current?.expand();
+                                }, 10);
+                            }}
+                                expireAvailableLoads={expireAvailableLoads}
+
+                            />}
+                    </>
+
+
                 )}
                 refreshControl={
                     <RefreshControl
@@ -405,7 +499,7 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                             </TouchableOpacity>
                         </View>
                         {selectedLoad ? (
-                            <>  
+                            <>
 
                                 {bottomMode === '' &&
                                     <View style={{ padding: wp(2), borderWidth: .5, borderRadius: wp(6), borderColor: backgroundLight }}>

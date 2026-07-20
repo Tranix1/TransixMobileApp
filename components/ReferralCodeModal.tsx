@@ -55,7 +55,7 @@ export default function ReferralCodeModal({
                             <Ionicons name="close" size={wp(4)} color={icon} />
                         </TouchableOpacity>
                         <ThemedText type="title" style={[styles.title, { color: accent }]}>Referral Code Required</ThemedText>
-                        <ThemedText type="tiny" style={[styles.description, { color: coolGray }]}>You must provide a valid referral code to access fleet features. Enter it below or choose another action.</ThemedText>
+                        <ThemedText type="tiny" style={[styles.description, { color: coolGray }]}>You must provide a valid referral code to access Business features. Enter it below or choose another action.</ThemedText>
                         <Input
                             containerStyles={styles.input}
                             placeholder="Enter referral code"

@@ -48,6 +48,7 @@ export default function Index() {
   const icon = useThemeColor('icon')
   const { user } = useAuth();
   const backgroundLight = useThemeColor('backgroundLight')
+  const background = useThemeColor("background")
 
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
@@ -366,10 +367,8 @@ export default function Index() {
   }
 
   return (
-    <ScreenWrapper>
+    <View style={{flex :1 , backgroundColor:background}}>
       <CustomHeader pageTitle="Transix"  />
-
-
 
 
           { isAgent ? (
@@ -625,7 +624,7 @@ export default function Index() {
         vehicleName = {selectedVehicle?.name || ''}
         
       />
-    </ScreenWrapper>
+    </View>
   );
 }
 

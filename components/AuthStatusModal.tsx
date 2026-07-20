@@ -50,6 +50,9 @@ export default function     AuthStatusModal({ visible, onClose, user, type }: Au
         try {
             // Force reload the app by restarting the entire app
             if (Updates.isEnabled) {
+                console.log("hiii")
+                onClose();
+
                 await Updates.reloadAsync();
             } else {
                 // For development mode, we'll use a different approach

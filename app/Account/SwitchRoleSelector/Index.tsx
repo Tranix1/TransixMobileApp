@@ -6,7 +6,7 @@ import CustomHeader from "@/components/CustomHeader";
 import ReferralCodeModal from "@/components/ReferralCodeModal";
 import { router } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
-import { validateReferrerCode, setDocuments } from "@/db/operations";
+import { validateReferrerCode, setDocuments, updateDocument } from "@/db/operations";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { hp, wp } from "@/constants/common";
@@ -32,7 +32,7 @@ function SwitchRoleSelector() {
     const accent = useThemeColor('accent');
     const icon = useThemeColor('icon');
 
-    const hasReferral = !!user?.referrerId || !!user?.referrerCode;
+   const hasReferral = !!user?.referredBy?.userId;
 
     useEffect(() => {
         if (user) {
@@ -42,41 +42,68 @@ function SwitchRoleSelector() {
 
     // ---------- shared referral handlers ----------
 
-    const handleSubmitReferralCode = async (code: string) => {
-        if (!code || !code.trim()) {
-            ToastAndroid.show('Please enter a referral code.', ToastAndroid.SHORT);
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            const normalizedCode = code.trim().toUpperCase();
-            const validation = await validateReferrerCode(normalizedCode);
-
-            if (!validation.exists || !validation.referrerId) {
-                ToastAndroid.show('Invalid referral code. Please check and try again.', ToastAndroid.LONG);
-                return;
-            }
-
-            const saved = await setDocuments('personalData', { referrerId: validation.referrerId });
-            if (!saved) {
-                ToastAndroid.show('Unable to save referral code. Please try again.', ToastAndroid.LONG);
-                return;
-            }
-
-            if (user) {
-                await setupUser({ ...user, referrerId: validation.referrerId });
-            }
-
-            setReferralCode(normalizedCode);
-            setShowReferralModal(false);
-            ToastAndroid.show('Referral code accepted.', ToastAndroid.SHORT);
-        } catch (error) {
-            ToastAndroid.show('Referral validation failed. Please try again.', ToastAndroid.LONG);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+  const handleSubmitReferralCode = async (code: string) => {
+          if (!code || !code.trim()) {
+              ToastAndroid.show(
+                  "Please enter a referral code.",
+                  ToastAndroid.SHORT
+              );
+              return;
+          }
+  
+          setIsSubmitting(true);
+  
+          try {
+              const normalizedCode = code.trim().toUpperCase();
+  
+              const validation = await validateReferrerCode(normalizedCode);
+  
+              if (!validation.exists ||  !validation.referrerData) {
+                  ToastAndroid.show(
+                      "Invalid referral code. Please check and try again.",
+                      ToastAndroid.LONG
+                  );
+                  return;
+              }
+  
+              await updateDocument(
+                  "personalData",
+                  user?.uid || "",
+                  {
+                      referredBy: validation.referrerData
+                  }
+              );
+  
+              if (user) {
+                  await setupUser({
+                      ...user,
+                      referredBy: validation.referrerData
+                  });
+              }
+  
+              setReferralCode(normalizedCode);
+              setShowReferralModal(false);
+  
+              ToastAndroid.show(
+                  "Referral code accepted.",
+                  ToastAndroid.SHORT
+              );
+  
+          } catch (error) {
+              console.error(
+                  "Referral validation error:",
+                  error
+              );
+  
+              ToastAndroid.show(
+                  "Referral validation failed. Please try again.",
+                  ToastAndroid.LONG
+              );
+  
+          } finally {
+              setIsSubmitting(false);
+          }
+      };
 
     const handleRefresh = async () => {
         if (user) {
@@ -127,7 +154,7 @@ function SwitchRoleSelector() {
 
     // ---------- Brokerage (owned) ----------
 
-    const ownedBrokerages = Array.isArray(user?.brokergePDetails) ? user.brokergePDetails : [];
+    const ownedBrokerages = Array.isArray(user?.brokergeDetails) ? user.brokergeDetails : [];
     const brokerageCount = ownedBrokerages.length;
 
     const handleBrokerageSelect = async (brokerage: any) => {

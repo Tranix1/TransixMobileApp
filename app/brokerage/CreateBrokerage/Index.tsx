@@ -27,10 +27,12 @@ import { SelectLocationProp } from '@/types/types';
 import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplete';
 import { FontAwesome } from '@expo/vector-icons';
 import { Countries } from '@/types/types';
+import { router } from 'expo-router';
 
 const CreaterBrokerage = ({ }) => {
   const icon = useThemeColor('icon');
   const background = useThemeColor('background');
+  const accent = useThemeColor("accent")
   const { user } = useAuth();
 
   // Broker verification state
@@ -67,7 +69,7 @@ const CreaterBrokerage = ({ }) => {
 
     if (!brokerName) errors.push('Brokerage name');
     if (!brokerPhone) errors.push('Brokerage phone');
-    if (!locationFull?.description) errors.push('Brokerage address');
+    if (!locationFull?.description) errors.push('Select your office location');
 
     if (!typeOfBroker) errors.push("Type of broker`")
 
@@ -76,6 +78,8 @@ const CreaterBrokerage = ({ }) => {
         'Incomplete setup',
         `Please complete: ${errors.join('\n')}`
       );
+    setUploadingBrokerD(false);
+
       return;
     }
 
@@ -85,6 +89,8 @@ const CreaterBrokerage = ({ }) => {
         'Verification incomplete',
         'Please upload all required documents to complete verification.'
       );
+    setUploadingBrokerD(false);
+
       return
     }
     if (selectedBrokerDocuments.length < 5 && typeOfBroker === "Company Broker") {
@@ -92,6 +98,8 @@ const CreaterBrokerage = ({ }) => {
         'Verification incomplete',
         'Please upload all required documents to complete verification.'
       );
+    setUploadingBrokerD(false);
+
       return
     }
 
@@ -124,7 +132,7 @@ const CreaterBrokerage = ({ }) => {
         organizationPhone: brokerPhone,
 
         location: locationFull,
-        operationCountries,
+        operationCountries :operationCountries,
 
         organizationAdminPhone: user?.phoneNumber,
         organizationAdminEmail: user?.email,
@@ -269,7 +277,7 @@ const CreaterBrokerage = ({ }) => {
         ownerId: user?.uid,
         id: brokerageId,
         location: locationFull,
-        operationCountries,
+        operationCountries:operationCountries,
 
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -306,7 +314,7 @@ const CreaterBrokerage = ({ }) => {
         ownerId: user?.uid,
         id: brokerageId,
         location: locationFull,
-        operationCountries,
+        operationCountries:operationCountries,
 
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -337,7 +345,7 @@ const CreaterBrokerage = ({ }) => {
 
       await addDocumentWithId(`organizationProfiles`, brokerageId, {
         organizationId: brokerageId,
-        type: "fleet", // or "fleet"
+        type: "brokerage", // or "fleet"
 
         name: brokerName,
         profilePhoto: user?.photoURL || null,
@@ -347,7 +355,7 @@ const CreaterBrokerage = ({ }) => {
         ownerName: user?.displayName || user?.organisation,
 
         location: locationFull,
-        operationCountries,
+        operationCountries:operationCountries,
 
         verificationStatus: "pending",
 
@@ -376,6 +384,7 @@ const CreaterBrokerage = ({ }) => {
       // Close modal and show success
       setUploadingBrokerD(false);
       alert('Broker verification submitted successfully! Your account will be reviewed.');
+      router.back()
 
     } catch (error) {
       console.error('Error saving broker verification:', error);
@@ -391,7 +400,7 @@ const CreaterBrokerage = ({ }) => {
     <ScreenWrapper>
       <Heading page='Create Brokerage' />
 
-      <View style={{ gap: wp(2) }}>
+      <View style={{ gap: wp(2), padding:15 }}>
 
         <ScrollView>
 
@@ -446,6 +455,7 @@ const CreaterBrokerage = ({ }) => {
             </>}
             value={brokerPhone}
             placeholder="700 000 000"
+            keyboardType='numeric'
             onChangeText={setBrokerPhone}
           />
 
@@ -456,13 +466,15 @@ const CreaterBrokerage = ({ }) => {
             onChangeText={setBrokerEmail}
           />
 
+          <ThemedText>Select your office location</ThemedText>
+
           <TouchableOpacity
-            style={styles.input}
+            style={[styles.input,]}
             onPress={() => setDspDspLocation(true)}
           >
             <ThemedText>
               {locationFull?.description ||
-                'Select destination'}
+                'Operating Location'}
             </ThemedText>
           </TouchableOpacity>
 
@@ -472,7 +484,7 @@ const CreaterBrokerage = ({ }) => {
             dspRoute={dsplocation}
             setDspRoute={setDspDspLocation}
             setRoute={setLocationFull}
-            topic="Select Destination"
+            topic="Operating Location"
             setPickLocationOnMap={setShowMapPicker}
           />
 
@@ -490,14 +502,14 @@ const CreaterBrokerage = ({ }) => {
 
 
 
-          <>
+          <View style={{marginTop:hp(2), marginBottom:hp(2)}}>
 
-            <ThemedText style={{ marginBottom: wp(4) }}>
+            <ThemedText style={{ marginBottom: wp(2),color:accent}}>
               {operationCountries?.join(', ') || '--'}
             </ThemedText>
 
             <ThemedText>
-              Permitted countries<ThemedText color="red">*</ThemedText>
+              Select the countries where your brokerage operates.
             </ThemedText>
 
             <View style={{
@@ -547,7 +559,7 @@ const CreaterBrokerage = ({ }) => {
               }
 
             </View>
-          </>
+          </View>
 
 
 

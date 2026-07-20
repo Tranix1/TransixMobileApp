@@ -333,7 +333,7 @@ export default function Index() {
         {/* <AuthStatusModal visible={dspCreateAcc} onClose={() => isAuthenticated && setDspCreateAcc(false)} user={user} type="create" /> */}
 
 
-        <AuthStatusModal visible={dspVerifyAcc} onClose={() => !needsEmailVerification && setDspVerifyAcc(false)} user={user} type="verify" />
+        <AuthStatusModal visible={dspVerifyAcc} onClose={() => setDspVerifyAcc(false)} user={user} type="verify" />
       </View>
     </ScreenWrapper>
   );

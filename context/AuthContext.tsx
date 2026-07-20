@@ -516,7 +516,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     userId: credentials.uid,
 
                     name:
-                        credentials.organisation ||
+                        credentials.displayName ||
                         credentials.displayName ||
                         "Unknown",
 

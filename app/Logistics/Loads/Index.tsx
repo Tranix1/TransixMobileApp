@@ -39,10 +39,16 @@ const Index = () => {
     const [bottomMode, setBottomMode] = useState<'Bid' | 'Book' | ''>('');
 
     const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
-    const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public'>('Private');
+    const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public' |"Network">('Private');
+    const [loadVisibilityBfr, setLoadVisibilityBfr] = useState<'Private' | 'Public' |"Network">('Private');
+    
     // const [currentRole, setCurrentRole] = useState<any>(null);
     const [expireAvailableLoads, setExpiredAvailableLods] = React.useState<"ALL" | "AVAILABLE" | "EXPIRED">("ALL")
+    const [selectedAccountType, setSelectedAccountType] = React.useState<"ALL" | "BROKERAGE" | "Fleet" | "DRIVER">("ALL")
 
+const nowTimeStamp = Timestamp.now()
+
+    
 
     const LoadTructs = async () => {
         try {
@@ -53,11 +59,33 @@ const Index = () => {
             let filters: any[] = [];
             let collectionName: string | null = null;
 
+            if(loadVisibility ==="Network"){
+
+                if(selectedAccountType !== "ALL"){
+                     filters = [
+                        where("type", "==", selectedAccountType),
+                        where("verificationStatus", "==", "approved"),
+
+                    ];
+                }else{
+                    
+                    filters = [
+                        where("verificationStatus", "==", "approved"),
+                    ];
+                }
+
+                    
+
+                    
+                    // Public cargo always lives here
+                    collectionName = "organizationProfiles";
+            }
+
             // =============================
             // CARGO ID MODE (EXACT LOAD)
             // =============================
 
-            if (cargoId) {
+         else   if (cargoId) {
 
                 if (cargoVisibilityG === 'PUBLIC') {
 
@@ -109,14 +137,14 @@ const Index = () => {
                         filters = [
                             where("approvalStatus", "==", "approved"),
                             where("state", "==", "available"),
-                            where("expiresAt", ">", Timestamp.now()),
+                            where("expiresAt", ">", nowTimeStamp),
                         ];
                     } else if (expireAvailableLoads === "AVAILABLE") {
 
                         filters = [
                             where("approvalStatus", "==", "approved"),
                             where("state", "==", "available"),
-                            where("expiresAt", ">", Timestamp.now()),
+                            where("expiresAt", ">", nowTimeStamp),
                             where("organizationId", "==", currentRole.organizationId),
                         ];
                     } else if (expireAvailableLoads === "EXPIRED") {
@@ -124,7 +152,7 @@ const Index = () => {
                         filters = [
                             where("approvalStatus", "==", "approved"),
                             where("state", "==", "available"),
-                            where("expiresAt", "<=", Timestamp.now()),
+                            where("expiresAt", "<=", nowTimeStamp),
                             where("organizationId", "==", currentRole.organizationId),
                         ];
                     }
@@ -167,8 +195,15 @@ const Index = () => {
         }
     }
     useEffect(() => {
+        
         LoadTructs();
-    }, [loadVisibility, currentRole, expireAvailableLoads])
+    }, [loadVisibility, currentRole, expireAvailableLoads ,selectedAccountType])
+    
+
+    useEffect(()=>{
+        setLoads([])
+ setLoadVisibility(loadVisibilityBfr)
+    },[loadVisibilityBfr])
 
     const onRefresh = async () => {
         try {
@@ -184,56 +219,212 @@ const Index = () => {
         }
     };
 
-    const loadMoreLoads = async () => {
-        if (loadingMore || !lastVisible) return;
+   const loadMoreLoads = async () => {
+    if (loadingMore || !lastVisible) return;
 
-        try {
-            setLoadingMore(true);
-            setError(null);
+    try {
+        setLoadingMore(true);
+        setError(null);
 
-            let filters: any[] = [];
-            let collectionName: string | null = null;
+        let filters: any[] = [];
+        let collectionName: string | null = null;
 
 
-            // Apply same filters as in LoadTructs for pagination
-            if (currentRole?.accType === 'fleet' && loadVisibility === 'Private') {
-                collectionName = `fleets/${currentRole.fleetId}/Cargo`;
+        // =============================
+        // NETWORK MODE
+        // =============================
+        if (loadVisibility === "Network") {
 
-            } else if (currentRole?.accType === 'brokerage' && loadVisibility === 'Private') {
-                collectionName = `brokerages/${currentRole.fleetId}/Cargo`;
+            if (selectedAccountType !== "ALL") {
 
-            } else {
                 filters = [
-                    where("approvalStatus", "==", "approved"),
-                    where("isApproved", "==", true),
-                    where("personalAccTypeIsApproved", "==", true)
+                    where("type", "==", selectedAccountType),
+                    where("verificationStatus", "==", "approved"),
                 ];
 
-                if (loadVisibility === 'Public') {
-                    filters.push(where("loadVisibility", "==", "Public"));
-                    collectionName = "Cargo"
+            } else {
+
+                filters = [
+                    where("verificationStatus", "==", "approved"),
+                ];
+
+            }
+
+            collectionName = "organizationProfiles";
+        }
+
+
+        // =============================
+        // CARGO ID MODE
+        // =============================
+        else if (cargoId) {
+
+            if (cargoVisibilityG === "PUBLIC") {
+
+                filters = [
+                    where("approvalStatus", "==", "approved"),
+                    where("cargoId", "==", cargoId),
+                ];
+
+                collectionName = "Cargo";
+
+
+            } else if (cargoVisibilityG === "PRIVATE") {
+
+
+                filters = [
+                    where("cargoId", "==", cargoId),
+                ];
+
+
+                if (
+                    currentRole?.accType === "fleet" ||
+                    currentRole?.accType === "driver"
+                ) {
+
+                    collectionName = `fleets/${currentRole.fleetId}/Cargo`;
+
+
+                } else if (currentRole?.accType === "brokerage") {
+
+                    collectionName = `brokerages/${currentRole.organizationId}/Cargo`;
+
                 }
             }
 
-            if (!collectionName) {
-                throw new Error("Collection name is required");
-            }
-
-            const result = await fetchDocuments(collectionName, 10, lastVisible, filters);
-
-            if (result) {
-                setLoads([...Loads, ...result.data as Load[]]);
-                setLastVisible(result.lastVisible);
-            }
-        } catch (error) {
-            console.error('Error loading more loads:', error);
-            setError('Failed to load more loads. Please try again.');
-            ToastAndroid.show('Failed to load more loads', ToastAndroid.SHORT);
-        } finally {
-            setLoadingMore(false);
         }
-    };
 
+
+        // =============================
+        // NORMAL LOAD LIST
+        // =============================
+        else {
+
+
+            // Fleet private loads
+            if (
+                currentRole?.accType === "fleet" &&
+                loadVisibility === "Private"
+            ) {
+
+                collectionName = `fleets/${currentRole.fleetId}/Cargo`;
+
+
+            }
+
+
+            // Brokerage private loads
+            else if (
+                currentRole?.accType === "brokerage" &&
+                loadVisibility === "Private"
+            ) {
+
+                collectionName = `brokerages/${currentRole.organizationId}/Cargo`;
+
+            }
+
+
+            // Public loads
+            else {
+
+                collectionName = "Cargo";
+
+
+                if (expireAvailableLoads === "ALL") {
+
+                    filters = [
+                        where("approvalStatus", "==", "approved"),
+                        where("state", "==", "available"),
+                        where("expiresAt", ">", nowTimeStamp),
+                    ];
+
+
+                } else if (expireAvailableLoads === "AVAILABLE") {
+
+
+                    filters = [
+                        where("approvalStatus", "==", "approved"),
+                        where("state", "==", "available"),
+                        where("expiresAt", ">", nowTimeStamp),
+                        where(
+                            "organizationId",
+                            "==",
+                            currentRole.organizationId
+                        ),
+                    ];
+
+
+                } else if (expireAvailableLoads === "EXPIRED") {
+
+
+                    filters = [
+                        where("approvalStatus", "==", "approved"),
+                        where("state", "==", "available"),
+                        where("expiresAt", "<=", nowTimeStamp),
+                        where(
+                            "organizationId",
+                            "==",
+                            currentRole.organizationId
+                        ),
+                    ];
+
+                }
+            }
+        }
+
+
+
+        if (!collectionName) {
+            console.log("No cargo collection found");
+            return;
+        }
+
+
+
+        const result = await fetchDocuments(
+            collectionName,
+            50,
+            lastVisible,
+            filters
+        );
+
+
+
+        if (result?.data?.length) {
+
+            setLoads(prev => [
+                ...prev,
+                ...(result.data as Load[])
+            ]);
+
+            setLastVisible(result.lastVisible);
+
+
+        } else {
+
+            setLastVisible(null);
+
+        }
+
+
+
+    } catch (error) {
+
+        console.error("Error loading more loads:", error);
+
+        setError("Failed to load more loads. Please try again.");
+
+        ToastAndroid.show(
+            "Failed to load more loads",
+            ToastAndroid.SHORT
+        );
+
+    } finally {
+
+        setLoadingMore(false);
+
+    }
+};
 
     return (
         <GestureHandlerRootView style={{ flex: 1, }}>
@@ -270,13 +461,15 @@ const Index = () => {
                                     { topic: "Public", value: "Public" },
                                     { topic: "Network", value: "Network" },
                                 ]}
-                                condition={loadVisibility}
-                                onSelect={setLoadVisibility}
+                                condition={loadVisibilityBfr}
+                                onSelect={setLoadVisibilityBfr}
 
                             /> : null
                     }
                     setExpiredAvailableLods={setExpiredAvailableLods}
                     expireAvailableLoads={expireAvailableLoads}
+                    setSelectedAccountType={setSelectedAccountType}
+                    selectedAccountType ={selectedAccountType}
                     loadVisibility={loadVisibility}
                     cargoVisibilityG={`${cargoVisibilityG}`}
                 />

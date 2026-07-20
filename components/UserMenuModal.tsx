@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, View, TouchableOpacity, TouchableNativeFeedback, StyleSheet, ScrollView } from 'react-native';
+import { Modal, Pressable, View, TouchableOpacity, TouchableNativeFeedback, StyleSheet, ScrollView, ToastAndroid } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
 // import * as Clipboard from 'expo-clipboard';
@@ -168,8 +168,10 @@ export default function UserMenuModal({ visible, onClose, onProfileUpdate }: Use
                         icon: 'location-outline',
                         iconFamily: Ionicons,
                         onPress: () => {
-                            router.push('/Tracking/Index');
+                               ToastAndroid.show('Coming Soon...', ToastAndroid.SHORT);
                             onClose();
+
+                         
                         },
                     },
                     {
@@ -179,6 +181,8 @@ export default function UserMenuModal({ visible, onClose, onProfileUpdate }: Use
                         iconFamily: Ionicons,
                         onPress: () => {
                             // router.push('/Analytics/Index');
+                                  ToastAndroid.show('Coming Soon...', ToastAndroid.SHORT);
+                            
                             onClose();
                         },
                     },
@@ -325,7 +329,7 @@ export default function UserMenuModal({ visible, onClose, onProfileUpdate }: Use
                             </View>
 
                             {/* Referral: tap to copy */}
-                                <TouchableNativeFeedback onPress={handleCopyReferral}>
+                              {currentRole.accType !=="tracking" &&  <TouchableNativeFeedback onPress={handleCopyReferral}>
                                     <View style={[styles.referralRow, { backgroundColor: background }]}>
                                         {/* <Ionicons name="gift-outline" size={wp(6)} color={accent}  /> */}
                                                         <Ionicons name="person-outline" size={wp(4)} color={accent} style={styles.menuIcon} />
@@ -349,7 +353,7 @@ export default function UserMenuModal({ visible, onClose, onProfileUpdate }: Use
                                             </ThemedText>
                                         </View>
                                     </View>
-                                </TouchableNativeFeedback>
+                                </TouchableNativeFeedback>}
                             
 
                             <View style={styles.menuItems}>

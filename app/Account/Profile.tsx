@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native'
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Image, Keyboard, FlatList } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { router, useLocalSearchParams } from 'expo-router';
@@ -46,6 +46,25 @@ const Edit = () => {
     const [address, setAddress] = useState('');
     const [selectedValue, setSelectedValue] = useState({ value: '', label: '' });
 
+
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+    useEffect(() => {
+        const showSub = Keyboard.addListener("keyboardDidShow", () => {
+            setKeyboardVisible(true);
+        });
+
+        const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+            setKeyboardVisible(false);
+        });
+
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
+
+
     const backgroundLight = useThemeColor('backgroundLight')
     const background = useThemeColor('background')
     const icon = useThemeColor('icon')
@@ -54,7 +73,7 @@ const Edit = () => {
 
     const [countryCode, setCountryCode] = useState<{ id: number, name: string }>({ id: 0, name: '+263' })
 
-    const [location, setLocation] = useState<LocationData> ({
+    const [location, setLocation] = useState<LocationData>({
         description: "",
         placeId: "",
         latitude: null,
@@ -65,46 +84,46 @@ const Edit = () => {
     const [loadingLocation, setLoadingLocation] = useState(false);
 
     const getCurrentLocation = async () => {
-    try {
-        setLoadingLocation(true);
+        try {
+            setLoadingLocation(true);
 
-        const { status } = await Location.requestForegroundPermissionsAsync();
+            const { status } = await Location.requestForegroundPermissionsAsync();
 
-        if (status !== "granted") {
-            return;
+            if (status !== "granted") {
+                return;
+            }
+
+            const current = await Location.getCurrentPositionAsync({});
+
+            const latitude = current.coords.latitude;
+            const longitude = current.coords.longitude;
+
+            const address = await Location.reverseGeocodeAsync({
+                latitude,
+                longitude,
+            });
+
+            const place = address[0];
+
+            const city = place.city || place.subregion || place.district || "";
+            const country = place.country || "";
+
+            setLocation({
+                description: `${city}${country ? `, ${country}` : ""}`,
+                placeId: "",
+                latitude,
+                longitude,
+                country,
+                city,
+            });
+
+        } catch (error) {
+            console.log("Location error:", error);
+
+        } finally {
+            setLoadingLocation(false);
         }
-
-        const current = await Location.getCurrentPositionAsync({});
-
-        const latitude = current.coords.latitude;
-        const longitude = current.coords.longitude;
-
-        const address = await Location.reverseGeocodeAsync({
-            latitude,
-            longitude,
-        });
-
-        const place = address[0];
-
-        const city = place.city || place.subregion || place.district || "";
-        const country = place.country || "";
-
-        setLocation({
-            description: `${city}${country ? `, ${country}` : ""}`,
-            placeId: "",
-            latitude,
-            longitude,
-            country,
-            city,
-        });
-
-    } catch (error) {
-        console.log("Location error:", error);
-
-    } finally {
-        setLoadingLocation(false);
-    }
-};
+    };
 
     useEffect(() => {
         if (!user) {
@@ -144,20 +163,28 @@ const Edit = () => {
 
     const Submit = async () => {
 
+        console.log("giiiii")
+
         const MissingDriverDetails = [
             !organisation && "Enter Organisation Name",
-            !selectedValue.value && "Select Country Of Operation",
-            !address && "Enter Physical Adress ",
+            !location.city && "Select Your Location ",
             !countryCode.name && "Select Country Code",
             !phoneNumber && "Enter Phone Number",
         ].filter(Boolean);
 
-        if (MissingDriverDetails.length > 0 && operation === "create") {
-            // setContractDErr(true);
-            alertBox("Missing Profile Details", MissingDriverDetails.join("\n"), [], "error");
+
+
+        if (MissingDriverDetails.length > 0) {
+            alert(MissingDriverDetails.join("\n"),)
+            // alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
+
             setLoading(false)
+
             return;
         }
+
+
+
 
 
         if (!user) {
@@ -209,247 +236,245 @@ const Edit = () => {
 
     return (
         <ScreenWrapper>
-            <Heading page={headerTitle} />
-
             <View style={styles.container}>
+                <Heading page={headerTitle} />
 
-                <View>
+                <FlatList
+                    data={[1]}
+                    renderItem={() => (
 
-                    {imagelogo && <Image source={{ uri: imagelogo.uri }} style={{ width: wp(40), height: wp(40), margin: 'auto', marginBottom: 9, borderRadius: wp(4) }} />}
-                    {!imagelogo && !user?.photoURL && <TouchableOpacity
-                        style={[styles.input, { height: hp(14), justifyContent: 'center', alignItems: 'center' }]}
-                        onPress={selectSingleImage}
-                    >
-                        <Ionicons name='image-outline' size={wp(8)} color={icon} />
-                        <ThemedText style={styles.label}>Click To Add Logo</ThemedText>
+                        <View style={{padding:15}}>
 
-                    </TouchableOpacity>}
+                            {imagelogo && <Image source={{ uri: imagelogo.uri }} style={{ width: wp(40), height: wp(40), margin: 'auto', marginBottom: 9, borderRadius: wp(4) }} />}
+                            {!imagelogo && !user?.photoURL && <TouchableOpacity
+                                style={[styles.input, { height: hp(14), justifyContent: 'center', alignItems: 'center' }]}
+                                onPress={selectSingleImage}
+                            >
+                                <Ionicons name='image-outline' size={wp(8)} color={icon} />
+                                <ThemedText style={styles.label}>Click To Add Logo</ThemedText>
 
-                    {user?.photoURL && !imagelogo && <TouchableOpacity style={styles.header} onPress={selectSingleImage}>
-                        <Image
-                            style={styles.avatar}
-                            source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
-                        />
-                        <ThemedText type='subtitle' color={accent}>Edit</ThemedText>
-                    </TouchableOpacity>}
+                            </TouchableOpacity>}
+
+                            {user?.photoURL && !imagelogo && <TouchableOpacity style={styles.header} onPress={selectSingleImage}>
+                                <Image
+                                    style={styles.avatar}
+                                    source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
+                                />
+                                <ThemedText type='subtitle' color={accent}>Edit</ThemedText>
+                            </TouchableOpacity>}
 
 
-                    <ThemedText style={styles.label}>User Name</ThemedText>
-                    <Input
-                        containerStyles={styles.input}
-                        placeholder="Your Organisation"
-                        value={organisation}
-                        onChangeText={setOrganisation}
-                    />
-
-  <ThemedText style={styles.label}>Phone Number</ThemedText>
-
-                    <Input
-                        Icon={<>
-                            <Dropdown
-                                style={[{ width: wp(15) }]}
-                                selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
-                                data={countryCodes}
-                                maxHeight={hp(60)}
-                                labelField="name"
-                                valueField="name"
-                                placeholder="+00"
-                                value={countryCode?.name}
-                                itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-                                activeColor={background}
-
-                                containerStyle={{
-                                    borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                                    width: wp(45),
-                                    shadowOffset: {
-                                        width: 0,
-                                        height: 9,
-                                    },
-                                    shadowOpacity: 0.50,
-                                    shadowRadius: 12.35,
-
-                                    elevation: 19,
-                                    paddingVertical: wp(1)
-                                }}
-                                onChange={item => {
-                                    console.log(item);
-                                    setCountryCode(item);
-                                }}
-
-                                renderLeftIcon={() => <></>}
-                                renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
-                                renderItem={((item, selected) =>
-                                    <>
-                                        <View style={[styles.item, selected && {}]}>
-                                            <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
-                                            {selected && (
-                                                <Ionicons
-                                                    color={icon}
-                                                    name='checkmark-outline'
-                                                    size={wp(5)}
-                                                />
-                                            )}
-                                        </View>
-                                        <Divider />
-                                    </>
-                                )}
-
+                            <ThemedText style={styles.label}>User Name</ThemedText>
+                            <Input
+                                containerStyles={styles.input}
+                                placeholder="Your Organisation"
+                                value={organisation}
+                                onChangeText={setOrganisation}
                             />
-                            <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
-                        </>}
-                        value={phoneNumber}
-                        placeholder="700 000 000"
-                        onChangeText={(text) => setPhoneNumber(text)}
-                        keyboardType="numeric"
-                    />
+
+                            <ThemedText style={styles.label}>Phone Number</ThemedText>
+
+                            <Input
+                                Icon={<>
+                                    <Dropdown
+                                        style={[{ width: wp(15) }]}
+                                        selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
+                                        data={countryCodes}
+                                        maxHeight={hp(60)}
+                                        labelField="name"
+                                        valueField="name"
+                                        placeholder="+00"
+                                        value={countryCode?.name}
+                                        itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
+                                        activeColor={background}
+
+                                        containerStyle={{
+                                            borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
+                                            width: wp(45),
+                                            shadowOffset: {
+                                                width: 0,
+                                                height: 9,
+                                            },
+                                            shadowOpacity: 0.50,
+                                            shadowRadius: 12.35,
+
+                                            elevation: 19,
+                                            paddingVertical: wp(1)
+                                        }}
+                                        onChange={item => {
+                                            console.log(item);
+                                            setCountryCode(item);
+                                        }}
+
+                                        renderLeftIcon={() => <></>}
+                                        renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
+                                        renderItem={((item, selected) =>
+                                            <>
+                                                <View style={[styles.item, selected && {}]}>
+                                                    <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
+                                                    {selected && (
+                                                        <Ionicons
+                                                            color={icon}
+                                                            name='checkmark-outline'
+                                                            size={wp(5)}
+                                                        />
+                                                    )}
+                                                </View>
+                                                <Divider />
+                                            </>
+                                        )}
+
+                                    />
+                                    <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
+                                </>}
+                                value={phoneNumber}
+                                placeholder="700 000 000"
+                                onChangeText={(text) => setPhoneNumber(text)}
+                                keyboardType="numeric"
+                            />
 
 
 
 
+                            {location.city && location.country && (
+
+                                <View style={[styles.selectedLocation]}>
+                                    <View style={styles.selectedLocationIcon}>
+                                        <MaterialCommunityIcons
+                                            name="map-marker-check"
+                                            size={22}
+                                            color={accent}
+                                        />
+                                    </View>
+
+                                    <View style={{ marginLeft: 12 }}>
+                                        <ThemedText style={styles.selectedCity}>
+                                            {location.city}
+                                        </ThemedText>
+
+                                        <ThemedText style={styles.selectedCountry}>
+                                            {location.country}
+                                        </ThemedText>
+                                    </View>
+                                </View>
+
+                            )}
+
+                            <ThemedText style={styles.label}>
+                                Where are you based? (City & Country)
+                            </ThemedText>
+                            <TouchableOpacity
+                                onPress={getCurrentLocation}
+                                style={[styles.locationButton, { borderColor: accent }]}
+                            >
+
+                                <MaterialCommunityIcons
+                                    name="crosshairs-gps"
+                                    size={20}
+                                    color={accent}
+                                />
+
+                                <ThemedText style={{ marginLeft: 8 }}>
+                                    {loadingLocation
+                                        ? "Getting location..."
+                                        : "Use current location"}
+                                </ThemedText>
+                            </TouchableOpacity>
+
+                            <ThemedText style={styles.label}>Or search your city</ThemedText>
 
 
+                            <GooglePlacesAutocomplete
+                                placeholder="Search your city"
+                                keyboardShouldPersistTaps="always"
+                                listViewDisplayed="auto"
+
+                                fetchDetails={true}
+                                predefinedPlaces={[]}
+                                minLength={2}
+                                debounce={300}
+                                timeout={10000}
+                                keepResultsAfterBlur={false}
+                                enablePoweredByContainer={false}
+
+                                onPress={(data, details = null) => {
+                                    if (!details) return;
+
+                                    const components = details.address_components || [];
+
+                                    const countryComponent = components.find((c: any) =>
+                                        c.types?.includes("country")
+                                    );
+
+                                    const cityComponent = components.find((c: any) =>
+                                        c.types?.includes("locality") ||
+                                        c.types?.includes("administrative_area_level_2") ||
+                                        c.types?.includes("sublocality")
+                                    );
+
+                                    setLocation({
+                                        description: data.description || "",
+                                        placeId: data.place_id || "",
+                                        latitude: details.geometry?.location?.lat || null,
+                                        longitude: details.geometry?.location?.lng || null,
+                                        country: countryComponent?.long_name || "",
+                                        city: cityComponent?.long_name || "",
+                                    });
+                                }}
+
+                                query={{
+                                    key: "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4",
+                                    language: "en",
+                                    types: "(cities)",
+                                }}
+
+                                textInputProps={{
+                                    onFocus: () => console.log("focused"),
+                                }}
+
+                                onFail={(error) => {
+                                    console.log("Google Places Error:", error);
+                                }}
+
+                                styles={{
+                                    container: {
+                                        flex: 0,
+                                    },
+                                    textInputContainer: {
+                                        width: "100%",
+                                    },
+                                    textInput: {
+                                        height: 50,
+                                        borderRadius: 10,
+                                        paddingHorizontal: 15,
+                                        fontSize: 15,
+                                    },
+                                    listView: {
+                                        backgroundColor: background,
+                                        borderRadius: 10,
+                                        marginTop: 5,
+                                    },
+                                    row: {
+                                        padding: 13,
+                                    },
+                                }}
+                            />
 
 
-                        {location.city && location.country && (
-    
-    <View style={[styles.selectedLocation ]}>
-    <View style={styles.selectedLocationIcon}>
-        <MaterialCommunityIcons
-            name="map-marker-check"
-            size={22}
-            color={accent}
-        />
-    </View>
-
-    <View style={{ marginLeft: 12 }}>
-        <ThemedText style={styles.selectedCity}>
-            {location.city}
-        </ThemedText>
-
-        <ThemedText style={styles.selectedCountry}>
-            {location.country}
-        </ThemedText>
-    </View>
-</View>
-
-)}
-
-<ThemedText style={styles.label} >Where are you based (city/country)? </ThemedText>
-
-                    <TouchableOpacity
-                        onPress={getCurrentLocation}
-                        style={[styles.locationButton, {borderColor:accent} ]}
-                    >
-                        
-                        <MaterialCommunityIcons
-                            name="crosshairs-gps"
-                            size={20}
-                            color={accent}
-                        />
-
-                        <ThemedText style={{ marginLeft: 8 }}>
-                            {     loadingLocation
-                                ? "Getting location..."
-                                : "Use current location"}
-                        </ThemedText>
-                    </TouchableOpacity>
-
-<ThemedText style={styles.label}>Or search your city</ThemedText>
+                            <TouchableOpacity onPress={Submit} style={[styles.signUpButton, { backgroundColor: accent }]} disabled={loading}>
+                                <ThemedText color='#fff' type='subtitle'>{loading ? "Saving..." : "Save"} </ThemedText>
+                            </TouchableOpacity>
 
 
-                    <GooglePlacesAutocomplete
-                        placeholder="Search your city"
-                        fetchDetails={true}
-                        predefinedPlaces={[]}
-                        minLength={2}
-                        debounce={300}
-                        timeout={10000}
-                        keepResultsAfterBlur={false}
-                        enablePoweredByContainer={false}
-                        keyboardShouldPersistTaps="always"
-
-                        onPress={(data, details = null) => {
-                            if (!details) return;
-
-                            const components = details.address_components || [];
-
-                            const countryComponent = components.find((c: any) =>
-                                c.types?.includes("country")
-                            );
-
-                            const cityComponent = components.find((c: any) =>
-                                c.types?.includes("locality") ||
-                                c.types?.includes("administrative_area_level_2") ||
-                                c.types?.includes("sublocality")
-                            );
-
-                            setLocation({
-                                description: data.description || "",
-                                placeId: data.place_id || "",
-                                latitude: details.geometry?.location?.lat || null,
-                                longitude: details.geometry?.location?.lng || null,
-                                country: countryComponent?.long_name || "",
-                                city: cityComponent?.long_name || "",
-                            });
-                        }}
-
-                        query={{
-                            key: "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4",
-                            language: "en",
-                            types: "(cities)",
-                        }}
-
-                        textInputProps={{
-                            onFocus: () => console.log("focused"),
-                        }}
-
-                        onFail={(error) => {
-                            console.log("Google Places Error:", error);
-                        }}
-
-                        styles={{
-                            container: {
-                                flex: 0,
-                            },
-                            textInputContainer: {
-                                width: "100%",
-                            },
-                            textInput: {
-                                height: 50,
-                                borderRadius: 10,
-                                paddingHorizontal: 15,
-                                fontSize: 15,
-                            },
-                            listView: {
-                                backgroundColor: "white",
-                                borderRadius: 10,
-                                marginTop: 5,
-                            },
-                            row: {
-                                padding: 13,
-                            },
-                        }}
-                    />
-
-
-
-
-
-                  
-
-
-
-
-
-                    <TouchableOpacity onPress={() => Submit()} style={[styles.signUpButton, { backgroundColor: accent }]} disabled={loading}>
-                        <ThemedText color='#fff' type='subtitle'>{loading ? "Saving..." : "Save"} </ThemedText>
-                    </TouchableOpacity>
-
-                    <View style={{ height: 300 }}>
-
-                    </View>
-                </View>
-
+                        </View>
+                    )}
+                    keyExtractor={() => "profile-form"}
+                    keyboardShouldPersistTaps="always"
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{
+                        paddingBottom: hp(45),
+                    }}
+                />
             </View>
         </ScreenWrapper>
     )
@@ -460,7 +485,6 @@ export default Edit
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingHorizontal: 24,
     },
     logo: {
         width: wp(60),
@@ -523,7 +547,7 @@ const styles = StyleSheet.create({
         borderRadius: 999,
         alignItems: 'center',
         marginBottom: 24,
-        marginTop:10
+        marginTop: 10
     },
     dividerText: {
         textAlign: 'center',
@@ -581,65 +605,65 @@ const styles = StyleSheet.create({
     },
     iconStyle: {
         marginRight: wp(2)
-    }, 
-    
-   locationButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    backgroundColor: "rgba(0,0,0,0.03)",
-},
+    },
 
-locationIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-},
+    locationButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 20,
+        padding: 14,
+        borderRadius: 14,
+        borderWidth: 1,
+        backgroundColor: "rgba(0,0,0,0.03)",
+    },
 
-locationTitle: {
-    fontWeight: "600",
-    fontSize: 15,
-},
+    locationIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: 12,
+    },
 
-locationSubtitle: {
-    marginTop: 3,
-    fontSize: 12,
-    opacity: 0.6,
-},
+    locationTitle: {
+        fontWeight: "600",
+        fontSize: 15,
+    },
+
+    locationSubtitle: {
+        marginTop: 3,
+        fontSize: 12,
+        opacity: 0.6,
+    },
     selectedLocation: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-    borderRadius: 14,
-    marginTop: 12,
-    borderWidth: 1,
-    backgroundColor: "rgba(0, 150, 136, 0.26)",
-    marginBottom:7 ,
-},
+        flexDirection: "row",
+        alignItems: "center",
+        padding: 14,
+        borderRadius: 14,
+        marginTop: 8,
+        borderWidth: 1,
+        backgroundColor: "rgba(0, 150, 136, 0.26)",
+        marginBottom: 7,
+    },
 
-selectedLocationIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0, 150, 136, 0.15)",
-},
+    selectedLocationIcon: {
+        width: 42,
+        height: 42,
+        borderRadius: 21,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "rgba(0, 150, 136, 0.15)",
+    },
 
-selectedCity: {
-    fontWeight: "700",
-    fontSize: 15,
-},
+    selectedCity: {
+        fontWeight: "700",
+        fontSize: 15,
+    },
 
-selectedCountry: {
-    marginTop: 3,
-    opacity: 0.65,
-    fontSize: 13,
-},
+    selectedCountry: {
+        marginTop: 3,
+        opacity: 0.65,
+        fontSize: 13,
+    },
 });
