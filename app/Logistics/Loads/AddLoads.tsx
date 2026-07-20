@@ -881,7 +881,7 @@ const AddLoadDB = () => {
 
               <LocationSelector
                 origin={origin}
-                destination={destination}
+                destination={destination} 
                 setOrigin={setOrigin}
                 setDestination={setDestination}
                 dspFromLocation={dspFromLocation}

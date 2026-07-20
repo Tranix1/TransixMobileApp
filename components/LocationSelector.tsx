@@ -84,7 +84,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                             { color: origin ? icon : '#888' }
                         ]}
                     >
-                        {origin?.description || frstInputtTopic ||   "Select Origin"}
+                        {origin?.description || frstInputtTopic ||   "Select Origin" }
                     </ThemedText>
                 </View>
             </TouchableOpacity>
@@ -93,11 +93,11 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                 dspRoute={dspFromLocation}
                 setDspRoute={setDspFromLocation}
                 setRoute={setOrigin}
-                topic='Load Origin'
+                topic={ frstInputtTopic ||   "Select Origin"}
                 setPickLocationOnMap={setPickLocationOnMap}
             />
 
-            <ThemedText>
+            <ThemedText style={{marginTop:7}}>
                 {secondInputTopic ? secondInputTopic : "Destination Location"} <ThemedText color="red">*</ThemedText>
             </ThemedText>
 
@@ -129,7 +129,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                 dspRoute={dspToLocation}
                 setDspRoute={setDspToLocation}
                 setRoute={setDestination}
-                topic="Load Destination"
+                topic={secondInputTopic || "Destination Location"}
                 setPickLocationOnMap={setPickLocationOnMap}
             />
 

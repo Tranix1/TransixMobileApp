@@ -34,6 +34,8 @@ export default function AddDriver() {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [locationFull, setLocationFull] = useState<SelectLocationProp | null>(null);
 
+
+
     const [selfieImage, setSelfieImage] = useState<ImagePickerAsset | null>(null);
     const [driverLicense, setDriverLicense] = useState<ImagePickerAsset | null>(null);
     const [nationalId, setNationalId] = useState<ImagePickerAsset | null>(null);
@@ -205,6 +207,7 @@ export default function AddDriver() {
 
             ToastAndroid.show('Driver added successfully', ToastAndroid.SHORT);
             router.back();
+
 
         } catch (error) {
             console.error('Error adding driver:', error);

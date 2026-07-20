@@ -66,7 +66,7 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
                         {currentRole.userRole === '' ?
                             <View style={{
                                 flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-                                paddingVertical: wp(1), paddingHorizontal: wp(2)
+                                paddingVertical: wp(1), paddingHorizontal: wp(4)
                             }} >
                                 <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold', fontSize: wp(5) }} >{pageTitle} </ThemedText>
                                 <TouchableNativeFeedback onPress={() => setDspMenu(true)} >

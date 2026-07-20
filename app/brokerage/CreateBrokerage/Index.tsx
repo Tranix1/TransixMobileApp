@@ -72,6 +72,8 @@ const CreaterBrokerage = ({ }) => {
     if (!locationFull?.description) errors.push('Select your office location');
 
     if (!typeOfBroker) errors.push("Type of broker`")
+    if (operationCountries.length <= 0) errors.push('Select countries brokerage operates');
+
 
     if (errors.length > 0) {
       Alert.alert(
@@ -168,9 +170,6 @@ const CreaterBrokerage = ({ }) => {
       };
 
       await addDocumentWithId('verifiedUsers',brokerageId ,brokerVerificationData);
-
-
-
 
 
       // ===============================

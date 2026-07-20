@@ -38,12 +38,10 @@ export function GooglePlaceAutoCompleteComp({
     // Test API key function
     const testApiKey = async () => {
         try {
-            console.log('Testing API key...');
             const response = await fetch(
                 `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=test&key=AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4`
             );
             const data = await response.json();
-            console.log('API test response:', data);
         } catch (error) {
             console.error('API test error:', error);
         }
@@ -56,31 +54,23 @@ export function GooglePlaceAutoCompleteComp({
 
     async function reverseGeocode(lat: number, lng: number) {
         try {
-            console.log('Starting reverse geocoding for:', lat, lng);
             const apiKey = "AIzaSyDt9eSrTVt24TVG0nxR4b6VY_eGZyHD4M4";
             const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
             const res = await fetch(url);
             const data = await res.json();
 
-            console.log('Reverse geocoding response:', data);
 
             if (data.status !== "OK") throw new Error("Geocoding failed");
 
             const result = data.results[0];
-            console.log('First result:', result);
-            console.log('Address components:', result.address_components);
 
             const countryComponent = result.address_components?.find((c: any) => {
-                console.log('Checking country component:', c);
                 return c.types?.includes("country");
             });
             const cityComponent = result.address_components?.find((c: any) => {
-                console.log('Checking city component:', c);
                 return c.types?.includes("locality");
             });
 
-            console.log('Found country component:', countryComponent);
-            console.log('Found city component:', cityComponent);
 
             return {
                 description: result.formatted_address || '',
@@ -121,9 +111,9 @@ export function GooglePlaceAutoCompleteComp({
                                 minLength={2}
                                 debounce={300}
                                 timeout={10000}
-                                keepResultsAfterBlur={false}
+                                keepResultsAfterBlur={true}
                                 enablePoweredByContainer={false}
-                                keyboardShouldPersistTaps="always"
+                                keyboardShouldPersistTaps="handled"
                                 onPress={(data, details = null) => {
                                     console.log('Location selected - data:', data);
                                     console.log('Location selected - details:', details);
@@ -165,10 +155,7 @@ export function GooglePlaceAutoCompleteComp({
                                         console.log('GooglePlacesAutocomplete focused');
                                         setIsDropdownVisible(true);
                                     },
-                                    onBlur: () => {
-                                        console.log('GooglePlacesAutocomplete blurred');
-                                        setIsDropdownVisible(false);
-                                    },
+                                    
                                     onChangeText: (text) => {
                                         console.log('Search text changed:', text);
                                     },

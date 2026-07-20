@@ -43,7 +43,11 @@ const CreateFleet = () => {
 
 
     const [baseAdress, setBaseAdress] = useState<SelectLocationProp | null>(null);
+    console.log(baseAdress , "bse Address")
     const [billingAddress, setbillingAddress] = useState<SelectLocationProp | null>(null);
+    console.log("billing address" , billingAddress)
+
+
     const [dspFromLocation, setDspFromLocation] = useState(false);
     const [locationPicKERdSP, setPickLocationOnMap] = useState(false);
     const [dspToLocation, setDspToLocation] = useState(false);
@@ -53,6 +57,7 @@ const CreateFleet = () => {
 
     const icon = useThemeColor('icon');
     const background = useThemeColor('background');
+    const accent = useThemeColor("accent")
 
     const styles = {
         selectedTextStyle: {
@@ -90,6 +95,7 @@ const CreateFleet = () => {
         if (!fleetPhone) errors.push('Fleet phone');
         if (!billingAddress?.description) errors.push('Billing address');
         if (!baseAdress?.description) errors.push('Base location');
+        if (operationCountries.length <= 0) errors.push('Select countries fleet operates');
 
         if (errors.length > 0) {
             Alert.alert(
@@ -142,7 +148,7 @@ const CreateFleet = () => {
 
                 baseAdress: baseAdress?.description,
                 baseAdressFull: baseAdress,
-                operationCountries,
+                operationCountries:operationCountries,
                 location: billingAddress || baseAdress,
 
                 documents: {
@@ -171,7 +177,7 @@ const CreateFleet = () => {
                 name: fleetData.fleetName,
                 organizationPhone: fleetData.fleetPhone,
                 organizationEmail: fleetData.fleetEmail,
-                operationCountries,
+                operationCountries:operationCountries,
 
                 countryCode: fleetData.fleetCountryCode?.name,
                 typeOfFleet: fleetData.typeOfFleet,
@@ -203,7 +209,7 @@ const CreateFleet = () => {
 
                 typeOfFleet: fleetData.typeOfFleet,
 
-                operationCountries,
+                operationCountries:operationCountries,
 
                 billingAddress: billingAddress?.description,
                 billingAddressFull: billingAddress,
@@ -247,7 +253,7 @@ const CreateFleet = () => {
                 ownerName: user.displayName || user.organisation,
 
                 location: billingAddress || baseAdress,
-                operationCountries,
+                operationCountries:operationCountries,
 
                 verificationStatus: "pending",
 
@@ -326,6 +332,62 @@ const CreateFleet = () => {
                         value={fleetName}
                         onChangeText={setFleetName}
                     />
+                    
+                    <ThemedText>Fleet Phone Number</ThemedText>
+                    <Input
+                        Icon={
+                            <>
+                                <Dropdown
+                                    style={[{ width: wp(15) }]}
+                                    selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
+                                    data={countryCodes}
+                                    maxHeight={hp(60)}
+                                    labelField="name"
+                                    valueField="name"
+                                    placeholder="+00"
+                                    value={fleetCountryCode?.name}
+                                    itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
+                                    activeColor={background}
+                                    containerStyle={{
+                                        borderRadius: wp(3),
+                                        backgroundColor: background,
+                                        borderWidth: 0,
+                                        shadowColor: '#000',
+                                        width: wp(30),
+                                        shadowOffset: { width: 0, height: 9 },
+                                        shadowOpacity: 0.5,
+                                        shadowRadius: 12.35,
+                                        elevation: 19,
+                                        paddingVertical: wp(1),
+                                    }}
+                                    onChange={item => setFleetCountryCode(item)}
+                                    renderLeftIcon={() => <></>}
+                                    renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
+                                    renderItem={(item, selected) => (
+                                        <>
+                                            <View style={[styles.item, selected && {}]}>
+                                                <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
+                                                {selected && <Ionicons color={icon} name="checkmark-outline" size={wp(5)} />}
+                                            </View>
+                                            <Divider />
+                                        </>
+                                    )}
+                                />
+                                <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
+                            </>
+                        }
+                        value={fleetPhone}
+                        placeholder="700 000 000"
+                        onChangeText={setFleetPhone}
+                        keyboardType='numeric'
+                    />
+
+                    <ThemedText>Fleet Email Address</ThemedText>
+                    <Input
+                        placeholder="Enter fleet owner email"
+                        value={fleetEmail}
+                        onChangeText={setFleetEmail}
+                    />
 
 
                     <LocationSelector
@@ -350,12 +412,12 @@ const CreateFleet = () => {
 
                     <>
 
-                        <ThemedText style={{ marginBottom: wp(4) }}>
+                        <ThemedText style={{ marginBottom: wp(2),color:accent,marginTop: wp(3) }}>
                             {operationCountries?.join(', ') || '--'}
                         </ThemedText>
 
                         <ThemedText>
-                            Permitted countries<ThemedText color="red">*</ThemedText>
+                            Select the countries where your Fleet operates.<ThemedText color="red">*</ThemedText>
                         </ThemedText>
 
                         <View style={{
@@ -410,60 +472,6 @@ const CreateFleet = () => {
 
 
 
-                    <ThemedText>Fleet Phone Number</ThemedText>
-                    <Input
-                        Icon={
-                            <>
-                                <Dropdown
-                                    style={[{ width: wp(15) }]}
-                                    selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
-                                    data={countryCodes}
-                                    maxHeight={hp(60)}
-                                    labelField="name"
-                                    valueField="name"
-                                    placeholder="+00"
-                                    value={fleetCountryCode?.name}
-                                    itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-                                    activeColor={background}
-                                    containerStyle={{
-                                        borderRadius: wp(3),
-                                        backgroundColor: background,
-                                        borderWidth: 0,
-                                        shadowColor: '#000',
-                                        width: wp(30),
-                                        shadowOffset: { width: 0, height: 9 },
-                                        shadowOpacity: 0.5,
-                                        shadowRadius: 12.35,
-                                        elevation: 19,
-                                        paddingVertical: wp(1),
-                                    }}
-                                    onChange={item => setFleetCountryCode(item)}
-                                    renderLeftIcon={() => <></>}
-                                    renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
-                                    renderItem={(item, selected) => (
-                                        <>
-                                            <View style={[styles.item, selected && {}]}>
-                                                <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
-                                                {selected && <Ionicons color={icon} name="checkmark-outline" size={wp(5)} />}
-                                            </View>
-                                            <Divider />
-                                        </>
-                                    )}
-                                />
-                                <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
-                            </>
-                        }
-                        value={fleetPhone}
-                        placeholder="700 000 000"
-                        onChangeText={setFleetPhone}
-                    />
-
-                    <ThemedText>Fleet Email Address</ThemedText>
-                    <Input
-                        placeholder="Enter fleet owner email"
-                        value={fleetEmail}
-                        onChangeText={setFleetEmail}
-                    />
 
                     <DocumentUploader
                         documents={selectedFleetDocuments[0]}
