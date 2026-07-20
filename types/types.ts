@@ -279,6 +279,7 @@ export type PrivateTruckType = {
 };
 export type Load = {
     id: string,
+    cargoId : string
     distance: string,
     duration: string,
     durationInTraffic: string,

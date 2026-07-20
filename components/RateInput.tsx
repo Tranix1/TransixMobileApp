@@ -15,8 +15,8 @@ interface RateInputProps {
     distance: string;
     selectedCurrency: { id: number, name: string };
     setSelectedCurrency: (currency: { id: number, name: string }) => void;
-    ratePerKm : number
-    setRatePerKm :(rate: number) => void;
+    ratePerKm: number
+    setRatePerKm: (rate: number) => void;
     selectedModelType: { id: number, name: string };
     setSelectedModelType: (model: { id: number, name: string }) => void;
     rateExplanation: string;
@@ -40,8 +40,8 @@ export const RateInput: React.FC<RateInputProps> = ({
     distance,
     selectedCurrency,
     setSelectedCurrency,
-    ratePerKm ,
-    setRatePerKm ,
+    ratePerKm,
+    setRatePerKm,
     selectedModelType,
     setSelectedModelType,
     rateExplanation,
@@ -62,17 +62,43 @@ export const RateInput: React.FC<RateInputProps> = ({
     const model = isReturnRate ? (returnModelType || selectedReturnModelType) : selectedModelType;
     const setModel = isReturnRate ? (setReturnModelType || setSelectedReturnModelType) : setSelectedModelType;
 
-    
+    // Ensure currency and model have valid defaults
+    const safeCurrency = currency && currency.id && currency.name ? currency : { id: 1, name: 'USD' };
+    const safeModel = model && model.id && model.name ? model : { id: 1, name: 'Solid' };
+
+
     const handleRateChange = async (value: string) => {
         setRate(value);
 
+        if (!value || !distance) {
+            return;
+        }
+
         const usdPrice = await convertToUSD(
             Number(value),
-            selectedCurrency.name
+            safeCurrency.name
         );
 
+        let totalPrice = usdPrice;
+
+        switch (safeModel.name) {
+
+            case "/ Tonne":
+                totalPrice = usdPrice * 30;
+                break;
+
+            case "/ Litre":
+                totalPrice = usdPrice * 35000;
+                break;
+
+            case "Solid":
+            default:
+                totalPrice = usdPrice;
+                break;
+        }
+
         const calculatedRate = calculateRatePerKm(
-            usdPrice,
+            totalPrice,
             distance
         );
 
@@ -85,18 +111,13 @@ export const RateInput: React.FC<RateInputProps> = ({
     const rateLabel = isReturnRate ? "Return Price" : "Price";
     const explanationLabel = isReturnRate ? "Return Terms" : "Explain rate";
 
-    // Ensure currency and model have valid defaults
-    const safeCurrency = currency && currency.id && currency.name ? currency : { id: 1, name: 'USD' };
-    const safeModel = model && model.id && model.name ? model : { id: 1, name: 'Solid' };
-
-
 
     // Auto-sync return currency with main currency when main currency changes
     useEffect(() => {
         if (isReturnRate && selectedCurrency && safeSetCurrency) {
             safeSetCurrency(selectedCurrency);
         }
-    }, [selectedCurrency, isReturnRate, safeSetCurrency]);
+    }, [selectedCurrency, isReturnRate, safeSetCurrency,]);
 
     // Ensure return currency and model are properly initialized
     useEffect(() => {
@@ -109,6 +130,20 @@ export const RateInput: React.FC<RateInputProps> = ({
             }
         }
     }, [isReturnRate, currency, model, safeSetCurrency, safeSetModel]);
+
+
+    useEffect(() => {
+
+        if (rate && distance) {
+            handleRateChange(rate);
+        }
+
+    }, [
+        safeModel.name,
+        safeCurrency.name,
+        distance
+    ]);
+
 
     return (
         <View>
@@ -138,21 +173,40 @@ export const RateInput: React.FC<RateInputProps> = ({
                     />
 
 
-                    <View style={{ flexDirection: "row", alignItems: "center", position:"absolute", left :-17, bottom:-7 ,  }}>
+                    <View
+                        style={{
+                            position: "absolute",
+                            left: -35,
+                            bottom: -10,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            width: wp(70),
+                        }}
+                    >
                         <ThemedText
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
                             style={{
-                                fontSize: 12,
+                                flex: 1,
+                                fontSize: 11,
                                 fontWeight: "500",
-                                marginRight: 6,
+                                // marginRight: 2,
                             }}
                         >
-                            Calc: price ÷ (distance × 2)
+                            {
+                                safeModel.name === "Solid"
+                                    ? "Calc: price ÷ (distance × 2)"
+                                    : safeModel.name === "/ Tonne"
+                                        ? "Calc: price × 30T ÷ (distance × 2)"
+                                        : "Calc: price × 35000L ÷ (distance × 2)"
+                            }
                         </ThemedText>
+
 
                         <ThemedText
                             style={{
                                 fontSize: 14,
-                                fontWeight: "600",
+                                fontWeight: "700",
                                 color:
                                     ratePerKm < 2
                                         ? '#EF4444'
@@ -179,7 +233,7 @@ export const RateInput: React.FC<RateInputProps> = ({
 
             {!isReturnRate && (
                 <>
-                    <ThemedText>
+                    <ThemedText style={{ marginTop: 10 }}>
                         {explanationLabel}
                         <ThemedText style={{ fontStyle: "italic" }}>
                             {isReturnRate ? "" : " like link and triaxle rate"}
@@ -189,7 +243,7 @@ export const RateInput: React.FC<RateInputProps> = ({
                         placeholder={isReturnRate ? "Enter return terms" : "explain rate if neccesary"}
                         value={rateExplanation}
                         onChangeText={setRateExplanation}
-                        style={{ height: 45.5 }}
+                        style={{ height: 45.5, }}
                     />
                 </>
             )}

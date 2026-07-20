@@ -210,6 +210,7 @@ const accent = useThemeColor("accent")
               value={newCustomer.phone}
               onChangeText={(t: string) => setNewCustomer(prev => ({ ...prev, phone: t }))}
               style={{ marginTop: wp(2) }}
+              keyboardType='numeric'
             />
 
             <Input
@@ -222,14 +223,14 @@ const accent = useThemeColor("accent")
             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: wp(3) }}>
               <TouchableOpacity
                 onPress={() => setShowAddModal(false)}
-                style={{ padding: wp(2), marginRight: wp(2) }}
+                style={{ padding: wp(2), marginRight: wp(2) ,paddingHorizontal:25}}
                 disabled={saving}
               >
                 <ThemedText>Cancel</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleAddCustomer}
-                style={{ padding: wp(2), backgroundColor: '#4CAF50', borderRadius: 8 }}
+                style={{ padding: wp(2), backgroundColor: accent, borderRadius: 8,paddingHorizontal:25 }}
                 disabled={saving}
               >
                 <ThemedText style={{ color: '#fff' }}>

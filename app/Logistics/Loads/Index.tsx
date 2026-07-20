@@ -26,6 +26,7 @@ const Index = () => {
     const [loadingMore, setLoadingMore] = useState(false);
     const [Loads, setLoads] = useState<Load[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [hasMoreLoads, setHasMoreLoads] = useState(true);
     const [error, setError] = useState<string | null>(null)
 
     const [showfilter, setShowfilter] = useState(false)
@@ -46,327 +47,120 @@ const Index = () => {
     const [expireAvailableLoads, setExpiredAvailableLods] = React.useState<"ALL" | "AVAILABLE" | "EXPIRED">("ALL")
     const [selectedAccountType, setSelectedAccountType] = React.useState<"ALL" | "BROKERAGE" | "Fleet" | "DRIVER">("ALL")
 
-const nowTimeStamp = Timestamp.now()
 
-    
-
-    const LoadTructs = async () => {
-        try {
-            setIsLoading(true)
-            setError(null)
-
-
-            let filters: any[] = [];
-            let collectionName: string | null = null;
-
-            if(loadVisibility ==="Network"){
-
-                if(selectedAccountType !== "ALL"){
-                     filters = [
-                        where("type", "==", selectedAccountType),
-                        where("verificationStatus", "==", "approved"),
-
-                    ];
-                }else{
-                    
-                    filters = [
-                        where("verificationStatus", "==", "approved"),
-                    ];
-                }
-
-                    
-
-                    
-                    // Public cargo always lives here
-                    collectionName = "organizationProfiles";
-            }
-
-            // =============================
-            // CARGO ID MODE (EXACT LOAD)
-            // =============================
-
-         else   if (cargoId) {
-
-                if (cargoVisibilityG === 'PUBLIC') {
-
-                    filters = [
-                        where("approvalStatus", "==", "approved"),
-                        where("cargoId", "==", cargoId),
-                    ];
-                    // Public cargo always lives here
-                    collectionName = "Cargo";
-
-                } else if (cargoVisibilityG === 'PRIVATE') {
-                    filters = [
-                        where("cargoId", "==", cargoId),
-                    ];
-                    // Private cargo belongs to owner
-                    if (currentRole?.accType === "fleet" || currentRole.accType === "driver") {
-                        collectionName = `fleets/${currentRole.fleetId}/Cargo`;
-
-                    } else if (currentRole?.accType === "brokerage") {
-                        collectionName = `brokers/${currentRole.brokerId}/Cargo`;
-                    }
-                }
-
-
-            }
-            // =============================
-            // NORMAL LIST MODE
-            // =============================
-            else {
-
-                if (currentRole?.accType === "fleet" && loadVisibility === "Private") {
-
-                    collectionName = `fleets/${currentRole.fleetId}/Cargo`;
-
-
-
-                } else if (
-                    currentRole?.accType === "brokerage" &&
-                    loadVisibility === "Private"
-                ) {
-                    collectionName = `brokerages/${currentRole.organizationId}/Cargo`;
-
-
-                } else {
-
-                    collectionName = "Cargo";
-                    if (expireAvailableLoads === "ALL") {
-
-                        filters = [
-                            where("approvalStatus", "==", "approved"),
-                            where("state", "==", "available"),
-                            where("expiresAt", ">", nowTimeStamp),
-                        ];
-                    } else if (expireAvailableLoads === "AVAILABLE") {
-
-                        filters = [
-                            where("approvalStatus", "==", "approved"),
-                            where("state", "==", "available"),
-                            where("expiresAt", ">", nowTimeStamp),
-                            where("organizationId", "==", currentRole.organizationId),
-                        ];
-                    } else if (expireAvailableLoads === "EXPIRED") {
-
-                        filters = [
-                            where("approvalStatus", "==", "approved"),
-                            where("state", "==", "available"),
-                            where("expiresAt", "<=", nowTimeStamp),
-                            where("organizationId", "==", currentRole.organizationId),
-                        ];
-                    }
-
-                }
-            }
-
-
-            // Safety
-            if (!collectionName) {
-                console.log("No cargo source found");
-                return [];
-            }
-
-
-            const maLoads = await fetchDocuments(
-                collectionName,
-                50,
-                undefined,
-                filters
-            );
-
-
-
-            if (maLoads.data.length) {
-                if (filters.length > 0 && maLoads.data.length < 0) setFilteredPNotAavaialble(true)
-                setLoads(maLoads.data as Load[])
-                console.log('Loads fetched:', maLoads.data);
-                setLastVisible(maLoads.lastVisible)
-            } else {
-                setLoads([])
-                setLastVisible(null)
-            }
-        } catch (error) {
-            console.error('Error loading loads:', error)
-            setError('Failed to load loads. Please try again.')
-            ToastAndroid.show('Failed to load loads', ToastAndroid.SHORT)
-        } finally {
-            setIsLoading(false)
-        }
-    }
-    useEffect(() => {
         
-        LoadTructs();
-    }, [loadVisibility, currentRole, expireAvailableLoads ,selectedAccountType])
-    
+const LoadTructs = async () => {
 
-    useEffect(()=>{
-        setLoads([])
- setLoadVisibility(loadVisibilityBfr)
-    },[loadVisibilityBfr])
-
-    const onRefresh = async () => {
-        try {
-            setRefreshing(true);
-            setError(null);
-            await LoadTructs();
-        } catch (error) {
-            console.error('Error refreshing loads:', error);
-            setError('Failed to refresh loads. Please try again.');
-            ToastAndroid.show('Failed to refresh loads', ToastAndroid.SHORT);
-        } finally {
-            setRefreshing(false);
-        }
-    };
-
-   const loadMoreLoads = async () => {
-    if (loadingMore || !lastVisible) return;
+    const nowTimeStamp = Timestamp.now();
 
     try {
-        setLoadingMore(true);
+
+        setIsLoading(true);
         setError(null);
+        setHasMoreLoads(true);
+        setLastVisible(null);
+
 
         let filters: any[] = [];
         let collectionName: string | null = null;
 
 
-        // =============================
-        // NETWORK MODE
-        // =============================
         if (loadVisibility === "Network") {
 
-            if (selectedAccountType !== "ALL") {
-
-                filters = [
+            filters = selectedAccountType !== "ALL"
+                ? [
                     where("type", "==", selectedAccountType),
                     where("verificationStatus", "==", "approved"),
-                ];
-
-            } else {
-
-                filters = [
+                ]
+                : [
                     where("verificationStatus", "==", "approved"),
                 ];
 
-            }
-
             collectionName = "organizationProfiles";
-        }
 
 
-        // =============================
-        // CARGO ID MODE
-        // =============================
-        else if (cargoId) {
+        } else if (cargoId) {
+
+
+            filters = [
+                where("cargoId", "==", cargoId),
+            ];
+
 
             if (cargoVisibilityG === "PUBLIC") {
 
-                filters = [
-                    where("approvalStatus", "==", "approved"),
-                    where("cargoId", "==", cargoId),
-                ];
+                filters.push(
+                    where("approvalStatus", "==", "approved")
+                );
 
                 collectionName = "Cargo";
 
 
-            } else if (cargoVisibilityG === "PRIVATE") {
-
-
-                filters = [
-                    where("cargoId", "==", cargoId),
-                ];
-
+            } else {
 
                 if (
                     currentRole?.accType === "fleet" ||
                     currentRole?.accType === "driver"
                 ) {
 
-                    collectionName = `fleets/${currentRole.fleetId}/Cargo`;
+                    collectionName =
+                        `fleets/${currentRole.fleetId}/Cargo`;
 
+                } 
+                else if (currentRole?.accType === "brokerage") {
 
-                } else if (currentRole?.accType === "brokerage") {
-
-                    collectionName = `brokerages/${currentRole.organizationId}/Cargo`;
-
+                    collectionName =
+                        `brokerages/${currentRole.organizationId}/Cargo`;
                 }
             }
 
-        }
+
+        } else {
 
 
-        // =============================
-        // NORMAL LOAD LIST
-        // =============================
-        else {
-
-
-            // Fleet private loads
             if (
                 currentRole?.accType === "fleet" &&
                 loadVisibility === "Private"
             ) {
 
-                collectionName = `fleets/${currentRole.fleetId}/Cargo`;
+                collectionName =
+                    `fleets/${currentRole.fleetId}/Cargo`;
 
 
-            }
-
-
-            // Brokerage private loads
-            else if (
+            } else if (
                 currentRole?.accType === "brokerage" &&
                 loadVisibility === "Private"
             ) {
 
-                collectionName = `brokerages/${currentRole.organizationId}/Cargo`;
+                collectionName =
+                    `brokerages/${currentRole.organizationId}/Cargo`;
 
-            }
 
-
-            // Public loads
-            else {
+            } else {
 
                 collectionName = "Cargo";
 
 
-                if (expireAvailableLoads === "ALL") {
+                filters = [
+                    where("approvalStatus", "==", "approved"),
+                    where("state", "==", "available"),
+                    where(
+                        "expiresAt",
+                        expireAvailableLoads === "EXPIRED" ? "<=" : ">",
+                        nowTimeStamp
+                    ),
+                ];
 
-                    filters = [
-                        where("approvalStatus", "==", "approved"),
-                        where("state", "==", "available"),
-                        where("expiresAt", ">", nowTimeStamp),
-                    ];
 
+                if(expireAvailableLoads === "AVAILABLE"){
 
-                } else if (expireAvailableLoads === "AVAILABLE") {
-
-
-                    filters = [
-                        where("approvalStatus", "==", "approved"),
-                        where("state", "==", "available"),
-                        where("expiresAt", ">", nowTimeStamp),
+                    filters.push(
                         where(
                             "organizationId",
                             "==",
                             currentRole.organizationId
-                        ),
-                    ];
-
-
-                } else if (expireAvailableLoads === "EXPIRED") {
-
-
-                    filters = [
-                        where("approvalStatus", "==", "approved"),
-                        where("state", "==", "available"),
-                        where("expiresAt", "<=", nowTimeStamp),
-                        where(
-                            "organizationId",
-                            "==",
-                            currentRole.organizationId
-                        ),
-                    ];
+                        )
+                    );
 
                 }
             }
@@ -374,8 +168,167 @@ const nowTimeStamp = Timestamp.now()
 
 
 
-        if (!collectionName) {
-            console.log("No cargo collection found");
+        if(!collectionName){
+            setLoads([]);
+            return;
+        }
+
+
+
+        const result = await fetchDocuments(
+            collectionName,
+            50,
+            undefined,
+            filters
+        );
+
+
+
+        const data = result.data as Load[];
+
+
+
+        setLoads(data);
+
+
+        setLastVisible(result.lastVisible || null);
+
+
+
+        // stop pagination if less than 50
+        if(!result.lastVisible || data.length < 50){
+            setHasMoreLoads(false);
+        }
+
+
+        console.log("Initial loads:", data.length);
+
+
+
+    } catch(error){
+
+        console.log(error);
+
+        setError(
+            "Failed to load loads. Please try again."
+        );
+
+
+    } finally {
+
+        setIsLoading(false);
+
+    }
+};
+        useEffect(() => {
+            
+            LoadTructs();
+        }, [loadVisibility, currentRole, expireAvailableLoads ,selectedAccountType])
+        
+
+        useEffect(()=>{
+            setLoads([])
+    setLoadVisibility(loadVisibilityBfr)
+        },[loadVisibilityBfr])
+
+        const onRefresh = async () => {
+            try {
+                setRefreshing(true);
+                setError(null);
+                await LoadTructs();
+            } catch (error) {
+                console.error('Error refreshing loads:', error);
+                setError('Failed to refresh loads. Please try again.');
+                ToastAndroid.show('Failed to refresh loads', ToastAndroid.SHORT);
+            } finally {
+                setRefreshing(false);
+            }
+        };
+
+  const loadMoreLoads = async () => {
+
+
+    if(
+        loadingMore ||
+        !lastVisible ||
+        !hasMoreLoads
+    ){
+        return;
+    }
+
+
+
+    try {
+
+        setLoadingMore(true);
+
+
+        const nowTimeStamp = Timestamp.now();
+
+
+        let filters:any[] = [];
+        let collectionName:string | null = null;
+
+
+
+        if(loadVisibility === "Network"){
+
+
+            filters =
+            selectedAccountType !== "ALL"
+            ?
+            [
+                where("type","==",selectedAccountType),
+                where(
+                    "verificationStatus",
+                    "==",
+                    "approved"
+                )
+            ]
+            :
+            [
+                where(
+                    "verificationStatus",
+                    "==",
+                    "approved"
+                )
+            ];
+
+
+            collectionName =
+                "organizationProfiles";
+
+
+
+        } else {
+
+
+            collectionName = "Cargo";
+
+
+            filters = [
+                where(
+                    "approvalStatus",
+                    "==",
+                    "approved"
+                ),
+                where(
+                    "state",
+                    "==",
+                    "available"
+                ),
+                where(
+                    "expiresAt",
+                    ">",
+                    nowTimeStamp
+                ),
+            ];
+
+        }
+
+
+
+        if(!collectionName){
             return;
         }
 
@@ -390,40 +343,73 @@ const nowTimeStamp = Timestamp.now()
 
 
 
-        if (result?.data?.length) {
-
-            setLoads(prev => [
-                ...prev,
-                ...(result.data as Load[])
-            ]);
-
-            setLastVisible(result.lastVisible);
+        const newData = result.data as Load[];
 
 
-        } else {
 
+        if(newData.length === 0){
+
+            setHasMoreLoads(false);
             setLastVisible(null);
+            return;
 
         }
 
 
 
-    } catch (error) {
+        setLoads(prev => {
 
-        console.error("Error loading more loads:", error);
 
-        setError("Failed to load more loads. Please try again.");
+            const existingIds = new Set(
+                prev.map(item=>item.cargoId)
+            );
 
-        ToastAndroid.show(
-            "Failed to load more loads",
-            ToastAndroid.SHORT
+
+            const unique = newData.filter(
+                item=>!existingIds.has(item.cargoId)
+            );
+
+
+            return [
+                ...prev,
+                ...unique
+            ];
+
+        });
+
+
+
+        setLastVisible(
+            result.lastVisible || null
         );
+
+
+
+        if(
+            !result.lastVisible ||
+            newData.length < 50
+        ){
+
+            setHasMoreLoads(false);
+
+        }
+
+
+
+    } catch(error){
+
+        console.log(
+            "Load more error",
+            error
+        );
+
 
     } finally {
 
         setLoadingMore(false);
 
     }
+
 };
 
     return (

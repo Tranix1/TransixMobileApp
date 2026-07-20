@@ -86,15 +86,15 @@ export const litresCapacity = [
 ]
 
 export const tonneSizes = [
-    { id: 0, name: '1-3 T' },
-    { id: 1, name: '3-6 T' },
-    { id: 2, name: '7-10 T' },
-    { id: 3, name: '11-13 T' },
-    { id: 4, name: '12-15 T' },
-    { id: 5, name: '16-20 T' },
-    { id: 5, name: '30T' },
-    { id: 7, name: '34T' },
-];
+    { id: 0, name: '34T' },
+    { id: 1, name: '30T' },
+    { id: 2, name: '16-20 T' },
+    { id: 3, name: '12-15 T' },
+    { id: 4, name: '11-13 T' },
+    { id: 5, name: '7-10 T' },
+    { id: 6, name: '3-6 T' },
+    { id: 7, name: '1-3 T' },
+]
 
 
 export const countryCodes = [

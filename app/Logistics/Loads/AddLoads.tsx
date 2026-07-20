@@ -687,6 +687,7 @@ const AddLoadDB = () => {
       });
 
       ToastAndroid.show('load added successfully.', ToastAndroid.SHORT);
+      router.back()
     } catch (error) {
       console.error("Error submitting load:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
@@ -762,7 +763,7 @@ const AddLoadDB = () => {
         onStepPress={setStep}
       />
 
-      <View style={{ flex: 1, position: 'relative' }}>
+      <View style={{ flex: 1, position: 'relative',paddingHorizontal:7 }}>
 
         {/* ============ NEW FIRST STEP: BASIC INFO ============ */}
         {currentStepKey === 'basicInfo' && (
@@ -774,7 +775,7 @@ const AddLoadDB = () => {
               <Divider />
 
               <ThemedText>
-                Customer<ThemedText color="red">*</ThemedText>
+                Customer (Load Owner / Shipper)<ThemedText color="red">*</ThemedText>
               </ThemedText>
               <CustomerPicker
                 userId={user?.uid || ""}
