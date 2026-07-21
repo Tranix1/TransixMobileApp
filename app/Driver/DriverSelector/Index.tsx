@@ -252,7 +252,6 @@ const filteredFleets =
 
     
     const handleDriverSelect = async (fleet: any) => {    
-        console.log(fleet.referrerCode,  "The refferal code  ")
         if (!fleet) return;
 
         const fleetRole = {

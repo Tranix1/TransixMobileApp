@@ -720,7 +720,8 @@ export default function DriverIndex() {
 
                 if (!currentRole.fleetId) return
                 const driverRef = doc(db, 'fleets', currentRole.fleetId, 'Drivers', `DRV_${driver.userId}`);
-                await setDoc(driverRef, { ...fleetUpdate, driverId: `DRV_${driver?.userId}`, fullName: driver.fullName, phoneNumber: driver.phoneNumber, email: driver.email, timeStamp: serverTimestamp(), profilePhoto: driver.selfieImage, payment: buildPaymentPayload(driver.id), });
+                await setDoc(driverRef, { ...fleetUpdate, driverId: `DRV_${driver?.userId}`, 
+                 driverUserId:driver?.userId,   fullName: driver.fullName, phoneNumber: driver.phoneNumber, driverEmail: driver.email, timeStamp: serverTimestamp(), profilePhoto: driver.selfieImage, payment: buildPaymentPayload(driver.id), });
 
             }));
 

@@ -175,12 +175,12 @@ const LoadTructs = async () => {
 
 
 
-        const result = await fetchDocuments(
-            collectionName,
-            50,
-            undefined,
-            filters
-        );
+            const result = await fetchDocuments(
+                collectionName,
+                50,
+                undefined,
+                filters
+            );
 
 
 
@@ -245,172 +245,172 @@ const LoadTructs = async () => {
             }
         };
 
-  const loadMoreLoads = async () => {
-
-
-    if(
-        loadingMore ||
-        !lastVisible ||
-        !hasMoreLoads
-    ){
-        return;
-    }
-
-
-
-    try {
-
-        setLoadingMore(true);
-
-
-        const nowTimeStamp = Timestamp.now();
-
-
-        let filters:any[] = [];
-        let collectionName:string | null = null;
-
-
-
-        if(loadVisibility === "Network"){
-
-
-            filters =
-            selectedAccountType !== "ALL"
-            ?
-            [
-                where("type","==",selectedAccountType),
-                where(
-                    "verificationStatus",
-                    "==",
-                    "approved"
-                )
-            ]
-            :
-            [
-                where(
-                    "verificationStatus",
-                    "==",
-                    "approved"
-                )
-            ];
-
-
-            collectionName =
-                "organizationProfiles";
-
-
-
-        } else {
-
-
-            collectionName = "Cargo";
-
-
-            filters = [
-                where(
-                    "approvalStatus",
-                    "==",
-                    "approved"
-                ),
-                where(
-                    "state",
-                    "==",
-                    "available"
-                ),
-                where(
-                    "expiresAt",
-                    ">",
-                    nowTimeStamp
-                ),
-            ];
-
-        }
-
-
-
-        if(!collectionName){
-            return;
-        }
-
-
-
-        const result = await fetchDocuments(
-            collectionName,
-            50,
-            lastVisible,
-            filters
-        );
-
-
-
-        const newData = result.data as Load[];
-
-
-
-        if(newData.length === 0){
-
-            setHasMoreLoads(false);
-            setLastVisible(null);
-            return;
-
-        }
-
-
-
-        setLoads(prev => {
-
-
-            const existingIds = new Set(
-                prev.map(item=>item.cargoId)
-            );
-
-
-            const unique = newData.filter(
-                item=>!existingIds.has(item.cargoId)
-            );
-
-
-            return [
-                ...prev,
-                ...unique
-            ];
-
-        });
-
-
-
-        setLastVisible(
-            result.lastVisible || null
-        );
-
+    const loadMoreLoads = async () => {
 
 
         if(
-            !result.lastVisible ||
-            newData.length < 50
+            loadingMore ||
+            !lastVisible ||
+            !hasMoreLoads
         ){
-
-            setHasMoreLoads(false);
-
+            return;
         }
 
 
 
-    } catch(error){
+        try {
 
-        console.log(
-            "Load more error",
-            error
-        );
+            setLoadingMore(true);
 
 
-    } finally {
+            const nowTimeStamp = Timestamp.now();
 
-        setLoadingMore(false);
 
-    }
+            let filters:any[] = [];
+            let collectionName:string | null = null;
 
-};
+
+
+            if(loadVisibility === "Network"){
+
+
+                filters =
+                selectedAccountType !== "ALL"
+                ?
+                [
+                    where("type","==",selectedAccountType),
+                    where(
+                        "verificationStatus",
+                        "==",
+                        "approved"
+                    )
+                ]
+                :
+                [
+                    where(
+                        "verificationStatus",
+                        "==",
+                        "approved"
+                    )
+                ];
+
+
+                collectionName =
+                    "organizationProfiles";
+
+
+
+            } else {
+
+
+                collectionName = "Cargo";
+
+
+                filters = [
+                    where(
+                        "approvalStatus",
+                        "==",
+                        "approved"
+                    ),
+                    where(
+                        "state",
+                        "==",
+                        "available"
+                    ),
+                    where(
+                        "expiresAt",
+                        ">",
+                        nowTimeStamp
+                    ),
+                ];
+
+            }
+
+
+
+            if(!collectionName){
+                return;
+            }
+
+
+
+            const result = await fetchDocuments(
+                collectionName,
+                50,
+                lastVisible,
+                filters
+            );
+
+
+
+            const newData = result.data as Load[];
+
+
+
+            if(newData.length === 0){
+
+                setHasMoreLoads(false);
+                setLastVisible(null);
+                return;
+
+            }
+
+
+
+            setLoads(prev => {
+
+
+                const existingIds = new Set(
+                    prev.map(item=>item.cargoId)
+                );
+
+
+                const unique = newData.filter(
+                    item=>!existingIds.has(item.cargoId)
+                );
+
+
+                return [
+                    ...prev,
+                    ...unique
+                ];
+
+            });
+
+
+
+            setLastVisible(
+                result.lastVisible || null
+            );
+
+
+
+            if(
+                !result.lastVisible ||
+                newData.length < 50
+            ){
+
+                setHasMoreLoads(false);
+
+            }
+
+
+
+        } catch(error){
+
+            console.log(
+                "Load more error",
+                error
+            );
+
+
+        } finally {
+
+            setLoadingMore(false);
+
+        }
+
+    };
 
     return (
         <GestureHandlerRootView style={{ flex: 1, }}>

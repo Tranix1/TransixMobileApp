@@ -152,6 +152,8 @@ function SwitchRoleSelector() {
         router.replace('/');
     };
 
+
+
     // ---------- Brokerage (owned) ----------
 
     const ownedBrokerages = Array.isArray(user?.brokergeDetails) ? user.brokergeDetails : [];
@@ -255,6 +257,46 @@ function SwitchRoleSelector() {
             console.error("Error updating fleet decision:", error);
         }
     };
+
+
+
+  
+    const handleDriverSelect = async (driver: any) => {    
+        if (!driver) return;
+
+        const fleetRole = {
+            role: 'driver' as const,
+            fleetId: driver.fleetId,
+            companyName: driver.companyName || driver.fleetName,
+            userRole  : driver.userRole || 'owner',
+            accType: 'driver' as const,
+            driverId: driver.driverId || null,
+
+            fleetMainAdminId: driver.fleetMainAdminId || null,
+            fleetManagerId: driver.fleetManagerId || null,
+            fleetDispatcherId: driver.fleetDispatcherId || null,
+
+            referrerCode : driver.referrerCode || null ,
+
+            organizationName : driver.companyName || driver.fleetName ,
+            organizationId : driver.fleetId ,
+
+            phone : `${driver.countryCode}${driver?.organizationPhone}` ,
+            email : driver.organizationEmail ,
+            billingAddress : driver?.billingAddressFull ,
+            baseAdress : driver?.baseAdressFull  
+            
+        };
+
+    (fleetRole as any);
+        await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
+        setCurrentRole(fleetRole as any)
+        router.replace('/');
+    };
+
+
+
+
 
     if (!user) {
         return (
@@ -426,7 +468,7 @@ function SwitchRoleSelector() {
                             >
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <TouchableOpacity
-                                        onPress={() => driver.status === 'active' && handleFleetSelect(driver)}
+                                        onPress={() => driver.status === 'active' && handleDriverSelect(driver)}
                                         style={{ flex: 1 }}
                                     >
                                         <ThemedText style={{ fontWeight: '700', fontSize: wp(4) }}>
@@ -503,6 +545,7 @@ function SwitchRoleSelector() {
                         </ThemedText>
                     </View>
                 )}
+                <View style={{height:hp(15)}} />
 
             </ScrollView>
 

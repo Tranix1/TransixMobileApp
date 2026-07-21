@@ -28,7 +28,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { wp, hp } from "@/constants/common";
 import { Image } from "expo-image";
 import { sendUserNotification } from "@/Utilities/pushNotification";
-import { updateDocument } from "@/db/operations";
+import { readById, updateDocument } from "@/db/operations";
 import { useAuth } from "@/context/AuthContext";
 
 type Props = {
@@ -59,7 +59,6 @@ export default function DriverDefaultModal({
     assignmentSource,
 }: Props) {
 
-console.log(assignmentId)
     const accent = useThemeColor("accent");
     const backgroundLight = useThemeColor("backgroundLight");
     const icon = useThemeColor("icon");
@@ -143,10 +142,10 @@ console.log(assignmentId)
         if (!assignmentId) return
         try {
 
-            if (assignmentSource === "Broker") {
+            if (assignmentSource === "brokerage") {
                 updateDocument(`brokerages/${brokerageId}/assignments`, assignmentId, {
-                    
-                    status : "PENDING",
+
+                    status: "PENDING",
                     driverDetails: {
                         driverId: selected.driverId || selected?.id || null,
                         driverDocId: selected?.docId || selected?.id || selected.driverId || null,
@@ -163,8 +162,8 @@ console.log(assignmentId)
 
 
                 updateDocument(`fleets/${fleetId}/assignments`, assignmentId, {
-                    
-                    status : "PENDING",
+
+                    status: "PENDING",
                     driverDetails: {
                         driverId: selected.driverId || selected?.id || null,
                         driverDocId: selected?.docId || selected?.id || selected.driverId || null,
@@ -178,11 +177,11 @@ console.log(assignmentId)
                     }
 
                 })
-            } else if (assignmentSource === "Fleet") {
+            } else if (assignmentSource === "fleet") {
 
                 updateDocument(`fleets/${fleetId}/assignments`, assignmentId, {
 
-                    status : "PENDING",
+                    status: "PENDING",
                     driverDetails: {
                         driverId: selected.driverId || selected?.id || null,
                         driverDocId: selected?.docId || selected?.id || selected.driverId || null,
@@ -198,26 +197,44 @@ console.log(assignmentId)
                 })
             }
 
-            if (selected.expoPushToken) {
-                await sendUserNotification(
-                    selected.expoPushToken,
-                    "New Load Assignment 📦",
-                    `You have been assigned a new load with ${numberPlate}. Please review and accept or reject it.`,
-                    {
-                        pathname: "/Driver/AssignmentDetails",
-                        params: {
-                            assignmentId,
+            if (selected.driverUserId) {
+
+                const driverData = await readById(
+                    "personalData",
+                    selected.driverUserId
+                ) as {
+                    id: string;
+                    expoPushToken?: string;
+                };
+
+                const expoPushToken = driverData?.expoPushToken;
+
+                if (expoPushToken) {
+
+                    await sendUserNotification(
+                        expoPushToken,
+                        "New Load Assignment 📦",
+                        `You have been assigned a new load with ${numberPlate}. Please review and accept or reject it.`,
+                        {
+                            pathname: "/Driver/AssignmentDetails",
+                            params: {
+                                assignmentId,
+                            },
                         },
-                    },
-                    {
-                        type: "load_assignment",
-                        assignmentId,
-                        truckId,
-                        fleetId,
-                    }
-                );
+                        {
+                            type: "load_assignment",
+                            assignmentId,
+                            truckId,
+                            fleetId,
+                        }
+                    );
+
+                } else {
+                    alert("Driver has no push token");
+                }
+
             } else {
-                alert("Driver has no push token");
+                alert("Driver has no user account linked");
             }
 
             ToastAndroid.show(
@@ -230,7 +247,7 @@ console.log(assignmentId)
         }
     }
 
-    
+
 
 
     const setDefaultDriver = async () => {
@@ -333,25 +350,44 @@ console.log(assignmentId)
 
 
             // Notify driver AFTER successful save
-            if (selected.expoPushToken) {
-                await sendUserNotification(
-                    selected.expoPushToken,
-                    "New Truck Assignment 🚛",
-                    `You have been assigned to ${numberPlate}`,
-                    {
-                        pathname: "/Driver/TruckDetails",
-                        params: {
-                            truckId,
+              if (selected.driverUserId) {
+
+                const driverData = await readById(
+                    "personalData",
+                    selected.driverUserId
+                ) as {
+                    id: string;
+                    expoPushToken?: string;
+                };
+
+                const expoPushToken = driverData?.expoPushToken;
+
+                if (expoPushToken) {
+
+                    await sendUserNotification(
+                        expoPushToken,
+                        "New Load Assignment 📦",
+                        `You have been assigned a new load with ${numberPlate}. Please review and accept or reject it.`,
+                        {
+                            pathname: "/Driver/AssignmentDetails",
+                            params: {
+                                assignmentId,
+                            },
                         },
-                    },
-                    {
-                        type: "truck_assignment",
-                        truckId,
-                        fleetId,
-                    }
-                );
+                        {
+                            type: "load_assignment",
+                            assignmentId,
+                            truckId,
+                            fleetId,
+                        }
+                    );
+
+                } else {
+                    alert("Driver has no push token");
+                }
+
             } else {
-                alert("Driver has no push token");
+                alert("Driver has no user account linked");
             }
 
             ToastAndroid.show(
@@ -630,7 +666,7 @@ console.log(assignmentId)
                                 }}
                             >
 
-                                {typeOfAction === "Assign Driver" ? "Assign Driver": "Set Default Driver"}
+                                {typeOfAction === "Assign Driver" ? "Assign Driver" : "Set Default Driver"}
 
                             </ThemedText>
 
