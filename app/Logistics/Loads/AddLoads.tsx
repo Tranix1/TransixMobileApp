@@ -561,13 +561,13 @@ const AddLoadDB = () => {
         }
       }
 
-        if (validationErrors.length > 0) {
-          alert(validationErrors.join("\n"),)
-          // alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
+      if (validationErrors.length > 0) {
+        alert(validationErrors.join("\n"),)
+        // alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
 
-          setIsSubmitting(false)
-          return;
-        }
+        setIsSubmitting(false)
+        return;
+      }
 
       // Show payment confirmation modal
       confirmLoadPaymentAndSubmit()
@@ -678,11 +678,11 @@ const AddLoadDB = () => {
         trucksNeeded,
         typeofLoad,
         rate,
-        ratePerKm ,
+        ratePerKm,
         selectedModelType,
         selectedCurrency,
         selectedCustomer,
-        isTrackingEnabled ,
+        isTrackingEnabled,
 
       });
 
@@ -763,7 +763,7 @@ const AddLoadDB = () => {
         onStepPress={setStep}
       />
 
-      <View style={{ flex: 1, position: 'relative',paddingHorizontal:7 }}>
+      <View style={{ flex: 1, position: 'relative', paddingHorizontal: 7 }}>
 
         {/* ============ NEW FIRST STEP: BASIC INFO ============ */}
         {currentStepKey === 'basicInfo' && (
@@ -881,7 +881,7 @@ const AddLoadDB = () => {
 
               <LocationSelector
                 origin={origin}
-                destination={destination} 
+                destination={destination}
                 setOrigin={setOrigin}
                 setDestination={setDestination}
                 dspFromLocation={dspFromLocation}
@@ -1555,6 +1555,32 @@ const AddLoadDB = () => {
                   <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>
                     Available Trucks ({searchedTrucks.length})
                   </ThemedText>
+
+
+                  {searchedTrucks.length === 0 && (
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => router.push("/Logistics/Trucks/AddTrucks")}
+                      style={{
+                        marginTop: wp(2),
+                        paddingVertical: wp(3),
+                        paddingHorizontal: wp(4),
+                        borderRadius: 10,
+                        backgroundColor: icon + "20",
+                        alignItems: "center",
+                      }}
+                    >
+                      <ThemedText style={{ fontWeight: "bold" }}>
+                        No trucks found
+                      </ThemedText>
+
+                      <ThemedText style={{ marginTop: wp(1), fontSize: 12 }}>
+                        Tap here to add a truck
+                      </ThemedText>
+                    </TouchableOpacity>
+                  )}
+
+
 
                   <View style={{ maxHeight: hp(48), marginTop: wp(1) }}>
 

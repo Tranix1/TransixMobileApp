@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, FlatList, Image, RefreshControl, Modal, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, FlatList, Image, RefreshControl, Modal, Alert, ToastAndroid } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -69,7 +69,7 @@ interface Driver {
     name: string;
     email: string;
     userId: string
-    selfieImage : string  
+    selfieImage: string
     // Add other properties present in your 'Drivers' collection
 }
 
@@ -510,9 +510,20 @@ export default function DriverIndex() {
                 <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => {
+                        if (item.status !== "active") {
+                            ToastAndroid.show(
+                                "Waiting for the driver to accept your invitation.",
+                                ToastAndroid.SHORT
+                            );
+                            return;
+                        }
+
                         router.push({
                             pathname: "/Fleet/Driver/DriverDetails",
-                            params: { driverId: item.id, fleetId: currentFleet?.fleetId }
+                            params: {
+                                driverId: item.id,
+                                fleetId: currentFleet?.fleetId,
+                            },
                         });
                     }}
                     style={styles.driverInfo}
@@ -709,7 +720,7 @@ export default function DriverIndex() {
 
                 if (!currentRole.fleetId) return
                 const driverRef = doc(db, 'fleets', currentRole.fleetId, 'Drivers', `DRV_${driver.userId}`);
-                await setDoc(driverRef, { ...fleetUpdate, driverId: `DRV_${driver?.userId}`, fullName: driver.fullName, phoneNumber: driver.phoneNumber, email: driver.email, timeStamp: serverTimestamp() ,profilePhoto:driver.selfieImage, payment: buildPaymentPayload(driver.id), });
+                await setDoc(driverRef, { ...fleetUpdate, driverId: `DRV_${driver?.userId}`, fullName: driver.fullName, phoneNumber: driver.phoneNumber, email: driver.email, timeStamp: serverTimestamp(), profilePhoto: driver.selfieImage, payment: buildPaymentPayload(driver.id), });
 
             }));
 
@@ -760,105 +771,105 @@ export default function DriverIndex() {
 
                         <ThemedText style={{ fontWeight: 'bold', marginTop: wp(2) }}>Available Drivers</ThemedText>
 
-                        
-                            <FlatList
-                                data={searchedDrivers}
-                                keyExtractor={(item) => item.id}
-                                keyboardShouldPersistTaps="handled"
-                                style={{ maxHeight: hp(45) }}
-                                renderItem={({ item }) => {
-                                    const isSelected = selectedDrivers.some(
-                                        d => d.id === item.id
-                                    );
-                                    const payment = getPaymentDraft(item.id);
 
-                                    return (
-                                        <View style={{ marginVertical: 4 }}>
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    setSelectedDrivers(prev =>
-                                                        isSelected
-                                                            ? prev.filter(d => d.id !== item.id)
-                                                            : [...prev, item]
-                                                    );
-                                                    // Start a fresh payment draft the moment a driver is selected
-                                                    if (!isSelected && !driverPayments[item.id]) {
-                                                        updatePaymentDraft(item.id, {});
-                                                    }
-                                                }}
-                                                style={{
-                                                    padding: 10,
-                                                    borderWidth: 1,
-                                                    borderColor: isSelected ? accent : icon,
-                                                    borderTopLeftRadius: 8,
-                                                    borderTopRightRadius: 8,
-                                                    borderBottomLeftRadius: isSelected ? 0 : 8,
-                                                    borderBottomRightRadius: isSelected ? 0 : 8,
-                                                    borderBottomWidth: isSelected ? 0 : 1,
-                                                    backgroundColor: isSelected
-                                                        ? backgroundLight
-                                                        : background,
-                                                }}
-                                            >
-                                                <ThemedText>{item.fullName}</ThemedText>
-                                                <ThemedText style={{ fontSize: 12 }}>
-                                                    {item.email}
+                        <FlatList
+                            data={searchedDrivers}
+                            keyExtractor={(item) => item.id}
+                            keyboardShouldPersistTaps="handled"
+                            style={{ maxHeight: hp(45) }}
+                            renderItem={({ item }) => {
+                                const isSelected = selectedDrivers.some(
+                                    d => d.id === item.id
+                                );
+                                const payment = getPaymentDraft(item.id);
+
+                                return (
+                                    <View style={{ marginVertical: 4 }}>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setSelectedDrivers(prev =>
+                                                    isSelected
+                                                        ? prev.filter(d => d.id !== item.id)
+                                                        : [...prev, item]
+                                                );
+                                                // Start a fresh payment draft the moment a driver is selected
+                                                if (!isSelected && !driverPayments[item.id]) {
+                                                    updatePaymentDraft(item.id, {});
+                                                }
+                                            }}
+                                            style={{
+                                                padding: 10,
+                                                borderWidth: 1,
+                                                borderColor: isSelected ? accent : icon,
+                                                borderTopLeftRadius: 8,
+                                                borderTopRightRadius: 8,
+                                                borderBottomLeftRadius: isSelected ? 0 : 8,
+                                                borderBottomRightRadius: isSelected ? 0 : 8,
+                                                borderBottomWidth: isSelected ? 0 : 1,
+                                                backgroundColor: isSelected
+                                                    ? backgroundLight
+                                                    : background,
+                                            }}
+                                        >
+                                            <ThemedText>{item.fullName}</ThemedText>
+                                            <ThemedText style={{ fontSize: 12 }}>
+                                                {item.email}
+                                            </ThemedText>
+                                        </TouchableOpacity>
+
+                                        {isSelected && (
+                                            <View style={{
+                                                borderWidth: 1,
+                                                borderTopWidth: 0,
+                                                borderColor: accent,
+                                                borderBottomLeftRadius: 8,
+                                                borderBottomRightRadius: 8,
+                                                padding: 10,
+                                                backgroundColor: background,
+                                            }}>
+                                                <ThemedText style={{ fontSize: 12, fontWeight: '600', marginBottom: 8 }}>
+                                                    Payment Method
                                                 </ThemedText>
-                                            </TouchableOpacity>
 
-                                            {isSelected && (
-                                                <View style={{
-                                                    borderWidth: 1,
-                                                    borderTopWidth: 0,
-                                                    borderColor: accent,
-                                                    borderBottomLeftRadius: 8,
-                                                    borderBottomRightRadius: 8,
-                                                    padding: 10,
-                                                    backgroundColor: background,
-                                                }}>
-                                                    <ThemedText style={{ fontSize: 12, fontWeight: '600', marginBottom: 8 }}>
-                                                        Payment Method
-                                                    </ThemedText>
+                                                <PaymentTypeSelector
+                                                    value={payment.type}
+                                                    onChange={(t) => updatePaymentDraft(item.id, { type: t })}
+                                                    accent={accent}
+                                                    icon={icon}
+                                                    text={text}
+                                                    background={background}
+                                                />
 
-                                                    <PaymentTypeSelector
-                                                        value={payment.type}
-                                                        onChange={(t) => updatePaymentDraft(item.id, { type: t })}
-                                                        accent={accent}
-                                                        icon={icon}
-                                                        text={text}
-                                                        background={background}
-                                                    />
+                                                <PaymentDetailFields
+                                                    draft={payment}
+                                                    onPatch={(patch) => updatePaymentDraft(item.id, patch)}
+                                                    accent={accent}
+                                                    icon={icon}
+                                                    text={text}
+                                                    background={background}
+                                                />
+                                            </View>
+                                        )}
+                                    </View>
+                                );
+                            }}
+                            ListEmptyComponent={
+                                loadingAllDrivers ? (
+                                    <ThemedText style={{ textAlign: 'center', marginTop: 10 }}>
+                                        Loading drivers…
+                                    </ThemedText>
+                                ) : driverSearchQuery.trim() ? (
+                                    <ThemedText style={{ textAlign: 'center', marginTop: 10 }}>
+                                        No drivers found with "{driverSearchQuery.trim()}"
+                                    </ThemedText>
+                                ) : (
+                                    <ThemedText style={{ textAlign: 'center', marginTop: 10 }}>
+                                        No drivers available
+                                    </ThemedText>
+                                )
+                            }
+                        />
 
-                                                    <PaymentDetailFields
-                                                        draft={payment}
-                                                        onPatch={(patch) => updatePaymentDraft(item.id, patch)}
-                                                        accent={accent}
-                                                        icon={icon}
-                                                        text={text}
-                                                        background={background}
-                                                    />
-                                                </View>
-                                            )}
-                                        </View>
-                                    );
-                                }}
-                                ListEmptyComponent={
-                                    loadingAllDrivers ? (
-                                        <ThemedText style={{ textAlign: 'center', marginTop: 10 }}>
-                                            Loading drivers…
-                                        </ThemedText>
-                                    ) : driverSearchQuery.trim() ? (
-                                        <ThemedText style={{ textAlign: 'center', marginTop: 10 }}>
-                                            No drivers found with "{driverSearchQuery.trim()}"
-                                        </ThemedText>
-                                    ) : (
-                                        <ThemedText style={{ textAlign: 'center', marginTop: 10 }}>
-                                            No drivers available
-                                        </ThemedText>
-                                    )
-                                }
-                            />
-                        
 
                         <TouchableOpacity
                             disabled={isSubmitting || selectedDrivers.length === 0}
@@ -1065,7 +1076,7 @@ const styles = StyleSheet.create({
     addButton: {
         padding: wp(2),
         borderRadius: wp(2),
-        marginRight: wp(2),
+        marginRight: wp(4),
     },
     emptyState: {
         flex: 1,

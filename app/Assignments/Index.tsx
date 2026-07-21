@@ -30,6 +30,7 @@ import { Image } from 'expo-image';
 import { ImagePickerAsset } from 'expo-image-picker';
 import DriverDefaultModal from '@/components/DriverDefaultModal';
 import FinancePanel from '@/components/FinancePanel';
+import TruckDefaultModal from '@/components/TruckDefaultModal';
 
 // ---------------------------------------------------------------------------
 // Independent Assignments page for Fleet / Broker use.
@@ -1079,26 +1080,35 @@ function Jobs() {
     const activeFilterEntries = Object.entries(filters) as [FilterType, FilterValue][];
 
     const [dspAssignDriverModaal, setDspAssignDriverModal] = useState(false)
+    const [dspAssignTruckModl , setDspAssignTruckModal] = useState(false)
 
     const renderCargoItem = (assignmentData: any) => {
         return (
             <View key={assignmentData.id} style={[styles.cargoItem, { backgroundColor: backgroundLight }]}>
 
 
-
+            <TruckDefaultModal 
+            
+            visible={dspAssignTruckModl}
+                    onClose={() =>setDspAssignTruckModal (false)}
+                    fleetId={currentRole?.organizationId ? currentRole?.organizationId : ""}
+                    typeOfAction="Assign Truck"
+                    assignmentId={assignmentData.id}
+                    assignmentSource={assignmentData.externalLoad?"brokerage": "fleet"}
+            />
 
                 <DriverDefaultModal
                     visible={dspAssignDriverModaal}
                     onClose={() => setDspAssignDriverModal(false)}
-                    fleetId={currentRole.organizationId ? currentRole.organizationId : ""}
-                    truckId={assignmentData?.truckDetails?.truckId}
+                    fleetId={currentRole?.organizationId ? currentRole?.organizationId : ""}
+                    truckId={assignmentData?.truckDetails?.truckId ||"UNASSIGNED"}
                     numberPlate={assignmentData?.truckDetails?.numberPlate}
                     onAssigned={(driver) => {
                         console.log("Assigned:", driver);
                     }}
                     typeOfAction="Assign Driver"
                     assignmentId={assignmentData.id}
-                    brokerageId={assignmentData.brokerageCoordinator.organizationId}
+                    brokerageId={assignmentData.brokerageCoordinator?.organizationId || ""}
                     assignmentSource={assignmentData.source}
                 />
 
@@ -1186,7 +1196,7 @@ function Jobs() {
 
                 <View style={styles.cargoHeader}>
                     <ThemedText style={styles.cargoTitle}>
-                        {assignmentData?.loadDetails?.productName || 'Load'} - {assignmentData.truckDetails.truckName}
+                        {assignmentData?.loadDetails?.productName || 'Load'} - {assignmentData?.truckDetails?.truckName ||   "UNASSIGNED" }
                     </ThemedText>
 
                     <View style={[styles.statusBadge, { backgroundColor: getStatusColor(assignmentData.status) }]}>
@@ -1330,14 +1340,31 @@ function Jobs() {
                     marginTop: wp(2),
                 }}>
 
+
+                     {!assignmentData.truckDetails && currentRole.accType === "fleet" &&  currentRole.accType === "fleet" && <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => setDspAssignTruckModal(true)}
+                    >
+                        <Ionicons
+                            name="alert-circle-outline"
+                            size={16}
+                            color={accent}
+                        />
+
+                        <ThemedText style={styles.actionButtonText}>
+                            Assign Truck
+                        </ThemedText>
+
+                    </TouchableOpacity>}
+
                     {/* DRIVER */}
-                    <TouchableOpacity
+                 {assignmentData.driverDetails && <TouchableOpacity
                         style={styles.actionButton}
                         onPress={() => { }}
                     >
                         <Ionicons name="person-circle-outline" size={16} color={accent} />
                         <ThemedText style={styles.actionButtonText}>Driver</ThemedText>
-                    </TouchableOpacity>
+                    </TouchableOpacity>}
 
                     {/* LOAD */}
                     <TouchableOpacity
@@ -1356,8 +1383,26 @@ function Jobs() {
                         <ThemedText style={styles.actionButtonText}>Load</ThemedText>
                     </TouchableOpacity>
 
+
+                            {!assignmentData.driverDetails && currentRole.accType === "fleet" && <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => setDspAssignDriverModal(true)}
+                    >
+                        <Ionicons
+                            name="alert-circle-outline"
+                            size={16}
+                            color={accent}
+                        />
+
+                        <ThemedText style={styles.actionButtonText}>
+                            Assign Driver
+                        </ThemedText>
+
+                    </TouchableOpacity>}
+
+
                     {/* TRUCK */}
-                    <TouchableOpacity
+                   {assignmentData.truckDetails &&  <TouchableOpacity
                         style={styles.actionButton}
 
                         onPress={() => router.push({
@@ -1369,7 +1414,7 @@ function Jobs() {
                     >
                         <Ionicons name="car-sport-outline" size={16} color={accent} />
                         <ThemedText style={styles.actionButtonText}>Truck</ThemedText>
-                    </TouchableOpacity>
+                    </TouchableOpacity>}
 
                 </View>
 
@@ -1384,7 +1429,7 @@ function Jobs() {
                 >
 
                     {/* TRACKER - Everyone */}
-                    <TouchableOpacity
+              {(assignmentData.status!== "UNASSIGNED") &&       <TouchableOpacity
                         style={styles.actionButton}
                         onPress={() => {
                             console.log("Open tracker");
@@ -1395,7 +1440,7 @@ function Jobs() {
                                 router.push({
                                     pathname: "/Map/VehicleTrackingMap",
                                     params: {
-                                        vehicleId: assignmentData.truckDetails.trackingDeviceId,
+                                        vehicleId: assignmentData.truckDetails.trackingDeviceId ||"UNASSIGNED" ,
 
                                         pickupLati: assignmentData.loadDetails.pickupLocation.latitud,
                                         pickupLongi: assignmentData.loadDetails.pickupLocation.longitude,
@@ -1414,7 +1459,7 @@ function Jobs() {
                         <ThemedText style={styles.actionButtonText}>
                             Tracker
                         </ThemedText>
-                    </TouchableOpacity>
+                    </TouchableOpacity> }
 
 
 
@@ -1521,21 +1566,7 @@ function Jobs() {
                         </TouchableOpacity>
                     )}
 
-                    {assignmentData.status === 'ASSIGNED' && currentRole.accType === "fleet" && <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => setDspAssignDriverModal(true)}
-                    >
-                        <Ionicons
-                            name="alert-circle-outline"
-                            size={16}
-                            color={accent}
-                        />
-
-                        <ThemedText style={styles.actionButtonText}>
-                            Assign Driver
-                        </ThemedText>
-
-                    </TouchableOpacity>}
+                
 
                     {assignmentData.status === 'ASSIGNED' && currentRole.accType === "fleet" && <TouchableOpacity
                         style={styles.actionButton}
@@ -1786,7 +1817,7 @@ function Jobs() {
                 );
             } else if (shipper) {
 
-                let path = shipper.accType === "fleet" ? `fleets/${shipper.organizationId}/assignments` : `brokerages/${shipper.organizationId}/assignments`
+                let path = shipper.accType === "fleet" ? `fleets/${shipper?.organizationId}/assignments` : `brokerages/${shipper?.organizationId}/assignments`
 
                 await updateDocument(
                     path,

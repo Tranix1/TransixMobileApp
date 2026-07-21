@@ -290,9 +290,7 @@ function AddTrucks() {
       operationCountries.length <= 0 && "Select the countries where the truck has permits.",
       // (!gitImage || gitImage.length === 0) && "Upload GIT Certificate",
       (!truckNumberPlate || truckNumberPlate.length === 0) && "Upload Number Plate image",
-      (!selectedProofOfOwnerShip || selectedProofOfOwnerShip.trim() === '') && (!selectedTruckLease || selectedTruckLease.length === 0) && "Enter Ownership details or upload Ownership document",
       !truckType && "Select Truck Type (Private/Public)",
-      (!selectedTruckLease || selectedTruckLease.length === 0) && "Upload Lease/Ownership Document",
     ].filter(Boolean);
 
     if (missingTruckDetails.length > 0) {
@@ -359,7 +357,7 @@ function AddTrucks() {
     const trialEndAt = new Date(trialStartAt);
     trialEndAt.setDate(trialEndAt.getDate() + 30);
 
-  
+
 
     try {
 
@@ -377,7 +375,7 @@ function AddTrucks() {
           where("numberPlate", "==", formData.numberPlate),
           where("isTrial", "==", true),
         ]
-      );  
+      );
 
 
       let subscriptionData;
@@ -426,7 +424,7 @@ function AddTrucks() {
           trialEndAt,
 
           createdAt: Date.now(),
-              lastPaymentAt: null
+          lastPaymentAt: null
 
 
         });
@@ -445,7 +443,7 @@ function AddTrucks() {
           trialEndAt: null,
 
           nextBillingAt: null,
-              lastPaymentAt: null
+          lastPaymentAt: null
 
 
         };
@@ -506,9 +504,9 @@ function AddTrucks() {
 
         truckDispatchProfile: {
           notificationSettings: {
-            notificationsEnabled: fleetConfig?.notificationsEnabled,
-            notifyRoles: fleetConfig?.truckDefaults.notification.roles,
-            minRatePerKm: fleetConfig?.truckDefaults.notification.ratePerKm || null,
+            notificationsEnabled: fleetConfig?.notificationsEnabled || false,
+            notifyRoles: fleetConfig?.truckDefaults?.notification?.roles || [],
+            minRatePerKm: fleetConfig?.truckDefaults?.notification?.ratePerKm || null,
           },
           availabilityData: {
             status: "AVAILABLE",
@@ -553,9 +551,9 @@ function AddTrucks() {
         tankerType: selectedTankerType ? selectedTankerType?.name : null,
 
         notificationSettings: {
-          notificationsEnabled: fleetConfig?.notificationsEnabled,
-          notifyRoles: fleetConfig?.truckDefaults.notification.roles,
-          minRatePerKm: fleetConfig?.truckDefaults.notification.ratePerKm || null,
+          notificationsEnabled: fleetConfig?.notificationsEnabled || false,
+          notifyRoles: fleetConfig?.truckDefaults?.notification?.roles || [],
+          minRatePerKm: fleetConfig?.truckDefaults?.notification?.ratePerKm || null,
           assignments: {
             dispatcher: {
               id: user.uid,
@@ -632,7 +630,7 @@ function AddTrucks() {
             Truck Details
           </ThemedText>
 
-          <View style={{
+          {currentRole.accType === "driver" && <View style={{
 
             borderWidth: 1,
             borderColor: iconColor + '4c',
@@ -731,7 +729,7 @@ function AddTrucks() {
             }}>
               {/* Upload proof of address first */}
             </ThemedText>
-          </View>
+          </View>}
 
           <View style={{ gap: wp(2) }}>
 

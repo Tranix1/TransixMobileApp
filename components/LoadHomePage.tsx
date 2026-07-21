@@ -204,7 +204,7 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
 
             <FlatList
                 keyExtractor={(item) => item.id.toString()}
-                contentContainerStyle={{}}
+                                contentContainerStyle={{}}
                 data={Loads}
 
 

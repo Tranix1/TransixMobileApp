@@ -270,12 +270,14 @@ export const submitLoad = async (params: SubmitLoadParams) => {
 
     });
 
+
+    if (assignmentDetails.length > 0) {
+
     for (const assignment of assignmentDetails) {
       const assignmentDocId = `${cargoId}_${assignment.truckId}_${assignment.driverId}`;
       await addDocumentWithId(`fleets/${fleetId}/assignments`, assignmentDocId, assignment);
     }
-
-
+    
     for (const assignment of assignmentDetails) {
 
       if (assignment.driverDetails?.expoPushToken) {
@@ -293,6 +295,11 @@ export const submitLoad = async (params: SubmitLoadParams) => {
               }
             }
           );
+
+
+
+
+
 
         } catch (error) {
           Alert.alert(
@@ -315,6 +322,48 @@ export const submitLoad = async (params: SubmitLoadParams) => {
         ToastAndroid.SHORT
       );
     }
+
+  }else {
+
+
+    const assignmentDocId = `${cargoId}_UNASSIGNED`;
+       const loadDetails = {
+        ...baseLoadDetails,
+        pickupDate: loadingDate || null,
+        deliveryDate: deliveryDate || null,
+        pickupLocation: origin || null,
+        deliveryLocation: destination || null,
+
+      };
+
+  await addDocumentWithId(
+    `fleets/${fleetId}/assignments`,
+    assignmentDocId,
+    {
+      cargoId,
+      loadId: cargoId,
+      fleetId,
+
+      truckId: null,
+      driverId: null,
+
+      status: "UNASSIGNED",
+
+      loadDetails: loadDetails,
+        externalLoad: false,   
+
+      truckDetails: null,
+      driverDetails: null,
+      shipper:selectedCustomer ,
+
+      coordinator,
+
+      createdAt: Date.now().toString(),
+      timeStamp: serverTimestamp(),
+    }
+  );
+
+}
 
 
     for (const selectedBrokerId of selectedBrokers) {

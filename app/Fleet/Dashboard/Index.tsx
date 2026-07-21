@@ -385,6 +385,7 @@ export default function TransixDashboard() {
                         backgroundLight={backgroundColor}
                         border={border}
                         textlight={textlight}
+                        onPress={()=>router.push("/Fleet/Driver/Index")}
                     />
                     <OverviewCard
                         title="My Referrals"

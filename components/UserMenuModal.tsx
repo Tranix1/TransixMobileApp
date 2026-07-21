@@ -118,16 +118,7 @@ export default function UserMenuModal({ visible, onClose, onProfileUpdate }: Use
                             onClose();
                         },
                     },
-                    {
-                        id: 'Workspace',
-                        title: 'Workspace',
-                        icon: 'clipboard-list',
-                        iconFamily: FontAwesome6,
-                        onPress: () => {
-                            router.push('/BooksAndBids/SlctBidsAndBooks');
-                            onClose();
-                        },
-                    },
+                 
                     {
                         id: 'Analytics',
                         title: 'Analytics',
