@@ -442,15 +442,15 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                                     <ThemedText type='tiny' style={{ color: icon }}>Loading More</ThemedText>
                                     <AccentRingLoader color={accent} size={20} dotSize={4} />
                                 </View>
-                                :
-                                (!lastVisible && Loads.length > 0) ?
-                                    <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                                        <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>No more Loads to Load
-                                        </ThemedText>
-                                        <Ionicons color={icon} style={{}} name='alert-circle-outline' size={wp(6)} />
+                                    :
+                                    (!lastVisible && Loads.length > 0) ?
+                                        <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                                            <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>No more Loads to Load
+                                            </ThemedText>
+                                            <Ionicons color={icon} style={{}} name='alert-circle-outline' size={wp(6)} />
 
-                                    </View>
-                                    : null
+                                        </View>
+                                        : null
                         }
 
                     </View>

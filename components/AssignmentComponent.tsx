@@ -23,6 +23,7 @@ import { arrayUnion } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
 import { takePhoto, selectMultipleImages } from '@/Utilities/photoPickerUtils';
 import GetTrackerModal from "./GetTrackerModal";
+import { notifyUserById } from "@/Utilities/pushNotification";
 
 
 
@@ -37,7 +38,7 @@ const getStatusColor = (status: string) => {
     }
 };
 
-    export default function AssignmentCard({ assignmentData }: any) {
+export default function AssignmentCard({ assignmentData }: any) {
 
 
     const accent = useThemeColor("accent")
@@ -58,43 +59,47 @@ const getStatusColor = (status: string) => {
 
     const [uploadingImageUpdate, setUploadImageUpdate] = useState("")
 
-const [getTrackerModal,setGetTrackerModal]= useState(false)
+    const [getTrackerModal, setGetTrackerModal] = useState(false)
 
 
-const handleTrackTruck = (truckTrackerId?: string | null) => {
+    const handleTrackTruck = (truckTrackerId?: string | null) => {
 
-    console.log(truckTrackerId)
-    if (truckTrackerId) {
-        console.log("hiiii")
-        // router.push(`/Tracking/${truckTrackerId}`);
-        //   {
-        //                     router.push({
-        //                         pathname: "/Map/VehicleTrackingMap",
-        //                         params: {
-        //                             vehicleId: assignmentData.truckDetails.trackingDeviceId || "UNASSIGNED",
+        if (truckTrackerId) {
+            console.log("hiiii")
+            // router.push(`/Tracking/${truckTrackerId}`);
+            //   {
+            //                     router.push({
+            //                         pathname: "/Map/VehicleTrackingMap",
+            //                         params: {
+            //                             vehicleId: assignmentData.truckDetails.trackingDeviceId || "UNASSIGNED",
 
-        //                             pickupLati: assignmentData.loadDetails.pickupLocation.latitud,
-        //                             pickupLongi: assignmentData.loadDetails.pickupLocation.longitude,
-        //                             pickupName: assignmentData.loadDetails.pickupLocation.description,
+            //                             pickupLati: assignmentData.loadDetails.pickupLocation.latitud,
+            //                             pickupLongi: assignmentData.loadDetails.pickupLocation.longitude,
+            //                             pickupName: assignmentData.loadDetails.pickupLocation.description,
 
-        //                             dropoffLati: assignmentData.loadDetails.deliveryLocation.latitude,
-        //                             dropoffLongi: assignmentData.loadDetails.deliveryLocation.longitude,
-        //                             dropoffName: assignmentData.loadDetails.deliveryLocation.description,
+            //                             dropoffLati: assignmentData.loadDetails.deliveryLocation.latitude,
+            //                             dropoffLongi: assignmentData.loadDetails.deliveryLocation.longitude,
+            //                             dropoffName: assignmentData.loadDetails.deliveryLocation.description,
 
-        //                             plannedRoutePolyline: assignmentData.loadDetails.deliveryLocation,
-        //                         },
-        //                     });
-        //                 }
-    } else {
-        console.log("Byee")
+            //                             plannedRoutePolyline: assignmentData.loadDetails.deliveryLocation,
+            //                         },
+            //                     });
+            //                 }
+        } else {
+            console.log("Byee")
 
-        setGetTrackerModal(true);
-    }
-};
-
+            setGetTrackerModal(true);
+        }
+    };
 
 
-    const startTrip = async (assignmentId: string) => {
+
+    const startTrip = async (
+        assignmentId: string,
+        externalLoad: boolean,
+        fleetCoordinatorId: string,
+        cargoCoordinatorId?: string
+    ) => {
         if (!assignmentId) return
         try {
             await updateDocument(
@@ -122,6 +127,49 @@ const handleTrackTruck = (truckTrackerId?: string | null) => {
                     })
                 }
             );
+
+
+
+
+            // Notify fleet coordinator
+            if (fleetCoordinatorId) {
+                await notifyUserById(
+                    fleetCoordinatorId,
+                    "Load Started 🚚",
+                    `Trip ${assignmentId} is now in transit. The truck has started the delivery.`,
+                    {
+                        pathname: "/Fleet/AssignmentDetails",
+                        params: {
+                            assignmentId,
+                        },
+                    },
+                    {
+                        type: "load_in_transit",
+                        assignmentId,
+                    }
+                );
+            }
+
+            // Notify cargo coordinator only for external loads
+            if (externalLoad && cargoCoordinatorId) {
+                await notifyUserById(
+                    cargoCoordinatorId,
+                    "Load In Transit 🚚",
+                    `Your load is now in transit. The assigned truck has started the delivery.`,
+                    {
+                        pathname: "/Cargo/AssignmentDetails",
+                        params: {
+                            assignmentId,
+                        },
+                    },
+                    {
+                        type: "load_in_transit",
+                        assignmentId,
+                    }
+                );
+            }
+            
+
             ToastAndroid.show(
                 "Trip started • Now In Transit 🚚",
                 ToastAndroid.SHORT
@@ -142,23 +190,26 @@ const handleTrackTruck = (truckTrackerId?: string | null) => {
 
 
 
-    const finishTrip = async (assignmentId: string) => {
+    const finishTrip = async (
+        assignmentId: string,
+        externalLoad: boolean,
+        fleetCoordinatorId: string,
+        cargoCoordinatorId?: string
+    ) => {
         try {
             const images = proofImages[assignmentId] || [];
 
-            // Upload all images in parallel
             const uploadedUrls = await Promise.all(
                 images.map(image =>
                     uploadImage(
                         image,
                         `assignments/${assignmentId}/proof`,
                         setUploadImageUpdate,
-                        "Proof"
+                        "POD"
                     )
                 )
             );
 
-            // Remove any failed uploads
             const proofFiles = uploadedUrls.filter(
                 (url): url is string => url !== null
             );
@@ -167,7 +218,7 @@ const handleTrackTruck = (truckTrackerId?: string | null) => {
                 `fleets/${scopeId}/assignments`,
                 assignmentId,
                 {
-                    status: "COMPLETED",
+                    status: "Awaiting Confirmation",
 
                     completedAt: Date.now(),
                     completedBy: user?.uid ?? "",
@@ -196,15 +247,63 @@ const handleTrackTruck = (truckTrackerId?: string | null) => {
                 }
             );
 
-            // Clear local images for this assignment
             setProofImages(prev => {
                 const updated = { ...prev };
                 delete updated[assignmentId];
                 return updated;
             });
 
+            // Notify fleet coordinator
+            if (fleetCoordinatorId) {
+                await notifyUserById(
+                    fleetCoordinatorId,
+                    "Load Completed ✅",
+                    `Trip ${assignmentId} has been completed and POD has been submitted.`,
+                    {
+                        pathname: "/Fleet/AssignmentDetails",
+                        params: {
+                            assignmentId,
+                        },
+                    },
+                    {
+                        type: "load_completed",
+                        assignmentId,
+                    }
+                );
+            }
+
+
+            // Notify cargo coordinator only for external loads
+            if (externalLoad && cargoCoordinatorId) {
+                await notifyUserById(
+                    cargoCoordinatorId,
+                    "Load Delivered ✅",
+                    `The load has been delivered and POD has been submitted.`,
+                    {
+                        pathname: "/Cargo/AssignmentDetails",
+                        params: {
+                            assignmentId,
+                        },
+                    },
+                    {
+                        type: "load_completed",
+                        assignmentId,
+                    }
+                );
+            }
+
+            ToastAndroid.show(
+                "Trip completed. POD submitted successfully.",
+                ToastAndroid.LONG
+            );
+
         } catch (error) {
             console.log("Proof upload error:", error);
+
+            ToastAndroid.show(
+                "Failed to complete trip. Please try again.",
+                ToastAndroid.LONG
+            );
         }
     };
 
@@ -314,7 +413,7 @@ const handleTrackTruck = (truckTrackerId?: string | null) => {
 
 
 
-        <GetTrackerModal visible={getTrackerModal} onClose={()=> setGetTrackerModal(false)} />
+            <GetTrackerModal visible={getTrackerModal} onClose={() => setGetTrackerModal(false)} />
 
             <TruckDefaultModal
 
@@ -586,7 +685,14 @@ const handleTrackTruck = (truckTrackerId?: string | null) => {
                 {/* DRIVER */}
                 {assignmentData.driverDetails && <TouchableOpacity
                     style={styles.actionButton}
-                    onPress={() => { }}
+                    onPress={() => {
+                        router.push({
+                            pathname: "/Driver/Details/Index",
+                            params: {
+                                driverId: assignmentData.driverDetails.driverId,
+                            },
+                        });
+                    }}
                 >
                     <Ionicons name="person-circle-outline" size={16} color={accent} />
                     <ThemedText style={styles.actionButtonText}>Driver</ThemedText>
@@ -657,11 +763,11 @@ const handleTrackTruck = (truckTrackerId?: string | null) => {
                 {/* TRACKER - Everyone */}
                 {(assignmentData.status !== "UNASSIGNED") && <TouchableOpacity
                     style={styles.actionButton}
-                    
-                    onPress={()=>handleTrackTruck(assignmentData?.truckDetails?.trackingDeviceId) }
+
+                    onPress={() => handleTrackTruck(assignmentData?.truckDetails?.trackingDeviceId)}
                 >
                     <Ionicons name="navigate-circle-outline" size={16} color={accent}
-                      
+
 
                     />
                     <ThemedText style={styles.actionButtonText}>
@@ -678,7 +784,12 @@ const handleTrackTruck = (truckTrackerId?: string | null) => {
                         onPress={() => {
 
                             if (assignmentData.status === "PENDING") {
-                                startTrip(assignmentData.id);
+                                startTrip(
+                                    assignmentData.id,
+                                    assignmentData.externalLoad,
+                                    assignmentData.fleetCoordinatorId.id,
+                                    assignmentData.cargoCoordinator.id
+                                );
                             }
 
                             else if (assignmentData.status === "IN_TRANSIT") {
@@ -707,7 +818,7 @@ const handleTrackTruck = (truckTrackerId?: string | null) => {
                                 assignmentData.status === "PENDING"
                                     ? "Start Trip"
                                     : assignmentData.status === "IN_TRANSIT"
-                                        ? "Upload Proof"
+                                        ? "Upload POD"
                                         : "Completed"
                             }
                         </ThemedText>
@@ -719,7 +830,12 @@ const handleTrackTruck = (truckTrackerId?: string | null) => {
                     <TouchableOpacity
                         style={styles.actionButton}
                         activeOpacity={0.7}
-                        onPress={() => finishTrip(assignmentData.id)}
+                        onPress={() => finishTrip(
+                            assignmentData.id,
+                            assignmentData.externalLoad,
+                            assignmentData.fleetCoordinatorId.id,
+                            assignmentData.cargoCoordinator.id
+                        )}
                     >
                         <Ionicons name="checkmark-circle-outline" size={18} color="#FFF" />
                         <ThemedText style={styles.actionButtonText}>
@@ -848,7 +964,10 @@ const handleTrackTruck = (truckTrackerId?: string | null) => {
                 cargoRateModel={assignmentData.loadDetails.model}
                 cargoRatePerKm={assignmentData.loadDetails.ratePerKm}
                 cargoPaymentTerms={assignmentData.loadDetails.paymentTerms}
-            />  
+                fleetCoordinator={assignmentData.fleetCoordinator}
+                numberPlate={assignmentData.truckDetails.numberPlate}
+                truckId={assignmentData.truckDetails.truckId}
+            />
 
         </View>
     );

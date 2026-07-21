@@ -150,6 +150,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       deliveryLocation: assignment.deliveryLocation || destination || null,
     };
 
+          
+
     return {
       cargoId,
       loadId: cargoId,
@@ -160,6 +162,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       // The truck's own owning fleet/org (not necessarily the poster of the load — relevant
       // when a broker assigns a truck that belongs to a different fleet).
       fleetDetails: truck?.organizationDetails ?? truck?.fleetDetails ?? null,
+      fleetCoordinator: truck?.dispatcher ,
+
       loadDetails,
       truckDetails,
       driverDetails,
@@ -466,7 +470,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
         driverDetails: null,
         status: 'ASSIGNED',
         acceptedBy: null,
-        fleeCoordinator: truck.assignments?.dispatcher
+        fleetCoordinator: truck.assignments?.dispatcher
           ? {
             id: truck.assignments.dispatcher.id || null,
             organizationId: truck.fleetId || null,
@@ -475,7 +479,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
             expoPushToken: truck.assignments.dispatcher.expoPushToken || null,
           }
           : null,
-        brokerageCoordinator: coordinator,
+        cargoCoordinator: coordinator,
         createdAt: Date.now().toString(),
       }
 

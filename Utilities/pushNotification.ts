@@ -401,11 +401,43 @@ export const sendUserNotification = async (
 };
 
 
+
+export const notifyUserById = async (
+    userId: string,
+    title: string,
+    message: string,
+    route: any,
+    data: any
+) => {
+    const userData = await readById(
+        "personalData",
+        userId
+    ) as {
+        id: string;
+        expoPushToken?: string;
+    };
+
+    const expoPushToken = userData?.expoPushToken;
+
+    if (expoPushToken) {
+        await sendUserNotification(
+            expoPushToken,
+            title,
+            message,
+            route,
+            data
+        );
+    } else {
+        console.log(`User ${userId} has no push token`);
+    }
+};
+
+
 import { router, } from "expo-router";
 import { getAdminUser, updateAdminExpoPushToken } from './adminPermissions';
 import { collection, getDocs, query, where, updateDoc } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
-import { updateDocument } from '@/db/operations';
+import { readById, updateDocument } from '@/db/operations';
 // hooks/useNotificationRouting.ts
 
 

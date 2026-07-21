@@ -119,7 +119,7 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
                                 </View>
 
 
-                                <View style={{ flexDirection: 'row', width: wp(26), justifyContent: "space-between", alignItems: 'center' }}>
+                                <View style={{ flexDirection: 'row', width: wp(26), justifyContent: "space-around", alignItems: 'center', }}>
 
                                     <TouchableNativeFeedback onPress={() => filterElement?.(true)}>
                                         <View >

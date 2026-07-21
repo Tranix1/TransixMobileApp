@@ -27,7 +27,7 @@ import Input from "@/components/Input";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { wp, hp } from "@/constants/common";
 import { Image } from "expo-image";
-import { sendUserNotification } from "@/Utilities/pushNotification";
+import { notifyUserById, sendUserNotification } from "@/Utilities/pushNotification";
 import { readById, updateDocument } from "@/db/operations";
 import { useAuth } from "@/context/AuthContext";
 
@@ -197,45 +197,29 @@ export default function DriverDefaultModal({
                 })
             }
 
-            if (selected.driverUserId) {
+         if (selected.driverUserId) {
 
-                const driverData = await readById(
-                    "personalData",
-                    selected.driverUserId
-                ) as {
-                    id: string;
-                    expoPushToken?: string;
-                };
+    await notifyUserById(
+        selected.driverUserId,
+        "New Load Assignment 📦",
+        `You have been assigned a new load with ${numberPlate}. Please review and accept or reject it.`,
+        {
+            pathname: "/Driver/AssignmentDetails",
+            params: {
+                assignmentId,
+            },
+        },
+        {
+            type: "load_assignment",
+            assignmentId,
+            truckId,
+            fleetId,
+        }
+    );
 
-                const expoPushToken = driverData?.expoPushToken;
-
-                if (expoPushToken) {
-
-                    await sendUserNotification(
-                        expoPushToken,
-                        "New Load Assignment 📦",
-                        `You have been assigned a new load with ${numberPlate}. Please review and accept or reject it.`,
-                        {
-                            pathname: "/Driver/AssignmentDetails",
-                            params: {
-                                assignmentId,
-                            },
-                        },
-                        {
-                            type: "load_assignment",
-                            assignmentId,
-                            truckId,
-                            fleetId,
-                        }
-                    );
-
-                } else {
-                    alert("Driver has no push token");
-                }
-
-            } else {
-                alert("Driver has no user account linked");
-            }
+} else {
+    alert("Driver has no user account linked");
+}
 
             ToastAndroid.show(
                 `${selected.fullName} assigned to the load successfully`,

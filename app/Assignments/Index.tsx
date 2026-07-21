@@ -10,6 +10,7 @@ import {
     FlatList,
     Alert,
     ToastAndroid,
+    RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -34,6 +35,7 @@ import FinancePanel from '@/components/FinancePanel';
 import TruckDefaultModal from '@/components/TruckDefaultModal';
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import AssignmentCard from '@/components/AssignmentComponent';
+import AccentRingLoader from '@/components/AccentRingLoader';
 
 // ---------------------------------------------------------------------------
 // Independent Assignments page for Fleet / Broker use.
@@ -445,6 +447,8 @@ function Jobs() {
     const fetchAssignments = async () => {
         if (!scopeId) return;
 
+        setIsLoading(true)
+
         try {
             setLoading(true);
 
@@ -473,8 +477,11 @@ function Jobs() {
                 setHasMoreAssignments(true);
             }
 
+            setIsLoading(false)
+
         } catch (error) {
             console.error("Error fetching assignments:", error);
+            setIsLoading(false)
 
         } finally {
             setLoading(false);
@@ -531,6 +538,19 @@ function Jobs() {
             setLoadingMore(false);
         }
     };
+    const onRefresh = async () => {
+                try {
+                    setRefreshing(true);
+                    setError(null);
+                    await fetchAssignments();
+                } catch (error) {
+                    console.error('Error refreshing loads:', error);
+                    setError('Failed to refresh loads. Please try again.');
+                    ToastAndroid.show('Failed to refresh loads', ToastAndroid.SHORT);
+                } finally {
+                    setRefreshing(false);
+                }
+            };
 
     useEffect(() => {
 
@@ -692,25 +712,88 @@ function Jobs() {
                 )}
 
                 {/* Cargo List */}
-                    <FlatList
-                        data={assignedCargo}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                            <AssignmentCard assignmentData={item}  />
-                        )}
-                        onEndReached={loadMoreAssignments}
-                        onEndReachedThreshold={0.5}
-                        ListEmptyComponent={
-                            <View style={{ alignItems: "center", marginTop: 30 }}>
-                                <ThemedText>No assignments found</ThemedText>
-                            </View>
-                        }
-                        ListFooterComponent={
-                            loadingMore ? (
-                                <ActivityIndicator size="small" color={accent} />
-                            ) : null
-                        }
-                    />
+                <FlatList
+                    data={assignedCargo}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <AssignmentCard assignmentData={item} />
+                    )}
+                    onEndReached={loadMoreAssignments}
+                    onEndReachedThreshold={0.5}
+                     refreshControl={
+                                        <RefreshControl
+                                            refreshing={refreshing}
+                                            onRefresh={onRefresh}
+                                            colors={[accent]}
+                                        />
+                                    }
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            {isLoading ? (
+                                <>
+                                    <AccentRingLoader color={accent} size={32} dotSize={6} />
+                                    <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                                        Loading Assignments…
+                                    </ThemedText>
+                                    <ThemedText type='tiny' style={styles.emptySubtext}>
+                                        Please Wait
+                                    </ThemedText>
+                                </>
+                            ) : error ? (
+                                <>
+                                    <Ionicons name="alert-circle-outline" size={wp(8)} color="#ef4444" />
+                                    <ThemedText type='defaultSemiBold' style={[styles.emptyText, { color: '#ef4444' }]}>
+                                        {error}
+                                    </ThemedText>
+                                    <ThemedText type='tiny' style={styles.emptySubtext}>
+                                        Pull to refresh
+                                    </ThemedText>
+                                </>
+                            ) : (
+                                <>
+                                    <Ionicons name="cube-outline" size={wp(8)} color={icon} />
+                                    <ThemedText type='defaultSemiBold' style={styles.emptyText}>
+                                        No Assignments Available
+                                    </ThemedText>
+
+
+                                    <TouchableOpacity onPress={() => router.push("/Logistics/Loads/AddLoads")} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}
+                                    >
+                                        <ThemedText style={{ color: '#666' }}>
+                                            Create a load to get started. Post it privately or request carriers from the network.
+                                        </ThemedText>
+
+                                        <Ionicons
+                                            name="chevron-forward"
+                                            size={16}
+                                            color={accent}
+                                            style={{ marginLeft: 4 }}
+                                        />
+                                    </TouchableOpacity>
+
+
+                                    {activeTab && <ThemedText type='tiny' style={styles.emptySubtext}>
+                                        Check back later
+                                    </ThemedText>}
+                                </>
+                            )}
+                        </View>
+                    }
+                    ListFooterComponent={
+                        loadingMore ? (
+                            <AccentRingLoader color={accent} size={20} dotSize={4} />
+
+                        ) :
+                            (!lastVisible && assignedCargo.length > 0) ?
+                                <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                                    <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>No more assigments to Load
+                                    </ThemedText>
+                                    <Ionicons color={icon} style={{}} name='alert-circle-outline' size={wp(6)} />
+
+                                </View>
+                                : null
+                    }
+                />
 
 
 
@@ -1019,6 +1102,15 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "flex-end",
         gap: 12,
+    }, emptySubtext: {
+        textAlign: 'center',
+        marginTop: wp(2)
+    }, emptyText: {
+        textAlign: 'center'
+    }, emptyContainer: {
+        minHeight: hp(80),
+        justifyContent: 'center',
+        alignItems: 'center'
     },
 });
 

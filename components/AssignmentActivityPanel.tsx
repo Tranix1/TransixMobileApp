@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { ThemedText } from "./ThemedText";
-import { View, TouchableOpacity ,Alert ,ActivityIndicator,StyleSheet} from "react-native";
+import { View, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { db } from "@/db/fireBaseConfig";
-import { collection,orderBy,updateDoc , doc , increment , where , getDocs , query,addDoc,getDoc } from "firebase/firestore";
-import { wp,hp } from "@/constants/common";
+import { collection, orderBy, updateDoc, doc, increment, where, getDocs, query, addDoc, getDoc } from "firebase/firestore";
+import { wp, hp } from "@/constants/common";
 import Input from "./Input";
 import FinancePanel from "./FinancePanel";
+import { sendPushNotification } from "@/Utilities/pushNotification";
+import { readById } from "@/db/operations";
 
 type Props = {
     assignmentId: string;
@@ -23,10 +25,18 @@ type Props = {
     initialNotesCount?: number;
     initialIssuesCount?: number;
 
-  
+    fleetCoordinator:{
+            id: string,
+              name: string,
+              phoneNumber :string ,
+              organizationId :string
+    }
+    numberPlate : string
+    truckId : string
+
 };
 
-    
+
 export default function AssignmentActivityPanel({
     assignmentId,
     fleetId,
@@ -37,6 +47,9 @@ export default function AssignmentActivityPanel({
     cargoPaymentTerms,
     initialNotesCount,
     initialIssuesCount,
+    fleetCoordinator ,
+    numberPlate ,
+    truckId ,
 }: Props) {
 
     // existing logic here
@@ -159,6 +172,57 @@ export default function AssignmentActivityPanel({
             } catch (countError) {
                 console.log("Could not update assignment counts", countError);
             }
+
+
+
+            if (activityView === "ISSUE") {
+
+
+
+                if (fleetCoordinator?.id) {
+
+                    const coordinatorData = await readById(
+                        "personalData",
+                        fleetCoordinator.id
+                    ) as {
+                        id: string;
+                        expoPushToken?: string;
+                    };
+
+                    const expoPushToken = coordinatorData?.expoPushToken;
+
+                    if (expoPushToken) {
+
+                        await sendPushNotification(
+                            expoPushToken,
+                            "New Load Assignment 📦",
+                            `A new load has been assigned to truck ${numberPlate}. Please review the assignment.`,
+                            {
+                                pathname: "/Fleet/AssignmentDetails",
+                                params: {
+                                    assignmentId,
+                                },
+                            },
+                            {
+                                type: "load_assignment",
+                                assignmentId,
+                                truckId,
+                                fleetId,
+                            }
+                        );
+
+                    } else {
+                        alert("Fleet coordinator has no push token");
+                    }
+
+                } else {
+                    alert("No fleet coordinator linked");
+                }
+
+            }
+
+
+
         } catch (error) {
             console.log(error);
             Alert.alert('Error', 'Failed to save. Please try again.');
@@ -582,8 +646,8 @@ export default function AssignmentActivityPanel({
                     onClose={() => setFinanceView(false)}
                     assignmentId={assignmentId}
                     rate={Number(cargoRate)}
-                    cargoRateCurrency={cargoRateCurrency ||""}
-                    cargoRateModel={cargoRateModel||""}
+                    cargoRateCurrency={cargoRateCurrency || ""}
+                    cargoRateModel={cargoRateModel || ""}
                     ratePerKm={Number(cargoRatePerKm)}
                     paymentTerms={cargoPaymentTerms}
                 />

@@ -23,6 +23,7 @@ import { sendPushNotification } from "@/Utilities/pushNotification";
 import Input from "@/components/Input";
 
 import ImageViewing from 'react-native-image-viewing';
+import { SelectLocationProp } from "@/types/types";
 
 // Shape matches the driverVerificationData object used when creating/submitting a driver.
 // Adjust / move to @/types/types once you have a shared Driver interface.
@@ -40,7 +41,7 @@ interface DriverVerificationData {
 
     driverVerificcationTier?: string;
 
-    location?: string;
+    location?: SelectLocationProp;
 
     documents: {
         selfieImage?: string;
@@ -71,8 +72,10 @@ const DriverDetails = () => {
     const backgroundLight = useThemeColor("backgroundLight");
     const textColor = useThemeColor("text");
 
-    const { driverid, dspDetails, fleetId } = useLocalSearchParams();
+    const {  driverId, dspDetails, fleetId } = useLocalSearchParams();
     const [driverData, setDriverData] = useState<DriverVerificationData>({} as DriverVerificationData)
+
+
     const [modalVisible, setModalVisible] = useState(false);
     const [refreshing, setRefreshing] = useState(false)
     const [isSaved, setIsSaved] = useState(false);
@@ -87,10 +90,11 @@ const DriverDetails = () => {
     const getData = async () => {
         try {
             setRefreshing(true)
-            if (!driverid) return;
+            if (!driverId) return;
             // If fleetId is provided, fetch from fleet subcollection, otherwise from main Drivers collection
             const collectionName =  'verifiedUsers';
-            const driver = await readById(collectionName, driverid as string)
+            const driver = await readById(collectionName, driverId as string)
+            
             if (driver) {
                 setDriverData(driver as DriverVerificationData)
             }
@@ -102,6 +106,11 @@ const DriverDetails = () => {
     };
 
     
+useEffect(()=>{
+                getData()
+
+},[])
+
 
     // Function to toggle save state
     const toggleSaveDriver = async () => {
@@ -520,7 +529,7 @@ const DriverDetails = () => {
                                     {driverData.organizationName}
                                 </ThemedText>
                                 <ThemedText>
-                                    {driverData.location}
+                                    {driverData.location?.city} {driverData.location?.country}
                                 </ThemedText>
                             </View>
                             {driverData.verificationStatus === 'approved' &&
@@ -584,7 +593,7 @@ const DriverDetails = () => {
                             borderColor: coolGray
                         }}>
                             <ThemedText type="subtitle" style={{ color: accent, marginBottom: wp(3) }}>
-                                Fleet Admin
+                                Driver Details
                             </ThemedText>
 
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: wp(2) }}>
@@ -780,33 +789,7 @@ const DriverDetails = () => {
                         </View>
                     )}
 
-                    <TouchableOpacity
-                        style={{
-                            height: 45,
-                            backgroundColor: accent,
-                            width: 240,
-                            borderRadius: 21,
-                            justifyContent: "center",
-                            alignItems: "center",
-                            alignSelf: "center",
-                            marginTop: wp(4),
-                            marginBottom: wp(4),
-                            shadowColor: accent,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.12,
-                            shadowRadius: 4,
-                            elevation: 2,
-                            paddingHorizontal: 5
-                        }}
-                           
-                    >
-                        <ThemedText style={{ color: "white" }}>
-                            View Drivers from{'  '}
-                            <ThemedText style={{ textDecorationLine: 'underline', color: 'white' }}>
-                                {driverData.organizationName}
-                            </ThemedText>
-                        </ThemedText>
-                    </TouchableOpacity>
+                    
 
                 </View>
             </ScrollView>

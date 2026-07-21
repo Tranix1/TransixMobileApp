@@ -220,19 +220,21 @@ function BookLCargo({ }) {
               },
 
               fleetDetails: item.organizationDetails ?? null,
-              
-              truckDetails: {
-                  truckId: item.id,
-                  truckType: item.truckType || null,
-                  truckCapacity: item.truckCapacity || null,
-                  cargoArea: item.cargoArea || null,
-                  locations: item.locations || [],
-                  trackingDeviceId: (item as any).trackingDeviceId || null,
-                  trackerStatus: trackerStatus,
-                  truckHasTracker: hasTracker,
+              fleeCoordinator: item?.dispatcher ?? null,
+              cargoCoordinator: loadItem.coordinator,
 
-                  numberPlate: item.numberPlate || null,
-                  truckName: item.truckName,
+              truckDetails: {
+                truckId: item.id,
+                truckType: item.truckType || null,
+                truckCapacity: item.truckCapacity || null,
+                cargoArea: item.cargoArea || null,
+                locations: item.locations || [],
+                trackingDeviceId: (item as any).trackingDeviceId || null,
+                trackerStatus: trackerStatus,
+                truckHasTracker: hasTracker,
+
+                numberPlate: item.numberPlate || null,
+                truckName: item.truckName,
 
               },
 

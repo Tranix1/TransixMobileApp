@@ -173,6 +173,7 @@ export default function TruckDefaultModal({
                     status: "PENDING",
                     truckDetails,
                     fleetDetails: selected.organizationDetails ?? null,
+                    fleetCoordinator: selected?.dispatcher ?? null,
 
 
                 })
@@ -183,6 +184,7 @@ export default function TruckDefaultModal({
                     status: "PENDING",
                     truckDetails,
                     fleetDetails: selected.organizationDetails ?? null,
+                    fleetCoordinator: selected?.dispatcher ?? null,
 
 
                 })
@@ -194,6 +196,7 @@ export default function TruckDefaultModal({
                     status: "PENDING",
                     truckDetails,
                     fleetDetails: selected.organizationDetails ?? null,
+                    fleetCoordinator: selected?.dispatcher ?? null,
 
                 })
             }

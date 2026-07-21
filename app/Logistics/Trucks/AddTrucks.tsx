@@ -28,6 +28,7 @@ import KYCVerificationModal from "@/components/KYCVerificationModal";
 import { db } from "@/db/fireBaseConfig";
 import { doc, collection, getDoc, getDocs, query, where, limit, serverTimestamp, writeBatch } from "firebase/firestore";
 import { SelectLocationProp } from "@/types/types";
+import { PhoneAuthCredential } from "firebase/auth";
 
 type FleetConfig = {
 
@@ -558,7 +559,8 @@ function AddTrucks() {
             dispatcher: {
               id: user.uid,
               name: user.displayName,
-              expoPushToken: expoPushToken || user?.expoPushToken
+              phoneNumber : user.phoneNumber ,
+              organizationId : currentRole?.organizationId || currentRole?.fleetId ||null
             }
           },
         },
