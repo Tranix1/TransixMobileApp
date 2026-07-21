@@ -22,6 +22,7 @@ import { fetchDocuments, updateDocument, uploadImage } from '@/db/operations';
 import { arrayUnion } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
 import { takePhoto, selectMultipleImages } from '@/Utilities/photoPickerUtils';
+import GetTrackerModal from "./GetTrackerModal";
 
 
 
@@ -38,7 +39,6 @@ const getStatusColor = (status: string) => {
 
     export default function AssignmentCard({ assignmentData }: any) {
 
-    console.log(assignmentData)
 
     const accent = useThemeColor("accent")
     const backgroundLight = useThemeColor("backgroundLight")
@@ -57,6 +57,40 @@ const getStatusColor = (status: string) => {
 
 
     const [uploadingImageUpdate, setUploadImageUpdate] = useState("")
+
+const [getTrackerModal,setGetTrackerModal]= useState(false)
+
+
+const handleTrackTruck = (truckTrackerId?: string | null) => {
+
+    console.log(truckTrackerId)
+    if (truckTrackerId) {
+        console.log("hiiii")
+        // router.push(`/Tracking/${truckTrackerId}`);
+        //   {
+        //                     router.push({
+        //                         pathname: "/Map/VehicleTrackingMap",
+        //                         params: {
+        //                             vehicleId: assignmentData.truckDetails.trackingDeviceId || "UNASSIGNED",
+
+        //                             pickupLati: assignmentData.loadDetails.pickupLocation.latitud,
+        //                             pickupLongi: assignmentData.loadDetails.pickupLocation.longitude,
+        //                             pickupName: assignmentData.loadDetails.pickupLocation.description,
+
+        //                             dropoffLati: assignmentData.loadDetails.deliveryLocation.latitude,
+        //                             dropoffLongi: assignmentData.loadDetails.deliveryLocation.longitude,
+        //                             dropoffName: assignmentData.loadDetails.deliveryLocation.description,
+
+        //                             plannedRoutePolyline: assignmentData.loadDetails.deliveryLocation,
+        //                         },
+        //                     });
+        //                 }
+    } else {
+        console.log("Byee")
+
+        setGetTrackerModal(true);
+    }
+};
 
 
 
@@ -278,6 +312,9 @@ const getStatusColor = (status: string) => {
     return (
         <View key={assignmentData.id} style={[styles.cargoItem, { backgroundColor: backgroundLight }]}>
 
+
+
+        <GetTrackerModal visible={getTrackerModal} onClose={()=> setGetTrackerModal(false)} />
 
             <TruckDefaultModal
 
@@ -607,7 +644,7 @@ const getStatusColor = (status: string) => {
 
             </View>
 
-            {/* OPERATION ACTIONS */}
+            {/* ERATION ACTIONS */}
             <View
                 style={{
                     flexDirection: 'row',
@@ -620,29 +657,11 @@ const getStatusColor = (status: string) => {
                 {/* TRACKER - Everyone */}
                 {(assignmentData.status !== "UNASSIGNED") && <TouchableOpacity
                     style={styles.actionButton}
-                    onPress={() => {
-                        console.log("Open tracker");
-                    }}
+                    
+                    onPress={()=>handleTrackTruck(assignmentData?.truckDetails?.trackingDeviceId) }
                 >
                     <Ionicons name="navigate-circle-outline" size={16} color={accent}
-                        onPress={() => {
-                            router.push({
-                                pathname: "/Map/VehicleTrackingMap",
-                                params: {
-                                    vehicleId: assignmentData.truckDetails.trackingDeviceId || "UNASSIGNED",
-
-                                    pickupLati: assignmentData.loadDetails.pickupLocation.latitud,
-                                    pickupLongi: assignmentData.loadDetails.pickupLocation.longitude,
-                                    pickupName: assignmentData.loadDetails.pickupLocation.description,
-
-                                    dropoffLati: assignmentData.loadDetails.deliveryLocation.latitude,
-                                    dropoffLongi: assignmentData.loadDetails.deliveryLocation.longitude,
-                                    dropoffName: assignmentData.loadDetails.deliveryLocation.description,
-
-                                    plannedRoutePolyline: assignmentData.loadDetails.deliveryLocation,
-                                },
-                            });
-                        }}
+                      
 
                     />
                     <ThemedText style={styles.actionButtonText}>
