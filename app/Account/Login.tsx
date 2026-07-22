@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import {
     View,
@@ -6,7 +6,8 @@ import {
     StyleSheet,
     ActivityIndicator,
     ScrollView,
-    Alert,Keyboard
+    Keyboard,
+    ToastAndroid,
 } from 'react-native';
 import Input from '@/components/Input';
 import { hp, wp } from '@/constants/common';
@@ -14,13 +15,18 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { ThemedText } from '@/components/ThemedText';
 import { Image } from 'expo-image';
 import { useAuth } from '@/context/AuthContext';
-import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 import {
     MaterialCommunityIcons,
     FontAwesome5,
     Ionicons,
+    EvilIcons,
 } from '@expo/vector-icons';
 import { AccountType } from '@/types/types';
+import { PhoneAuthProvider } from 'firebase/auth';
+import { auth, firebaseConfig } from '@/db/fireBaseConfig';
+import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
+import PhoneInput from '@/components/PhoneInput';
+import { router } from 'expo-router';
 
 const ACCOUNT_TYPES: {
     key: AccountType;
@@ -34,11 +40,8 @@ const ACCOUNT_TYPES: {
 ];
 
 const Login = ({ setDspLoginOrSignup }: any) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [resetPassword, setResetPassword] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<AccountType>('tracking');
 
     const backgroundLight = useThemeColor('backgroundLight');
@@ -46,17 +49,26 @@ const Login = ({ setDspLoginOrSignup }: any) => {
     const accent = useThemeColor('accent');
     const coolGray = useThemeColor('coolGray');
 
-       const [keyboardVisible, setKeyboardVisible] = useState(false);
-    
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [countryCode, setCountryCode] = useState({ id: 0, name: '' });
+
+    const [verificationId, setVerificationId] = useState('');
+    const [otp, setOtp] = useState('');
+    const [otpSent, setOtpSent] = useState(false);
+
+    const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
+
     useEffect(() => {
-        const showSub = Keyboard.addListener("keyboardDidShow", () => {
+        const showSub = Keyboard.addListener('keyboardDidShow', () => {
             setKeyboardVisible(true);
         });
-    
-        const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+
+        const hideSub = Keyboard.addListener('keyboardDidHide', () => {
             setKeyboardVisible(false);
         });
-    
+
         return () => {
             showSub.remove();
             hideSub.remove();
@@ -64,43 +76,91 @@ const Login = ({ setDspLoginOrSignup }: any) => {
     }, []);
 
     const { Login: loginUser } = useAuth();
-    const auth = getAuth();
 
     const handleAccountSelect = (type: AccountType) => setSelectedAccount(type);
 
-    const onsubmit = async () => {
-        if (!email || !password) {
-            setError('Please fill in all fields');
-            return;
-        }
-        setError(null);
-        setLoading(true);
+    const sendPhoneOTP = async () => {
         try {
-            const res = await loginUser({ email, password, accountType: selectedAccount });
-            if (!res.success) setError(res.message || 'Login failed. Please try again.');
-        } catch (err: any) {
-            setError(err.message || 'Login failed. Please try again.');
-        } finally {
+            const length = phoneNumber.replace(/\D/g, '').length;
+
+            if (!countryCode.name) {
+                setError('Select a country code');
+                return;
+            }
+
+            if (countryCode.name === '+267') {
+                if (length !== 8) {
+                    setError('Botswana phone number must be 8 digits');
+                    return;
+                }
+            } else {
+                if (length !== 9) {
+                    setError('Phone number must be 9 digits');
+                    return;
+                }
+            }
+
+            setError(null);
+            setLoading(true);
+
+            const provider = new PhoneAuthProvider(auth);
+
+            const id = await provider.verifyPhoneNumber(
+                `${countryCode.name}${phoneNumber}`,
+                recaptchaVerifier.current!
+            );
+
+            setVerificationId(id);
+            setOtpSent(true);
+            setLoading(false);
+        } catch (error: any) {
+            console.error(error);
+            ToastAndroid.show(
+                error?.message || `${error}`,
+                ToastAndroid.LONG
+            );
             setLoading(false);
         }
     };
 
-    const sendPasswordReset = async () => {
-        if (!email) {
-            Alert.alert('Error', 'Enter your email address to reset your password');
+const onsubmit = async () => {
+    if (!phoneNumber || !otp) {
+        setError('Please fill in all fields');
+        return;
+    }
+
+    setError(null);
+    setLoading(true);
+
+    try {
+        const res = await loginUser({
+            phoneNumber: `${countryCode.name}${phoneNumber}`,
+            verificationId,
+            otp,
+            accountType: selectedAccount,
+        });
+
+        if (!res.success) {
+            setError(res.message || 'Login failed. Please try again.');
             return;
         }
-        setLoading(true);
-        try {
-            await sendPasswordResetEmail(auth, email);
-            setResetPassword(false);
-            Alert.alert('Success', 'A password reset link has been sent to your email.');
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
+
+        
+
+        if (res.currentRole?.userRole === "create_Acc") {
+            router.push({
+                pathname: "/Account/Selector",
+                params: { accountType: selectedAccount },
+            });
+        } else {
+            router.replace('/');
         }
-    };
+    } catch (err: any) {
+        setError(err.message || 'Login failed. Please try again.');
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <ScreenWrapper>
@@ -170,92 +230,90 @@ const Login = ({ setDspLoginOrSignup }: any) => {
                         </View>
                     )}
 
-                    {!resetPassword ? (
-                        <View>
-                            <ThemedText style={styles.label}>Email</ThemedText>
+                    <FirebaseRecaptchaVerifierModal
+                        ref={recaptchaVerifier}
+                        firebaseConfig={firebaseConfig}
+                    />
+
+                    <ThemedText style={styles.label}>Phone Number</ThemedText>
+
+                    <PhoneInput
+                        value={phoneNumber}
+                        onChangeText={setPhoneNumber}
+                        countryCode={countryCode}
+                        setCountryCode={setCountryCode}
+                        editable={otpSent}
+                    />
+
+                    {otpSent && (
+                        <>
+                            <ThemedText style={styles.label}>OTP Code</ThemedText>
+
                             <Input
+                                placeholder="Enter OTP"
+                                value={otp}
+                                onChangeText={setOtp}
+                                keyboardType="number-pad"
                                 containerStyles={styles.input}
-                                placeholder="Your email"
-                                value={email}
-                                onChangeText={setEmail}
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                                autoCorrect={false}
                             />
+                        </>
+                    )}
 
-                            <View style={styles.passwordHeader}>
-                                <ThemedText style={styles.label}>Password</ThemedText>
-                                <TouchableOpacity onPress={() => setResetPassword(true)} hitSlop={8}>
-                                    <ThemedText style={styles.forgotPassword}>Forgot Password?</ThemedText>
-                                </TouchableOpacity>
-                            </View>
-
-                            <Input
-                                containerStyles={styles.input}
-                                placeholder="Enter your password"
-                                value={password}
-                                isPassword
-                                onChangeText={setPassword}
-                            />
-
-                            <TouchableOpacity
-                                onPress={onsubmit}
-                                style={[
-                                    styles.signUpButton,
-                                    { backgroundColor: accent, opacity: loading ? 0.6 : 1 },
-                                ]}
-                                disabled={loading}
-                                activeOpacity={0.85}
-                            >
-                                {loading ? (
-                                    <ActivityIndicator color="#fff" />
-                                ) : (
-                                    <ThemedText color="#fff" type="subtitle">
-                                        Login
-                                    </ThemedText>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    ) : (
-                        <View>
-                            <ThemedText style={styles.resetText} color={coolGray}>
-                                Enter a valid email to receive a password reset link.
-                            </ThemedText>
-
-                            <ThemedText style={styles.label}>Email</ThemedText>
-                            <Input
-                                containerStyles={styles.input}
-                                placeholder="Your email"
-                                value={email}
-                                onChangeText={setEmail}
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                            />
-
-                            <TouchableOpacity
-                                onPress={sendPasswordReset}
-                                style={[
-                                    styles.signUpButton,
-                                    { backgroundColor: accent, opacity: loading ? 0.6 : 1 },
-                                ]}
-                                disabled={loading}
-                                activeOpacity={0.85}
-                            >
-                                {loading ? (
-                                    <ActivityIndicator color="#fff" />
-                                ) : (
-                                    <ThemedText color="#fff" type="subtitle">
-                                        Reset Password
-                                    </ThemedText>
-                                )}
-                            </TouchableOpacity>
-
-                            <TouchableOpacity onPress={() => setResetPassword(false)} hitSlop={8}>
-                                <ThemedText style={{ textAlign: 'center', color: accent, fontWeight: '600' }}>
-                                    Back to Login
+                    {!otpSent ? (
+                        <TouchableOpacity
+                            onPress={sendPhoneOTP}
+                            disabled={loading}
+                            activeOpacity={0.85}
+                            style={[
+                                styles.otpButton,
+                                {
+                                    borderColor: accent,
+                                    opacity: loading ? 0.6 : 1,
+                                },
+                            ]}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <ThemedText color="#fff" type="subtitle">
+                                    Send OTP
                                 </ThemedText>
-                            </TouchableOpacity>
-                        </View>
+                            )}
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity
+                            onPress={onsubmit}
+                            style={[
+                                styles.signUpButton,
+                                { backgroundColor: accent, opacity: loading ? 0.6 : 1 },
+                            ]}
+                            disabled={loading}
+                            activeOpacity={0.85}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <ThemedText color="#fff" type="subtitle">
+                                    Login
+                                </ThemedText>
+                            )}
+                        </TouchableOpacity>
+                    )}
+
+                    {otpSent && (
+                        <TouchableOpacity
+                            onPress={() => {
+                                setOtpSent(false);
+                                setOtp('');
+                                setVerificationId('');
+                            }}
+                            disabled={loading}
+                            hitSlop={8}
+                        >
+                            <ThemedText style={{ textAlign: 'center', color: accent, fontWeight: '600', marginBottom: hp(2) }}>
+                                Change phone number
+                            </ThemedText>
+                        </TouchableOpacity>
                     )}
 
                     <TouchableOpacity
@@ -342,6 +400,15 @@ const styles = StyleSheet.create({
         marginTop: hp(1),
         marginBottom: hp(2),
         elevation: 3,
+    },
+    otpButton: {
+        height: 48,
+        borderRadius: 14,
+        borderWidth: 1,
+        backgroundColor: 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: hp(2),
     },
     resetText: { marginBottom: hp(2), lineHeight: 22 },
     footerText: { textAlign: 'center', marginTop: hp(1) },

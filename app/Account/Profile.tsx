@@ -42,7 +42,6 @@ const Edit = () => {
     const [imagelogo, setLogo] = useState<ImagePickerAsset | null>(null);
 
     const [organisation, setOrganisation] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
     const [address, setAddress] = useState('');
     const [selectedValue, setSelectedValue] = useState({ value: '', label: '' });
 
@@ -132,7 +131,6 @@ const Edit = () => {
         }
 
         setOrganisation(user?.organisation || '');
-        setPhoneNumber(user?.number || '');
         setCountryCode(user.countryCode || { id: 0, name: '+263' });
         setAddress(user?.address || '');
         setSelectedValue({ value: user.country || '', label: user.country || '' });
@@ -169,7 +167,6 @@ const Edit = () => {
             !organisation && "Enter Organisation Name",
             !location.city && "Select Your Location ",
             !countryCode.name && "Select Country Code",
-            !phoneNumber && "Enter Phone Number",
         ].filter(Boolean);
 
 
@@ -198,9 +195,7 @@ const Edit = () => {
 
 
             location: location,
-            phoneNumber: `${countryCode.name}${phoneNumber}`,
-            number: phoneNumber,
-            countryCode: countryCode,
+            phoneNumber: user.phoneNumber,
             organisation: organisation,
             displayName: organisation,
             photoURL: imagelogo ? logoImage || undefined : user.photoURL,
@@ -272,66 +267,7 @@ const Edit = () => {
                                 onChangeText={setOrganisation}
                             />
 
-                            <ThemedText style={styles.label}>Phone Number</ThemedText>
-
-                            <Input
-                                Icon={<>
-                                    <Dropdown
-                                        style={[{ width: wp(15) }]}
-                                        selectedTextStyle={[styles.selectedTextStyle, { color: icon }]}
-                                        data={countryCodes}
-                                        maxHeight={hp(60)}
-                                        labelField="name"
-                                        valueField="name"
-                                        placeholder="+00"
-                                        value={countryCode?.name}
-                                        itemContainerStyle={{ borderRadius: wp(2), marginHorizontal: wp(1) }}
-                                        activeColor={background}
-
-                                        containerStyle={{
-                                            borderRadius: wp(3), backgroundColor: background, borderWidth: 0, shadowColor: "#000",
-                                            width: wp(45),
-                                            shadowOffset: {
-                                                width: 0,
-                                                height: 9,
-                                            },
-                                            shadowOpacity: 0.50,
-                                            shadowRadius: 12.35,
-
-                                            elevation: 19,
-                                            paddingVertical: wp(1)
-                                        }}
-                                        onChange={item => {
-                                            console.log(item);
-                                            setCountryCode(item);
-                                        }}
-
-                                        renderLeftIcon={() => <></>}
-                                        renderRightIcon={() => <Ionicons name="chevron-down" size={wp(4)} color={icon} />}
-                                        renderItem={((item, selected) =>
-                                            <>
-                                                <View style={[styles.item, selected && {}]}>
-                                                    <ThemedText style={[{ textAlign: 'left', flex: 1 }, selected && { color: '#0f9d58' }]}>{item.name}</ThemedText>
-                                                    {selected && (
-                                                        <Ionicons
-                                                            color={icon}
-                                                            name='checkmark-outline'
-                                                            size={wp(5)}
-                                                        />
-                                                    )}
-                                                </View>
-                                                <Divider />
-                                            </>
-                                        )}
-
-                                    />
-                                    <ThemedText style={{ marginHorizontal: wp(4) }}>|</ThemedText>
-                                </>}
-                                value={phoneNumber}
-                                placeholder="700 000 000"
-                                onChangeText={(text) => setPhoneNumber(text)}
-                                keyboardType="numeric"
-                            />
+                           
 
 
 

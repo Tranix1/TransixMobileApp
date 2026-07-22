@@ -26,6 +26,7 @@ type Props = {
     }) => void;
 
     placeholder?: string;
+    editable ?: boolean
 };
 
 export default function PhoneInput({
@@ -34,6 +35,7 @@ export default function PhoneInput({
     countryCode,
     setCountryCode,
     placeholder = "700 000 000",
+    editable ,
 }: Props) {
 
     const background = useThemeColor("background");
@@ -170,6 +172,7 @@ export default function PhoneInput({
             onChangeText={onChangeText}
 
             keyboardType="numeric"
+            editable ={!editable}
         />
     );
 }

@@ -550,8 +550,8 @@ export const validateReferralCode = async (referralCode: string) => {
 
             const q = query(
                 collection(db, "referrers"),
-                where("referralCode", "==", referralCode) ,
-                    where("isActive", "==", true)
+                where("referralCode", "==", referralCode),
+                where("isActive", "==", true)
 
             );
 
@@ -577,10 +577,10 @@ export const validateReferralCode = async (referralCode: string) => {
                 data: {
                     userId: data.userId,
                     name: data.name ?? "Unknown",
-                    email: data.email ?? "",
+                    phoneNumber: data.phoneNumber,
                     referralCode: data.referralCode,
                     joinedAt: data.createdAt ?? new Date().toISOString(),
-                },
+                }
             };
         }
 
@@ -615,11 +615,14 @@ export const validateReferralCode = async (referralCode: string) => {
                 type: "CAMPAIGN",
 
                 data: {
+                    userId: data.userId,
+                    name: data.name,
+                    phoneNumber: data.phoneNumber,
                     referralCode: data.referralCode,
                     campaign: data.campaign,
                     platform: data.platform,
                     createdAt: data.createdAt,
-                },
+                }
             };
         }
 

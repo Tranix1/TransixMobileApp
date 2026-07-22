@@ -19,15 +19,21 @@ import { setDoc } from "firebase/firestore";
 
 type AlertType = "default" | "error" | "success" | "laoding" | "destructive";
 
-interface LoginCredentials {
-    email: string;
-    password: string;
+type LoginCredentials = {
+    phoneNumber?: string;
+    verificationId: string;
+    otp: string;
     accountType: AccountType;
-}
+};
 
 interface LoginResponse {
     success: boolean;
     message: string;
+    currentRole?: {
+        userRole: string
+        accType: string
+    }
+
 }
 
 interface SignUpCredentials {
@@ -263,21 +269,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await AsyncStorage.removeItem('currentUser');
     };
 
-
     const Login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
         try {
-            const userCredential = await signInWithEmailAndPassword(
+            const credential = PhoneAuthProvider.credential(
+                credentials.verificationId,
+                credentials.otp
+            );
+
+            const userCredential = await signInWithCredential(
                 auth,
-                credentials.email,
-                credentials.password
+                credential
             );
 
             setUser(undefined);
 
             const firebaseUser = userCredential.user;
 
-
             const personalData = await readById('personalData', firebaseUser.uid) || {};
+
             const fullUser: User = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email ?? undefined,
@@ -291,15 +300,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             console.log(fullUser)
             setIsSignedIN(true);
             setIsAppReady(true);
+
             await AsyncStorage.setItem('user', JSON.stringify(fullUser));
             await AsyncStorage.setItem('currentUser', JSON.stringify(fullUser));
             await AsyncStorage.setItem(`personalData_${firebaseUser.uid}`, JSON.stringify(personalData));
-            await saveCurrentRole(credentials.accountType);
-            await router.replace('/');
+
+            let currentRoleAccType: { userRole: string; accType: string };
+
+            const ownedBrokerages = Array.isArray(fullUser?.brokergeDetails) ? fullUser.brokergeDetails : [];
+            const ownedFleets = Array.isArray(fullUser?.fleets) ? fullUser.fleets : [];
+            const hasDriverProfile = !!fullUser?.driverDetails;
+
+            if (credentials.accountType === "brokerage" && ownedBrokerages.length > 0) {
+                currentRoleAccType = {
+                    userRole: "verified",
+                    accType: credentials.accountType,
+                };
+            } else if (credentials.accountType === "fleet" && ownedFleets.length > 0) {
+                currentRoleAccType = {
+                    userRole: "verified",
+                    accType: credentials.accountType,
+                };
+            } else if (credentials.accountType === "driver" && hasDriverProfile) {
+                currentRoleAccType = {
+                    userRole: "verified",
+                    accType: credentials.accountType,
+                };
+            } else {
+                currentRoleAccType = {
+                    userRole: "create_Acc",
+                    accType: credentials.accountType,
+                };
+            }
+
+            await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
 
             return {
                 success: true,
                 message: "Login successful",
+                currentRole: currentRoleAccType,
             };
         } catch (error) {
             console.log(error);
@@ -390,8 +429,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     referredBy
                 }),
 
-                accountType: accountRole.accType,
-                role: accountRole.role,
+                accountType: credentials.accountType,
                 createdAt: Date.now().toString(),
             };
 
@@ -400,10 +438,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 userData
             );
             if (!saved) {
-    return {
-        success: false,
-    };
-}
+                return {
+                    success: false,
+                };
+            }
 
 
             let newRefferalCode = await generateUniqueReferralCode("REFERRER");
@@ -415,7 +453,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     userId: firebaseUser.uid,
 
                     name:
-                        credentials.displayName ||"Unknown",
+                        credentials.displayName || "Unknown",
 
                     phoneNumber: firebaseUser.phoneNumber ?? undefined,
 
@@ -464,7 +502,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const currentRoleAccType = {
                 userRole: "create_Acc",
 
-                accType: accountRole,
+                accType: credentials.accountType,
 
             };
 
@@ -481,7 +519,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             return {
                 success: true,
-                accountRole,
+                accountRole: { userRole: "create_Acc", accType: credentials.accountType },
             };
 
         } catch (error) {
@@ -518,7 +556,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
 
-            
+
     const updateCurrentUser = async (userData: User) => {
         try {
             await AsyncStorage.setItem("currentUser", JSON.stringify(userData));

@@ -28,7 +28,7 @@ import { Countries } from '@/types/types';
 
 const CreateFleet = () => {
     const router = useRouter();
-    const { user, setCurrentRole, setupUser } = useAuth();
+    const { user, setCurrentRole, setupUser ,  currentRole } = useAuth();
     const [typeOfFleet, setTypeOfFleet] = useState('');
     const [fleetName, setFleetName] = useState('');
     const [fleetPhone, setFleetPhone] = useState('');
@@ -43,9 +43,7 @@ const CreateFleet = () => {
 
 
     const [baseAdress, setBaseAdress] = useState<SelectLocationProp | null>(null);
-    console.log(baseAdress , "bse Address")
     const [billingAddress, setbillingAddress] = useState<SelectLocationProp | null>(null);
-    console.log("billing address" , billingAddress)
 
 
     const [dspFromLocation, setDspFromLocation] = useState(false);
@@ -134,11 +132,11 @@ const CreateFleet = () => {
                 organizationName: fleetData.fleetName,
 
                 organizationEmail: fleetData.fleetEmail,
-                organizationPhone: fleetData.fleetPhone,
+                organizationPhone:    fleetData.fleetPhone && fleetCountryCode.name ?
+                `${fleetCountryCode.name}${fleetData.fleetPhone}`: user.phoneNumber  ,
 
                 fleetMainAdminName: user.displayName,
                 organizationAdminPhone: user.phoneNumber,
-                organizationAdminEmail: user.email,
 
                 countryCode: fleetData.fleetCountryCode?.name,
                 typeOfFleet: fleetData.typeOfFleet,
@@ -265,7 +263,6 @@ const CreateFleet = () => {
 
             const contactDetails = {
                 userName: user?.displayName,
-                email: user?.email,
                 phoneNumber: user?.phoneNumber,
                 photoUrl: user?.photoURL,
                 userId: user?.uid,
@@ -319,9 +316,12 @@ const CreateFleet = () => {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: background, paddingTop: 36, }} >
+        <View style={{ flex: 1, backgroundColor: background,  }} >
+
+        <View style={{paddingTop:currentRole.userRole==="create_Acc"?0: 36}}>
 
             <Heading page="Create Fleet" />
+        </View>
 
             <View style={{ margin: hp(3) }}>
 
@@ -382,12 +382,7 @@ const CreateFleet = () => {
                         keyboardType='numeric'
                     />
 
-                    <ThemedText>Fleet Email Address</ThemedText>
-                    <Input
-                        placeholder="Enter fleet owner email"
-                        value={fleetEmail}
-                        onChangeText={setFleetEmail}
-                    />
+                    
 
 
                     <LocationSelector

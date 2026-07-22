@@ -24,7 +24,7 @@ function BrokerageSelector() {
     const accent = useThemeColor('accent');
     const icon = useThemeColor('icon');
 
-    const ownedBrokerages = Array.isArray(user?.brokergePDetails) ? user.brokergePDetails : [];
+    const ownedBrokerages = Array.isArray(user?.brokergeDetails) ? user.brokergeDetails : [];
     const brokerages = ownedBrokerages.length;
     const hasReferral = !!user?.referredBy?.userId;
 

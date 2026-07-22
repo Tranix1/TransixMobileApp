@@ -66,7 +66,7 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
     const [otp, setOtp] = useState("");
     const [otpSent, setOtpSent] = useState(false);
 
-const [referralValidation, setReferralValidation] = useState<any>(null);
+    const [referralValidation, setReferralValidation] = useState<any>(null);
 
 
 
@@ -98,10 +98,15 @@ const [referralValidation, setReferralValidation] = useState<any>(null);
 
 
 
-
     const sendPhoneOTP = async () => {
+
         try {
             const length = phoneNumber.replace(/\D/g, "").length;
+
+            if (!countryCode.name) {
+                setError("Select a country code");
+                return;
+            }
 
             if (countryCode.name === "+267") {
                 if (length !== 8) {
@@ -120,6 +125,10 @@ const [referralValidation, setReferralValidation] = useState<any>(null);
                 return
             }
 
+              if (!acceptTerms) {
+            setError("You must accept the terms and privacy policy");
+            return;
+        }
 
             if (selectedAccount !== "tracking" && referrerCode) {
                 const normalizedCode = referrerCode.trim().toUpperCase();
@@ -134,17 +143,18 @@ const [referralValidation, setReferralValidation] = useState<any>(null);
                 setReferralValidation(validation);
             }
 
+            setLoading(true)
 
             const provider = new PhoneAuthProvider(auth);
 
             const id = await provider.verifyPhoneNumber(
-                `${countryCode}${phoneNumber}`,
+                `${countryCode.name}${phoneNumber}`,
                 recaptchaVerifier.current!
             );
 
             setVerificationId(id);
             setOtpSent(true);
-
+            setLoading(false)
 
         } catch (error: any) {
             console.error(error)
@@ -152,6 +162,7 @@ const [referralValidation, setReferralValidation] = useState<any>(null);
                 error?.message || `${error}`,
                 ToastAndroid.LONG
             );
+            setLoading(false)
 
             return {
                 success: false,
@@ -161,31 +172,31 @@ const [referralValidation, setReferralValidation] = useState<any>(null);
 
 
 
-    const verifyOTP = async () => {
-        try {
+    // const verifyOTP = async () => {
+    //     try {
 
-            const credential = PhoneAuthProvider.credential(
-                verificationId,
-                otp
-            );
+    //         const credential = PhoneAuthProvider.credential(
+    //             verificationId,
+    //             otp
+    //         );
 
-            const userCredential = await signInWithCredential(
-                auth,
-                credential
-            );
+    //         const userCredential = await signInWithCredential(
+    //             auth,
+    //             credential
+    //         );
 
-            ToastAndroid.show(
-                `Created ${userCredential.user.uid}`,
-                ToastAndroid.LONG
-            );
+    //         ToastAndroid.show(
+    //             `Created ${userCredential.user.uid}`,
+    //             ToastAndroid.LONG
+    //         );
 
-        } catch (error: any) {
-            ToastAndroid.show(
-                error?.message || `${error}`,
-                ToastAndroid.LONG
-            );
-        }
-    };
+    //     } catch (error: any) {
+    //         ToastAndroid.show(
+    //             error?.message || `${error}`,
+    //             ToastAndroid.LONG
+    //         );
+    //     }
+    // };
 
 
 
@@ -198,49 +209,48 @@ const [referralValidation, setReferralValidation] = useState<any>(null);
             return;
         }
 
-        if (!acceptTerms) {
-            setError("You must accept the terms and privacy policy");
-            return;
-        }
+      
 
         setError(null);
+
+   
 
         try {
             setLoading(true);
             setIsSigningUp(true);
 
             const result = await signUp({
-                phoneNumber,
+                phoneNumber:`${countryCode.name}${phoneNumber}` ,
                 verificationId,
                 otp,
                 referrerCode,
                 accountType: selectedAccount,
                 displayName: fullname,
-                referralValidation 
+                referralValidation
             });
 
             if (result.success) {
-                if(selectedAccount ==="fleet"){
-                    router.replace( "/Fleet/CreateFleet");
+                if (selectedAccount === "fleet") {
+                    router.replace("/Fleet/CreateFleet");
 
-                }else if(selectedAccount === "brokerage" ){
+                } else if (selectedAccount === "brokerage") {
 
-                    router.replace( "/brokerage/CreateBrokerage/Index");
+                    router.replace("/brokerage/CreateBrokerage/Index");
 
-                }else if (selectedAccount ==="driver"){
-                    router.replace( "/Driver/Add/Index");
+                } else if (selectedAccount === "driver") {
+                    router.replace("/Driver/Add/Index");
 
-                }else if(selectedAccount ==="tracking"){
+                } else if (selectedAccount === "tracking") {
 
                     router.replace({
-                    pathname: "/Account/Profile",
-                    params: {
-                        operation: "create",
-                        accountType: result.accountRole.accType,
-                    },
-                });
+                        pathname: "/Account/Profile",
+                        params: {
+                            operation: "create",
+                            accountType: result.accountRole.accType,
+                        },
+                    });
                 }
-                
+
             }
 
         } catch (err: any) {
@@ -339,6 +349,8 @@ const [referralValidation, setReferralValidation] = useState<any>(null);
                         value={fullname}
                         onChangeText={setFullName}
                         autoCapitalize="words"
+                        editable={!otpSent}
+
                     />
 
                     <ThemedText style={styles.label}>Phone Number</ThemedText>
@@ -348,10 +360,25 @@ const [referralValidation, setReferralValidation] = useState<any>(null);
                         onChangeText={setPhoneNumber}
                         countryCode={countryCode}
                         setCountryCode={setCountryCode}
+                        editable={otpSent}
+
                     />
 
 
+                    {selectedAccount !== 'tracking' && (
+                        <View>
+                            <ThemedText style={styles.label}>Referral Code </ThemedText>
+                            <Input
+                                containerStyles={styles.input}
+                                placeholder="Enter referrer code"
+                                value={referrerCode}
+                                onChangeText={setReferrerCode}
+                                autoCapitalize="characters"
+                                editable={!otpSent}
 
+                            />
+                        </View>
+                    )}
                     {otpSent && (
                         <>
                             <ThemedText style={styles.label}>OTP Code</ThemedText>
@@ -365,25 +392,8 @@ const [referralValidation, setReferralValidation] = useState<any>(null);
 
                             />
 
-                            <TouchableOpacity onPress={verifyOTP}>
-                                <ThemedText>Verify OTP</ThemedText>
-                            </TouchableOpacity>
+
                         </>
-                    )}
-
-
-
-                    {selectedAccount !== 'tracking' && (
-                        <View>
-                            <ThemedText style={styles.label}>Referral Code </ThemedText>
-                            <Input
-                                containerStyles={styles.input}
-                                placeholder="Enter referrer code"
-                                value={referrerCode}
-                                onChangeText={setReferrerCode}
-                                autoCapitalize="characters"
-                            />
-                        </View>
                     )}
 
                     {/* TERMS */}
@@ -462,7 +472,7 @@ const [referralValidation, setReferralValidation] = useState<any>(null);
                     </TouchableOpacity>
 
                     {!keyboardVisible && (
-                        <View style={{ height: hp(8) }} />
+                        <View style={{ height: hp(18) }} />
                     )}
                     {keyboardVisible && (
                         <View style={{ height: hp(50) }} />
@@ -520,7 +530,7 @@ const styles = StyleSheet.create({
     label: { fontSize: wp(3.6), fontWeight: '600', marginBottom: hp(0.8) },
     input: {
         borderWidth: 1,
-        borderColor: 'rgba(128,128,128,0.3)',
+        // borderColor: 'frgba(128,128,128,0.3)',
         borderRadius: wp(4),
         paddingHorizontal: wp(4),
         marginBottom: hp(2),
