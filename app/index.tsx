@@ -248,7 +248,7 @@ export default function Index() {
             },
           })}
         >
-          {dspCreateAcc ? (
+          {!dspCreateAcc ? (
             <>
               {/* <Tab.Screen name="Home " component={dspLoginOSignup ? Login : SignUp} /> */}
 
@@ -258,7 +258,7 @@ export default function Index() {
                     <Login
                       {...props}
                       setDspLoginOrSignup={setDspLoginOrSignup}
-                    />
+                    />  
                   ) : (
                     <SignUp
                       {...props}

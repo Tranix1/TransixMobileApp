@@ -2,7 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import {
     createUserWithEmailAndPassword,
-    sendEmailVerification,
+    PhoneAuthProvider,
+    signInWithCredential,
     signInWithEmailAndPassword,
     signOut,
     updateProfile,
@@ -30,8 +31,9 @@ interface LoginResponse {
 }
 
 interface SignUpCredentials {
-    email: string;
-    password: string;
+    phoneNumber: string;
+    verificationId: string;
+    otp: string;
     displayName: string;
     referrerCode?: string;
     accountType?: AccountType;
@@ -95,7 +97,7 @@ const DEFAULT_BROKER_ROLE: CurrentRole = {
 };
 
 const AuthContext = createContext<AuthContextValue>({
-    signUp: async () => {return {success: false,};},
+    signUp: async () => { return { success: false, }; },
     Login: async () => ({ success: false, message: "" }),
     isSignedIn: false,
     user: null,
@@ -273,13 +275,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             const firebaseUser = userCredential.user;
 
-            if (auth.currentUser && !auth.currentUser.emailVerified) {
-                await sendEmailVerification(firebaseUser);
-                Alert.alert(
-                    "Verification Email Sent",
-                    "Please verify your email to continue."
-                );
-            }
 
             const personalData = await readById('personalData', firebaseUser.uid) || {};
             const fullUser: User = {
@@ -337,10 +332,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 referredBy = validation.referrerData;
             }
 
-            const userCredential = await createUserWithEmailAndPassword(
+            const credential = PhoneAuthProvider.credential(
+                credentials.verificationId,
+                credentials.otp
+            );
+
+            const userCredential = await signInWithCredential(
                 auth,
-                credentials.email,
-                credentials.password
+                credential
             );
 
             const firebaseUser = userCredential.user;
@@ -354,8 +353,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             });
 
             const userData: User = {
+
                 uid: firebaseUser.uid,
-                email: firebaseUser.email ?? undefined,
+                phoneNumber: firebaseUser.phoneNumber ?? undefined,
                 displayName: credentials.displayName,
 
                 ...(referredBy && {
@@ -403,14 +403,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             await saveCurrentRole(accountRole);
 
-            await sendEmailVerification(firebaseUser).catch(() => { });
 
             ToastAndroid.show(
                 "Account created successfully!",
                 ToastAndroid.SHORT
             );
 
-           
+
 
             return {
                 success: true,
@@ -425,9 +424,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 ToastAndroid.LONG
             );
 
-            return{
-              success :false  
-            } ;
+            return {
+                success: false
+            };
         }
     };
 
@@ -462,186 +461,179 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     const updateAccount = async (
-    credentials: User
-): Promise<UpdateAccountResponse> => {
-    try {
-        const currentUser = auth.currentUser;
+        credentials: User
+    ): Promise<UpdateAccountResponse> => {
+        try {
+            const currentUser = auth.currentUser;
 
-        if (!isSignedIn || !currentUser || !credentials.uid) {
+            if (!isSignedIn || !currentUser || !credentials.uid) {
+                return {
+                    success: false,
+                    error: "User not signed in.",
+                };
+            }
+
+            await updateProfile(currentUser, {
+                displayName:
+                    credentials.organisation ||
+                    credentials.displayName ||
+                    "",
+                photoURL: credentials.photoURL || null,
+            });
+
+          
+
+            // Get existing user data
+            const existingUser = await readById(
+                "personalData",
+                credentials.uid
+            ) as Partial<User> | null;
+
+
+            // Keep existing referral code
+            let referralCode =
+                existingUser?.referralCode ||
+                user?.referralCode;
+
+
+            // Create referral profile only once
+            if (!referralCode) {
+
+                referralCode = await generateUniqueReferrerCode();
+
+                await addDocumentWithId(
+                    "referrers",
+                    credentials.uid,
+                    {
+                        userId: credentials.uid,
+
+                        name:
+                            credentials.displayName ||
+                            credentials.displayName ||
+                            "Unknown",
+
+                        email:
+                            credentials.email ||
+                            currentUser.email ||
+                            "",
+
+                        referralCode,
+
+                        createdAt:
+                            new Date().toISOString(),
+
+                        isActive: true,
+                    }
+                );
+            }
+
+
+            const fullUser: User = {
+                ...(existingUser as User),
+                ...credentials,
+
+                uid: credentials.uid,
+
+                displayName:
+                    credentials.organisation ||
+                    credentials.displayName ||
+                    "",
+
+                accountType: currentRole.accType,
+
+                role: currentRole.role,
+
+                expoPushToken:
+                    credentials.expoPushToken ||
+                    existingUser?.expoPushToken ||
+                    "",
+
+                referralCode,
+
+                // Preserve referral object from signup
+                ...(existingUser?.referredBy || user?.referredBy
+                    ? {
+                        referredBy:
+                            existingUser?.referredBy ||
+                            user?.referredBy
+                    }
+                    : {}),
+            };
+
+
+            // Remove undefined values before Firebase
+            const cleanUser = Object.fromEntries(
+                Object.entries(fullUser)
+                    .filter(([_, value]) => value !== undefined)
+            ) as User;
+
+
+            await setDocuments(
+                "personalData",
+                cleanUser
+            );
+
+
+            await AsyncStorage.setItem(
+                "user",
+                JSON.stringify(cleanUser)
+            );
+
+            await AsyncStorage.setItem(
+                "currentUser",
+                JSON.stringify(cleanUser)
+            );
+
+            await AsyncStorage.setItem(
+                `profile_${cleanUser.uid}`,
+                JSON.stringify(cleanUser)
+            );
+
+            await AsyncStorage.setItem(
+                `personalData_${cleanUser.uid}`,
+                JSON.stringify(cleanUser)
+            );
+
+
+            setUser(cleanUser);
+
+            setIsSignedIN(true);
+
+            setIsAppReady(true);
+
+
+            if (cleanUser.expoPushToken) {
+
+                await updateUserTokenInAllCollections(
+                    cleanUser.uid,
+                    cleanUser.expoPushToken
+                );
+
+            }
+
+
+            return {
+                success: true,
+                user: cleanUser,
+            };
+
+
+        } catch (error) {
+
+            console.log(
+                "Update Error >",
+                error
+            );
+
             return {
                 success: false,
-                error: "User not signed in.",
+                error: (error as Error).message,
             };
         }
-
-        await updateProfile(currentUser, {
-            displayName:
-                credentials.organisation ||
-                credentials.displayName ||
-                "",
-            photoURL: credentials.photoURL || null,
-        });
-
-        if (!currentUser.emailVerified) {
-            await sendEmailVerification(currentUser).catch(() => {});
-
-            ToastAndroid.show(
-                "Verification Email Sent. Please check your inbox.",
-                ToastAndroid.LONG
-            );
-        }
-
-        // Get existing user data
-        const existingUser = await readById(
-            "personalData",
-            credentials.uid
-        ) as Partial<User> | null;
+    };
 
 
-        // Keep existing referral code
-        let referralCode =
-            existingUser?.referralCode ||
-            user?.referralCode;
 
-
-        // Create referral profile only once
-        if (!referralCode) {
-
-            referralCode = await generateUniqueReferrerCode();
-
-            await addDocumentWithId(
-                "referrers",
-                credentials.uid,
-                {
-                    userId: credentials.uid,
-
-                    name:
-                        credentials.displayName ||
-                        credentials.displayName ||
-                        "Unknown",
-
-                    email:
-                        credentials.email ||
-                        currentUser.email ||
-                        "",
-
-                    referralCode,
-
-                    createdAt:
-                        new Date().toISOString(),
-
-                    isActive: true,
-                }
-            );
-        }
-
-
-        const fullUser: User = {
-            ...(existingUser as User),
-            ...credentials,
-
-            uid: credentials.uid,
-
-            displayName:
-                credentials.organisation ||
-                credentials.displayName ||
-                "",
-
-            accountType: currentRole.accType,
-
-            role: currentRole.role,
-
-            expoPushToken:
-                credentials.expoPushToken ||
-                existingUser?.expoPushToken ||
-                "",
-
-            referralCode,
-
-            // Preserve referral object from signup
-            ...(existingUser?.referredBy || user?.referredBy
-                ? {
-                    referredBy:
-                        existingUser?.referredBy ||
-                        user?.referredBy
-                }
-                : {}),
-        };
-
-
-        // Remove undefined values before Firebase
-        const cleanUser = Object.fromEntries(
-            Object.entries(fullUser)
-                .filter(([_, value]) => value !== undefined)
-        ) as User;
-
-
-        await setDocuments(
-            "personalData",
-            cleanUser
-        );
-
-
-        await AsyncStorage.setItem(
-            "user",
-            JSON.stringify(cleanUser)
-        );
-
-        await AsyncStorage.setItem(
-            "currentUser",
-            JSON.stringify(cleanUser)
-        );
-
-        await AsyncStorage.setItem(
-            `profile_${cleanUser.uid}`,
-            JSON.stringify(cleanUser)
-        );
-
-        await AsyncStorage.setItem(
-            `personalData_${cleanUser.uid}`,
-            JSON.stringify(cleanUser)
-        );
-
-
-        setUser(cleanUser);
-
-        setIsSignedIN(true);
-
-        setIsAppReady(true);
-
-
-        if (cleanUser.expoPushToken) {
-
-            await updateUserTokenInAllCollections(
-                cleanUser.uid,
-                cleanUser.expoPushToken
-            );
-
-        }
-
-
-        return {
-            success: true,
-            user: cleanUser,
-        };
-
-
-    } catch (error) {
-
-        console.log(
-            "Update Error >",
-            error
-        );
-
-        return {
-            success: false,
-            error: (error as Error).message,
-        };
-    }
-};
-
-
-    
 
 
 

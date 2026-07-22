@@ -130,6 +130,7 @@ interface FinancePanelProps {
     // Payment milestones for this load, e.g. 50/50 split or 100% on loading.
     // Defaults to a single "Full Payment" (100%) milestone if not provided.
     paymentTerms?: PaymentMilestone[];
+    driverPayment : any
 }
 
 const EXPENSE_CATEGORIES: { key: ExpenseCategory; label: string; icon: any }[] = [
@@ -137,7 +138,6 @@ const EXPENSE_CATEGORIES: { key: ExpenseCategory; label: string; icon: any }[] =
     { key: "POLICE", label: "Police", icon: "shield-outline" },
     { key: "PARKING", label: "Parking", icon: "car-outline" },
     { key: "VID", label: "VID", icon: "document-text-outline" },
-    { key: "DRIVER", label: "Driver", icon: "person-outline" },
     { key: "CUSTOM", label: "Other", icon: "add-circle-outline" },
 ];
 
@@ -152,6 +152,7 @@ export default function FinancePanel({
     cargoRateModel,
     ratePerKm,
     paymentTerms,
+    driverPayment
 }: FinancePanelProps) {
     const { user, currentRole } = useAuth();
     const fleetId = currentRole?.organizationId || currentRole?.fleetId || "";
@@ -297,6 +298,8 @@ export default function FinancePanel({
             setSavingFinance(false);
         }
     };
+
+    
 
     // ---------- CONFIRM INCOME MILESTONE ----------
     const confirmIncome = async () => {
@@ -624,6 +627,7 @@ export default function FinancePanel({
                 </View>
             ) : (
                 /* ===================== EXPENSES TAB ===================== */
+
                 <View style={{ marginTop: wp(3) }}>
                     <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: wp(2.5) }}>
                         {EXPENSE_CATEGORIES.map((c) => (
@@ -655,7 +659,50 @@ export default function FinancePanel({
                                 </ThemedText>
                             </TouchableOpacity>
                         ))}
+
+
+                       { currentRole.accType=="fleet"  && driverPayment.type==="trip"&&  <TouchableOpacity
+                    onPress={() => setCategory("DRIVER")}
+                    style={[
+                        styles.categoryChip,
+                        {
+                            borderColor:
+                                category === "DRIVER"
+                                    ? accent
+                                    : "rgba(128,128,128,0.3)",
+                            backgroundColor:
+                                category === "DRIVER"
+                                    ? accent
+                                    : "transparent",
+                        },
+                    ]}
+                >
+                    <Ionicons
+                        name="person-outline"
+                        size={14}
+                        color={
+                            category === "DRIVER"
+                                ? backgroundLight
+                                : "#8A8A8E"
+                        }
+                        style={{ marginRight: 4 }}
+                    />
+
+                    <ThemedText
+                        style={{
+                            fontSize: 12,
+                            fontWeight: "bold",
+                            color:
+                                category === "DRIVER"
+                                    ? backgroundLight
+                                    : icon,
+                        }}
+                    >
+                        Driver 
+                    </ThemedText>
+                </TouchableOpacity>}
                     </View>
+                    
 
                     {category === "CUSTOM" && (
                         <View style={{ marginBottom: wp(2.5) }}>
@@ -693,6 +740,8 @@ export default function FinancePanel({
                         </View>
                     )}
 
+                    
+
                     <Input placeholder="Amount" value={amount} onChangeText={setAmount} keyboardType="decimal-pad" />
                     <Input
                         placeholder="Note (optional)"
@@ -721,6 +770,7 @@ export default function FinancePanel({
                     </TouchableOpacity>
                 </View>
             )}
+            
 
             {/* ENTRY LIST */}
             <View style={{ marginTop: wp(3.5) }}>
@@ -733,48 +783,164 @@ export default function FinancePanel({
                 ) : financeEntries.length === 0 ? (
                     <ThemedText style={{ fontSize: 12, color: "#999" }}>No financial records yet.</ThemedText>
                 ) : (
-                    financeEntries.map((item) => (
-                        <View key={item.id} style={styles.entryRow}>
-                            <View style={{ flex: 1 }}>
-                                <ThemedText style={{ fontSize: 13, fontWeight: "600" }}>
-                                    {item.entryType === "INCOME"
-                                        ? `${item.milestoneLabel || "Income"} • ${
-                                              item.paymentMethod === "CASH" ? "Cash" : "Bank"
-                                          }`
-                                        : EXPENSE_CATEGORIES.find((c) => c.key === item.category)?.label || "Expense"}
-                                </ThemedText>
-                                {item.note ? (
-                                    <ThemedText style={{ fontSize: 11, color: "#8A8A8E", marginTop: 1 }}>
-                                        {item.note}
-                                    </ThemedText>
-                                ) : null}
-                                {item.customFields?.length ? (
-                                    <ThemedText style={{ fontSize: 10.5, color: "#8A8A8E", marginTop: 1 }}>
-                                        {item.customFields.map((f) => `${f.label}: ${f.value}`).join(" • ")}
-                                    </ThemedText>
-                                ) : null}
-                                <ThemedText style={{ fontSize: 10, color: "#B0B0B0", marginTop: 1 }}>
-                                    {item.createdByName} • {new Date(item.createdAt).toLocaleString()}
-                                </ThemedText>
-                            </View>
+                    
+                    <>
+                    
+    {/* CATEGORY BUTTONS */}
+    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        {EXPENSE_CATEGORIES.map((c) => (
+            <TouchableOpacity
+                key={c.key}
+                onPress={() => setCategory(c.key)}
+                style={[
+                    styles.categoryChip,
+                    {
+                        borderColor:
+                            category === c.key
+                                ? accent
+                                : "rgba(128,128,128,0.3)",
+                        backgroundColor:
+                            category === c.key
+                                ? accent
+                                : "transparent",
+                    },
+                ]}
+            >
+                <Ionicons
+                    name={c.icon}
+                    size={14}
+                    color={
+                        category === c.key
+                            ? backgroundLight
+                            : "#8A8A8E"
+                    }
+                    style={{ marginRight: 4 }}
+                />
 
-                            <View style={{ flexDirection: "row", alignItems: "center" }}>
-                                <ThemedText
-                                    style={{
-                                        fontSize: 13,
-                                        fontWeight: "700",
-                                        color: item.entryType === "INCOME" ? "#2E7D32" : "#D32F2F",
-                                        marginRight: wp(2),
-                                    }}
-                                >
-                                    {item.entryType === "INCOME" ? "+" : "-"}${item.amount.toFixed(2)}
-                                </ThemedText>
-                                <TouchableOpacity onPress={() => deleteFinanceEntry(item)}>
-                                    <Ionicons name="close-outline" size={16} color="#B0B0B0" />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    ))
+                <ThemedText
+                    style={{
+                        fontSize: 12,
+                        fontWeight: "bold",
+                        color:
+                            category === c.key
+                                ? backgroundLight
+                                : icon,
+                    }}
+                >
+                    {c.label}
+                </ThemedText>
+            </TouchableOpacity>
+        ))}
+
+
+              
+    </View>
+
+
+    {/* FINANCE ENTRIES */}
+    {financeEntries.map((item) => (
+        <View key={item.id} style={styles.entryRow}>
+            <View style={{ flex: 1 }}>
+                <ThemedText
+                    style={{
+                        fontSize: 13,
+                        fontWeight: "600",
+                    }}
+                >
+                    {item.entryType === "INCOME"
+                        ? `${item.milestoneLabel || "Income"} • ${
+                              item.paymentMethod === "CASH"
+                                  ? "Cash"
+                                  : "Bank"
+                          }`
+                        : item.category === "DRIVER"
+                        ? "Driver Payment"
+                        : EXPENSE_CATEGORIES.find(
+                              (c) => c.key === item.category
+                          )?.label || "Expense"}
+                </ThemedText>
+
+                {item.note ? (
+                    <ThemedText
+                        style={{
+                            fontSize: 11,
+                            color: "#8A8A8E",
+                            marginTop: 1,
+                        }}
+                    >
+                        {item.note}
+                    </ThemedText>
+                ) : null}
+
+                {item.customFields?.length ? (
+                    <ThemedText
+                        style={{
+                            fontSize: 10.5,
+                            color: "#8A8A8E",
+                            marginTop: 1,
+                        }}
+                    >
+                        {item.customFields
+                            .map(
+                                (f) =>
+                                    `${f.label}: ${f.value}`
+                            )
+                            .join(" • ")}
+                    </ThemedText>
+                ) : null}
+
+                <ThemedText
+                    style={{
+                        fontSize: 10,
+                        color: "#B0B0B0",
+                        marginTop: 1,
+                    }}
+                >
+                    {item.createdByName} •{" "}
+                    {new Date(
+                        item.createdAt
+                    ).toLocaleString()}
+                </ThemedText>
+            </View>
+
+            <View
+                style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                }}
+            >
+                <ThemedText
+                    style={{
+                        fontSize: 13,
+                        fontWeight: "700",
+                        color:
+                            item.entryType === "INCOME"
+                                ? "#2E7D32"
+                                : "#D32F2F",
+                        marginRight: wp(2),
+                    }}
+                >
+                    {item.entryType === "INCOME"
+                        ? "+"
+                        : "-"}
+                    ${item.amount.toFixed(2)}
+                </ThemedText>
+
+                <TouchableOpacity
+                    onPress={() =>
+                        deleteFinanceEntry(item)
+                    }
+                >
+                    <Ionicons
+                        name="close-outline"
+                        size={16}
+                        color="#B0B0B0"
+                    />
+                </TouchableOpacity>
+            </View>
+        </View>
+    ))}
+</>
                 )}
             </View>
         </View>

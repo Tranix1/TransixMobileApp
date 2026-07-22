@@ -86,7 +86,6 @@ export default function AssignmentCard({ assignmentData }: any) {
             //                     });
             //                 }
         } else {
-            console.log("Byee")
 
             setGetTrackerModal(true);
         }
@@ -967,6 +966,7 @@ export default function AssignmentCard({ assignmentData }: any) {
                 fleetCoordinator={assignmentData.fleetCoordinator}
                 numberPlate={assignmentData.truckDetails.numberPlate}
                 truckId={assignmentData.truckDetails.truckId}
+                driverPayment = {assignmentData.driverPayment}
             />
 
         </View>

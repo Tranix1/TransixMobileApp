@@ -6,7 +6,8 @@ import {
     StyleSheet,
     ScrollView,
     ActivityIndicator,
-    Alert, Keyboard
+    Alert, Keyboard,
+    ToastAndroid
 } from 'react-native';
 import Input from '@/components/Input';
 import {
@@ -22,6 +23,12 @@ import { Image } from 'expo-image';
 import { useAuth } from '@/context/AuthContext';
 import { AccountType } from '@/types/types';
 import { router } from 'expo-router';
+import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
+import { auth } from '@/db/fireBaseConfig';
+import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
+import { useRef } from "react";
+import { firebaseConfig } from '@/db/fireBaseConfig';
+
 
 const ACCOUNT_TYPES: {
     key: AccountType;
@@ -51,6 +58,18 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
     const [keyboardVisible, setKeyboardVisible] = useState(false);
 
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [verificationId, setVerificationId] = useState("");
+    const [otp, setOtp] = useState("");
+    const [otpSent, setOtpSent] = useState(false);
+
+
+
+
+
+    const recaptchaVerifier =
+        useRef<FirebaseRecaptchaVerifierModal>(null);
+
     useEffect(() => {
         const showSub = Keyboard.addListener("keyboardDidShow", () => {
             setKeyboardVisible(true);
@@ -66,9 +85,73 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
         };
     }, []);
 
-    const { signUp } = useAuth();
+    const { signUp, } = useAuth();
 
     const handleAccountSelect = (type: AccountType) => setSelectedAccount(type);
+
+    // const verificationId = await provider.verifyPhoneNumber(
+    //     phoneNumber,
+    // );
+
+
+
+
+    const sendPhoneOTP = async () => {
+        try {
+            const provider = new PhoneAuthProvider(auth);
+
+            const id = await provider.verifyPhoneNumber(
+                phoneNumber,
+                recaptchaVerifier.current!
+            );
+
+            setVerificationId(id);
+            setOtpSent(true);
+
+
+        } catch (error: any) {
+            console.error(error)
+            ToastAndroid.show(
+                error?.message || `${error}`,
+                ToastAndroid.LONG
+            );
+
+            return {
+                success: false,
+            };
+        }
+    };
+
+
+
+    const verifyOTP = async () => {
+        try {
+            const credential = PhoneAuthProvider.credential(
+                verificationId,
+                otp
+            );
+
+            const userCredential = await signInWithCredential(
+                auth,
+                credential
+            );
+
+            ToastAndroid.show(
+                `Created ${userCredential.user.uid}`,
+                ToastAndroid.LONG
+            );
+
+        } catch (error: any) {
+            ToastAndroid.show(
+                error?.message || `${error}`,
+                ToastAndroid.LONG
+            );
+        }
+    };
+
+
+
+
 
 
     const onsubmit = async () => {
@@ -89,8 +172,9 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
             setIsSigningUp(true);
 
             const result = await signUp({
-                email,
-                password,
+                phoneNumber,
+                verificationId,
+                otp,
                 referrerCode,
                 accountType: selectedAccount,
                 displayName: fullname,
@@ -186,6 +270,14 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                         </View>
                     )}
 
+
+
+                    <FirebaseRecaptchaVerifierModal
+                        ref={recaptchaVerifier}
+                        firebaseConfig={firebaseConfig}
+                    />
+
+
                     <ThemedText style={styles.label}>Full Name</ThemedText>
                     <Input
                         containerStyles={styles.input}
@@ -195,29 +287,40 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                         autoCapitalize="words"
                     />
 
-                    <ThemedText style={styles.label}>Email</ThemedText>
                     <Input
-                        containerStyles={styles.input}
-                        placeholder="Your email"
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoCorrect={false}
+                        placeholder="+263771234567"
+                        value={phoneNumber}
+                        onChangeText={setPhoneNumber}
                     />
 
-                    <ThemedText style={styles.label}>Password</ThemedText>
-                    <Input
-                        containerStyles={styles.input}
-                        placeholder="Enter your password"
-                        value={password}
-                        isPassword
-                        onChangeText={setPassword}
-                    />
+                    {!otpSent && (
+                        <TouchableOpacity onPress={sendPhoneOTP} disabled={otpSent}>
+                            <ThemedText>
+                                Send OTP
+                            </ThemedText>
+                        </TouchableOpacity>
+                    )}
+
+                    {otpSent && (
+                        <>
+                            <Input
+                                placeholder="Enter OTP"
+                                value={otp}
+                                onChangeText={setOtp}
+                                keyboardType="number-pad"
+                            />
+
+                            <TouchableOpacity onPress={verifyOTP}>
+                                <ThemedText>Verify OTP</ThemedText>
+                            </TouchableOpacity>
+                        </>
+                    )}
+
+                   
 
                     {(selectedAccount === 'fleet' || selectedAccount === 'brokerage') && (
                         <View>
-                            <ThemedText style={styles.label}>Referral Code (Optional)</ThemedText>
+                            <ThemedText style={styles.label}>Referral Code </ThemedText>
                             <Input
                                 containerStyles={styles.input}
                                 placeholder="Enter referrer code"

@@ -33,6 +33,7 @@ type Props = {
     }
     numberPlate : string
     truckId : string
+    driverPayment : any
 
 };
 
@@ -50,6 +51,7 @@ export default function AssignmentActivityPanel({
     fleetCoordinator ,
     numberPlate ,
     truckId ,
+    driverPayment
 }: Props) {
 
     // existing logic here
@@ -650,6 +652,7 @@ export default function AssignmentActivityPanel({
                     cargoRateModel={cargoRateModel || ""}
                     ratePerKm={Number(cargoRatePerKm)}
                     paymentTerms={cargoPaymentTerms}
+                    driverPayment ={driverPayment}
                 />
 
 

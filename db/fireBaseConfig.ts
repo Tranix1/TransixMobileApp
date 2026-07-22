@@ -20,7 +20,7 @@ import { getVertexAI, getGenerativeModel } from "firebase/vertexai";
 //   appId: "1:355769728168:web:0960c6b40f0fcdfd58569d",
 //   measurementId: "G-CJPGMZJBSD"
 // };
-const firebaseConfig = {
+export const firebaseConfig = { 
   apiKey: "AIzaSyDY9dgj43xzhjfOLtW2rqPeUNOvXQTy_dw",
   authDomain: "transix-470b3.firebaseapp.com",
   projectId: "transix-470b3",

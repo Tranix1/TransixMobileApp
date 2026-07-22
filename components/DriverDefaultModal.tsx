@@ -138,11 +138,11 @@ export default function DriverDefaultModal({
 
     const setDriverToAssigment = async () => {
 
-
         if (!assignmentId) return
         try {
 
             if (assignmentSource === "brokerage") {
+
                 updateDocument(`brokerages/${brokerageId}/assignments`, assignmentId, {
 
                     status: "PENDING",
@@ -155,8 +155,8 @@ export default function DriverDefaultModal({
                         email: selected?.email || null,
                         role: selected ? 'main' : selected.role || 'assigned',
                         //   isDefault: isDefaultDriver,
-                        expoPushToken: selected?.expoPushToken || null,
-                    }
+                    },
+                    driverPayment: selected.payment,
 
                 })
 
@@ -173,12 +173,15 @@ export default function DriverDefaultModal({
                         email: selected?.email || null,
                         role: selected ? 'main' : selected.role || 'assigned',
                         //   isDefault: isDefaultDriver,
-                        expoPushToken: selected?.expoPushToken || null,
-                    }
+
+                    },
+                    driverPayment: selected.payment,
+
 
                 })
             } else if (assignmentSource === "fleet") {
 
+
                 updateDocument(`fleets/${fleetId}/assignments`, assignmentId, {
 
                     status: "PENDING",
@@ -192,44 +195,59 @@ export default function DriverDefaultModal({
                         role: selected ? 'main' : selected.role || 'assigned',
                         //   isDefault: isDefaultDriver,
                         expoPushToken: selected?.expoPushToken || null,
-                    }
+                    },
+                    driverPayment: selected.payment,
+
 
                 })
             }
 
-         if (selected.driverUserId) {
+            if (selected.driverUserId) {
 
-    await notifyUserById(
-        selected.driverUserId,
-        "New Load Assignment 📦",
-        `You have been assigned a new load with ${numberPlate}. Please review and accept or reject it.`,
-        {
-            pathname: "/Driver/AssignmentDetails",
-            params: {
-                assignmentId,
-            },
-        },
-        {
-            type: "load_assignment",
-            assignmentId,
-            truckId,
-            fleetId,
-        }
-    );
+                await notifyUserById(
+                    selected.driverUserId,
+                    "New Load Assignment 📦",
+                    `You have been assigned a new load with ${numberPlate}. Please review and accept or reject it.`,
+                    {
+                        pathname: "/Driver/AssignmentDetails",
+                        params: {
+                            assignmentId,
+                        },
+                    },
+                    {
+                        type: "load_assignment",
+                        assignmentId,
+                        truckId,
+                        fleetId,
+                    }
+                );
 
-} else {
-    alert("Driver has no user account linked");
-}
+            } else {
+                alert("Driver has no user account linked");
+            }
 
             ToastAndroid.show(
                 `${selected.fullName} assigned to the load successfully`,
                 ToastAndroid.SHORT
             );
 
+            onClose()
+
         } catch (e) {
             console.error(e)
         }
     }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -334,7 +352,7 @@ export default function DriverDefaultModal({
 
 
             // Notify driver AFTER successful save
-              if (selected.driverUserId) {
+            if (selected.driverUserId) {
 
                 const driverData = await readById(
                     "personalData",
