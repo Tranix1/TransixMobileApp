@@ -248,7 +248,7 @@ export default function Index() {
             },
           })}
         >
-          {!dspCreateAcc ? (
+          {dspCreateAcc ? (
             <>
               {/* <Tab.Screen name="Home " component={dspLoginOSignup ? Login : SignUp} /> */}
 

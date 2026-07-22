@@ -29,6 +29,9 @@ import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
 import { useRef } from "react";
 import { firebaseConfig } from '@/db/fireBaseConfig';
 
+import PhoneInput from '@/components/PhoneInput';
+import { validateReferralCode } from '@/db/operations';
+
 
 const ACCOUNT_TYPES: {
     key: AccountType;
@@ -43,8 +46,6 @@ const ACCOUNT_TYPES: {
 
 const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
     const [fullname, setFullName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [referrerCode, setReferrerCode] = useState('');
     const [acceptTerms, setAcceptTerms] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -59,11 +60,13 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
     const [keyboardVisible, setKeyboardVisible] = useState(false);
 
     const [phoneNumber, setPhoneNumber] = useState('');
+    const [countryCode, setCountryCode] = useState({ id: 0, name: '' });
+
     const [verificationId, setVerificationId] = useState("");
     const [otp, setOtp] = useState("");
     const [otpSent, setOtpSent] = useState(false);
 
-
+const [referralValidation, setReferralValidation] = useState<any>(null);
 
 
 
@@ -98,10 +101,44 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
     const sendPhoneOTP = async () => {
         try {
+            const length = phoneNumber.replace(/\D/g, "").length;
+
+            if (countryCode.name === "+267") {
+                if (length !== 8) {
+                    setError("Botswana phone number must be 8 digits");
+                    return;
+                }
+            } else {
+                if (length !== 9) {
+                    setError("Phone number must be 9 digits");
+                    return;
+                }
+            }
+
+            if (selectedAccount !== "tracking" && !referrerCode) {
+                setError("Referral code is required");
+                return
+            }
+
+
+            if (selectedAccount !== "tracking" && referrerCode) {
+                const normalizedCode = referrerCode.trim().toUpperCase();
+
+                const validation = await validateReferralCode(normalizedCode);
+
+                if (!validation.exists) {
+                    setError("Invalid referral code");
+                    return;
+                }
+
+                setReferralValidation(validation);
+            }
+
+
             const provider = new PhoneAuthProvider(auth);
 
             const id = await provider.verifyPhoneNumber(
-                phoneNumber,
+                `${countryCode}${phoneNumber}`,
                 recaptchaVerifier.current!
             );
 
@@ -126,6 +163,7 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
     const verifyOTP = async () => {
         try {
+
             const credential = PhoneAuthProvider.credential(
                 verificationId,
                 otp
@@ -155,7 +193,7 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
 
     const onsubmit = async () => {
-        if (!email || !password || !fullname) {
+        if (!phoneNumber || !fullname) {
             setError("Please fill in all fields");
             return;
         }
@@ -178,6 +216,7 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                 referrerCode,
                 accountType: selectedAccount,
                 displayName: fullname,
+                referralValidation 
             });
 
             if (result.success) {
@@ -198,6 +237,7 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
             setIsSigningUp(false);
         }
     };
+
 
     return (
         <ScreenWrapper>
@@ -287,27 +327,28 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                         autoCapitalize="words"
                     />
 
-                    <Input
-                        placeholder="+263771234567"
+                    <ThemedText style={styles.label}>Phone Number</ThemedText>
+
+                    <PhoneInput
                         value={phoneNumber}
                         onChangeText={setPhoneNumber}
+                        countryCode={countryCode}
+                        setCountryCode={setCountryCode}
                     />
 
-                    {!otpSent && (
-                        <TouchableOpacity onPress={sendPhoneOTP} disabled={otpSent}>
-                            <ThemedText>
-                                Send OTP
-                            </ThemedText>
-                        </TouchableOpacity>
-                    )}
+
 
                     {otpSent && (
                         <>
+                            <ThemedText style={styles.label}>OTP Code</ThemedText>
+
                             <Input
                                 placeholder="Enter OTP"
                                 value={otp}
                                 onChangeText={setOtp}
                                 keyboardType="number-pad"
+                                containerStyles={styles.input}
+
                             />
 
                             <TouchableOpacity onPress={verifyOTP}>
@@ -316,9 +357,9 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                         </>
                     )}
 
-                   
 
-                    {(selectedAccount === 'fleet' || selectedAccount === 'brokerage') && (
+
+                    {selectedAccount !== 'tracking' && (
                         <View>
                             <ThemedText style={styles.label}>Referral Code </ThemedText>
                             <Input
@@ -347,8 +388,37 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                         </ThemedText>
                     </TouchableOpacity>
 
+
+
+
+
+                    {!otpSent && (
+                        <TouchableOpacity
+                            onPress={sendPhoneOTP}
+                            disabled={loading}
+                            activeOpacity={0.85}
+                            style={[
+                                styles.otpButton,
+                                {
+                                    borderColor: accent,
+                                    opacity: loading ? 0.6 : 1,
+                                },
+                            ]}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <ThemedText color="#fff" type="subtitle">
+                                    Send OTP
+                                </ThemedText>
+                            )}
+                        </TouchableOpacity>
+                    )}
+
+
+
                     {/* SIGN UP BUTTON */}
-                    <TouchableOpacity
+                    {otpSent && <TouchableOpacity
                         onPress={onsubmit}
                         style={[
                             styles.signUpButton,
@@ -364,7 +434,7 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                                 Create Account
                             </ThemedText>
                         )}
-                    </TouchableOpacity>
+                    </TouchableOpacity>}
 
                     {/* FOOTER */}
                     <TouchableOpacity
@@ -456,4 +526,14 @@ const styles = StyleSheet.create({
     },
     footerText: { textAlign: 'center' },
     loginLink: { fontWeight: '700', textDecorationLine: 'underline' },
+    otpButton: {
+        height: 48,
+        borderRadius: 14,
+        borderWidth: 1,
+        backgroundColor: "transparent",
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: hp(4),
+
+    },
 });

@@ -12,7 +12,7 @@ import { createContext, ReactElement, useContext, useEffect, useState } from "re
 import { Alert, ToastAndroid } from "react-native";
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 import { auth } from "@/db/fireBaseConfig";
-import { addDocumentWithId, generateUniqueReferrerCode, getReferralCodeByUserId, readById, setDocuments, validateReferrerCode } from "@/db/operations";
+import { addDocumentWithId, generateUniqueReferralCode, getReferralCodeByUserId, readById, setDocuments, validateReferralCode } from "@/db/operations";
 import { AccountType, CurrentRole, User } from "@/types/types";
 import { updateUserTokenInAllCollections } from "@/Utilities/pushNotification";
 import { setDoc } from "firebase/firestore";
@@ -37,6 +37,7 @@ interface SignUpCredentials {
     displayName: string;
     referrerCode?: string;
     accountType?: AccountType;
+    referralValidation: any
 }
 
 interface UpdateAccountResponse {
@@ -312,25 +313,53 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const signUp = async (credentials: SignUpCredentials): Promise<{ success: boolean; accountRole?: any }> => {
         try {
+
+
             let referredBy: User["referredBy"] | undefined;
 
-            if (credentials.referrerCode?.trim()) {
-                const validation = await validateReferrerCode(
-                    credentials.referrerCode.trim().toUpperCase()
-                );
 
-                if (!validation.exists || !validation.referrerData) {
-                    ToastAndroid.show(
-                        "Invalid referral code. Please check the code or leave it blank.",
-                        ToastAndroid.LONG
-                    );
-                    return {
-                        success: false,
+            if (credentials.referralValidation?.exists) {
+
+
+                if (credentials.referralValidation.type === "REFERRER") {
+
+                    referredBy = {
+
+                        userId: credentials.referralValidation.data.userId,
+                        name: credentials.referralValidation.data.name,
+                        phoneNumber: credentials.referralValidation.data.phoneNumber,
+                        referralCode: credentials.referralValidation.data.referralCode,
+                        joinedAt: credentials.referralValidation.data.joinedAt,
                     };
+
                 }
 
-                referredBy = validation.referrerData;
+
+                if (credentials.referralValidation.type === "CAMPAIGN") {
+
+                    referredBy = {
+
+                        userId: credentials.referralValidation.data.userId,
+                        name: credentials.referralValidation.data.name,
+                        phoneNumber: credentials.referralValidation.data.phoneNumber,
+
+                        referralCode: credentials.referralValidation.data.referralCode,
+
+
+
+                        campaign:
+                            credentials.referralValidation.data.campaign,
+
+                        platform:
+                            credentials.referralValidation.data.platform,
+
+                        createdAt:
+                            credentials.referralValidation.data.createdAt,
+                    };
+
+                }
             }
+
 
             const credential = PhoneAuthProvider.credential(
                 credentials.verificationId,
@@ -371,6 +400,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 "personalData",
                 userData
             );
+
+
+
+
+
+            let newRefferalCode = await generateUniqueReferralCode("REFERRER");
+
+            await addDocumentWithId(
+                "referrers",
+                firebaseUser.uid,
+                {
+                    userId: firebaseUser.uid,
+
+                    name:
+                        credentials.displayName ||
+                        credentials.displayName ||
+                        "Unknown",
+
+                    phoneNumber: firebaseUser.phoneNumber ?? undefined,
+
+
+                    referralCode: newRefferalCode,
+
+                    createdAt:
+                        new Date().toISOString(),
+
+                    isActive: true,
+                }
+            );
+
+
+
 
             if (!saved) {
                 ToastAndroid.show(
@@ -449,6 +510,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+
+
+
+
+
+
     const updateCurrentUser = async (userData: User) => {
         try {
             await AsyncStorage.setItem("currentUser", JSON.stringify(userData));
@@ -481,7 +548,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 photoURL: credentials.photoURL || null,
             });
 
-          
+
 
             // Get existing user data
             const existingUser = await readById(
@@ -497,35 +564,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 
             // Create referral profile only once
-            if (!referralCode) {
 
-                referralCode = await generateUniqueReferrerCode();
-
-                await addDocumentWithId(
-                    "referrers",
-                    credentials.uid,
-                    {
-                        userId: credentials.uid,
-
-                        name:
-                            credentials.displayName ||
-                            credentials.displayName ||
-                            "Unknown",
-
-                        email:
-                            credentials.email ||
-                            currentUser.email ||
-                            "",
-
-                        referralCode,
-
-                        createdAt:
-                            new Date().toISOString(),
-
-                        isActive: true,
-                    }
-                );
-            }
 
 
             const fullUser: User = {

@@ -97,17 +97,17 @@ export const tonneSizes = [
 ]
 
 
-export const countryCodes = [
-    { id: 0, name: '+263' },
-    { id: 1, name: '+27' },
-    { id: 2, name: '+264' },
-    { id: 3, name: '+255' },
-    { id: 4, name: '+258' },
-    { id: 5, name: '+260' },
-    { id: 6, name: '+265' },
-    { id: 7, name: '+267' },
-    { id: 8, name: '+243' }
-]
+    export const countryCodes = [
+        { id: 0, name: '+263' },
+        { id: 1, name: '+27' },
+        { id: 2, name: '+264' },
+        { id: 3, name: '+255' },
+        { id: 4, name: '+258' },
+        { id: 5, name: '+260' },
+        { id: 6, name: '+265' },
+        { id: 7, name: '+267' },
+        { id: 8, name: '+243' }
+    ]
 
 
 

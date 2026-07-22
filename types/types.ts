@@ -396,10 +396,13 @@ export type User = {
     referrerId?: string, // ID of the user who referred this user
     referredBy?: {
         userId: string ;
-        name: string ;
-        email: string ;
+        name?: string ;
+        phoneNumber?: string ;
         referralCode: string ;
-        joinedAt: string ;
+        joinedAt?: string ;
+        campaign?: string  ;
+        platform?:string
+        createdAt ?: string
     };
     expoPushToken?: string, // Push notification token
     [key: string]: any; // To allow additional properties

@@ -16,7 +16,7 @@ import { pickDocument } from '@/Utilities/utils';
 import { takePhoto } from '@/Utilities/imageUtils';
 import { DocumentAsset } from '@/types/types';
 import { useAuth } from '@/context/AuthContext';
-import { addDocument, uploadImage, updateDocument, generateUniqueReferrerCode, addDocumentWithId } from '@/db/operations';
+import { addDocument, uploadImage, updateDocument, generateUniqueReferralCode, addDocumentWithId } from '@/db/operations';
 import { setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import CustomHeader from '@/components/CustomHeader';

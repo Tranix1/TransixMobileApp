@@ -349,7 +349,7 @@ export const getDocById = async (
 
 
 
-export const readById = async (collectionName: string , id: string) => {
+export const readById = async (collectionName: string, id: string) => {
     try {
         // Reference to the document by ID
         const postRef = doc(db, collectionName, id);
@@ -533,48 +533,116 @@ export const validateReferrer = async (referrerEmail: string) => {
     }
 };
 
-export const validateReferrerCode = async (referrerCode: string) => {
+export const validateReferralCode = async (referralCode: string) => {
     try {
-        const q = query(
-            collection(db, "referrers"),
-            where("referralCode", "==", referrerCode)
-        );
 
-        const querySnapshot = await getDocs(q);
-
-        if (querySnapshot.empty) {
+        if (!referralCode) {
             return {
                 exists: false,
-                referrerId: null,
-                referrerData: undefined
+                type: null,
+                data: null,
             };
         }
 
-        const referrerDoc = querySnapshot.docs[0];
-        const data = referrerDoc.data();
 
-        return {
-            exists: true,
-            referrerId: data.userId,
+        // Individual referral
+        if (referralCode.startsWith("R")) {
 
-            referrerData: {
-                userId: data.userId,
-                name: data.name ?? "Unknown",
-                email: data.email ?? "",
-                referralCode: data.referralCode,
-                joinedAt: data.createdAt ?? new Date().toISOString(),
+            const q = query(
+                collection(db, "referrers"),
+                where("referralCode", "==", referralCode)
+            );
+
+            const querySnapshot = await getDocs(q);
+
+
+            if (querySnapshot.empty) {
+                return {
+                    exists: false,
+                    type: "REFERRER",
+                    data: null,
+                };
             }
+
+
+            const data = querySnapshot.docs[0].data();
+
+
+            return {
+                exists: true,
+                type: "REFERRER",
+
+                data: {
+                    userId: data.userId,
+                    name: data.name ?? "Unknown",
+                    email: data.email ?? "",
+                    referralCode: data.referralCode,
+                    joinedAt: data.createdAt ?? new Date().toISOString(),
+                },
+            };
+        }
+
+
+
+        // Campaign referral
+        if (referralCode.startsWith("C")) {
+
+            const q = query(
+                collection(db, "campaignReferrals"),
+                where("referralCode", "==", referralCode)
+            );
+
+
+            const querySnapshot = await getDocs(q);
+
+
+            if (querySnapshot.empty) {
+                return {
+                    exists: false,
+                    type: "CAMPAIGN",
+                    data: null,
+                };
+            }
+
+
+            const data = querySnapshot.docs[0].data();
+
+
+            return {
+                exists: true,
+                type: "CAMPAIGN",
+
+                data: {
+                    referralCode: data.referralCode,
+                    campaign: data.campaign,
+                    platform: data.platform,
+                    createdAt: data.createdAt,
+                },
+            };
+        }
+
+
+
+        // Unknown prefix
+        return {
+            exists: false,
+            type: null,
+            data: null,
         };
 
+
     } catch (error) {
+
         console.error(
-            "Error validating referrer code:",
+            "Error validating referral code:",
             error
         );
 
         throw error;
     }
 };
+
+
 export const getReferrerByCode = async (referrerCode: string) => {
     try {
         const q = query(collection(db, "referrers"), where("referrerCode", "==", referrerCode));
@@ -633,37 +701,69 @@ export const getAllReferrers = async () => {
     }
 };
 
-export const generateUniqueReferrerCode = async (): Promise<string> => {
-    let code: string;
+type ReferralType = "REFERRER" | "CAMPAIGN";
+
+export const generateUniqueReferralCode = async (
+    type: ReferralType
+): Promise<string> => {
+
+    let code = "";
     let isUnique = false;
     let attempts = 0;
     const maxAttempts = 10;
 
+    const prefix = type === "CAMPAIGN" ? "C" : "R";
+
+
     while (!isUnique && attempts < maxAttempts) {
-        // Generate a 6-character alphanumeric code
-        code = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+        code =
+            prefix +
+            Math.random()
+                .toString(36)
+                .substring(2, 7)
+                .toUpperCase();
+
 
         try {
-            const validation = await validateReferrerCode(code);
+
+            const validation = await validateReferralCode(code);
+
             if (!validation.exists) {
                 isUnique = true;
             }
+
         } catch (error) {
-            console.error("Error checking code uniqueness:", error);
-            // If there's an error checking, assume it's unique to avoid infinite loop
+
+            console.error(
+                "Error checking referral code uniqueness:",
+                error
+            );
+
             isUnique = true;
         }
+
 
         attempts++;
     }
 
+
     if (!isUnique) {
-        // Fallback: add timestamp to ensure uniqueness
-        code = Math.random().toString(36).substring(2, 6).toUpperCase() + Date.now().toString().slice(-2);
+
+        code =
+            prefix +
+            Date.now()
+                .toString()
+                .slice(-6);
+
     }
 
-    return code!;
+
+    return code;
 };
+
+
+
 
 export const generateUniqueUserId = async (): Promise<string> => {
     let userId: string;
