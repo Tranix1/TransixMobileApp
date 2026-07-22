@@ -220,13 +220,27 @@ const [referralValidation, setReferralValidation] = useState<any>(null);
             });
 
             if (result.success) {
-                router.replace({
+                if(selectedAccount ==="fleet"){
+                    router.replace( "/Fleet/CreateFleet");
+
+                }else if(selectedAccount === "brokerage" ){
+
+                    router.replace( "/brokerage/CreateBrokerage/Index");
+
+                }else if (selectedAccount ==="driver"){
+                    router.replace( "/Driver/Add/Index");
+
+                }else if(selectedAccount ==="tracking"){
+
+                    router.replace({
                     pathname: "/Account/Profile",
                     params: {
                         operation: "create",
                         accountType: result.accountRole.accType,
                     },
                 });
+                }
+                
             }
 
         } catch (err: any) {

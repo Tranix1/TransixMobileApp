@@ -550,7 +550,9 @@ export const validateReferralCode = async (referralCode: string) => {
 
             const q = query(
                 collection(db, "referrers"),
-                where("referralCode", "==", referralCode)
+                where("referralCode", "==", referralCode) ,
+                    where("isActive", "==", true)
+
             );
 
             const querySnapshot = await getDocs(q);

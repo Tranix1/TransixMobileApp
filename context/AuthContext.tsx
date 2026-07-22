@@ -340,12 +340,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     referredBy = {
 
                         userId: credentials.referralValidation.data.userId,
+
                         name: credentials.referralValidation.data.name,
                         phoneNumber: credentials.referralValidation.data.phoneNumber,
 
                         referralCode: credentials.referralValidation.data.referralCode,
-
-
 
                         campaign:
                             credentials.referralValidation.data.campaign,
@@ -400,9 +399,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 "personalData",
                 userData
             );
-
-
-
+            if (!saved) {
+    return {
+        success: false,
+    };
+}
 
 
             let newRefferalCode = await generateUniqueReferralCode("REFERRER");
@@ -414,9 +415,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     userId: firebaseUser.uid,
 
                     name:
-                        credentials.displayName ||
-                        credentials.displayName ||
-                        "Unknown",
+                        credentials.displayName ||"Unknown",
 
                     phoneNumber: firebaseUser.phoneNumber ?? undefined,
 
@@ -429,7 +428,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     isActive: true,
                 }
             );
-
 
 
 
@@ -462,7 +460,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 JSON.stringify(userData)
             );
 
-            await saveCurrentRole(accountRole);
+
+            const currentRoleAccType = {
+                userRole: "create_Acc",
+
+                accType: accountRole,
+
+            };
+
+            await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
+
 
 
             ToastAndroid.show(
@@ -511,11 +518,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
 
-
-
-
-
-
+            
     const updateCurrentUser = async (userData: User) => {
         try {
             await AsyncStorage.setItem("currentUser", JSON.stringify(userData));

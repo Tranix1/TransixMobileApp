@@ -116,21 +116,21 @@ function BrokerageSelector() {
 
         if (!brokerage) return;
 
-        const brokerageRole = {
-            role: 'brokerage' as const,
-            brokerageId: brokerage.brokerageId,
-            companyName: brokerage.name || brokerage.brokerage,
+            const brokerageRole = {
+                role: 'brokerage' as const,
+                brokerageId: brokerage.brokerageId,
+                companyName: brokerage.name || brokerage.brokerage,
 
-            userRole: brokerage.userRole || 'owner',
-            accType: 'brokerage' as const,
+                userRole: brokerage.userRole || 'owner',
+                accType: 'brokerage' as const,
 
-            referrerCode: brokerage.referrerCode || null,
-            organizationName: brokerage.name,
-            organizationId: brokerage.id,
-            phone: `${brokerage.countryCode}${brokerage?.organizationPhone}`,
-            email: brokerage.organizationEmail,
-            location: brokerage?.location,
-        };
+                referrerCode: brokerage.referrerCode || null,
+                organizationName: brokerage.name,
+                organizationId: brokerage.id,
+                phone: `${brokerage.countryCode}${brokerage?.organizationPhone}`,
+                email: brokerage.organizationEmail,
+                location: brokerage?.location,
+            };
 
         (brokerageRole as any);
         await AsyncStorage.setItem('currentRole', JSON.stringify(brokerageRole));
