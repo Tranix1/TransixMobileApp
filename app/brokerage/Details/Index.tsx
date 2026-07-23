@@ -141,7 +141,7 @@ const BrokerDetails = () => {
 
     useEffect(() => {
         getData();
-       
+
     }, [])
 
     // Function to toggle save state
@@ -795,7 +795,7 @@ const BrokerDetails = () => {
                         </View>
                     }
 
-                    { <View>
+                    {<View>
                         <ThemedText style={{ textAlign: 'center', marginVertical: wp(4), color: "#1E90FF" }}>Identity Documents</ThemedText>
 
                         <ScrollView pagingEnabled horizontal style={{ marginVertical: 10 }} >

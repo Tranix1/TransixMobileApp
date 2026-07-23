@@ -562,8 +562,8 @@ function AddTrucks() {
             dispatcher: {
               id: user.uid,
               name: user.displayName,
-              phoneNumber : user.phoneNumber ,
-              organizationId : currentRole?.organizationId || currentRole?.fleetId ||null
+              phoneNumber: user.phoneNumber,
+              organizationId: currentRole?.organizationId || currentRole?.fleetId || null
             }
           },
         },
@@ -579,9 +579,22 @@ function AddTrucks() {
       })
 
 
- const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
+      const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
       if (analyticsOrganizationId) {
-        void trackTruckAdded({ userId: user?.uid, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: 'fleet', role: currentRole?.userRole, accountType: currentRole?.accType, metadata: { truckId :truckId} }).catch(console.error);
+
+        void trackTruckAdded(
+          {
+            userId: user?.uid,
+            organizationId: analyticsOrganizationId,
+            organizationProfileId: analyticsOrganizationId,
+            organizationType: 'fleet',
+            role: currentRole?.userRole,
+            accountType: currentRole?.accType,
+          },
+          {
+            truckId: truckId,
+          }
+        ).catch(console.error);
         void incrementTotalTrucks('fleet', analyticsOrganizationId).catch(console.error);
         void incrementTruckCount(analyticsOrganizationId).catch(console.error);
       }
@@ -610,7 +623,7 @@ function AddTrucks() {
     }
   };
 
-  
+
 
   return (
     <ScreenWrapper>
@@ -998,5 +1011,5 @@ const styles = StyleSheet.create({
   selectedTextStyle: {
     fontSize: 16,
   }
-      });
-     
+});
+

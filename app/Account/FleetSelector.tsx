@@ -6,12 +6,13 @@ import CustomHeader from "@/components/CustomHeader";
 import ReferralCodeModal from "@/components/ReferralCodeModal";
 import { router } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
-import { validateReferrerCode, setDocuments, updateDocument } from "@/db/operations";
+import {  setDocuments, updateDocument } from "@/db/operations";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { hp, wp } from "@/constants/common";
 import { db } from "@/db/fireBaseConfig";
 import { setDoc, doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { handleSubmitReferralCode } from "@/Utilities/handleSubmitRefferalCode";
 
 interface FleetAccess {
     fleetId: string;
@@ -45,69 +46,7 @@ function FleetSelector() {
 
 
 
-    const handleSubmitReferralCode = async (code: string) => {
-        if (!code || !code.trim()) {
-            ToastAndroid.show(
-                "Please enter a referral code.",
-                ToastAndroid.SHORT
-            );
-            return;
-        }
-
-        setIsSubmitting(true);
-
-        try {
-            const normalizedCode = code.trim().toUpperCase();
-
-            const validation = await validateReferrerCode(normalizedCode);
-
-            if (!validation.exists || !validation.referrerId || !validation.referrerData) {
-                ToastAndroid.show(
-                    "Invalid referral code. Please check and try again.",
-                    ToastAndroid.LONG
-                );
-                return;
-            }
-
-            await updateDocument(
-                "personalData",
-                user?.uid || "",
-                {
-                    referredBy: validation.referrerData
-                }
-            );
-
-            if (user) {
-                await setupUser({
-                    ...user,
-                    referredBy: validation.referrerData
-                });
-            }
-
-            setReferralCode(normalizedCode);
-            setShowReferralModal(false);
-
-            ToastAndroid.show(
-                "Referral code accepted.",
-                ToastAndroid.SHORT
-            );
-
-        } catch (error) {
-            console.error(
-                "Referral validation error:",
-                error
-            );
-
-            ToastAndroid.show(
-                "Referral validation failed. Please try again.",
-                ToastAndroid.LONG
-            );
-
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
+   
 
 
 
@@ -608,15 +547,25 @@ function FleetSelector() {
 
             )}
 
-            <ReferralCodeModal
-                visible={showReferralModal}
-                initialCode={referralCode}
-                isSubmitting={isSubmitting}
-                onClose={() => setShowReferralModal(!hasReferral)}
-                onSubmit={handleSubmitReferralCode}
-                onLogout={handleLogout}
-                onRefresh={handleRefresh}
-            />
+           <ReferralCodeModal
+                          visible={showReferralModal}
+                          initialCode={referralCode}
+                          isSubmitting={isSubmitting}
+                          onClose={() => setShowReferralModal(!hasReferral)}
+          
+                          onSubmit={(code) =>
+                              handleSubmitReferralCode({
+                                  code,
+                                  user,
+                                  setupUser,
+                                  setReferralCode,
+                                  setShowReferralModal,
+                                  setIsSubmitting
+                              })
+                          }
+                          onLogout={handleLogout}
+                          onRefresh={handleRefresh}
+                      />
         </View>
     );
 }

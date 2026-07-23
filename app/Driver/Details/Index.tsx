@@ -72,7 +72,7 @@ const DriverDetails = () => {
     const backgroundLight = useThemeColor("backgroundLight");
     const textColor = useThemeColor("text");
 
-    const {  driverId, dspDetails, fleetId } = useLocalSearchParams();
+    const { driverId, dspDetails, fleetId } = useLocalSearchParams();
     const [driverData, setDriverData] = useState<DriverVerificationData>({} as DriverVerificationData)
 
 
@@ -92,9 +92,9 @@ const DriverDetails = () => {
             setRefreshing(true)
             if (!driverId) return;
             // If fleetId is provided, fetch from fleet subcollection, otherwise from main Drivers collection
-            const collectionName =  'verifiedUsers';
+            const collectionName = 'verifiedUsers';
             const driver = await readById(collectionName, driverId as string)
-            
+
             if (driver) {
                 setDriverData(driver as DriverVerificationData)
             }
@@ -105,11 +105,11 @@ const DriverDetails = () => {
         }
     };
 
-    
-useEffect(()=>{
-                getData()
 
-},[])
+    useEffect(() => {
+        getData()
+
+    }, [])
 
 
     // Function to toggle save state
@@ -333,8 +333,8 @@ useEffect(()=>{
                                 {/* 1. EDIT DRIVER */}
                                 <TouchableOpacity
                                     style={styles.actionButton}
-                                    
-                                      
+
+
                                 >
                                     <Ionicons name="create-outline" size={22} color={accent} />
                                     <ThemedText type="subtitle">Edit Driver Info</ThemedText>
@@ -344,7 +344,7 @@ useEffect(()=>{
                                 {/* 2. EDIT DOCUMENTS */}
                                 <TouchableOpacity
                                     style={styles.actionButton}
-                                   
+
                                 >
                                     <Ionicons name="images-outline" size={22} color={accent} />
                                     <ThemedText type="subtitle">Edit Documents</ThemedText>
@@ -802,7 +802,7 @@ useEffect(()=>{
                         </View>
                     )}
 
-                    
+
 
                 </View>
             </ScrollView>

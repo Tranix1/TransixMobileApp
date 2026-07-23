@@ -427,6 +427,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const userData: User = {
 
                 uid: firebaseUser.uid,
+                userId :firebaseUser.uid,
                 phoneNumber: firebaseUser.phoneNumber ?? undefined,
                 displayName: credentials.displayName,
 
@@ -524,14 +525,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             void trackAccountCreated(analyticsContext).catch(console.error);
             if (referredBy?.userId) void incrementSignups(referredBy.userId).catch(console.error);
 
-
-
             ToastAndroid.show(
                 "Account created successfully!",
                 ToastAndroid.SHORT
             );
-
-
 
             return {
                 success: true,

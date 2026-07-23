@@ -6,12 +6,13 @@ import CustomHeader from "@/components/CustomHeader";
 import ReferralCodeModal from "@/components/ReferralCodeModal";
 import { router } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
-import { validateReferrerCode, setDocuments, updateDocument, readById } from "@/db/operations";
+import { validateReferralCode, setDocuments, updateDocument, readById, } from "@/db/operations";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { hp, wp } from "@/constants/common";
 import { db } from "@/db/fireBaseConfig";
 import { setDoc, doc, updateDoc } from "firebase/firestore";
+import { handleSubmitReferralCode } from "@/Utilities/handleSubmitRefferalCode";
 
 interface FleetAccess {
     fleetId: string;
@@ -32,7 +33,7 @@ function SwitchRoleSelector() {
     const accent = useThemeColor('accent');
     const icon = useThemeColor('icon');
 
-   const hasReferral = !!user?.referredBy?.userId;
+    const hasReferral = !!user?.referredBy?.userId;
 
     useEffect(() => {
         if (user) {
@@ -42,68 +43,7 @@ function SwitchRoleSelector() {
 
     // ---------- shared referral handlers ----------
 
-  const handleSubmitReferralCode = async (code: string) => {
-          if (!code || !code.trim()) {
-              ToastAndroid.show(
-                  "Please enter a referral code.",
-                  ToastAndroid.SHORT
-              );
-              return;
-          }
-  
-          setIsSubmitting(true);
-  
-          try {
-              const normalizedCode = code.trim().toUpperCase();
-  
-              const validation = await validateReferrerCode(normalizedCode);
-  
-              if (!validation.exists ||  !validation.referrerData) {
-                  ToastAndroid.show(
-                      "Invalid referral code. Please check and try again.",
-                      ToastAndroid.LONG
-                  );
-                  return;
-              }
-  
-              await updateDocument(
-                  "personalData",
-                  user?.uid || "",
-                  {
-                      referredBy: validation.referrerData
-                  }
-              );
-  
-              if (user) {
-                  await setupUser({
-                      ...user,
-                      referredBy: validation.referrerData
-                  });
-              }
-  
-              setReferralCode(normalizedCode);
-              setShowReferralModal(false);
-  
-              ToastAndroid.show(
-                  "Referral code accepted.",
-                  ToastAndroid.SHORT
-              );
-  
-          } catch (error) {
-              console.error(
-                  "Referral validation error:",
-                  error
-              );
-  
-              ToastAndroid.show(
-                  "Referral validation failed. Please try again.",
-                  ToastAndroid.LONG
-              );
-  
-          } finally {
-              setIsSubmitting(false);
-          }
-      };
+   
 
     const handleRefresh = async () => {
         if (user) {
@@ -119,7 +59,7 @@ function SwitchRoleSelector() {
     const getVerifiedStatus = async (recordId?: string) => {
         if (!recordId) return 'pending';
         try {
-            const record = await readById('verifiedUsers', recordId);
+            const record = await readById('verifiedUsers', recordId) as any;;
             return record?.verificationStatus || 'pending';
         } catch (error) {
             console.error('Error fetching verification status:', error);
@@ -244,8 +184,8 @@ function SwitchRoleSelector() {
         fleetFilter === 'active'
             ? activeFleets
             : fleetFilter === 'pending'
-            ? pendingFleets
-            : accessibleFleets.filter(fleet => fleet.status === 'ended' || fleet.status === 'declined');
+                ? pendingFleets
+                : accessibleFleets.filter(fleet => fleet.status === 'ended' || fleet.status === 'declined');
 
     const handleDriverDecision = async (fleet: any, decision: 'active' | 'declined') => {
         try {
@@ -293,15 +233,15 @@ function SwitchRoleSelector() {
 
 
 
-  
-    const handleDriverSelect = async (driver: any) => {    
+
+    const handleDriverSelect = async (driver: any) => {
         if (!driver) return;
 
         const fleetRole = {
             role: 'driver' as const,
             fleetId: driver.fleetId,
             companyName: driver.companyName || driver.fleetName,
-            userRole  : driver.userRole || 'owner',
+            userRole: driver.userRole || 'owner',
             accType: 'driver' as const,
             driverId: driver.driverId || null,
 
@@ -309,19 +249,19 @@ function SwitchRoleSelector() {
             fleetManagerId: driver.fleetManagerId || null,
             fleetDispatcherId: driver.fleetDispatcherId || null,
 
-            referrerCode : driver.referrerCode || null ,
+            referrerCode: driver.referrerCode || null,
 
-            organizationName : driver.companyName || driver.fleetName ,
-            organizationId : driver.fleetId ,
+            organizationName: driver.companyName || driver.fleetName,
+            organizationId: driver.fleetId,
 
-            phone : `${driver.countryCode}${driver?.organizationPhone}` ,
-            email : driver.organizationEmail ,
-            billingAddress : driver?.billingAddressFull ,
-            baseAdress : driver?.baseAdressFull  
-            
+            phone: `${driver.countryCode}${driver?.organizationPhone}`,
+            email: driver.organizationEmail,
+            billingAddress: driver?.billingAddressFull,
+            baseAdress: driver?.baseAdressFull
+
         };
 
-    (fleetRole as any);
+        (fleetRole as any);
         await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
         setCurrentRole(fleetRole as any)
         router.replace('/');
@@ -516,8 +456,8 @@ function SwitchRoleSelector() {
                                         style={{
                                             backgroundColor:
                                                 driver.status === 'pending' ? '#FFF3E0'
-                                                : driver.status === 'active' ? '#E8F5E9'
-                                                : '#FFEBEE',
+                                                    : driver.status === 'active' ? '#E8F5E9'
+                                                        : '#FFEBEE',
                                             paddingHorizontal: wp(2),
                                             paddingVertical: wp(1),
                                             borderRadius: wp(4),
@@ -529,8 +469,8 @@ function SwitchRoleSelector() {
                                                 fontWeight: '700',
                                                 color:
                                                     driver.status === 'pending' ? '#EF6C00'
-                                                    : driver.status === 'active' ? '#2E7D32'
-                                                    : '#C62828',
+                                                        : driver.status === 'active' ? '#2E7D32'
+                                                            : '#C62828',
                                             }}
                                         >
                                             {driver.status.toUpperCase()}
@@ -578,7 +518,7 @@ function SwitchRoleSelector() {
                         </ThemedText>
                     </View>
                 )}
-                <View style={{height:hp(15)}} />
+                <View style={{ height: hp(15) }} />
 
             </ScrollView>
 
@@ -587,7 +527,17 @@ function SwitchRoleSelector() {
                 initialCode={referralCode}
                 isSubmitting={isSubmitting}
                 onClose={() => setShowReferralModal(!hasReferral)}
-                onSubmit={handleSubmitReferralCode}
+
+                onSubmit={(code) =>
+                    handleSubmitReferralCode({
+                        code,
+                        user,
+                        setupUser,
+                        setReferralCode,
+                        setShowReferralModal,
+                        setIsSubmitting
+                    })
+                }
                 onLogout={handleLogout}
                 onRefresh={handleRefresh}
             />

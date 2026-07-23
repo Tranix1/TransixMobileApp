@@ -461,8 +461,6 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       };
 
 
-
-
       const assignment = {
         cargoId,
         loadId: cargoId,

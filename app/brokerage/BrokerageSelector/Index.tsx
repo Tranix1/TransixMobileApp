@@ -6,12 +6,13 @@ import CustomHeader from "@/components/CustomHeader";
 import ReferralCodeModal from "@/components/ReferralCodeModal";
 import { router } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
-import { validateReferrerCode, setDocuments, updateDocument } from "@/db/operations";
+import {  setDocuments, updateDocument } from "@/db/operations";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { hp, wp } from "@/constants/common";
 import SubscriptionPaymentModal from "@/components/SubscriptionPaymentModal";
-
+import { handleSubmitReferralCode } from "@/Utilities/handleSubmitRefferalCode";
+import { readById } from "@/db/operations";
 
 function BrokerageSelector() {
     const { user, Logout, setupUser, setCurrentRole, currentRole } = useAuth();
@@ -37,68 +38,6 @@ function BrokerageSelector() {
 
 
 
-    const handleSubmitReferralCode = async (code: string) => {
-        if (!code || !code.trim()) {
-            ToastAndroid.show(
-                "Please enter a referral code.",
-                ToastAndroid.SHORT
-            );
-            return;
-        }
-
-        setIsSubmitting(true);
-
-        try {
-            const normalizedCode = code.trim().toUpperCase();
-
-            const validation = await validateReferrerCode(normalizedCode);
-
-            if (!validation.exists || !validation.referrerId || !validation.referrerData) {
-                ToastAndroid.show(
-                    "Invalid referral code. Please check and try again.",
-                    ToastAndroid.LONG
-                );
-                return;
-            }
-
-            await updateDocument(
-                "personalData",
-                user?.uid || "",
-                {
-                    referredBy: validation.referrerData
-                }
-            );
-
-            if (user) {
-                await setupUser({
-                    ...user,
-                    referredBy: validation.referrerData
-                });
-            }
-
-            setReferralCode(normalizedCode);
-            setShowReferralModal(false);
-
-            ToastAndroid.show(
-                "Referral code accepted.",
-                ToastAndroid.SHORT
-            );
-
-        } catch (error) {
-            console.error(
-                "Referral validation error:",
-                error
-            );
-
-            ToastAndroid.show(
-                "Referral validation failed. Please try again.",
-                ToastAndroid.LONG
-            );
-
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
 
     const handleRefresh = async () => {
         if (user) {
@@ -114,7 +53,7 @@ function BrokerageSelector() {
     const getVerifiedStatus = async (recordId?: string) => {
         if (!recordId) return 'pending';
         try {
-            const record = await readById('verifiedUsers', recordId);
+            const record = await readById('verifiedUsers', recordId) as any;
             return record?.verificationStatus || 'pending';
         } catch (error) {
             console.error('Error fetching verification status:', error);
@@ -136,21 +75,21 @@ function BrokerageSelector() {
             return;
         }
 
-            const brokerageRole = {
-                role: 'brokerage' as const,
-                brokerageId: brokerage.brokerageId,
-                companyName: brokerage.name || brokerage.brokerage,
+        const brokerageRole = {
+            role: 'brokerage' as const,
+            brokerageId: brokerage.brokerageId,
+            companyName: brokerage.name || brokerage.brokerage,
 
-                userRole: brokerage.userRole || 'owner',
-                accType: 'brokerage' as const,
+            userRole: brokerage.userRole || 'owner',
+            accType: 'brokerage' as const,
 
-                referrerCode: brokerage.referrerCode || null,
-                organizationName: brokerage.name,
-                organizationId: brokerage.id,
-                phone: `${brokerage.countryCode}${brokerage?.organizationPhone}`,
-                email: brokerage.organizationEmail,
-                location: brokerage?.location,
-            };
+            referrerCode: brokerage.referrerCode || null,
+            organizationName: brokerage.name,
+            organizationId: brokerage.id,
+            phone: `${brokerage.countryCode}${brokerage?.organizationPhone}`,
+            email: brokerage.organizationEmail,
+            location: brokerage?.location,
+        };
 
         (brokerageRole as any);
         await AsyncStorage.setItem('currentRole', JSON.stringify(brokerageRole));
@@ -244,14 +183,24 @@ function BrokerageSelector() {
 
 
             <ReferralCodeModal
-                visible={showReferralModal}
-                initialCode={referralCode}
-                isSubmitting={isSubmitting}
-                onClose={() => setShowReferralModal(!hasReferral)}
-                onSubmit={handleSubmitReferralCode}
-                onLogout={handleLogout}
-                onRefresh={handleRefresh}
-            />
+                           visible={showReferralModal}
+                           initialCode={referralCode}
+                           isSubmitting={isSubmitting}
+                           onClose={() => setShowReferralModal(!hasReferral)}
+           
+                           onSubmit={(code) =>
+                               handleSubmitReferralCode({
+                                   code,
+                                   user,
+                                   setupUser,
+                                   setReferralCode,
+                                   setShowReferralModal,
+                                   setIsSubmitting
+                               })
+                           }
+                           onLogout={handleLogout}
+                           onRefresh={handleRefresh}
+                       />
         </View>
     );
 }
