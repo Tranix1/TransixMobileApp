@@ -200,6 +200,24 @@ const Settings = () => {
                                     </TouchableNativeFeedback>
                                 </View>
                             )}
+                            {isSuperAdmin() && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/Analytics')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='bar-chart-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>
+                                                    Analytics
+                                                </ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>
+                                                    View analytics events and referral funnel
+                                                </ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
                             {hasPermissionSync('approve_trucks') && (
                                 <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
                                     <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/ApproveTrucks')}>
