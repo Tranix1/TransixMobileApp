@@ -148,10 +148,17 @@ const onsubmit = async () => {
         
 
         if (res.currentRole?.userRole === "create_Acc") {
-            router.push({
-                pathname: "/Account/Selector",
-                params: { accountType: selectedAccount },
-            });
+            if(res.currentRole.accType ==="fleet"){
+                router.push("/Fleet/CreateFleet")
+            }else if(res.currentRole.accType ==="brokerage"){
+                router.push("/brokerage/CreateBrokerage/Index")
+            }else if (res.currentRole.accType ==="driver"){
+                router.push("/Driver/Add/Index")
+            }else{
+                router.push("/")
+            }
+
+            
         } else {
             router.replace('/');
         }

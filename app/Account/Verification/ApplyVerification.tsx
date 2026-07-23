@@ -9,6 +9,7 @@ const { Paynow } = require("paynow");
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { ThemedText } from "@/components/ThemedText";
 import { router } from "expo-router";
+import { trackVerificationSubmitted } from '@/services/analytics/appAnalytics';
 // import ecocashLogo from "../../../assets/images/ECOCASH-logo(1).jpg" // Removed as this path is incorrect.  Handled with require below.
 import { useThemeColor } from '@/hooks/useThemeColor'
 import Input from "@/components/Input";
@@ -182,6 +183,7 @@ const ApplyVerification = () => {
                 userId: userId,
                 pollUrl: pollUrl,
             });
+            void trackVerificationSubmitted({ userId, metadata: { verificationId: docRef.id } }).catch(console.error);
 
             setFormData({
                 buzLoc: "",

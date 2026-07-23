@@ -6,7 +6,7 @@ import CustomHeader from "@/components/CustomHeader";
 import ReferralCodeModal from "@/components/ReferralCodeModal";
 import { router } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
-import { validateReferrerCode, setDocuments, updateDocument } from "@/db/operations";
+import { validateReferrerCode, setDocuments, updateDocument, readById } from '@/db/operations';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { hp, wp } from "@/constants/common";
@@ -115,6 +115,17 @@ function FleetSelector() {
 
     const handleLogout = async () => {
         await Logout();
+    };
+
+    const getVerifiedStatus = async (recordId?: string) => {
+        if (!recordId) return 'pending';
+        try {
+            const record = await readById('verifiedUsers', recordId);
+            return record?.verificationStatus || 'pending';
+        } catch (error) {
+            console.error('Error fetching verification status:', error);
+            return 'pending';
+        }
     };
 
 
@@ -253,6 +264,16 @@ const filteredFleets =
     
     const handleDriverSelect = async (fleet: any) => {    
         if (!fleet) return;
+
+        const fleetId = fleet.fleetId || fleet.organizationId;
+        const fleetStatus = fleet.verificationStatus || await getVerifiedStatus(fleetId);
+        if (fleetStatus !== 'approved') {
+            ToastAndroid.show(
+                'This fleet connection is not verified yet. Please wait for approval.',
+                ToastAndroid.LONG
+            );
+            return;
+        }
 
         const fleetRole = {
             role: 'driver' as const,

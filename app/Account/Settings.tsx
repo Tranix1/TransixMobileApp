@@ -290,6 +290,34 @@ const Settings = () => {
                                     </TouchableNativeFeedback>
                                 </View>
                             )}
+                            {hasPermissionSync('manage_referrers') && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/Campaigns/CreateCampaign')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='megaphone-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>Create Campaign</ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>Create an admin marketing referral campaign</ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
+                            {hasPermissionSync('manage_referrers') && (
+                                <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                                    <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/Campaigns/CreateCampaignReferral')}>
+                                        <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
+                                            <Ionicons name='link-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
+                                            <View style={{ flex: 1 }}>
+                                                <ThemedText type='default'>Campaign Referrals</ThemedText>
+                                                <ThemedText type='tiny' color={coolgray}>Assign campaign codes to existing referrers</ThemedText>
+                                            </View>
+                                            <Ionicons name='chevron-forward' size={wp(4)} color={icon} />
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                </View>
+                            )}
                             {hasPermissionSync('version_management') && (
                                 <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
                                     <TouchableNativeFeedback onPress={() => router.push('/Account/VersionManagement')}>

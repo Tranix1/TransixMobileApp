@@ -6,6 +6,9 @@ import { addDocumentWithId } from '@/db/operations';
 import { notifyTrucksByFilters } from '@/Utilities/notifyTruckByFilters';
 import { Customer } from '@/components/CustomerPicker';
 import { sendPushNotification } from '@/Utilities/pushNotification';
+import { trackLoadCreated } from '@/services/analytics/appAnalytics';
+import { incrementActiveLoads, incrementPrivateBrokerageLoads, incrementPrivateFleetLoads, incrementPublicLoads, incrementTotalLoads } from '@/services/analytics/dashboardAnalytics';
+import { incrementLoadsPosted } from '@/services/analytics/organizationAnalytics';
 
 
 export type LoadVisibility = 'Private' | 'Public' | 'Both';
@@ -77,6 +80,19 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     organizationId: roleAny?.organizationId,
     name: user.organisation || user.displayName || '',
     phoneNumber: user.phoneNumber || '',
+  };
+  const analyticsType = currentRole?.accType === 'brokerage' ? 'brokerage' : 'fleet';
+  const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId || null;
+  const analyticsContext = { userId: user?.uid, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType ?? null, role: currentRole?.userRole ?? null, accountType: currentRole?.accType ?? null, referrerId: user?.referredBy?.userId ?? null, referralCodeUsed: user?.referredBy?.referralCode ?? null, campaign: user?.referredBy?.campaign ?? null, platform: user?.referredBy?.platform ?? null, metadata: { loadId: cargoId, visibility: loadVisibility } };
+  const recordLoadCreated = () => {
+    void trackLoadCreated(analyticsContext).catch(console.error);
+    if (!analyticsOrganizationId) return;
+    void incrementTotalLoads(analyticsType, analyticsOrganizationId).catch(console.error);
+    void incrementActiveLoads(analyticsType, analyticsOrganizationId).catch(console.error);
+    void incrementLoadsPosted(analyticsOrganizationId).catch(console.error);
+    if (loadVisibility === 'Public' || loadVisibility === 'Both') void incrementPublicLoads(analyticsType, analyticsOrganizationId).catch(console.error);
+    if ((loadVisibility === 'Private' || loadVisibility === 'Both') && analyticsType === 'fleet') void incrementPrivateFleetLoads(analyticsType, analyticsOrganizationId).catch(console.error);
+    if ((loadVisibility === 'Private' || loadVisibility === 'Both') && analyticsType === 'brokerage') void incrementPrivateBrokerageLoads(analyticsType, analyticsOrganizationId).catch(console.error);
   };
 
   // Visibility tag used inside each nested assignment doc.
@@ -582,6 +598,7 @@ if (dispatcherToken) {
       await writePublicLoad();
       // await notifyTrucksByFilters({ trucksNeeded, loadItem: buildNotificationLoadItem(params) });
     }
+    recordLoadCreated();
     return;
   }
 
@@ -592,10 +609,12 @@ if (dispatcherToken) {
     if (loadVisibility === 'Public' || loadVisibility === 'Both') {
       await writePublicLoad();
     }
+    recordLoadCreated();
     return;
   }
 
   await writePublicLoad();
+  recordLoadCreated();
   if (
     loadVisibility === "Public" ||
     loadVisibility === "Both"
@@ -606,4 +625,4 @@ if (dispatcherToken) {
       contractId: cargoId,
     });
   }
-};  
+};

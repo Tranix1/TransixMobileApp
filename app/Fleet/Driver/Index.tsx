@@ -15,6 +15,8 @@ import { deleteDocument, updateDocument } from '@/db/operations';
 // import ImageViewing from 'react-nativeput';
 import Input from '@/components/Input';
 import { useAuth } from '@/context/AuthContext';
+import { trackEvent } from '@/services/analytics/appAnalytics';
+import { incrementMemberCount } from '@/services/analytics/organizationAnalytics';
 
 // Payment method types for a driver
 type PaymentType = 'trip' | 'monthly' | 'later' | 'custom';
@@ -724,6 +726,14 @@ export default function DriverIndex() {
                  driverUserId:driver?.userId,   fullName: driver.fullName, phoneNumber: driver.phoneNumber, driverEmail: driver.email, timeStamp: serverTimestamp(), profilePhoto: driver.selfieImage, payment: buildPaymentPayload(driver.id), });
 
             }));
+
+            const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
+            if (analyticsOrganizationId) {
+                for (const driver of selectedDrivers) {
+                    void trackEvent({ eventName: 'driver_added', userId: driver.userId, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: 'fleet', role: 'driver', accountType: 'driver', metadata: { driverId: driver.userId } }).catch(console.error);
+                }
+                void incrementMemberCount(analyticsOrganizationId, selectedDrivers.length).catch(console.error);
+            }
 
 
             fetchDrivers()

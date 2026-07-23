@@ -240,15 +240,8 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                 } else if (selectedAccount === "driver") {
                     router.replace("/Driver/Add/Index");
 
-                } else if (selectedAccount === "tracking") {
-
-                    router.replace({
-                        pathname: "/Account/Profile",
-                        params: {
-                            operation: "create",
-                            accountType: result.accountRole.accType,
-                        },
-                    });
+                }else{
+                    router.push("/")
                 }
 
             }

@@ -203,9 +203,16 @@ useEffect(()=>{
     const approveDriver = async () => {
         try {
             setProcessing(true);
+            await updateDocumentWithAdminTracking(
+                'verifiedUsers',
+                driverData.id,
+                { verificationStatus: 'approved', rejectionReason: '' },
+                ADMIN_ACTIONS.APPROVE_DRIVER,
+                'account',
+                driverData.organizationName || driverData.id,
+                'Approved driver verification'
+            );
 
-
-        
             if (driverData.expoPushToken) {
                 await sendPushNotification(
                     driverData.expoPushToken,
@@ -235,9 +242,15 @@ useEffect(()=>{
 
         try {
             setProcessing(true);
-
-
-          
+            await updateDocumentWithAdminTracking(
+                'verifiedUsers',
+                driverData.id,
+                { verificationStatus: 'rejected', rejectionReason: declineReason.trim() },
+                ADMIN_ACTIONS.DECLINE_USER,
+                'account',
+                driverData.organizationName || driverData.id,
+                `Declined driver verification: ${declineReason.trim()}`
+            );
 
             if (driverData.expoPushToken) {
                 await sendPushNotification(

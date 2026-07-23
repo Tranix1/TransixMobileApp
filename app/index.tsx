@@ -87,8 +87,6 @@ export default function Index() {
 
   const { currentRole } = useAuth();
 
-  console.log(currentRole ,"current Role")
-
   // Check if profile details are missing
 
   const isAuthReady = !authLoading && user !== undefined;

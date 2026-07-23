@@ -885,8 +885,9 @@ export default function Tracking() {
         <SubscriptionPaymentModal
           isVisible={isUpgradeModalVisible}
           onClose={() => setIsUpgradeModalVisible(false)}
-          vehicleId={firebaseDocId || ''}
-          vehicleName={deviceInfo?.name || 'Vehicle'}
+          subscriptionType="tracking"
+          trackingVehicleId={firebaseDocId || ''}
+          payerOrganizationName={deviceInfo?.name || 'Tracking Vehicle'}
         />
       </View>
     </ScreenWrapper>

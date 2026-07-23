@@ -29,6 +29,9 @@ import { db } from "@/db/fireBaseConfig";
 import { doc, collection, getDoc, getDocs, query, where, limit, serverTimestamp, writeBatch } from "firebase/firestore";
 import { SelectLocationProp } from "@/types/types";
 import { PhoneAuthCredential } from "firebase/auth";
+import { trackTruckAdded } from '@/services/analytics/appAnalytics';
+import { incrementTotalTrucks } from '@/services/analytics/dashboardAnalytics';
+import { incrementTruckCount } from '@/services/analytics/organizationAnalytics';
 
 type FleetConfig = {
 
@@ -575,6 +578,13 @@ function AddTrucks() {
 
       })
 
+
+ const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
+      if (analyticsOrganizationId) {
+        void trackTruckAdded({ userId: user?.uid, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: 'fleet', role: currentRole?.userRole, accountType: currentRole?.accType, metadata: { truckId :truckId} }).catch(console.error);
+        void incrementTotalTrucks('fleet', analyticsOrganizationId).catch(console.error);
+        void incrementTruckCount(analyticsOrganizationId).catch(console.error);
+      }
       // Auto-attach the fleet's active default brokerages to this new
       // truck and notify them — mirrors the manual "Other Brokers" flow.
       await assignDefaultBrokeragesToTruck(
@@ -599,6 +609,8 @@ function AddTrucks() {
       setSpinnerItem(false)
     }
   };
+
+  
 
   return (
     <ScreenWrapper>
@@ -986,4 +998,5 @@ const styles = StyleSheet.create({
   selectedTextStyle: {
     fontSize: 16,
   }
-});
+      });
+     

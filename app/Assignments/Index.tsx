@@ -36,6 +36,9 @@ import TruckDefaultModal from '@/components/TruckDefaultModal';
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import AssignmentCard from '@/components/AssignmentComponent';
 import AccentRingLoader from '@/components/AccentRingLoader';
+import { trackAssignmentCompleted, trackAssignmentStarted } from '@/services/analytics/appAnalytics';
+import { incrementAssignmentsCompleted, incrementAssignmentsStarted } from '@/services/analytics/dashboardAnalytics';
+import { incrementCompletedTrips, incrementActiveTrips } from '@/services/analytics/organizationAnalytics';
 
 // ---------------------------------------------------------------------------
 // Independent Assignments page for Fleet / Broker use.
@@ -574,6 +577,22 @@ function Jobs() {
                 status: newStatus,
                 ...(rejectionReason ? { rejectionReason } : {}),
             });
+
+            const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId || scopeId;
+            const normalizedStatus = newStatus.toLowerCase();
+            if (analyticsOrganizationId && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
+                const context = { userId: user?.uid, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType, role: currentRole?.userRole, accountType: currentRole?.accType, metadata: { cargoId, assignmentId: assignmentDocId, status: newStatus } };
+                if (normalizedStatus === 'active' || normalizedStatus === 'started') {
+                    void trackAssignmentStarted(context).catch(console.error);
+                    void incrementAssignmentsStarted(currentRole.accType, analyticsOrganizationId).catch(console.error);
+                    void incrementActiveTrips(analyticsOrganizationId).catch(console.error);
+                }
+                if (normalizedStatus === 'completed') {
+                    void trackAssignmentCompleted(context).catch(console.error);
+                    void incrementAssignmentsCompleted(currentRole.accType, analyticsOrganizationId).catch(console.error);
+                    void incrementCompletedTrips(analyticsOrganizationId).catch(console.error);
+                }
+            }
 
             setAssignedCargo((prev) =>
                 prev.map((item) =>

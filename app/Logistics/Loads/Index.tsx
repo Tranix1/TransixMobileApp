@@ -69,7 +69,7 @@ const LoadTructs = async () => {
 
             filters = selectedAccountType !== "ALL"
                 ? [
-                    where("type", "==", selectedAccountType),
+                    where("type", "==", selectedAccountType.toLowerCase()),
                     where("verificationStatus", "==", "approved"),
                 ]
                 : [
@@ -469,5 +469,4 @@ const LoadTructs = async () => {
 
 
 export default React.memo(Index)
-
 

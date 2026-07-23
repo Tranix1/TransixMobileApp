@@ -588,14 +588,18 @@ export const validateReferralCode = async (referralCode: string) => {
 
         // Campaign referral
         if (referralCode.startsWith("C")) {
-
-            const q = query(
+            // New records use campaignReferralCode; retain the legacy field lookup
+            // so previously issued campaign codes continue to work.
+            let querySnapshot = await getDocs(query(
                 collection(db, "campaignReferrals"),
-                where("referralCode", "==", referralCode)
-            );
-
-
-            const querySnapshot = await getDocs(q);
+                where("campaignReferralCode", "==", referralCode)
+            ));
+            if (querySnapshot.empty) {
+                querySnapshot = await getDocs(query(
+                    collection(db, "campaignReferrals"),
+                    where("referralCode", "==", referralCode)
+                ));
+            }
 
 
             if (querySnapshot.empty) {
@@ -608,6 +612,9 @@ export const validateReferralCode = async (referralCode: string) => {
 
 
             const data = querySnapshot.docs[0].data();
+            if (data.active === false) {
+                return { exists: false, type: "CAMPAIGN", data: null };
+            }
 
 
             return {
@@ -616,11 +623,11 @@ export const validateReferralCode = async (referralCode: string) => {
 
                 data: {
                     userId: data.userId,
-                    name: data.name,
+                    name: data.displayName ?? data.name ?? "Unknown",
                     phoneNumber: data.phoneNumber,
-                    referralCode: data.referralCode,
-                    campaign: data.campaign,
-                    platform: data.platform,
+                    referralCode: data.referralCode ?? data.campaignReferralCode,
+                    campaign: data.campaignName ?? data.campaign,
+                    platform: data.platformId ?? data.platform,
                     createdAt: data.createdAt,
                 }
             };
@@ -645,6 +652,87 @@ export const validateReferralCode = async (referralCode: string) => {
 
         throw error;
     }
+};
+
+export interface CampaignInput {
+    campaignName: string;
+    description: string;
+    objective: string;
+    content: string;
+    marketingMessage: string;
+    platforms: string[];
+    status: "Upcoming" | "Active" | "Paused" | "Completed";
+    startDate: string;
+    endDate: string;
+    targetAudience: string;
+    maxUses?: number | null;
+    budget?: number | null;
+    notes: string;
+    createdBy: string;
+}
+
+/** Creates a campaign with a Firestore-generated campaign ID. */
+export const createCampaign = async (input: CampaignInput): Promise<string> => {
+    const campaignRef = doc(collection(db, "campaigns"));
+    await setDoc(campaignRef, {
+        ...input,
+        campaignId: campaignRef.id,
+        active: input.status === "Active",
+        createdAt: serverTimestamp(),
+    });
+    return campaignRef.id;
+};
+
+/** Reads campaigns for the campaign-referral selector. */
+export const getCampaigns = async () => {
+    const snapshot = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt", "desc")));
+    return snapshot.docs.map((item) => ({ campaignId: item.id, ...item.data() }));
+};
+
+/** Reuses the existing referrer collection and supports its legacy field names. */
+export const searchReferrers = async (searchTerm: string) => {
+    const normalized = searchTerm.trim().toLowerCase();
+    const referrers = await getAllReferrers();
+    if (!normalized) return referrers;
+    return referrers.filter((item: any) => [
+        item.referralCode,
+        item.referrerCode,
+        item.displayName,
+        item.name,
+        item.userName,
+        item.phoneNumber,
+        item.userEmail,
+        item.email,
+    ].some((value) => String(value ?? "").toLowerCase().includes(normalized)));
+};
+
+export interface CampaignReferralInput {
+    campaignId: string;
+    campaignName: string;
+    platformId: string;
+    platformName: string;
+    userId: string;
+    displayName: string;
+    phoneNumber?: string | null;
+    referralCode: string;
+    createdBy: string;
+}
+
+/** Generates and persists a campaign referral using the existing C-prefixed code generator. */
+export const createCampaignReferral = async (input: CampaignReferralInput) => {
+    const referralRef = doc(collection(db, "campaignReferrals"));
+    const campaignReferralCode = await generateUniqueReferralCode("CAMPAIGN");
+    await setDoc(referralRef, {
+        ...input,
+        referralId: referralRef.id,
+        campaignReferralCode,
+        active: true,
+        createdAt: serverTimestamp(),
+        // Compatibility fields used by the existing validator and older data.
+        campaign: input.campaignName,
+        platform: input.platformId,
+    });
+    return { referralId: referralRef.id, campaignReferralCode };
 };
 
 

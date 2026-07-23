@@ -15,6 +15,8 @@ import { LoadTracker } from "@/components/LoadTracker";
 import { useAuth } from '@/context/AuthContext';
 import { getRelativeTime } from "@/Utilities/getDateRelativeTime";
 import { serverTimestamp } from "firebase/firestore";
+import { trackAssignmentCreated, trackTruckAccepted } from '@/services/analytics/appAnalytics';
+import { incrementAssignmentsCreated, incrementAcceptedBookings } from '@/services/analytics/dashboardAnalytics';
 // Function to get relative time (e.g., "1 hr ago", "4 seconds ago")
 
 
@@ -33,7 +35,7 @@ export const RequestedCargo = ({
   const coolGray = "#e5e7eb";
   const backgroundLight = useThemeColor('backgroundLight')
   const accent = useThemeColor('accent')
-  const { user } = useAuth();
+  const { user, currentRole } = useAuth();
 
   const [showAlert, setshowAlert] = useState<ReactElement | null>(null);
   function alertBox(title: string, message: string, buttons?: Alertbutton[], type?: "default" | "error" | "success" | "laoding" | "destructive" | undefined) {
@@ -125,7 +127,7 @@ export const RequestedCargo = ({
 
     })
 
-    updateDocument("cargoRequests", item.id, {
+    await updateDocument("cargoRequests", item.id, {
       requestStatus: "ACCEPTED",
       ownerDecision: "Accepted",
       acceptedAt: new Date(),
@@ -137,6 +139,15 @@ export const RequestedCargo = ({
 
       assignmentCreated: true,
     })
+
+    const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
+    if (analyticsOrganizationId && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
+      const context = { userId: user?.uid, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole.accType, role: currentRole.userRole, accountType: currentRole.accType, metadata: { assignmentId: assigmentId, loadId: item.loadItemDetails.loadId, truckId: item.truckDetails.truckId } };
+      void trackAssignmentCreated(context).catch(console.error);
+      void trackTruckAccepted(context).catch(console.error);
+      void incrementAssignmentsCreated(currentRole.accType, analyticsOrganizationId).catch(console.error);
+      void incrementAcceptedBookings(currentRole.accType, analyticsOrganizationId).catch(console.error);
+    }
 
     ToastAndroid.show(
       "Load accepted. It now appears under Assignments.",
@@ -469,8 +480,6 @@ export const RequestedCargo = ({
     </View>
   );
 }
-
-
 
 
 

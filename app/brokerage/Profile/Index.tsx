@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { wp, hp } from '@/constants/common';
 import { useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 
 // ---------- Types ----------
@@ -184,33 +184,28 @@ export default function BrokerProfile() {
                 // If brokers and fleets share this collection, add:
                 //   where('type', '==', 'broker')
                 // If organizationId is your doc ID instead, use getDoc(doc(db, 'profiles', orgId)).
-                const profilesQuery = query(
-                    collection(db, 'profiles'),
-                    where('organizationId', '==', orgId),
-                    limit(1)
-                );
-                const snapshot = await getDocs(profilesQuery);
+                const snapshot = await getDoc(doc(db, 'organizationProfiles', orgId));
 
-                if (!snapshot.empty) {
-                    const data = snapshot.docs[0].data() as any;
+                if (snapshot.exists()) {
+                    const data = snapshot.data() as any;
                     setBroker((prev) => ({
                         ...prev,
                         logoUrl: data.logoUrl ?? prev.logoUrl,
                         name: data.name || prev.name,
-                        location: data.location || prev.location,
+                        location: data.location?.description || data.location || prev.location,
                         rating: data.rating ?? prev.rating,
                         reviewsCount: data.reviewsCount ?? prev.reviewsCount,
                         memberSince: data.memberSince || prev.memberSince,
                         lastActive: data.lastActive || prev.lastActive,
 
-                        publicLoadsPosted: data.publicLoadsPosted ?? prev.publicLoadsPosted,
-                        privateLoadsPosted: data.privateLoadsPosted ?? prev.privateLoadsPosted,
-                        activeLoads: data.activeLoads ?? prev.activeLoads,
-                        completedLoads: data.completedLoads ?? prev.completedLoads,
+                        publicLoadsPosted: data.loadsPosted ?? prev.publicLoadsPosted,
+                        privateLoadsPosted: data.loadsPosted ?? prev.privateLoadsPosted,
+                        activeLoads: data.activeTrips ?? prev.activeLoads,
+                        completedLoads: data.loadsCompleted ?? prev.completedLoads,
 
-                        loadAcceptanceRate: data.loadAcceptanceRate ?? prev.loadAcceptanceRate,
-                        avgResponseTime: data.avgResponseTime || prev.avgResponseTime,
-                        replyRate: data.replyRate ?? prev.replyRate,
+                        loadAcceptanceRate: data.acceptanceRate ?? prev.loadAcceptanceRate,
+                        avgResponseTime: data.responseTime ? `${data.responseTime} min` : prev.avgResponseTime,
+                        replyRate: data.responseRate ?? prev.replyRate,
                         cancellationRate: data.cancellationRate ?? prev.cancellationRate,
                         paymentReputation: data.paymentReputation || prev.paymentReputation,
                         successfulDeliveries: data.successfulDeliveries ?? prev.successfulDeliveries,

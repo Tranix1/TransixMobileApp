@@ -16,6 +16,9 @@ import { addDocumentWithId, generateUniqueReferralCode, getReferralCodeByUserId,
 import { AccountType, CurrentRole, User } from "@/types/types";
 import { updateUserTokenInAllCollections } from "@/Utilities/pushNotification";
 import { setDoc } from "firebase/firestore";
+import { trackAccountCreated, trackLogin, trackLogout } from "@/services/analytics/appAnalytics";
+import { incrementAccountsCreated } from "@/services/analytics/dashboardAnalytics";
+import { incrementSignups } from "@/services/analytics/referralAnalytics";
 
 type AlertType = "default" | "error" | "success" | "laoding" | "destructive";
 
@@ -335,6 +338,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
 
+            void trackLogin({ userId: firebaseUser.uid, accountType: credentials.accountType, role: currentRoleAccType.userRole }).catch(console.error);
+
             return {
                 success: true,
                 message: "Login successful",
@@ -508,6 +513,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
 
+            const analyticsContext = {
+                userId: firebaseUser.uid,
+                accountType: credentials.accountType,
+                referrerId: referredBy?.userId ?? null,
+                referralCodeUsed: credentials.referrerCode ?? referredBy?.referralCode ?? null,
+                campaign: referredBy?.campaign ?? null,
+                platform: referredBy?.platform ?? null,
+            };
+            void trackAccountCreated(analyticsContext).catch(console.error);
+            if (referredBy?.userId) void incrementSignups(referredBy.userId).catch(console.error);
+
 
 
             ToastAndroid.show(
@@ -539,7 +555,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const Logout = async () => {
         try {
+            const analyticsContext = { userId: user?.uid, accountType: user?.accountType, organizationId: currentRole?.organizationId ?? currentRole?.fleetId ?? null, organizationType: currentRole?.accType ?? null, role: currentRole?.userRole ?? null };
             await signOut(auth);
+            void trackLogout(analyticsContext).catch(console.error);
             await AsyncStorage.clear();
             setCurrentRoleState(DEFAULT_GENERAL_ROLE);
             setUser(null);

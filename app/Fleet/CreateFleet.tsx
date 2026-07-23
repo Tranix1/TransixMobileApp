@@ -25,6 +25,8 @@ import { LocationSelector } from '@/components/LocationSelector';
 import { SelectLocationProp } from '@/types/types';
 import { FontAwesome } from '@expo/vector-icons';
 import { Countries } from '@/types/types';
+import { trackEvent } from '@/services/analytics/appAnalytics';
+import { incrementAccountsCreated } from '@/services/analytics/dashboardAnalytics';
 
 const CreateFleet = () => {
     const router = useRouter();
@@ -298,6 +300,10 @@ const CreateFleet = () => {
                     rateUpdated: true
                 }
             })
+
+            void trackEvent({ eventName: "fleet_created", userId: user.uid, organizationId: fleetId, organizationProfileId: fleetId, organizationType: "fleet", role: "owner", accountType: "fleet", country: fleetData.fleetCountryCode?.name, metadata: { typeOfFleet: fleetData.typeOfFleet } }).catch(console.error);
+            // Creates the derived dashboard document without changing its counters.
+            void incrementAccountsCreated("fleet", fleetId, 0).catch(console.error);
 
 
 

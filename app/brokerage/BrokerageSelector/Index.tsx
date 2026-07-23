@@ -111,10 +111,30 @@ function BrokerageSelector() {
         await Logout();
     };
 
+    const getVerifiedStatus = async (recordId?: string) => {
+        if (!recordId) return 'pending';
+        try {
+            const record = await readById('verifiedUsers', recordId);
+            return record?.verificationStatus || 'pending';
+        } catch (error) {
+            console.error('Error fetching verification status:', error);
+            return 'pending';
+        }
+    };
 
     const handleBrokerageSelect = async (brokerage: any) => {
 
         if (!brokerage) return;
+
+        const brokerId = brokerage.organizationId || brokerage.brokerageId || brokerage.id;
+        const brokerStatus = brokerage.verificationStatus || await getVerifiedStatus(brokerId);
+        if (brokerStatus !== 'approved') {
+            ToastAndroid.show(
+                'This brokerage is not verified yet. Please wait for approval.',
+                ToastAndroid.LONG
+            );
+            return;
+        }
 
             const brokerageRole = {
                 role: 'brokerage' as const,

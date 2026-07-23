@@ -10,6 +10,8 @@ import { useAuth } from "@/context/AuthContext";
 import { where } from "firebase/firestore";
 import { wp } from "@/constants/common";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { trackTrackerLinked } from '@/services/analytics/appAnalytics';
+import { incrementTrackersLinked } from '@/services/analytics/dashboardAnalytics';
 
 export default function AddTrackedVehicle() {
   const [vehicleName, setVehicleName] = useState("");
@@ -199,6 +201,10 @@ export default function AddTrackedVehicle() {
           trackerAddedAt: Date.now().toString()
         });
       }
+
+      const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
+      void trackTrackerLinked({ userId: salesman?.uid, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType, role: currentRole?.userRole, accountType: currentRole?.accType, referrerId: selectedUser?.referrerId ?? null, metadata: { truckId: selectedTruck?.id ?? null, deviceId } }).catch(console.error);
+      if (analyticsOrganizationId && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) void incrementTrackersLinked(currentRole.accType, analyticsOrganizationId).catch(console.error);
 
       Alert.alert("Success", "Vehicle added successfully!");
 

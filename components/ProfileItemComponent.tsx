@@ -6,6 +6,7 @@ import { ThemedText } from './ThemedText'
 import { Image } from 'expo-image'
 import { FontAwesome5, Fontisto, Octicons, Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
+import { trackOrganizationViewed } from '@/services/analytics/appAnalytics'
 
 export type SelectLocationProp = {
     description: string;
@@ -20,6 +21,7 @@ type ProfileAccType = "fleet" | "brokerage" | "driver";
 
 interface BusinessProfile {
     id: string;
+    organizationId?: string;
     name: string;
     ownerName: string;
     profilePhoto?: string;
@@ -64,13 +66,15 @@ const remainingCount = Math.max(
 
 
     function haandlePressProfile (){
+        const organizationId = profile.organizationId || profile.id;
+        void trackOrganizationViewed({ organizationId, organizationProfileId: organizationId, organizationType: profile.type, metadata: { source: 'load_network' } }).catch(console.error);
         if(profile.type ==="brokerage"){
-            router.push("/brokerage/Profile/Index")
+            router.push({ pathname: "/brokerage/Profile/Index", params: { organizationId, organizationType: profile.type } })
         }else if(profile.type ==="fleet"){
-            router.push("/Fleet/Profile/Index")
+            router.push({ pathname: "/Fleet/Profile/Index", params: { organizationId, organizationType: profile.type } })
 
         }else if(profile.type==="driver"){
-            router.push("/Driver/Profile/Index")
+            router.push({ pathname: "/Driver/Profile/Index", params: { organizationId, driverId: organizationId, organizationType: profile.type } })
         }
     }
 

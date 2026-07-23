@@ -8,7 +8,7 @@ import UserMenuModal from '@/components/UserMenuModal';
 import { useAuthState } from '@/hooks/useAuthState';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 
 // ---------- Types ----------
@@ -144,7 +144,7 @@ function Profile() {
     } = useAuthState();
 
     const { currentRole } = useAuth();
-    const { driverId: driverIdParam } = useLocalSearchParams<{ driverId?: string }>();
+    const { driverId: driverIdParam, organizationId: organizationIdParam } = useLocalSearchParams<{ driverId?: string; organizationId?: string }>();
 
     const [dspCreateAcc, setDspCreateAcc] = React.useState(false);
     const [dspVerifyAcc, setDspVerifyAcc] = React.useState(false);
@@ -159,24 +159,17 @@ function Profile() {
                 const driverId = driverIdParam || user?.uid;
                 if (!driverId) return;
 
-                // Query "profiles" collection filtered by driverId.
-                // If drivers are stored by doc ID instead, replace with:
-                //   const snap = await getDoc(doc(db, 'profiles', driverId));
-                const profilesQuery = query(
-                    collection(db, 'profiles'),
-                    where('driverId', '==', driverId),
-                    limit(1)
-                );
-                const snapshot = await getDocs(profilesQuery);
+                const profileId = organizationIdParam || driverId;
+                const snapshot = await getDoc(doc(db, 'organizationProfiles', profileId));
 
-                if (!snapshot.empty) {
-                    const data = snapshot.docs[0].data() as any;
+                if (snapshot.exists()) {
+                    const data = snapshot.data() as any;
                     setDriver((prev) => ({
                         ...prev,
                         photoUrl: data.photoUrl || prev.photoUrl,
                         fullName: data.fullName || user?.displayName || prev.fullName,
-                        location: data.location || prev.location,
-                        rating: data.rating ?? prev.rating,
+                        location: data.location?.description || data.location || prev.location,
+                        rating: data.averageRating ?? prev.rating,
                         reviewsCount: data.reviewsCount ?? prev.reviewsCount,
                         memberSince: data.memberSince || prev.memberSince,
                         lastActive: data.lastActive || prev.lastActive,
@@ -187,7 +180,7 @@ function Profile() {
 
                         onTimeDelivery: data.onTimeDelivery ?? prev.onTimeDelivery,
                         acceptanceRate: data.acceptanceRate ?? prev.acceptanceRate,
-                        avgResponseTime: data.avgResponseTime || prev.avgResponseTime,
+                        avgResponseTime: data.responseTime ? `${data.responseTime} min` : prev.avgResponseTime,
                         cancellationRate: data.cancellationRate ?? prev.cancellationRate,
                         safetyRecord: data.safetyRecord || prev.safetyRecord,
                         totalDistance: data.totalDistance ?? prev.totalDistance,
@@ -207,7 +200,7 @@ function Profile() {
         };
 
         loadDriverProfile();
-    }, [driverIdParam, user]);
+    }, [driverIdParam, organizationIdParam, user]);
 
     const checkAuth = (theAction?: () => void) => {
         if (!isAuthenticated) {

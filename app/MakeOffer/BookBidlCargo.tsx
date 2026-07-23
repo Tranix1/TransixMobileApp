@@ -20,6 +20,9 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import { formatCurrency } from '@/services/services'
 import { usePushNotifications, sendPushNotification, sendBookingWithTrackerNotification } from "@/Utilities/pushNotification";
 import { useAuth } from "@/context/AuthContext";
+import { trackLoadBooked } from '@/services/analytics/appAnalytics';
+import { incrementBookings } from '@/services/analytics/dashboardAnalytics';
+import { incrementSuccessfulBookings } from '@/services/analytics/organizationAnalytics';
 
 function BookLCargo({ }) {
   const { bottom } = useSafeAreaInsets();
@@ -271,7 +274,14 @@ function BookLCargo({ }) {
               timeStamp: serverTimestamp(),
 
             }
-            addDocument("cargoRequests", theData)
+            await addDocument("cargoRequests", theData);
+
+            const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
+            void trackLoadBooked({ userId, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType, role: currentRole?.userRole, accountType: currentRole?.accType, referrerId: user?.referredBy?.userId ?? null, referralCodeUsed: user?.referredBy?.referralCode ?? null, campaign: user?.referredBy?.campaign ?? null, platform: user?.referredBy?.platform ?? null, metadata: { loadId: loadItem.id, truckId: item.id, operationType: OperationType } }).catch(console.error);
+            if (analyticsOrganizationId && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
+              void incrementBookings(currentRole.accType, analyticsOrganizationId).catch(console.error);
+              void incrementSuccessfulBookings(analyticsOrganizationId).catch(console.error);
+            }
 
             if (loadItem.expoPushToken) {
               await sendBookingWithTrackerNotification(

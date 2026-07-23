@@ -11,7 +11,8 @@ import React, { ReactElement, useEffect, useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 import { BlurView } from 'expo-blur';
-import { deleteDocument, readById } from "@/db/operations";
+import { deleteDocument, readById, updateDocumentWithAdminTracking } from "@/db/operations";
+import { ADMIN_ACTIONS } from "@/Utilities/adminActionTracker";
 import { Image } from 'expo-image'
 import { useAuth } from "@/context/AuthContext";
 import Divider from "@/components/Divider";
@@ -321,6 +322,15 @@ const FleetDetails = () => {
     const approveFleet = async () => {
         try {
             setProcessing(true);
+            await updateDocumentWithAdminTracking(
+                'verifiedUsers',
+                fleetData.id,
+                { verificationStatus: 'approved', rejectionReason: '' },
+                ADMIN_ACTIONS.APPROVE_USER,
+                'account',
+                fleetData.organizationName || fleetData.id,
+                'Approved fleet verification'
+            );
 
             if (fleetData.expoPushToken) {
                 await sendPushNotification(
@@ -351,6 +361,15 @@ const FleetDetails = () => {
 
         try {
             setProcessing(true);
+            await updateDocumentWithAdminTracking(
+                'verifiedUsers',
+                fleetData.id,
+                { verificationStatus: 'rejected', rejectionReason: declineReason.trim() },
+                ADMIN_ACTIONS.DECLINE_USER,
+                'account',
+                fleetData.organizationName || fleetData.id,
+                `Declined fleet verification: ${declineReason.trim()}`
+            );
 
             if (fleetData.expoPushToken) {
                 await sendPushNotification(

@@ -20,6 +20,7 @@ import AccentRingLoader from '@/components/AccentRingLoader';
 import CustomHeader from './CustomHeader';
 import Heading from './Heading';
 import ProfileItemComponent from './ProfileItemComponent';
+import { trackLoadDeleted } from '@/services/analytics/appAnalytics';
 
 interface LoadsComponentProps {
     Loads: Load[];
@@ -88,7 +89,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
     setSelectedAccountType,
 }) => {
     // Component implementation
-    const { user } = useAuth();
+    const { user, currentRole } = useAuth();
 
     const accent = useThemeColor('accent')
     const coolGray = useThemeColor('coolGray')
@@ -139,6 +140,7 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
                     onPress: async () => {
                         try {
                             await deleteDocument('Cargo', selectedLoad.id);
+                            void trackLoadDeleted({ userId: user?.uid, organizationId: currentRole?.organizationId || currentRole?.fleetId, organizationType: currentRole?.accType, role: currentRole?.userRole, accountType: currentRole?.accType, metadata: { loadId: selectedLoad.id } }).catch(console.error);
                             ToastAndroid.show('Load deleted successfully', ToastAndroid.SHORT);
                             bottomSheetRef.current?.close();
                             // Refresh the loads list
@@ -775,5 +777,4 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
 })
-
 

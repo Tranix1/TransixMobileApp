@@ -34,6 +34,10 @@ interface ReferralDashboardData {
   earningsHistory: EarningsEntry[];
 }
 
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { db } from '@/db/fireBaseConfig';
+import { readById, updateDocument, addDocument } from '@/db/operations';
+
 /**
  * Pull together everything the dashboard needs in one call:
  * 1. Look up all users this referrer brought in (e.g. a `referredBy` field
@@ -48,12 +52,83 @@ interface ReferralDashboardData {
 export async function getReferralDashboardData(
   referrerUserId: string
 ): Promise<ReferralDashboardData> {
-  // TODO: replace with real DB calls, e.g.:
-  // const { getDocuments } = await import('@/db/operations');
-  // const referredUsers = await getDocuments('Users', where('referredBy', '==', referrerUserId));
-  // const balanceDoc = await getDocument('ReferralBalances', referrerUserId);
-  // const history = await getDocuments('ReferralEarnings', where('referrerId', '==', referrerUserId));
-  throw new Error('getReferralDashboardData not implemented');
+  const referrer = await readById('referrers', referrerUserId) as any;
+
+  const balance = referrer?.wallet?.balance ?? 0;
+  const totalEarned = referrer?.wallet?.totalEarned ?? 0;
+  const totalWithdrawn = referrer?.wallet?.totalWithdrawn ?? 0;
+
+  const referredUsersSnapshot = await getDocs(
+    query(
+      collection(db, 'personalData'),
+      where('referredBy.userId', '==', referrerUserId),
+      orderBy('createdAt', 'asc')
+    )
+  );
+
+  const transactionSnapshot = await getDocs(
+    query(
+      collection(db, `referrers/${referrerUserId}/transactions`),
+      orderBy('createdAt', 'desc')
+    )
+  );
+
+  const transactions = transactionSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as any[];
+
+  const commissionByUser: Record<string, number> = {};
+  const firstSubscriptionByUser: Record<string, string> = {};
+
+  transactions.forEach((transaction) => {
+    if (transaction.type === 'commission' && transaction.referredUserId) {
+      const userId = transaction.referredUserId;
+      commissionByUser[userId] = (commissionByUser[userId] || 0) + (transaction.amount || 0);
+      if (!firstSubscriptionByUser[userId] && transaction.createdAt) {
+        firstSubscriptionByUser[userId] = transaction.createdAt;
+      }
+    }
+  });
+
+  const referredUsers = referredUsersSnapshot.docs.map((doc) => {
+    const data = doc.data() as any;
+    const id = doc.id;
+    const commissionEarned = commissionByUser[id] || 0;
+
+    return {
+      id,
+      name: data.displayName || data.name || data.organisation || 'Unknown',
+      phoneNumber: data.phoneNumber || data.contact || 'Unknown',
+      status: commissionEarned > 0 ? 'subscribed' : 'not_subscribed',
+      dateReferred: data.createdAt || data.joinedAt || (data.timeStamp?.toDate?.toISOString?.() ?? new Date().toISOString()),
+      dateSubscribed: firstSubscriptionByUser[id],
+      subscriptionType: commissionEarned > 0 ? 'truck' : undefined,
+      commissionEarned,
+    } as ReferredUser;
+  });
+
+  const earningsHistory = transactions.map((transaction) => {
+    const data = transaction as any;
+    return {
+      id: transaction.id,
+      referredUserName:
+        data.referredUserName || data.referredUserId || data.organizationName || 'Unknown',
+      amount: data.amount || 0,
+      date: data.createdAt || (data.timeStamp?.toDate?.toISOString?.() ?? new Date().toISOString()),
+      reason:
+        data.type === 'commission'
+          ? `${data.subscriptionType || 'Subscription'} commission`
+          : data.type === 'withdrawal'
+            ? 'Withdrawal'
+            : String(data.type || 'Activity'),
+    } as EarningsEntry;
+  });
+
+  return {
+    availableBalance: balance,
+    totalEarned,
+    totalWithdrawn,
+    referredUsers,
+    earningsHistory,
+  };
 }
 
 /**
@@ -72,6 +147,41 @@ export async function requestWithdrawal(
   method: 'ecocash' | 'bank',
   destination: string
 ): Promise<{ success: boolean; message?: string }> {
-  // TODO: replace with real implementation.
-  throw new Error('requestWithdrawal not implemented');
+  if (amount <= 0) {
+    return { success: false, message: 'Withdrawal amount must be greater than zero.' };
+  }
+
+  const referrer = await readById('referrers', referrerUserId) as any;
+  if (!referrer) {
+    return { success: false, message: 'Referrer not found.' };
+  }
+
+  const currentBalance = referrer?.wallet?.balance ?? 0;
+  const currentWithdrawn = referrer?.wallet?.totalWithdrawn ?? 0;
+
+  if (amount > currentBalance) {
+    return { success: false, message: 'Withdrawal amount exceeds available balance.' };
+  }
+
+  const newBalance = currentBalance - amount;
+  const newTotalWithdrawn = currentWithdrawn + amount;
+
+  await updateDocument('referrers', referrerUserId, {
+    wallet: {
+      balance: newBalance,
+      totalWithdrawn: newTotalWithdrawn,
+      updatedAt: new Date().toISOString(),
+    },
+  });
+
+  await addDocument(`referrers/${referrerUserId}/transactions`, {
+    type: 'withdrawal',
+    amount,
+    method,
+    destination,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  });
+
+  return { success: true };
 }

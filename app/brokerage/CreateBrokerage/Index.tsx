@@ -28,6 +28,8 @@ import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplet
 import { FontAwesome } from '@expo/vector-icons';
 import { Countries } from '@/types/types';
 import { router } from 'expo-router';
+import { trackEvent } from '@/services/analytics/appAnalytics';
+import { incrementAccountsCreated } from '@/services/analytics/dashboardAnalytics';
 
 const CreaterBrokerage = ({ }) => {
   const icon = useThemeColor('icon');
@@ -377,6 +379,10 @@ const CreaterBrokerage = ({ }) => {
 
       const contactRef = doc(db, 'brokerages', brokerageId, 'Contacts', `OWN_${user?.uid}`);
       await setDoc(contactRef, contactDetails);
+
+      void trackEvent({ eventName: "brokerage_created", userId: user?.uid, organizationId: brokerageId, organizationProfileId: brokerageId, organizationType: "brokerage", role: "owner", accountType: "brokerage", country: brokerCountryCode?.name, metadata: { brokerType: typeOfBroker } }).catch(console.error);
+      // Creates the derived dashboard document without changing its counters.
+      void incrementAccountsCreated("brokerage", brokerageId, 0).catch(console.error);
 
 
 

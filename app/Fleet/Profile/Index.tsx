@@ -8,7 +8,7 @@
     import { wp, hp } from '@/constants/common';
     import { useLocalSearchParams } from 'expo-router';
     import AsyncStorage from '@react-native-async-storage/async-storage';
-    import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+    import { doc, getDoc } from 'firebase/firestore';
     import { db } from '@/db/fireBaseConfig';
 
     // ---------- Types ----------
@@ -161,37 +161,29 @@
                         return;
                     }
 
-                    // Query the "profiles" collection filtered by organizationId.
-                    // If organizationId is actually your doc ID instead, replace this
-                    // block with: const snap = await getDoc(doc(db, 'profiles', orgId));
-                    const profilesQuery = query(
-                        collection(db, 'profiles'),
-                        where('organizationId', '==', orgId),
-                        limit(1)
-                    );
-                    const snapshot = await getDocs(profilesQuery);
+                    const snapshot = await getDoc(doc(db, 'organizationProfiles', orgId));
 
-                    if (!snapshot.empty) {
-                        const data = snapshot.docs[0].data() as any;
+                    if (snapshot.exists()) {
+                        const data = snapshot.data() as any;
                         setFleet((prev) => ({
                             ...prev,
                             logoUrl: data.logoUrl ?? prev.logoUrl,
                             name: data.name || prev.name,
-                            location: data.location || prev.location,
+                            location: data.location?.description || data.location || prev.location,
                             rating: data.rating ?? prev.rating,
                             reviewsCount: data.reviewsCount ?? prev.reviewsCount,
                             memberSince: data.memberSince || prev.memberSince,
                             lastActive: data.lastActive || prev.lastActive,
 
-                            totalTrucks: data.totalTrucks ?? prev.totalTrucks,
+                            totalTrucks: data.truckCount ?? prev.totalTrucks,
                             availableTrucks: data.availableTrucks ?? prev.availableTrucks,
-                            drivers: data.drivers ?? prev.drivers,
+                            drivers: data.memberCount ?? prev.drivers,
                             activeTrips: data.activeTrips ?? prev.activeTrips,
                             completedTrips: data.completedTrips ?? prev.completedTrips,
 
                             onTimeDelivery: data.onTimeDelivery ?? prev.onTimeDelivery,
                             acceptanceRate: data.acceptanceRate ?? prev.acceptanceRate,
-                            avgResponseTime: data.avgResponseTime || prev.avgResponseTime,
+                            avgResponseTime: data.responseTime ? `${data.responseTime} min` : prev.avgResponseTime,
                             paymentReputation: data.paymentReputation || prev.paymentReputation,
                             cancellationRate: data.cancellationRate ?? prev.cancellationRate,
                             trackingStatus: data.trackingStatus || prev.trackingStatus,

@@ -11,7 +11,8 @@ import React, { ReactElement, useEffect, useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
 import { BlurView } from 'expo-blur';
-import { deleteDocument, readById } from "@/db/operations";
+import { deleteDocument, readById, updateDocumentWithAdminTracking } from "@/db/operations";
+import { ADMIN_ACTIONS } from "@/Utilities/adminActionTracker";
 import { Image } from 'expo-image'
 import { useAuth } from "@/context/AuthContext";
 import Divider from "@/components/Divider";
@@ -317,6 +318,15 @@ const BrokerDetails = () => {
     const approveBroker = async () => {
         try {
             setProcessing(true);
+            await updateDocumentWithAdminTracking(
+                'verifiedUsers',
+                brokerData.id,
+                { verificationStatus: 'approved', rejectionReason: '' },
+                ADMIN_ACTIONS.APPROVE_USER,
+                'account',
+                brokerData.organizationName || brokerData.id,
+                'Approved broker verification'
+            );
 
             if (brokerData.expoPushToken) {
                 await sendPushNotification(
@@ -347,6 +357,15 @@ const BrokerDetails = () => {
 
         try {
             setProcessing(true);
+            await updateDocumentWithAdminTracking(
+                'verifiedUsers',
+                brokerData.id,
+                { verificationStatus: 'rejected', rejectionReason: declineReason.trim() },
+                ADMIN_ACTIONS.DECLINE_USER,
+                'account',
+                brokerData.organizationName || brokerData.id,
+                `Declined broker verification: ${declineReason.trim()}`
+            );
 
             if (brokerData.expoPushToken) {
                 await sendPushNotification(

@@ -13,13 +13,15 @@ import { useAuth } from '@/context/AuthContext';
 import { addDocument } from '@/db/operations';
 import { handleMakePayment } from '@/payments/operations';
 import { addToWallet } from '@/Utilities/walletUtils';
+import { trackWalletDeposit, trackWalletWithdrawalRequested } from '@/services/analytics/appAnalytics';
+import { incrementWalletBalance, incrementWalletDeposits, incrementWithdrawalsRequested } from '@/services/analytics/dashboardAnalytics';
 
 const DepositAndWithdraw = () => {
   const router = useRouter();
   const accent = useThemeColor('accent') || '#007AFF';
   const backgroundLight = useThemeColor('backgroundLight') ;
   const background = useThemeColor('background') ;
-  const { user } = useAuth();
+  const { user, currentRole } = useAuth();
 
   const [amount, setAmount] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -56,6 +58,12 @@ const DepositAndWithdraw = () => {
         // Add funds to wallet
         if (user?.uid) {
           await addToWallet(user.uid, depositAmount, `PayNow deposit of $${depositAmount.toFixed(2)}`);
+          const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
+          void trackWalletDeposit({ userId: user.uid, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType, role: currentRole?.userRole, accountType: currentRole?.accType, referrerId: user?.referredBy?.userId ?? null, referralCodeUsed: user?.referredBy?.referralCode ?? null, campaign: user?.referredBy?.campaign ?? null, platform: user?.referredBy?.platform ?? null, metadata: { amount: depositAmount, currency: 'USD' } }).catch(console.error);
+          if (analyticsOrganizationId && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
+            void incrementWalletDeposits(currentRole.accType, analyticsOrganizationId, depositAmount).catch(console.error);
+            void incrementWalletBalance(currentRole.accType, analyticsOrganizationId, depositAmount).catch(console.error);
+          }
 
         }
 
@@ -109,6 +117,9 @@ const DepositAndWithdraw = () => {
 
       await addDocument('WalletTransactions', transactionData);
       await addDocument('WalletHistory', transactionData); // Also save to WalletHistory
+      const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
+      void trackWalletWithdrawalRequested({ userId: user?.uid, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType, role: currentRole?.userRole, accountType: currentRole?.accType, referrerId: user?.referredBy?.userId ?? null, referralCodeUsed: user?.referredBy?.referralCode ?? null, campaign: user?.referredBy?.campaign ?? null, platform: user?.referredBy?.platform ?? null, metadata: { amount: withdrawAmount, currency: 'USD' } }).catch(console.error);
+      if (analyticsOrganizationId && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) void incrementWithdrawalsRequested(currentRole.accType, analyticsOrganizationId, withdrawAmount).catch(console.error);
 
       Alert.alert(
         'Withdrawal Requested',
