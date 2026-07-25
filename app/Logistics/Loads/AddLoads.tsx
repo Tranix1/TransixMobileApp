@@ -11,7 +11,7 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import Heading from "@/components/Heading";
 import { router } from "expo-router";
 import { db } from '@/db/fireBaseConfig';
-import { collection, query, getDocs } from 'firebase/firestore';
+import { collection, query, getDocs, where } from 'firebase/firestore';
 import { useAuth } from "@/context/AuthContext";
 
 import { hp, wp } from "@/constants/common";
@@ -86,7 +86,7 @@ const AddLoadDB = () => {
   const [searchedTrucks, setSearchedTrucks] = useState<any[]>([]);
   const [selectedFleetTrucks, setSelectedFleetTrucks] = useState<any[]>([]);
   const [truckSearchQuery, setTruckSearchQuery] = useState('');
-  const [loadVisibility, setLoadVisibility] = useState<LoadVisibility>('Private');
+  const [loadVisibility, setLoadVisibility] = useState<LoadVisibility>('Public');
 
   // Broker search states
   const [selectedBrokers, setSelectedBrokers] = useState<string[]>([]);
@@ -120,7 +120,7 @@ const AddLoadDB = () => {
 
       // Fetch trucks for broker search functionality
       try {
-        const trucksGetResult = await fetchDocuments(`fleets/${currentRole.fleetId}/Trucks`, 100);
+        const trucksGetResult = await fetchDocuments(`fleets/${currentRole.fleetId}/Trucks`, 100, undefined , [where("approvalStatus", "==", "approved")]);
         if (trucksGetResult && trucksGetResult.data && Array.isArray(trucksGetResult.data)) {
           setFleetTrucks(trucksGetResult.data);
           setSearchedTrucks(trucksGetResult.data); // Initialize searchedBrokerTrucks with all trucks
@@ -143,8 +143,8 @@ const AddLoadDB = () => {
       if (currentRole && currentRole.accType === 'brokerage') {
         try {
           // Use getDocs to fetch broker assigned trucks directly
-          const brokerTrucksQuery = query(collection(db, `brokerages/${currentRole.organizationId}/Trucks`));
-          const brokerTrucksSnapshot = await getDocs(brokerTrucksQuery);
+          const brokerTrucksQuery = query(collection(db, `brokerages/${currentRole.organizationId}/Trucks` ) , where("status","==" , "active")  );
+          const brokerTrucksSnapshot = await getDocs(brokerTrucksQuery );
 
           const brokerTrucksData = brokerTrucksSnapshot.docs.map(doc => ({
             id: doc.id,
@@ -599,6 +599,11 @@ const AddLoadDB = () => {
       if (!user || !user.uid) {
         alert("Please wait for user data to load or reopen Add Load.");
         return;
+      }
+
+      if(ratePerKm < 2 && (loadVisibility ==="Public" || loadVisibility==="Both" ) ){
+        alert("the rate per killometer must be greater than 2")
+        return
       }
 
 

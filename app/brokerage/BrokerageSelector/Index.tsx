@@ -182,25 +182,25 @@ function BrokerageSelector() {
             </View>
 
 
-            <ReferralCodeModal
-                           visible={showReferralModal}
-                           initialCode={referralCode}
-                           isSubmitting={isSubmitting}
-                           onClose={() => setShowReferralModal(!hasReferral)}
-           
-                           onSubmit={(code) =>
-                               handleSubmitReferralCode({
-                                   code,
-                                   user,
-                                   setupUser,
-                                   setReferralCode,
-                                   setShowReferralModal,
-                                   setIsSubmitting
-                               })
-                           }
-                           onLogout={handleLogout}
-                           onRefresh={handleRefresh}
-                       />
+                <ReferralCodeModal
+                            visible={showReferralModal}
+                            initialCode={referralCode}
+                            isSubmitting={isSubmitting}
+                            onClose={() => setShowReferralModal(!hasReferral)}
+            
+                            onSubmit={(code) =>
+                                handleSubmitReferralCode({
+                                    code,
+                                    user,
+                                    setupUser,
+                                    setReferralCode,
+                                    setShowReferralModal,
+                                    setIsSubmitting
+                                })
+                            }
+                            onLogout={handleLogout}
+                            onRefresh={handleRefresh}
+                        />
         </View>
     );
 }

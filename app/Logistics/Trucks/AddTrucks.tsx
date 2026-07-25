@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Image, StyleSheet, ScrollView, ToastAndroid, ActivityIndicator } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ImagePickerAsset } from 'expo-image-picker';
-import { addDocument, getDocById, setDocuments, getUsers, fetchDocuments, updateDocument, addDocumentWithId, checkDocumentExists } from "@/db/operations";
+import { addDocument, getDocById, setDocuments, getUsers, fetchDocuments, updateDocument, addDocumentWithId, checkDocumentExists, readById } from "@/db/operations";
 import { uploadImage } from "@/db/operations";
 import { handleChange } from "@/Utilities/utils";
 import { selectImageNoCrop, selectImageWithCrop } from "@/Utilities/imageUtils";
@@ -309,18 +309,34 @@ function AddTrucks() {
 
 
     if (selectedTruckType?.name === "Rigid") {
-      if (images.length < 2) { alert("Please select truck image and horse reg book for Rigid."); return; }
+      if (images.length < 2) {
+        alert("Please select truck image and horse reg book for Rigid.");
+        setSpinnerItem(false)
+        return;
+
+
+      }
       truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
       truckBookImage = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Truck Book Image");
 
     } else if (selectedTruckType?.name === "Triaxle") {
-      if (images.length < 3) { alert("Please select truck image, horse reg book, and trailer book for Triaxle."); return; }
+      if (images.length < 3) {
+        alert("Please select truck image, horse reg book, and trailer book for Triaxle.");
+        setSpinnerItem(false)
+
+        return;
+      }
       truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
       truckBookImage = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Truck Book Image");
       trailerBookF = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Trailer Book First");
 
     } else if (selectedTruckType?.name === "Super Link") {
-      if (images.length < 4) { alert("Please select truck image, horse reg book, trailer book, and second trailer book for Super Link."); return; }
+      if (images.length < 4) {
+        alert("Please select truck image, horse reg book, trailer book, and second trailer book for Super Link.");
+        setSpinnerItem(false)
+
+        return;
+      }
       truckImage = await uploadImage(images[0], "Trucks", setUploadImageUpdate, "Truck Image");
       truckBookImage = await uploadImage(images[1], "Trucks", setUploadImageUpdate, "Truck Book Image");
       trailerBookF = await uploadImage(images[2], "Trucks", setUploadImageUpdate, "Trailer Book First");
@@ -338,10 +354,14 @@ function AddTrucks() {
     setUploadImageUpdate("")
 
 
-    if (!selectedCargoArea)
+    if (!selectedCargoArea) {
+
+      setSpinnerItem(false)
       return alert("SelectsTruck Type");
+    }
 
     if (!user) {
+      setSpinnerItem(false)
 
       return alert("Please Login to your account to add a truck");
     }
@@ -349,9 +369,13 @@ function AddTrucks() {
 
     if (!user) {
       alert("Please Login first");
+      setSpinnerItem(false)
+
       return;
     }
-    if (!user.organisation) {
+    if (!user.displayName) {
+      setSpinnerItem(false)
+
       alert("Please edit your account and add Organisation details first, eg:Organisation Name!");
       return;
     }
@@ -527,7 +551,7 @@ function AddTrucks() {
         // Associate with fleet if user is a fleet
         organizationDetails: {
           id: currentRole.organizationId || currentRole.fleetId || null,
-          name: currentRole.companyName || user?.organisation,
+          name: currentRole.companyName || user?.displayName,
           phone: currentRole.phone || null,
           billingAddress: currentRole.billingAddress || null,
           baseAdress: currentRole.baseAdress || null,
@@ -590,14 +614,55 @@ function AddTrucks() {
             organizationType: 'fleet',
             role: currentRole?.userRole,
             accountType: currentRole?.accType,
+            truckId: truckId,
+
           },
           {
-            truckId: truckId,
-          }
+
+            cargoArea: selectedCargoArea.name,
+            tankerType: selectedTankerType ? selectedTankerType?.name : null,
+
+            truckCapacity: selectedTruckCapacity?.name,
+            truckOperatingLocations: operationCountries,
+          },
+
+
         ).catch(console.error);
         void incrementTotalTrucks('fleet', analyticsOrganizationId).catch(console.error);
         void incrementTruckCount(analyticsOrganizationId).catch(console.error);
       }
+
+      const updateTruckTypeCount = async (truckType: string) => {
+        const orgId = currentRole.organizationId || "";
+
+        const organization = await readById("organizationProfiles", orgId) as any;
+
+        const existingTruckTypes: { type: string; count: number; }[] = organization?.truckTypes || [];
+
+        const updatedTruckTypes = existingTruckTypes.some(
+          (item) => item.type === truckType
+        )
+          ? existingTruckTypes.map((item) =>
+            item.type === truckType
+              ? { ...item, count: item.count + 1 }
+              : item
+          )
+          : [
+            ...existingTruckTypes,
+            {
+              type: truckType,
+              count: 1,
+            },
+          ];
+
+        await updateDocument("organizationProfiles", orgId, {
+          truckTypes: updatedTruckTypes,
+        });
+      };
+
+      await updateTruckTypeCount(selectedCargoArea.name)
+      
+
       // Auto-attach the fleet's active default brokerages to this new
       // truck and notify them — mirrors the manual "Other Brokers" flow.
       await assignDefaultBrokeragesToTruck(

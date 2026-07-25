@@ -97,17 +97,18 @@ export const tonneSizes = [
 ]
 
 
-    export const countryCodes = [
-        { id: 0, name: '+263' },
-        { id: 1, name: '+27' },
-        { id: 2, name: '+264' },
-        { id: 3, name: '+255' },
-        { id: 4, name: '+258' },
-        { id: 5, name: '+260' },
-        { id: 6, name: '+265' },
-        { id: 7, name: '+267' },
-        { id: 8, name: '+243' }
-    ]
+export const countryCodes = [
+    { id: 0, name: '+263' }, // Zimbabwe
+    { id: 1, name: '+27' },  // South Africa
+    { id: 2, name: '+260' }, // Zambia
+    { id: 3, name: '+258' }, // Mozambique
+    { id: 4, name: '+267' }, // Botswana
+    { id: 5, name: '+264' }, // Namibia
+    { id: 6, name: '+255' }, // Tanzania
+    { id: 7, name: '+265' }, // Malawi
+    { id: 8, name: '+254' }, // Kenya
+    { id: 9, name: '+256' }  // Uganda
+];
 
 
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Modal, TouchableOpacity } from 'react-native';
+import { View, Modal, TouchableOpacity, Alert } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // adjust to your actual import
 import Input from './Input'; // adjust path
 import { ThemedText } from './ThemedText'; // adjust path
@@ -7,6 +7,7 @@ import { wp } from '@/constants/common';
 import { fetchDocuments, addDocument } from '@/db/operations';
 import { useAuth } from '@/context/AuthContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import PhoneInput from './PhoneInput';
 
 export interface Customer {
   id: string;
@@ -19,7 +20,6 @@ export interface Customer {
 
 interface NewCustomerForm {
   name: string;
-  phone: string;
   billingAddress: string;
 }
 
@@ -52,9 +52,11 @@ const accent = useThemeColor("accent")
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [newCustomer, setNewCustomer] = useState<NewCustomerForm>({
     name: '',
-    phone: '',
     billingAddress: ''
   });
+
+   const [phoneNumber, setPhoneNumber] = useState('');
+      const [countryCode, setCountryCode] = useState({ id: 0, name: '' });
   const [saving, setSaving] = useState<boolean>(false);
 
   useEffect(() => {
@@ -95,13 +97,15 @@ const accent = useThemeColor("accent")
 
   const handleAddCustomer = async () => {
     if (!newCustomer.name?.trim()) return;
-
+    if(!countryCode.name && !newCustomer.billingAddress){
+      Alert.alert("Enter full cutsomer details")
+    }
     setSaving(true);
     try {
       const customerData: Omit<Customer, 'id'> = {
         organizationId: currentRole?.organizationId || null,
         name: newCustomer.name.trim(),
-        phone: newCustomer.phone,
+        phone: `${countryCode.name}${phoneNumber}`,
         billingAddress: newCustomer.billingAddress,
         createdBy: userId
       };
@@ -124,7 +128,7 @@ const accent = useThemeColor("accent")
         const createdCustomer: Customer = { id: newId, ...customerData };
         onSelectCustomer?.(createdCustomer);
 
-        setNewCustomer({ name: '', phone: '', billingAddress: '' });
+        setNewCustomer({ name: '', billingAddress: '' });
         setShowAddModal(false);
       }
     } catch (error) {
@@ -205,13 +209,14 @@ const accent = useThemeColor("accent")
               value={newCustomer.name}
               onChangeText={(t: string) => setNewCustomer(prev => ({ ...prev, name: t }))}
             />
-            <Input
-              placeholder="Phone"
-              value={newCustomer.phone}
-              onChangeText={(t: string) => setNewCustomer(prev => ({ ...prev, phone: t }))}
-              style={{ marginTop: wp(2) }}
-              keyboardType='numeric'
-            />
+                        
+                                <PhoneInput
+                                    value={phoneNumber}
+                                    onChangeText={setPhoneNumber}
+                                    countryCode={countryCode}
+                                    setCountryCode={setCountryCode}
+                                />
+            
 
             <Input
               placeholder="Billing Address"

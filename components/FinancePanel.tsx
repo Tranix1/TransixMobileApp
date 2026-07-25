@@ -78,11 +78,13 @@ import Input from "./Input";
 import { wp } from "@/constants/common";
 import { useAuth } from "@/context/AuthContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { addDocumentWithId, updateDocument } from "@/db/operations";
+import { getDoc } from "firebase/firestore";
 // ------------------------------------------------------
 
 type EntryType = "INCOME" | "EXPENSE";
 type PaymentMethod = "BANK" | "CASH";
-type ExpenseCategory = "FUEL" | "POLICE" | "PARKING" | "VID" | "DRIVER" | "CUSTOM";
+type ExpenseCategory = "FUEL" | "POLICE" | "PARKING" | "VID" | "DRIVER" | "CUSTOM" | "BROKER";
 type PanelTab = "INCOME" | "EXPENSE";
 
 interface CustomField {
@@ -124,13 +126,18 @@ interface FinancePanelProps {
     // Total agreed rate for this load. Milestone amounts are calculated from this.
     rate: number;
     // Informational only, shown at the top of the panel (e.g. "$2.00/km").
-     cargoRateCurrency:string 
-    cargoRateModel : string 
+    cargoRateCurrency: string
+    cargoRateModel: string
     ratePerKm?: number;
     // Payment milestones for this load, e.g. 50/50 split or 100% on loading.
     // Defaults to a single "Full Payment" (100%) milestone if not provided.
     paymentTerms?: PaymentMilestone[];
-    driverPayment : any
+    driverPayment: any,
+    driverName?: string,
+    driverId: string,
+
+    brokerName?: string,
+    brokerId?: string
 }
 
 const EXPENSE_CATEGORIES: { key: ExpenseCategory; label: string; icon: any }[] = [
@@ -148,11 +155,15 @@ export default function FinancePanel({
     onClose,
     assignmentId,
     rate,
-     cargoRateCurrency,
+    cargoRateCurrency,
     cargoRateModel,
     ratePerKm,
     paymentTerms,
-    driverPayment
+    driverPayment,
+    driverId,
+    driverName,
+    brokerId,
+    brokerName,
 }: FinancePanelProps) {
     const { user, currentRole } = useAuth();
     const fleetId = currentRole?.organizationId || currentRole?.fleetId || "";
@@ -260,6 +271,49 @@ export default function FinancePanel({
         try {
             setSavingFinance(true);
 
+
+            if (category === "DRIVER" || category === "BROKER") {
+                const financeRef = collection(db, "fleets", fleetId, "Finance", "Account", "Payout");
+
+                const payload = {
+                    entryType: "PAYOUT",
+                    category, // DRIVER | BROKER
+                    amount: numericAmount,
+                    state: "TO_BE_PAID", // TO_BE_PAID | PAID
+                    note: note.trim() || "",
+
+                    assignmentId,
+                    tripId: assignmentId,
+
+                    createdAt: Date.now(),
+                    createdBy: user?.uid ?? "",
+                    createdByName: user?.displayName ?? "User",
+                    createdByRole: currentRole?.userRole ?? "User",
+                    createdByAccRole: currentRole?.accType ?? "",
+                };
+
+                const newDoc = await addDoc(financeRef, payload);
+
+                setFinanceEntries(prev => [
+                    { id: newDoc.id, ...payload } as FinanceEntry,
+                    ...prev,
+                ]);
+
+                const assignmentRef = doc(db, "fleets",
+                    fleetId,
+                    "assignments",
+                    assignmentId
+                );
+
+                await updateDoc(assignmentRef, {
+                    payoutStatus: "TO_BE_PAID",
+                    payoutCategory: category, // DRIVER or BROKER
+                    payoutAmount: numericAmount,
+                });
+
+                return;
+            }
+
             const financeRef = collection(db, "fleets", fleetId, "Finance", "Account", "Transactions");
 
             const payload: any = {
@@ -299,7 +353,154 @@ export default function FinancePanel({
         }
     };
 
-    
+
+
+    const savePayout = async () => {
+
+        const payload = {
+            entryType: "PAYOUT",
+            category,
+            amount,
+            state: "TO_BE_PAID",
+
+            assignmentId,
+            tripId: assignmentId,
+
+            payeeId: category === "DRIVER" ? driverId : category === "BROKER" ? brokerId : null,
+            payeeName: category === "DRIVER" ? driverName : category === "BROKER" ? brokerName : null,
+
+            note: note?.trim() || "",
+
+            createdAt: Date.now(),
+            createdBy: user?.uid ?? "",
+            createdByName: user?.displayName ?? "User",
+            createdByRole: currentRole?.userRole ?? "User",
+            createdByAccRole: currentRole?.accType ?? "",
+        };
+
+        const payoutId = `${category === "BROKER" ? "BRK" : category === "DRIVER" ? "DRV" : "NULL"}_PY_${assignmentId}`
+        const payoutRef = await addDocumentWithId(`fleets/${fleetId}/Finance/Account/Payout`, payoutId, payload)
+        //   (financeRef, payload);
+
+        const assignmentRef = doc(
+            db,
+            "fleets",
+            fleetId,
+            "assignments",
+            assignmentId
+        );
+
+        await updateDoc(assignmentRef, {
+            payoutStatus: "TO_BE_PAID",
+            payoutCategory: category,
+            payoutAmount: amount,
+            payoutId: payoutId,
+            payeeId: category === "DRIVER" ? driverId : category === "BROKER" ? brokerId : null,
+            payeeName: category === "DRIVER" ? driverName : category === "BROKER" ? brokerName : null,
+
+        });
+
+        if (category === "DRIVER") {
+
+
+            await updateDocument(
+                "organizationProfiles",
+                fleetId,
+                {
+                    payouts: {
+                        driverCreated: increment(1)
+                    }
+                }
+            );
+        } else if (category === "BROKER") {
+            await updateDocument(
+                "organizationProfiles",
+                fleetId,
+                {
+                    payouts: {
+                        brokerCreated: increment(1)
+                    }
+                }
+            );
+        }
+
+
+        return payoutId;
+    };
+
+
+    const markPayoutPaid = async (category: "DRIVER" | "BROKER") => {
+        try {
+
+            const payoutId =
+                category === "DRIVER"
+                    ? `DRV_PY_${assignmentId}`
+                    : `BRK_PY_${assignmentId}`;
+
+
+            const payoutRef = doc(
+                db,
+                "fleets",
+                fleetId,
+                "Finance",
+                "Account",
+                "Payout",
+                payoutId
+            );
+
+
+            await updateDoc(payoutRef, {
+                state: "PAID",
+                paidAt: Date.now(),
+                paidBy: user?.uid ?? "",
+            });
+
+
+            const assignmentRef = doc(
+                db,
+                "fleets",
+                fleetId,
+                "assignments",
+                assignmentId
+            );
+
+
+            await updateDoc(assignmentRef, {
+                payoutStatus: "PAID",
+                payoutPaidCategory: category,
+                payoutPaidAt: Date.now(),
+            });
+
+            if (category === "DRIVER") {
+
+
+                await updateDocument(
+                    "organizationProfiles",
+                    fleetId,
+                    {
+                        payouts: {
+                            driverConfirmed: increment(1)
+                        }
+                    }
+                );
+            } else if (category === "BROKER") {
+                await updateDocument(
+                    "organizationProfiles",
+                    fleetId,
+                    {
+                        payouts: {
+                            brokerConfirmed: increment(1)
+                        }
+                    }
+                );
+            }
+            
+
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
 
     // ---------- CONFIRM INCOME MILESTONE ----------
     const confirmIncome = async () => {
@@ -416,7 +617,7 @@ export default function FinancePanel({
                 <View style={[styles.rateBar, { backgroundColor: backgroundLight }]}>
                     {rate > 0 ? (
                         <ThemedText style={{ fontSize: 12, color: "#8A8A8E" }}>
-                            Rate <ThemedText style={{ fontSize: 12, fontWeight: "700", color: icon }}>{cargoRateCurrency} {rate } {cargoRateModel} </ThemedText>
+                            Rate <ThemedText style={{ fontSize: 12, fontWeight: "700", color: icon }}>{cargoRateCurrency} {rate} {cargoRateModel} </ThemedText>
                         </ThemedText>
                     ) : (
                         <View />
@@ -661,48 +862,174 @@ export default function FinancePanel({
                         ))}
 
 
-                       { currentRole.accType=="fleet"  && driverPayment.type==="trip"&&  <TouchableOpacity
-                    onPress={() => setCategory("DRIVER")}
-                    style={[
-                        styles.categoryChip,
-                        {
-                            borderColor:
-                                category === "DRIVER"
-                                    ? accent
-                                    : "rgba(128,128,128,0.3)",
-                            backgroundColor:
-                                category === "DRIVER"
-                                    ? accent
-                                    : "transparent",
-                        },
-                    ]}
-                >
-                    <Ionicons
-                        name="person-outline"
-                        size={14}
-                        color={
-                            category === "DRIVER"
-                                ? backgroundLight
-                                : "#8A8A8E"
-                        }
-                        style={{ marginRight: 4 }}
-                    />
+                        {currentRole.accType == "fleet" && driverPayment.type === "trip" && <TouchableOpacity
+                            onPress={() => setCategory("DRIVER")}
+                            style={[
+                                styles.categoryChip,
+                                {
+                                    borderColor:
+                                        category === "DRIVER"
+                                            ? accent
+                                            : "rgba(128,128,128,0.3)",
+                                    backgroundColor:
+                                        category === "DRIVER"
+                                            ? accent
+                                            : "transparent",
+                                },
+                            ]}
+                        >
+                            <Ionicons
+                                name="person-outline"
+                                size={14}
+                                color={
+                                    category === "DRIVER"
+                                        ? backgroundLight
+                                        : "#8A8A8E"
+                                }
+                                style={{ marginRight: 4 }}
+                            />
 
-                    <ThemedText
-                        style={{
-                            fontSize: 12,
-                            fontWeight: "bold",
-                            color:
-                                category === "DRIVER"
-                                    ? backgroundLight
-                                    : icon,
-                        }}
-                    >
-                        Driver 
-                    </ThemedText>
-                </TouchableOpacity>}
+                            <ThemedText
+                                style={{
+                                    fontSize: 12,
+                                    fontWeight: "bold",
+                                    color:
+                                        category === "DRIVER"
+                                            ? backgroundLight
+                                            : icon,
+                                }}
+                            >
+                                Driver
+                            </ThemedText>
+                        </TouchableOpacity>}
+
+
+                        {currentRole.accType == "fleet" && driverPayment.type === "trip" && <TouchableOpacity
+                            onPress={() => markPayoutPaid("DRIVER")}
+                            style={[
+                                styles.categoryChip,
+                                {
+                                    borderColor:
+                                        category === "DRIVER"
+                                            ? accent
+                                            : "rgba(128,128,128,0.3)",
+                                    backgroundColor:
+                                        category === "DRIVER"
+                                            ? accent
+                                            : "transparent",
+                                },
+                            ]}
+                        >
+                            <Ionicons
+                                name="person-outline"
+                                size={14}
+                                color={
+                                    category === "DRIVER"
+                                        ? backgroundLight
+                                        : "#8A8A8E"
+                                }
+                                style={{ marginRight: 4 }}
+                            />
+
+                            <ThemedText
+                                style={{
+                                    fontSize: 12,
+                                    fontWeight: "bold",
+                                    color:
+                                        category === "DRIVER"
+                                            ? backgroundLight
+                                            : icon,
+                                }}
+                            >
+                                Driver PAID
+                            </ThemedText>
+                        </TouchableOpacity>}
+
+                        {currentRole.accType == "fleet" && <TouchableOpacity
+                            onPress={() => setCategory("BROKER")}
+                            style={[
+                                styles.categoryChip,
+                                {
+                                    borderColor:
+                                        category === "BROKER"
+                                            ? accent
+                                            : "rgba(128,128,128,0.3)",
+                                    backgroundColor:
+                                        category === "BROKER"
+                                            ? accent
+                                            : "transparent",
+                                },
+                            ]}
+                        >
+                            <Ionicons
+                                name="person-outline"
+                                size={14}
+                                color={
+                                    category === "BROKER"
+                                        ? backgroundLight
+                                        : "#8A8A8E"
+                                }
+                                style={{ marginRight: 4 }}
+                            />
+
+                            <ThemedText
+                                style={{
+                                    fontSize: 12,
+                                    fontWeight: "bold",
+                                    color:
+                                        category === "BROKER"
+                                            ? backgroundLight
+                                            : icon,
+                                }}
+                            >
+                                BROKER
+                            </ThemedText>
+                        </TouchableOpacity>}
+
+                        {currentRole.accType == "fleet" && <TouchableOpacity
+                            onPress={() => markPayoutPaid("BROKER")}
+                            style={[
+                                styles.categoryChip,
+                                {
+                                    borderColor:
+                                        category === "BROKER"
+                                            ? accent
+                                            : "rgba(128,128,128,0.3)",
+                                    backgroundColor:
+                                        category === "BROKER"
+                                            ? accent
+                                            : "transparent",
+                                },
+                            ]}
+                        >
+                            <Ionicons
+                                name="person-outline"
+                                size={14}
+                                color={
+                                    category === "BROKER"
+                                        ? backgroundLight
+                                        : "#8A8A8E"
+                                }
+                                style={{ marginRight: 4 }}
+                            />
+
+                            <ThemedText
+                                style={{
+                                    fontSize: 12,
+                                    fontWeight: "bold",
+                                    color:
+                                        category === "BROKER"
+                                            ? backgroundLight
+                                            : icon,
+                                }}
+                            >
+                                Broker Paid
+                            </ThemedText>
+                        </TouchableOpacity>}
+
+
                     </View>
-                    
+
 
                     {category === "CUSTOM" && (
                         <View style={{ marginBottom: wp(2.5) }}>
@@ -740,7 +1067,7 @@ export default function FinancePanel({
                         </View>
                     )}
 
-                    
+
 
                     <Input placeholder="Amount" value={amount} onChangeText={setAmount} keyboardType="decimal-pad" />
                     <Input
@@ -750,7 +1077,7 @@ export default function FinancePanel({
                         style={{ marginTop: wp(1.5) }}
                     />
 
-                    <TouchableOpacity
+                    {(category !== "BROKER" && category !== "DRIVER") && <TouchableOpacity
                         style={[
                             styles.actionButton,
                             {
@@ -767,10 +1094,32 @@ export default function FinancePanel({
                         <ThemedText style={{ color: backgroundLight, fontWeight: "700" }}>
                             {savingFinance ? "Saving..." : "Add Expense"}
                         </ThemedText>
-                    </TouchableOpacity>
+                    </TouchableOpacity>}
+
+
+
+                    {(category === "BROKER" || category == "DRIVER") && <TouchableOpacity
+                        style={[
+                            styles.actionButton,
+                            {
+                                marginTop: wp(2.5),
+                                justifyContent: "center",
+                                backgroundColor: accent,
+                                borderColor: accent,
+                                opacity: savingFinance || !amount.trim() ? 0.6 : 1,
+                            },
+                        ]}
+                        disabled={savingFinance || !amount.trim()}
+                        onPress={savePayout}
+                    >
+                        <ThemedText style={{ color: backgroundLight, fontWeight: "700" }}>
+                            {savingFinance ? "Saving..." : "Add Payout"}
+                        </ThemedText>
+                    </TouchableOpacity>}
+
                 </View>
             )}
-            
+
 
             {/* ENTRY LIST */}
             <View style={{ marginTop: wp(3.5) }}>
@@ -783,164 +1132,163 @@ export default function FinancePanel({
                 ) : financeEntries.length === 0 ? (
                     <ThemedText style={{ fontSize: 12, color: "#999" }}>No financial records yet.</ThemedText>
                 ) : (
-                    
+
                     <>
-                    
-    {/* CATEGORY BUTTONS */}
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        {EXPENSE_CATEGORIES.map((c) => (
-            <TouchableOpacity
-                key={c.key}
-                onPress={() => setCategory(c.key)}
-                style={[
-                    styles.categoryChip,
-                    {
-                        borderColor:
-                            category === c.key
-                                ? accent
-                                : "rgba(128,128,128,0.3)",
-                        backgroundColor:
-                            category === c.key
-                                ? accent
-                                : "transparent",
-                    },
-                ]}
-            >
-                <Ionicons
-                    name={c.icon}
-                    size={14}
-                    color={
-                        category === c.key
-                            ? backgroundLight
-                            : "#8A8A8E"
-                    }
-                    style={{ marginRight: 4 }}
-                />
 
-                <ThemedText
-                    style={{
-                        fontSize: 12,
-                        fontWeight: "bold",
-                        color:
-                            category === c.key
-                                ? backgroundLight
-                                : icon,
-                    }}
-                >
-                    {c.label}
-                </ThemedText>
-            </TouchableOpacity>
-        ))}
+                        {/* CATEGORY BUTTONS */}
+                        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                            {EXPENSE_CATEGORIES.map((c) => (
+                                <TouchableOpacity
+                                    key={c.key}
+                                    onPress={() => setCategory(c.key)}
+                                    style={[
+                                        styles.categoryChip,
+                                        {
+                                            borderColor:
+                                                category === c.key
+                                                    ? accent
+                                                    : "rgba(128,128,128,0.3)",
+                                            backgroundColor:
+                                                category === c.key
+                                                    ? accent
+                                                    : "transparent",
+                                        },
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name={c.icon}
+                                        size={14}
+                                        color={
+                                            category === c.key
+                                                ? backgroundLight
+                                                : "#8A8A8E"
+                                        }
+                                        style={{ marginRight: 4 }}
+                                    />
 
-
-              
-    </View>
+                                    <ThemedText
+                                        style={{
+                                            fontSize: 12,
+                                            fontWeight: "bold",
+                                            color:
+                                                category === c.key
+                                                    ? backgroundLight
+                                                    : icon,
+                                        }}
+                                    >
+                                        {c.label}
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            ))}
 
 
-    {/* FINANCE ENTRIES */}
-    {financeEntries.map((item) => (
-        <View key={item.id} style={styles.entryRow}>
-            <View style={{ flex: 1 }}>
-                <ThemedText
-                    style={{
-                        fontSize: 13,
-                        fontWeight: "600",
-                    }}
-                >
-                    {item.entryType === "INCOME"
-                        ? `${item.milestoneLabel || "Income"} • ${
-                              item.paymentMethod === "CASH"
-                                  ? "Cash"
-                                  : "Bank"
-                          }`
-                        : item.category === "DRIVER"
-                        ? "Driver Payment"
-                        : EXPENSE_CATEGORIES.find(
-                              (c) => c.key === item.category
-                          )?.label || "Expense"}
-                </ThemedText>
 
-                {item.note ? (
-                    <ThemedText
-                        style={{
-                            fontSize: 11,
-                            color: "#8A8A8E",
-                            marginTop: 1,
-                        }}
-                    >
-                        {item.note}
-                    </ThemedText>
-                ) : null}
+                        </View>
 
-                {item.customFields?.length ? (
-                    <ThemedText
-                        style={{
-                            fontSize: 10.5,
-                            color: "#8A8A8E",
-                            marginTop: 1,
-                        }}
-                    >
-                        {item.customFields
-                            .map(
-                                (f) =>
-                                    `${f.label}: ${f.value}`
-                            )
-                            .join(" • ")}
-                    </ThemedText>
-                ) : null}
 
-                <ThemedText
-                    style={{
-                        fontSize: 10,
-                        color: "#B0B0B0",
-                        marginTop: 1,
-                    }}
-                >
-                    {item.createdByName} •{" "}
-                    {new Date(
-                        item.createdAt
-                    ).toLocaleString()}
-                </ThemedText>
-            </View>
+                        {/* FINANCE ENTRIES */}
+                        {financeEntries.map((item) => (
+                            <View key={item.id} style={styles.entryRow}>
+                                <View style={{ flex: 1 }}>
+                                    <ThemedText
+                                        style={{
+                                            fontSize: 13,
+                                            fontWeight: "600",
+                                        }}
+                                    >
+                                        {item.entryType === "INCOME"
+                                            ? `${item.milestoneLabel || "Income"} • ${item.paymentMethod === "CASH"
+                                                ? "Cash"
+                                                : "Bank"
+                                            }`
+                                            : item.category === "DRIVER"
+                                                ? "Driver Payment"
+                                                : EXPENSE_CATEGORIES.find(
+                                                    (c) => c.key === item.category
+                                                )?.label || "Expense"}
+                                    </ThemedText>
 
-            <View
-                style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                }}
-            >
-                <ThemedText
-                    style={{
-                        fontSize: 13,
-                        fontWeight: "700",
-                        color:
-                            item.entryType === "INCOME"
-                                ? "#2E7D32"
-                                : "#D32F2F",
-                        marginRight: wp(2),
-                    }}
-                >
-                    {item.entryType === "INCOME"
-                        ? "+"
-                        : "-"}
-                    ${item.amount.toFixed(2)}
-                </ThemedText>
+                                    {item.note ? (
+                                        <ThemedText
+                                            style={{
+                                                fontSize: 11,
+                                                color: "#8A8A8E",
+                                                marginTop: 1,
+                                            }}
+                                        >
+                                            {item.note}
+                                        </ThemedText>
+                                    ) : null}
 
-                <TouchableOpacity
-                    onPress={() =>
-                        deleteFinanceEntry(item)
-                    }
-                >
-                    <Ionicons
-                        name="close-outline"
-                        size={16}
-                        color="#B0B0B0"
-                    />
-                </TouchableOpacity>
-            </View>
-        </View>
-    ))}
-</>
+                                    {item.customFields?.length ? (
+                                        <ThemedText
+                                            style={{
+                                                fontSize: 10.5,
+                                                color: "#8A8A8E",
+                                                marginTop: 1,
+                                            }}
+                                        >
+                                            {item.customFields
+                                                .map(
+                                                    (f) =>
+                                                        `${f.label}: ${f.value}`
+                                                )
+                                                .join(" • ")}
+                                        </ThemedText>
+                                    ) : null}
+
+                                    <ThemedText
+                                        style={{
+                                            fontSize: 10,
+                                            color: "#B0B0B0",
+                                            marginTop: 1,
+                                        }}
+                                    >
+                                        {item.createdByName} •{" "}
+                                        {new Date(
+                                            item.createdAt
+                                        ).toLocaleString()}
+                                    </ThemedText>
+                                </View>
+
+                                <View
+                                    style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    <ThemedText
+                                        style={{
+                                            fontSize: 13,
+                                            fontWeight: "700",
+                                            color:
+                                                item.entryType === "INCOME"
+                                                    ? "#2E7D32"
+                                                    : "#D32F2F",
+                                            marginRight: wp(2),
+                                        }}
+                                    >
+                                        {item.entryType === "INCOME"
+                                            ? "+"
+                                            : "-"}
+                                        ${item.amount.toFixed(2)}
+                                    </ThemedText>
+
+                                    <TouchableOpacity
+                                        onPress={() =>
+                                            deleteFinanceEntry(item)
+                                        }
+                                    >
+                                        <Ionicons
+                                            name="close-outline"
+                                            size={16}
+                                            color="#B0B0B0"
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        ))}
+                    </>
                 )}
             </View>
         </View>

@@ -53,7 +53,7 @@ interface Step {
 const FEATURES: Feature[] = [
   {
     icon: "car-sport-outline",
-    color: BRAND.navy,
+    color: BRAND.teal,
     title: "Fleet Management",
     description: "Everything a fleet owner needs, in one place.",
     points: [
@@ -67,7 +67,7 @@ const FEATURES: Feature[] = [
   },
   {
     icon: "briefcase-outline",
-    color: BRAND.amber,
+    color: BRAND.teal,
     title: "Brokerage",
     description: "Source loads and move freight with confidence.",
     points: [
@@ -93,7 +93,7 @@ const FEATURES: Feature[] = [
   },
   {
     icon: "swap-horizontal-outline",
-    color: BRAND.navy,
+    color: BRAND.teal,
     title: "Trip Management",
     description: "From assignment to delivery, fully tracked.",
     points: [
@@ -106,7 +106,7 @@ const FEATURES: Feature[] = [
   },
   {
     icon: "navigate-outline",
-    color: BRAND.good,
+    color: BRAND.teal,
     title: "Live GPS Tracking",
     description: "Know where every vehicle is, in real time.",
     points: [
@@ -118,7 +118,7 @@ const FEATURES: Feature[] = [
   },
   {
     icon: "wallet-outline",
-    color: BRAND.amber,
+    color: BRAND.teal,
     title: "Finance",
     description: "Clear visibility into money in and money out.",
     points: [
@@ -148,7 +148,7 @@ const FEATURES: Feature[] = [
   },
   {
     icon: "shield-checkmark-outline",
-    color: BRAND.bad,
+    color: BRAND.teal,
     title: "Verification",
     description: "Every user is verified before accessing services.",
     points: ["Safe and trusted marketplace"],
@@ -164,19 +164,19 @@ const WHY_ITEMS: WhyItem[] = [
   },
   {
     icon: "navigate-outline",
-    color: BRAND.good,
+    color: BRAND.teal,
     title: "Real-Time Tracking",
     description: "Live GPS visibility across every active trip.",
   },
   {
     icon: "bulb-outline",
-    color: BRAND.amber,
+    color: BRAND.teal,
     title: "Smart Logistics",
     description: "Tools that make fleet and load management effortless.",
   },
   {
     icon: "earth-outline",
-    color: BRAND.navy,
+    color: BRAND.teal,
     title: "Growing African Network",
     description: "A rapidly expanding community of transporters and brokers.",
   },
@@ -188,13 +188,13 @@ const WHY_ITEMS: WhyItem[] = [
   },
   {
     icon: "cash-outline",
-    color: BRAND.amber,
+    color: BRAND.teal,
     title: "Referral Rewards",
     description: "Earn ongoing passive income for every business you bring in.",
   },
   {
     icon: "lock-closed-outline",
-    color: BRAND.bad,
+    color: BRAND.teal,
     title: "Secure Platform",
     description: "Built with safety and reliability at its core.",
   },
@@ -260,7 +260,7 @@ function About() {
       {/* Kept as an intentional dark navy "brand" surface in both themes,
           the way a logo lockup or splash card would be — it's meant to
           pop rather than blend into the page. */}
-      <View style={[styles.hero, { backgroundColor: navy }]}>
+      <View style={[styles.hero, { backgroundColor: teal }]}>
         <View style={styles.heroIconRow}>
           <View style={[styles.heroBadge, { backgroundColor: "rgba(255,255,255,0.12)" }]}>
             <Ionicons name="car-sport" size={wp(7)} color="#FFFFFF" />
@@ -274,7 +274,7 @@ function About() {
         </View>
 
         <ThemedText style={styles.heroTitle}>Transix</ThemedText>
-        <ThemedText style={[styles.heroSlogan, { color: teal }]}>
+        <ThemedText style={[styles.heroSlogan,]}>
           Connecting Africa's Logistics
         </ThemedText>
         <ThemedText style={styles.heroDescription}>
@@ -316,7 +316,7 @@ function About() {
               key={pill}
               style={[
                 styles.pill,
-                { backgroundColor: accentlight, borderColor: border },
+                { backgroundColor: teal, borderColor: border },
               ]}
             >
               <ThemedText style={[styles.pillText, { color: text }]}>
@@ -557,7 +557,7 @@ function About() {
 
           <TouchableOpacity
             onPress={openEmail}
-            style={[styles.contactButton, { backgroundColor: navy }]}
+            style={[styles.contactButton, { backgroundColor: teal }]}
             activeOpacity={0.85}
           >
             <Ionicons name="mail-outline" size={wp(5)} color="#FFFFFF" />
@@ -724,7 +724,7 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontSize: wp(3),
-    fontWeight: "700",
+    fontWeight: "bold",
     letterSpacing: 1,
     marginBottom: hp(0.6),
   },

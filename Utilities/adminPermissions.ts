@@ -90,9 +90,22 @@ export const SUPER_ADMIN_PERMISSIONS = [
     'manage_admins'
 ];
 
-export const isSuperAdmin = (userId: string): boolean => {
-    // Check if user is the main super admin
-    return userId === 'QOC9krp5BOR7NhFXRuX5f32u17e2';
+export const isSuperAdmin = async (userId: string): Promise<boolean> => {
+    try {
+        const adminDoc = await getDoc(doc(db, "adminRoles", userId));
+
+        if (!adminDoc.exists()) {
+            return false;
+        }
+
+        const admin = adminDoc.data();
+
+        return admin.role === "SUPER_ADMIN" && admin.isActive === true;
+
+    } catch (error) {
+        console.error("Error checking super admin:", error);
+        return false;
+    }
 };
 
 export const getAdminUser = async (userId: string): Promise<AdminUser | null> => {
@@ -110,7 +123,7 @@ export const getAdminUser = async (userId: string): Promise<AdminUser | null> =>
 
 export const hasPermission = async (userId: string, permission: string): Promise<boolean> => {
     // Super admin has all permissions
-    if (isSuperAdmin(userId)) {
+    if (await isSuperAdmin(userId)) {
         return true;
     }
 
@@ -129,7 +142,7 @@ export const hasPermission = async (userId: string, permission: string): Promise
 
 export const hasAnyPermission = async (userId: string, permissions: string[]): Promise<boolean> => {
     // Super admin has all permissions
-    if (isSuperAdmin(userId)) {
+    if (await isSuperAdmin(userId)) {
         return true;
     }
 
@@ -148,7 +161,7 @@ export const hasAnyPermission = async (userId: string, permissions: string[]): P
 
 export const getAdminPermissions = async (userId: string): Promise<string[]> => {
     // Super admin has all permissions
-    if (isSuperAdmin(userId)) {
+    if (await isSuperAdmin(userId)) {
         return SUPER_ADMIN_PERMISSIONS;
     }
 

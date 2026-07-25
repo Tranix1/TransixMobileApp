@@ -87,7 +87,7 @@ export default function Index() {
 
   const { currentRole } = useAuth();
 
-  // Check if profile details are missing
+    // Check if profile details are missing
 
   const isAuthReady = !authLoading && user !== undefined;
 
@@ -257,7 +257,7 @@ export default function Index() {
               <>
                 <Tab.Screen name="Home " component={Dashboard} />
                 <Tab.Screen name="Loads" component={Loads} />
-                <Tab.Screen name="Chat" component={ChatIndex} />
+                {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
                 <Tab.Screen name="Trucks" component={LogisticsTrucks} />
               </>
             ) :
@@ -277,7 +277,7 @@ export default function Index() {
                   <>
                     <Tab.Screen name="Jobs" component={Jobs} />
                     <Tab.Screen name="Trucks" component={Trucks} />
-                    <Tab.Screen name="Chat" component={ChatIndex} />
+                    {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
                     <Tab.Screen name="Earnings" component={Earnings} />
                   </>
                 ) : (typeof currentRole === 'object' && currentRole.role === 'driver'&&currentRole.userRole === "create_Acc") ?
@@ -296,7 +296,7 @@ export default function Index() {
                     <>
                       <Tab.Screen name="Loads" component={Loads} />
                       <Tab.Screen name="Trucks" component={LogisticsTrucks} />
-                      <Tab.Screen name="Chat" component={ChatIndex} />
+                      {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
                       <Tab.Screen name="Wallet" component={Wallet} />
                     </>
                   ) 

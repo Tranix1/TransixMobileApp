@@ -63,7 +63,7 @@ export const useAdminPermissions = () => {
     };
 
     const isSuperAdmin = (): boolean => {
-        return user?.uid === 'QOC9krp5BOR7NhFXRuX5f32u17e2';
+        return user?.uid === 'Ij5LdXmBhDZrobGfuixAIeav1J63';
     };
 
     return {

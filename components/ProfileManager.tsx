@@ -116,10 +116,10 @@ export default function ProfileManager({ user, onProfileUpdate, onClose }: Profi
 
                     <View style={styles.userDetails}>
                         <ThemedText type='subtitle'>
-                            {displayUser?.organisation || displayUser?.displayName || 'No name'}
+                            { displayUser?.displayName || 'No name'}
                         </ThemedText>
                         <ThemedText type='tiny' color={coolGray}>
-                            {displayUser?.email}
+                            {displayUser?.phoneNumber}
                         </ThemedText>
                     </View>
 

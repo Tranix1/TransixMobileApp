@@ -10,7 +10,7 @@ import Input from '@/components/Input';
 import { selectImage } from '@/Utilities/imageUtils';
 import { ImagePickerAsset } from 'expo-image-picker';
 import { useAuth } from '@/context/AuthContext';
-import { addDocument, addDocumentWithId, uploadImage, getUsers, updateDocument, readById, fetchDocuments, generateUniqueReferrerCode } from '@/db/operations';
+import { addDocument, addDocumentWithId, uploadImage, getUsers, updateDocument, readById, fetchDocuments, } from '@/db/operations';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePushNotifications } from '@/Utilities/pushNotification';
@@ -21,13 +21,16 @@ import { getDriverLevel } from '@/Utilities/DriverLevelVerification';
 import { SelectLocationProp } from '@/types/types';
 import { LocationPicker, } from '@/components/LocationPicker';
 import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplete';
+import CustomHeader from '@/components/CustomHeader';
+import { trackEvent } from '@/services/analytics/appAnalytics';
+import { incrementAccountsCreated } from '@/services/analytics/dashboardAnalytics';
 export default function AddDriver() {
     const background = useThemeColor('background');
     const backgroundLight = useThemeColor('backgroundLight');
     const text = useThemeColor('text');
     const accent = useThemeColor('accent');
     const icon = useThemeColor('icon');
-    const { user } = useAuth();
+    const { user, currentRole } = useAuth();
     const { driverId, editMode } = useLocalSearchParams();
 
     const [fullName, setFullName] = useState('');
@@ -184,29 +187,41 @@ export default function AddDriver() {
 
 
             await addDocumentWithId(`organizationProfiles`, fixedDriverId, {
-                    organizationId: fixedDriverId,
-                    type: "driver", // or "fleet"
-            
-                    name: fullName.trim(),
-                    profilePhoto: user?.photoURL || null,
-                    coverPhoto: null,
-                    description: "",
-                    ownerId: user?.uid,
-                    ownerName: user?.displayName || user?.organisation,
-            
-                    location: locationFull,
-            
-                    verificationStatus: "pending",
-            
-                    createdAt: Date.now()
-                  }
-            
-                  )
-            
+                organizationId: fixedDriverId,
+                type: "driver", // or "fleet"
 
+                name: fullName.trim(),
+                profilePhoto: user?.photoURL || null,
+                coverPhoto: null,
+                description: "",
+                ownerId: user?.uid,
+                ownerName: user?.displayName || user?.organisation,
+
+                location: locationFull,
+
+                verificationStatus: "pending",
+
+                createdAt: Date.now()
+            }
+
+            )
+
+
+            void trackEvent({ eventName: "driver_created", userId: user.uid, organizationId: fixedDriverId, organizationProfileId: fixedDriverId, organizationType: "driver", role: "owner", accountType: "driver", country: locationFull }).catch(console.error);
+            // Creates the derived dashboard document without changing its counters.
+
+            const currentRoleAccType = {
+                userRole: "",
+
+                accType: "driver",
+
+            };
+
+            await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
+
+            router.push("/Driver/DriverSelector/Index");
 
             ToastAndroid.show('Driver added successfully', ToastAndroid.SHORT);
-            router.back();
 
 
         } catch (error) {
@@ -265,8 +280,8 @@ export default function AddDriver() {
 
             await updateDocument(`/Drivers`, existingDriver.id, updateData);
 
+            router.push("/Driver/DriverSelector/Index");
             ToastAndroid.show('Driver updated successfully', ToastAndroid.SHORT);
-            router.back();
         } catch (error) {
             console.error('Error updating driver:', error);
             ToastAndroid.show('Error updating driver', ToastAndroid.SHORT);
@@ -282,8 +297,14 @@ export default function AddDriver() {
 
 
     return (
-        <ScreenWrapper>
-            <Heading page={isEditMode ? "Edit Driver" : "Add Driver"} />
+        <View  style={{flex:1 , backgroundColor: background,}}>
+            {currentRole.userRole !== "create_Acc" ? <View style={{ paddingTop: 36 }}>
+
+                <Heading page="Create Driver" />
+            </View> : <CustomHeader pageTitle='Create Driver' />}
+
+
+
             <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.container, { backgroundColor: background }]}>
 
                 <ThemedText style={styles.description}>
@@ -305,7 +326,7 @@ export default function AddDriver() {
                     keyboardType="phone-pad"
                 />
 
-             
+
 
                 <ThemedText>Home Location <ThemedText color="red">*</ThemedText></ThemedText>
 
@@ -486,7 +507,7 @@ export default function AddDriver() {
 
 
 
-        </ScreenWrapper>
+        </View>
     );
 }
 
@@ -525,7 +546,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: wp(2),
-        width:wp(90) ,
-        marginBottom:hp(3)
+        width: wp(90),
+        marginBottom: hp(3)
     },
 });

@@ -1,6 +1,6 @@
 import { where } from 'firebase/firestore';
 import { fetchDocuments } from '@/db/operations';
-import { sendPushNotification } from './pushNotification';
+import { notifyUserById, sendPushNotification } from './pushNotification';
 import { ToastAndroid, Platform, Alert } from 'react-native';
 import { TruckNeededType } from '@/types/types';
 
@@ -65,11 +65,11 @@ const showToast = (message: string) => {
  */
 export const notifyTrucksByFilters = async ({
   trucksNeeded,
-  contractId,
+  cargoId,
   loadItem,
 }: {
   trucksNeeded: TruckNeededType[];
-  contractId?: string;
+  cargoId?: string;
   loadItem: LoadItem;
 }) => {
   const loadRatePerKm = loadItem.ratePerKm || 0;
@@ -78,72 +78,81 @@ export const notifyTrucksByFilters = async ({
     const { cargoArea, truckType, tankerType, capacity, operationCountries } = need;
 
     // 1. Query setup
-    const filters = [
-      where("truckType", "==", truckType),
-      where("cargoArea", "==", cargoArea),
-      where("truckCapacity", "==", capacity),
-      where("tankerType", "==", tankerType),
-    ];
+  
+const filters = [
+  where("truckType", "==", truckType),
+  where("cargoArea", "==", cargoArea),
+  where("truckCapacity", "==", capacity),
+  where("availabilityData.status", "==", "AVAILABLE"),
+  where("notificationSettings.notificationsEnabled", "==", true),
+];
 
+if (tankerType) {
+  filters.push(where("tankerType", "==", tankerType));
+}
     const truckResult = await fetchDocuments("truckMarketplaceProfile", 100, undefined, filters);
-    
+
     if (!truckResult?.data || truckResult.data.length === 0) {
       continue;
     }
 
-    const matchedTrucks = (truckResult.data as MarketplaceTruck[]).filter((truck) => {
-      // Rule 3: Skip if not available
-      if (truck.availabilityData?.status !== "AVAILABLE") return false;
+  const matchedTrucks = (truckResult.data as MarketplaceTruck[]).filter((truck) => {
+  // Minimum rate
+  if (
+    loadRatePerKm <
+    (truck.notificationSettings?.minRatePerKm ?? 0)
+  ) {
+    return false;
+  }
 
-      // Rule 4: Skip if notifications disabled
-      if (truck.notificationSettings?.notificationsEnabled === false) return false;
+  // Countries
+  if (operationCountries.length > 0) {
+    const truckCountries = truck.locations ?? [];
 
-      // Rule 5: Rate filtering
-      if (loadRatePerKm < (truck.notificationSettings?.minRatePerKm || 0)) return false;
+    const matchesCountry = operationCountries.every(country =>
+        truckCountries.includes(country)
+    );
 
-      // Rule 2: Country filtering
-      if (operationCountries.length > 0) {
-        const matchesCountry = operationCountries.every(c => truck.locations?.includes(c));
-        if (!matchesCountry) return false;
-      }
-
-      return true;
-    });
-
-    // 2. Send notifications
-    for (const truck of matchedTrucks) {
-      try {
-        const { notifyRoles, assignments } = truck.notificationSettings;
-        const tokens: string[] = [];
-
-        if (notifyRoles.includes('driver') && assignments.driver?.expoPushToken) {
-          tokens.push(assignments.driver.expoPushToken);
-        }
-        if (notifyRoles.includes('dispatcher') && assignments.dispatcher?.expoPushToken) {
-          tokens.push(assignments.dispatcher.expoPushToken);
-        }
-
-        const message = `New load matched: ${loadItem.truckType} in ${loadItem.origin} to ${loadItem.destination}. Rate: ${loadItem.currency} ${loadItem.rate}`;
-
-        for (const token of tokens) {
-          await sendPushNotification(
-            token,
-            "New Load Available",
-            message,
-            {
-              pathname: '/BooksAndBids/ViewBidsAndBooks',
-              params: {
-                dbName: "bookings",
-                dspRoute: "Booked by Carriers",
-                contractId: contractId || null,
-              }
-            }
-          );
-        }
-      } catch (error) {
-        console.error(`Failed to notify truck ${truck.id}:`, error);
-      }
+    if (!matchesCountry) {
+        return false;
     }
+}
+
+  return true;
+});
+
+   // 2. Send notifications
+for (const truck of matchedTrucks) {
+  try {
+    const dispatcherId =
+      truck.notificationSettings?.assignments?.dispatcher?.id;
+
+    if (!dispatcherId) {
+      console.log(`Truck ${truck.id} has no dispatcher assigned.`);
+      continue;
+    }
+
+    await notifyUserById(
+      dispatcherId,
+      "🚚 New Load Match",
+      `${loadItem.truckType} load available from ${loadItem.origin} to ${loadItem.destination}. ${loadItem.currency} ${loadItem.rate.toLocaleString()} (${loadItem.ratePerKm}/km). Tap to review and book if interested.`,
+      {
+        pathname: "/BooksAndBids/ViewBidsAndBooks",
+        params: {
+          dbName: "bookings",
+          dspRoute: "Booked by Carriers",
+          contractId: cargoId ?? null,
+        },
+      },
+      {
+        cargoId,
+        truckId: truck.id,
+      }
+    );
+  } catch (error) {
+    console.error(`Failed to notify truck ${truck.id}:`, error);
+  }
+}
   }
 
   showToast("Notifications dispatched to matching trucks.");

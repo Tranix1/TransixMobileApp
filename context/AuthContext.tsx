@@ -19,6 +19,8 @@ import { setDoc } from "firebase/firestore";
 import { trackAccountCreated, trackLogin, trackLogout } from "@/services/analytics/appAnalytics";
 import { incrementAccountsCreated } from "@/services/analytics/dashboardAnalytics";
 import { incrementSignups } from "@/services/analytics/referralAnalytics";
+import { getExpoPushTokenAsync } from "expo-notifications";
+import { getExpoPushToken } from "@/Utilities/getExpoPushToken";
 
 type AlertType = "default" | "error" | "success" | "laoding" | "destructive";
 
@@ -272,7 +274,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await AsyncStorage.removeItem('currentUser');
     };
 
-    const Login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
+
+
+    const Login = async (
+        credentials: LoginCredentials
+    ): Promise<LoginResponse> => {
         try {
             const credential = PhoneAuthProvider.credential(
                 credentials.verificationId,
@@ -288,7 +294,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             const firebaseUser = userCredential.user;
 
-            const personalData = await readById('personalData', firebaseUser.uid) || {};
+
+            // Update notification token
+            try {
+                await getExpoPushToken(firebaseUser.uid);
+            } catch (error) {
+                console.log("Push token update failed", error);
+            }
+
+
+            // Get latest personal data after token update
+            const personalData =
+                await readById("personalData", firebaseUser.uid) || {};
+
 
             const fullUser: User = {
                 uid: firebaseUser.uid,
@@ -299,36 +317,51 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 ...personalData,
             };
 
-            setUser(fullUser);
-            console.log(fullUser)
-            setIsSignedIN(true);
-            setIsAppReady(true);
 
-            await AsyncStorage.setItem('user', JSON.stringify(fullUser));
-            await AsyncStorage.setItem('currentUser', JSON.stringify(fullUser));
-            await AsyncStorage.setItem(`personalData_${firebaseUser.uid}`, JSON.stringify(personalData));
+            let currentRoleAccType: {
+                userRole: string;
+                accType: string;
+            };
 
-            let currentRoleAccType: { userRole: string; accType: string };
 
-            const ownedBrokerages = Array.isArray(fullUser?.brokergeDetails) ? fullUser.brokergeDetails : [];
-            const ownedFleets = Array.isArray(fullUser?.fleets) ? fullUser.fleets : [];
+            const ownedBrokerages = Array.isArray(fullUser?.brokergeDetails)
+                ? fullUser.brokergeDetails
+                : [];
+
+            const ownedFleets = Array.isArray(fullUser?.fleets)
+                ? fullUser.fleets
+                : [];
+
             const hasDriverProfile = !!fullUser?.driverDetails;
 
-            if (credentials.accountType === "brokerage" && ownedBrokerages.length > 0) {
+
+            if (
+                credentials.accountType === "brokerage" &&
+                ownedBrokerages.length > 0
+            ) {
                 currentRoleAccType = {
                     userRole: "verified",
                     accType: credentials.accountType,
                 };
-            } else if (credentials.accountType === "fleet" && ownedFleets.length > 0) {
+
+            } else if (
+                credentials.accountType === "fleet" &&
+                ownedFleets.length > 0
+            ) {
                 currentRoleAccType = {
                     userRole: "verified",
                     accType: credentials.accountType,
                 };
-            } else if (credentials.accountType === "driver" && hasDriverProfile) {
+
+            } else if (
+                credentials.accountType === "driver" &&
+                hasDriverProfile
+            ) {
                 currentRoleAccType = {
                     userRole: "verified",
                     accType: credentials.accountType,
                 };
+
             } else {
                 currentRoleAccType = {
                     userRole: "create_Acc",
@@ -336,16 +369,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 };
             }
 
-            await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
 
-            void trackLogin({ userId: firebaseUser.uid, accountType: credentials.accountType, role: currentRoleAccType.userRole }).catch(console.error);
+            // Save user data
+            setUser(fullUser);
+            setIsSignedIN(true);
+
+
+            await AsyncStorage.setItem(
+                "user",
+                JSON.stringify(fullUser)
+            );
+
+            await AsyncStorage.setItem(
+                "currentUser",
+                JSON.stringify(fullUser)
+            );
+
+            await AsyncStorage.setItem(
+                `personalData_${firebaseUser.uid}`,
+                JSON.stringify(personalData)
+            );
+
+
+            await AsyncStorage.setItem(
+                "currentRole",
+                JSON.stringify(currentRoleAccType)
+            );
+
+
+            void trackLogin({
+                userId: firebaseUser.uid,
+                accountType: credentials.accountType,
+                role: currentRoleAccType.userRole
+            }).catch(console.error);
+
+
+            // App ready after everything is loaded
+            setIsAppReady(true);
+
 
             return {
                 success: true,
                 message: "Login successful",
                 currentRole: currentRoleAccType,
             };
+
+
         } catch (error) {
+
             console.log(error);
 
             return {
@@ -354,40 +425,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             };
         }
     };
+    const signUp = async (
+        credentials: SignUpCredentials
+    ): Promise<{ success: boolean; accountRole?: any }> => {
 
-    const signUp = async (credentials: SignUpCredentials): Promise<{ success: boolean; accountRole?: any }> => {
         try {
-
 
             let referredBy: User["referredBy"] | undefined;
 
 
             if (credentials.referralValidation?.exists) {
 
-
                 if (credentials.referralValidation.type === "REFERRER") {
 
                     referredBy = {
-
                         userId: credentials.referralValidation.data.userId,
                         name: credentials.referralValidation.data.name,
                         phoneNumber: credentials.referralValidation.data.phoneNumber,
                         referralCode: credentials.referralValidation.data.referralCode,
                         joinedAt: credentials.referralValidation.data.joinedAt,
                     };
-
                 }
-
 
                 if (credentials.referralValidation.type === "CAMPAIGN") {
 
                     referredBy = {
-
                         userId: credentials.referralValidation.data.userId,
-
                         name: credentials.referralValidation.data.name,
                         phoneNumber: credentials.referralValidation.data.phoneNumber,
-
                         referralCode: credentials.referralValidation.data.referralCode,
 
                         campaign:
@@ -402,19 +467,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                 }
             }
-
-
             const credential = PhoneAuthProvider.credential(
                 credentials.verificationId,
                 credentials.otp
             );
-
             const userCredential = await signInWithCredential(
                 auth,
                 credential
             );
-
             const firebaseUser = userCredential.user;
+
+            // Get notification token
+            let expoPushToken: string | undefined;
+
+            try {
+
+                expoPushToken =
+                    await getExpoPushToken(firebaseUser.uid) ?? undefined;
+
+            } catch (error) {
+
+                console.log(
+                    "Push token update failed",
+                    error
+                );
+
+            }
 
             const accountRole = normalizeAccountType(
                 credentials.accountType || "tracking"
@@ -424,76 +502,102 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 displayName: credentials.displayName,
             });
 
+            const newReferralCode =
+                await generateUniqueReferralCode("REFERRER");
+
             const userData: User = {
 
                 uid: firebaseUser.uid,
-                userId :firebaseUser.uid,
-                phoneNumber: firebaseUser.phoneNumber ?? undefined,
-                displayName: credentials.displayName,
 
-                ...(referredBy && {
-                    referredBy
+                userId: firebaseUser.uid,
+
+                phoneNumber:
+                    firebaseUser.phoneNumber ?? undefined,
+
+                displayName:
+                    credentials.displayName,
+
+                referralCode:
+                    newReferralCode,
+
+
+                ...(expoPushToken && {
+                    expoPushToken,
                 }),
 
-                accountType: credentials.accountType,
-                createdAt: Date.now().toString(),
+
+                ...(referredBy && {
+                    referredBy,
+                }),
+
+
+                accountType:
+                    credentials.accountType,
+
+
+                createdAt:
+                    Date.now().toString(),
             };
 
             const saved = await setDocuments(
                 "personalData",
                 userData
             );
+
             if (!saved) {
+
+                ToastAndroid.show(
+                    "Unable to create profile. Please try again.",
+                    ToastAndroid.LONG
+                );
+
                 return {
                     success: false,
                 };
             }
-
-
-            let newRefferalCode = await generateUniqueReferralCode("REFERRER");
 
             await addDocumentWithId(
                 "referrers",
                 firebaseUser.uid,
                 {
-                    userId: firebaseUser.uid,
+
+                    userId:
+                        firebaseUser.uid,
 
                     name:
                         credentials.displayName || "Unknown",
 
-                    phoneNumber: firebaseUser.phoneNumber ?? undefined,
+                    phoneNumber:
+                        firebaseUser.phoneNumber ?? undefined,
 
-
-                    referralCode: newRefferalCode,
+                    referralCode:
+                        newReferralCode,
 
                     createdAt:
                         new Date().toISOString(),
 
-                    isActive: true,
+                    isActive:
+                        true,
                 }
             );
 
+            const currentRoleAccType = {
 
+                userRole:
+                    "create_Acc",
 
-            if (!saved) {
-                ToastAndroid.show(
-                    "Unable to create profile. Please try again.",
-                    ToastAndroid.LONG
-                );
-                return {
-                    success: false,
-                };
-            }
+                accType:
+                    credentials.accountType,
 
+            };
             setUser(userData);
+
             setIsSignedIN(true);
-            setIsAppReady(true);
 
             await AsyncStorage.setItem(
                 "user",
                 JSON.stringify(userData)
             );
-
             await AsyncStorage.setItem(
                 "currentUser",
                 JSON.stringify(userData)
@@ -504,26 +608,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 JSON.stringify(userData)
             );
 
-
-            const currentRoleAccType = {
-                userRole: "create_Acc",
-
-                accType: credentials.accountType,
-
-            };
-
-            await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
+            await AsyncStorage.setItem(
+                "currentRole",
+                JSON.stringify(currentRoleAccType)
+            );
 
             const analyticsContext = {
-                userId: firebaseUser.uid,
-                accountType: credentials.accountType,
-                referrerId: referredBy?.userId ?? null,
-                referralCodeUsed: credentials.referrerCode ?? referredBy?.referralCode ?? null,
-                campaign: referredBy?.campaign ?? null,
-                platform: referredBy?.platform ?? null,
+
+                userId:
+                    firebaseUser.uid,
+
+                accountType:
+                    credentials.accountType,
+
+
+                referrerId:
+                    referredBy?.userId ?? null,
+
+
+                referralCodeUsed:
+                    credentials.referrerCode ??
+                    referredBy?.referralCode ??
+                    null,
+                campaign:
+                    referredBy?.campaign ??
+                    null,
+
+
+                platform:
+                    referredBy?.platform ??
+                    null,
             };
-            void trackAccountCreated(analyticsContext).catch(console.error);
-            if (referredBy?.userId) void incrementSignups(referredBy.userId).catch(console.error);
+
+
+            void trackAccountCreated(
+                analyticsContext
+            ).catch(console.error);
+
+            if (referredBy?.userId) {
+
+                void incrementSignups(
+                    referredBy.userId
+                ).catch(console.error);
+
+            }
+
+            setIsAppReady(true);
 
             ToastAndroid.show(
                 "Account created successfully!",
@@ -531,12 +661,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             );
 
             return {
+
                 success: true,
-                accountRole: { userRole: "create_Acc", accType: credentials.accountType },
+
+                accountRole:
+                    currentRoleAccType,
+
             };
 
         } catch (error) {
-            console.error("Sign up failed:", error);
+
+            console.error(
+                "Sign up failed:",
+                error
+            );
 
             ToastAndroid.show(
                 getFirebaseErrorMessage(error),
@@ -546,6 +684,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             return {
                 success: false
             };
+
         }
     };
 

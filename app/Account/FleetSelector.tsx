@@ -195,7 +195,6 @@ function FleetSelector() {
 
 
     const handleFleetSelect = async (fleet: any) => {
-        console.log(fleet.referrerCode, "The refferal code  ")
         if (!fleet) return;
 
         const fleetRole = {

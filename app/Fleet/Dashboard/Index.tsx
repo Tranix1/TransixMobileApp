@@ -414,7 +414,7 @@ export default function TransixDashboard() {
                 {/* ======================= AttentionCard ======================= */}
 
 
-
+{/* 
 <>
 <SectionHeader
     title="Needs Attention"
@@ -548,8 +548,68 @@ export default function TransixDashboard() {
 />
 
 
-</>
+</> */}
 
+
+   {/* ============================== QUICK ACTIONS ============================== */}
+                <SectionHeader title="Quick Actions" textlight={textlight} accent={accent} />
+                <View style={styles.quickActionsGrid}>
+                     <QuickAction
+                        label="Add Truck"
+                        iconElement={<FontAwesome6 name="box" size={wp(4.4)} color={BRAND.teal} />}
+                        iconBg={`${BRAND.teal}1A`}
+                        onPress={() => router.push('/Logistics/Trucks/AddTrucks')}
+                        background={background}
+                        border={border}
+                        textlight={textlight}
+                    />
+                    <QuickAction
+                        label="Add Load"
+                        iconElement={<FontAwesome6 name="box" size={wp(4.4)} color={BRAND.navy} />}
+                        iconBg={`${BRAND.navy}1A`}
+                        onPress={() => router.push('/Logistics/Loads/AddLoads')}
+                        background={background}
+                        border={border}
+                        textlight={textlight}
+                    />
+                    
+                    <QuickAction
+                        label="Create Request"
+                        iconElement={<Ionicons name="calendar-outline" size={wp(4.4)} color={BRAND.teal} />}
+                        iconBg={`${BRAND.teal}1A`}
+                        onPress={() => router.push('/BooksAndBids/ViewBidsAndBooks')}
+                        background={background}
+                        border={border}
+                        textlight={textlight}
+                    />
+                    <QuickAction
+                        label="View Requested"
+                        iconElement={<MaterialCommunityIcons name="clipboard-list-outline" size={wp(4.4)} color={BRAND.amber} />}
+                        iconBg={`${BRAND.amber}1A`}
+                        onPress={() => router.push('/Assignments/Index')}
+                        background={background}
+                        border={border}
+                        textlight={textlight}
+                    />
+                    <QuickAction
+                        label="Finance Centre"
+                        iconElement={<Ionicons name="cash-outline" size={wp(4.4)} color={BRAND.good} />}
+                        iconBg={`${BRAND.good}1A`}
+                        onPress={() => router.push('/Wallet/DepositAndWithdraw')}
+                        background={background}
+                        border={border}
+                        textlight={textlight}
+                    />
+                    <QuickAction
+                        label="Track Vehicles"
+                        iconElement={<MaterialCommunityIcons name="map-marker-radius" size={wp(4.4)} color={BRAND.info} />}
+                        iconBg={`${BRAND.info}1A`}
+                        onPress={() => router.push('/Tracking/Index')}
+                        background={background}
+                        border={border}
+                        textlight={textlight}
+                    />
+                </View>
 
                 {/* ======================= Today Card ======================= */}
 
@@ -642,7 +702,7 @@ export default function TransixDashboard() {
                 />
 
                 {/* ========================= PERFORMANCE OVERVIEW ========================= */}
-                <SectionHeader title="Performance Overview" textlight={textlight} accent={accent} />
+                {/* <SectionHeader title="Performance Overview" textlight={textlight} accent={accent} />
                 <View style={styles.performanceGrid}>
                     <PerformanceStat
                         label="Completed Trips"
@@ -684,11 +744,11 @@ export default function TransixDashboard() {
                         border={border}
                         textlight={textlight}
                     />
-                </View>
+                </View> */}
 
 
                 {/* ============================ RECENT ACTIVITY ============================ */}
-                <SectionHeader title="Recent Activity" textlight={textlight} accent={accent} />
+                {/* <SectionHeader title="Recent Activity" textlight={textlight} accent={accent} />
                 <View style={[styles.listCard, { backgroundColor: background, borderColor: border, paddingVertical: hp(1) }]}>
                     <ActivityItem
                         text="New load created — Bulawayo to Gaborone, 28t"
@@ -730,57 +790,9 @@ export default function TransixDashboard() {
                         border={border}
                         textlight={textlight}
                     />
-                </View>
+                </View> */}
 
-                {/* ============================== QUICK ACTIONS ============================== */}
-                <SectionHeader title="Quick Actions" textlight={textlight} accent={accent} />
-                <View style={styles.quickActionsGrid}>
-                    <QuickAction
-                        label="Add Load"
-                        iconElement={<FontAwesome6 name="box" size={wp(4.4)} color={BRAND.navy} />}
-                        iconBg={`${BRAND.navy}1A`}
-                        onPress={() => router.push('/Logistics/Loads/AddLoads')}
-                        background={background}
-                        border={border}
-                        textlight={textlight}
-                    />
-                    <QuickAction
-                        label="Create Booking"
-                        iconElement={<Ionicons name="calendar-outline" size={wp(4.4)} color={BRAND.teal} />}
-                        iconBg={`${BRAND.teal}1A`}
-                        onPress={() => router.push('/BooksAndBids/ViewBidsAndBooks')}
-                        background={background}
-                        border={border}
-                        textlight={textlight}
-                    />
-                    <QuickAction
-                        label="View Assignments"
-                        iconElement={<MaterialCommunityIcons name="clipboard-list-outline" size={wp(4.4)} color={BRAND.amber} />}
-                        iconBg={`${BRAND.amber}1A`}
-                        onPress={() => router.push('/Assignments/Index')}
-                        background={background}
-                        border={border}
-                        textlight={textlight}
-                    />
-                    <QuickAction
-                        label="Finance Centre"
-                        iconElement={<Ionicons name="cash-outline" size={wp(4.4)} color={BRAND.good} />}
-                        iconBg={`${BRAND.good}1A`}
-                        onPress={() => router.push('/Wallet/DepositAndWithdraw')}
-                        background={background}
-                        border={border}
-                        textlight={textlight}
-                    />
-                    <QuickAction
-                        label="Track Vehicles"
-                        iconElement={<MaterialCommunityIcons name="map-marker-radius" size={wp(4.4)} color={BRAND.info} />}
-                        iconBg={`${BRAND.info}1A`}
-                        onPress={() => router.push('/Tracking/Index')}
-                        background={background}
-                        border={border}
-                        textlight={textlight}
-                    />
-                </View>
+             
             </ScrollView>
         </View>
     );

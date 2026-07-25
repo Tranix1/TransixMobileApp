@@ -1,11 +1,11 @@
-import { collection, doc, serverTimestamp, setDoc, Timestamp, writeBatch } from 'firebase/firestore';
+import { collection, doc, increment, serverTimestamp, setDoc, Timestamp, writeBatch } from 'firebase/firestore';
 import { ToastAndroid, Alert, Platform } from "react-native";
 
 import { db } from '@/db/fireBaseConfig';
-import { addDocumentWithId } from '@/db/operations';
+import { addDocumentWithId, updateDocument } from '@/db/operations';
 import { notifyTrucksByFilters } from '@/Utilities/notifyTruckByFilters';
 import { Customer } from '@/components/CustomerPicker';
-import { sendPushNotification } from '@/Utilities/pushNotification';
+import { notifyUserById, sendPushNotification } from '@/Utilities/pushNotification';
 import { trackLoadCreated } from '@/services/analytics/appAnalytics';
 import { incrementActiveLoads, incrementPrivateBrokerageLoads, incrementPrivateFleetLoads, incrementPublicLoads, incrementTotalLoads } from '@/services/analytics/dashboardAnalytics';
 import { incrementLoadsPosted } from '@/services/analytics/organizationAnalytics';
@@ -89,7 +89,38 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     if (!analyticsOrganizationId) return;
     void incrementTotalLoads(analyticsType, analyticsOrganizationId).catch(console.error);
     void incrementActiveLoads(analyticsType, analyticsOrganizationId).catch(console.error);
-    void incrementLoadsPosted(analyticsOrganizationId).catch(console.error);
+
+
+    if(loadVisibility === 'Public'){
+
+      updateDocument("organizationProfiles" ,analyticsOrganizationId ,{
+        publicLoads :{
+          posted:increment(1)
+        }
+      } )
+
+    }else if(loadVisibility === 'Private'){
+  updateDocument("organizationProfiles" ,analyticsOrganizationId ,{
+        privateLoads :{
+          posted:increment(1)
+        }
+      } )
+    }else if(loadVisibility==="Both"){
+  updateDocument("organizationProfiles" ,analyticsOrganizationId ,{
+        publicLoads :{
+          posted:increment(1)
+        }
+      } )
+        updateDocument("organizationProfiles" ,analyticsOrganizationId ,{
+     
+      } ) 
+    }
+
+
+
+
+
+
     if (loadVisibility === 'Public' || loadVisibility === 'Both') void incrementPublicLoads(analyticsType, analyticsOrganizationId).catch(console.error);
     if ((loadVisibility === 'Private' || loadVisibility === 'Both') && analyticsType === 'fleet') void incrementPrivateFleetLoads(analyticsType, analyticsOrganizationId).catch(console.error);
     if ((loadVisibility === 'Private' || loadVisibility === 'Both') && analyticsType === 'brokerage') void incrementPrivateBrokerageLoads(analyticsType, analyticsOrganizationId).catch(console.error);
@@ -155,7 +186,6 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       email: driver?.email || null,
       role: isDefaultDriver ? 'main' : assignment.role || 'assigned',
       isDefault: isDefaultDriver,
-      expoPushToken: driver?.expoPushToken || null,
     };
 
     const loadDetails = {
@@ -166,7 +196,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       deliveryLocation: assignment.deliveryLocation || destination || null,
     };
 
-          
+
 
     return {
       cargoId,
@@ -178,7 +208,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       // The truck's own owning fleet/org (not necessarily the poster of the load — relevant
       // when a broker assigns a truck that belongs to a different fleet).
       fleetDetails: truck?.organizationDetails ?? truck?.fleetDetails ?? null,
-      fleetCoordinator: truck?.dispatcher ,
+      fleetCoordinator: truck?.dispatcher,
 
       loadDetails,
       truckDetails,
@@ -293,61 +323,73 @@ export const submitLoad = async (params: SubmitLoadParams) => {
 
     if (assignmentDetails.length > 0) {
 
-    for (const assignment of assignmentDetails) {
-      const assignmentDocId = `${cargoId}_${assignment.truckId}_${assignment.driverId}`;
-      await addDocumentWithId(`fleets/${fleetId}/assignments`, assignmentDocId, assignment);
-    }
-    
-    for (const assignment of assignmentDetails) {
-
-      if (assignment.driverDetails?.expoPushToken) {
-
-        try {
-          await sendPushNotification(
-            assignment.driverDetails.expoPushToken,
-            "New Load Assignment 🚛",
-            `You have been assigned a load from ${assignment.loadDetails.origin.description} to ${assignment.loadDetails.destination.description}`,
-            {
-              pathname: "/Driver/AssignmentDetails",
-              params: {
-                cargoId,
-                assignmentId: `${cargoId}_${assignment.truckId}_${assignment.driverId}`,
-              }
-            }
-          );
-
-
-
-
-
-
-        } catch (error) {
-          Alert.alert(
-            "Notification Failed",
-            `Load was assigned to ${assignment.driverDetails.driverName}, but notification failed.`
-          );
-
-          console.log(
-            "Driver notification error:",
-            error
-          );
-        }
-
+      for (const assignment of assignmentDetails) {
+        const assignmentDocId = `${cargoId}_${assignment.truckId}_${assignment.driverId}`;
+        await addDocumentWithId(`fleets/${fleetId}/assignments`, assignmentDocId, assignment);
       }
-    }
 
-    if (Platform.OS === "android") {
-      ToastAndroid.show(
-        "Private load assigned successfully 🚛",
-        ToastAndroid.SHORT
-      );
-    }
+      for (const assignment of assignmentDetails) {
 
-  }else {
+        if (assignment.driverDetails?.driverId) {
+
+          try {
+
+            const driverUserId = assignment.driverDetails?.driverId.replace("DRV_")
 
 
-    const assignmentDocId = `${cargoId}_UNASSIGNED`;
-       const loadDetails = {
+            await notifyUserById(
+              driverUserId,
+              "New Load Assignment 🚛",
+              `You have been assigned a load from ${assignment.loadDetails.origin.description} to ${assignment.loadDetails.destination.description}`,
+
+              {
+                pathname: "Assignments/Index",
+                params: {
+                  cargoId,
+                  assignmentId: `${cargoId}_${assignment.truckId}_${assignment.driverId}`,
+                  fleetId: assignment.fleetDetails.id
+                }
+              }, {
+              type: "load_assignment",
+              assignmentId: `${cargoId}_${assignment.truckId}_${assignment.driverId}`,
+            }
+            );
+
+
+
+
+
+
+
+
+
+          } catch (error) {
+            Alert.alert(
+              "Notification Failed",
+              `Load was assigned to ${assignment.driverDetails.driverName}, but notification failed.`
+            );
+
+            console.log(
+              "Driver notification error:",
+              error
+            );
+          }
+
+        }
+      }
+
+      if (Platform.OS === "android") {
+        ToastAndroid.show(
+          "Private load assigned successfully 🚛",
+          ToastAndroid.SHORT
+        );
+      }
+
+    } else {
+
+
+      const assignmentDocId = `${cargoId}_UNASSIGNED`;
+      const loadDetails = {
         ...baseLoadDetails,
         pickupDate: loadingDate || null,
         deliveryDate: deliveryDate || null,
@@ -356,34 +398,34 @@ export const submitLoad = async (params: SubmitLoadParams) => {
 
       };
 
-  await addDocumentWithId(
-    `fleets/${fleetId}/assignments`,
-    assignmentDocId,
-    {
-      cargoId,
-      loadId: cargoId,
-      fleetId,
+      await addDocumentWithId(
+        `fleets/${fleetId}/assignments`,
+        assignmentDocId,
+        {
+          cargoId,
+          loadId: cargoId,
+          fleetId,
 
-      truckId: null,
-      driverId: null,
+          truckId: null,
+          driverId: null,
 
-      status: "UNASSIGNED",
+          status: "UNASSIGNED",
 
-      loadDetails: loadDetails,
-        externalLoad: false,   
+          loadDetails: loadDetails,
+          externalLoad: false,
 
-      truckDetails: null,
-      driverDetails: null,
-      shipper:selectedCustomer ,
+          truckDetails: null,
+          driverDetails: null,
+          shipper: selectedCustomer,
 
-      coordinator,
+          coordinator,
 
-      createdAt: Date.now().toString(),
-      timeStamp: serverTimestamp(),
+          createdAt: Date.now().toString(),
+          timeStamp: serverTimestamp(),
+        }
+      );
+
     }
-  );
-
-}
 
 
     for (const selectedBrokerId of selectedBrokers) {
@@ -469,16 +511,16 @@ export const submitLoad = async (params: SubmitLoadParams) => {
         driverId: null,
         visibility: visibilityTag,
         loadDetails: loadDetails,
-        externalLoad: true,   
+        externalLoad: true,
         // The truck's own owning fleet/org (not necessarily the poster of the load — relevant
         // when a broker assigns a truck that belongs to a different fleet).
         fleetDetails: truck?.organizationDetails ?? truck?.fleetDetails ?? null,
-        shipper : {
+        shipper: {
           id: currentRole.organizationId || currentRole.fleetId || null,
           name: currentRole.companyName || user?.organisation,
           phone: currentRole.phone || null,
           location: currentRole.billingAddress || currentRole.location || null,
-          accType: currentRole.accType || null ,
+          accType: currentRole.accType || null,
         },
         truckDetails,
         driverDetails: null,
@@ -536,42 +578,48 @@ export const submitLoad = async (params: SubmitLoadParams) => {
 
 
 
-const dispatcherToken =
-  truck.assignments?.dispatcher?.expoPushToken;
+      const dispatcherId =
+        truck.assignments?.dispatcher?.id;
 
 
-if (dispatcherToken) {
-  try {
-    await sendPushNotification(
-      dispatcherToken,
-      "New Load Assigned 🚛",
-      `${truck.truckName} has been assigned a new load from ${origin.description} to ${destination.description}`,
-      {
-        pathname: "/Dispatcher/AssignmentDetails",
-        params: {
-          cargoId,
-          truckId: truck.id,
-        },
-      },
-      {
-        type: "private_load_assigned",
-        cargoId,
-        truckId: truck.id,
+      if (dispatcherId) {
+        try {
+
+
+
+          await notifyUserById(
+            dispatcherId,
+            "New Load Assigned 🚛",
+            `${truck.truckName} has been assigned a new load from ${origin.description} to ${destination.description}`,
+            {
+              pathname: "/Dispatcher/AssignmentDetails",
+              params: {
+                cargoId,
+                truckId: truck.id,
+              },
+            },
+            {
+              type: "private_load_assigned",
+              cargoId,
+              truckId: truck.id,
+            }
+          );
+
+
+
+
+        } catch (error) {
+          Alert.alert(
+            "Notification Failed",
+            "Load assigned but dispatcher notification failed."
+          );
+
+          console.log(
+            "Dispatcher notification error:",
+            error
+          );
+        }
       }
-    );
-
-  } catch (error) {
-    Alert.alert(
-      "Notification Failed",
-      "Load assigned but dispatcher notification failed."
-    );
-
-    console.log(
-      "Dispatcher notification error:",
-      error
-    );
-  }
-}
 
     }
   };
@@ -620,7 +668,7 @@ if (dispatcherToken) {
     await notifyTrucksByFilters({
       trucksNeeded,
       loadItem: buildNotificationLoadItem(params) as any,
-      contractId: cargoId,
+      cargoId: cargoId,
     });
   }
 };

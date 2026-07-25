@@ -27,10 +27,11 @@ import { FontAwesome } from '@expo/vector-icons';
 import { Countries } from '@/types/types';
 import { trackEvent } from '@/services/analytics/appAnalytics';
 import { incrementAccountsCreated } from '@/services/analytics/dashboardAnalytics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CreateFleet = () => {
     const router = useRouter();
-    const { user, setCurrentRole, setupUser ,  currentRole } = useAuth();
+    const { user,  setupUser ,  currentRole } = useAuth();
     const [typeOfFleet, setTypeOfFleet] = useState('');
     const [fleetName, setFleetName] = useState('');
     const [fleetPhone, setFleetPhone] = useState('');
@@ -137,8 +138,8 @@ const CreateFleet = () => {
                 organizationPhone:    fleetData.fleetPhone && fleetCountryCode.name ?
                 `${fleetCountryCode.name}${fleetData.fleetPhone}`: user.phoneNumber  ,
 
-                fleetMainAdminName: user.displayName,
-                organizationAdminPhone: user.phoneNumber,
+                adminName: user.displayName,
+                adminPhone: user.phoneNumber,
 
                 countryCode: fleetData.fleetCountryCode?.name,
                 typeOfFleet: fleetData.typeOfFleet,
@@ -301,18 +302,25 @@ const CreateFleet = () => {
                 }
             })
 
-            void trackEvent({ eventName: "fleet_created", userId: user.uid, organizationId: fleetId, organizationProfileId: fleetId, organizationType: "fleet", role: "owner", accountType: "fleet", country: fleetData.fleetCountryCode?.name, metadata: { typeOfFleet: fleetData.typeOfFleet } }).catch(console.error);
+            void trackEvent({ eventName: "fleet_created", userId: user.uid, organizationId: fleetId, organizationProfileId: fleetId, organizationType: "fleet", role: "owner", accountType: "fleet", country: billingAddress || baseAdress, metadata: { typeOfFleet: fleetData.typeOfFleet } }).catch(console.error);
             // Creates the derived dashboard document without changing its counters.
             void incrementAccountsCreated("fleet", fleetId, 0).catch(console.error);
 
 
 
 
+           const currentRoleAccType = {
+                userRole: "",
 
-            await setCurrentRole("fleet");
+                accType:"fleet" ,
+
+            };
+            await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
+
+
 
             Alert.alert('Fleet saved', 'Your fleet request has been submitted.');
-            await router.replace('/');
+            await router.push("/Fleet/FleetSelector/Index");
         } catch (error) {
             console.error('Error saving fleet verification:', error);
             Alert.alert('Error submitting fleet verification', 'Please try again.');
@@ -324,10 +332,10 @@ const CreateFleet = () => {
     return (
         <View style={{ flex: 1, backgroundColor: background,  }} >
 
-        <View style={{paddingTop:currentRole.userRole==="create_Acc"?0: 36}}>
+      {currentRole.userRole!=="create_Acc" ?  <View style={{paddingTop: 36}}>
 
             <Heading page="Create Fleet" />
-        </View>
+        </View> : <CustomHeader pageTitle='Create Fleet' /> }
 
             <View style={{ margin: hp(3) }}>
 

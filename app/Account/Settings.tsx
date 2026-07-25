@@ -36,11 +36,11 @@ const Settings = () => {
                     <View style={{ flexDirection: 'row', gap: wp(4), marginBottom: wp(4) }}>
                         <Image
                             style={{ backgroundColor: coolgray, borderRadius: 999, width: wp(15), height: wp(15) }}
-                            source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
+                            source={{ uri: user?.photoURL || 'https://via.placeholder.com/100'   }}
                         />
                         <View style={{ flex: 1 }}>
-                            <ThemedText type='title'>{user?.organisation || '-'}</ThemedText>
-                            <ThemedText type='tiny' color={icon}>{user?.email || 'Click button below to login'}</ThemedText>
+                            <ThemedText type='title'>{user?.displayName || '-'}</ThemedText>
+                            <ThemedText type='tiny' color={icon}>{user?.phoneNumber || 'Click button below to login'}</ThemedText>
                             {!user &&
                                 <View style={{ marginTop: wp(2) }}>
                                     <Button title='Login' onPress={() => router.push('/Account/Login')} />

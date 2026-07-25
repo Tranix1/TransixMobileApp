@@ -703,14 +703,14 @@ const TruckDetails = () => {
                         }
                     </View>} />
             <ScrollView
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={getData}
-                        colors={[accent]}
-                        tintColor={accent}
-                    />
-                }
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={getData}
+                            colors={[accent]}
+                            tintColor={accent}
+                        />
+                    }
                 contentContainerStyle={{ paddingBottom: hp(6), marginHorizontal: wp(2) }}>
                 <View style={{ marginHorizontal: wp(2) }}>
                     <View style={{ alignItems: 'center', borderRadius: 2, flex: 1, marginBottom: wp(2) }}>

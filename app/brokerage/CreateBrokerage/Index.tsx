@@ -17,7 +17,7 @@ import { takePhoto } from '@/Utilities/imageUtils';
 import { DocumentAsset } from '@/types/types';
 import Heading from '@/components/Heading';
 import { useAuth } from '@/context/AuthContext';
-import { updateDocument, generateUniqueReferrerCode, checkDocumentExists, addDocumentWithId } from '@/db/operations';
+import { updateDocument,  checkDocumentExists, addDocumentWithId } from '@/db/operations';
 import { uploadImage } from '@/db/operations';
 import { setDoc, doc, where, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
@@ -30,18 +30,19 @@ import { Countries } from '@/types/types';
 import { router } from 'expo-router';
 import { trackEvent } from '@/services/analytics/appAnalytics';
 import { incrementAccountsCreated } from '@/services/analytics/dashboardAnalytics';
+import CustomHeader from '@/components/CustomHeader';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CreaterBrokerage = ({ }) => {
   const icon = useThemeColor('icon');
   const background = useThemeColor('background');
   const accent = useThemeColor("accent")
-  const { user } = useAuth();
+  const { user , currentRole } = useAuth();
 
   // Broker verification state
   const [typeOfBroker, setTypeOfBroker] = useState('');
   const [brokerName, setBrokerName] = useState('');
   const [brokerPhone, setBrokerPhone] = useState('');
-  const [brokerEmail, setBrokerEmail] = useState('');
 
   const [operationCountries, setOperationCountries] = useState<string[]>([]);
   const [showCountries, setShowCountries] = useState(false);
@@ -121,26 +122,24 @@ const CreaterBrokerage = ({ }) => {
       const uploadedUrls = await Promise.all(uploadPromises);
       const brokerageId = `BRK_${Date.now()}_${user?.uid}`;
 
-      const code = await generateUniqueReferrerCode();
 
       // Prepare broker verification data
       const brokerVerificationData = {
         userId: user?.uid,
+          adminName: user?.displayName,
+                adminPhone: user?.phoneNumber,
+
         organizationId: brokerageId,
         accType: 'brokerage',
 
         organizationName: brokerName,
-        phoneNumber: brokerPhone,
-        email: brokerEmail,
         countryCode: brokerCountryCode?.name,
-        organizationPhone: brokerPhone,
+        organizationPhone: brokerPhone && brokerCountryCode.name ? `${brokerCountryCode.name} ${brokerPhone}` : user?.phoneNumber,
+        
 
         location: locationFull,
         operationCountries :operationCountries,
 
-        organizationAdminPhone: user?.phoneNumber,
-        organizationAdminEmail: user?.email,
-        organizationMainAdminName: user?.displayName,
 
         typeOfBroker: typeOfBroker,
         documents: {
@@ -273,7 +272,6 @@ const CreaterBrokerage = ({ }) => {
       const brokerCollectionData = {
         name: brokerName,
         organizationPhone: brokerPhone,
-        organizationEmail: brokerEmail,
 
         ownerId: user?.uid,
         id: brokerageId,
@@ -310,7 +308,6 @@ const CreaterBrokerage = ({ }) => {
 
         name: brokerName,
         organizationPhone: brokerPhone,
-        organizationEmail: brokerEmail,
 
         ownerId: user?.uid,
         id: brokerageId,
@@ -369,7 +366,6 @@ const CreaterBrokerage = ({ }) => {
 
       const contactDetails = {
         userName: user?.displayName,
-        email: user?.email,
         phoneNumber: user?.phoneNumber,
         photoUrl: user?.photoURL,
         userId: user?.uid,
@@ -380,16 +376,23 @@ const CreaterBrokerage = ({ }) => {
       const contactRef = doc(db, 'brokerages', brokerageId, 'Contacts', `OWN_${user?.uid}`);
       await setDoc(contactRef, contactDetails);
 
-      void trackEvent({ eventName: "brokerage_created", userId: user?.uid, organizationId: brokerageId, organizationProfileId: brokerageId, organizationType: "brokerage", role: "owner", accountType: "brokerage", country: brokerCountryCode?.name, metadata: { brokerType: typeOfBroker } }).catch(console.error);
+      void trackEvent({ eventName: "brokerage_created", userId: user?.uid, organizationId: brokerageId, organizationProfileId: brokerageId, organizationType: "brokerage", role: "owner", accountType: "brokerage", country: locationFull , metadata: { brokerType: typeOfBroker } }).catch(console.error);
       // Creates the derived dashboard document without changing its counters.
       void incrementAccountsCreated("brokerage", brokerageId, 0).catch(console.error);
 
 
+        const currentRoleAccType = {
+                userRole: "",
+
+                accType:"brokerage" ,
+
+            };
+            await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
 
       // Close modal and show success
       setUploadingBrokerD(false);
+      router.push("/brokerage/BrokerageSelector/Index")
       alert('Broker verification submitted successfully! Your account will be reviewed.');
-      router.back()
 
     } catch (error) {
       console.error('Error saving broker verification:', error);
@@ -402,8 +405,16 @@ const CreaterBrokerage = ({ }) => {
   const [dsplocation, setDspDspLocation] = useState(false);
 
   return (
-    <ScreenWrapper>
-      <Heading page='Create Brokerage' />
+    <View style={{flex:1,backgroundColor: background,}}>
+      
+        {currentRole.userRole!=="create_Acc" ?  <View style={{paddingTop: 36}}>
+
+            <Heading page="Create Brokerage" />
+        </View> :
+         <CustomHeader pageTitle='Create Brokerage' />
+          }
+
+       
 
       <View style={{ gap: wp(2), padding:15 }}>
 
@@ -411,7 +422,7 @@ const CreaterBrokerage = ({ }) => {
 
           <ThemedText>Name</ThemedText>
           <Input
-            placeholder="Enter your full name"
+            placeholder="Enter brokerage full name"
             value={brokerName}
             onChangeText={setBrokerName}
           />
@@ -464,12 +475,7 @@ const CreaterBrokerage = ({ }) => {
             onChangeText={setBrokerPhone}
           />
 
-          <ThemedText>Email Address</ThemedText>
-          <Input
-            placeholder="Enter your email"
-            value={brokerEmail}
-            onChangeText={setBrokerEmail}
-          />
+         
 
           <ThemedText>Select your office location</ThemedText>
 
@@ -649,7 +655,6 @@ const CreaterBrokerage = ({ }) => {
               typeOfBroker,
               brokerName,
               brokerPhone,
-              brokerEmail,
               brokerCountryCode,
               selectedBrokerDocuments,
               brokerFileType
@@ -664,7 +669,7 @@ const CreaterBrokerage = ({ }) => {
           <View style={{ height: 140 }} />
         </ScrollView>
       </View>
-    </ScreenWrapper>
+    </View>
   );
 };
 
