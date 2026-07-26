@@ -10,6 +10,9 @@ export type AnalyticsMetadata = {
   truckOperatingLocations?: string[];
   brokerType ?: string | null  
   typeOfFleet ?:  string | null
+  truckId ?: string ,
+  loadId ?: string
+  operationType ?: string  | string[]
 };
 
 /** Identity and attribution values attached to every analytics event. */
@@ -28,6 +31,8 @@ export interface AnalyticsContext {
   referrerId?: string | null;
   organizationProfileId?: string | null;
   appVersion?: string | null;
+  metadata?: AnalyticsMetadata;
+
 }
 
 export interface TrackEventInput extends AnalyticsContext {
@@ -76,7 +81,7 @@ export const trackAccountVerified = event("account_verified");
 /** Load lifecycle events. */
 export const trackLoadCreated = event("load_created"); export const trackLoadEdited = event("load_edited"); export const trackLoadDeleted = event("load_deleted"); export const trackLoadExpired = event("load_expired");
 export const trackPublicLoadCreated = event("public_load_created"); export const trackPrivateFleetLoadCreated = event("private_fleet_load_created"); export const trackPrivateBrokerageLoadCreated = event("private_brokerage_load_created");
-export const trackLoadBooked = event("load_booked"); export const trackLoadCancelled = event("load_cancelled"); export const trackLoadCompleted = event("load_completed");
+export const trackRequestCargo = event("request_cargo"); export const trackLoadCancelled = event("load_cancelled"); export const trackLoadCompleted = event("load_completed"); export const trackCargoRequested = event("cargo_requested")
 /** Truck and recommendation events. */
 export const trackTruckAdded = event("truck_added"); export const trackTruckUpdated = event("truck_updated"); export const trackTruckRemoved = event("truck_removed");
 export const trackTruckRecommended = event("truck_recommended"); export const trackTruckAccepted = event("truck_accepted"); export const trackTruckDeclined = event("truck_declined");

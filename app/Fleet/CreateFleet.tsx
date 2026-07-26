@@ -1,5 +1,5 @@
 ﻿import React, { useState } from 'react';
-import { Alert, View, ScrollView, TouchableOpacity } from 'react-native';
+import { Alert, View, ScrollView, TouchableOpacity, TouchableNativeFeedback } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
@@ -13,11 +13,11 @@ import ScreenWrapper from '@/components/ScreenWrapper';
 import { hp, wp } from '@/constants/common';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { pickDocument } from '@/Utilities/utils';
-import { takePhoto } from '@/Utilities/imageUtils';
+import { selectImage, selectImageNoCrop, takePhoto } from '@/Utilities/imageUtils';
 import { DocumentAsset } from '@/types/types';
 import { useAuth } from '@/context/AuthContext';
 import { addDocument, uploadImage, updateDocument, generateUniqueReferralCode, addDocumentWithId } from '@/db/operations';
-import { setDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { setDoc, doc, serverTimestamp, getDocs, collection, query, where } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import CustomHeader from '@/components/CustomHeader';
 import Heading from '@/components/Heading';
@@ -28,10 +28,14 @@ import { Countries } from '@/types/types';
 import { trackEvent } from '@/services/analytics/appAnalytics';
 import { incrementAccountsCreated } from '@/services/analytics/dashboardAnalytics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ProfileImageModal from '@/components/selectImageNoCrop';
+import { Image } from 'expo-image';
+import { notifyUserById } from '@/Utilities/pushNotification';
+
 
 const CreateFleet = () => {
     const router = useRouter();
-    const { user,  setupUser ,  currentRole } = useAuth();
+    const { user, setupUser, currentRole } = useAuth(); 
     const [typeOfFleet, setTypeOfFleet] = useState('');
     const [fleetName, setFleetName] = useState('');
     const [fleetPhone, setFleetPhone] = useState('');
@@ -55,6 +59,19 @@ const CreateFleet = () => {
     const [distance, setDistance] = useState("");
     const [duration, setDuration] = useState("");
     const [durationInTraffic, setDurationInTraffic] = useState("");
+
+
+
+    const [profileImageModal, setProfileImageModal] = React.useState(false);
+    const [selectedImage, setSelectedImage] = React.useState<any>(null);
+
+    const handleSelectProfileImage = () => {
+        selectImage((image) => {
+            setSelectedImage(image);
+            setProfileImageModal(true);
+        });
+    };
+
 
     const icon = useThemeColor('icon');
     const background = useThemeColor('background');
@@ -135,8 +152,8 @@ const CreateFleet = () => {
                 organizationName: fleetData.fleetName,
 
                 organizationEmail: fleetData.fleetEmail,
-                organizationPhone:    fleetData.fleetPhone && fleetCountryCode.name ?
-                `${fleetCountryCode.name}${fleetData.fleetPhone}`: user.phoneNumber  ,
+                organizationPhone: fleetData.fleetPhone && fleetCountryCode.name ?
+                    `${fleetCountryCode.name}${fleetData.fleetPhone}` : user.phoneNumber,
 
                 adminName: user.displayName,
                 adminPhone: user.phoneNumber,
@@ -149,7 +166,7 @@ const CreateFleet = () => {
 
                 baseAdress: baseAdress?.description,
                 baseAdressFull: baseAdress,
-                operationCountries:operationCountries,
+                operationCountries: operationCountries,
                 location: billingAddress || baseAdress,
 
                 documents: {
@@ -170,7 +187,7 @@ const CreateFleet = () => {
                 updatedAt: new Date().toISOString(),
 
             };
-            await addDocumentWithId('verifiedUsers',fleetId ,fleetVerificationData);
+            await addDocumentWithId('verifiedUsers', fleetId, fleetVerificationData);
 
 
 
@@ -178,7 +195,7 @@ const CreateFleet = () => {
                 name: fleetData.fleetName,
                 organizationPhone: fleetData.fleetPhone,
                 organizationEmail: fleetData.fleetEmail,
-                operationCountries:operationCountries,
+                operationCountries: operationCountries,
 
                 countryCode: fleetData.fleetCountryCode?.name,
                 typeOfFleet: fleetData.typeOfFleet,
@@ -210,7 +227,7 @@ const CreateFleet = () => {
 
                 typeOfFleet: fleetData.typeOfFleet,
 
-                operationCountries:operationCountries,
+                operationCountries: operationCountries,
 
                 billingAddress: billingAddress?.description,
                 billingAddressFull: billingAddress,
@@ -226,7 +243,6 @@ const CreateFleet = () => {
                 fleetVerified: true,
                 fleets: [...existingFleets, newFleetAccess],
                 updatedAt: new Date().toISOString(),
-                verificationStatus: "pending"
             });
 
             const updatedUser = {
@@ -243,18 +259,17 @@ const CreateFleet = () => {
                 type: "fleet", // or "fleet"
 
                 name: fleetData.fleetName,
-                profilePhoto: user.photoURL || null,
                 coverPhoto: null,
                 description: "",
                 ownerId: user.uid,
                 ownerName: user.displayName || user.organisation,
 
                 location: billingAddress || baseAdress,
-                operationCountries:operationCountries,
+                operationCountries: operationCountries,
 
                 verificationStatus: "pending",
 
-                createdAt: Date.now() ,
+                createdAt: Date.now(),
             }
 
             )
@@ -305,18 +320,38 @@ const CreateFleet = () => {
 
 
 
-           const currentRoleAccType = {
+            const currentRoleAccType = {
                 userRole: "",
 
-                accType:"fleet" ,
+                accType: "fleet",
 
             };
             await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
 
 
+                const notifyQyery = query(collection(db,"adminRoles"), where("role","==","SUPER_ADMIN"),where("active","==", true) )
+                const notifySnapShot = await getDocs(notifyQyery)
+
+            await   Promise.all(
+                notifySnapShot.docs.map((doc)=>{
+                       notifyUserById(
+                          doc.id,
+                          `New verification request`,
+                          `${fleetData.fleetName} , Driver has submitted a verification request`,
+            
+                          {
+                            pathname: "Account/Admin",
+                          }, {
+                          type: "account_verification",
+                        }
+                        );
+
+                })
+            )
+
 
             Alert.alert('Fleet saved', 'Your fleet request has been submitted.');
-            await router.push("/Fleet/FleetSelector/Index");
+             router.push("/Fleet/FleetSelector/Index");
         } catch (error) {
             console.error('Error saving fleet verification:', error);
             Alert.alert('Error submitting fleet verification', 'Please try again.');
@@ -326,12 +361,67 @@ const CreateFleet = () => {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: background,  }} >
+        <View style={{ flex: 1, backgroundColor: background, }} >
 
-      {currentRole.userRole!=="create_Acc" ?  <View style={{paddingTop: 36}}>
+            {currentRole.userRole !== "create_Acc" ? <View style={{ paddingTop: 36 }}>
 
-            <Heading page="Create Fleet"  />
-        </View> : <CustomHeader pageTitle='Create Fleet' /> }
+                <Heading page="Create Fleet" rightComponent={<View style={{ paddingRight: 20 }}>
+                    <TouchableNativeFeedback onPress={handleSelectProfileImage} style={{ paddingRight: 15 }}>
+                        <View
+                            style={{
+                                padding: wp(1),
+                                width: wp(9),
+                                height: wp(9),
+                                overflow: "hidden",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                borderWidth: 1,
+                            }}
+                        >
+
+                            {currentRole?.profilePhoto ? (
+                                <Image
+                                    source={{ uri: currentRole.profilePhoto }}
+                                    style={{
+                                        width: "100%",
+                                        height: "100%"
+                                    }}
+                                />
+                            ) : (
+                                <View style={{ alignItems: "center" }}>
+                                    <Ionicons
+                                        name="person-add-outline"
+                                        size={wp(5)}
+                                        color={icon}
+                                    />
+
+                                    <ThemedText
+                                        type="tiny"
+                                        style={{
+                                            fontSize: wp(2.5),
+                                        }}
+                                    >
+                                        Photo
+                                    </ThemedText>
+                                </View>
+                            )}
+
+                        </View>
+                    </TouchableNativeFeedback>
+                </View>
+                } />
+            </View> : <CustomHeader pageTitle='Create Fleet' />}
+
+
+
+            <ProfileImageModal
+                visible={profileImageModal}
+                image={selectedImage}
+                onClose={() => setProfileImageModal(false)}
+                onChangeImage={handleSelectProfileImage}
+
+            />
+
 
             <View style={{ margin: hp(3) }}>
 
@@ -342,7 +432,7 @@ const CreateFleet = () => {
                         value={fleetName}
                         onChangeText={setFleetName}
                     />
-                    
+
                     <ThemedText>Fleet Phone Number</ThemedText>
                     <Input
                         Icon={
@@ -392,7 +482,7 @@ const CreateFleet = () => {
                         keyboardType='numeric'
                     />
 
-                    
+
 
 
                     <LocationSelector
@@ -417,7 +507,7 @@ const CreateFleet = () => {
 
                     <>
 
-                        <ThemedText style={{ marginBottom: wp(2),color:accent,marginTop: wp(3) }}>
+                        <ThemedText style={{ marginBottom: wp(2), color: accent, marginTop: wp(3) }}>
                             {operationCountries?.join(', ') || '--'}
                         </ThemedText>
 

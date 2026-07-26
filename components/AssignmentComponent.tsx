@@ -1165,17 +1165,17 @@ export default function AssignmentCard({ assignmentData }: any) {
             <AssignmentActivityPanel
                 assignmentId={assignmentData.id}
                 fleetId={assignmentData?.fleetDetails?.id}
-                initialNotesCount={assignmentData.notesCount}
-                initialIssuesCount={assignmentData.issuesCount}
-                cargoRate={assignmentData.loadDetails.rate}
-                cargoRateCurrency={assignmentData.loadDetails.currency}
-                cargoRateModel={assignmentData.loadDetails.model}
-                cargoRatePerKm={assignmentData.loadDetails.ratePerKm}
-                cargoPaymentTerms={assignmentData.loadDetails.paymentTerms}
-                fleetCoordinator={assignmentData.fleetCoordinator}
-                numberPlate={assignmentData.truckDetails.numberPlate}
-                truckId={assignmentData.truckDetails.truckId}
-                driverPayment={assignmentData.driverPayment}
+                initialNotesCount={assignmentData?.notesCount}
+                initialIssuesCount={assignmentData?.issuesCount}
+                cargoRate={assignmentData?.loadDetails?.rate}
+                cargoRateCurrency={assignmentData?.loadDetails?.currency}
+                cargoRateModel={assignmentData?.loadDetails?.model}
+                cargoRatePerKm={assignmentData?.loadDetails?.ratePerKm}
+                cargoPaymentTerms={assignmentData?.loadDetails.paymentTerms}
+                fleetCoordinator={assignmentData?.fleetCoordinator}
+                numberPlate={assignmentData?.truckDetails?.numberPlate}
+                truckId={assignmentData?.truckDetails?.truckId}
+                driverPayment={assignmentData?.driverPayment}
             />
 
         </View >

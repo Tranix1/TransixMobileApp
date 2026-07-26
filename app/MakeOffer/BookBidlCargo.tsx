@@ -7,7 +7,7 @@ import { auth, db } from "@/db/fireBaseConfig";
 import { addDocument, runFirestoreTransaction, checkDocumentExists, setDocuments, readById } from "@/db/operations";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { collection, serverTimestamp, query, where, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, serverTimestamp, query, where, onSnapshot, getDocs, increment } from 'firebase/firestore';
 import { Truck } from "@/types/types";
 import { toggleItemById } from "@/Utilities/utils";
 import { updateDocument } from "@/db/operations";
@@ -20,9 +20,13 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import { formatCurrency } from '@/services/services'
 import { usePushNotifications, sendPushNotification, sendBookingWithTrackerNotification } from "@/Utilities/pushNotification";
 import { useAuth } from "@/context/AuthContext";
-import { trackLoadBooked } from '@/services/analytics/appAnalytics';
+
+import { trackRequestCargo, trackCargoRequested } from '@/services/analytics/appAnalytics';
 import { incrementBookings } from '@/services/analytics/dashboardAnalytics';
-import { incrementSuccessfulBookings } from '@/services/analytics/organizationAnalytics';
+import { incrementSuccessfullyRequestedPblcCargo, incrementRequestsSuccessfulPblcCargo } from '@/services/analytics/organizationAnalytics';
+
+import { doc, writeBatch, getDoc } from "firebase/firestore";
+
 
 function BookLCargo({ }) {
   const { bottom } = useSafeAreaInsets();
@@ -276,11 +280,102 @@ function BookLCargo({ }) {
             }
             await addDocument("cargoRequests", theData);
 
+
+            // For truck owner
             const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
-            void trackLoadBooked({ userId, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType, role: currentRole?.userRole, accountType: currentRole?.accType, referrerId: user?.referredBy?.userId ?? null, referralCodeUsed: user?.referredBy?.referralCode ?? null, campaign: user?.referredBy?.campaign ?? null, platform: user?.referredBy?.platform ?? null, metadata: { loadId: loadItem.id, truckId: item.id, operationType: OperationType } }).catch(console.error);
+            void trackRequestCargo({ userId, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType, role: currentRole?.userRole, accountType: currentRole?.accType, referrerId: user?.referredBy?.userId ?? null, referralCodeUsed: user?.referredBy?.referralCode ?? null, campaign: user?.referredBy?.campaign ?? null, platform: user?.referredBy?.platform ?? null, metadata: { loadId: loadItem.id, truckId: item.id, operationType: OperationType } }).catch(console.error);
+
+
+            // For Cargo Owner
+
+            void trackCargoRequested({ userId, organizationId: loadItem.organizationId, organizationProfileId: loadItem.organizationId, organizationType: loadItem.postedBy.accType, role: loadItem.postedBy.userRole, accountType: loadItem.postedBy.accType, metadata: { loadId: loadItem.id, truckId: item.id, operationType: OperationType } }).catch(console.error);
+
+
             if (analyticsOrganizationId && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
               void incrementBookings(currentRole.accType, analyticsOrganizationId).catch(console.error);
-              void incrementSuccessfulBookings(analyticsOrganizationId).catch(console.error);
+
+
+
+
+
+
+
+              const batch = writeBatch(db);
+
+              // Update Truckorganization stats
+              batch.update(
+                doc(db, "organizationProfiles", analyticsOrganizationId),
+                {
+                  requestsPblcCargo: increment(1),
+
+                },
+
+
+              );
+              // Update Load organization stats
+
+              batch.update(
+                doc(db, "organizationProfiles", loadItem.organizationId),
+                {
+                  requestedPblcCargo: increment(1),
+
+                },
+
+
+              );
+
+
+
+              // Add Time with Id
+
+              const assignmentTimeId = `${loadItem.id}_${item.id}`
+                .toLowerCase()
+                .replace(/\s+/g, "_");
+
+
+              //eeting the time for fleet 
+              const addingTimeTrackForFleet = doc(
+                db,
+                "organizationProfiles",
+                analyticsOrganizationId,
+                "requestAnalytics",
+                assignmentTimeId
+              );
+
+              batch.set(addingTimeTrackForFleet, {
+
+                requestedAt: serverTimestamp(),
+                respondedAt: null,
+                respondedTimeMs: null,
+                status: "PENDING"
+
+              });
+
+              //eeting the time for fleet 
+              const addingTimeTrackForLoad = doc(
+                db,
+                "organizationProfiles",
+                analyticsOrganizationId,
+                "requestAnalytics",
+                assignmentTimeId
+              );
+
+              batch.set(addingTimeTrackForLoad, {
+
+                requestedAt: serverTimestamp(),
+                respondedAt: null,
+                respondedTimeMs: null,
+                status: "PENDING"
+
+              });
+
+
+              await batch.commit();
+
+
+
+
+
             }
 
             if (loadItem.expoPushToken) {

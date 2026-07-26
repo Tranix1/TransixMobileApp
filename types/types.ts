@@ -20,6 +20,7 @@ export type CurrentRole =
         email: string | null
         billingAddress: string | null
         baseAdress: string | null
+        profilePhoto : string 
 
     }
     | {
@@ -39,6 +40,7 @@ export type CurrentRole =
         email: string | null
         billingAddress: string | null
         baseAdress: string | null
+        profilePhoto : string 
 
     }
     | {
@@ -55,6 +57,8 @@ export type CurrentRole =
         email: string | null
         billingAddress: string | null
         baseAdress: string | null
+        profilePhoto : string 
+
 
     } | {
         role: 'driver';
@@ -71,6 +75,8 @@ export type CurrentRole =
         billingAddress: string | null
         baseAdress: string | null
         companyName: string
+        profilePhoto : string 
+
     };
 
 

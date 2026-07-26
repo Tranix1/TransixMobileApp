@@ -16,7 +16,8 @@ import { useAuth } from '@/context/AuthContext';
 import { getRelativeTime } from "@/Utilities/getDateRelativeTime";
 import { serverTimestamp } from "firebase/firestore";
 import { trackAssignmentCreated, trackTruckAccepted } from '@/services/analytics/appAnalytics';
-import { incrementAssignmentsCreated, incrementAcceptedBookings } from '@/services/analytics/dashboardAnalytics';
+      
+import { incrementAssignmentsCreated,incrementRequestsAcceptedPblcCargo  } from '@/services/analytics/dashboardAnalytics';
 // Function to get relative time (e.g., "1 hr ago", "4 seconds ago")
 
 
@@ -50,6 +51,10 @@ export const RequestedCargo = ({
       />
     )
   }
+
+
+
+
   const handleDeny = () => {
     alertBox(
       dspRoute === "Requested Loads" ? "Remove Request" : "Deny Load",
@@ -86,7 +91,6 @@ export const RequestedCargo = ({
   };
 
   const handleConfirm = async (data: any) => {
-    console.log("heie e")
     const payload = {
       ...data,
       visibility: "PUBLIC",
@@ -141,12 +145,29 @@ export const RequestedCargo = ({
     })
 
     const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
+
+
     if (analyticsOrganizationId && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
       const context = { userId: user?.uid, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole.accType, role: currentRole.userRole, accountType: currentRole.accType, metadata: { assignmentId: assigmentId, loadId: item.loadItemDetails.loadId, truckId: item.truckDetails.truckId } };
+
       void trackAssignmentCreated(context).catch(console.error);
+
       void trackTruckAccepted(context).catch(console.error);
+
       void incrementAssignmentsCreated(currentRole.accType, analyticsOrganizationId).catch(console.error);
-      void incrementAcceptedBookings(currentRole.accType, analyticsOrganizationId).catch(console.error);
+
+      // Truck Owner
+
+      void incrementRequestsAcceptedPblcCargo(currentRole.accType, item?.fleetDetails?.id).catch(console.error);
+      
+      // LoadOwner
+
+      void incrementAcceptedRequestedPblcCargo(currentRole.accType, analyticsOrganizationId).catch(console.error);
+      
+
+
+
+      
     }
 
     ToastAndroid.show(

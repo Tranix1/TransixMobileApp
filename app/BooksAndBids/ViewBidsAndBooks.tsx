@@ -25,7 +25,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { getCurrentLocation } from '@/Utilities/utils';
 
 
-const accent = "#6a0c0c";
+const accent = "#6a0c0c" ;
 const background = "#fff";
 const cardBg = "#f8f8f8";
 const coolGray = "#e5e7eb";
@@ -295,10 +295,6 @@ function BookingsandBiddings({ }) {
           </View>
         }
       />
-
-
-
-
 
     </ScreenWrapper>
   );

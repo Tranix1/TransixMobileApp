@@ -4,7 +4,7 @@ import { db } from "@/db/fireBaseConfig";
 export type DashboardType = "fleet" | "brokerage";
 export type DashboardMetric =
   | "accountsCreated" | "verifiedAccounts" | "totalLoads" | "activeLoads" | "completedLoads" | "cancelledLoads" | "publicLoads" | "privateFleetLoads" | "privateBrokerageLoads"
-  | "recommendedTrucks" | "acceptedRecommendations" | "bookings" | "acceptedBookings" | "cancelledBookings" | "assignmentsCreated" | "assignmentsStarted" | "assignmentsCompleted"
+  | "recommendedTrucks" | "acceptedRecommendations" | "bookings" | "acceptedRequests" | "cancelledBookings" | "assignmentsCreated" | "assignmentsStarted" | "assignmentsCompleted"
   | "activeTrips" | "completedTrips" | "cancelledTrips" | "totalTrucks" | "busyTrucks" | "availableTrucks" | "offlineTrucks" | "trackersLinked" | "onlineTrackers" | "offlineTrackers"
   | "revenue" | "expenses" | "profit" | "walletBalance" | "walletDeposits" | "withdrawalsRequested" | "withdrawalsCompleted" | "trackingRevenue" | "brokerageRevenue" | "subscriptionRevenue" | "referralCommissionPaid"
   | "referredUsers" | "verifiedReferrals" | "activeReferrals";
@@ -21,7 +21,7 @@ const metric = (name: DashboardMetric): MetricHelper => (type, organizationId, a
 export const incrementAccountsCreated = metric("accountsCreated"); export const incrementVerifiedAccounts = metric("verifiedAccounts");
 export const incrementTotalLoads = metric("totalLoads"); export const incrementActiveLoads = metric("activeLoads"); export const incrementCompletedLoads = metric("completedLoads"); export const incrementCancelledLoads = metric("cancelledLoads"); export const incrementPublicLoads = metric("publicLoads"); export const incrementPrivateFleetLoads = metric("privateFleetLoads"); export const incrementPrivateBrokerageLoads = metric("privateBrokerageLoads");
 export const incrementRecommendedTrucks = metric("recommendedTrucks"); export const incrementAcceptedRecommendations = metric("acceptedRecommendations");
-export const incrementBookings = metric("bookings"); export const incrementAcceptedBookings = metric("acceptedBookings"); export const incrementCancelledBookings = metric("cancelledBookings");
+export const incrementBookings = metric("bookings"); export const incrementAcceptedRequests = metric("acceptedRequests"); export const incrementCancelledBookings = metric("cancelledBookings");
 export const incrementAssignmentsCreated = metric("assignmentsCreated"); export const incrementAssignmentsStarted = metric("assignmentsStarted"); export const incrementAssignmentsCompleted = metric("assignmentsCompleted");
 export const incrementActiveTrips = metric("activeTrips"); export const incrementCompletedTrips = metric("completedTrips"); export const incrementCancelledTrips = metric("cancelledTrips");
 export const incrementTotalTrucks = metric("totalTrucks"); export const incrementBusyTrucks = metric("busyTrucks"); export const incrementAvailableTrucks = metric("availableTrucks"); export const incrementOfflineTrucks = metric("offlineTrucks");

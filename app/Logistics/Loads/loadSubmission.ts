@@ -151,6 +151,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     deliveryDate: deliveryDate || null,
     shipper: selectedCustomer,
     isTrackingEnabled: isTrackingEnabled,
+    createdByAcc: currentRole?.accType,
+
   };
 
 
@@ -194,7 +196,6 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       pickupLocation: assignment.pickupLocation || origin || null,
       deliveryLocation: assignment.deliveryLocation || destination || null,
     };
-
 
 
     return {
@@ -298,7 +299,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       usserId: user.uid,
       userName: user.displayName,
 
-      organizationId: currentRole.organizationId
+      organizationId: currentRole.organizationId,
+
     }
   };
 
@@ -322,7 +324,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
 
     if (assignmentDetails.length > 0) {
 
- updateDocument("organizationProfiles", analyticsOrganizationId, {
+      updateDocument("organizationProfiles", analyticsOrganizationId, {
         privateLoads: {
           assigned: increment(1)
         }
@@ -359,12 +361,6 @@ export const submitLoad = async (params: SubmitLoadParams) => {
               assignmentId: `${cargoId}_${assignment.truckId}_${assignment.driverId}`,
             }
             );
-
-
-
-
-
-
 
 
 
@@ -540,7 +536,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
           }
           : null,
         cargoCoordinator: coordinator,
-        createdByAcc:"brokerages" ,
+        createdByAcc: "brokerages",
         createdAt: Date.now().toString(),
       }
 

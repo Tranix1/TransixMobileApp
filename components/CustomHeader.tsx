@@ -17,6 +17,9 @@ interface CustomHeaderProps {
     filterElement?: (value: boolean) => void;
 
 }
+import { Image } from 'expo-image';
+import { selectImage, selectImageNoCrop } from '@/Utilities/imageUtils';
+import ProfileImageModal from './selectImageNoCrop';
 
 export default function CustomHeader({ pageTitle, addingNavigate, filterElement }: CustomHeaderProps) {
     const background = useThemeColor("background");
@@ -47,6 +50,15 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
             router.push("/Driver/Details/Index")
         }
     }
+    const [profileImageModal, setProfileImageModal] = React.useState(false);
+    const [selectedImage, setSelectedImage] = React.useState<any>(null);
+
+    const handleSelectProfileImage = () => {
+        selectImage((image) => {
+            setSelectedImage(image);
+            setProfileImageModal(true);
+        });
+    };
 
     return (
         <View style={{ backgroundColor: background, }} >
@@ -59,6 +71,14 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
             />
 
             <View>
+
+                <ProfileImageModal
+                    visible={profileImageModal}
+                    image={selectedImage}
+                    onClose={() => setProfileImageModal(false)}
+                    onChangeImage={handleSelectProfileImage}
+                  
+                />
 
 
                 {typeof currentRole === 'object' && (currentRole.role === 'fleet' || currentRole.role === 'brokerage' || currentRole.accType === "driver") ? (
@@ -74,6 +94,58 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
                                         <Ionicons name="ellipsis-vertical" size={wp(5)} color={icon} />
                                     </View>
                                 </TouchableNativeFeedback>
+
+
+
+
+                                <TouchableNativeFeedback onPress={handleSelectProfileImage}>
+                                    <View
+                                        style={{
+                                            padding: wp(1),
+                                            width: wp(12),
+                                            height: wp(12),
+                                            borderRadius: wp(6),
+                                            overflow: "hidden",
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                            borderWidth: 1,
+                                            borderColor: accent
+                                        }}
+                                    >
+
+                                        {user?.photoURL ? (
+                                            <Image
+                                                source={{ uri: user.photoURL }}
+                                                style={{
+                                                    width: "100%",
+                                                    height: "100%"
+                                                }}
+                                            />
+                                        ) : (
+                                            <View style={{ alignItems: "center" }}>
+                                                <Ionicons
+                                                    name="person-add-outline"
+                                                    size={wp(5.5)}
+                                                    color={icon}
+                                                />
+
+                                                <ThemedText
+                                                    type="tiny"
+                                                    style={{
+                                                        fontSize: wp(2.5)
+                                                    }}
+                                                >   
+                                                    Photo
+                                                </ThemedText>
+                                            </View>
+                                        )}
+
+                                    </View>
+                                </TouchableNativeFeedback>
+
+
+
+
                             </View>
                             :
                             <View

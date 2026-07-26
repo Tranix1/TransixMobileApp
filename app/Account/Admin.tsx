@@ -6,11 +6,13 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { wp } from '@/constants/common';
 import { ThemedText } from '@/components/ThemedText';
 import { Ionicons } from '@expo/vector-icons';
-import { getUsers, getUsersByReferrerId } from '@/db/operations';
+import { fetchDocuments, getUsers, getUsersByReferrerId, updateDocument } from '@/db/operations';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/context/AuthContext';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import { router } from 'expo-router';
+import { where } from 'firebase/firestore';
+import { notifyUserById } from '@/Utilities/pushNotification';
 
 interface User {
     id: string;
@@ -34,14 +36,44 @@ const Admin = () => {
     const accent = useThemeColor('accent') || Colors.light.accent;
     const coolGray = useThemeColor('coolGray') || Colors.light.coolGray;
 
+    const [verifiedOUnverified, setVerifiedUnverfied] = React.useState<"declined" | "approved" | "pending" | null>(null)
+
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            let usersData : any[] = [];
+            let usersData: any[] = [];
+            let filters: any[] = [];
+
 
             if (isSuperAdmin()) {
                 // Super admin can see all users
-                usersData = await getUsers();
+                if (verifiedOUnverified === "approved") {
+
+                    filters = [
+                        where("verificationStatus", "==", "approved"),
+
+                    ];
+
+                } else if (verifiedOUnverified === "pending") {
+                    filters = [
+                        where("verificationStatus", "==", "pending"),
+
+                    ];
+                } else if (verifiedOUnverified === "declined") {
+                    filters = [
+                        where("verificationStatus", "==", "declined"),
+
+                    ];
+                }
+
+
+
+
+                const result = await fetchDocuments("verifiedUsers", 200, undefined)
+
+                setUsers(result.data);
+
+
             } else if (user?.uid) {
                 // Non-super admin can only see users they referred
                 usersData = await getUsersByReferrerId(user.uid);
@@ -65,11 +97,60 @@ const Admin = () => {
         }
     };
 
+
     useEffect(() => {
         fetchUsers();
-    }, []);
+    }, [verifiedOUnverified]);
 
-    const renderUserItem = (user: User) => (
+
+
+
+   async function approveAcc(
+        organizationId : string,
+        organizationName: string ,
+         userId : string ,
+         adminName: string ,
+          accType : string ,  
+        ) {
+            const orgDBAcc = accType==="fleet" ? "fleets" : accType==="brokerage" ? "brokerages" : accType ==="driver" ? "Drivers":""
+
+            updateDocument("verifiedUsers", organizationId ,{
+                verificationStatus: 'approved',
+
+            })
+
+             updateDocument("organizationProfiles", organizationId ,{
+                verificationStatus: 'approved',
+
+            })
+
+                updateDocument(orgDBAcc , organizationId ,{
+                verificationStatus: 'approved',
+
+            })
+
+            const pathForNotification = accType==="fleet" ? `Fleet/FleetSelector/Index` : accType==="brokerage" ? "brokerage/BrokerageSelector/Index" : accType ==="driver" ? "brokerage/BrokerageSelector/Index":""
+
+
+              await notifyUserById(
+              userId,
+              `Hello ${adminName}`,
+              `Your ${accType} account for ${organizationName}, has been approved and is now active. Thank you for choosing transix`,
+
+              {
+                pathname: pathForNotification,
+              }, {
+              type: "account_verification",
+            }
+            );
+            
+
+    }
+
+
+
+
+    const renderUserItem = (user: any) => (
         <View key={user.id} style={[styles.userCard, { backgroundColor: background }]}>
             <View style={styles.userInfo}>
                 <View style={[styles.avatar, { backgroundColor: accent }]}>
@@ -79,9 +160,7 @@ const Admin = () => {
                     <ThemedText type="default" style={styles.userName}>
                         {user.displayName || 'No Name'}
                     </ThemedText>
-                    <ThemedText type="tiny" color={coolGray}>
-                        {user.email}
-                    </ThemedText>
+
                     {user.phoneNumber && (
                         <ThemedText type="tiny" color={coolGray}>
                             {user.phoneNumber}
@@ -94,15 +173,86 @@ const Admin = () => {
                         {user.userType && (
                             <View style={[styles.userTypeBadge, { backgroundColor: accent }]}>
                                 <ThemedText color="white" type="tiny">
-                                    {user.userType}
+                                    {user.accType}
                                 </ThemedText>
                             </View>
                         )}
                     </View>
                 </View>
             </View>
+
+
+
+
+   <View style={{
+                flexDirection: 'row',
+                gap: wp(2),
+                marginTop: wp(2),
+            }}>
+
+
+                <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={()=>approveAcc(user.organizationId,user.organizationName , user.userId ,user.adminName ,user.accType)}
+                >
+                    <Ionicons
+                        name="alert-circle-outline"
+                        size={16}
+                        color={accent}
+                    />
+
+                    <ThemedText style={styles.actionButtonText}>
+                        Approve
+                    </ThemedText>
+
+                </TouchableOpacity>
+
+                {/* DRIVER */}
+                <TouchableOpacity
+                    style={styles.actionButton}
+                    
+                >
+                    <Ionicons name="person-circle-outline" size={16} color={accent} />
+                    <ThemedText style={styles.actionButtonText}>Decline</ThemedText>
+                </TouchableOpacity>
+
+                {/* LOAD */}
+                <TouchableOpacity
+                    style={styles.actionButton}
+                   
+                >
+                    <Ionicons name="cube-outline" size={16} color={accent} />
+                    <ThemedText style={styles.actionButtonText}>Hold</ThemedText>
+                </TouchableOpacity>
+
+
+                 <TouchableOpacity
+                    style={styles.actionButton}
+                >
+                    <Ionicons
+                        name="alert-circle-outline"
+                        size={16}
+                        color={accent}
+                    />
+
+                    <ThemedText style={styles.actionButtonText}>
+                        Hold
+                    </ThemedText>
+
+                </TouchableOpacity>
+
+
+           
+            </View>
+
+
+
+
+
+
         </View>
     );
+
 
     return (
         <ScreenWrapper>
@@ -133,29 +283,53 @@ const Admin = () => {
                 {/* Approval Actions */}
                 <View style={[styles.approvalCard, { backgroundColor: backgroundLight }]}>
                     <ThemedText type="subtitle" style={styles.approvalTitle}>
-                        Load Management
+                        Account Management
                     </ThemedText>
                     <View style={styles.approvalButtons}>
                         <TouchableOpacity
                             style={[styles.approvalButton, { backgroundColor: accent }]}
-                            onPress={() => router.push('/Account/Admin/ApproveLoads')}
+                            onPress={() => setVerifiedUnverfied(null)}
                         >
                             <Ionicons name="cube-outline" size={24} color="white" />
                             <ThemedText style={styles.approvalButtonText}>
-                                Approve Loads
+                                All
+                            </ThemedText>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.approvalButton, { backgroundColor: accent }]}
+                            onPress={() => setVerifiedUnverfied("pending")}
+                        >
+                            <Ionicons name="people-outline" size={24} color="white" />
+                            <ThemedText style={styles.approvalButtonText}>
+                                Pending
                             </ThemedText>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.approvalButton, { backgroundColor: accent }]}
-                            onPress={() => router.push('/Account/Admin/ApproveLoadsAccounts')}
+                            onPress={() => setVerifiedUnverfied("approved")}
                         >
                             <Ionicons name="people-outline" size={24} color="white" />
                             <ThemedText style={styles.approvalButtonText}>
-                                Approve Accounts
+                                Approved
                             </ThemedText>
                         </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.approvalButton, { backgroundColor: accent }]}
+                            onPress={() => setVerifiedUnverfied("declined")}
+
+                        >
+                            <Ionicons name="people-outline" size={24} color="white" />
+                            <ThemedText style={styles.approvalButtonText}>
+                                Declined
+                            </ThemedText>
+                        </TouchableOpacity>
+
                     </View>
                 </View>
+
+
 
                 {/* Users List */}
                 <View style={styles.listContainer}>
@@ -233,17 +407,31 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: wp(3),
+        padding: wp(2),
         borderRadius: wp(2),
         gap: wp(2),
     },
     approvalButtonText: {
         color: 'white',
         fontWeight: '600',
-        fontSize: wp(3.5),
+        fontSize: wp(3),
     },
     listContainer: {
         flex: 1,
+    },  actionButtonText: {
+        color: "white",
+        fontSize: 12,
+        fontWeight: "600",
+    },
+        actionButton: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 6,
+        gap: 4,
     },
     listHeader: {
         flexDirection: 'row',

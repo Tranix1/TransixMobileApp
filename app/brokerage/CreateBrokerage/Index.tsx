@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ScrollView, TouchableOpacity, Modal, Alert } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Modal, Alert, TouchableNativeFeedback } from 'react-native';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import Input from '@/components/Input';
@@ -13,13 +13,13 @@ import ScreenWrapper from '@/components/ScreenWrapper';
 import { hp, wp } from '@/constants/common';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { pickDocument } from '@/Utilities/utils';
-import { takePhoto } from '@/Utilities/imageUtils';
+import { selectImage, selectImageWithCrop, takePhoto } from '@/Utilities/imageUtils';
 import { DocumentAsset } from '@/types/types';
 import Heading from '@/components/Heading';
 import { useAuth } from '@/context/AuthContext';
-import { updateDocument,  checkDocumentExists, addDocumentWithId } from '@/db/operations';
+import { updateDocument, checkDocumentExists, addDocumentWithId } from '@/db/operations';
 import { uploadImage } from '@/db/operations';
-import { setDoc, doc, where, serverTimestamp } from 'firebase/firestore';
+import { setDoc, doc, where, serverTimestamp, collection, query, getDocs } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import { addDocument } from '@/db/operations';
 import { LocationPicker } from '@/components/LocationPicker';
@@ -32,12 +32,16 @@ import { trackEvent } from '@/services/analytics/appAnalytics';
 import { incrementAccountsCreated } from '@/services/analytics/dashboardAnalytics';
 import CustomHeader from '@/components/CustomHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'expo-image';
+import ProfileImageModal from '@/components/selectImageNoCrop';
+import { notifyUserById } from '@/Utilities/pushNotification';
+
 
 const CreaterBrokerage = ({ }) => {
   const icon = useThemeColor('icon');
   const background = useThemeColor('background');
   const accent = useThemeColor("accent")
-  const { user , currentRole } = useAuth();
+  const { user, currentRole } = useAuth();
 
   // Broker verification state
   const [typeOfBroker, setTypeOfBroker] = useState('');
@@ -48,6 +52,15 @@ const CreaterBrokerage = ({ }) => {
   const [showCountries, setShowCountries] = useState(false);
 
   const [locationFull, setLocationFull] = useState<SelectLocationProp | null>(null);
+
+  const [profileImageModal, setProfileImageModal] = React.useState(false);
+  const [selectedImage, setSelectedImage] = React.useState<any>(null);
+  const handleSelectProfileImage = () => {
+    selectImage((image) => {
+      setSelectedImage(image);
+      setProfileImageModal(true);
+    });
+  };
 
   const [brokerCountryCode, setBrokerCountryCode] = useState({ id: 0, name: '' });
   const [selectedBrokerDocuments, setSelectedBrokerDocuments] = useState<DocumentAsset[]>([
@@ -83,7 +96,7 @@ const CreaterBrokerage = ({ }) => {
         'Incomplete setup',
         `Please complete: ${errors.join('\n')}`
       );
-    setUploadingBrokerD(false);
+      setUploadingBrokerD(false);
 
       return;
     }
@@ -94,7 +107,7 @@ const CreaterBrokerage = ({ }) => {
         'Verification incomplete',
         'Please upload all required documents to complete verification.'
       );
-    setUploadingBrokerD(false);
+      setUploadingBrokerD(false);
 
       return
     }
@@ -103,7 +116,7 @@ const CreaterBrokerage = ({ }) => {
         'Verification incomplete',
         'Please upload all required documents to complete verification.'
       );
-    setUploadingBrokerD(false);
+      setUploadingBrokerD(false);
 
       return
     }
@@ -126,8 +139,8 @@ const CreaterBrokerage = ({ }) => {
       // Prepare broker verification data
       const brokerVerificationData = {
         userId: user?.uid,
-          adminName: user?.displayName,
-                adminPhone: user?.phoneNumber,
+        adminName: user?.displayName,
+        adminPhone: user?.phoneNumber,
 
         organizationId: brokerageId,
         accType: 'brokerage',
@@ -135,10 +148,10 @@ const CreaterBrokerage = ({ }) => {
         organizationName: brokerName,
         countryCode: brokerCountryCode?.name,
         organizationPhone: brokerPhone && brokerCountryCode.name ? `${brokerCountryCode.name} ${brokerPhone}` : user?.phoneNumber,
-        
+
 
         location: locationFull,
-        operationCountries :operationCountries,
+        operationCountries: operationCountries,
 
 
         typeOfBroker: typeOfBroker,
@@ -170,7 +183,7 @@ const CreaterBrokerage = ({ }) => {
         }
       };
 
-      await addDocumentWithId('verifiedUsers',brokerageId ,brokerVerificationData);
+      await addDocumentWithId('verifiedUsers', brokerageId, brokerVerificationData);
 
 
       // ===============================
@@ -276,7 +289,7 @@ const CreaterBrokerage = ({ }) => {
         ownerId: user?.uid,
         id: brokerageId,
         location: locationFull,
-        operationCountries:operationCountries,
+        operationCountries: operationCountries,
 
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -312,7 +325,7 @@ const CreaterBrokerage = ({ }) => {
         ownerId: user?.uid,
         id: brokerageId,
         location: locationFull,
-        operationCountries:operationCountries,
+        operationCountries: operationCountries,
 
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -353,7 +366,7 @@ const CreaterBrokerage = ({ }) => {
         ownerName: user?.displayName || user?.organisation,
 
         location: locationFull,
-        operationCountries:operationCountries,
+        operationCountries: operationCountries,
 
         verificationStatus: "pending",
 
@@ -376,18 +389,40 @@ const CreaterBrokerage = ({ }) => {
       const contactRef = doc(db, 'brokerages', brokerageId, 'Contacts', `OWN_${user?.uid}`);
       await setDoc(contactRef, contactDetails);
 
-      void trackEvent({ eventName: "brokerage_created", userId: user?.uid, organizationId: brokerageId, organizationProfileId: brokerageId, organizationType: "brokerage", role: "owner", accountType: "brokerage", country: locationFull , metadata: { brokerType: typeOfBroker } }).catch(console.error);
+      void trackEvent({ eventName: "brokerage_created", userId: user?.uid, organizationId: brokerageId, organizationProfileId: brokerageId, organizationType: "brokerage", role: "owner", accountType: "brokerage", country: locationFull, metadata: { brokerType: typeOfBroker } }).catch(console.error);
       // Creates the derived dashboard document without changing its counters.
       void incrementAccountsCreated("brokerage", brokerageId, 0).catch(console.error);
 
 
-        const currentRoleAccType = {
-                userRole: "",
+      const currentRoleAccType = {
+        userRole: "",
 
-                accType:"brokerage" ,
+        accType: "brokerage",
 
-            };
-            await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
+      };
+      await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
+
+
+      const notifyQyery = query(collection(db, "adminRoles"), where("role", "==", "SUPER_ADMIN"), where("active", "==", true))
+      const notifySnapShot = await getDocs(notifyQyery)
+
+      await Promise.all(
+        notifySnapShot.docs.map((doc) => {
+          notifyUserById(
+            doc.id,
+            `New verification request`,
+            `${brokerName} , Driver has submitted a verification request`,
+
+            {
+              pathname: "Account/Admin",
+            }, {
+            type: "account_verification",
+          }
+          );
+
+        })
+      )
+
 
       // Close modal and show success
       setUploadingBrokerD(false);
@@ -405,18 +440,69 @@ const CreaterBrokerage = ({ }) => {
   const [dsplocation, setDspDspLocation] = useState(false);
 
   return (
-    <View style={{flex:1,backgroundColor: background,}}>
-      
-        {currentRole.userRole!=="create_Acc" ?  <View style={{paddingTop: 36}}>
+    <View style={{ flex: 1, backgroundColor: background, }}>
 
-            <Heading page="Create Brokerage" />
-        </View> :
-         <CustomHeader pageTitle='Create Brokerage' />
-          }
+      {currentRole.userRole !== "create_Acc" ? <View style={{ paddingTop: 36 }}>
 
-       
+        <Heading page="Create Brokerage" rightComponent={<View style={{ paddingRight: 20 }}>
+          <TouchableNativeFeedback onPress={handleSelectProfileImage} style={{ paddingRight: 15 }}>
+            <View
+              style={{
+                padding: wp(1),
+                width: wp(9),
+                height: wp(9),
+                overflow: "hidden",
+                justifyContent: "center",
+                alignItems: "center",
+                borderWidth: 1,
+              }}
+            >
 
-      <View style={{ gap: wp(2), padding:15 }}>
+              {user?.photoURL ? (
+                <Image
+                  source={{ uri: user.photoURL }}
+                  style={{
+                    width: "100%",
+                    height: "100%"
+                  }}
+                />
+              ) : (
+                <View style={{ alignItems: "center" }}>
+                  <Ionicons
+                    name="person-add-outline"
+                    size={wp(5)}
+                    color={icon}
+                  />
+
+                  <ThemedText
+                    type="tiny"
+                    style={{
+                      fontSize: wp(2.5),
+                    }}
+                  >
+                    Photo
+                  </ThemedText>
+                </View>
+              )}
+
+            </View>
+          </TouchableNativeFeedback>
+        </View>
+        } />
+      </View> :
+        <CustomHeader pageTitle='Create Brokerage' />
+      }
+
+
+      <ProfileImageModal
+        visible={profileImageModal}
+        image={selectedImage}
+        onClose={() => setProfileImageModal(false)}
+        onChangeImage={handleSelectProfileImage}
+
+      />
+
+      <View style={{ gap: wp(2), padding: 15 }}>
 
         <ScrollView>
 
@@ -475,7 +561,7 @@ const CreaterBrokerage = ({ }) => {
             onChangeText={setBrokerPhone}
           />
 
-         
+
 
           <ThemedText>Select your office location</ThemedText>
 
@@ -513,9 +599,9 @@ const CreaterBrokerage = ({ }) => {
 
 
 
-          <View style={{marginTop:hp(2), marginBottom:hp(2)}}>
+          <View style={{ marginTop: hp(2), marginBottom: hp(2) }}>
 
-            <ThemedText style={{ marginBottom: wp(2),color:accent}}>
+            <ThemedText style={{ marginBottom: wp(2), color: accent }}>
               {operationCountries?.join(', ') || '--'}
             </ThemedText>
 

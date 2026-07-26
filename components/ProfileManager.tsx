@@ -7,74 +7,29 @@ import { hp, wp } from '@/constants/common';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { readById } from '@/db/operations';
-
+import { useAuth } from '@/context/AuthContext';
 interface ProfileManagerProps {
     user: any;
     onProfileUpdate?: (updatedUser: any) => void;
     onClose?: () => void;
 }
 
-export default function ProfileManager({ user, onProfileUpdate, onClose }: ProfileManagerProps) {
+export default function ProfileManager({  onProfileUpdate, onClose }: ProfileManagerProps) {
     const accent = useThemeColor('accent');
     const icon = useThemeColor('icon');
     const background = useThemeColor('background');
     const coolGray = useThemeColor('coolGray');
     const border = useThemeColor('border');
 
+        const { user, setupUser, currentRole } = useAuth();
+    
+
     const [profileData, setProfileData] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        loadProfileData();
-    }, []);
+   
 
-    const loadProfileData = async () => {
-        if (!user?.uid) {
-            setLoading(false);
-            return;
-        }
 
-        try {
-            setLoading(true);
-
-            // Try to get cached profile data first
-            const cachedProfile = await AsyncStorage.getItem(`profile_${user.uid}`);
-            if (cachedProfile) {
-                const parsedProfile = JSON.parse(cachedProfile);
-                setProfileData(parsedProfile);
-                onProfileUpdate?.(parsedProfile);
-            }
-
-            // Fetch fresh data from database
-            const freshProfile = await readById('personalData', user.uid);
-            if (freshProfile) {
-                setProfileData(freshProfile);
-                onProfileUpdate?.(freshProfile);
-
-                // Update cache
-                await AsyncStorage.setItem(`profile_${user.uid}`, JSON.stringify(freshProfile));
-            }
-        } catch (error) {
-            console.error('Error loading profile data:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const updateProfileCache = async (updatedData: any) => {
-        if (!user?.uid) return;
-
-        try {
-            const mergedData = { ...profileData, ...updatedData };
-            setProfileData(mergedData);
-            onProfileUpdate?.(mergedData);
-
-            // Update cache
-            await AsyncStorage.setItem(`profile_${user.uid}`, JSON.stringify(mergedData));
-        } catch (error) {
-            console.error('Error updating profile cache:', error);
-        }
-    };
+   
 
     const handleProfilePress = () => {
         router.push('/Account/Profile');
@@ -85,17 +40,7 @@ export default function ProfileManager({ user, onProfileUpdate, onClose }: Profi
         router.push('/Account/Index');
     };
 
-    if (loading) {
-        return (
-            <View style={[styles.container, { backgroundColor: background }]}>
-                <View style={styles.loadingContainer}>
-                    <ThemedText type="tiny" color={coolGray}>
-                        Loading profile...
-                    </ThemedText>
-                </View>
-            </View>
-        );
-    }
+  
 
     const displayUser = profileData || user;
 
@@ -104,12 +49,12 @@ export default function ProfileManager({ user, onProfileUpdate, onClose }: Profi
             <View style={styles.profileSection}>
                 <View style={styles.profileInfo}>
                     <View style={styles.avatarContainer}>
-                        {!displayUser?.photoURL ? (
+                        {!currentRole?.profilePhoto ? (
                             <FontAwesome name='user-circle' color={coolGray} size={wp(10)} />
                         ) : (
                             <Image
                                 style={styles.avatar}
-                                source={{ uri: displayUser?.photoURL || 'https://via.placeholder.com/100' }}
+                                source={{ uri:currentRole.profilePhoto  || 'https://via.placeholder.com/100' }}
                             />
                         )}
                     </View>
@@ -123,7 +68,7 @@ export default function ProfileManager({ user, onProfileUpdate, onClose }: Profi
                         </ThemedText>
                     </View>
 
-                    {!displayUser?.organisation && (
+                    {!displayUser?.displayName && (
                         <TouchableNativeFeedback onPress={handleProfilePress}>
                             <View style={styles.alertIcon}>
                                 <Ionicons name='alert-circle-outline' color={icon} size={wp(6)} />

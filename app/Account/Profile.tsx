@@ -161,7 +161,6 @@ const Edit = () => {
 
     const Submit = async () => {
 
-        console.log("giiiii")
 
         const MissingDriverDetails = [
             !organisation && "Enter Organisation Name",

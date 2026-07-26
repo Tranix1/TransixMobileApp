@@ -89,32 +89,32 @@ export const selectImageNoCrop = (callback: (image: ImagePickerAsset) => void) =
 };
 
 // Specific function for selecting images with cropping (for number plate)
-export const selectImageWithCrop = (callback: (image: ImagePickerAsset) => void) => {
-  const showImagePicker = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.5, // Reduced quality to help with file size
-      });
+  export const selectImageWithCrop = (callback: (image: ImagePickerAsset) => void) => {
+    const showImagePicker = async () => {
+      try {
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.5, // Reduced quality to help with file size
+        });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const asset = result.assets[0];
-        if (!(await validateFileSize(asset, MAX_FILE_SIZE_MB))) {
-          alert(`It's more than 2MB, add quality screenshot or resize`);
-          return;
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+          const asset = result.assets[0];
+          if (!(await validateFileSize(asset, MAX_FILE_SIZE_MB))) {
+            alert(`It's more than 2MB, add quality screenshot or resize`);
+            return;
+          }
+          callback(asset);
         }
-        callback(asset);
+      } catch (error) {
+        console.error('Error picking image:', error);
+        alert('Error picking image');
       }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      alert('Error picking image');
-    }
-  };
+    };
 
-  showImagePicker();
-};
+    showImagePicker();
+  };
 
 export const selectMultipleImages = (callback: (images: ImagePickerAsset[]) => void) => {
   const showImagePicker = async () => {

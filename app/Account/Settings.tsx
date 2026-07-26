@@ -16,7 +16,7 @@ import AdminReferralCode from '@/components/AdminReferralCode'
 
 const Settings = () => {
 
-    const { user, Logout } = useAuth()
+    const { user, Logout, currentRole } = useAuth()
     const { isAdmin, hasPermissionSync, isSuperAdmin } = useAdminPermissions()
 
     const icon = useThemeColor('icon');
@@ -36,7 +36,7 @@ const Settings = () => {
                     <View style={{ flexDirection: 'row', gap: wp(4), marginBottom: wp(4) }}>
                         <Image
                             style={{ backgroundColor: coolgray, borderRadius: 999, width: wp(15), height: wp(15) }}
-                            source={{ uri: user?.photoURL || 'https://via.placeholder.com/100'   }}
+                            source={{ uri: currentRole?.profilePhoto || 'https://via.placeholder.com/100'   }}
                         />
                         <View style={{ flex: 1 }}>
                             <ThemedText type='title'>{user?.displayName || '-'}</ThemedText>

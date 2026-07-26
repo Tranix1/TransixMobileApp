@@ -13,7 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { addDocument, addDocumentWithId, uploadImage, getUsers, updateDocument, readById, fetchDocuments, } from '@/db/operations';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { usePushNotifications } from '@/Utilities/pushNotification';
+import { notifyUserById, usePushNotifications } from '@/Utilities/pushNotification';
 import ImageUploadCard from '@/components/ImageUploadCard';
 import { takePhoto } from '@/Utilities/imageUtils';
 import Button from '@/components/Button';
@@ -24,6 +24,8 @@ import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplet
 import CustomHeader from '@/components/CustomHeader';
 import { trackEvent } from '@/services/analytics/appAnalytics';
 import { incrementAccountsCreated } from '@/services/analytics/dashboardAnalytics';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/db/fireBaseConfig';
 export default function AddDriver() {
     const background = useThemeColor('background');
     const backgroundLight = useThemeColor('backgroundLight');
@@ -219,6 +221,27 @@ export default function AddDriver() {
 
             await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
 
+                const notifyQyery = query(collection(db,"adminRoles"), where("role","==","SUPER_ADMIN"),where("active","==", true) )
+                const notifySnapShot = await getDocs(notifyQyery)
+
+            await   Promise.all(
+                notifySnapShot.docs.map((doc)=>{
+                       notifyUserById(
+                          doc.id,
+                          `New verification request`,
+                          `${fullName} , Driver has submitted a verification request`,
+            
+                          {
+                            pathname: "Account/Admin",
+                          }, {
+                          type: "account_verification",
+                        }
+                        );
+
+                })
+            )
+
+                         
             router.push("/Driver/DriverSelector/Index");
 
             ToastAndroid.show('Driver added successfully', ToastAndroid.SHORT);

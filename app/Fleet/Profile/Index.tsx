@@ -30,8 +30,15 @@ interface LoadEntry {
 
 interface ProvenRoutesType {
     id: string;
-    from: string;
-    to: string
+    from: {
+        city: string;
+        country: string;
+    };
+    to: {
+        city: string;
+        country: string;
+    };
+    tripsCompleted: number;
 }
 
 interface PayoutStats {
@@ -168,10 +175,31 @@ const DEFAULT_FLEET: FleetProfileData = {
         confirmationRate: 0,
     },
     provenRoutes: [
-        { id: 'l1', from: 'Harare', to: 'Beitbridge' },
-        { id: 'l2', from: 'Lusaka', to: 'Harare' },
-        { id: 'l3', from: 'Bulawayo', to: 'Gweru' },
-    ],
+        {
+            id: "l1",
+            from: {
+                city: "Harare",
+                country: "Zimbabwe"
+            },
+            to: {
+                city: "Beitbridge",
+                country: "Zimbabwe"
+            },
+            tripsCompleted: 15
+        },
+        {
+            id: "l2",
+            from: {
+                city: "Lusaka",
+                country: "Zambia"
+            },
+            to: {
+                city: "Harare",
+                country: "Zimbabwe"
+            },
+            tripsCompleted: 8
+        }
+    ]
 };
 
 
@@ -408,7 +436,7 @@ export default function FleetProfile() {
 
     const [refreshing, setRefreshing] = useState(false)
 
-        const [publicLoadsOpen, setPublicLoadsOpen] = useState(true);
+    const [publicLoadsOpen, setPublicLoadsOpen] = useState(true);
     const [privateLoadsOpen, setPrivateLoadsOpen] = useState(false);
     const [provenRoutesOpen, setProvenRoutes] = useState(true);
 
@@ -936,9 +964,6 @@ export default function FleetProfile() {
                 </SectionCard>
 
 
-
-
-
                 {/* ---------- Loads ---------- */}
                 <SectionCard title="Proven Routes" background={backgroundLight} textColor={text}>
                     <TouchableOpacity style={styles.dropdownHeader} onPress={() => setProvenRoutes((v) => !v)}>
@@ -947,16 +972,38 @@ export default function FleetProfile() {
                     </TouchableOpacity>
                     {provenRoutesOpen && (
                         <View style={styles.dropdownBody}>
+
+
                             {fleet.provenRoutes.length === 0 ? (
-                                <ThemedText style={[styles.emptyText, { color: icon }]}>No public loads listed.</ThemedText>
+                                <ThemedText style={[styles.emptyText, { color: icon }]}>
+                                    No proven routes yet.
+                                </ThemedText>
                             ) : (
-                                fleet.provenRoutes.map((load) => (
-                                    <View key={load.id} style={styles.loadRow}>
-                                        <Ionicons name="arrow-forward-circle-outline" size={wp(4)} color={accent} />
-                                        <ThemedText style={[styles.loadText, { color: text }]}> {load.from} → {load.to}</ThemedText>
+                                fleet.provenRoutes.map((route) => (
+                                    <View key={route.id} style={styles.loadRow}>
+                                        <Ionicons
+                                            name="arrow-forward-circle-outline"
+                                            size={wp(4)}
+                                            color={accent}
+                                        />
+
+                                        <ThemedText
+                                            style={[
+                                                styles.loadText,
+                                                { color: text }
+                                            ]}
+                                        >
+                                            {route.from.city}, {route.from.country}
+                                            {" → "}
+                                            {route.to.city}, {route.to.country}
+                                            {" • "}
+                                            {route.tripsCompleted} trips
+                                        </ThemedText>
                                     </View>
                                 ))
                             )}
+
+
                         </View>
                     )}
 
