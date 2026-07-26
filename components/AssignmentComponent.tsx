@@ -24,8 +24,8 @@ import { useAuth } from "@/context/AuthContext";
 import { takePhoto, selectMultipleImages } from '@/Utilities/photoPickerUtils';
 import GetTrackerModal from "./GetTrackerModal";
 import { notifyUserById } from "@/Utilities/pushNotification";
-
-
+import { db } from "@/db/fireBaseConfig";
+import { doc, collection, serverTimestamp, writeBatch, getDoc } from "firebase/firestore";
 
 const getStatusColor = (status: string) => {
     switch (status) {
@@ -99,441 +99,508 @@ export default function AssignmentCard({ assignmentData }: any) {
 
 
 
-const updateAssignmentCopies = async (
-    assignmentId: string,
-    data: any,
-    externalLoad: boolean,
-    cargoCoordinator?: coordinatorProps,
-    createdByAcc?: string,
-) => {
+    const updateAssignmentCopies = async (
+        assignmentId: string,
+        data: any,
+        externalLoad: boolean,
+        cargoCoordinator?: coordinatorProps,
+        createdByAcc?: string,
+    ) => {
 
-    // Fleet assignment
-    await updateDocument(
-        `fleets/${scopeId}/assignments`,
-        assignmentId,
-        data
-    );
-
-
-    // Cargo owner assignment
-    if (
-        externalLoad &&
-        cargoCoordinator &&
-        createdByAcc
-    ) {
-
+        // Fleet assignment
         await updateDocument(
-            `${createdByAcc}/${cargoCoordinator.organizationId}/assignments`,
+            `fleets/${scopeId}/assignments`,
             assignmentId,
             data
         );
 
-    }
 
-};
-
-const startTrip = async (
-    assignmentId: string,
-    externalLoad: boolean,
-    fleetCoordinator: coordinatorProps,
-    cargoCoordinator?: coordinatorProps,
-    createdByAcc?: string,
-) => {
-
-    if (!assignmentId) return;
-
-    try {
-
-
-        await updateAssignmentCopies(
-            assignmentId,
-            {
-                status:"IN_TRANSIT",
-
-                updatedAt:Date.now(),
-                updatedBy:user?.uid ?? "",
-                updatedByName:user?.displayName ?? "User",
-                updatedByRole:currentRole?.userRole ?? "",
-                updatedByAcc:currentRole?.accType ?? "",
-
-
-                statusHistory:arrayUnion({
-
-                    fromStatus:"PENDING",
-                    toStatus:"IN_TRANSIT",
-
-                    changedAt:Date.now(),
-
-                    changedBy:user?.uid ?? "",
-                    changedByName:user?.displayName ?? "User",
-                    changedByRole:currentRole?.userRole ?? "",
-                    changedByAcc:currentRole?.accType ?? "",
-
-                })
-
-            },
-            externalLoad,
-            cargoCoordinator,
+        // Cargo owner assignment
+        if (
+            externalLoad &&
+            cargoCoordinator &&
             createdByAcc
-        );
-
-
-
-
-        // Fleet stats
-        await updateDocument(
-            "organizationProfiles",
-            fleetCoordinator.organizationId,
-            {
-                privateLoads:{
-                    inTransit:increment(1)
-                }
-            }
-        );
-
-
-
-        // Public load stats
-        if(externalLoad && cargoCoordinator){
-
+        ) {
 
             await updateDocument(
-                "organizationProfiles",
-                cargoCoordinator.organizationId,
+                `${createdByAcc}/${cargoCoordinator.organizationId}/assignments`,
+                assignmentId,
+                data
+            );
+
+        }
+
+    };
+
+    const startTrip = async (
+        assignmentId: string,
+        externalLoad: boolean,
+        fleetCoordinator: coordinatorProps,
+        cargoCoordinator?: coordinatorProps,
+        createdByAcc?: string,
+    ) => {
+
+        if (!assignmentId) return;
+
+        try {
+
+
+            await updateAssignmentCopies(
+                assignmentId,
                 {
-                    publicLoads:{
-                        inTransit:increment(1)
+                    status: "IN_TRANSIT",
+
+                    updatedAt: Date.now(),
+                    updatedBy: user?.uid ?? "",
+                    updatedByName: user?.displayName ?? "User",
+                    updatedByRole: currentRole?.userRole ?? "",
+                    updatedByAcc: currentRole?.accType ?? "",
+
+
+                    statusHistory: arrayUnion({
+
+                        fromStatus: "PENDING",
+                        toStatus: "IN_TRANSIT",
+
+                        changedAt: Date.now(),
+
+                        changedBy: user?.uid ?? "",
+                        changedByName: user?.displayName ?? "User",
+                        changedByRole: currentRole?.userRole ?? "",
+                        changedByAcc: currentRole?.accType ?? "",
+
+                    })
+
+                },
+                externalLoad,
+                cargoCoordinator,
+                createdByAcc
+            );
+
+
+
+
+            // Fleet stats
+            await updateDocument(
+                "organizationProfiles",
+                fleetCoordinator.organizationId,
+                {
+                    privateLoads: {
+                        inTransit: increment(1)
                     }
                 }
             );
 
+
+
+            // Public load stats
+            if (externalLoad && cargoCoordinator) {
+
+
+                await updateDocument(
+                    "organizationProfiles",
+                    cargoCoordinator.organizationId,
+                    {
+                        publicLoads: {
+                            inTransit: increment(1)
+                        }
+                    }
+                );
+
+            }
+
+
+
+
+            await notifyUserById(
+                fleetCoordinator.id,
+                "Load Started 🚚",
+                `Trip ${assignmentId} is now in transit.`,
+                {
+                    pathname: "/Fleet/AssignmentDetails",
+                    params: { assignmentId }
+                },
+                {
+                    type: "load_in_transit",
+                    assignmentId
+                }
+            );
+
+
+
+
+            if (externalLoad && cargoCoordinator) {
+
+                await notifyUserById(
+                    cargoCoordinator.id,
+                    "Load In Transit 🚚",
+                    "Your load is now in transit.",
+                    {
+                        pathname: "/Cargo/AssignmentDetails",
+                        params: { assignmentId }
+                    },
+                    {
+                        type: "load_in_transit",
+                        assignmentId
+                    }
+                );
+
+            }
+
+
+        } catch (error) {
+
+            console.log("Start trip error:", error);
+
+        }
+
+    };
+
+
+    const finishTrip = async (
+        assignmentId: string,
+        externalLoad: boolean,
+        fleetCoordinator: coordinatorProps,
+        cargoCoordinator?: coordinatorProps,
+        createdByAcc?: string,
+    ) => {
+
+
+        try {
+
+
+            const images = proofImages[assignmentId] || [];
+
+
+            const uploadedUrls = await Promise.all(
+                images.map(image =>
+                    uploadImage(
+                        image,
+                        `assignments/${assignmentId}/proof`,
+                        setUploadImageUpdate,
+                        "POD"
+                    )
+                )
+            );
+
+
+            const proofFiles = uploadedUrls.filter(
+                (url): url is string => url !== null
+            );
+
+
+
+            await updateAssignmentCopies(
+
+                assignmentId,
+
+                {
+
+                    status: "Awaiting Confirmation",
+
+                    completedAt: Date.now(),
+
+                    completedBy: user?.uid ?? "",
+                    completedByName: user?.displayName ?? "",
+                    completedByRole: currentRole?.userRole ?? "",
+
+
+                    proofOfDelivery: {
+                        uploaded: proofFiles.length > 0,
+                        files: proofFiles
+                    },
+
+
+                    updatedAt: Date.now(),
+
+                    updatedBy: user?.uid ?? "",
+
+
+
+                    statusHistory: arrayUnion({
+
+                        fromStatus: "IN_TRANSIT",
+                        toStatus: "AWAITING_OWNER_CONFIRMATION",
+
+                        changedAt: Date.now(),
+
+                        changedBy: user?.uid ?? "",
+                        changedByName: user?.displayName ?? "",
+                        changedByRole: currentRole?.userRole ?? "",
+                        changedByAcc: currentRole?.accType ?? "",
+
+                    })
+
+                },
+
+                externalLoad,
+                cargoCoordinator,
+                createdByAcc
+
+            );
+
+
+
+
+            setProofImages(prev => {
+
+                const copy = { ...prev };
+
+                delete copy[assignmentId];
+
+                return copy;
+
+            });
+
+
+
+            await notifyUserById(
+                fleetCoordinator.id,
+                "Load Completed ✅",
+                "Trip completed and POD submitted.",
+                {
+                    pathname: "/Fleet/AssignmentDetails",
+                    params: { assignmentId }
+                },
+                {
+                    type: "load_completed",
+                    assignmentId
+                }
+            );
+
+
+
+            if (externalLoad && cargoCoordinator) {
+
+                await notifyUserById(
+                    cargoCoordinator.id,
+                    "Load Delivered ✅",
+                    "The load has been delivered. Please confirm.",
+                    {
+                        pathname: "/Cargo/AssignmentDetails",
+                        params: { assignmentId }
+                    },
+                    {
+                        type: "load_completed",
+                        assignmentId
+                    }
+                );
+
+            }
+
+
+
+        } catch (error) {
+
+            console.log("Finish trip error:", error);
+
+        }
+
+
+    };
+
+
+    const cargoOwnerConfirmation = async (
+        assignmentId: string,
+        externalLoad: boolean,
+        provenLocFrom: {
+            city: string;
+            country: string;
+        },
+        provenLocTo: {
+            city: string;
+            country: string;
+        },
+        fleetCoordinator: coordinatorProps,
+        cargoCoordinator?: coordinatorProps,
+        createdByAcc?: string,
+    ) => {
+
+
+        try {
+
+
+            await updateAssignmentCopies(
+
+                assignmentId,
+
+                {
+
+                    status: "COMPLETED",
+
+                    updatedAt: Date.now(),
+
+                    updatedBy: user?.uid ?? "",
+                    updatedByName: user?.displayName ?? "",
+                    updatedByRole: currentRole?.userRole ?? "",
+                    updatedByAcc: currentRole?.accType ?? "",
+
+
+
+                    statusHistory: arrayUnion({
+
+                        fromStatus: "AWAITING_OWNER_CONFIRMATION",
+                        toStatus: "COMPLETED",
+
+                        changedAt: Date.now(),
+
+                        changedBy: user?.uid ?? "",
+                        changedByName: user?.displayName ?? "",
+                        changedByRole: currentRole?.userRole ?? "",
+                        changedByAcc: currentRole?.accType ?? "",
+
+                    })
+
+                },
+
+                externalLoad,
+                cargoCoordinator,
+                createdByAcc
+
+            );
+
+
+
+
+
+            // Fleet completed stats
 
             await updateDocument(
                 "organizationProfiles",
                 fleetCoordinator.organizationId,
                 {
-                    publicLoads:{
-                        inTransit:increment(1)
+                    privateLoads: {
+                        completed: increment(1)
+                    },
+                    provenRoutes: [
+                        {
+                            id: "",
+                            from: provenLocFrom,
+                            to: provenLocTo
+                        }
+                    ]
+                }
+            );
+
+
+
+            const batch = writeBatch(db);
+
+            // Update organization stats
+            batch.update(
+                doc(db, "organizationProfiles", fleetCoordinator.organizationId),
+                {
+                    "privateLoads.completed": increment(1),
+                }
+            );
+
+            // Add proven route
+
+            const routeId = `${provenLocFrom.city}_${provenLocFrom.country}_${provenLocTo.city}_${provenLocTo.country}`
+                .toLowerCase()
+                .replace(/\s+/g, "_");
+
+
+            const provenRouteRef = doc(
+                db,
+                "organizationProfiles",
+                fleetCoordinator.organizationId,
+                "provenRoutes",
+                routeId
+            );
+
+            const routeSnap = await getDoc(provenRouteRef);
+
+            if (routeSnap.exists()) {
+
+                batch.update(provenRouteRef, {
+                    tripsCompleted: increment(1),
+                    lastUsed: serverTimestamp(),
+                });
+
+            } else {
+
+                batch.set(provenRouteRef, {
+                    from: provenLocFrom,
+                    to: provenLocTo,
+                    tripsCompleted: 1,
+                    assignmentId,
+                    createdAt: serverTimestamp(),
+                });
+
+            }
+
+            await batch.commit();
+
+
+
+
+            if (externalLoad && cargoCoordinator) {
+
+
+                const batch = writeBatch(db);
+
+                // Update organization stats
+                batch.update(
+                    doc(db, "organizationProfiles", cargoCoordinator.organizationId),
+                    {
+                        "privateLoads.completed": increment(1),
                     }
+                );
+
+                // Add proven route
+
+                const routeId = `${provenLocFrom.city}_${provenLocFrom.country}_${provenLocTo.city}_${provenLocTo.country}`
+                    .toLowerCase()
+                    .replace(/\s+/g, "_");
+
+
+                const provenRouteRef = doc(
+                    db,
+                    "organizationProfiles",
+                    cargoCoordinator.organizationId,
+                    "provenRoutes",
+                    routeId
+                );
+
+                const routeSnap = await getDoc(provenRouteRef);
+
+                if (routeSnap.exists()) {
+
+                    batch.update(provenRouteRef, {
+                        tripsCompleted: increment(1),
+                        lastUsed: serverTimestamp(),
+                    });
+
+                } else {
+
+                    batch.set(provenRouteRef, {
+                        from: provenLocFrom,
+                        to: provenLocTo,
+                        tripsCompleted: 1,
+                        assignmentId,
+                        createdAt: serverTimestamp(),
+                    });
+
                 }
-            );
 
-        }
+                await batch.commit();
 
-
-
-
-        await notifyUserById(
-            fleetCoordinator.id,
-            "Load Started 🚚",
-            `Trip ${assignmentId} is now in transit.`,
-            {
-                pathname:"/Fleet/AssignmentDetails",
-                params:{assignmentId}
-            },
-            {
-                type:"load_in_transit",
-                assignmentId
             }
-        );
 
+        } catch (error) {
 
-
-
-        if(externalLoad && cargoCoordinator){
-
-            await notifyUserById(
-                cargoCoordinator.id,
-                "Load In Transit 🚚",
-                "Your load is now in transit.",
-                {
-                    pathname:"/Cargo/AssignmentDetails",
-                    params:{assignmentId}
-                },
-                {
-                    type:"load_in_transit",
-                    assignmentId
-                }
-            );
+            console.log("Confirmation error:", error);
 
         }
 
 
-    }catch(error){
-
-        console.log("Start trip error:",error);
-
-    }
-
-};
-
-
-const finishTrip = async (
-    assignmentId:string,
-    externalLoad:boolean,
-    fleetCoordinator:coordinatorProps,
-    cargoCoordinator?:coordinatorProps,
-    createdByAcc?:string,
-) => {
-
-
-try {
-
-
-const images = proofImages[assignmentId] || [];
-
-
-const uploadedUrls = await Promise.all(
-    images.map(image =>
-        uploadImage(
-            image,
-            `assignments/${assignmentId}/proof`,
-            setUploadImageUpdate,
-            "POD"
-        )
-    )
-);
-
-
-const proofFiles = uploadedUrls.filter(
-    (url): url is string => url !== null
-);
-
-
-
-await updateAssignmentCopies(
-
-    assignmentId,
-
-    {
-
-        status:"Awaiting Confirmation",
-
-        completedAt:Date.now(),
-
-        completedBy:user?.uid ?? "",
-        completedByName:user?.displayName ?? "",
-        completedByRole:currentRole?.userRole ?? "",
-
-
-        proofOfDelivery:{
-            uploaded:proofFiles.length > 0,
-            files:proofFiles
-        },
-
-
-        updatedAt:Date.now(),
-
-        updatedBy:user?.uid ?? "",
-
-
-
-        statusHistory:arrayUnion({
-
-            fromStatus:"IN_TRANSIT",
-            toStatus:"AWAITING_OWNER_CONFIRMATION",
-
-            changedAt:Date.now(),
-
-            changedBy:user?.uid ?? "",
-            changedByName:user?.displayName ?? "",
-            changedByRole:currentRole?.userRole ?? "",
-            changedByAcc:currentRole?.accType ?? "",
-
-        })
-
-    },
-
-    externalLoad,
-    cargoCoordinator,
-    createdByAcc
-
-);
-
-
-
-
-setProofImages(prev=>{
-
-    const copy={...prev};
-
-    delete copy[assignmentId];
-
-    return copy;
-
-});
-
-
-
-
-
-await notifyUserById(
-    fleetCoordinator.id,
-    "Load Completed ✅",
-    "Trip completed and POD submitted.",
-    {
-        pathname:"/Fleet/AssignmentDetails",
-        params:{assignmentId}
-    },
-    {
-        type:"load_completed",
-        assignmentId
-    }
-);
-
-
-
-if(externalLoad && cargoCoordinator){
-
-    await notifyUserById(
-        cargoCoordinator.id,
-        "Load Delivered ✅",
-        "The load has been delivered. Please confirm.",
-        {
-            pathname:"/Cargo/AssignmentDetails",
-            params:{assignmentId}
-        },
-        {
-            type:"load_completed",
-            assignmentId
-        }
-    );
-
-}
-
-
-
-}catch(error){
-
-console.log("Finish trip error:",error);
-
-}
-
-
-};  
-
-
-const cargoOwnerConfirmation = async (
-    assignmentId:string,
-    externalLoad:boolean,
-    fleetCoordinator:coordinatorProps,
-    cargoCoordinator?:coordinatorProps,
-    createdByAcc?:string,
-) => {
-
-
-try {
-
-
-await updateAssignmentCopies(
-
-    assignmentId,
-
-    {
-
-        status:"COMPLETED",
-
-        updatedAt:Date.now(),
-
-        updatedBy:user?.uid ?? "",
-        updatedByName:user?.displayName ?? "",
-        updatedByRole:currentRole?.userRole ?? "",
-        updatedByAcc:currentRole?.accType ?? "",
-
-
-
-        statusHistory:arrayUnion({
-
-            fromStatus:"AWAITING_OWNER_CONFIRMATION",
-            toStatus:"COMPLETED",
-
-            changedAt:Date.now(),
-
-            changedBy:user?.uid ?? "",
-            changedByName:user?.displayName ?? "",
-            changedByRole:currentRole?.userRole ?? "",
-            changedByAcc:currentRole?.accType ?? "",
-
-        })
-
-    },
-
-    externalLoad,
-    cargoCoordinator,
-    createdByAcc
-
-);
-
-
-
-
-
-// Fleet completed stats
-
-await updateDocument(
-    "organizationProfiles",
-    fleetCoordinator.organizationId,
-    {
-        privateLoads:{
-            completed:increment(1)
-        }
-    }
-);
-
-
-
-
-if(externalLoad && cargoCoordinator){
-
-
-    await updateDocument(
-        "organizationProfiles",
-        cargoCoordinator.organizationId,
-        {
-            publicLoads:{
-                completed:increment(1)
-            }
-        }
-    );
-
-
-
-    await updateDocument(
-        "organizationProfiles",
-        fleetCoordinator.organizationId,
-        {
-            publicLoads:{
-                completed:increment(1)
-            }
-        }
-    );
-
-}
-
-
-
-}catch(error){
-
-console.log("Confirmation error:",error);
-
-}
-
-
-};
-
-
-
-
-
-
-
-
+    };
 
 
 
     return (
         <View key={assignmentData.id} style={[styles.cargoItem, { backgroundColor: backgroundLight }]}>
-
 
 
             <GetTrackerModal visible={getTrackerModal} onClose={() => setGetTrackerModal(false)} />
@@ -1041,6 +1108,17 @@ console.log("Confirmation error:",error);
                         cargoOwnerConfirmation(
                             assignmentData.id,
                             assignmentData.externalLoad,
+
+                            {
+                                city: assignmentData?.loadDetails?.pickupLocation?.city,
+                                country: assignmentData?.loadDetails?.pickupLocation?.country,
+                            },
+
+                            {
+                                city: assignmentData?.loadDetails?.deliveryLocation?.city,
+                                country: assignmentData?.loadDetails?.deliveryLocation?.country,
+                            },
+
                             assignmentData.fleetCoordinator,
                             assignmentData.cargoCoordinator,
                             assignmentData.createdByAcc,
@@ -1100,7 +1178,7 @@ console.log("Confirmation error:",error);
                 driverPayment={assignmentData.driverPayment}
             />
 
-        </View>
+        </View >
     );
 
 }

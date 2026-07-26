@@ -91,32 +91,31 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     void incrementActiveLoads(analyticsType, analyticsOrganizationId).catch(console.error);
 
 
-    if(loadVisibility === 'Public'){
+    if (loadVisibility === 'Public') {
 
-      updateDocument("organizationProfiles" ,analyticsOrganizationId ,{
-        publicLoads :{
-          posted:increment(1)
+      updateDocument("organizationProfiles", analyticsOrganizationId, {
+        publicLoads: {
+          posted: increment(1)
         }
-      } )
+      })
 
-    }else if(loadVisibility === 'Private'){
-  updateDocument("organizationProfiles" ,analyticsOrganizationId ,{
-        privateLoads :{
-          posted:increment(1)
+    } else if (loadVisibility === 'Private') {
+      updateDocument("organizationProfiles", analyticsOrganizationId, {
+        privateLoads: {
+          posted: increment(1)
         }
-      } )
-    }else if(loadVisibility==="Both"){
-  updateDocument("organizationProfiles" ,analyticsOrganizationId ,{
-        publicLoads :{
-          posted:increment(1)
+      })
+    } else if (loadVisibility === "Both") {
+      updateDocument("organizationProfiles", analyticsOrganizationId, {
+        publicLoads: {
+          posted: increment(1)
+        },
+        privateLoads: {
+          posted: increment(1)
         }
-      } )
-        updateDocument("organizationProfiles" ,analyticsOrganizationId ,{
-     
-      } ) 
+      })
+
     }
-
-
 
 
 
@@ -322,6 +321,12 @@ export const submitLoad = async (params: SubmitLoadParams) => {
 
 
     if (assignmentDetails.length > 0) {
+
+ updateDocument("organizationProfiles", analyticsOrganizationId, {
+        privateLoads: {
+          assigned: increment(1)
+        }
+      })
 
       for (const assignment of assignmentDetails) {
         const assignmentDocId = `${cargoId}_${assignment.truckId}_${assignment.driverId}`;
@@ -532,10 +537,10 @@ export const submitLoad = async (params: SubmitLoadParams) => {
             organizationId: truck.fleetId || null,
             name: truck.assignments.dispatcher.name || '',
             phoneNumber: truck.assignments.dispatcher.phoneNumber || '',
-            expoPushToken: truck.assignments.dispatcher.expoPushToken || null,
           }
           : null,
         cargoCoordinator: coordinator,
+        createdByAcc:"brokerages" ,
         createdAt: Date.now().toString(),
       }
 
@@ -623,14 +628,6 @@ export const submitLoad = async (params: SubmitLoadParams) => {
 
     }
   };
-
-
-
-
-
-
-
-
 
 
 

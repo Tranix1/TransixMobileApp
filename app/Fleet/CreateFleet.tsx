@@ -238,10 +238,6 @@ const CreateFleet = () => {
             await setupUser(updatedUser);
 
 
-
-
-
-
             await addDocumentWithId(`organizationProfiles`, fleetId, {
                 organizationId: fleetId,
                 type: "fleet", // or "fleet"
@@ -334,7 +330,7 @@ const CreateFleet = () => {
 
       {currentRole.userRole!=="create_Acc" ?  <View style={{paddingTop: 36}}>
 
-            <Heading page="Create Fleet" />
+            <Heading page="Create Fleet"  />
         </View> : <CustomHeader pageTitle='Create Fleet' /> }
 
             <View style={{ margin: hp(3) }}>

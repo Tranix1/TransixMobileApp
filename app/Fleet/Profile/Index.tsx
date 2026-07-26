@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { wp, hp } from '@/constants/common';
 import { useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, getDocs, collection, query, orderBy } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import { LoadLyfCyleStatsCompent } from '@/components/loadLyfCyleStatsPlbcPro';
 import { LoadLyfCyleStatsCompentSec } from '@/components/LoadLyfCyleStatsCompentSec';
@@ -27,6 +27,13 @@ interface LoadEntry {
     completed: number;
 
 }
+
+interface ProvenRoutesType {
+    id: string;
+    from: string;
+    to: string
+}
+
 interface PayoutStats {
     driverCreated: number;
     driverConfirmed: number;
@@ -80,6 +87,8 @@ interface FleetProfileData {
     latestReviews: ReviewEntry[];
 
     driversWorkedWith: number
+
+    provenRoutes: ProvenRoutesType[]
 }
 
 const ALL_SERVICES = [
@@ -130,10 +139,10 @@ const DEFAULT_FLEET: FleetProfileData = {
     latestReviews: [
         { id: 'r1', reviewer: 'J. Moyo', rating: 5, comment: 'Always on time and professional communication from start to finish.', date: 'Jun 8, 2026' },
         { id: 'r2', reviewer: 'T. Chirwa', rating: 4, comment: 'Dependable fleet with good coverage across the region.', date: 'May 21, 2026' },
-        { id: 'r2', reviewer: 'T. Chirwa', rating: 4, comment: 'Dependable fleet with good coverage across the region.', date: 'May 21, 2026' },
-    { id: 'r2', reviewer: 'T. Chirwa', rating: 4, comment: 'Dependable fleet with good coverage across the region.', date: 'May 21, 2026' },
-    { id: 'r2', reviewer: 'T. Chirwa', rating: 4, comment: 'Dependable fleet with good coverage across the region.', date: 'May 21, 2026' },
-    
+        { id: 'r2', reviewer: 'T. Chirwa', rating: 6, comment: 'Dependable fleet with good coverage across the region.', date: 'May 21, 2026' },
+        { id: 'r2', reviewer: 'T. Chirwa', rating: 7, comment: 'Dependable fleet with good coverage across the region.', date: 'May 21, 2026' },
+        { id: 'r2', reviewer: 'T. Chirwa', rating: 8, comment: 'Dependable fleet with good coverage across the region.', date: 'May 21, 2026' },
+
     ],
 
     publicLoads: {
@@ -158,6 +167,11 @@ const DEFAULT_FLEET: FleetProfileData = {
         lastPayout: 0,
         confirmationRate: 0,
     },
+    provenRoutes: [
+        { id: 'l1', from: 'Harare', to: 'Beitbridge' },
+        { id: 'l2', from: 'Lusaka', to: 'Harare' },
+        { id: 'l3', from: 'Bulawayo', to: 'Gweru' },
+    ],
 };
 
 
@@ -394,74 +408,142 @@ export default function FleetProfile() {
 
     const [refreshing, setRefreshing] = useState(false)
 
-    const [loading, setLoading] = useState(true);
-    const [publicLoadsOpen, setPublicLoadsOpen] = useState(true);
+        const [publicLoadsOpen, setPublicLoadsOpen] = useState(true);
     const [privateLoadsOpen, setPrivateLoadsOpen] = useState(false);
+    const [provenRoutesOpen, setProvenRoutes] = useState(true);
 
     const viewerIsOwner = isOwner === 'true';
 
     const loadFleetProfile = async () => {
         try {
-            setRefreshing(true)
+            setRefreshing(true);
 
             const orgId = organizationId;
+
             if (!orgId) {
-                setRefreshing(false)
                 return;
             }
 
-            const snapshot = await getDoc(doc(db, 'organizationProfiles', orgId));
+            const profileRef = doc(db, "organizationProfiles", orgId);
 
-            if (snapshot.exists()) {
-                const data = snapshot.data() as any;
+            const [profileSnap, routesSnap] = await Promise.all([
+                getDoc(profileRef),
+                getDocs(
+                    query(
+                        collection(
+                            db,
+                            "organizationProfiles",
+                            orgId,
+                            "provenRoutes"
+                        ),
+                        orderBy("createdAt", "desc")
+                    )
+                ),
+            ]);
 
-                const date = data.timeStamp.toDate()
-                const day = date.getDate()
-                const month = date.toLocaleString("default", { month: "long" })
-                const year = date.getFullYear()
-                const memberSince = `${day} ${month} ${year}`
-
-                setFleet((prev) => ({
-                    ...prev,
-                    logoUrl: data.logoUrl ?? prev.logoUrl,
-                    name: data.name || prev.name,
-                    location: data.location?.description || data.location || prev.location,
-                    rating: data.rating ?? prev.rating,
-                    reviewsCount: data.reviewsCount ?? prev.reviewsCount,
-                    memberSince: memberSince || prev.memberSince,
-                    lastActive: data.lastActive || prev.lastActive,
-
-                    loadsPosted: data.loadsPosted || prev.loadsPosted,
-                    totalTrucks: data.truckCount ?? prev.totalTrucks,
-                    availableTrucks: data.availableTrucks ?? prev.availableTrucks,
-                    trackedTrucks: data.availableTrucks ?? prev.availableTrucks,
-
-                    activeTrips: data.activeTrips ?? prev.activeTrips,
-                    completedTrips: data.completedTrips ?? prev.completedTrips,
-
-                    onTimeDelivery: data.onTimeDelivery ?? prev.onTimeDelivery,
-                    acceptanceRate: data.acceptanceRate ?? prev.acceptanceRate,
-                    avgResponseTime: data.responseTime ? `${data.responseTime} min` : prev.avgResponseTime,
-                    paymentReputation: data.paymentReputation || prev.paymentReputation,
-                    cancellationRate: data.cancellationRate ?? prev.cancellationRate,
-                    trackingStatus: data.trackingStatus || prev.trackingStatus,
-                    totalDistance: data.totalDistance ?? prev.totalDistance,
-
-                    truckTypes: data.truckTypes || prev.truckTypes,
-                    publicLoads: data.publicLoads || prev.publicLoads,
-                    privateLoads: data.privateLoads || prev.privateLoads,
-                    payouts: data.payouts || prev.payouts,
-                    driversWorkedWith: data.driversWorkedWith || prev.driversWorkedWith,
-                    latestReviews: data.latestReviews || prev.latestReviews,
-                }));
+            if (!profileSnap.exists()) {
+                return;
             }
-        } catch (error) {
-            console.error('Error loading fleet profile:', error);
-        } finally {
-            setRefreshing(false)
 
+            const data = profileSnap.data() as any;
+
+            const provenRoutes = routesSnap.docs.map((routeDoc) => {
+                const route = routeDoc.data();
+
+                return {
+                    id: routeDoc.id,
+                    from: route.from,
+                    to: route.to,
+                    assignmentId: route.assignmentId,
+                    createdAt: route.createdAt,
+                };
+            }) as any;
+
+            const memberSince = data.timeStamp
+                ? (() => {
+                    const date = data.timeStamp.toDate();
+                    return `${date.getDate()} ${date.toLocaleString(
+                        "default",
+                        { month: "long" }
+                    )} ${date.getFullYear()}`;
+                })()
+                : "";
+
+            setFleet((prev) => ({
+                ...prev,
+
+                logoUrl: data.logoUrl ?? prev.logoUrl,
+                name: data.name ?? prev.name,
+                location:
+                    data.location?.description ||
+                    data.location ||
+                    prev.location,
+
+                rating: data.rating ?? prev.rating,
+                reviewsCount: data.reviewsCount ?? prev.reviewsCount,
+                memberSince: memberSince || prev.memberSince,
+                lastActive: data.lastActive ?? prev.lastActive,
+
+                loadsPosted: data.loadsPosted ?? prev.loadsPosted,
+
+                totalTrucks: data.truckCount ?? prev.totalTrucks,
+                availableTrucks:
+                    data.availableTrucks ?? prev.availableTrucks,
+                trackedTrucks:
+                    data.trackedTrucks ?? prev.trackedTrucks,
+
+                activeTrips: data.activeTrips ?? prev.activeTrips,
+                completedTrips:
+                    data.completedTrips ?? prev.completedTrips,
+
+                onTimeDelivery:
+                    data.onTimeDelivery ?? prev.onTimeDelivery,
+
+                acceptanceRate:
+                    data.acceptanceRate ?? prev.acceptanceRate,
+
+                avgResponseTime: data.responseTime
+                    ? `${data.responseTime} min`
+                    : prev.avgResponseTime,
+
+                paymentReputation:
+                    data.paymentReputation ?? prev.paymentReputation,
+
+                cancellationRate:
+                    data.cancellationRate ?? prev.cancellationRate,
+
+                trackingStatus:
+                    data.trackingStatus ?? prev.trackingStatus,
+
+                totalDistance:
+                    data.totalDistance ?? prev.totalDistance,
+
+                truckTypes: data.truckTypes ?? prev.truckTypes,
+
+                // loaded from subcollection
+                provenRoutes,
+
+                publicLoads: data.publicLoads ?? prev.publicLoads,
+                privateLoads: data.privateLoads ?? prev.privateLoads,
+
+                payouts: data.payouts ?? prev.payouts,
+
+                driversWorkedWith:
+                    data.driversWorkedWith ?? prev.driversWorkedWith,
+
+                latestReviews:
+                    data.latestReviews ?? prev.latestReviews,
+
+                services: data.services ?? prev.services,
+            }));
+        } catch (error) {
+            console.error("Error loading fleet profile:", error);
+        } finally {
+            setRefreshing(false);
         }
     };
+
+
     useEffect(() => {
 
         loadFleetProfile();
@@ -857,6 +939,29 @@ export default function FleetProfile() {
 
 
 
+                {/* ---------- Loads ---------- */}
+                <SectionCard title="Proven Routes" background={backgroundLight} textColor={text}>
+                    <TouchableOpacity style={styles.dropdownHeader} onPress={() => setProvenRoutes((v) => !v)}>
+                        <ThemedText style={[styles.dropdownTitle, { color: text }]}>Proven Routes</ThemedText>
+                        <Ionicons name={provenRoutesOpen ? 'chevron-up' : 'chevron-down'} size={wp(4.5)} color={icon} />
+                    </TouchableOpacity>
+                    {provenRoutesOpen && (
+                        <View style={styles.dropdownBody}>
+                            {fleet.provenRoutes.length === 0 ? (
+                                <ThemedText style={[styles.emptyText, { color: icon }]}>No public loads listed.</ThemedText>
+                            ) : (
+                                fleet.provenRoutes.map((load) => (
+                                    <View key={load.id} style={styles.loadRow}>
+                                        <Ionicons name="arrow-forward-circle-outline" size={wp(4)} color={accent} />
+                                        <ThemedText style={[styles.loadText, { color: text }]}> {load.from} → {load.to}</ThemedText>
+                                    </View>
+                                ))
+                            )}
+                        </View>
+                    )}
+
+
+                </SectionCard>
 
 
 
