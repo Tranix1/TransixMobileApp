@@ -536,7 +536,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 
                 createdAt:
-                    Date.now().toString(),
+                    Date.now(),
             };
 
             const saved = await setDocuments(

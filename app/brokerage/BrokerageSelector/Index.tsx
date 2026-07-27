@@ -6,7 +6,7 @@ import CustomHeader from "@/components/CustomHeader";
 import ReferralCodeModal from "@/components/ReferralCodeModal";
 import { router } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
-import {  setDocuments, updateDocument } from "@/db/operations";
+import { setDocuments, updateDocument } from "@/db/operations";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { hp, wp } from "@/constants/common";
@@ -105,7 +105,7 @@ function BrokerageSelector() {
         );
     }
 
-    const [showModal, setShowModal] = useState(true)
+    const [showModal, setShowModal] = useState(false)
     const brokerage = user?.brokerageDetails?.find(
         (item: any) =>
             item.organizationId === currentRole.organizationId
@@ -122,7 +122,7 @@ function BrokerageSelector() {
     useEffect(() => {
 
         if (shouldShowBrokerageSubscription) {
-            // setShowModal(true);  
+            setShowModal(true);
         }
 
     }, [shouldShowBrokerageSubscription]);
@@ -182,25 +182,25 @@ function BrokerageSelector() {
             </View>
 
 
-                <ReferralCodeModal
-                            visible={showReferralModal}
-                            initialCode={referralCode}
-                            isSubmitting={isSubmitting}
-                            onClose={() => setShowReferralModal(!hasReferral)}
-            
-                            onSubmit={(code) =>
-                                handleSubmitReferralCode({
-                                    code,
-                                    user,
-                                    setupUser,
-                                    setReferralCode,
-                                    setShowReferralModal,
-                                    setIsSubmitting
-                                })
-                            }
-                            onLogout={handleLogout}
-                            onRefresh={handleRefresh}
-                        />
+            <ReferralCodeModal
+                visible={showReferralModal}
+                initialCode={referralCode}
+                isSubmitting={isSubmitting}
+                onClose={() => setShowReferralModal(!hasReferral)}
+
+                onSubmit={(code) =>
+                    handleSubmitReferralCode({
+                        code,
+                        user,
+                        setupUser,
+                        setReferralCode,
+                        setShowReferralModal,
+                        setIsSubmitting
+                    })
+                }
+                onLogout={handleLogout}
+                onRefresh={handleRefresh}
+            />
         </View>
     );
 }

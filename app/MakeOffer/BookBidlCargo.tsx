@@ -4,10 +4,10 @@ import { Image } from 'expo-image'
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth, db } from "@/db/fireBaseConfig";
-import { addDocument, runFirestoreTransaction, checkDocumentExists, setDocuments, readById } from "@/db/operations";
+import { addDocument, runFirestoreTransaction, checkDocumentExists, setDocuments, readById, addDocumentWithId } from "@/db/operations";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { collection, serverTimestamp, query, where, onSnapshot, getDocs, increment } from 'firebase/firestore';
+import { collection, serverTimestamp, query, where, onSnapshot, getDocs, increment, Timestamp } from 'firebase/firestore';
 import { Truck } from "@/types/types";
 import { toggleItemById } from "@/Utilities/utils";
 import { updateDocument } from "@/db/operations";
@@ -281,22 +281,37 @@ function BookLCargo({ }) {
             await addDocument("cargoRequests", theData);
 
 
+            const daySinceSignup = (Date.now() - user?.createdAt!) / (1000 * 60 * 60 * 24)
+            const accountAge = daySinceSignup < 30 ? "new" : daySinceSignup < 90 ? "active" : "established"
             // For truck owner
             const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
-            void trackRequestCargo({ userId, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType, role: currentRole?.userRole, accountType: currentRole?.accType, referrerId: user?.referredBy?.userId ?? null, referralCodeUsed: user?.referredBy?.referralCode ?? null, campaign: user?.referredBy?.campaign ?? null, platform: user?.referredBy?.platform ?? null, metadata: { loadId: loadItem.id, truckId: item.id, operationType: OperationType } }).catch(console.error);
+            void trackRequestCargo({ userId, accountAge: accountAge, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType, role: currentRole?.userRole, accountType: currentRole?.accType, referrerId: user?.referredBy?.userId ?? null, referralCodeUsed: user?.referredBy?.referralCode ?? null, campaign: user?.referredBy?.campaign ?? null, platform: user?.referredBy?.platform ?? null, metadata: { loadId: loadItem.id, truckId: item.id, operationType: OperationType } }).catch(console.error);
 
 
             // For Cargo Owner
 
-            void trackCargoRequested({ userId, organizationId: loadItem.organizationId, organizationProfileId: loadItem.organizationId, organizationType: loadItem.postedBy.accType, role: loadItem.postedBy.userRole, accountType: loadItem.postedBy.accType, metadata: { loadId: loadItem.id, truckId: item.id, operationType: OperationType } }).catch(console.error);
+            void trackCargoRequested({ userId, accountAge: accountAge, organizationId: loadItem.organizationId, organizationProfileId: loadItem.organizationId, organizationType: loadItem.postedBy.accType, role: loadItem.postedBy.userRole, accountType: loadItem.postedBy.accType, metadata: { loadId: loadItem.id, truckId: item.id, operationType: OperationType } }).catch(console.error);
 
 
             if (analyticsOrganizationId && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
               void incrementBookings(currentRole.accType, analyticsOrganizationId).catch(console.error);
 
 
+              const partershipId = [currentRole.organizationId, loadItem.organizationId].sort().join("_");
 
+              const checkPartershipExist = await readById("partners", partershipId)
+              if (!checkPartershipExist) {
+                addDocumentWithId("partners", partershipId, {
+                  partnerAId: currentRole.organizationId,
+                  partnerAName: currentRole.companyName,
+                  partnerAAccType: currentRole.accType,
+                  partnerBId: loadItem.organizationId,
+                  partnerBName: loadItem.companyName,
+                  partnerBAccType: loadItem.accType,
+                  active: true,
 
+                })
+              }
 
 
 
@@ -306,7 +321,9 @@ function BookLCargo({ }) {
               batch.update(
                 doc(db, "organizationProfiles", analyticsOrganizationId),
                 {
-                  requestsPblcCargo: increment(1),
+                  publicCargo: {
+                    totalRequestsInitiated: increment(1)
+                  }
 
                 },
 
@@ -317,16 +334,17 @@ function BookLCargo({ }) {
               batch.update(
                 doc(db, "organizationProfiles", loadItem.organizationId),
                 {
-                  requestedPblcCargo: increment(1),
+                  publicCargo: {
+                    totalRequestsSent: increment(1),
+                  }
 
                 },
 
 
               );
 
-
-
               // Add Time with Id
+              const nowTime = Timestamp.now();
 
               const assignmentTimeId = `${loadItem.id}_${item.id}`
                 .toLowerCase()
@@ -344,39 +362,54 @@ function BookLCargo({ }) {
 
               batch.set(addingTimeTrackForFleet, {
 
-                requestedAt: serverTimestamp(),
+                requestedAt: nowTime,
                 respondedAt: null,
                 respondedTimeMs: null,
-                status: "PENDING"
+                status: "PENDING",
+                truckId: item.id,
+                loadId: loadItem.id,
+                response: "PENDING", // or DECLINED
+                cargoType: "PUBLIC",
+                cargoOwnerAcc: loadItem.postedBy.accType,
+                partnerId: loadItem.organizationId,
+
+                createdAt: serverTimestamp(),
+
 
               });
 
-              //eeting the time for fleet 
+              //eeting the time for  Load
               const addingTimeTrackForLoad = doc(
                 db,
                 "organizationProfiles",
-                analyticsOrganizationId,
+                loadItem.organizationId,
                 "requestAnalytics",
                 assignmentTimeId
               );
 
               batch.set(addingTimeTrackForLoad, {
 
-                requestedAt: serverTimestamp(),
+                requestedAt: nowTime,
                 respondedAt: null,
                 respondedTimeMs: null,
-                status: "PENDING"
+                status: "PENDING",
+                response: "PENDING", // or DECLINED
+                partnerId: analyticsOrganizationId,
+
+                truckId: item.id,
+                loadId: loadItem.id,
+                cargoType: "PUBLIC",
+                cargoOwnerAcc: loadItem.postedBy.accType,
+                createdAt: serverTimestamp()
+
 
               });
 
 
               await batch.commit();
-
-
-
-
-
             }
+
+
 
             if (loadItem.expoPushToken) {
               await sendBookingWithTrackerNotification(

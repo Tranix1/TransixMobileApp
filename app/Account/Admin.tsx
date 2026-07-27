@@ -45,49 +45,37 @@ const Admin = () => {
             let filters: any[] = [];
 
 
-            if (isSuperAdmin()) {
-                // Super admin can see all users
-                if (verifiedOUnverified === "approved") {
+            // Super admin can see all users
+            if (verifiedOUnverified === "approved") {
 
-                    filters = [
-                        where("verificationStatus", "==", "approved"),
+                filters = [
+                    where("verificationStatus", "==", "approved"),
 
-                    ];
+                ];
 
-                } else if (verifiedOUnverified === "pending") {
-                    filters = [
-                        where("verificationStatus", "==", "pending"),
-
-                    ];
-                } else if (verifiedOUnverified === "declined") {
-                    filters = [
-                        where("verificationStatus", "==", "declined"),
-
-                    ];
-                }
+            } else if (verifiedOUnverified === "pending") {
+                filters = [
+                    where("verificationStatus", "==", "pending"),
 
 
+                ];
 
+            } else if (verifiedOUnverified === "declined") {
+                filters = [
+                    where("verificationStatus", "==", "declined"),
 
-                const result = await fetchDocuments("verifiedUsers", 200, undefined)
-
-                setUsers(result.data);
-
-
-            } else if (user?.uid) {
-                // Non-super admin can only see users they referred
-                usersData = await getUsersByReferrerId(user.uid);
-            } else {
-                usersData = [];
+                ];
             }
 
-            if (Array.isArray(usersData)) {
-                setUsers(usersData);
-                setTotalUsers(usersData.length);
-            } else {
-                setUsers([]);
-                setTotalUsers(0);
-            }
+
+
+
+            const result = await fetchDocuments("verifiedUsers", 200, undefined)
+
+            setUsers(result.data);
+
+
+
         } catch (error) {
             console.error('Error fetching users:', error);
             setUsers([]);
@@ -105,45 +93,45 @@ const Admin = () => {
 
 
 
-   async function approveAcc(
-        organizationId : string,
-        organizationName: string ,
-         userId : string ,
-         adminName: string ,
-          accType : string ,  
-        ) {
-            const orgDBAcc = accType==="fleet" ? "fleets" : accType==="brokerage" ? "brokerages" : accType ==="driver" ? "Drivers":""
+    async function approveAcc(
+        organizationId: string,
+        organizationName: string,
+        userId: string,
+        adminName: string,
+        accType: string,
+    ) {
+        const orgDBAcc = accType === "fleet" ? "fleets" : accType === "brokerage" ? "brokerages" : accType === "driver" ? "Drivers" : ""
 
-            updateDocument("verifiedUsers", organizationId ,{
-                verificationStatus: 'approved',
+        updateDocument("verifiedUsers", organizationId, {
+            verificationStatus: 'approved',
 
-            })
+        })
 
-             updateDocument("organizationProfiles", organizationId ,{
-                verificationStatus: 'approved',
+        updateDocument("organizationProfiles", organizationId, {
+            verificationStatus: 'approved',
 
-            })
+        })
 
-                updateDocument(orgDBAcc , organizationId ,{
-                verificationStatus: 'approved',
+        updateDocument(orgDBAcc, organizationId, {
+            verificationStatus: 'approved',
 
-            })
+        })
 
-            const pathForNotification = accType==="fleet" ? `Fleet/FleetSelector/Index` : accType==="brokerage" ? "brokerage/BrokerageSelector/Index" : accType ==="driver" ? "brokerage/BrokerageSelector/Index":""
+        const pathForNotification = accType === "fleet" ? `Fleet/FleetSelector/Index` : accType === "brokerage" ? "brokerage/BrokerageSelector/Index" : accType === "driver" ? "brokerage/BrokerageSelector/Index" : ""
 
 
-              await notifyUserById(
-              userId,
-              `Hello ${adminName}`,
-              `Your ${accType} account for ${organizationName}, has been approved and is now active. Thank you for choosing transix`,
+        await notifyUserById(
+            userId,
+            `Hello ${adminName}`,
+            `Your ${accType} account for ${organizationName}, has been approved and is now active. Thank you for choosing transix`,
 
-              {
+            {
                 pathname: pathForNotification,
-              }, {
-              type: "account_verification",
-            }
-            );
-            
+            }, {
+            type: "account_verification",
+        }
+        );
+
 
     }
 
@@ -158,7 +146,7 @@ const Admin = () => {
                 </View>
                 <View style={styles.userDetails}>
                     <ThemedText type="default" style={styles.userName}>
-                        {user.displayName || 'No Name'}
+                        {user.organizationName || 'No Name'}
                     </ThemedText>
 
                     {user.phoneNumber && (
@@ -170,10 +158,10 @@ const Admin = () => {
                         <ThemedText type="tiny" color={coolGray}>
                             ID: {user.id.substring(0, 8)}...
                         </ThemedText>
-                        {user.userType && (
+                        {user.accType && (
                             <View style={[styles.userTypeBadge, { backgroundColor: accent }]}>
                                 <ThemedText color="white" type="tiny">
-                                    {user.accType}
+                                    {user.accType} {user.verificationStatus}
                                 </ThemedText>
                             </View>
                         )}
@@ -184,7 +172,7 @@ const Admin = () => {
 
 
 
-   <View style={{
+            <View style={{
                 flexDirection: 'row',
                 gap: wp(2),
                 marginTop: wp(2),
@@ -193,7 +181,7 @@ const Admin = () => {
 
                 <TouchableOpacity
                     style={styles.actionButton}
-                    onPress={()=>approveAcc(user.organizationId,user.organizationName , user.userId ,user.adminName ,user.accType)}
+                    onPress={() => approveAcc(user.organizationId, user.organizationName, user.userId, user.adminName, user.accType)}
                 >
                     <Ionicons
                         name="alert-circle-outline"
@@ -210,7 +198,7 @@ const Admin = () => {
                 {/* DRIVER */}
                 <TouchableOpacity
                     style={styles.actionButton}
-                    
+
                 >
                     <Ionicons name="person-circle-outline" size={16} color={accent} />
                     <ThemedText style={styles.actionButtonText}>Decline</ThemedText>
@@ -219,14 +207,14 @@ const Admin = () => {
                 {/* LOAD */}
                 <TouchableOpacity
                     style={styles.actionButton}
-                   
+
                 >
                     <Ionicons name="cube-outline" size={16} color={accent} />
                     <ThemedText style={styles.actionButtonText}>Hold</ThemedText>
                 </TouchableOpacity>
 
 
-                 <TouchableOpacity
+                <TouchableOpacity
                     style={styles.actionButton}
                 >
                     <Ionicons
@@ -242,7 +230,7 @@ const Admin = () => {
                 </TouchableOpacity>
 
 
-           
+
             </View>
 
 
@@ -418,12 +406,12 @@ const styles = StyleSheet.create({
     },
     listContainer: {
         flex: 1,
-    },  actionButtonText: {
+    }, actionButtonText: {
         color: "white",
         fontSize: 12,
         fontWeight: "600",
     },
-        actionButton: {
+    actionButton: {
         flex: 1,
         flexDirection: "row",
         alignItems: "center",

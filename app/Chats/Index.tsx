@@ -44,7 +44,7 @@ export default function ChatIndex() {
             ? currentRole.fleetId
             : user?.fleetId ?? (Array.isArray(user?.fleets) ? user?.fleets[0]?.fleetId : undefined);
 
-            console.log("Current Role:", currentRole);
+    console.log("Current Role:", currentRole);
     useEffect(() => {
         if (!user?.uid) {
             setLoading(false);
@@ -112,7 +112,7 @@ export default function ChatIndex() {
         return () => unsubscribe();
     }, [user?.uid]);
 
-    
+
 
     useEffect(() => {
         if (!fleetId) {
@@ -140,26 +140,26 @@ export default function ChatIndex() {
 
 
 
-const fetchFleetOwner = async () => {
-  try {
-    const fleetRef = doc(db, "fleets", fleetId);
-    const fleetSnap = await getDoc(fleetRef);
+        const fetchFleetOwner = async () => {
+            try {
+                const fleetRef = doc(db, "fleets", fleetId);
+                const fleetSnap = await getDoc(fleetRef);
 
-    if (fleetSnap.exists()) {
-      const data = fleetSnap.data();
+                if (fleetSnap.exists()) {
+                    const data = fleetSnap.data();
 
-      setFleetOwner({
-        id: fleetSnap.id,
-        ...data,
-      });
-    }
+                    setFleetOwner({
+                        id: fleetSnap.id,
+                        ...data,
+                    });
+                }
 
-  } catch (error) {
-    console.error("Error fetching fleet owner", error);
-  }
-};
+            } catch (error) {
+                console.error("Error fetching fleet owner", error);
+            }
+        };
 
-fetchFleetOwner();
+        fetchFleetOwner();
 
     }, [fleetId]);
 
@@ -167,76 +167,76 @@ fetchFleetOwner();
 
 
 
-    const startChat = async (person : { userId?: string; ownerId?: string; uid?: string; id?: string }) => {
+    const startChat = async (person: { userId?: string; ownerId?: string; uid?: string; id?: string }) => {
 
         console.log("Starting chat with person:", person);
 
-  if (!user?.uid) return;
+        if (!user?.uid) return;
 
-  const otherUserId =
-    person?.userId ??
-    person?.ownerId ??
-    person?.uid ??
-    person?.id;
+        const otherUserId =
+            person?.userId ??
+            person?.ownerId ??
+            person?.uid ??
+            person?.id;
 
-      console.log("Current:", user.uid);
-  console.log("Other:", otherUserId);
+        console.log("Current:", user.uid);
+        console.log("Other:", otherUserId);
 
-  if (!otherUserId) return;
+        if (!otherUserId) return;
 
-  if (otherUserId === user.uid) {
-    console.log("Cannot start a chat with yourself");
-    return;
-  }
-
-
-
-  const chatId = [user.uid, otherUserId]
-    .sort()
-    .join("_");
-
-  const chatRef = doc(db, "chats", chatId);
-  const chatSnap = await getDoc(chatRef);
-
-  if (!chatSnap.exists()) {
-    await setDoc(chatRef, {
-      chatId,
-      participants: [user.uid, otherUserId],
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      lastMessage: "",
-      lastMessageAt: null,
-      type: "direct",
-    });
-  }
-
-  router.push({
-    pathname: "/Chats/ChatScreen",
-    params: { chatId },
-  });
-};
+        if (otherUserId === user.uid) {
+            console.log("Cannot start a chat with yourself");
+            return;
+        }
 
 
+
+        const chatId = [user.uid, otherUserId]
+            .sort()
+            .join("_");
+
+        const chatRef = doc(db, "chats", chatId);
+        const chatSnap = await getDoc(chatRef);
+
+        if (!chatSnap.exists()) {
+            await setDoc(chatRef, {
+                chatId,
+                participants: [user.uid, otherUserId],
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                lastMessage: "",
+                lastMessageAt: null,
+                type: "direct",
+            });
+        }
+
+        router.push({
+            pathname: "/Chats/ChatScreen",
+            params: { chatId },
+        });
+    };
 
 
 
 
 
 
-  
+
+
+
     const [dspMenu, setDspMenu] = useState(false);
 
-    
+
 
     return (
         <View style={[styles.wrapper, { backgroundColor: background }]}>
-             <UserMenuModal
-                            visible={dspMenu}
-                            onClose={() => setDspMenu(false)}
-                            user={user}
-                            onProfileUpdate={() => {}}
-                        />
-            <CustomHeader pageTitle="Chats" onPressMenu={() => setDspMenu(true)} />
+            <UserMenuModal
+                visible={dspMenu}
+                onClose={() => setDspMenu(false)}
+                user={user}
+                onProfileUpdate={() => { }}
+            />
+            <CustomHeader pageTitle="Chats" />
 
             <View style={[styles.searchContainer, { borderColor: border, backgroundColor: background }]}>
                 <TextInput
@@ -252,23 +252,23 @@ fetchFleetOwner();
 
 
 
-          <FlatList
-                            data={[
-  fleetOwner,
-  ...(fleetDrivers || [])
-].filter(Boolean)}
-                            keyExtractor={(item) => item.id}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={[styles.driverItem, { borderColor: icon, backgroundColor: background }]}
-                                    onPress={() => startChat(item)}
-                                >
-                              <ThemedText> {item.fullName || "Unnamed Driver"} </ThemedText>
-                                </TouchableOpacity>
-                            )}
-                            contentContainerStyle={{ paddingTop: wp(4) }}
-                            showsVerticalScrollIndicator={false}
-                        />
+            <FlatList
+                data={[
+                    fleetOwner,
+                    ...(fleetDrivers || [])
+                ].filter(Boolean)}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                    <TouchableOpacity
+                        style={[styles.driverItem, { borderColor: icon, backgroundColor: background }]}
+                        onPress={() => startChat(item)}
+                    >
+                        <ThemedText> {item.fullName || "Unnamed Driver"} </ThemedText>
+                    </TouchableOpacity>
+                )}
+                contentContainerStyle={{ paddingTop: wp(4) }}
+                showsVerticalScrollIndicator={false}
+            />
 
 
         </View>

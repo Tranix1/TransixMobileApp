@@ -50,7 +50,7 @@ export default function ChatScreen() {
     useEffect(() => {
         if (!chatId) return;
 
-        let unsubscribe = () => {};
+        let unsubscribe = () => { };
 
         const loadChat = async () => {
             try {

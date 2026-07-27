@@ -20,7 +20,7 @@ export type CurrentRole =
         email: string | null
         billingAddress: string | null
         baseAdress: string | null
-        profilePhoto : string 
+        profilePhoto: string
 
     }
     | {
@@ -40,7 +40,7 @@ export type CurrentRole =
         email: string | null
         billingAddress: string | null
         baseAdress: string | null
-        profilePhoto : string 
+        profilePhoto: string
 
     }
     | {
@@ -57,7 +57,7 @@ export type CurrentRole =
         email: string | null
         billingAddress: string | null
         baseAdress: string | null
-        profilePhoto : string 
+        profilePhoto: string
 
 
     } | {
@@ -75,7 +75,7 @@ export type CurrentRole =
         billingAddress: string | null
         baseAdress: string | null
         companyName: string
-        profilePhoto : string 
+        profilePhoto: string
 
     };
 
@@ -285,7 +285,7 @@ export type PrivateTruckType = {
 };
 export type Load = {
     id: string,
-    cargoId : string
+    cargoId: string
     distance: string,
     duration: string,
     durationInTraffic: string,
@@ -389,7 +389,7 @@ export const Countries = ['Zimbabwe',
 ]
 export type User = {
     uid: string,
-    createdAt?: number | string; // required
+    createdAt?: number; // required
 
     displayName?: string,
     photoURL?: string,
@@ -401,14 +401,14 @@ export type User = {
     address?: string,
     referrerId?: string, // ID of the user who referred this user
     referredBy?: {
-        userId: string ;
-        name?: string ;
-        phoneNumber?: string ;
-        referralCode: string ;
-        joinedAt?: string ;
-        campaign?: string  ;
-        platform?:string
-        createdAt ?: string
+        userId: string;
+        name?: string;
+        phoneNumber?: string;
+        referralCode: string;
+        joinedAt?: string;
+        campaign?: string;
+        platform?: string
+        createdAt?: string
     };
     expoPushToken?: string, // Push notification token
     [key: string]: any; // To allow additional properties
@@ -524,16 +524,16 @@ export type DocumentAsset = {
 
 export type ProofFileType = 'pdf' | 'image' | 'doc' | 'docx';
 
-    export type SelectLocationProp = {
+export type SelectLocationProp = {
 
-        description: string;
-        placeId: string;
-        latitude: number;
-        longitude: number;
-        country: string | null;
-        city: string | null;
+    description: string;
+    placeId: string;
+    latitude: number;
+    longitude: number;
+    country: string | null;
+    city: string | null;
 
-    }
+}
 
 export interface FuelItem {
     fuelType: string;

@@ -1,28 +1,32 @@
 import { Platform } from "react-native";
-import { collection, doc, serverTimestamp, setDoc, type DocumentData } from "firebase/firestore";
+import { collection, doc, serverTimestamp, setDoc, Timestamp, type DocumentData } from "firebase/firestore";
 import { db } from "@/db/fireBaseConfig";
 import { SelectLocationProp } from "@/types/types";
 /** Additional, event-specific values stored with an analytics event. */
 export type AnalyticsMetadata = {
- cargoArea?: string | null;
+  cargoArea?: string | null;
   tankerType?: string | null;
   truckCapacity?: string | null;
   truckOperatingLocations?: string[];
-  brokerType ?: string | null  
-  typeOfFleet ?:  string | null
-  truckId ?: string ,
-  loadId ?: string
-  operationType ?: string  | string[]
+  brokerType?: string | null
+  typeOfFleet?: string | null
+  truckId?: string,
+  loadId?: string
+  operationType?: string | string[],
+  cargoId?: string,
+  driverId?: string,
+  truckCargoArea?: string,
 };
 
 /** Identity and attribution values attached to every analytics event. */
 export interface AnalyticsContext {
   userId?: string | null;
+  accountAge: string | null;
   organizationId?: string | null;
   organizationType?: string | null;
   role?: string | null;
   accountType?: string | null;
-  truckId?: string | null ;
+  truckId?: string | null;
   country?: SelectLocationProp | null;
   city?: string | null;
   platform?: string | null;
@@ -48,11 +52,12 @@ export async function trackEvent(input: TrackEventInput): Promise<string> {
     eventName: input.eventName,
     timestamp: serverTimestamp(),
     userId: input.userId ?? null,
+    accountAge: input.accountAge ?? null,
     organizationId: input.organizationId ?? null,
     organizationType: input.organizationType ?? null,
     role: input.role ?? null,
     accountType: input.accountType ?? null,
-   
+
     country: input.country ?? null,
     city: input.city ?? null,
     platform: input.platform ?? Platform.OS,
@@ -62,7 +67,13 @@ export async function trackEvent(input: TrackEventInput): Promise<string> {
     organizationProfileId: input.organizationProfileId ?? null,
     appVersion: input.appVersion ?? null,
     devicePlatform: Platform.OS,
+
+
+
+
     metadata: input.metadata ?? {},
+    createdAt: Timestamp.now(),
+    timeStamp: serverTimestamp(),
   };
   await setDoc(eventRef, event);
   return eventRef.id;
@@ -70,7 +81,7 @@ export async function trackEvent(input: TrackEventInput): Promise<string> {
 
 type EventHelper = (context: AnalyticsContext, metadata?: AnalyticsMetadata) => Promise<string>;
 /** Creates a consistently typed helper backed by the immutable event writer. */
-const   event = (eventName: string): EventHelper => (context, metadata) => trackEvent({ ...context, eventName, metadata });
+const event = (eventName: string): EventHelper => (context, metadata) => trackEvent({ ...context, eventName, metadata });
 
 /** Authentication events. */
 export const trackAccountCreated = event("account_created");
@@ -79,11 +90,11 @@ export const trackLogout = event("logout");
 export const trackVerificationSubmitted = event("verification_submitted");
 export const trackAccountVerified = event("account_verified");
 /** Load lifecycle events. */
-export const trackLoadCreated = event("load_created"); export const trackLoadEdited = event("load_edited"); export const trackLoadDeleted = event("load_deleted"); export const trackLoadExpired = event("load_expired");
+export const trackLoadCreated = event("load_created"); export const trackNewUserCreatedLoad = event("newUser_created_load"); export const trackGrowinUserCreatedLoad = event("growingUser_created_load"); export const trackLoadEdited = event("load_edited"); export const trackLoadDeleted = event("load_deleted"); export const trackLoadExpired = event("load_expired");
 export const trackPublicLoadCreated = event("public_load_created"); export const trackPrivateFleetLoadCreated = event("private_fleet_load_created"); export const trackPrivateBrokerageLoadCreated = event("private_brokerage_load_created");
 export const trackRequestCargo = event("request_cargo"); export const trackLoadCancelled = event("load_cancelled"); export const trackLoadCompleted = event("load_completed"); export const trackCargoRequested = event("cargo_requested")
 /** Truck and recommendation events. */
-export const trackTruckAdded = event("truck_added"); export const trackTruckUpdated = event("truck_updated"); export const trackTruckRemoved = event("truck_removed");
+export const trackTruckAdded = event("truck_added"); export const trackNewUserTruckAdded = event("newUser_added_truck"); export const trackGrowingUserTruckAdded = event("growingUser_added_truck"); export const trackTruckUpdated = event("truck_updated"); export const trackTruckRemoved = event("truck_removed");
 export const trackTruckRecommended = event("truck_recommended"); export const trackTruckAccepted = event("truck_accepted"); export const trackTruckDeclined = event("truck_declined");
 /** Private-operation and trip events. */
 export const trackAssignmentCreated = event("assignment_created"); export const trackAssignmentStarted = event("assignment_started"); export const trackAssignmentCompleted = event("assignment_completed");

@@ -2,7 +2,7 @@ import { doc, increment, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "@/db/fireBaseConfig";
 
 /** User-visible organization statistics only. Private financial or member data belongs elsewhere. */
-export type OrganizationMetric = "loadsPosted" | "loadsCompleted" | "truckCount" | "requestsPblcCargo" | "requestedPblcCargo" | "acceptanceRate" | "completedTrips" | "activeTrips" | "followers" | "profileViews" | "averageRating" | "verifiedBadge" | "responseRate" | "responseTime" | "memberCount" | "joinedNetworks";
+export type OrganizationMetric = "loadsPosted" | "loadsCompleted" | "truckCount" | "requestsPblcCargo" | "requestedPblcCargo" | "acceptanceRate" | "completedTrips" | "activeTrips" | "followers" | "profileViews" | "averageRating" | "verifiedBadge" | "responseRate" | "responseTime" | "memberCount" | "joinedNetworks" | "recommendedTrucks";
 
 /** Atomically changes a field on the public `organizationProfiles/{id}` document. */
 export async function incrementOrganizationMetric(organizationProfileId: string, metric: OrganizationMetric, amount = 1): Promise<void> {
@@ -27,7 +27,7 @@ export const incrementRequestsAcceptedPblcCargo = metric("requestsPblcCargo"); e
 
   const incrementAcceptedRequestedPblcCargo = metric("requestedPblcCargo");
 
-
+export const incrementRecommendedTrucksOrg = metric("recommendedTrucks");
 
 export const incrementAcceptanceRate = metric("acceptanceRate"); export const incrementCompletedTrips = metric("completedTrips"); export const incrementActiveTrips = metric("activeTrips"); export const incrementFollowers = metric("followers");
 export const incrementProfileViews = metric("profileViews"); export const incrementAverageRating = metric("averageRating"); export const incrementVerifiedBadge = metric("verifiedBadge"); export const incrementResponseRate = metric("responseRate");

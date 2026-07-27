@@ -6,7 +6,7 @@ import { addDocumentWithId, updateDocument } from '@/db/operations';
 import { notifyTrucksByFilters } from '@/Utilities/notifyTruckByFilters';
 import { Customer } from '@/components/CustomerPicker';
 import { notifyUserById, sendPushNotification } from '@/Utilities/pushNotification';
-import { trackLoadCreated } from '@/services/analytics/appAnalytics';
+import { trackAssignmentCreated, trackGrowinUserCreatedLoad, trackLoadCreated, trackNewUserCreatedLoad } from '@/services/analytics/appAnalytics';
 import { incrementActiveLoads, incrementPrivateBrokerageLoads, incrementPrivateFleetLoads, incrementPublicLoads, incrementTotalLoads } from '@/services/analytics/dashboardAnalytics';
 import { incrementLoadsPosted } from '@/services/analytics/organizationAnalytics';
 
@@ -82,11 +82,21 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     phoneNumber: user.phoneNumber || '',
   };
   const analyticsType = currentRole?.accType === 'brokerage' ? 'brokerage' : 'fleet';
+
+
+  const daySinceSignup = (Date.now() - user?.createdAt!) / (1000 * 60 * 60 * 24)
+  const accountAge = daySinceSignup < 30 ? "new" : daySinceSignup < 90 ? "active" : "established"
+
   const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId || null;
-  const analyticsContext = { userId: user?.uid, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType ?? null, role: currentRole?.userRole ?? null, accountType: currentRole?.accType ?? null, referrerId: user?.referredBy?.userId ?? null, referralCodeUsed: user?.referredBy?.referralCode ?? null, campaign: user?.referredBy?.campaign ?? null, platform: user?.referredBy?.platform ?? null, metadata: { loadId: cargoId, visibility: loadVisibility } };
+  const analyticsContext = { userId: user?.uid, accountAge: accountAge, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType ?? null, role: currentRole?.userRole ?? null, accountType: currentRole?.accType ?? null, referrerId: user?.referredBy?.userId ?? null, referralCodeUsed: user?.referredBy?.referralCode ?? null, campaign: user?.referredBy?.campaign ?? null, platform: user?.referredBy?.platform ?? null, metadata: { loadId: cargoId, visibility: loadVisibility } };
   const recordLoadCreated = () => {
+
     void trackLoadCreated(analyticsContext).catch(console.error);
+
+
+
     if (!analyticsOrganizationId) return;
+
     void incrementTotalLoads(analyticsType, analyticsOrganizationId).catch(console.error);
     void incrementActiveLoads(analyticsType, analyticsOrganizationId).catch(console.error);
 
@@ -152,6 +162,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     shipper: selectedCustomer,
     isTrackingEnabled: isTrackingEnabled,
     createdByAcc: currentRole?.accType,
+    visibility: visibilityTag,
+
 
   };
 
@@ -324,16 +336,25 @@ export const submitLoad = async (params: SubmitLoadParams) => {
 
     if (assignmentDetails.length > 0) {
 
-      updateDocument("organizationProfiles", analyticsOrganizationId, {
-        privateLoads: {
-          assigned: increment(1)
-        }
-      })
 
       for (const assignment of assignmentDetails) {
         const assignmentDocId = `${cargoId}_${assignment.truckId}_${assignment.driverId}`;
         await addDocumentWithId(`fleets/${fleetId}/assignments`, assignmentDocId, assignment);
+
+        updateDocument("organizationProfiles", analyticsOrganizationId, {
+          privateCargo: {
+            assigned: increment(1)
+          }
+        })
+
+        const context = { userId: user?.uid, accountAge: accountAge, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole.accType, role: currentRole.userRole, accountType: currentRole.accType, metadata: { assignmentId: assignmentDocId, loadId: cargoId, truckId: assignment.truckDetails.truckId, assigmentType: "PRIVATE_FLEET_CARGO" } };
+
+        void trackAssignmentCreated(context).catch(console.error);
+
+
       }
+
+
 
       for (const assignment of assignmentDetails) {
 
@@ -342,6 +363,110 @@ export const submitLoad = async (params: SubmitLoadParams) => {
           try {
 
             const driverUserId = assignment.driverDetails?.driverId.replace("DRV_")
+
+
+            const batchSec = writeBatch(db);
+
+            // Update Truckorganization stats
+            batchSec.update(
+              doc(db, "organizationProfiles", analyticsOrganizationId),
+              {
+
+                driverAssignment: {
+                  totalRequestsInitiated: increment(1)
+                }
+
+              },
+
+
+            );
+
+            // Update driver organization stats
+
+            batchSec.update(
+              doc(db, "organizationProfiles", assignment.driverDetails?.driverId),
+              {
+                driverAssignment: {
+                  totalRequestsSent: increment(1),
+                }
+
+              },
+
+
+            );
+
+            // Add Time with Id
+            const nowTime = Timestamp.now();
+
+            const assignmentTimeId = `${cargoId}_${assignment.driverDetails?.driverId}`
+              .toLowerCase()
+              .replace(/\s+/g, "_");
+
+
+            //eeting the time for fleet 
+            const addingTimeTrackForFleet = doc(
+              db,
+              "organizationProfiles",
+              analyticsOrganizationId,
+              "requestAnalytics",
+              assignmentTimeId
+            );
+
+            batchSec.set(addingTimeTrackForFleet, {
+
+              requestedAt: nowTime,
+              respondedAt: null,
+              respondedTimeMs: null,
+              status: "PENDING",
+              truckId: assignment?.truckDetails?.truckId || null,
+              loadId: cargoId,
+              assignmentId: `${cargoId}_${assignment.truckId}_${assignment.driverId}`,
+              response: "PENDING", // or DECLINED
+              cargoType: "PRIVATE",
+              cargoOwnerAcc: currentRole?.accType,
+
+              driverId: assignment.driverDetails?.driverId,
+              createdAt: serverTimestamp(),
+
+
+            });
+
+            //eeting the time for  driver
+            const addingTimeTrackForLoad = doc(
+              db,
+              "organizationProfiles",
+              assignment.driverDetails?.driverId,
+              "requestAnalytics",
+              assignmentTimeId
+            );
+
+            batchSec.set(addingTimeTrackForLoad, {
+
+              requestedAt: nowTime,
+              respondedAt: null,
+              respondedTimeMs: null,
+              status: "PENDING",
+              response: "PENDING", // or DECLINED
+
+              truckId: assignment?.truckDetails?.truckId || null,
+              loadId: cargoId,
+              assignmentId: `${cargoId}_${assignment.truckId}_${assignment.driverId}`,
+
+              cargoType: "PRIVATE",
+              cargoOwnerAcc: currentRole?.accType,
+              fleetId: analyticsOrganizationId,
+              createdAt: serverTimestamp()
+
+
+            });
+
+
+            await batchSec.commit();
+
+
+
+
+
 
 
             await notifyUserById(
@@ -385,6 +510,9 @@ export const submitLoad = async (params: SubmitLoadParams) => {
           ToastAndroid.SHORT
         );
       }
+
+
+
 
     } else {
 
@@ -464,10 +592,6 @@ export const submitLoad = async (params: SubmitLoadParams) => {
   };
 
 
-
-
-
-
   const writeBrokerPrivateLoad = async () => {
     await setDoc(doc(db, `brokerages/${brokerId}/Cargo`, cargoId), {
       ...commonLoadData,
@@ -478,6 +602,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     });
 
     for (const truck of selectedBrokerTrucks) {
+
+
 
       // const assignmentDocId = `${cargoId}_${assignment.truckId}_${assignment.driverId}`;
       // await addDocumentWithId(`fleets/${fleetId}/assignments`, assignmentDocId, assignment);
@@ -570,6 +696,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
           phone: currentRole.phone,
           billingAddress: currentRole.location.description,
           createdBy: user?.uid,
+          createdByAcc: "brokerages",
+
         },
         timeStamp: serverTimestamp(),
 
@@ -579,14 +707,119 @@ export const submitLoad = async (params: SubmitLoadParams) => {
 
 
 
+
+
+      const batchSec = writeBatch(db);
+
+      // Update Truckorganization stats
+      batchSec.update(
+        doc(db, "organizationProfiles", truck.fleetId),
+        {
+
+          privateBrokerCargo: {
+            totalRequestsSent: increment(1),
+          }
+
+        },
+
+
+      );
+
+      // Update Load organization stats
+
+      batchSec.update(
+        doc(db, "organizationProfiles", analyticsOrganizationId),
+        {
+
+          privateBrokerCargo: {
+            totalRequestsInitiated: increment(1)
+          }
+        },
+
+
+      );
+
+      // Add Time with Id
+      const nowTime = Timestamp.now();
+
+      const assignmentTimeId = `${cargoId}_${truck?.id}`
+        .toLowerCase()
+        .replace(/\s+/g, "_");
+
+
+      //eeting the time for fleet 
+      const addingTimeTrackForFleet = doc(
+        db,
+        "organizationProfiles",
+        truck.fleetId,
+        "requestAnalytics",
+        assignmentTimeId
+      );
+
+      batchSec.set(addingTimeTrackForFleet, {
+
+        requestedAt: nowTime,
+        respondedAt: null,
+        respondedTimeMs: null,
+        status: "PENDING",
+        truckId: truck?.id,
+        loadId: cargoId,
+        response: "PENDING", // or DECLINED
+        cargoType: "PRIVATE",
+        cargoOwnerAcc: currentRole?.accType,
+        createdAt: serverTimestamp(),
+        partnerId: analyticsOrganizationId,
+        cargoOwner: false,
+        externalLoadOrg: analyticsOrganizationId,
+
+      });
+
+      //eeting the time for  Load
+      const addingTimeTrackForLoad = doc(
+        db,
+        "organizationProfiles",
+        analyticsOrganizationId,
+        "requestAnalytics",
+        assignmentTimeId
+      );
+
+      batchSec.set(addingTimeTrackForLoad, {
+
+        requestedAt: nowTime,
+        respondedAt: null,
+        respondedTimeMs: null,
+        status: "PENDING",
+        response: "PENDING", // or DECLINED
+
+        truckId: truck?.id,
+        loadId: cargoId,
+        cargoType: "PRIVATE",
+        cargoOwner: true,
+        partnerId: truck.fleetId,
+
+        createdAt: serverTimestamp()
+
+
+      });
+
+
+      await batchSec.commit();
+
+
+
+      const context = { userId: user?.uid, accountAge: accountAge, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole.accType, role: currentRole.userRole, accountType: currentRole.accType, metadata: { assignmentId: docId, loadId: cargoId, truckId: truck.truckId, assigmentType: "PRIVATE_BROKERAGE_CARGO" } };
+
+      void trackAssignmentCreated(context).catch(console.error);
+
+
+
+
       const dispatcherId =
         truck.assignments?.dispatcher?.id;
 
 
       if (dispatcherId) {
         try {
-
-
 
           await notifyUserById(
             dispatcherId,

@@ -6,7 +6,7 @@ import CustomHeader from "@/components/CustomHeader";
 import ReferralCodeModal from "@/components/ReferralCodeModal";
 import { router } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
-import {  setDocuments, updateDocument, readById } from '@/db/operations';
+import { setDocuments, updateDocument, readById, addDocumentWithId } from '@/db/operations';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { hp, wp } from "@/constants/common";
@@ -44,7 +44,7 @@ function FleetSelector() {
     }, [user, hasReferral]);
 
 
-   
+
 
     const handleRefresh = async () => {
         if (user) {
@@ -60,7 +60,7 @@ function FleetSelector() {
     const getVerifiedStatus = async (recordId?: string) => {
         if (!recordId) return 'pending';
         try {
-            const record = await readById('verifiedUsers', recordId) as any ;
+            const record = await readById('verifiedUsers', recordId) as any;
             return record?.verificationStatus || 'pending';
         } catch (error) {
             console.error('Error fetching verification status:', error);
@@ -68,7 +68,7 @@ function FleetSelector() {
         }
     };
 
-    
+
 
     const uploadedDocuments = [
         user?.driverProfile?.selfieImage,
@@ -172,6 +172,25 @@ function FleetSelector() {
 
                     const contactRef = doc(db, 'fleets', fleet.fleetId, 'Contacts', `DRV_${user?.uid}`);
                     await setDoc(contactRef, contactDetails);
+
+
+
+                    const partershipId = [fleet.fleetId, `DRV_${user.uid}`].sort().join("_");
+
+                    const checkPartershipExist = await readById("partners", partershipId)
+                    if (!checkPartershipExist) {
+                        addDocumentWithId("partners", partershipId, {
+                            partnerAId: fleet.fleetId,
+                            partnerAName: fleet.companyName || fleet.fleetName,
+                            partnerAAccType: "fleet",
+
+                            partnerBId: `DRV_${user.uid}`,
+                            partnerBName: user?.displayName,
+                            partnerBAccType: "driver",
+                            active: true,
+
+                        })
+                    }
 
 
 
@@ -430,24 +449,24 @@ function FleetSelector() {
             )}
 
             <ReferralCodeModal
-                           visible={showReferralModal}
-                           initialCode={referralCode}
-                           isSubmitting={isSubmitting}
-                           onClose={() => setShowReferralModal(!hasReferral)}
-           
-                           onSubmit={(code) =>
-                               handleSubmitReferralCode({
-                                   code,
-                                   user,
-                                   setupUser,
-                                   setReferralCode,
-                                   setShowReferralModal,
-                                   setIsSubmitting
-                               })
-                           }
-                           onLogout={handleLogout}
-                           onRefresh={handleRefresh}
-                       />
+                visible={showReferralModal}
+                initialCode={referralCode}
+                isSubmitting={isSubmitting}
+                onClose={() => setShowReferralModal(!hasReferral)}
+
+                onSubmit={(code) =>
+                    handleSubmitReferralCode({
+                        code,
+                        user,
+                        setupUser,
+                        setReferralCode,
+                        setShowReferralModal,
+                        setIsSubmitting
+                    })
+                }
+                onLogout={handleLogout}
+                onRefresh={handleRefresh}
+            />
         </View>
     );
 }

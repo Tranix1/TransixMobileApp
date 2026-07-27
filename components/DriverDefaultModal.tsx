@@ -18,7 +18,10 @@ import {
     doc,
     updateDoc,
     serverTimestamp,
-    writeBatch
+    writeBatch,
+    Timestamp,
+    increment,
+    getDoc,
 } from "firebase/firestore";
 
 import { db } from "@/db/fireBaseConfig";
@@ -35,28 +38,42 @@ type Props = {
     visible: boolean;
     onClose: () => void;
     fleetId: string;
+    cargoId: string,
     truckId: string;
     numberPlate: string;
     onAssigned?: (driver: any) => void;
 
     typeOfAction?: string
     assignmentId?: string
-    brokerageId?: string
-    assignmentSource?: string
+
+
+    cargoOwnerDetails?: {
+        id: string
+        organizationId: string
+        name: string
+        phone: string
+        billingAddress: string
+        createdBy: string
+        createdByAcc: string,
+
+    }
+
+    externalLoad: boolean
 };
 
 
 export default function DriverDefaultModal({
     visible,
     onClose,
+    cargoId,
     fleetId,
     truckId,
     numberPlate,
     onAssigned,
     typeOfAction,
     assignmentId,
-    brokerageId,
-    assignmentSource,
+    cargoOwnerDetails,
+    externalLoad,
 }: Props) {
 
     const accent = useThemeColor("accent");
@@ -136,14 +153,25 @@ export default function DriverDefaultModal({
     };
 
 
+
+
+
+
+
+
+
+
     const setDriverToAssigment = async () => {
 
         if (!assignmentId) return
         try {
 
-            if (assignmentSource === "brokerage") {
 
-                updateDocument(`brokerages/${brokerageId}/assignments`, assignmentId, {
+            if (externalLoad) {
+
+
+
+                updateDocument(`${cargoOwnerDetails?.createdByAcc}/${cargoOwnerDetails?.organizationId}/assignments`, assignmentId, {
 
                     status: "PENDING",
                     driverDetails: {
@@ -177,9 +205,144 @@ export default function DriverDefaultModal({
                     },
                     driverPayment: selected.payment,
 
-
                 })
-            } else if (assignmentSource === "fleet") {
+
+
+
+
+
+
+
+
+
+
+
+                const batch = writeBatch(db);
+
+                const assignmentTimeIdEXTE = `${cargoId}_${truckId}`
+                    .toLowerCase()
+                    .replace(/\s+/g, "_");
+
+                //eeting the time for fleet 
+                const addingTimeTrackForCargoOwnerEXTE = doc(
+                    db,
+                    "organizationProfiles",
+                    `${cargoOwnerDetails?.organizationId}`,
+                    "requestAnalytics",
+                    assignmentTimeIdEXTE
+                );
+
+                const getRequestedAt = await getDoc(addingTimeTrackForCargoOwnerEXTE);
+
+                const requestedAt = getRequestedAt.data()?.requestedAt;
+
+                if (!requestedAt) {
+                    throw new Error("Missing requestedAt");
+                }
+                const nowTimeEXTE = Timestamp.now();
+
+                // Seeting time for load owner
+                const respondedTimeMs =
+                    nowTimeEXTE.toMillis() - requestedAt.toMillis();
+
+                batch.set(addingTimeTrackForCargoOwnerEXTE, {
+
+                    respondedAt: nowTimeEXTE,
+                    respondedTimeMs: respondedTimeMs,
+                    status: "RESPONDED",
+                    response: "ACCEPTED", // or DECLINED
+
+
+                });
+
+                //eeting the time for fleet 
+                const addingTimeTrackForLoadEXTE = doc(
+                    db,
+                    "organizationProfiles",
+                    `${currentRole.organizationId}`,
+                    "requestAnalytics",
+                    assignmentTimeIdEXTE
+                );
+
+                batch.set(addingTimeTrackForLoadEXTE, {
+
+                    respondedAt: nowTimeEXTE,
+                    respondedTimeMs: respondedTimeMs,
+                    status: "RESPONDED",
+                    response: "ACCEPTED", // or DECLINED
+
+
+                });
+
+
+                // Update Truck organization stats
+                batch.update(
+                    doc(db, "organizationProfiles", `${currentRole.organizationId}`),
+                    {
+                        privateBrokerCargo: {
+                            acceptedRequestsReceived: increment(1),
+                            totalResponses: increment(1),
+                            totalResponseTimesMs: increment(respondedTimeMs),
+                        }
+
+                    },
+
+                );
+
+
+                // Update Load organization stats
+
+                batch.update(
+                    doc(db, "organizationProfiles", `${cargoOwnerDetails?.organizationId}`),
+                    {
+
+
+
+                        privateBrokerCargo: {
+                            acceptedRequests: increment(1),
+                        }
+
+
+                    },
+
+                );
+
+
+                await batch.commit();
+
+
+
+                if (cargoOwnerDetails?.createdBy) {
+
+                    await notifyUserById(
+                        cargoOwnerDetails?.createdBy,
+                        "New Load Assignment 📦",
+                        `You have been assigned a new load with ${numberPlate}. Please review and accept or reject it.`,
+                        {
+                            pathname: "/Driver/AssignmentDetails",
+                            params: {
+                                assignmentId,
+                            },
+                        },
+                        {
+                            type: "load_assignment",
+                            assignmentId,
+                            truckId,
+                            fleetId,
+                        }
+                    );
+
+                } else {
+                    alert("Driver has no user account linked");
+                }
+
+
+
+
+
+
+
+            } else {
 
 
                 updateDocument(`fleets/${fleetId}/assignments`, assignmentId, {
@@ -201,6 +364,113 @@ export default function DriverDefaultModal({
 
                 })
             }
+
+
+
+
+            const batchSec = writeBatch(db);
+
+            // Update Truckorganization stats
+            batchSec.update(
+                doc(db, "organizationProfiles", `${currentRole?.organizationId}`),
+                {
+
+
+
+                    driverAssignment: {
+                        totalRequestsInitiated: increment(1)
+                    }
+
+                },
+
+
+            );
+
+            // Update driver organization stats
+
+            batchSec.update(
+                doc(db, "organizationProfiles", selected.driverUserId),
+                {
+                    driverAssignment: {
+                        totalRequestsSent: increment(1),
+                    }
+
+                },
+
+
+            );
+
+            // Add Time with Id
+            const nowTime = Timestamp.now();
+
+            const assignmentTimeId = `${cargoId}_${selected.driverUserId}`
+                .toLowerCase()
+                .replace(/\s+/g, "_");
+
+
+            //eeting the time for fleet 
+            const addingTimeTrackForFleet = doc(
+                db,
+                "organizationProfiles",
+                `${currentRole?.organizationId}`,
+                "requestAnalytics",
+                assignmentTimeId
+            );
+
+            batchSec.set(addingTimeTrackForFleet, {
+
+                requestedAt: nowTime,
+                respondedAt: null,
+                respondedTimeMs: null,
+                status: "PENDING",
+                truckId: truckId || null,
+                loadId: cargoId,
+                assignmentId: assignmentId,
+
+                response: "PENDING", // or DECLINED
+                cargoType: "PRIVATE",
+                cargoOwnerAcc: currentRole?.accType,
+                createdAt: serverTimestamp(),
+
+
+            });
+
+            //eeting the time for  driver
+            const addingTimeTrackForLoad = doc(
+                db,
+                "organizationProfiles",
+                selected.driverUserId,
+                "requestAnalytics",
+                assignmentTimeId
+            );
+
+            batchSec.set(addingTimeTrackForLoad, {
+
+                requestedAt: nowTime,
+                respondedAt: null,
+                respondedTimeMs: null,
+                status: "PENDING",
+                response: "PENDING", // or DECLINED
+
+                truckId: truckId || null,
+
+                loadId: cargoId,
+
+                assignmentId: assignmentId,
+
+                cargoType: "PRIVATE",
+                cargoOwnerAcc: currentRole?.accType,
+                createdAt: serverTimestamp()
+
+
+            });
+
+            await batchSec.commit();
+
+
+
+
+
 
             if (selected.driverUserId) {
 

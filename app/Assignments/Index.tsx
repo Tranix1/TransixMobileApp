@@ -20,7 +20,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { router } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/db/fireBaseConfig';
-import { collection, getDocs, doc, updateDoc, addDoc, query, orderBy, increment, getDoc, serverTimestamp, arrayUnion, where } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, where } from 'firebase/firestore';
 import Heading from '@/components/Heading';
 import { wp, hp } from '@/constants/common';
 import Input from '@/components/Input';
@@ -347,53 +347,6 @@ function RejectReasonModal({
 // under fleets/{fleetId}/Assignments/{assignmentId}/activity, keeps a
 // running list per type, and bumps notesCount/issuesCount on the parent doc.
 // ---------------------------------------------------------------------------
-function AssignmentActivityPanel({
-
-    assignmentId,
-    fleetId,
-    initialNotesCount,
-    initialIssuesCount,
-    cargoRate,
-    cargoRateCurrency,
-    cargoRateModel,
-    cargoRatePerKm,
-    cargoPaymentTerms,
-    accent,
-    backgroundLight,
-    icon,
-
-}: {
-    assignmentId: string;
-    fleetId: string | undefined;
-    initialNotesCount?: number;
-    initialIssuesCount?: number;
-    cargoRate: string,
-    cargoRateCurrency: string;
-    cargoRateModel: string;
-    cargoRatePerKm: string;
-    cargoPaymentTerms: [];
-    accent: string;
-    backgroundLight: string;
-    icon: string
-}) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
-
-
 
 
 // ---------------------------------------------------------------------------
@@ -542,18 +495,18 @@ function Jobs() {
         }
     };
     const onRefresh = async () => {
-                try {
-                    setRefreshing(true);
-                    setError(null);
-                    await fetchAssignments();
-                } catch (error) {
-                    console.error('Error refreshing loads:', error);
-                    setError('Failed to refresh loads. Please try again.');
-                    ToastAndroid.show('Failed to refresh loads', ToastAndroid.SHORT);
-                } finally {
-                    setRefreshing(false);
-                }
-            };
+        try {
+            setRefreshing(true);
+            setError(null);
+            await fetchAssignments();
+        } catch (error) {
+            console.error('Error refreshing loads:', error);
+            setError('Failed to refresh loads. Please try again.');
+            ToastAndroid.show('Failed to refresh loads', ToastAndroid.SHORT);
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
     useEffect(() => {
 
@@ -578,21 +531,7 @@ function Jobs() {
                 ...(rejectionReason ? { rejectionReason } : {}),
             });
 
-            const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId || scopeId;
-            const normalizedStatus = newStatus.toLowerCase();
-            if (analyticsOrganizationId && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
-                const context = { userId: user?.uid, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType, role: currentRole?.userRole, accountType: currentRole?.accType, metadata: { cargoId, assignmentId: assignmentDocId, status: newStatus } };
-                if (normalizedStatus === 'active' || normalizedStatus === 'started') {
-                    void trackAssignmentStarted(context).catch(console.error);
-                    void incrementAssignmentsStarted(currentRole.accType, analyticsOrganizationId).catch(console.error);
-                    void incrementActiveTrips(analyticsOrganizationId).catch(console.error);
-                }
-                if (normalizedStatus === 'completed') {
-                    void trackAssignmentCompleted(context).catch(console.error);
-                    void incrementAssignmentsCompleted(currentRole.accType, analyticsOrganizationId).catch(console.error);
-                    void incrementCompletedTrips(analyticsOrganizationId).catch(console.error);
-                }
-            }
+
 
             setAssignedCargo((prev) =>
                 prev.map((item) =>
@@ -739,13 +678,13 @@ function Jobs() {
                     )}
                     onEndReached={loadMoreAssignments}
                     onEndReachedThreshold={0.5}
-                     refreshControl={
-                                        <RefreshControl
-                                            refreshing={refreshing}
-                                            onRefresh={onRefresh}
-                                            colors={[accent]}
-                                        />
-                                    }
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[accent]}
+                        />
+                    }
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
                             {isLoading ? (

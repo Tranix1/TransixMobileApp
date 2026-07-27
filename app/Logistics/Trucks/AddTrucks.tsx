@@ -29,7 +29,7 @@ import { db } from "@/db/fireBaseConfig";
 import { doc, collection, getDoc, getDocs, query, where, limit, serverTimestamp, writeBatch } from "firebase/firestore";
 import { SelectLocationProp } from "@/types/types";
 import { PhoneAuthCredential } from "firebase/auth";
-import { trackTruckAdded } from '@/services/analytics/appAnalytics';
+import { trackGrowingUserTruckAdded, trackNewUserTruckAdded, trackTruckAdded } from '@/services/analytics/appAnalytics';
 import { incrementTotalTrucks } from '@/services/analytics/dashboardAnalytics';
 import { incrementTruckCount } from '@/services/analytics/organizationAnalytics';
 
@@ -603,12 +603,18 @@ function AddTrucks() {
       })
 
 
+      const daySinceSignup = (Date.now() - user?.createdAt!) / (1000 * 60 * 60 * 24)
+      const accountAge = daySinceSignup < 30 ? "new" : daySinceSignup < 90 ? "active" : "established"
+
+
       const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
       if (analyticsOrganizationId) {
+
 
         void trackTruckAdded(
           {
             userId: user?.uid,
+            accountAge: accountAge,
             organizationId: analyticsOrganizationId,
             organizationProfileId: analyticsOrganizationId,
             organizationType: 'fleet',
@@ -628,6 +634,9 @@ function AddTrucks() {
 
 
         ).catch(console.error);
+
+
+
         void incrementTotalTrucks('fleet', analyticsOrganizationId).catch(console.error);
         void incrementTruckCount(analyticsOrganizationId).catch(console.error);
       }
@@ -661,7 +670,7 @@ function AddTrucks() {
       };
 
       await updateTruckTypeCount(selectedCargoArea.name)
-      
+
 
       // Auto-attach the fleet's active default brokerages to this new
       // truck and notify them — mirrors the manual "Other Brokers" flow.

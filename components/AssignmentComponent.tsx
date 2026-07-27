@@ -16,7 +16,7 @@ import { router } from "expo-router";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { getRelativeTime } from "@/Utilities/getDateRelativeTime";
 import { wp, hp } from "@/constants/common";
-import { increment, updateDoc } from "firebase/firestore";
+import { increment, Timestamp, updateDoc } from "firebase/firestore";
 import { ImagePickerAsset } from 'expo-image-picker';
 import { fetchDocuments, updateDocument, uploadImage } from '@/db/operations';
 import { arrayUnion } from "firebase/firestore";
@@ -26,6 +26,9 @@ import GetTrackerModal from "./GetTrackerModal";
 import { notifyUserById } from "@/Utilities/pushNotification";
 import { db } from "@/db/fireBaseConfig";
 import { doc, collection, serverTimestamp, writeBatch, getDoc } from "firebase/firestore";
+import { trackAssignmentCompleted, trackAssignmentStarted } from "@/services/analytics/appAnalytics";
+import { incrementAssignmentsCompleted, incrementAssignmentsStarted, } from "@/services/analytics/dashboardAnalytics";
+import { incrementActiveTrips, incrementCompletedTrips } from "@/services/analytics/organizationAnalytics";
 
 const getStatusColor = (status: string) => {
     switch (status) {
@@ -49,6 +52,11 @@ export default function AssignmentCard({ assignmentData }: any) {
     const { user, currentRole } = useAuth()
 
     const scopeId = currentRole.accType === 'brokerage' ? currentRole?.organizationId : currentRole?.fleetId;
+
+    const daySinceSignup = (Date.now() - user?.createdAt!) / (1000 * 60 * 60 * 24)
+    const accountAge = daySinceSignup < 30 ? "new" : daySinceSignup < 90 ? "active" : "established"
+
+
 
     const [proofTargetId, setProofTargetId] = useState<string | null>(null);
     const [proofImages, setProofImages] = useState<Record<string, ImagePickerAsset[]>>({});
@@ -135,6 +143,11 @@ export default function AssignmentCard({ assignmentData }: any) {
     const startTrip = async (
         assignmentId: string,
         externalLoad: boolean,
+
+        cargoId: string,
+        cargoVisibility: string,
+
+        truckId: string,
         fleetCoordinator: coordinatorProps,
         cargoCoordinator?: coordinatorProps,
         createdByAcc?: string,
@@ -179,6 +192,358 @@ export default function AssignmentCard({ assignmentData }: any) {
 
 
 
+            let typeOfLoadStarted
+
+            if (externalLoad) {
+                // private broker cargo 
+                if (cargoVisibility === "PRIVATE") {
+
+
+                    const batchExteBrkPrvt = writeBatch(db);
+
+                    const addingTripStartedExteDoc = `${cargoId}_${truckId}`
+                        .toLowerCase()
+                        .replace(/\s+/g, "_");
+
+                    //eeting the time for fleet 
+                    const tripStartedExteBrk = doc(
+                        db,
+                        "organizationProfiles",
+                        `${cargoCoordinator?.organizationId}`,
+                        "requestAnalytics",
+                        addingTripStartedExteDoc
+                    );
+
+
+
+                    // Seeting time for load owner
+
+                    batchExteBrkPrvt.set(tripStartedExteBrk, {
+
+                        assignmentId: assignmentId,
+                        tripsStarted: true
+
+                    });
+
+                    //eeting the time for fleet 
+                    const tripStartExteBrk = doc(
+                        db,
+                        "organizationProfiles",
+                        `${currentRole.organizationId}`,
+                        "requestAnalytics",
+                        addingTripStartedExteDoc
+                    );
+
+                    batchExteBrkPrvt.set(tripStartExteBrk, {
+
+                        assignmentId: assignmentId,
+                        tripsStarted: true
+
+                    });
+
+
+                    // Update Truck organization stats
+                    batchExteBrkPrvt.update(
+                        doc(db, "organizationProfiles", `${currentRole.organizationId}`),
+                        {
+                            privateBrokerCargo: {
+                                acceptedRequests: increment(1),
+
+                            }
+
+                        },
+
+                    );
+
+
+                    // Update Load organization stats
+
+                    batchExteBrkPrvt.update(
+                        doc(db, "organizationProfiles", `${cargoCoordinator?.organizationId}`),
+                        {
+
+                            privateBrokerCargo: {
+                                tripsStarted: increment(1)
+
+                            }
+
+                        },
+
+                    );
+
+
+                    await batchExteBrkPrvt.commit();
+
+
+
+
+
+
+
+
+                } else {
+                    // if public cargo
+
+
+                    const batchExteBrkPrvt = writeBatch(db);
+
+                    const addingTripStartedExteDoc = `${cargoId}_${truckId}`
+                        .toLowerCase()
+                        .replace(/\s+/g, "_");
+
+                    //eeting the time for fleet 
+                    const tripStartedExteBrk = doc(
+                        db,
+                        "organizationProfiles",
+                        `${cargoCoordinator?.organizationId}`,
+                        "requestAnalytics",
+                        addingTripStartedExteDoc
+                    );
+
+
+
+                    // Seeting time for load owner
+
+                    batchExteBrkPrvt.set(tripStartedExteBrk, {
+
+                        assignmentId: assignmentId,
+                        tripsStarted: true
+
+                    });
+
+                    //eeting the time for fleet 
+                    const tripStartExteBrk = doc(
+                        db,
+                        "organizationProfiles",
+                        `${currentRole.organizationId}`,
+                        "requestAnalytics",
+                        addingTripStartedExteDoc
+                    );
+
+                    batchExteBrkPrvt.set(tripStartExteBrk, {
+
+                        assignmentId: assignmentId,
+                        tripsStarted: true
+
+                    });
+
+
+                    // Update Truck organization stats
+                    batchExteBrkPrvt.update(
+                        doc(db, "organizationProfiles", `${currentRole.organizationId}`),
+                        {
+                            publicCargo: {
+                                acceptedRequests: increment(1),
+
+                            }
+
+                        },
+
+                    );
+
+
+                    // Update Load organization stats
+
+                    batchExteBrkPrvt.update(
+                        doc(db, "organizationProfiles", `${cargoCoordinator?.organizationId}`),
+                        {
+
+                            publicCargo: {
+                                tripsStarted: increment(1)
+
+                            }
+
+                        },
+
+                    );
+
+
+                    await batchExteBrkPrvt.commit();
+
+
+
+
+                }
+
+
+
+            } else {
+                // if public cargo
+
+
+                const batchExteBrkPrvt = writeBatch(db);
+
+                const addingTripStartedExteDoc = `${cargoId}_${truckId}`
+                    .toLowerCase()
+                    .replace(/\s+/g, "_");
+
+                //eeting the time for fleet 
+                const tripStartedExteBrk = doc(
+                    db,
+                    "organizationProfiles",
+                    `${cargoCoordinator?.organizationId}`,
+                    "requestAnalytics",
+                    addingTripStartedExteDoc
+                );
+
+
+                // Update Truck organization stats
+                batchExteBrkPrvt.update(
+                    doc(db, "organizationProfiles", `${currentRole.organizationId}`),
+                    {
+                        privateCargo: {
+                            acceptedRequests: increment(1),
+
+                        }
+
+                    },
+
+                );
+
+                await batchExteBrkPrvt.commit();
+
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            const batch = writeBatch(db);
+
+            const assignmentTimeIdEXTE = `${cargoId}_DRV_${user?.uid}`
+                .toLowerCase()
+                .replace(/\s+/g, "_");
+
+            //eeting the time for fleet 
+            const addingTimeTrackForCargoOwnerEXTE = doc(
+                db,
+                "organizationProfiles",
+                `${currentRole.organizationId}`,
+                "requestAnalytics",
+                assignmentTimeIdEXTE
+            );
+
+            const getRequestedAt = await getDoc(addingTimeTrackForCargoOwnerEXTE);
+
+            const requestedAt = getRequestedAt.data()?.requestedAt;
+
+            if (!requestedAt) {
+                throw new Error("Missing requestedAt");
+            }
+            const nowTimeEXTE = Timestamp.now();
+
+            // Seeting time for load owner
+            const respondedTimeMs =
+                nowTimeEXTE.toMillis() - requestedAt.toMillis();
+
+            batch.set(addingTimeTrackForCargoOwnerEXTE, {
+
+                respondedAt: nowTimeEXTE,
+                respondedTimeMs: respondedTimeMs,
+                status: "RESPONDED",
+                response: "ACCEPTED", // or DECLINED
+                assignmentId: assignmentId,
+                truckId: truckId,
+
+            });
+
+            //eeting the time for Driver
+            const addingTimeTrackForLoadEXTE = doc(
+                db,
+                "organizationProfiles",
+                `DRV_${user?.uid}`,
+                "requestAnalytics",
+                assignmentTimeIdEXTE
+            );
+
+            batch.set(addingTimeTrackForLoadEXTE, {
+
+                respondedAt: nowTimeEXTE,
+                respondedTimeMs: respondedTimeMs,
+                status: "RESPONDED",
+                response: "ACCEPTED", // or DECLINED
+                assignmentId: assignmentId,
+                truckId: truckId,
+
+            });
+
+
+            // Update Truck organization stats
+            batch.update(
+                doc(db, "organizationProfiles", `${currentRole.organizationId}`),
+                {
+
+                    driverAssignment: {
+                        acceptedRequests: increment(1),
+                    }
+
+                },
+
+            );
+
+
+            // Update Load organization stats
+
+            batch.update(
+
+                doc(db, "organizationProfiles", `DRV_${user?.uid}`),
+                {
+
+                    driverAssignment: {
+                        acceptedRequestsReceived: increment(1),
+                        totalResponses: increment(1),
+                        totalResponseTimesMs: increment(respondedTimeMs),
+                    }
+
+
+                },
+
+            );
+
+
+            await batch.commit();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             // Fleet stats
             await updateDocument(
@@ -208,6 +573,32 @@ export default function AssignmentCard({ assignmentData }: any) {
                 );
 
             }
+
+
+
+
+
+
+            const analyticsOrganizationIdForApp = currentRole?.organizationId || currentRole?.fleetId || scopeId;
+            if (analyticsOrganizationIdForApp && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
+                const context = {
+                    userId: user?.uid,
+                    accountAge: accountAge,
+                    organizationId: analyticsOrganizationIdForApp,
+                    organizationProfileId: analyticsOrganizationIdForApp,
+                    organizationType: currentRole?.accType,
+                    role: currentRole?.userRole,
+                    accountType: currentRole?.accType,
+                    metadata: { cargoId, assignmentId: assignmentId, status: "IN_TRANSIT" }
+                };
+                void trackAssignmentStarted(context).catch(console.error);
+                void incrementAssignmentsStarted(currentRole.accType, analyticsOrganizationIdForApp).catch(console.error);
+
+
+            }
+
+
+
 
 
 
@@ -414,6 +805,8 @@ export default function AssignmentCard({ assignmentData }: any) {
         fleetCoordinator: coordinatorProps,
         cargoCoordinator?: coordinatorProps,
         createdByAcc?: string,
+        cargoId?: string,
+        trckCargoArea?: string,
     ) => {
 
 
@@ -588,6 +981,28 @@ export default function AssignmentCard({ assignmentData }: any) {
 
             }
 
+
+
+
+            const analyticsOrganizationIdForApp = currentRole?.organizationId || currentRole?.fleetId || scopeId;
+            if (analyticsOrganizationIdForApp && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
+                const context = {
+                    userId: user?.uid,
+                    accountAge: accountAge,
+                    organizationId: analyticsOrganizationIdForApp,
+                    organizationProfileId: analyticsOrganizationIdForApp,
+                    organizationType: currentRole?.accType,
+                    role: currentRole?.userRole,
+                    accountType: currentRole?.accType,
+                    metadata: { cargoId, assignmentId: assignmentId, status: "IN_TRANSIT", truckCargoArea: trckCargoArea, }
+                };
+
+                void trackAssignmentCompleted(context).catch(console.error);
+                void incrementAssignmentsCompleted(currentRole.accType, analyticsOrganizationIdForApp).catch(console.error);
+            }
+
+
+
         } catch (error) {
 
             console.log("Confirmation error:", error);
@@ -596,6 +1011,7 @@ export default function AssignmentCard({ assignmentData }: any) {
 
 
     };
+
 
 
 
@@ -619,6 +1035,7 @@ export default function AssignmentCard({ assignmentData }: any) {
                 visible={dspAssignDriverModaal}
                 onClose={() => setDspAssignDriverModal(false)}
                 fleetId={currentRole?.organizationId ? currentRole?.organizationId : ""}
+                cargoId={assignmentData.loadDetails.loadId || assignmentData.loadDetails.cargoId}
                 truckId={assignmentData?.truckDetails?.truckId || "UNASSIGNED"}
                 numberPlate={assignmentData?.truckDetails?.numberPlate}
                 onAssigned={(driver) => {
@@ -626,8 +1043,12 @@ export default function AssignmentCard({ assignmentData }: any) {
                 }}
                 typeOfAction="Assign Driver"
                 assignmentId={assignmentData.id}
-                brokerageId={assignmentData.brokerageCoordinator?.organizationId || ""}
-                assignmentSource={assignmentData.externalLoad ? "brokerage" : "fleet"}
+
+
+                cargoOwnerDetails={assignmentData.shipper || {}}
+                externalLoad={assignmentData.externalLoad}
+
+
             />
 
 
@@ -976,7 +1397,12 @@ export default function AssignmentCard({ assignmentData }: any) {
                             if (assignmentData.status === "PENDING") {
                                 startTrip(
                                     assignmentData.id,
+
                                     assignmentData.externalLoad,
+                                    assignmentData.loadDetails.loadId || assignmentData.loadDetails.cargoId,
+                                    assignmentData.loadDetails.visibility,
+
+                                    assignmentData.truckDetails.truckId,
                                     assignmentData.fleetCoordinator,
                                     assignmentData.cargoCoordinator
                                 );
@@ -1122,6 +1548,8 @@ export default function AssignmentCard({ assignmentData }: any) {
                             assignmentData.fleetCoordinator,
                             assignmentData.cargoCoordinator,
                             assignmentData.createdByAcc,
+                            assignmentData.loadDetails.loadId || assignmentData.loadDetails.cargoId,
+                            assignmentData.truckDetails.cargoArea,
                         )
                     }
                 >

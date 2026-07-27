@@ -56,7 +56,6 @@ const AddLoadDB = () => {
   const [pickupDateTruckId, setPickupDateTruckId] = useState<string | null>(null);
   const [deliveryDateTruckId, setDeliveryDateTruckId] = useState<string | null>(null);
 
-
   const [assignmentOrigin, setAssignmentOrigin] =
     useState<SelectLocationProp | null>(null);
 
@@ -120,7 +119,7 @@ const AddLoadDB = () => {
 
       // Fetch trucks for broker search functionality
       try {
-        const trucksGetResult = await fetchDocuments(`fleets/${currentRole.fleetId}/Trucks`, 100, undefined , [where("approvalStatus", "==", "approved")]);
+        const trucksGetResult = await fetchDocuments(`fleets/${currentRole.fleetId}/Trucks`, 100, undefined, [where("approvalStatus", "==", "approved")]);
         if (trucksGetResult && trucksGetResult.data && Array.isArray(trucksGetResult.data)) {
           setFleetTrucks(trucksGetResult.data);
           setSearchedTrucks(trucksGetResult.data); // Initialize searchedBrokerTrucks with all trucks
@@ -143,8 +142,8 @@ const AddLoadDB = () => {
       if (currentRole && currentRole.accType === 'brokerage') {
         try {
           // Use getDocs to fetch broker assigned trucks directly
-          const brokerTrucksQuery = query(collection(db, `brokerages/${currentRole.organizationId}/Trucks` ) , where("status","==" , "active")  );
-          const brokerTrucksSnapshot = await getDocs(brokerTrucksQuery );
+          const brokerTrucksQuery = query(collection(db, `brokerages/${currentRole.organizationId}/Trucks`), where("status", "==", "active"));
+          const brokerTrucksSnapshot = await getDocs(brokerTrucksQuery);
 
           const brokerTrucksData = brokerTrucksSnapshot.docs.map(doc => ({
             id: doc.id,
@@ -601,7 +600,7 @@ const AddLoadDB = () => {
         return;
       }
 
-      if(ratePerKm < 2 && (loadVisibility ==="Public" || loadVisibility==="Both" ) ){
+      if (ratePerKm < 2 && (loadVisibility === "Public" || loadVisibility === "Both")) {
         alert("the rate per killometer must be greater than 2")
         return
       }

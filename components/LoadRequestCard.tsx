@@ -14,12 +14,14 @@ import AssignmentModal from "@/components/AssignmentModal";
 import { LoadTracker } from "@/components/LoadTracker";
 import { useAuth } from '@/context/AuthContext';
 import { getRelativeTime } from "@/Utilities/getDateRelativeTime";
-import { serverTimestamp } from "firebase/firestore";
+import { serverTimestamp, Timestamp } from "firebase/firestore";
 import { trackAssignmentCreated, trackTruckAccepted } from '@/services/analytics/appAnalytics';
-      
-import { incrementAssignmentsCreated,incrementRequestsAcceptedPblcCargo  } from '@/services/analytics/dashboardAnalytics';
+import { incrementAssignmentsCreated, } from '@/services/analytics/dashboardAnalytics';
 // Function to get relative time (e.g., "1 hr ago", "4 seconds ago")
+import { incrementRequestsAcceptedPblcCargo, incrementAcceptedRequestedPblcCargo } from "@/services/analytics/organizationAnalytics";
 
+import { doc, writeBatch, getDoc, increment } from "firebase/firestore";
+import { db } from "@/db/fireBaseConfig";
 
 export const RequestedCargo = ({
   item, dspRoute, currentLocation
@@ -102,7 +104,7 @@ export const RequestedCargo = ({
       driverDetails: item.driverDetails,
 
       driverId: item.driverDetails?.driverId || null,
-        externalLoad: true,
+      externalLoad: true,
 
       status: "ASSIGNED",
       createdAt: new Date(),
@@ -117,17 +119,17 @@ export const RequestedCargo = ({
 
     const assigmentId = `${item.loadItemDetails.loadId}_${item.truckDetails.truckId}`
 
-    await addDocumentWithId(`fleets/${item.fleetDetails.id}/assignments`, assigmentId , {
+    await addDocumentWithId(`fleets/${item.fleetDetails.id}/assignments`, assigmentId, {
       ...payload,
-      shipper: item.loadItemDetails.organizationDetails || null ,
-      timeStamp: serverTimestamp() ,
+      shipper: item.loadItemDetails.organizationDetails || null,
+      timeStamp: serverTimestamp(),
     });
 
     // Cargo Adder Owner can now see the booking in their Assigments section
-    await addDocumentWithId(`${item.loadItemDetails.postedBy.accType}/${item.loadItemDetails.postedBy.organizationId}/assignments`,assigmentId, {
+    await addDocumentWithId(`${item.loadItemDetails.postedBy.accType}/${item.loadItemDetails.postedBy.organizationId}/assignments`, assigmentId, {
       ...payload,
-      shipper: item.loadItemDetails.shipper || null ,
-      timeStamp: serverTimestamp() ,
+      shipper: item.loadItemDetails.shipper || null,
+      timeStamp: serverTimestamp(),
 
     })
 
@@ -146,9 +148,11 @@ export const RequestedCargo = ({
 
     const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
 
+    const daySinceSignup = (Date.now() - user?.createdAt!) / (1000 * 60 * 60 * 24)
+    const accountAge = daySinceSignup < 30 ? "new" : daySinceSignup < 90 ? "active" : "established"
 
     if (analyticsOrganizationId && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
-      const context = { userId: user?.uid, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole.accType, role: currentRole.userRole, accountType: currentRole.accType, metadata: { assignmentId: assigmentId, loadId: item.loadItemDetails.loadId, truckId: item.truckDetails.truckId } };
+      const context = { userId: user?.uid, accountAge: accountAge, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole.accType, role: currentRole.userRole, accountType: currentRole.accType, metadata: { assignmentId: assigmentId, loadId: item.loadItemDetails.loadId, truckId: item.truckDetails.truckId, assigmentType: "PUBLIC_CARGO" } };
 
       void trackAssignmentCreated(context).catch(console.error);
 
@@ -158,16 +162,110 @@ export const RequestedCargo = ({
 
       // Truck Owner
 
-      void incrementRequestsAcceptedPblcCargo(currentRole.accType, item?.fleetDetails?.id).catch(console.error);
-      
-      // LoadOwner
-
-      void incrementAcceptedRequestedPblcCargo(currentRole.accType, analyticsOrganizationId).catch(console.error);
-      
+      void incrementRequestsAcceptedPblcCargo(item?.fleetDetails?.id).catch(console.error);
+      // Load Owner
+      void incrementAcceptedRequestedPblcCargo(analyticsOrganizationId).catch(console.error);
 
 
 
-      
+
+
+
+
+
+
+      const batch = writeBatch(db);
+
+      const assignmentTimeId = `${item.loadItemDetails.loadId}_${item.truckDetails.truckId}`
+        .toLowerCase()
+        .replace(/\s+/g, "_");
+
+      //eeting the time for fleet 
+      const addingTimeTrackForFleet = doc(
+        db,
+        "organizationProfiles",
+        analyticsOrganizationId,
+        "requestAnalytics",
+        assignmentTimeId
+      );
+
+      const getRequestedAt = await getDoc(addingTimeTrackForFleet);
+
+      const requestedAt = getRequestedAt.data()?.requestedAt;
+
+      if (!requestedAt) {
+        throw new Error("Missing requestedAt");
+      }
+      const nowTime = Timestamp.now();
+
+      // Seeting time for load owner
+      const respondedTimeMs =
+        nowTime.toMillis() - requestedAt.toMillis();
+
+      batch.set(addingTimeTrackForFleet, {
+
+        respondedAt: nowTime,
+        respondedTimeMs: respondedTimeMs,
+        status: "RESPONDED",
+        response: "ACCEPTED", // or DECLINED
+
+
+      });
+
+      //eeting the time for fleet 
+      const addingTimeTrackForLoad = doc(
+        db,
+        "organizationProfiles",
+        analyticsOrganizationId,
+        "requestAnalytics",
+        assignmentTimeId
+      );
+
+      batch.set(addingTimeTrackForLoad, {
+
+        respondedAt: nowTime,
+        respondedTimeMs: respondedTimeMs,
+        status: "RESPONDED",
+        response: "ACCEPTED", // or DECLINED
+
+
+      });
+
+
+      // Update Truck organization stats
+      batch.update(
+        doc(db, "organizationProfiles", item?.fleetDetails?.id),
+        {
+          publicCargo: {
+            acceptedRequests: increment(1),
+          }
+
+
+        },
+
+      );
+      // Update Load organization stats
+
+      batch.update(
+        doc(db, "organizationProfiles", analyticsOrganizationId),
+        {
+
+          publicCargo: {
+            acceptedRequestsReceived: increment(1),
+            totalResponses: increment(1),
+            totalResponseTimesMs: increment(respondedTimeMs),
+          }
+
+        },
+
+      );
+
+
+      await batch.commit();
+
+
+
+
     }
 
     ToastAndroid.show(
@@ -263,7 +361,7 @@ export const RequestedCargo = ({
         >
           {dspRoute === "Requested Loads"
             ? (item.fleetDetails?.name || item.companyName)
-            : item.companyName  }
+            : item.companyName}
         </ThemedText>
 
         {/* RIGHT CHEVRON */}
@@ -501,6 +599,166 @@ export const RequestedCargo = ({
     </View>
   );
 }
+
+
+
+
+
+
+/* 
+
+so whats besy 
+
+ok   one is booking or bidding here so its a request aand am tracking the time here this is how 
+            const batch = writeBatch(db);
+
+            // Update Truckorganization stats
+            batch.update(
+                doc(db, "organizationProfiles", analyticsOrganizationId),
+                {
+                      requestsPblcCargo: increment(1) ,
+
+                } ,
+               
+
+            );
+            // Update Load organization stats
+
+              batch.update(
+                doc(db, "organizationProfiles", loadItem.organizationId),
+                {
+                      requestedPblcCargo: increment(1) ,
+
+                } ,
+               
+
+            );
+
+
+
+            // Add Time with Id
+
+            const assignmentTimeId = `${loadItem.id}_${item.id}`
+                .toLowerCase()
+                .replace(/\s+/g, "_");
+
+
+                //eeting the time for fleet 
+            const addingTimeTrackForFleet = doc(
+                db,
+                "organizationProfiles",
+                analyticsOrganizationId,
+                "provenRoutes",
+                assignmentTimeId
+            );
+
+                batch.set(addingTimeTrackForFleet, {
+                   
+                    requestedAt: serverTimestamp(),
+                    respondedAt :null ,
+                    respondedTimeMs :null ,
+                    status :"PENDING"
+
+                });
+
+                     //eeting the time for fleet 
+            const addingTimeTrackForLoad = doc(
+                db,
+                "organizationProfiles",
+                analyticsOrganizationId,
+                " ",
+                assignmentTimeId
+            );
+
+                  batch.set(addingTimeTrackForLoad, {
+                    
+                      requestedAt: serverTimestamp(),
+                      respondedAt :null ,
+                      respondedTimeMs :null ,
+                      status :"PENDING"
+
+                  });
+
+
+              await batch.commit();
+       so when booked the fleet or truck owner is the analaysticsId    then the load owner accepnt here    but l have an error on requetedAt and servertimsapt to milils how can l make this better and almost perfect 
+      const batch = writeBatch(db);
+
+      const assignmentTimeId = `${item.loadItemDetails.loadId}_${item.truckDetails.truckId}`
+        .toLowerCase()
+        .replace(/\s+/g, "_");
+
+      //eeting the time for fleet 
+      const addingTimeTrackForFleet = doc(
+        db,
+        "organizationProfiles",
+        analyticsOrganizationId,
+        "provenRoutes",
+        assignmentTimeId
+      );
+
+      const getrRquestedAt = await getDoc(addingTimeTrackForFleet);
+
+      const theRequestedAt = getrRquestedAt.data.requestedAt
+      const setRespondedAt = serverTimestamp()
+       const respondedTimeMs= theRequestedAt.toMillis() - setRespondedAt.toMillis() ;
+
+      batch.set(addingTimeTrackForFleet, {
+
+        respondedAt: theRequestedAt,
+        respondedTimeMs: respondedTimeMs,
+        status: "responded"
+
+      });
+
+      //eeting the time for fleet 
+      const addingTimeTrackForLoad = doc(
+        db,
+        "organizationProfiles",
+        analyticsOrganizationId,
+        "provenRoutes",
+        assignmentTimeId
+      );
+
+      batch.set(addingTimeTrackForLoad, {
+
+         respondedAt: theRequestedAt,
+        respondedTimeMs: respondedTimeMs,
+        status: "responded"
+
+      });
+
+
+       // Update Truck organization stats
+      batch.update(
+        doc(db, "organizationProfiles", item?.fleetDetails?.id),
+        {
+          requestsAcceptedPblcCargo: increment(1),
+
+        },
+
+
+      );
+      // Update Load organization stats
+
+      batch.update(
+        doc(db, "organizationProfiles", analyticsOrganizationId),
+        {
+          acceptedRequestedPblcCargo: increment(1),
+          totalResponses : increment(1) ,
+          totalResponseTimesMs : increment(respondedTimeMs)
+
+        },
+
+      );
+
+
+      await batch.commit();
+
+`
+
+
+*/
 
 
 

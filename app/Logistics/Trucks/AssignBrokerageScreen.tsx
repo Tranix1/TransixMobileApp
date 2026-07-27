@@ -31,6 +31,7 @@ import {
 import { db } from '@/db/fireBaseConfig';
 import { SelectLocationProp } from '@/types/types';
 import { sendUserNotification } from '@/Utilities/pushNotification';
+import { addDocumentWithId, readById } from '@/db/operations';
 
 // -----------------------------------------------------------------------------
 // Types
@@ -157,6 +158,22 @@ async function setBrokerageDefaultForFleet(
 
 
         await batch.commit();
+
+        const partershipId = [fleetId, brokerageId].sort().join("_");
+
+        const checkPartershipExist = await readById("partners", partershipId)
+        if (!checkPartershipExist) {
+            addDocumentWithId("partners", partershipId, {
+                partnerAId: fleetId,
+                partnerAName: fleetName,
+                partnerAAccType: "fleet",
+
+                partnerBId: brokerageId,
+                partnerBName: brokerageName,
+                partnerBAccType: "brokerage",
+                active: true
+            })
+        }
 
 
         ToastAndroid.show(
@@ -341,8 +358,8 @@ async function assignTruckBrokerage(
 ): Promise<void> {
     const batch = writeBatch(db);
     const assignedAt = new Date().toISOString();
- 
-    
+
+
     // fleets/{fleetId}/trucks/{truckId}/brokerages/{brokerageId}
     const truckAssignmentRef = doc(db, 'fleets', fleetId, 'Trucks', truckId, 'brokerages', brokerageId);
     batch.set(truckAssignmentRef, {
@@ -367,22 +384,36 @@ async function assignTruckBrokerage(
         cargoArea,
         truckCapacity: capacity,
         numberPlate,
-       locations:  operatingLocations,
+        locations: operatingLocations,
         status: 'active',
         assignedAt,
         timeStamp: serverTimestamp(),
         imageUrl: imageUrl.replace("/o/Trucks/", "/o/Trucks%2F"),
         accType: "Broker",
-        assignments: truckAssigments ,
-        approvalStatus :'approved' ,
+        assignments: truckAssigments,
+        approvalStatus: 'approved',
     });
 
     await batch.commit();
 
-    ToastAndroid.show(
-        "Truck assigned successfully 🚛",
-        ToastAndroid.SHORT
-    );
+
+    const partershipId = [fleetId, brokerageId].sort().join("_");
+
+    const checkPartershipExist = await readById("partners", partershipId)
+    if (!checkPartershipExist) {
+        addDocumentWithId("partners", partershipId, {
+            partnerAId: fleetId,
+            partnerAName: fleetName,
+            partnerAAccType: "fleet",
+
+            partnerBId: brokerageId,
+            partnerBName: brokerageName,
+            partnerBAccType: "brokerage",
+            active: true
+        })
+    }
+
+
 
 
     if (brokerToken) {
@@ -403,6 +434,10 @@ async function assignTruckBrokerage(
     } else {
         console.warn('⚠️ No expoPushToken found for brokerage, skipping notification');
     }
+    ToastAndroid.show(
+        "Truck assigned successfully 🚛",
+        ToastAndroid.SHORT
+    );
 }
 
 /**
@@ -825,7 +860,7 @@ const AssignBrokerageScreen: React.FC = () => {
     const truckAssigments = params.truckAssigments || {}
 
 
-   
+
 
     const background = useThemeColor('background');
     const backgroundLight = useThemeColor('backgroundLight');
@@ -946,7 +981,7 @@ const AssignBrokerageScreen: React.FC = () => {
         const nextIds = new Set(previous);
         nextIds.add(brokerage.id);
         setDefaultBrokerageIds(nextIds);
-        setBrokerageDefaultForFleet(brokerage.id, brokerage.name, fleetId, fleetName ,selectedOtherBrokerage?.expoPushToken).catch(() => {
+        setBrokerageDefaultForFleet(brokerage.id, brokerage.name, fleetId, fleetName, selectedOtherBrokerage?.expoPushToken).catch(() => {
             setDefaultBrokerageIds(previous);
             Alert.alert('Error', 'Could not set default brokerage. Please try again.');
         });
