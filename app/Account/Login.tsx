@@ -22,22 +22,20 @@ import {
     EvilIcons,
 } from '@expo/vector-icons';
 import { AccountType } from '@/types/types';
-import { PhoneAuthProvider } from 'firebase/auth';
-import { auth, firebaseConfig } from '@/db/fireBaseConfig';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import PhoneInput from '@/components/PhoneInput';
 import { router } from 'expo-router';
+
 
 const ACCOUNT_TYPES: {
     key: AccountType;
     label: string;
     icon: (color: string) => React.ReactNode;
 }[] = [
-    { key: 'tracking', label: 'Tracking', icon: (c) => <Ionicons name="location" size={20} color={c} /> },
-    { key: 'fleet', label: 'Fleet', icon: (c) => <FontAwesome5 name="truck" size={17} color={c} /> },
-    { key: 'driver', label: 'Driver', icon: (c) => <Ionicons name="person" size={20} color={c} /> },
-    { key: 'brokerage', label: 'Broker', icon: (c) => <MaterialCommunityIcons name="briefcase-outline" size={20} color={c} /> },
-];
+        { key: 'tracking', label: 'Tracking', icon: (c) => <Ionicons name="location" size={20} color={c} /> },
+        { key: 'fleet', label: 'Fleet', icon: (c) => <FontAwesome5 name="truck" size={17} color={c} /> },
+        { key: 'driver', label: 'Driver', icon: (c) => <Ionicons name="person" size={20} color={c} /> },
+        { key: 'brokerage', label: 'Broker', icon: (c) => <MaterialCommunityIcons name="briefcase-outline" size={20} color={c} /> },
+    ];
 
 const Login = ({ setDspLoginOrSignup }: any) => {
     const [loading, setLoading] = useState(false);
@@ -58,7 +56,8 @@ const Login = ({ setDspLoginOrSignup }: any) => {
     const [otp, setOtp] = useState('');
     const [otpSent, setOtpSent] = useState(false);
 
-    const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
+    const [confirmation, setConfirmation] = useState<any>(null);
+
 
     useEffect(() => {
         const showSub = Keyboard.addListener('keyboardDidShow', () => {
@@ -103,71 +102,90 @@ const Login = ({ setDspLoginOrSignup }: any) => {
             setError(null);
             setLoading(true);
 
-            const provider = new PhoneAuthProvider(auth);
+            // Load Firebase Auth only when OTP is requested
+            const auth = require("@react-native-firebase/auth").default;
 
-            const id = await provider.verifyPhoneNumber(
-                `${countryCode.name}${phoneNumber}`,
-                recaptchaVerifier.current!
+            const confirmationResult = await auth().signInWithPhoneNumber(
+                `${countryCode.name}${phoneNumber}`
             );
 
-            setVerificationId(id);
+            setConfirmation(confirmationResult);
             setOtpSent(true);
-            setLoading(false);
+
         } catch (error: any) {
             console.error(error);
+
             ToastAndroid.show(
                 error?.message || `${error}`,
                 ToastAndroid.LONG
             );
+
+        } finally {
             setLoading(false);
         }
     };
 
-const onsubmit = async () => {
-    if (!phoneNumber || !otp) {
-        setError('Please fill in all fields');
-        return;
-    }
 
-    setError(null);
-    setLoading(true);
-
-    try {
-        const res = await loginUser({
-            phoneNumber: `${countryCode.name}${phoneNumber}`,
-            verificationId,
-            otp,
-            accountType: selectedAccount,
-        });
-
-        if (!res.success) {
-            setError(res.message || 'Login failed. Please try again.');
+    const verifyOTP = async (code: string) => {
+        if (!phoneNumber || !code) {
+            setError('Please fill in all fields');
             return;
         }
 
-        
+        if (!confirmation) {
+            setError('OTP session expired. Please request a new code.');
+            return;
+        }
 
-        if (res.currentRole?.userRole === "create_Acc") {
-            if(res.currentRole.accType ==="fleet"){
-                router.push("/Fleet/CreateFleet")
-            }else if(res.currentRole.accType ==="brokerage"){
-                router.push("/brokerage/CreateBrokerage/Index")
-            }else if (res.currentRole.accType ==="driver"){
-                router.push("/Driver/Add/Index")
-            }else{
-                router.push("/")
+        setError(null);
+        setLoading(true);
+
+        try {
+            await confirmation.confirm(code);
+
+
+            const res = await loginUser({
+                phoneNumber: `${countryCode.name}${phoneNumber}`,
+                verificationId,
+                otp,
+                accountType: selectedAccount,
+            });
+
+            if (!res.success) {
+                setError(res.message || 'Login failed. Please try again.');
+                return;
             }
 
-            
-        } else {
-            router.replace('/');
+            if (res.currentRole?.userRole === "create_Acc") {
+                if (res.currentRole.accType === "fleet") {
+                    router.push("/Fleet/CreateFleet");
+                } else if (res.currentRole.accType === "brokerage") {
+                    router.push("/brokerage/CreateBrokerage/Index");
+                } else if (res.currentRole.accType === "driver") {
+                    router.push("/Driver/Add/Index");
+                } else {
+                    router.push("/");
+                }
+            } else {
+                router.replace('/');
+            }
+        } catch (err: any) {
+            console.error(err);
+            ToastAndroid.show(
+                err?.message || `${err}`,
+                ToastAndroid.LONG
+            );
+            setError(err.message || 'Invalid OTP. Please try again.');
+        } finally {
+            setLoading(false);
         }
-    } catch (err: any) {
-        setError(err.message || 'Login failed. Please try again.');
-    } finally {
-        setLoading(false);
-    }
-};
+    };
+
+    const onsubmit = async () => {
+        await verifyOTP(otp);
+    };
+
+
 
     return (
         <ScreenWrapper>
@@ -237,10 +255,7 @@ const onsubmit = async () => {
                         </View>
                     )}
 
-                    <FirebaseRecaptchaVerifierModal
-                        ref={recaptchaVerifier}
-                        firebaseConfig={firebaseConfig}
-                    />
+
 
                     <ThemedText style={styles.label}>Phone Number</ThemedText>
 

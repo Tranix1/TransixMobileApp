@@ -45,7 +45,7 @@ import DriverSelector from "./Driver/DriverSelector/Index"
 import BrokerageSelector from "./brokerage/BrokerageSelector/Index";
 
 import Login from "./Account/Login";
-import Tracking from "./Tracking/Map";
+
 import TrackingIndex from "./Tracking/Index"
 import CreateFleet from "./Fleet/CreateFleet";
 import CreateDriverAcc from "./Driver/Add/Index"
@@ -87,7 +87,7 @@ export default function Index() {
 
   const { currentRole } = useAuth();
 
-    // Check if profile details are missing
+  // Check if profile details are missing
 
   const isAuthReady = !authLoading && user !== undefined;
 
@@ -226,7 +226,7 @@ export default function Index() {
             <>
               {/* <Tab.Screen name="Home " component={dspLoginOSignup ? Login : SignUp} /> */}
 
-              <Tab.Screen name="Home ">
+              <Tab.Screen name="Home">
                 {(props) =>
                   dspLoginOrSignup ? (
                     <Login
@@ -250,7 +250,7 @@ export default function Index() {
 
             (typeof currentRole === 'object' && currentRole.accType === 'tracking') ? (
               <>
-                <Tab.Screen name="Home " component={TrackingIndex} />
+                {/* <Tab.Screen name="Home " component={TrackingIndex} /> */}
                 <Tab.Screen name="About " component={About} />
               </>
             ) : (typeof currentRole === 'object' && currentRole.accType === 'fleet' && currentRole.userRole === 'owner') ? (
@@ -261,62 +261,62 @@ export default function Index() {
                 <Tab.Screen name="Trucks" component={LogisticsTrucks} />
               </>
             ) :
-            
-              (typeof currentRole === 'object' && currentRole.accType === 'fleet' &&currentRole.userRole === "create_Acc" ) ?
+
+              (typeof currentRole === 'object' && currentRole.accType === 'fleet' && currentRole.userRole === "create_Acc") ?
                 (<>
                   <Tab.Screen name="Home " component={CreateFleet} />
                   <Tab.Screen name="About " component={About} />
-                </>):
-              (typeof currentRole === 'object' && currentRole.accType === 'fleet' ) ?
-                (<>
-                  <Tab.Screen name="Home " component={FleetSelector} />
-                  <Tab.Screen name="About " component={About} />
-                </>)
-
-                : (typeof currentRole === 'object' && currentRole.accType === 'driver' && currentRole.userRole === 'driver') ? (
-                  <>
-                    <Tab.Screen name="Jobs" component={Jobs} />
-                    <Tab.Screen name="Trucks" component={Trucks} />
-                    {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
-                    <Tab.Screen name="Earnings" component={Earnings} />
-                  </>
-                ) : (typeof currentRole === 'object' && currentRole.role === 'driver'&&currentRole.userRole === "create_Acc") ?
+                </>) :
+                (typeof currentRole === 'object' && currentRole.accType === 'fleet') ?
                   (<>
-                    <Tab.Screen name="Home " component={CreateDriverAcc} />
-                    <Tab.Screen name="About " component={About} />
-                  </>):
-                
-                (typeof currentRole === 'object' && currentRole.role === 'driver') ?
-                  (<>
-                    <Tab.Screen name="Home " component={DriverSelector} />
+                    <Tab.Screen name="Home " component={FleetSelector} />
                     <Tab.Screen name="About " component={About} />
                   </>)
 
-                  : (typeof currentRole === 'object' && currentRole.accType === 'brokerage' && currentRole.userRole === 'owner') ? (
+                  : (typeof currentRole === 'object' && currentRole.accType === 'driver' && currentRole.userRole === 'driver') ? (
                     <>
-                      <Tab.Screen name="Loads" component={Loads} />
-                      <Tab.Screen name="Trucks" component={LogisticsTrucks} />
+                      <Tab.Screen name="Jobs" component={Jobs} />
+                      <Tab.Screen name="Trucks" component={Trucks} />
                       {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
-                      <Tab.Screen name="Wallet" component={Wallet} />
+                      <Tab.Screen name="Earnings" component={Earnings} />
                     </>
-                  ) 
-                   : (typeof currentRole === 'object' && currentRole.accType === 'brokerage'&&currentRole.userRole === "create_Acc") ?
+                  ) : (typeof currentRole === 'object' && currentRole.role === 'driver' && currentRole.userRole === "create_Acc") ?
                     (<>
-                      <Tab.Screen name="Home " component={CreateBrokerageAcc} />
+                      <Tab.Screen name="Home " component={CreateDriverAcc} />
                       <Tab.Screen name="About " component={About} />
-                    </>):
-                  (typeof currentRole === 'object' && currentRole.accType === 'brokerage') ?
-                    (<>
-                      <Tab.Screen name="Home " component={BrokerageSelector} />
-                      <Tab.Screen name="About " component={About} />
-                    </>)
+                    </>) :
 
-                    : (
-                      <>
-                        {/* <Tab.Screen name="Home " component={Login} /> */}
+                    (typeof currentRole === 'object' && currentRole.role === 'driver') ?
+                      (<>
+                        <Tab.Screen name="Home " component={DriverSelector} />
                         <Tab.Screen name="About " component={About} />
-                      </>
-                    )}
+                      </>)
+
+                      : (typeof currentRole === 'object' && currentRole.accType === 'brokerage' && currentRole.userRole === 'owner') ? (
+                        <>
+                          <Tab.Screen name="Loads" component={Loads} />
+                          <Tab.Screen name="Trucks" component={LogisticsTrucks} />
+                          {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
+                          <Tab.Screen name="Wallet" component={Wallet} />
+                        </>
+                      )
+                        : (typeof currentRole === 'object' && currentRole.accType === 'brokerage' && currentRole.userRole === "create_Acc") ?
+                          (<>
+                            <Tab.Screen name="Home " component={CreateBrokerageAcc} />
+                            <Tab.Screen name="About " component={About} />
+                          </>) :
+                          (typeof currentRole === 'object' && currentRole.accType === 'brokerage') ?
+                            (<>
+                              <Tab.Screen name="Home " component={BrokerageSelector} />
+                              <Tab.Screen name="About " component={About} />
+                            </>)
+
+                            : (
+                              <>
+                                {/* <Tab.Screen name="Home " component={Login} /> */}
+                                {/* <Tab.Screen name="About " component={About} /> */}
+                              </>
+                            )}
         </Tab.Navigator>
 
         <UpdateModal visible={showUpdateModal} onClose={dismissUpdate} currentVersion={currentVersion} latestVersion={latestVersion} updateUrl="https://play.google.com/store/apps/details?id=com.yayapana.TransixNewVersion" isForceUpdate={isForceUpdate} />

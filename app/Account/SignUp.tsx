@@ -24,8 +24,6 @@ import { useAuth } from '@/context/AuthContext';
 import { AccountType } from '@/types/types';
 import { router } from 'expo-router';
 import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
-import { auth } from '@/db/fireBaseConfig';
-import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
 import { useRef } from "react";
 import { firebaseConfig } from '@/db/fireBaseConfig';
 
@@ -62,6 +60,8 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [countryCode, setCountryCode] = useState({ id: 0, name: '' });
 
+    const [confirmation, setConfirmation] = useState<any>(null);
+
     const [verificationId, setVerificationId] = useState("");
     const [otp, setOtp] = useState("");
     const [otpSent, setOtpSent] = useState(false);
@@ -70,8 +70,6 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
 
 
-    const recaptchaVerifier =
-        useRef<FirebaseRecaptchaVerifierModal>(null);
 
     useEffect(() => {
         const showSub = Keyboard.addListener("keyboardDidShow", () => {
@@ -99,7 +97,6 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
 
     const sendPhoneOTP = async () => {
-
         try {
             const length = phoneNumber.replace(/\D/g, "").length;
 
@@ -122,7 +119,7 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
             if (selectedAccount !== "tracking" && !referrerCode) {
                 setError("Referral code is required");
-                return
+                return;
             }
 
             if (!acceptTerms) {
@@ -143,81 +140,53 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                 setReferralValidation(validation);
             }
 
-            setLoading(true)
+            setError(null);
+            setLoading(true);
 
-            const provider = new PhoneAuthProvider(auth);
+            // Load Firebase Auth only when user requests OTP
+            const auth = require("@react-native-firebase/auth").default;
 
-            const id = await provider.verifyPhoneNumber(
-                `${countryCode.name}${phoneNumber}`,
-                recaptchaVerifier.current!
+            const confirmationResult = await auth().signInWithPhoneNumber(
+                `${countryCode.name}${phoneNumber}`
             );
 
-            setVerificationId(id);
+            setConfirmation(confirmationResult);
             setOtpSent(true);
-            setLoading(false)
 
         } catch (error: any) {
-            console.error(error)
+            console.error(error);
+
             ToastAndroid.show(
                 error?.message || `${error}`,
                 ToastAndroid.LONG
             );
-            setLoading(false)
 
-            return {
-                success: false,
-            };
+        } finally {
+            setLoading(false);
         }
     };
 
-
-
-    // const verifyOTP = async () => {
-    //     try {
-
-    //         const credential = PhoneAuthProvider.credential(
-    //             verificationId,
-    //             otp
-    //         );
-
-    //         const userCredential = await signInWithCredential(
-    //             auth,
-    //             credential
-    //         );
-
-    //         ToastAndroid.show(
-    //             `Created ${userCredential.user.uid}`,
-    //             ToastAndroid.LONG
-    //         );
-
-    //     } catch (error: any) {
-    //         ToastAndroid.show(
-    //             error?.message || `${error}`,
-    //             ToastAndroid.LONG
-    //         );
-    //     }
-    // };
-
-
-
-
-
-
-    const onsubmit = async () => {
+    const verifyOTP = async (code: string) => {
         if (!phoneNumber || !fullname) {
             setError("Please fill in all fields");
             return;
         }
 
-
+        if (!confirmation) {
+            setError("OTP session expired. Please request a new code.");
+            return;
+        }
 
         setError(null);
-
-
 
         try {
             setLoading(true);
             setIsSigningUp(true);
+
+            await confirmation.confirm(code);
+
+
+
 
             const result = await signUp({
                 phoneNumber: `${countryCode.name}${phoneNumber}`,
@@ -233,28 +202,36 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
             if (result.success) {
                 if (selectedAccount === "fleet") {
                     router.replace("/Fleet/CreateFleet");
-
                 } else if (selectedAccount === "brokerage") {
-
                     router.replace("/brokerage/CreateBrokerage/Index");
-
                 } else if (selectedAccount === "driver") {
                     router.replace("/Driver/Add/Index");
-
                 } else {
-                    router.push("/")
+                    router.push("/");
                 }
-
             }
 
         } catch (err: any) {
+            console.error(err);
+            ToastAndroid.show(
+                err?.message || `${err}`,
+                ToastAndroid.LONG
+            );
             setError(err.message || "Signup failed. Please try again.");
-
         } finally {
             setLoading(false);
             setIsSigningUp(false);
         }
     };
+
+
+
+
+    const onsubmit = async () => {
+        await verifyOTP(otp);
+    };
+
+
 
 
     return (
@@ -330,10 +307,6 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
 
 
-                    <FirebaseRecaptchaVerifierModal
-                        ref={recaptchaVerifier}
-                        firebaseConfig={firebaseConfig}
-                    />
 
 
                     <ThemedText style={styles.label}>Full Name</ThemedText>
@@ -535,6 +508,7 @@ const styles = StyleSheet.create({
     checkboxText: { marginLeft: wp(2), fontSize: wp(3.5), flexShrink: 1 },
 
     signUpButton: {
+        
         paddingVertical: hp(2),
         borderRadius: wp(100),
         alignItems: 'center',
