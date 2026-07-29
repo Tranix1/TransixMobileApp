@@ -226,7 +226,7 @@ function FleetSelector() {
         if (!fleet) return;
 
         const fleetId = fleet.fleetId || fleet.organizationId;
-        const fleetStatus = fleet.verificationStatus || await getVerifiedStatus(fleetId);
+        const fleetStatus =  await getVerifiedStatus(fleetId);
         if (fleetStatus !== 'approved') {
             ToastAndroid.show(
                 'This fleet connection is not verified yet. Please wait for approval.',

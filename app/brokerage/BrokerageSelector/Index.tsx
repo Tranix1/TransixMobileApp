@@ -66,7 +66,8 @@ function BrokerageSelector() {
         if (!brokerage) return;
 
         const brokerId = brokerage.organizationId || brokerage.brokerageId || brokerage.id;
-        const brokerStatus = brokerage.verificationStatus || await getVerifiedStatus(brokerId);
+        const brokerStatus =  await getVerifiedStatus(brokerId);
+        console.log(brokerStatus)
         if (brokerStatus !== 'approved') {
             ToastAndroid.show(
                 'This brokerage is not verified yet. Please wait for approval.',
@@ -105,7 +106,8 @@ function BrokerageSelector() {
         );
     }
 
-    const [showModal, setShowModal] = useState(false)
+    const [showModal, setShowModal] = useState(true)
+    
     const brokerage = user?.brokerageDetails?.find(
         (item: any) =>
             item.organizationId === currentRole.organizationId
@@ -209,7 +211,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         // paddingHorizontal: 16,
-        paddingTop: 16,
     },
     centered: {
         flex: 1,

@@ -52,8 +52,8 @@ const styles = StyleSheet.create({
     fontFamily: 'sfbold',
   },
   title: {
-    fontSize: 32,
-    fontFamily: 'sfbold',
+      fontSize: 32,
+      fontFamily: 'sfbold',
   },
   subtitle: {
     fontSize: 20,

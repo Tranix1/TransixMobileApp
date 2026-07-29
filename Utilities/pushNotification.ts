@@ -419,6 +419,11 @@ export const notifyUserById = async (
 
     const expoPushToken = userData?.expoPushToken;
 
+    console.log(expoPushToken)
+
+    console.log(userData)
+
+
     if (expoPushToken) {
         await sendUserNotification(
             expoPushToken,

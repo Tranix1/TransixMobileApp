@@ -13,8 +13,6 @@ import { wp } from "@/constants/common";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { updateDocument, uploadImage } from "@/db/operations";
 import { useAuth } from "@/context/AuthContext";
-import { updateProfile } from "firebase/auth";
-import { auth } from "@/db/fireBaseConfig";
 import AccentRingLoader from "./AccentRingLoader";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -54,6 +52,10 @@ console.log(typeof image, )
 
             const accTypeDB = currentRole.accType === "fleet" ? "fleets" : currentRole.accType === "brokerage" ? "brokerages" : currentRole.accType === "driver" ? "drivers" : ""
 
+
+            if(currentRole.userRole !== "create_Acc"){
+
+
             await updateDocument("organizationProfiles", currentRole.organizationId, {
                 profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
 
@@ -68,6 +70,8 @@ console.log(typeof image, )
                 profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
 
             })
+            }
+
 
             const currentRoleAccType = {
                 ...currentRole,
@@ -75,6 +79,7 @@ console.log(typeof image, )
                 profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
 
             };
+            
 
             await AsyncStorage.setItem(
                 "currentRole",

@@ -278,7 +278,6 @@ const CreateFleet = () => {
             const contactDetails = {
                 userName: user?.displayName,
                 phoneNumber: user?.phoneNumber,
-                photoUrl: user?.photoURL,
                 userId: user?.uid,
                 userRole: "owner",
                 status: "active",

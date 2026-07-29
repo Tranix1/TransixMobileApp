@@ -77,7 +77,7 @@ function FleetSelector() {
 
     const handleFleetSelect = async (fleet: any) => {
         const fleetId = fleet.fleetId || fleet.organizationId;
-        const fleetStatus = fleet.verificationStatus || await getVerifiedStatus(fleetId);
+        const fleetStatus =  await getVerifiedStatus(fleetId);
         if (fleetStatus !== 'approved') {
             ToastAndroid.show(
                 'This fleet is not verified yet. Please wait for approval.',

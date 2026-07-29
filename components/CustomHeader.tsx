@@ -60,6 +60,9 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
         });
     };
 
+
+    console.log(currentRole)
+
     return (
         <View style={{ backgroundColor: background, }} >
 
@@ -77,73 +80,86 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
                     image={selectedImage}
                     onClose={() => setProfileImageModal(false)}
                     onChangeImage={handleSelectProfileImage}
-                  
+
                 />
 
 
-                {typeof currentRole === 'object' && (currentRole.role === 'fleet' || currentRole.role === 'brokerage' || currentRole.accType === "driver") ? (
+
+
+                {(currentRole.accType === 'fleet' || currentRole.accType === 'brokerage' || currentRole.accType === "driver") ? (
                     <>
-                        {currentRole.userRole === '' ?
-                            <View style={{
-                                flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-                                paddingVertical: wp(1), paddingHorizontal: wp(4)
-                            }} >
-                                <ThemedText style={{ alignSelf: 'center', fontWeight: 'bold', fontSize: wp(5) }} >{pageTitle} </ThemedText>
-                                <TouchableNativeFeedback onPress={() => setDspMenu(true)} >
-                                    <View >
-                                        <Ionicons name="ellipsis-vertical" size={wp(5)} color={icon} />
-                                    </View>
-                                </TouchableNativeFeedback>
+                        {currentRole.userRole === "create_Acc" ?
+                            <View
+                                style={{
+                                    backgroundColor: background,
+                                    paddingHorizontal: wp(3.5),
+                                    paddingVertical: wp(1),
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: wp(1),
+                                    paddingRight: 15,
 
+                                }}
+                            >
 
+                                <View style={{}}>
+                                    <ThemedText style={{ fontSize: 30, fontFamily: 'sfbold', }} >{pageTitle}</ThemedText>
+                                    {pageTitle === "Tracking" && <ThemedText type='default' >Role: {currentRole.accType}
+                                    </ThemedText>}
+                                </View>
 
-
-                                <TouchableNativeFeedback onPress={handleSelectProfileImage}>
-                                    <View
-                                        style={{
-                                            padding: wp(1),
-                                            width: wp(12),
-                                            height: wp(12),
-                                            borderRadius: wp(6),
-                                            overflow: "hidden",
-                                            justifyContent: "center",
-                                            alignItems: "center",
-                                            borderWidth: 1,
-                                            borderColor: accent
-                                        }}
-                                    >
-
-                                        {user?.photoURL ? (
-                                            <Image
-                                                source={{ uri: user.photoURL }}
+                                <View style={{ flexDirection: "row" }}>
+                                    <View style={{ paddingRight: 20 }}>
+                                        <TouchableNativeFeedback onPress={handleSelectProfileImage} style={{ paddingRight: 15 }}>
+                                            <View
                                                 style={{
-                                                    width: "100%",
-                                                    height: "100%"
+                                                    padding: wp(1),
+                                                    width: wp(9),
+                                                    height: wp(9),
+                                                    overflow: "hidden",
+                                                    justifyContent: "center",
+                                                    alignItems: "center",
+                                                    borderWidth: 1,
                                                 }}
-                                            />
-                                        ) : (
-                                            <View style={{ alignItems: "center" }}>
-                                                <Ionicons
-                                                    name="person-add-outline"
-                                                    size={wp(5.5)}
-                                                    color={icon}
-                                                />
+                                            >
 
-                                                <ThemedText
-                                                    type="tiny"
-                                                    style={{
-                                                        fontSize: wp(2.5)
-                                                    }}
-                                                >   
-                                                    Photo
-                                                </ThemedText>
+                                                {currentRole?.profilePhoto ? (
+                                                    <Image
+                                                        source={{ uri: currentRole.profilePhoto }}
+                                                        style={{
+                                                            width: "100%",
+                                                            height: "100%"
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <View style={{ alignItems: "center" }}>
+                                                        <Ionicons
+                                                            name="person-add-outline"
+                                                            size={wp(5)}
+                                                            color={icon}
+                                                        />
+
+                                                        <ThemedText
+                                                            type="tiny"
+                                                            style={{
+                                                                fontSize: wp(2.5),
+                                                            }}
+                                                        >
+                                                            Photo
+                                                        </ThemedText>
+                                                    </View>
+                                                )}
+
                                             </View>
-                                        )}
-
+                                        </TouchableNativeFeedback>
                                     </View>
-                                </TouchableNativeFeedback>
-
-
+                                    <TouchableNativeFeedback onPress={() => setDspMenu(true)} style={{ marginLeft: 10 }} >
+                                        <View >
+                                            <Ionicons name="ellipsis-vertical" size={wp(6)} color={icon} />
+                                        </View>
+                                    </TouchableNativeFeedback>
+                                </View>
 
 
                             </View>
@@ -160,13 +176,13 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
                                 }}
                             >
 
-                                <TouchableNativeFeedback onPress={handleProfileNvigation}
+                                {currentRole.userRole && <TouchableNativeFeedback onPress={handleProfileNvigation}
 
                                 >
                                     <View style={{ padding: wp(2) }}>
                                         <FontAwesome6 name="user" size={wp(7)} color={icon} />;
                                     </View>
-                                </TouchableNativeFeedback>
+                                </TouchableNativeFeedback>  }
                                 {/* <TouchableNativeFeedback onPress={() => router.push("/Fleet/Profile/Index")}  >
                                     <View style={{ padding: wp(2) }}>
                                         <FontAwesome6 name="user" size={wp(7)} color={icon} />;
@@ -178,17 +194,17 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
                                     </View>
                                 </TouchableNativeFeedback> */}
 
-                                <View style={{}}>
+                                
                                     <View style={{}}>
                                         <ThemedText type="title" style={{ alignSelf: "center" }} >{pageTitle}</ThemedText>
-                                        <ThemedText type="tiny" style={{ alignSelf: 'center' }}><ThemedText type='tiny' style={{ fontSize: wp(3), }}>
+                                      { currentRole.userRole && <ThemedText type="tiny" style={{ alignSelf: 'center' }}><ThemedText type='tiny' style={{ fontSize: wp(3), }}>
                                             {currentRole.companyName?.length > 5
                                                 ? `${currentRole.companyName.slice(0, 5)}`
                                                 : currentRole.companyName}
                                         </ThemedText> : {currentRole.accType} - {currentRole.userRole}
-                                        </ThemedText>
+                                        </ThemedText>}
                                     </View>
-                                </View>
+                                
 
 
                                 <View style={{ flexDirection: 'row', width: wp(26), justifyContent: "space-around", alignItems: 'center', }}>

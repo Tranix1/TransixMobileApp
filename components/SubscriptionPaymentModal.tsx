@@ -49,12 +49,16 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
   payerOrganizationId,
   payerOrganizationName,
 }) => {
+
+  console.log(payerOrganizationId)
   const accent = useThemeColor('accent');
   const background = useThemeColor('background');
   const backgroundLight = useThemeColor('backgroundLight');
   const iconColorTheme = useThemeColor('icon');
 
-  const { user } = useAuth()
+  const { user , currentRole} = useAuth()
+
+  console.log(currentRole)
 
   const pricing = SUBSCRIPTION_PRICING[subscriptionType];
   const isDev = __DEV__;
@@ -131,7 +135,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
           createdAt: now,
         });
 
-        await updateDocument('brokerages', payerOrganizationId, {
+        await updateDocument('brokerages', payerOrganizationId!, {
           subscription: {
             plan: 'Broker Monthly',
             active: true,

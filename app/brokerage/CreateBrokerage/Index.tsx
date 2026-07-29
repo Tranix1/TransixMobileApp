@@ -180,7 +180,9 @@ const CreaterBrokerage = ({ }) => {
           completedLoads: 0,
           revenue: 0,
           rating: 0
-        }
+        } ,
+        timeStamp : serverTimestamp()
+
       };
 
       await addDocumentWithId('verifiedUsers', brokerageId, brokerVerificationData);
@@ -303,6 +305,7 @@ const CreaterBrokerage = ({ }) => {
         expoPushToken: user?.expoPushToken || null,
 
         subscription: subscriptionData,
+        timeStamp : serverTimestamp()
       };
 
 
@@ -359,7 +362,6 @@ const CreaterBrokerage = ({ }) => {
         type: "brokerage", // or "fleet"
 
         name: brokerName,
-        profilePhoto: user?.photoURL || null,
         coverPhoto: null,
         description: "",
         ownerId: user?.uid,
@@ -380,7 +382,6 @@ const CreaterBrokerage = ({ }) => {
       const contactDetails = {
         userName: user?.displayName,
         phoneNumber: user?.phoneNumber,
-        photoUrl: user?.photoURL,
         userId: user?.uid,
         userRole: "owner",
         status: "active",
@@ -398,6 +399,7 @@ const CreaterBrokerage = ({ }) => {
         userRole: "",
 
         accType: "brokerage",
+        
 
       };
       await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
@@ -426,7 +428,7 @@ const CreaterBrokerage = ({ }) => {
 
       // Close modal and show success
       setUploadingBrokerD(false);
-      router.push("/brokerage/BrokerageSelector/Index")
+      router.push("/")
       alert('Broker verification submitted successfully! Your account will be reviewed.');
 
     } catch (error) {
@@ -458,9 +460,9 @@ const CreaterBrokerage = ({ }) => {
               }}
             >
 
-              {user?.photoURL ? (
+              {currentRole?.profilePhoto? (
                 <Image
-                  source={{ uri: user.photoURL }}
+                  source={{ uri: currentRole.profilePhoto }}
                   style={{
                     width: "100%",
                     height: "100%"
@@ -504,7 +506,7 @@ const CreaterBrokerage = ({ }) => {
 
       <View style={{ gap: wp(2), padding: 15 }}>
 
-        <ScrollView>
+        <ScrollView >
 
           <ThemedText>Name</ThemedText>
           <Input

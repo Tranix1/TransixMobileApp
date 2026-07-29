@@ -24,7 +24,7 @@ import { GooglePlaceAutoCompleteComp } from '@/components/GooglePlaceAutoComplet
 import CustomHeader from '@/components/CustomHeader';
 import { trackEvent } from '@/services/analytics/appAnalytics';
 import { incrementAccountsCreated } from '@/services/analytics/dashboardAnalytics';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, serverTimestamp, where } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 export default function AddDriver() {
     const background = useThemeColor('background');
@@ -146,8 +146,7 @@ export default function AddDriver() {
                 submittedAt: new Date().toISOString(),
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-
-
+                timeStamp: serverTimestamp()
             };
 
             await addDocumentWithId('verifiedUsers', fixedDriverId, driverVerificationData);
@@ -193,7 +192,6 @@ export default function AddDriver() {
                 type: "driver", // or "fleet"
 
                 name: fullName.trim(),
-                profilePhoto: user?.photoURL || null,
                 coverPhoto: null,
                 description: "",
                 ownerId: user?.uid,
