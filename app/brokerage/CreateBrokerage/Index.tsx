@@ -389,7 +389,7 @@ const CreaterBrokerage = ({ }) => {
       const contactRef = doc(db, 'brokerages', brokerageId, 'Contacts', `OWN_${user?.uid}`);
       await setDoc(contactRef, contactDetails);
 
-      void trackEvent({ eventName: "brokerage_created", userId: user?.uid, organizationId: brokerageId, organizationProfileId: brokerageId, organizationType: "brokerage", role: "owner", accountType: "brokerage", country: locationFull, metadata: { brokerType: typeOfBroker } }).catch(console.error);
+      void trackEvent({ eventName: "brokerage_created", userId: user?.uid, organizationId: brokerageId, organizationProfileId: brokerageId, organizationType: "brokerage", role: "owner", accountType: "brokerage", location: locationFull, metadata: { brokerType: typeOfBroker } }).catch(console.error);
       // Creates the derived dashboard document without changing its counters.
       void incrementAccountsCreated("brokerage", brokerageId, 0).catch(console.error);
 

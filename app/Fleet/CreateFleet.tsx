@@ -35,7 +35,7 @@ import { notifyUserById } from '@/Utilities/pushNotification';
 
 const CreateFleet = () => {
     const router = useRouter();
-    const { user, setupUser, currentRole } = useAuth(); 
+    const { user, setupUser, currentRole } = useAuth();
     const [typeOfFleet, setTypeOfFleet] = useState('');
     const [fleetName, setFleetName] = useState('');
     const [fleetPhone, setFleetPhone] = useState('');
@@ -313,7 +313,13 @@ const CreateFleet = () => {
                 }
             })
 
-            void trackEvent({ eventName: "fleet_created", userId: user.uid, organizationId: fleetId, organizationProfileId: fleetId, organizationType: "fleet", role: "owner", accountType: "fleet", country: billingAddress || baseAdress, metadata: { typeOfFleet: fleetData.typeOfFleet } }).catch(console.error);
+            void trackEvent({
+                eventName: "fleet_created", userId: user.uid, organizationId: fleetId, organizationProfileId: fleetId, organizationType: "fleet", role: "owner", accountType: "fleet",
+                location: billingAddress || baseAdress,
+                fleetBillingAddress: billingAddress,
+                fleetBaseAddress: baseAdress,
+                metadata: { typeOfFleet: fleetData.typeOfFleet }
+            }).catch(console.error);
             // Creates the derived dashboard document without changing its counters.
             void incrementAccountsCreated("fleet", fleetId, 0).catch(console.error);
 
@@ -329,29 +335,29 @@ const CreateFleet = () => {
             await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
 
 
-                const notifyQyery = query(collection(db,"adminRoles"), where("role","==","SUPER_ADMIN"),where("active","==", true) )
-                const notifySnapShot = await getDocs(notifyQyery)
+            const notifyQyery = query(collection(db, "adminRoles"), where("role", "==", "SUPER_ADMIN"), where("active", "==", true))
+            const notifySnapShot = await getDocs(notifyQyery)
 
-            await   Promise.all(
-                notifySnapShot.docs.map((doc)=>{
-                       notifyUserById(
-                          doc.id,
-                          `New verification request`,
-                          `${fleetData.fleetName} , Driver has submitted a verification request`,
-            
-                          {
+            await Promise.all(
+                notifySnapShot.docs.map((doc) => {
+                    notifyUserById(
+                        doc.id,
+                        `New verification request`,
+                        `${fleetData.fleetName} , Driver has submitted a verification request`,
+
+                        {
                             pathname: "Account/Admin",
-                          }, {
-                          type: "account_verification",
-                        }
-                        );
+                        }, {
+                        type: "account_verification",
+                    }
+                    );
 
                 })
             )
 
 
             Alert.alert('Fleet saved', 'Your fleet request has been submitted.');
-             router.push("/Fleet/FleetSelector/Index");
+            router.push("/Fleet/FleetSelector/Index");
         } catch (error) {
             console.error('Error saving fleet verification:', error);
             Alert.alert('Error submitting fleet verification', 'Please try again.');

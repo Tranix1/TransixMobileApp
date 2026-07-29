@@ -29,6 +29,7 @@ import { doc, collection, serverTimestamp, writeBatch, getDoc } from "firebase/f
 import { trackAssignmentCompleted, trackAssignmentStarted } from "@/services/analytics/appAnalytics";
 import { incrementAssignmentsCompleted, incrementAssignmentsStarted, } from "@/services/analytics/dashboardAnalytics";
 import { incrementActiveTrips, incrementCompletedTrips } from "@/services/analytics/organizationAnalytics";
+import { incrementOrgStats, recordTripStarted, respondToRequestAnalytics, upsertProvenRoute } from "@/Utilities/analyticsHelpers";
 
 const getStatusColor = (status: string) => {
     switch (status) {
@@ -143,510 +144,141 @@ export default function AssignmentCard({ assignmentData }: any) {
     const startTrip = async (
         assignmentId: string,
         externalLoad: boolean,
-
         cargoId: string,
         cargoVisibility: string,
-
         truckId: string,
         fleetCoordinator: coordinatorProps,
         cargoCoordinator?: coordinatorProps,
         createdByAcc?: string,
+        truckDetails?: any
     ) => {
-
         if (!assignmentId) return;
 
         try {
-
-
             await updateAssignmentCopies(
                 assignmentId,
                 {
                     status: "IN_TRANSIT",
-
                     updatedAt: Date.now(),
                     updatedBy: user?.uid ?? "",
                     updatedByName: user?.displayName ?? "User",
                     updatedByRole: currentRole?.userRole ?? "",
                     updatedByAcc: currentRole?.accType ?? "",
-
-
                     statusHistory: arrayUnion({
-
                         fromStatus: "PENDING",
                         toStatus: "IN_TRANSIT",
-
                         changedAt: Date.now(),
-
                         changedBy: user?.uid ?? "",
                         changedByName: user?.displayName ?? "User",
                         changedByRole: currentRole?.userRole ?? "",
                         changedByAcc: currentRole?.accType ?? "",
-
-                    })
-
+                    }),
                 },
                 externalLoad,
                 cargoCoordinator,
                 createdByAcc
             );
 
-
-
-            let typeOfLoadStarted
-
-            if (externalLoad) {
-                // private broker cargo 
-                if (cargoVisibility === "PRIVATE") {
-
-
-                    const batchExteBrkPrvt = writeBatch(db);
-
-                    const addingTripStartedExteDoc = `${cargoId}_${truckId}`
-                        .toLowerCase()
-                        .replace(/\s+/g, "_");
-
-                    //eeting the time for fleet 
-                    const tripStartedExteBrk = doc(
-                        db,
-                        "organizationProfiles",
-                        `${cargoCoordinator?.organizationId}`,
-                        "requestAnalytics",
-                        addingTripStartedExteDoc
-                    );
-
-
-
-                    // Seeting time for load owner
-
-                    batchExteBrkPrvt.set(tripStartedExteBrk, {
-
-                        assignmentId: assignmentId,
-                        tripsStarted: true
-
-                    });
-
-                    //eeting the time for fleet 
-                    const tripStartExteBrk = doc(
-                        db,
-                        "organizationProfiles",
-                        `${currentRole.organizationId}`,
-                        "requestAnalytics",
-                        addingTripStartedExteDoc
-                    );
-
-                    batchExteBrkPrvt.set(tripStartExteBrk, {
-
-                        assignmentId: assignmentId,
-                        tripsStarted: true
-
-                    });
-
-
-                    // Update Truck organization stats
-                    batchExteBrkPrvt.update(
-                        doc(db, "organizationProfiles", `${currentRole.organizationId}`),
-                        {
-                            privateBrokerCargo: {
-                                acceptedRequests: increment(1),
-
-                            }
-
-                        },
-
-                    );
-
-
-                    // Update Load organization stats
-
-                    batchExteBrkPrvt.update(
-                        doc(db, "organizationProfiles", `${cargoCoordinator?.organizationId}`),
-                        {
-
-                            privateBrokerCargo: {
-                                tripsStarted: increment(1)
-
-                            }
-
-                        },
-
-                    );
-
-
-                    await batchExteBrkPrvt.commit();
-
-
-
-
-
-
-
-
-                } else {
-                    // if public cargo
-
-
-                    const batchExteBrkPrvt = writeBatch(db);
-
-                    const addingTripStartedExteDoc = `${cargoId}_${truckId}`
-                        .toLowerCase()
-                        .replace(/\s+/g, "_");
-
-                    //eeting the time for fleet 
-                    const tripStartedExteBrk = doc(
-                        db,
-                        "organizationProfiles",
-                        `${cargoCoordinator?.organizationId}`,
-                        "requestAnalytics",
-                        addingTripStartedExteDoc
-                    );
-
-
-
-                    // Seeting time for load owner
-
-                    batchExteBrkPrvt.set(tripStartedExteBrk, {
-
-                        assignmentId: assignmentId,
-                        tripsStarted: true
-
-                    });
-
-                    //eeting the time for fleet 
-                    const tripStartExteBrk = doc(
-                        db,
-                        "organizationProfiles",
-                        `${currentRole.organizationId}`,
-                        "requestAnalytics",
-                        addingTripStartedExteDoc
-                    );
-
-                    batchExteBrkPrvt.set(tripStartExteBrk, {
-
-                        assignmentId: assignmentId,
-                        tripsStarted: true
-
-                    });
-
-
-                    // Update Truck organization stats
-                    batchExteBrkPrvt.update(
-                        doc(db, "organizationProfiles", `${currentRole.organizationId}`),
-                        {
-                            publicCargo: {
-                                acceptedRequests: increment(1),
-
-                            }
-
-                        },
-
-                    );
-
-
-                    // Update Load organization stats
-
-                    batchExteBrkPrvt.update(
-                        doc(db, "organizationProfiles", `${cargoCoordinator?.organizationId}`),
-                        {
-
-                            publicCargo: {
-                                tripsStarted: increment(1)
-
-                            }
-
-                        },
-
-                    );
-
-
-                    await batchExteBrkPrvt.commit();
-
-
-
-
-                }
-
-
-
-            } else {
-                // if public cargo
-
-
-                const batchExteBrkPrvt = writeBatch(db);
-
-                const addingTripStartedExteDoc = `${cargoId}_${truckId}`
-                    .toLowerCase()
-                    .replace(/\s+/g, "_");
-
-                //eeting the time for fleet 
-                const tripStartedExteBrk = doc(
-                    db,
-                    "organizationProfiles",
-                    `${cargoCoordinator?.organizationId}`,
-                    "requestAnalytics",
-                    addingTripStartedExteDoc
-                );
-
-
-                // Update Truck organization stats
-                batchExteBrkPrvt.update(
-                    doc(db, "organizationProfiles", `${currentRole.organizationId}`),
-                    {
-                        privateCargo: {
-                            acceptedRequests: increment(1),
-
-                        }
-
-                    },
-
-                );
-
-                await batchExteBrkPrvt.commit();
-
-            }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            const batch = writeBatch(db);
-
-            const assignmentTimeIdEXTE = `${cargoId}_DRV_${user?.uid}`
-                .toLowerCase()
-                .replace(/\s+/g, "_");
-
-            //eeting the time for fleet 
-            const addingTimeTrackForCargoOwnerEXTE = doc(
-                db,
-                "organizationProfiles",
-                `${currentRole.organizationId}`,
-                "requestAnalytics",
-                assignmentTimeIdEXTE
-            );
-
-            const getRequestedAt = await getDoc(addingTimeTrackForCargoOwnerEXTE);
-
-            const requestedAt = getRequestedAt.data()?.requestedAt;
-
-            if (!requestedAt) {
-                throw new Error("Missing requestedAt");
-            }
-            const nowTimeEXTE = Timestamp.now();
-
-            // Seeting time for load owner
-            const respondedTimeMs =
-                nowTimeEXTE.toMillis() - requestedAt.toMillis();
-
-            batch.set(addingTimeTrackForCargoOwnerEXTE, {
-
-                respondedAt: nowTimeEXTE,
-                respondedTimeMs: respondedTimeMs,
-                status: "RESPONDED",
-                response: "ACCEPTED", // or DECLINED
-                assignmentId: assignmentId,
-                truckId: truckId,
-
+            // --- Trip-started stats (replaces 3 duplicated ~60-line blocks) ---
+            const tripStartedDocId = `${cargoId}_${truckId}`.toLowerCase().replace(/\s+/g, "_");
+            const statsCategory = !externalLoad
+                ? "privateCargo"
+                : cargoVisibility === "PRIVATE"
+                    ? "privateBrokerCargo"
+                    : "publicCargo";
+
+            const tripBatch = writeBatch(db);
+            recordTripStarted(tripBatch, {
+                truckOrgId: `${currentRole.organizationId}`,
+                loadOrgId: externalLoad ? cargoCoordinator?.organizationId : null,
+                docId: tripStartedDocId,
+                assignmentId,
+                statsCategory,
+            });
+            await tripBatch.commit();
+
+            // --- Driver response timing + stats ---
+            const driverOrgId = `DRV_${user?.uid}`;
+            const assignmentTimeIdExte = `${cargoId}_${driverOrgId}`.toLowerCase().replace(/\s+/g, "_");
+
+            const respBatch = writeBatch(db);
+            const respondedTimeMs = await respondToRequestAnalytics(respBatch, {
+                orgIdA: `${currentRole.organizationId}`, // must be the side requestedAt was written on
+                orgIdB: driverOrgId,
+                docId: assignmentTimeIdExte,
+                response: "ACCEPTED",
+                extra: { assignmentId, truckId },
             });
 
-            //eeting the time for Driver
-            const addingTimeTrackForLoadEXTE = doc(
-                db,
-                "organizationProfiles",
-                `DRV_${user?.uid}`,
-                "requestAnalytics",
-                assignmentTimeIdEXTE
-            );
-
-            batch.set(addingTimeTrackForLoadEXTE, {
-
-                respondedAt: nowTimeEXTE,
-                respondedTimeMs: respondedTimeMs,
-                status: "RESPONDED",
-                response: "ACCEPTED", // or DECLINED
-                assignmentId: assignmentId,
-                truckId: truckId,
-
+            incrementOrgStats(respBatch, `${currentRole?.organizationId}`, {
+                "driverAssignment.acceptedRequests": 1,
+            });
+            incrementOrgStats(respBatch, driverOrgId, {
+                "driverAssignment.acceptedRequestsReceived": 1,
+                "driverAssignment.totalResponses": 1,
+                "driverAssignment.totalResponseTimesMs": respondedTimeMs,
             });
 
+            await respBatch.commit();
 
-            // Update Truck organization stats
-            batch.update(
-                doc(db, "organizationProfiles", `${currentRole.organizationId}`),
-                {
-
-                    driverAssignment: {
-                        acceptedRequests: increment(1),
-                    }
-
-                },
-
-            );
-
-
-            // Update Load organization stats
-
-            batch.update(
-
-                doc(db, "organizationProfiles", `DRV_${user?.uid}`),
-                {
-
-                    driverAssignment: {
-                        acceptedRequestsReceived: increment(1),
-                        totalResponses: increment(1),
-                        totalResponseTimesMs: increment(respondedTimeMs),
-                    }
-
-
-                },
-
-            );
-
-
-            await batch.commit();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            // Fleet stats
-            await updateDocument(
-                "organizationProfiles",
-                fleetCoordinator.organizationId,
-                {
-                    privateLoads: {
-                        inTransit: increment(1)
-                    }
-                }
-            );
-
-
-
-            // Public load stats
+            // --- Org-level in-transit stats ---
+            const inTransitBatch = writeBatch(db);
+            incrementOrgStats(inTransitBatch, fleetCoordinator.organizationId, { "privateLoads.inTransit": 1 });
             if (externalLoad && cargoCoordinator) {
-
-
-                await updateDocument(
-                    "organizationProfiles",
-                    cargoCoordinator.organizationId,
-                    {
-                        publicLoads: {
-                            inTransit: increment(1)
-                        }
-                    }
-                );
-
+                incrementOrgStats(inTransitBatch, cargoCoordinator.organizationId, { "publicLoads.inTransit": 1 });
             }
+            await inTransitBatch.commit();
 
-
-
-
-
-
+            // --- Analytics tracking ---
             const analyticsOrganizationIdForApp = currentRole?.organizationId || currentRole?.fleetId || scopeId;
-            if (analyticsOrganizationIdForApp && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
+            if (analyticsOrganizationIdForApp && (currentRole?.accType === "fleet" || currentRole?.accType === "brokerage")) {
                 const context = {
                     userId: user?.uid,
-                    accountAge: accountAge,
+                    accountAge,
                     organizationId: analyticsOrganizationIdForApp,
                     organizationProfileId: analyticsOrganizationIdForApp,
                     organizationType: currentRole?.accType,
                     role: currentRole?.userRole,
                     accountType: currentRole?.accType,
-                    metadata: { cargoId, assignmentId: assignmentId, status: "IN_TRANSIT" }
+                    metadata: {
+                        cargoId,
+                        assignmentId,
+                        status: "IN_TRANSIT",
+                        trucksData: {
+                            cargoArea: truckDetails?.cargoArea,
+                            truckType: truckDetails?.truckType,
+                            truckCapacity: truckDetails?.truckCapacity,
+                            operatingCountries: truckDetails?.locations,
+                            tankerType: truckDetails?.tankerType,
+                        },
+                    },
                 };
                 void trackAssignmentStarted(context).catch(console.error);
                 void incrementAssignmentsStarted(currentRole.accType, analyticsOrganizationIdForApp).catch(console.error);
-
-
             }
 
-
-
-
-
-
-
+            // --- Notifications ---
             await notifyUserById(
                 fleetCoordinator.id,
                 "Load Started 🚚",
                 `Trip ${assignmentId} is now in transit.`,
-                {
-                    pathname: "/Fleet/AssignmentDetails",
-                    params: { assignmentId }
-                },
-                {
-                    type: "load_in_transit",
-                    assignmentId
-                }
+                { pathname: "/Fleet/AssignmentDetails", params: { assignmentId } },
+                { type: "load_in_transit", assignmentId }
             );
 
-
-
-
             if (externalLoad && cargoCoordinator) {
-
                 await notifyUserById(
                     cargoCoordinator.id,
                     "Load In Transit 🚚",
                     "Your load is now in transit.",
-                    {
-                        pathname: "/Cargo/AssignmentDetails",
-                        params: { assignmentId }
-                    },
-                    {
-                        type: "load_in_transit",
-                        assignmentId
-                    }
+                    { pathname: "/Cargo/AssignmentDetails", params: { assignmentId } },
+                    { type: "load_in_transit", assignmentId }
                 );
-
             }
-
-
         } catch (error) {
-
             console.log("Start trip error:", error);
-
         }
-
     };
-
 
     const finishTrip = async (
         assignmentId: string,
@@ -791,225 +423,87 @@ export default function AssignmentCard({ assignmentData }: any) {
     };
 
 
+
     const cargoOwnerConfirmation = async (
         assignmentId: string,
         externalLoad: boolean,
-        provenLocFrom: {
-            city: string;
-            country: string;
-        },
-        provenLocTo: {
-            city: string;
-            country: string;
-        },
+        provenLocFrom: { city: string; country: string },
+        provenLocTo: { city: string; country: string },
         fleetCoordinator: coordinatorProps,
         cargoCoordinator?: coordinatorProps,
         createdByAcc?: string,
         cargoId?: string,
-        trckCargoArea?: string,
+        truckDetails?: any
     ) => {
-
-
         try {
-
-
             await updateAssignmentCopies(
-
                 assignmentId,
-
                 {
-
                     status: "COMPLETED",
-
                     updatedAt: Date.now(),
-
                     updatedBy: user?.uid ?? "",
                     updatedByName: user?.displayName ?? "",
                     updatedByRole: currentRole?.userRole ?? "",
                     updatedByAcc: currentRole?.accType ?? "",
-
-
-
                     statusHistory: arrayUnion({
-
                         fromStatus: "AWAITING_OWNER_CONFIRMATION",
                         toStatus: "COMPLETED",
-
                         changedAt: Date.now(),
-
                         changedBy: user?.uid ?? "",
                         changedByName: user?.displayName ?? "",
                         changedByRole: currentRole?.userRole ?? "",
                         changedByAcc: currentRole?.accType ?? "",
-
-                    })
-
+                    }),
                 },
-
                 externalLoad,
                 cargoCoordinator,
                 createdByAcc
-
             );
 
-
-
-
-
-            // Fleet completed stats
-
-            await updateDocument(
-                "organizationProfiles",
-                fleetCoordinator.organizationId,
-                {
-                    privateLoads: {
-                        completed: increment(1)
-                    },
-                    provenRoutes: [
-                        {
-                            id: "",
-                            from: provenLocFrom,
-                            to: provenLocTo
-                        }
-                    ]
-                }
-            );
-
-
-
+            // Fleet side: stats + proven route
             const batch = writeBatch(db);
-
-            // Update organization stats
-            batch.update(
-                doc(db, "organizationProfiles", fleetCoordinator.organizationId),
-                {
-                    "privateLoads.completed": increment(1),
-                }
-            );
-
-            // Add proven route
-
-            const routeId = `${provenLocFrom.city}_${provenLocFrom.country}_${provenLocTo.city}_${provenLocTo.country}`
-                .toLowerCase()
-                .replace(/\s+/g, "_");
-
-
-            const provenRouteRef = doc(
-                db,
-                "organizationProfiles",
-                fleetCoordinator.organizationId,
-                "provenRoutes",
-                routeId
-            );
-
-            const routeSnap = await getDoc(provenRouteRef);
-
-            if (routeSnap.exists()) {
-
-                batch.update(provenRouteRef, {
-                    tripsCompleted: increment(1),
-                    lastUsed: serverTimestamp(),
-                });
-
-            } else {
-
-                batch.set(provenRouteRef, {
-                    from: provenLocFrom,
-                    to: provenLocTo,
-                    tripsCompleted: 1,
-                    assignmentId,
-                    createdAt: serverTimestamp(),
-                });
-
-            }
-
+            incrementOrgStats(batch, fleetCoordinator.organizationId, { "privateLoads.completed": 1 });
+            await upsertProvenRoute(batch, fleetCoordinator.organizationId, assignmentId, provenLocFrom, provenLocTo);
             await batch.commit();
 
-
-
-
+            // Cargo coordinator side (only for external loads)
             if (externalLoad && cargoCoordinator) {
-
-
-                const batch = writeBatch(db);
-
-                // Update organization stats
-                batch.update(
-                    doc(db, "organizationProfiles", cargoCoordinator.organizationId),
-                    {
-                        "privateLoads.completed": increment(1),
-                    }
-                );
-
-                // Add proven route
-
-                const routeId = `${provenLocFrom.city}_${provenLocFrom.country}_${provenLocTo.city}_${provenLocTo.country}`
-                    .toLowerCase()
-                    .replace(/\s+/g, "_");
-
-
-                const provenRouteRef = doc(
-                    db,
-                    "organizationProfiles",
-                    cargoCoordinator.organizationId,
-                    "provenRoutes",
-                    routeId
-                );
-
-                const routeSnap = await getDoc(provenRouteRef);
-
-                if (routeSnap.exists()) {
-
-                    batch.update(provenRouteRef, {
-                        tripsCompleted: increment(1),
-                        lastUsed: serverTimestamp(),
-                    });
-
-                } else {
-
-                    batch.set(provenRouteRef, {
-                        from: provenLocFrom,
-                        to: provenLocTo,
-                        tripsCompleted: 1,
-                        assignmentId,
-                        createdAt: serverTimestamp(),
-                    });
-
-                }
-
-                await batch.commit();
-
+                const batch2 = writeBatch(db);
+                incrementOrgStats(batch2, cargoCoordinator.organizationId, { "privateLoads.completed": 1 });
+                await upsertProvenRoute(batch2, cargoCoordinator.organizationId, assignmentId, provenLocFrom, provenLocTo);
+                await batch2.commit();
             }
 
-
-
-
             const analyticsOrganizationIdForApp = currentRole?.organizationId || currentRole?.fleetId || scopeId;
-            if (analyticsOrganizationIdForApp && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
+            if (analyticsOrganizationIdForApp && (currentRole?.accType === "fleet" || currentRole?.accType === "brokerage")) {
                 const context = {
                     userId: user?.uid,
-                    accountAge: accountAge,
+                    accountAge,
                     organizationId: analyticsOrganizationIdForApp,
                     organizationProfileId: analyticsOrganizationIdForApp,
                     organizationType: currentRole?.accType,
                     role: currentRole?.userRole,
                     accountType: currentRole?.accType,
-                    metadata: { cargoId, assignmentId: assignmentId, status: "IN_TRANSIT", truckCargoArea: trckCargoArea, }
+                    metadata: {
+                        cargoId,
+                        assignmentId,
+                        status: "IN_TRANSIT", // NOTE: was "IN_TRANSIT" in the original for a COMPLETED confirmation — check if this should be "COMPLETED"
+                        trucksData: {
+                            cargoArea: truckDetails?.cargoArea,
+                            truckType: truckDetails?.truckType,
+                            truckCapacity: truckDetails?.truckCapacity,
+                            operatingCountries: truckDetails?.locations,
+                            tankerType: truckDetails?.tankerType,
+                        },
+                    },
                 };
 
                 void trackAssignmentCompleted(context).catch(console.error);
                 void incrementAssignmentsCompleted(currentRole.accType, analyticsOrganizationIdForApp).catch(console.error);
             }
-
-
-
         } catch (error) {
-
             console.log("Confirmation error:", error);
-
         }
-
-
     };
 
 
@@ -1404,7 +898,8 @@ export default function AssignmentCard({ assignmentData }: any) {
 
                                     assignmentData.truckDetails.truckId,
                                     assignmentData.fleetCoordinator,
-                                    assignmentData.cargoCoordinator
+                                    assignmentData.cargoCoordinator,
+                                    assignmentData.truckDetails,
                                 );
                             }
 
@@ -1549,7 +1044,7 @@ export default function AssignmentCard({ assignmentData }: any) {
                             assignmentData.cargoCoordinator,
                             assignmentData.createdByAcc,
                             assignmentData.loadDetails.loadId || assignmentData.loadDetails.cargoId,
-                            assignmentData.truckDetails.cargoArea,
+                            assignmentData.truckDetails
                         )
                     }
                 >

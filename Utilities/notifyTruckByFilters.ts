@@ -140,10 +140,22 @@ export const notifyTrucksByFilters = async ({
         organizationType: currentRole?.accType,
         role: currentRole?.userRole,
         accountType: currentRole?.accType,
-        metadata: { cargoId, truckCargoArea: `${cargoArea}`, }
+        metadata: {
+          loadId: cargoId,
+          trucksData: {
+            cargoArea: `${cargoArea}`,
+            truckType: `${truckType}`,
+            numberOfTrucksRecommended: matchedTrucks.length,
+            truckCapacity: `${capacity}`,
+            operatingCountries: operationCountries as string[],
+            tankerType: `${tankerType}`,
+
+          }
+        }
       };
 
       void trackTruckRecommended(context).catch(console.error);
+
       void incrementRecommendedTrucksOrg(`${currentRole.organizationId}`,).catch(console.error);
     }
 

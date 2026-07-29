@@ -21,11 +21,12 @@ import { formatCurrency } from '@/services/services'
 import { usePushNotifications, sendPushNotification, sendBookingWithTrackerNotification } from "@/Utilities/pushNotification";
 import { useAuth } from "@/context/AuthContext";
 
-import { trackRequestCargo, trackCargoRequested } from '@/services/analytics/appAnalytics';
+import { trackCargoRequests, trackCargoRequested } from '@/services/analytics/appAnalytics';
 import { incrementBookings } from '@/services/analytics/dashboardAnalytics';
 import { incrementSuccessfullyRequestedPblcCargo, incrementRequestsSuccessfulPblcCargo } from '@/services/analytics/organizationAnalytics';
 
 import { doc, writeBatch, getDoc } from "firebase/firestore";
+import { createRequestAnalyticsPair, incrementOrgStats } from "@/Utilities/analyticsHelpers";
 
 
 function BookLCargo({ }) {
@@ -165,292 +166,180 @@ function BookLCargo({ }) {
 
     async function handleSubmitDetails() {
       try {
-        if (auth.currentUser) {
-          const userId = auth.currentUser.uid
+        if (!auth.currentUser) return;
+        const userId = auth.currentUser.uid;
 
-          const selectedDriver = selectedDrivers[item.id];
-          if (!selectedDriver) {
-            ToastAndroid.show("Select a driver for this truck first", ToastAndroid.SHORT);
-            return;
-          }
-
-          // NEW: require a valid bid amount when bidding
-          if (OperationType === "Bid" && (!bidAmount || isNaN(Number(bidAmount)) || Number(bidAmount) <= 0)) {
-            ToastAndroid.show("Enter a valid bid rate first", ToastAndroid.SHORT);
-            return;
-          }
-
-          const existingBBDoc = await checkExistixtBBDoc(`${userId}${loadItem.id}${item.timeStamp}`);
-
-          const truckData = await readById(`fleets/${currentRole.fleetId}/Trucks`, item.id) as any;
-          const hasTracker = truckData?.hasTracker;
-          const trackerStatus = truckData?.trackerStatus;
-          const trackingDeviceId = truckData?.trackingDeviceId;
-
-          if (!existingBBDoc) {
-            const theData = {
-              requestStatus: "PENDING",
-              created_at: Date.now().toString(),
-              requestId: `${userId}${loadItem.id}${item.timeStamp}`,
-              cargoId: loadItem.id,
-              companyName: loadItem.companyName,
-              onwerId: loadItem.userId,
-              productName: loadItem.typeofLoad,
-              // CHANGED: use the typed bid amount when bidding, otherwise the posted rate
-              ownerDecision: "Pending",
-              // CHANGED: status now driven by OperationType, not a bidRate param
-              status: OperationType === "Bid" ? "Bidded" : "Booked",
-              loadId: loadItem.id,
-              approvedTrck: false,
-              alreadyInRequested: true,
-              expoPushToken: expoPushToken || null,
-              trackerShared: false,
-              trackerSharingRequested: false,
-              loadOwnerId: loadItem.userId,
-
-
-              bookedBy: {
-                userId: user?.uid || "unknown",
-                name: user?.displayName || "unknown",
-                role: currentRole?.userRole || "unknown",
-                phone: user?.phoneNumber || "unknown",
-                email: user?.email || "unknown",
-                addedAt: Date.now().toString(),
-              },
-              driverDetails: {
-                driverId: selectedDriver.id,
-                driverName: selectedDriver.fullName || null,
-                driverPhoneNumber: selectedDriver.phoneNumber || null,
-                driverEmail: selectedDriver.email || null,
-                driverLicenseNumber: selectedDriver.licenseNumber || null
-
-              },
-
-              fleetDetails: item.organizationDetails ?? null,
-              fleeCoordinator: item?.dispatcher ?? null,
-              cargoCoordinator: loadItem.coordinator,
-
-              truckDetails: {
-                truckId: item.id,
-                truckType: item.truckType || null,
-                truckCapacity: item.truckCapacity || null,
-                cargoArea: item.cargoArea || null,
-                locations: item.locations || [],
-                trackingDeviceId: (item as any).trackingDeviceId || null,
-                trackerStatus: trackerStatus,
-                truckHasTracker: hasTracker,
-
-                numberPlate: item.numberPlate || null,
-                truckName: item.truckName,
-
-              },
-
-              loadItemDetails: {
-                loadId: loadItem.id,
-                contact: loadItem.contact || null,
-                companyName: loadItem.companyName || null,
-                productName: loadItem.typeofLoad || null,
-                origin: loadItem.origin || null,
-                originFull: loadItem.originFull || null,
-                destination: loadItem.destination || null,
-                destinationFull: loadItem.destinationFull || null,
-                originCoordinates: loadItem.originCoordinates || null,
-                destinationCoordinates: loadItem.destinationCoordinates || null,
-                rate: OperationType === "Bid" ? Number(bidAmount) : loadItem.rate,
-                currency: loadItem.currency || null,
-                model: loadItem.model || null,
-                paymentTerms: loadItem.paymentTerms || null,
-                loadingDate: loadItem.loadingDate || null,
-                deliveryDate: loadItem.deliveryDate || null,
-                accType: loadItem.accType,
-                userRole: loadItem.userRole,
-                organizationId: loadItem.organizationId,
-                shipper: loadItem.shipper,
-                organizationDetails: loadItem.organizationDetails,
-                postedBy: loadItem.postedBy ?? null,
-                routePolyline: loadItem.routePolyline || null,
-                bounds: loadItem.bounds || null,
-                distance: loadItem.distance || null,
-                duration: loadItem.duration || null,
-              },
-
-
-              timeStamp: serverTimestamp(),
-
-            }
-            await addDocument("cargoRequests", theData);
-
-
-            const daySinceSignup = (Date.now() - user?.createdAt!) / (1000 * 60 * 60 * 24)
-            const accountAge = daySinceSignup < 30 ? "new" : daySinceSignup < 90 ? "active" : "established"
-            // For truck owner
-            const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
-            void trackRequestCargo({ userId, accountAge: accountAge, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType, role: currentRole?.userRole, accountType: currentRole?.accType, referrerId: user?.referredBy?.userId ?? null, referralCodeUsed: user?.referredBy?.referralCode ?? null, campaign: user?.referredBy?.campaign ?? null, platform: user?.referredBy?.platform ?? null, metadata: { loadId: loadItem.id, truckId: item.id, operationType: OperationType } }).catch(console.error);
-
-
-            // For Cargo Owner
-
-            void trackCargoRequested({ userId, accountAge: accountAge, organizationId: loadItem.organizationId, organizationProfileId: loadItem.organizationId, organizationType: loadItem.postedBy.accType, role: loadItem.postedBy.userRole, accountType: loadItem.postedBy.accType, metadata: { loadId: loadItem.id, truckId: item.id, operationType: OperationType } }).catch(console.error);
-
-
-            if (analyticsOrganizationId && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
-              void incrementBookings(currentRole.accType, analyticsOrganizationId).catch(console.error);
-
-
-              const partershipId = [currentRole.organizationId, loadItem.organizationId].sort().join("_");
-
-              const checkPartershipExist = await readById("partners", partershipId)
-              if (!checkPartershipExist) {
-                addDocumentWithId("partners", partershipId, {
-                  partnerAId: currentRole.organizationId,
-                  partnerAName: currentRole.companyName,
-                  partnerAAccType: currentRole.accType,
-                  partnerBId: loadItem.organizationId,
-                  partnerBName: loadItem.companyName,
-                  partnerBAccType: loadItem.accType,
-                  active: true,
-
-                })
-              }
-
-
-
-              const batch = writeBatch(db);
-
-              // Update Truckorganization stats
-              batch.update(
-                doc(db, "organizationProfiles", analyticsOrganizationId),
-                {
-                  publicCargo: {
-                    totalRequestsInitiated: increment(1)
-                  }
-
-                },
-
-
-              );
-              // Update Load organization stats
-
-              batch.update(
-                doc(db, "organizationProfiles", loadItem.organizationId),
-                {
-                  publicCargo: {
-                    totalRequestsSent: increment(1),
-                  }
-
-                },
-
-
-              );
-
-              // Add Time with Id
-              const nowTime = Timestamp.now();
-
-              const assignmentTimeId = `${loadItem.id}_${item.id}`
-                .toLowerCase()
-                .replace(/\s+/g, "_");
-
-
-              //eeting the time for fleet 
-              const addingTimeTrackForFleet = doc(
-                db,
-                "organizationProfiles",
-                analyticsOrganizationId,
-                "requestAnalytics",
-                assignmentTimeId
-              );
-
-              batch.set(addingTimeTrackForFleet, {
-
-                requestedAt: nowTime,
-                respondedAt: null,
-                respondedTimeMs: null,
-                status: "PENDING",
-                truckId: item.id,
-                loadId: loadItem.id,
-                response: "PENDING", // or DECLINED
-                cargoType: "PUBLIC",
-                cargoOwnerAcc: loadItem.postedBy.accType,
-                partnerId: loadItem.organizationId,
-
-                createdAt: serverTimestamp(),
-
-
-              });
-
-              //eeting the time for  Load
-              const addingTimeTrackForLoad = doc(
-                db,
-                "organizationProfiles",
-                loadItem.organizationId,
-                "requestAnalytics",
-                assignmentTimeId
-              );
-
-              batch.set(addingTimeTrackForLoad, {
-
-                requestedAt: nowTime,
-                respondedAt: null,
-                respondedTimeMs: null,
-                status: "PENDING",
-                response: "PENDING", // or DECLINED
-                partnerId: analyticsOrganizationId,
-
-                truckId: item.id,
-                loadId: loadItem.id,
-                cargoType: "PUBLIC",
-                cargoOwnerAcc: loadItem.postedBy.accType,
-                createdAt: serverTimestamp()
-
-
-              });
-
-
-              await batch.commit();
-            }
-
-
-
-            if (loadItem.expoPushToken) {
-              await sendBookingWithTrackerNotification(
-                loadItem.expoPushToken,
-                truckData?.ownerName || "Truck Owner",
-                `${loadItem.origin} to ${loadItem.destination}`,
-                hasTracker && trackerStatus === 'active' && trackingDeviceId,
-                theData.requestId
-              );
-            } else {
-              console.warn('⚠️ No expoPushToken found in loadItem, skipping notification');
-            }
-
-            const existingBBDoc2 = await checkDocumentExists("newIterms", [where('receriverId', '==', userId)]);
-            let newBiddedDoc = 0
-            let newBOOKEDDoc = 0
-
-            if (!existingBBDoc2) {
-              setDocuments("bidBookingStats", {
-                bookingdocs: newBOOKEDDoc,
-                biddingdocs: newBiddedDoc,
-                timestamp: serverTimestamp(),
-                receriverId: item.userId,
-              })
-            } else {
-              await runFirestoreTransaction(`bidBookingStats/${userId}`, (data) => {
-                const currentBiddingDocs = data?.biddingdocs || 0;
-                const currentBookingsDocs = data?.bookingdocs || 0;
-                return {};
-              });
-            }
-
-            // CHANGED: message now driven by OperationType
-            ToastAndroid.show(`Load ${OperationType === "Bid" ? "BIDDING" : "BOOKING"} completed successfully.`, ToastAndroid.SHORT);
-
-          } else {
-            alert("Truck alreadyy Booked")
-          }
+        const selectedDriver = selectedDrivers[item.id];
+        if (!selectedDriver) {
+          ToastAndroid.show("Select a driver for this truck first", ToastAndroid.SHORT);
+          return;
         }
+
+        if (OperationType === "Bid" && (!bidAmount || isNaN(Number(bidAmount)) || Number(bidAmount) <= 0)) {
+          ToastAndroid.show("Enter a valid bid rate first", ToastAndroid.SHORT);
+          return;
+        }
+
+        const existingBBDoc = await checkExistixtBBDoc(`${userId}${loadItem.id}${item.timeStamp}`);
+        if (existingBBDoc) {
+          alert("Truck already booked");
+          return;
+        }
+
+        const truckData = await readById(`fleets/${currentRole.fleetId}/Trucks`, item.id) as any;
+        const { hasTracker, trackerStatus, trackingDeviceId } = truckData ?? {};
+
+        const theData = {
+          requestStatus: "PENDING",
+          created_at: Date.now().toString(),
+          requestId: `${userId}${loadItem.id}${item.timeStamp}`,
+          cargoId: loadItem.id,
+          companyName: loadItem.companyName,
+          onwerId: loadItem.userId,
+          productName: loadItem.typeofLoad,
+          ownerDecision: "Pending",
+          status: OperationType === "Bid" ? "Bidded" : "Booked",
+          loadId: loadItem.id,
+          approvedTrck: false,
+          alreadyInRequested: true,
+          expoPushToken: expoPushToken || null,
+          trackerShared: false,
+          trackerSharingRequested: false,
+          loadOwnerId: loadItem.userId,
+          bookedBy: {
+            userId: user?.uid || "unknown",
+            name: user?.displayName || "unknown",
+            role: currentRole?.userRole || "unknown",
+            phone: user?.phoneNumber || "unknown",
+            email: user?.email || "unknown",
+            addedAt: Date.now().toString(),
+          },
+          driverDetails: {
+            driverId: selectedDriver.id,
+            driverName: selectedDriver.fullName || null,
+            driverPhoneNumber: selectedDriver.phoneNumber || null,
+            driverEmail: selectedDriver.email || null,
+            driverLicenseNumber: selectedDriver.licenseNumber || null,
+          },
+          fleetDetails: item.organizationDetails ?? null,
+          fleeCoordinator: item?.dispatcher ?? null,
+          cargoCoordinator: loadItem.coordinator,
+          truckDetails: {
+            truckId: item.id,
+            truckType: item.truckType || null,
+            truckCapacity: item.truckCapacity || null,
+            cargoArea: item.cargoArea || null,
+            locations: item.locations || [],
+            trackingDeviceId: (item as any).trackingDeviceId || null,
+            trackerStatus,
+            truckHasTracker: hasTracker,
+            numberPlate: item.numberPlate || null,
+            truckName: item.truckName,
+          },
+          loadItemDetails: {
+            loadId: loadItem.id,
+            contact: loadItem.contact || null,
+            companyName: loadItem.companyName || null,
+            productName: loadItem.typeofLoad || null,
+            origin: loadItem.origin || null,
+            originFull: loadItem.originFull || null,
+            destination: loadItem.destination || null,
+            destinationFull: loadItem.destinationFull || null,
+            originCoordinates: loadItem.originCoordinates || null,
+            destinationCoordinates: loadItem.destinationCoordinates || null,
+            rate: OperationType === "Bid" ? Number(bidAmount) : loadItem.rate,
+            currency: loadItem.currency || null,
+            model: loadItem.model || null,
+            paymentTerms: loadItem.paymentTerms || null,
+            loadingDate: loadItem.loadingDate || null,
+            deliveryDate: loadItem.deliveryDate || null,
+            accType: loadItem.accType,
+            userRole: loadItem.userRole,
+            organizationId: loadItem.organizationId,
+            shipper: loadItem.shipper,
+            organizationDetails: loadItem.organizationDetails,
+            postedBy: loadItem.postedBy ?? null,
+            routePolyline: loadItem.routePolyline || null,
+            bounds: loadItem.bounds || null,
+            distance: loadItem.distance || null,
+            duration: loadItem.duration || null,
+          },
+          timeStamp: serverTimestamp(),
+        };
+
+        await addDocument("cargoRequests", theData);
+
+        const daySinceSignup = (Date.now() - user?.createdAt!) / (1000 * 60 * 60 * 24);
+        const accountAge = daySinceSignup < 30 ? "new" : daySinceSignup < 90 ? "active" : "established";
+        const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
+
+        void trackCargoRequests({
+          userId,
+          accountAge,
+          organizationId: analyticsOrganizationId,
+          organizationProfileId: analyticsOrganizationId,
+          organizationType: currentRole?.accType,
+          role: currentRole?.userRole,
+          accountType: currentRole?.accType,
+          referrerId: user?.referredBy?.userId ?? null,
+          referralCodeUsed: user?.referredBy?.referralCode ?? null,
+          campaign: user?.referredBy?.campaign ?? null,
+          platform: user?.referredBy?.platform ?? null,
+          metadata: { loadId: loadItem.id, truckId: item.id, operationType: OperationType },
+        }).catch(console.error);
+
+        if (analyticsOrganizationId && (currentRole?.accType === "fleet" || currentRole?.accType === "brokerage")) {
+          void incrementBookings(currentRole.accType, analyticsOrganizationId).catch(console.error);
+
+          const partnershipId = [currentRole.organizationId, loadItem.organizationId].sort().join("_");
+          const partnershipExists = await readById("partners", partnershipId);
+          if (!partnershipExists) {
+            addDocumentWithId("partners", partnershipId, {
+              partnerAId: currentRole.organizationId,
+              partnerAName: currentRole.companyName,
+              partnerAAccType: currentRole.accType,
+              partnerBId: loadItem.organizationId,
+              partnerBName: loadItem.companyName,
+              partnerBAccType: loadItem.accType,
+              active: true,
+            });
+          }
+
+          const assignmentTimeId = `${loadItem.id}_${item.id}`.toLowerCase().replace(/\s+/g, "_");
+
+          const batch = writeBatch(db);
+          incrementOrgStats(batch, analyticsOrganizationId, { "publicCargo.totalRequestsInitiated": 1 });
+          incrementOrgStats(batch, loadItem.organizationId, { "publicCargo.totalRequestsSent": 1 });
+          createRequestAnalyticsPair(batch, {
+            orgIdA: analyticsOrganizationId,
+            orgIdB: loadItem.organizationId,
+            docId: assignmentTimeId,
+            loadId: loadItem.id,
+            truckId: item.id,
+            cargoType: "PUBLIC",
+            cargoOwnerAcc: loadItem.postedBy.accType,
+          });
+          await batch.commit();
+        }
+
+        if (loadItem.expoPushToken) {
+          await sendBookingWithTrackerNotification(
+            loadItem.expoPushToken,
+            truckData?.ownerName || "Truck Owner",
+            `${loadItem.origin} to ${loadItem.destination}`,
+            hasTracker && trackerStatus === "active" && trackingDeviceId,
+            theData.requestId
+          );
+        } else {
+          console.warn("⚠️ No expoPushToken found in loadItem, skipping notification");
+        }
+
+        ToastAndroid.show(
+          `Load ${OperationType === "Bid" ? "BIDDING" : "BOOKING"} completed successfully.`,
+          ToastAndroid.SHORT
+        );
       } catch (err) {
-        console.error(err)
+        console.error(err);
       }
     }
 

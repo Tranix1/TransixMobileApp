@@ -48,7 +48,8 @@ interface SignUpCredentials {
     displayName: string;
     referrerCode?: string;
     accountType?: AccountType;
-    referralValidation: any
+    referralValidation: any,
+    countryCode: string,
 }
 
 interface UpdateAccountResponse {
@@ -638,6 +639,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 platform:
                     referredBy?.platform ??
                     null,
+
+                countryCode: credentials.countryCode ?? null
             };
 
 
@@ -691,7 +694,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const Logout = async () => {
         try {
-            const analyticsContext = { userId: user?.uid, accountType: user?.accountType, organizationId: currentRole?.organizationId ?? currentRole?.fleetId ?? null, organizationType: currentRole?.accType ?? null, role: currentRole?.userRole ?? null };
+            const daySinceSignup = (Date.now() - user?.createdAt!) / (1000 * 60 * 60 * 24)
+            const accountAge = daySinceSignup < 30 ? "new" : daySinceSignup < 90 ? "active" : "established"
+
+            const analyticsContext = { userId: user?.uid, accountAge: accountAge, accountType: user?.accountType, organizationId: currentRole?.organizationId ?? currentRole?.fleetId ?? null, organizationType: currentRole?.accType ?? null, role: currentRole?.userRole ?? null };
             await signOut(auth);
             void trackLogout(analyticsContext).catch(console.error);
             await AsyncStorage.clear();

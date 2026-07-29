@@ -22,6 +22,7 @@ import { incrementRequestsAcceptedPblcCargo, incrementAcceptedRequestedPblcCargo
 
 import { doc, writeBatch, getDoc, increment } from "firebase/firestore";
 import { db } from "@/db/fireBaseConfig";
+import { incrementOrgStats, respondToRequestAnalytics } from "@/Utilities/analyticsHelpers";
 
 export const RequestedCargo = ({
   item, dspRoute, currentLocation
@@ -96,28 +97,17 @@ export const RequestedCargo = ({
     const payload = {
       ...data,
       visibility: "PUBLIC",
-
       fleetDetails: item?.organizationDetails ?? null,
-
       loadDetails: item.loadItemDetails,
       truckDetails: item.truckDetails,
       driverDetails: item.driverDetails,
-
       driverId: item.driverDetails?.driverId || null,
       externalLoad: true,
-
       status: "ASSIGNED",
       createdAt: new Date(),
     };
 
-    // Fleet Owner accepts the request and creates a booking in the "CargoBookings" collection
-    // await addDocument(`fleets/${item.organizationDetails.id}/assignments`, {
-    //   ...payload,
-    //   shipper: item.loadItemDetails.organizationDetails || null 
-    // });
-
-
-    const assigmentId = `${item.loadItemDetails.loadId}_${item.truckDetails.truckId}`
+    const assigmentId = `${item.loadItemDetails.loadId}_${item.truckDetails.truckId}`;
 
     await addDocumentWithId(`fleets/${item.fleetDetails.id}/assignments`, assigmentId, {
       ...payload,
@@ -125,154 +115,77 @@ export const RequestedCargo = ({
       timeStamp: serverTimestamp(),
     });
 
-    // Cargo Adder Owner can now see the booking in their Assigments section
-    await addDocumentWithId(`${item.loadItemDetails.postedBy.accType}/${item.loadItemDetails.postedBy.organizationId}/assignments`, assigmentId, {
-      ...payload,
-      shipper: item.loadItemDetails.shipper || null,
-      timeStamp: serverTimestamp(),
-
-    })
+    await addDocumentWithId(
+      `${item.loadItemDetails.postedBy.accType}/${item.loadItemDetails.postedBy.organizationId}/assignments`,
+      assigmentId,
+      { ...payload, shipper: item.loadItemDetails.shipper || null, timeStamp: serverTimestamp() }
+    );
 
     await updateDocument("cargoRequests", item.id, {
       requestStatus: "ACCEPTED",
       ownerDecision: "Accepted",
       acceptedAt: new Date(),
-
-      // Useful references
       assignedFleetId: item?.fleetDetails?.id ?? null,
       assignedTruckId: item.truckDetails.truckId,
       assignedDriverId: item.driverDetails.driverId,
-
       assignmentCreated: true,
-    })
+    });
 
     const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
-
-    const daySinceSignup = (Date.now() - user?.createdAt!) / (1000 * 60 * 60 * 24)
-    const accountAge = daySinceSignup < 30 ? "new" : daySinceSignup < 90 ? "active" : "established"
+    const daySinceSignup = (Date.now() - user?.createdAt!) / (1000 * 60 * 60 * 24);
+    const accountAge = daySinceSignup < 30 ? "new" : daySinceSignup < 90 ? "active" : "established";
 
     if (analyticsOrganizationId && (currentRole?.accType === 'fleet' || currentRole?.accType === 'brokerage')) {
-      const context = { userId: user?.uid, accountAge: accountAge, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole.accType, role: currentRole.userRole, accountType: currentRole.accType, metadata: { assignmentId: assigmentId, loadId: item.loadItemDetails.loadId, truckId: item.truckDetails.truckId, assigmentType: "PUBLIC_CARGO" } };
+      const context = {
+        userId: user?.uid, accountAge, organizationId: analyticsOrganizationId,
+        organizationProfileId: analyticsOrganizationId, organizationType: currentRole.accType,
+        role: currentRole.userRole, accountType: currentRole.accType,
+        metadata: {
+          assignmentId: assigmentId, loadId: item.loadItemDetails.loadId,
+          truckId: item.truckDetails.truckId, assigmentType: "PUBLIC_CARGO",
+          loadDetails: item.loadItemDetails, trucksAssigned: item.truckDetails,
+        },
+      };
 
       void trackAssignmentCreated(context).catch(console.error);
-
       void trackTruckAccepted(context).catch(console.error);
-
       void incrementAssignmentsCreated(currentRole.accType, analyticsOrganizationId).catch(console.error);
-
-      // Truck Owner
-
       void incrementRequestsAcceptedPblcCargo(item?.fleetDetails?.id).catch(console.error);
-      // Load Owner
       void incrementAcceptedRequestedPblcCargo(analyticsOrganizationId).catch(console.error);
 
-
-
-
-
-
-
-
-
-      const batch = writeBatch(db);
-
+      // Respond to the pending request + bump stats
       const assignmentTimeId = `${item.loadItemDetails.loadId}_${item.truckDetails.truckId}`
         .toLowerCase()
         .replace(/\s+/g, "_");
 
-      //eeting the time for fleet 
-      const addingTimeTrackForFleet = doc(
-        db,
-        "organizationProfiles",
-        analyticsOrganizationId,
-        "requestAnalytics",
-        assignmentTimeId
-      );
+      const batch = writeBatch(db);
 
-      const getRequestedAt = await getDoc(addingTimeTrackForFleet);
-
-      const requestedAt = getRequestedAt.data()?.requestedAt;
-
-      if (!requestedAt) {
-        throw new Error("Missing requestedAt");
-      }
-      const nowTime = Timestamp.now();
-
-      // Seeting time for load owner
-      const respondedTimeMs =
-        nowTime.toMillis() - requestedAt.toMillis();
-
-      batch.set(addingTimeTrackForFleet, {
-
-        respondedAt: nowTime,
-        respondedTimeMs: respondedTimeMs,
-        status: "RESPONDED",
-        response: "ACCEPTED", // or DECLINED
-
-
+      // FIX: originally both "addingTimeTrackForFleet" and "addingTimeTrackForLoad" pointed
+      // at organizationProfiles/{analyticsOrganizationId}/... — the same document twice.
+      // The truck-owning org's requestAnalytics doc (item.fleetDetails.id) was never updated,
+      // and since requestedAt was originally written under item.fleetDetails.id when the
+      // truck owner created the request (see handleSubmitDetails), reading it from
+      // analyticsOrganizationId would silently produce `undefined` / throw.
+      const respondedTimeMs = await respondToRequestAnalytics(batch, {
+        orgIdA: item?.fleetDetails?.id,   // truck owner org — where requestedAt lives
+        orgIdB: analyticsOrganizationId,  // load owner org — the one responding now
+        docId: assignmentTimeId,
+        response: "ACCEPTED",
       });
 
-      //eeting the time for fleet 
-      const addingTimeTrackForLoad = doc(
-        db,
-        "organizationProfiles",
-        analyticsOrganizationId,
-        "requestAnalytics",
-        assignmentTimeId
-      );
-
-      batch.set(addingTimeTrackForLoad, {
-
-        respondedAt: nowTime,
-        respondedTimeMs: respondedTimeMs,
-        status: "RESPONDED",
-        response: "ACCEPTED", // or DECLINED
-
-
+      incrementOrgStats(batch, item?.fleetDetails?.id, {
+        "publicCargo.acceptedRequests": 1,
       });
-
-
-      // Update Truck organization stats
-      batch.update(
-        doc(db, "organizationProfiles", item?.fleetDetails?.id),
-        {
-          publicCargo: {
-            acceptedRequests: increment(1),
-          }
-
-
-        },
-
-      );
-      // Update Load organization stats
-
-      batch.update(
-        doc(db, "organizationProfiles", analyticsOrganizationId),
-        {
-
-          publicCargo: {
-            acceptedRequestsReceived: increment(1),
-            totalResponses: increment(1),
-            totalResponseTimesMs: increment(respondedTimeMs),
-          }
-
-        },
-
-      );
-
+      incrementOrgStats(batch, analyticsOrganizationId, {
+        "publicCargo.acceptedRequestsReceived": 1,
+        "publicCargo.totalResponses": 1,
+        "publicCargo.totalResponseTimesMs": respondedTimeMs,
+      });
 
       await batch.commit();
-
-
-
-
     }
 
-    ToastAndroid.show(
-      "Load accepted. It now appears under Assignments.",
-      ToastAndroid.LONG
-    );
-
+    ToastAndroid.show("Load accepted. It now appears under Assignments.", ToastAndroid.LONG);
     setShowModal(false);
   };
 

@@ -209,7 +209,7 @@ export default function AddDriver() {
             )
 
 
-            void trackEvent({ eventName: "driver_created", userId: user.uid, organizationId: fixedDriverId, organizationProfileId: fixedDriverId, organizationType: "driver", role: "owner", accountType: "driver", country: locationFull }).catch(console.error);
+            void trackEvent({ eventName: "driver_created", userId: user.uid, organizationId: fixedDriverId, organizationProfileId: fixedDriverId, organizationType: "driver", role: "owner", accountType: "driver", location: locationFull }).catch(console.error);
             // Creates the derived dashboard document without changing its counters.
 
             const currentRoleAccType = {
@@ -221,27 +221,27 @@ export default function AddDriver() {
 
             await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
 
-                const notifyQyery = query(collection(db,"adminRoles"), where("role","==","SUPER_ADMIN"),where("active","==", true) )
-                const notifySnapShot = await getDocs(notifyQyery)
+            const notifyQyery = query(collection(db, "adminRoles"), where("role", "==", "SUPER_ADMIN"), where("active", "==", true))
+            const notifySnapShot = await getDocs(notifyQyery)
 
-            await   Promise.all(
-                notifySnapShot.docs.map((doc)=>{
-                       notifyUserById(
-                          doc.id,
-                          `New verification request`,
-                          `${fullName} , Driver has submitted a verification request`,
-            
-                          {
+            await Promise.all(
+                notifySnapShot.docs.map((doc) => {
+                    notifyUserById(
+                        doc.id,
+                        `New verification request`,
+                        `${fullName} , Driver has submitted a verification request`,
+
+                        {
                             pathname: "Account/Admin",
-                          }, {
-                          type: "account_verification",
-                        }
-                        );
+                        }, {
+                        type: "account_verification",
+                    }
+                    );
 
                 })
             )
 
-                         
+
             router.push("/Driver/DriverSelector/Index");
 
             ToastAndroid.show('Driver added successfully', ToastAndroid.SHORT);
@@ -320,7 +320,7 @@ export default function AddDriver() {
 
 
     return (
-        <View  style={{flex:1 , backgroundColor: background,}}>
+        <View style={{ flex: 1, backgroundColor: background, }}>
             {currentRole.userRole !== "create_Acc" ? <View style={{ paddingTop: 36 }}>
 
                 <Heading page="Create Driver" />

@@ -125,10 +125,10 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                 return
             }
 
-              if (!acceptTerms) {
-            setError("You must accept the terms and privacy policy");
-            return;
-        }
+            if (!acceptTerms) {
+                setError("You must accept the terms and privacy policy");
+                return;
+            }
 
             if (selectedAccount !== "tracking" && referrerCode) {
                 const normalizedCode = referrerCode.trim().toUpperCase();
@@ -209,24 +209,25 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
             return;
         }
 
-      
+
 
         setError(null);
 
-   
+
 
         try {
             setLoading(true);
             setIsSigningUp(true);
 
             const result = await signUp({
-                phoneNumber:`${countryCode.name}${phoneNumber}` ,
+                phoneNumber: `${countryCode.name}${phoneNumber}`,
                 verificationId,
                 otp,
                 referrerCode,
                 accountType: selectedAccount,
                 displayName: fullname,
-                referralValidation
+                referralValidation,
+                countryCode: countryCode.name,
             });
 
             if (result.success) {
@@ -240,7 +241,7 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                 } else if (selectedAccount === "driver") {
                     router.replace("/Driver/Add/Index");
 
-                }else{
+                } else {
                     router.push("/")
                 }
 

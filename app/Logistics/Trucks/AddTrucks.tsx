@@ -630,6 +630,19 @@ function AddTrucks() {
 
             truckCapacity: selectedTruckCapacity?.name,
             truckOperatingLocations: operationCountries,
+
+
+            trucksData: {
+              cargoArea: selectedCargoArea.name as string,
+              truckType: truckType,
+              truckCapacity: `${selectedTruckCapacity?.name}`,
+              operatingCountries: operationCountries as string[],
+              tankerType: selectedTankerType?.name,
+
+            }
+
+
+
           },
 
 
