@@ -24,6 +24,7 @@ import { readById, updateDocument, addDocument } from '@/db/operations';
 import { SubscriptionType, SUBSCRIPTION_PRICING, REFERRAL_ELIGIBLE_PAYMENTS } from '@/constants/subscriptionConfig';
 import { getDocs, where, query, collection } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
+import { notifyUserById } from '@/Utilities/pushNotification';
 
 interface ReferralCreditResult {
   credited: boolean;
@@ -253,6 +254,18 @@ export async function creditReferralIfEligible(
 
         createdAt: new Date().toISOString(),
 
+      }
+    );
+
+    await notifyUserById(
+      referrerId,
+      "Referral commission earned 🎉",
+      `You earned $${commissionAmount} from a ${subscriptionType} subscription referral.`,
+      "/Wallet",
+      {
+        type: "referral_commission",
+        amount: commissionAmount,
+        organizationId: payerOrganizationId,
       }
     );
 

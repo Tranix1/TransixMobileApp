@@ -51,6 +51,7 @@ import TrackingIndex from "./Tracking/Index"
 import CreateFleet from "./Fleet/CreateFleet";
 import CreateDriverAcc from "./Driver/Add/Index"
 import CreateBrokerageAcc from "./brokerage/CreateBrokerage/Index"
+import SubscriptionPaymentModal from "@/components/SubscriptionPaymentModal";
 
 const Tab = createBottomTabNavigator();
 
@@ -69,13 +70,52 @@ export default function Index() {
   const [dspLoginOrSignup, setDspLoginOrSignup] = useState(true);
   const [isSigningUp, setIsSigningUp] = useState(false);
 
-  const {
+  const { currentRole  } = useAuth();
+
+const {
     isLoading: authLoading,
     isAuthenticated,
     user,
     needsEmailVerification,
     error: authError,
   } = useAuthState();
+
+
+
+    const [showModalPayment, setShowModalPaymentModal] = useState(false)
+
+
+ const brokerage = user?.brokerageDetails?.find(
+        (item: any) =>
+            item.organizationId === currentRole.organizationId
+    );
+
+
+    const shouldShowBrokerageSubscription =
+        brokerage &&
+        (
+            !brokerage.subscription ||
+            !brokerage.subscription.active ||
+            Date.now() > brokerage.subscription.expiresAt
+        );
+ 
+
+
+
+
+       useEffect(() => {
+    
+            if (shouldShowBrokerageSubscription) {
+                setShowModalPaymentModal(true);
+            }
+    
+        }, [shouldShowBrokerageSubscription]);
+
+
+
+
+
+  
 
   const {
     showUpdateModal,
@@ -86,7 +126,6 @@ export default function Index() {
     dismissUpdate,
   } = useAppUpdate();
 
-  const { currentRole } = useAuth();
 
   // Check if profile details are missing
 
@@ -322,6 +361,14 @@ export default function Index() {
 
         <UpdateModal visible={showUpdateModal} onClose={dismissUpdate} currentVersion={currentVersion} latestVersion={latestVersion} updateUrl="https://play.google.com/store/apps/details?id=com.yayapana.TransixNewVersion" isForceUpdate={isForceUpdate} />
 
+
+    <SubscriptionPaymentModal
+                isVisible={showModalPayment}
+                onClose={() => setShowModalPaymentModal(false)}
+                subscriptionType="brokerage"      // or "broker" / "tracking"
+                payerOrganizationId={currentRole.organizationId || ""}
+                payerOrganizationName={currentRole.companyName || " "}
+            />
 
 
       </View>

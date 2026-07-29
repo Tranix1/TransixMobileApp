@@ -56,7 +56,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
   const backgroundLight = useThemeColor('backgroundLight');
   const iconColorTheme = useThemeColor('icon');
 
-  const { user , currentRole} = useAuth()
+  const { user, currentRole } = useAuth()
 
   console.log(currentRole)
 
@@ -147,7 +147,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
           updatedAt: now,
         });
 
-        const updatedBrokerages = user?.brokerageDetails?.map((broker: any) => {
+        const updatedBrokerages = user?.brokergeDetails?.map((broker: any) => {
           if (broker.organizationId === payerOrganizationId) {
             return {
               ...broker,
@@ -163,7 +163,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
         });
 
         await updateDocument('personalData', user?.uid || '', {
-          brokerageDetails: updatedBrokerages,
+          brokergeDetails: updatedBrokerages,
         });
       } else if (subscriptionType === 'truck') {
         const now = Date.now();
@@ -214,6 +214,13 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
       }
 
       if (loadVehicles) loadVehicles();
+
+      if (loadVehicles) loadVehicles();
+
+      ToastAndroid.show(
+        "Subscription activated successfully!",
+        ToastAndroid.SHORT
+      );
       resetState();
       onClose();
     } catch (error) {
