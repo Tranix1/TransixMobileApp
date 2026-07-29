@@ -5,13 +5,11 @@ import {
     PhoneAuthProvider,
     signInWithCredential,
     signInWithEmailAndPassword,
-    signOut,
     updateProfile,
 } from "firebase/auth";
 import { createContext, ReactElement, useContext, useEffect, useState } from "react";
 import { Alert, ToastAndroid } from "react-native";
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
-import { auth } from "@/db/fireBaseConfig";
 import { addDocumentWithId, generateUniqueReferralCode, getReferralCodeByUserId, readById, setDocuments, validateReferralCode } from "@/db/operations";
 import { AccountType, CurrentRole, User } from "@/types/types";
 import { updateUserTokenInAllCollections } from "@/Utilities/pushNotification";
@@ -22,7 +20,11 @@ import { incrementSignups } from "@/services/analytics/referralAnalytics";
 import { getExpoPushTokenAsync } from "expo-notifications";
 import { getExpoPushToken } from "@/Utilities/getExpoPushToken";
 
+import auth from "@react-native-firebase/auth"
+
 type AlertType = "default" | "error" | "success" | "laoding" | "destructive";
+
+
 
 type LoginCredentials = {
     phoneNumber?: string;
@@ -281,20 +283,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         credentials: LoginCredentials
     ): Promise<LoginResponse> => {
         try {
-            const credential = PhoneAuthProvider.credential(
-                credentials.verificationId,
-                credentials.otp
-            );
 
-            const userCredential = await signInWithCredential(
-                auth,
-                credential
-            );
+
 
             setUser(undefined);
 
-            const firebaseUser = userCredential.user;
+            const firebaseUser = auth().currentUser;
 
+            if (!firebaseUser) {
+                return {
+                    success: false,
+                    message: "Authentication failed. Please login again."
+                };
+            }
 
             // Update notification token
             try {
@@ -426,271 +427,308 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             };
         }
     };
-    const signUp = async (
-        credentials: SignUpCredentials
-    ): Promise<{ success: boolean; accountRole?: any }> => {
+ 
+
+
+const signUp = async (
+    credentials: SignUpCredentials
+): Promise<{ success: boolean; accountRole?: any }> => {
+
+    try {
+
+        const firebaseUser = auth().currentUser;
+
+        if (!firebaseUser) {
+            throw new Error("User authentication failed");
+        }
+
+
+        let referredBy: User["referredBy"] | undefined;
+
+
+        const referral = credentials.referralValidation;
+
+
+        if (referral?.exists && referral.data) {
+
+            if (referral.type === "REFERRER") {
+
+                referredBy = {
+                    userId: referral.data.userId,
+                    name: referral.data.name ?? "Unknown",
+                    phoneNumber: referral.data.phoneNumber ?? "",
+                    referralCode: referral.data.referralCode,
+                    joinedAt: referral.data.joinedAt,
+                };
+
+            }
+
+
+            if (referral.type === "CAMPAIGN") {
+
+                referredBy = {
+
+                    userId: referral.data.userId,
+
+                    name: referral.data.name ?? "Unknown",
+
+                    phoneNumber:
+                        referral.data.phoneNumber ?? "",
+
+                    referralCode:
+                        referral.data.referralCode,
+
+                    campaign:
+                        referral.data.campaign,
+
+                    platform:
+                        referral.data.platform,
+
+                    createdAt:
+                        referral.data.createdAt,
+
+                };
+
+            }
+        }
+
+
+
+      await firebaseUser.updateProfile({
+    displayName: credentials.displayName,
+});
+
+
+        const newReferralCode =
+            await generateUniqueReferralCode("REFERRER");
+
+
+
+        let expoPushToken: string | undefined;
+
 
         try {
 
-            let referredBy: User["referredBy"] | undefined;
+            expoPushToken =
+                await getExpoPushToken(firebaseUser.uid) ?? undefined;
 
+        } catch(e){
 
-            if (credentials.referralValidation?.exists) {
-
-                if (credentials.referralValidation.type === "REFERRER") {
-
-                    referredBy = {
-                        userId: credentials.referralValidation.data.userId,
-                        name: credentials.referralValidation.data.name,
-                        phoneNumber: credentials.referralValidation.data.phoneNumber,
-                        referralCode: credentials.referralValidation.data.referralCode,
-                        joinedAt: credentials.referralValidation.data.joinedAt,
-                    };
-                }
-
-                if (credentials.referralValidation.type === "CAMPAIGN") {
-
-                    referredBy = {
-                        userId: credentials.referralValidation.data.userId,
-                        name: credentials.referralValidation.data.name,
-                        phoneNumber: credentials.referralValidation.data.phoneNumber,
-                        referralCode: credentials.referralValidation.data.referralCode,
-
-                        campaign:
-                            credentials.referralValidation.data.campaign,
-
-                        platform:
-                            credentials.referralValidation.data.platform,
-
-                        createdAt:
-                            credentials.referralValidation.data.createdAt,
-                    };
-
-                }
-            }
-            const credential = PhoneAuthProvider.credential(
-                credentials.verificationId,
-                credentials.otp
-            );
-            const userCredential = await signInWithCredential(
-                auth,
-                credential
-            );
-            const firebaseUser = userCredential.user;
-
-            // Get notification token
-            let expoPushToken: string | undefined;
-
-            try {
-
-                expoPushToken =
-                    await getExpoPushToken(firebaseUser.uid) ?? undefined;
-
-            } catch (error) {
-
-                console.log(
-                    "Push token update failed",
-                    error
-                );
-
-            }
-
-            const accountRole = normalizeAccountType(
-                credentials.accountType || "tracking"
+            console.log(
+                "Push token failed",
+                e
             );
 
-            await updateProfile(firebaseUser, {
-                displayName: credentials.displayName,
-            });
-
-            const newReferralCode =
-                await generateUniqueReferralCode("REFERRER");
-
-            const userData: User = {
-
-                uid: firebaseUser.uid,
-
-                userId: firebaseUser.uid,
-
-                phoneNumber:
-                    firebaseUser.phoneNumber ?? undefined,
-
-                displayName:
-                    credentials.displayName,
-
-                referralCode:
-                    newReferralCode,
+        }
 
 
-                ...(expoPushToken && {
-                    expoPushToken,
-                }),
+
+        const userData: User = {
+
+            uid: firebaseUser.uid,
+
+            userId: firebaseUser.uid,
+
+            phoneNumber:
+                firebaseUser.phoneNumber ?? credentials.phoneNumber,
+
+            displayName:
+                credentials.displayName || "Unknown",
+
+            referralCode:
+                newReferralCode,
 
 
-                ...(referredBy && {
-                    referredBy,
-                }),
+            accountType:
+                credentials.accountType || "tracking",
 
 
-                accountType:
-                    credentials.accountType,
+            createdAt:
+                Date.now(),
 
 
-                createdAt:
-                    Date.now(),
-            };
+            ...(expoPushToken && {
+                expoPushToken
+            }),
 
-            const saved = await setDocuments(
-                "personalData",
-                userData
+
+            ...(referredBy && {
+                referredBy
+            }),
+
+        };
+
+
+
+        const saved = await setDocuments(
+            "personalData",
+            userData
+        );
+
+
+        if (!saved) {
+
+            throw new Error(
+                "Failed creating user profile"
             );
 
-            if (!saved) {
+        }
 
-                ToastAndroid.show(
-                    "Unable to create profile. Please try again.",
-                    ToastAndroid.LONG
-                );
 
-                return {
-                    success: false,
-                };
-            }
 
-            await addDocumentWithId(
-                "referrers",
-                firebaseUser.uid,
-                {
-
-                    userId:
-                        firebaseUser.uid,
-
-                    name:
-                        credentials.displayName || "Unknown",
-
-                    phoneNumber:
-                        firebaseUser.phoneNumber ?? undefined,
-
-                    referralCode:
-                        newReferralCode,
-
-                    createdAt:
-                        new Date().toISOString(),
-
-                    isActive:
-                        true,
-                }
-            );
-
-            const currentRoleAccType = {
-
-                userRole:
-                    "create_Acc",
-
-                accType:
-                    credentials.accountType,
-
-            };
-            setUser(userData);
-
-            setIsSignedIN(true);
-
-            await AsyncStorage.setItem(
-                "user",
-                JSON.stringify(userData)
-            );
-            await AsyncStorage.setItem(
-                "currentUser",
-                JSON.stringify(userData)
-            );
-
-            await AsyncStorage.setItem(
-                `personalData_${firebaseUser.uid}`,
-                JSON.stringify(userData)
-            );
-
-            await AsyncStorage.setItem(
-                "currentRole",
-                JSON.stringify(currentRoleAccType)
-            );
-
-            const analyticsContext = {
+        await addDocumentWithId(
+            "referrers",
+            firebaseUser.uid,
+            {
 
                 userId:
                     firebaseUser.uid,
 
-                accountType:
-                    credentials.accountType,
+                name:
+                    credentials.displayName || "Unknown",
 
+                phoneNumber:
+                    firebaseUser.phoneNumber ?? "",
 
-                referrerId:
-                    referredBy?.userId ?? null,
+                referralCode:
+                    newReferralCode,
 
+                createdAt:
+                    new Date().toISOString(),
 
-                referralCodeUsed:
-                    credentials.referrerCode ??
-                    referredBy?.referralCode ??
-                    null,
-                campaign:
-                    referredBy?.campaign ??
-                    null,
-
-
-                platform:
-                    referredBy?.platform ??
-                    null,
-
-                countryCode: credentials.countryCode ?? null
-            };
-
-
-            void trackAccountCreated(
-                analyticsContext
-            ).catch(console.error);
-
-            if (referredBy?.userId) {
-
-                void incrementSignups(
-                    referredBy.userId
-                ).catch(console.error);
+                isActive:
+                    true,
 
             }
+        );
 
-            setIsAppReady(true);
 
-            ToastAndroid.show(
-                "Account created successfully!",
-                ToastAndroid.SHORT
-            );
 
-            return {
+        const currentRoleAccType = {
 
-                success: true,
+            userRole:
+                "create_Acc",
 
-                accountRole:
-                    currentRoleAccType,
+            accType:
+                credentials.accountType,
 
-            };
+        };
 
-        } catch (error) {
 
-            console.error(
-                "Sign up failed:",
-                error
-            );
 
-            ToastAndroid.show(
-                getFirebaseErrorMessage(error),
-                ToastAndroid.LONG
-            );
+        setUser(userData);
 
-            return {
-                success: false
-            };
+        setIsSignedIN(true);
+
+
+
+        await AsyncStorage.multiSet([
+
+            [
+                "user",
+                JSON.stringify(userData)
+            ],
+
+            [
+                "currentUser",
+                JSON.stringify(userData)
+            ],
+
+            [
+                `personalData_${firebaseUser.uid}`,
+                JSON.stringify(userData)
+            ],
+
+            [
+                "currentRole",
+                JSON.stringify(currentRoleAccType)
+            ]
+
+        ]);
+
+
+
+        void trackAccountCreated({
+
+            userId:
+                firebaseUser.uid,
+
+            accountType:
+                credentials.accountType,
+
+            referrerId:
+                referredBy?.userId ?? null,
+
+            referralCodeUsed:
+                credentials.referrerCode ??
+                referredBy?.referralCode ??
+                null,
+
+            campaign:
+                referredBy?.campaign ?? null,
+
+            platform:
+                referredBy?.platform ?? null,
+
+            countryCode:
+                credentials.countryCode ?? null,
+
+        }).catch(console.error);
+
+
+
+        if (referredBy?.userId) {
+
+            void incrementSignups(
+                referredBy.userId
+            ).catch(console.error);
 
         }
-    };
 
+
+
+        setIsAppReady(true);
+
+
+        ToastAndroid.show(
+            "Account created successfully!",
+            ToastAndroid.SHORT
+        );
+
+
+        return {
+
+            success:true,
+
+            accountRole:
+                currentRoleAccType
+
+        };
+
+
+    } catch(error:any){
+
+        console.error(
+            "Signup failed:",
+            error
+        );
+
+
+        ToastAndroid.show(
+            getFirebaseErrorMessage(error),
+            ToastAndroid.LONG
+        );
+
+
+        return {
+            success:false
+        };
+
+    }
+};
+
+
+    
 
     const Logout = async () => {
         try {
@@ -698,7 +736,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const accountAge = daySinceSignup < 30 ? "new" : daySinceSignup < 90 ? "active" : "established"
 
             const analyticsContext = { userId: user?.uid, accountAge: accountAge, accountType: user?.accountType, organizationId: currentRole?.organizationId ?? currentRole?.fleetId ?? null, organizationType: currentRole?.accType ?? null, role: currentRole?.userRole ?? null };
-            await signOut(auth);
+            await auth().signOut();
             void trackLogout(analyticsContext).catch(console.error);
             await AsyncStorage.clear();
             setCurrentRoleState(DEFAULT_GENERAL_ROLE);
@@ -732,7 +770,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         credentials: User
     ): Promise<UpdateAccountResponse> => {
         try {
-            const currentUser = auth.currentUser;
+            const currentUser = auth().currentUser;
 
             if (!isSignedIn || !currentUser || !credentials.uid) {
                 return {
@@ -741,13 +779,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 };
             }
 
-            await updateProfile(currentUser, {
-                displayName:
-                    credentials.organisation ||
-                    credentials.displayName ||
-                    "",
-                photoURL: credentials.photoURL || null,
-            });
 
 
 

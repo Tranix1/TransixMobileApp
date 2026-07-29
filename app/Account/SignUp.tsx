@@ -165,6 +165,7 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
             setLoading(false);
         }
     };
+    
 
     const verifyOTP = async (code: string) => {
         if (!phoneNumber || !fullname) {
@@ -207,7 +208,7 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                 } else if (selectedAccount === "driver") {
                     router.replace("/Driver/Add/Index");
                 } else {
-                    router.push("/");
+                    router.push("/Tracking/Index");
                 }
             }
 
@@ -508,7 +509,7 @@ const styles = StyleSheet.create({
     checkboxText: { marginLeft: wp(2), fontSize: wp(3.5), flexShrink: 1 },
 
     signUpButton: {
-        
+
         paddingVertical: hp(2),
         borderRadius: wp(100),
         alignItems: 'center',

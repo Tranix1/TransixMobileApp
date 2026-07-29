@@ -107,7 +107,7 @@ const Login = ({ setDspLoginOrSignup }: any) => {
 
             const confirmationResult = await auth().signInWithPhoneNumber(
                 `${countryCode.name}${phoneNumber}`
-            );
+            );  
 
             setConfirmation(confirmationResult);
             setOtpSent(true);

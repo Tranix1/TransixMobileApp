@@ -45,6 +45,7 @@ import DriverSelector from "./Driver/DriverSelector/Index"
 import BrokerageSelector from "./brokerage/BrokerageSelector/Index";
 
 import Login from "./Account/Login";
+import Tracking from "./Tracking/Map";
 
 import TrackingIndex from "./Tracking/Index"
 import CreateFleet from "./Fleet/CreateFleet";
@@ -182,6 +183,7 @@ export default function Index() {
   }
 
 
+  console.log(currentRole)
 
 
   return (
@@ -193,8 +195,8 @@ export default function Index() {
               const color = focused ? accent : icon;
               const size = wp(5);
               switch (route.name) {
-                case "Home ": return <Octicons name="home" size={size} color={color} />;
-                case "About ": return <Octicons name="info" size={size} color={color} />;
+                case "Home": return <Octicons name="home" size={size} color={color} />;
+                case "About": return <Octicons name="info" size={size} color={color} />;
                 case "Loads": return <FontAwesome6 name="trailer" size={size} color={color} />;
                 case "Trucks": return <Fontisto name="truck" size={size} color={color} />;
                 case "Store": return <Entypo name="shop" size={size} color={color} />;
@@ -243,19 +245,18 @@ export default function Index() {
                 }
               </Tab.Screen>
 
-
-              <Tab.Screen name="About " component={About} />
+              <Tab.Screen name="About" component={About} />
             </>
           ) :
 
             (typeof currentRole === 'object' && currentRole.accType === 'tracking') ? (
               <>
-                {/* <Tab.Screen name="Home " component={TrackingIndex} /> */}
-                <Tab.Screen name="About " component={About} />
+                <Tab.Screen name="Home" component={TrackingIndex}/>
+                <Tab.Screen name="About" component={About} />
               </>
             ) : (typeof currentRole === 'object' && currentRole.accType === 'fleet' && currentRole.userRole === 'owner') ? (
               <>
-                <Tab.Screen name="Home " component={Dashboard} />
+                <Tab.Screen name="Home" component={Dashboard} />
                 <Tab.Screen name="Loads" component={Loads} />
                 {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
                 <Tab.Screen name="Trucks" component={LogisticsTrucks} />
@@ -264,13 +265,13 @@ export default function Index() {
 
               (typeof currentRole === 'object' && currentRole.accType === 'fleet' && currentRole.userRole === "create_Acc") ?
                 (<>
-                  <Tab.Screen name="Home " component={CreateFleet} />
-                  <Tab.Screen name="About " component={About} />
+                  <Tab.Screen name="Home" component={CreateFleet} />
+                  <Tab.Screen name="About" component={About} />
                 </>) :
                 (typeof currentRole === 'object' && currentRole.accType === 'fleet') ?
                   (<>
-                    <Tab.Screen name="Home " component={FleetSelector} />
-                    <Tab.Screen name="About " component={About} />
+                    <Tab.Screen name="Home" component={FleetSelector} />
+                    <Tab.Screen name="About" component={About} />
                   </>)
 
                   : (typeof currentRole === 'object' && currentRole.accType === 'driver' && currentRole.userRole === 'driver') ? (
@@ -282,14 +283,14 @@ export default function Index() {
                     </>
                   ) : (typeof currentRole === 'object' && currentRole.role === 'driver' && currentRole.userRole === "create_Acc") ?
                     (<>
-                      <Tab.Screen name="Home " component={CreateDriverAcc} />
-                      <Tab.Screen name="About " component={About} />
+                      <Tab.Screen name="Home" component={CreateDriverAcc} />
+                      <Tab.Screen name="About" component={About} />
                     </>) :
 
                     (typeof currentRole === 'object' && currentRole.role === 'driver') ?
                       (<>
-                        <Tab.Screen name="Home " component={DriverSelector} />
-                        <Tab.Screen name="About " component={About} />
+                        <Tab.Screen name="Home" component={DriverSelector} />
+                        <Tab.Screen name="About" component={About} />
                       </>)
 
                       : (typeof currentRole === 'object' && currentRole.accType === 'brokerage' && currentRole.userRole === 'owner') ? (
@@ -302,13 +303,13 @@ export default function Index() {
                       )
                         : (typeof currentRole === 'object' && currentRole.accType === 'brokerage' && currentRole.userRole === "create_Acc") ?
                           (<>
-                            <Tab.Screen name="Home " component={CreateBrokerageAcc} />
-                            <Tab.Screen name="About " component={About} />
+                            <Tab.Screen name="Home" component={CreateBrokerageAcc} />
+                            <Tab.Screen name="About" component={About} />
                           </>) :
                           (typeof currentRole === 'object' && currentRole.accType === 'brokerage') ?
                             (<>
-                              <Tab.Screen name="Home " component={BrokerageSelector} />
-                              <Tab.Screen name="About " component={About} />
+                              <Tab.Screen name="Home" component={BrokerageSelector} />
+                              <Tab.Screen name="About" component={About} />
                             </>)
 
                             : (

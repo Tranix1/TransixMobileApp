@@ -1,9 +1,12 @@
 import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, where, onSnapshot, runTransaction, serverTimestamp, startAfter, limit, orderBy, DocumentData, Query, setDoc, getDoc } from "firebase/firestore";
-import { db, auth } from "./fireBaseConfig";
+import { db } from "./fireBaseConfig";
 import { getDownloadURL, ref, uploadBytes, } from "firebase/storage";
 import { storage } from "./fireBaseConfig";
 import { usePushNotifications, sendPushNotification } from "@/Utilities/pushNotification";
 import { logAdminAction, getCurrentAdminInfo, ADMIN_ACTIONS } from "@/Utilities/adminActionTracker";
+import auth from "@react-native-firebase/auth"
+
+
 /**
  * Add a document to a Firestore collection.
  * @param collectionName - The name of the Firestore collection.
@@ -20,7 +23,7 @@ export const addDocument = async (
         const docRef = await addDoc(collection(db, collectionName), {
             ...data,
             timeStamp: serverTimestamp(),
-            userId: auth.currentUser?.uid,
+            userId: auth().currentUser?.uid,
         });
         return docRef.id;
     } catch (error) {
@@ -37,20 +40,24 @@ export const addDocument = async (
  */
 export const addDocumentWithId = async (
     collectionName: string,
-    docId: string,
-    data: object
+    id: string,
+    data: any
 ) => {
     try {
-        const docRef = doc(db, collectionName, docId);
-        await setDoc(docRef, {
-            ...data,
-            timeStamp: serverTimestamp(),
-            userId: auth.currentUser?.uid,
-        });
-        return docId;
-    } catch (error) {
-        console.error("Error adding document with custom ID:", error);
-        throw error;
+        await setDoc(
+            doc(db, collectionName, id),
+            data
+        );
+
+        return true;
+
+    } catch(error) {
+        console.error(
+            "Error adding document with custom ID:",
+            error
+        );
+
+        return false;
     }
 };
 
@@ -310,42 +317,57 @@ export const AddUser = async (userId: string, userData: object) => {
     }
 };
 
-export const setDocuments = async (dbName: string, userData: object) => {
+export const setDocuments = async (
+    collectionName:string,
+    data:any
+) => {
     try {
-        if (auth.currentUser) {
+        await setDoc(
+            doc(db, collectionName, data.uid),
+            data
+        );
 
-            const userRef = doc(db, dbName, auth.currentUser?.uid); // Custom ID
-            await setDoc(userRef, userData, { merge: true });
+        return true;
 
-            return true;
-        }
-    } catch (error) {
-        console.error("Error adding user:", error);
+    } catch(error){
+        console.error("setDocuments error:", error);
         return false;
     }
 };
 
 export const getDocById = async (
     dbName: string,
-    setDocDetails: React.Dispatch<React.SetStateAction<any>> // use a better type if possible
+    setDocDetails: React.Dispatch<React.SetStateAction<any>>
 ) => {
     try {
-        if (auth.currentUser) {
-            const docRef = doc(db, dbName, auth.currentUser.uid);
 
-            onSnapshot(docRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    setDocDetails(docSnap.data()); // ✅ get the actual data
-                } else {
-                    console.log('No such document!');
-                }
-            });
+        const user = auth().currentUser;
+
+        if (!user) {
+            console.log("No authenticated user");
+            return;
         }
+
+        const docRef = doc(
+            db,
+            dbName,
+            user.uid
+        );
+
+        onSnapshot(docRef, (docSnap) => {
+
+            if (docSnap.exists()) {
+                setDocDetails(docSnap.data());
+            } else {
+                console.log("No such document!");
+            }
+
+        });
+
     } catch (err) {
         console.error(err);
     }
 };
-
 
 
 
@@ -534,7 +556,9 @@ export const validateReferrer = async (referrerEmail: string) => {
 };
 
 export const validateReferralCode = async (referralCode: string) => {
-    try {
+    console.log("REFERRAL CODE RECEIVED:", referralCode);
+
+    try {   
 
         if (!referralCode) {
             return {

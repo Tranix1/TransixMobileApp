@@ -1,6 +1,6 @@
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/db/fireBaseConfig";
 
 export const getExpoPushToken = async (
@@ -8,11 +8,13 @@ export const getExpoPushToken = async (
 ): Promise<string | null> => {
     try {
 
-        const { status } = await Notifications.getPermissionsAsync();
+        const { status } =
+            await Notifications.getPermissionsAsync();
 
         let finalStatus = status;
 
         if (status !== "granted") {
+
             const permission =
                 await Notifications.requestPermissionsAsync();
 
@@ -46,11 +48,14 @@ export const getExpoPushToken = async (
         const expoPushToken = response.data;
 
 
-        await updateDoc(
+        await setDoc(
             doc(db, "personalData", userId),
             {
                 expoPushToken,
                 pushTokenUpdatedAt: Date.now(),
+            },
+            {       
+                merge: true
             }
         );
 

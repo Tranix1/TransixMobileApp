@@ -55,6 +55,7 @@ export interface AnalyticsContext {
   organizationProfileId?: string | null;
   appVersion?: string | null;
   metadata?: AnalyticsMetadata;
+  countryCode ?: string | null
 
 }
 

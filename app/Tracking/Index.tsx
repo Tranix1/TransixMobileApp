@@ -368,7 +368,11 @@ export default function Index() {
 
   return (
     <View style={{flex :1 , backgroundColor:background}}>
+
+      <View style={{paddingTop:10}}>
+
       <CustomHeader pageTitle="Transix"  />
+      </View>
 
 
           { isAgent ? (

@@ -393,7 +393,7 @@ export type User = {
 
     displayName?: string,
     photoURL?: string,
-    phoneNumber?: string,
+    phoneNumber?: string | null,
     email?: string,
     emailVerified?: boolean,
     organisation?: string,

@@ -4,7 +4,7 @@ import { initializeApp } from "firebase/app";
 
 import { getFirestore, } from 'firebase/firestore'
 import { getStorage } from "firebase/storage"
-import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import { initializeAuth,  } from 'firebase/auth';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import { getVertexAI, getGenerativeModel } from "firebase/vertexai";
 
@@ -35,9 +35,7 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app)
 export const storage = getStorage(app)
 
-export const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
-});
+
 
 const vertexAI = getVertexAI(app);
 export const model = getGenerativeModel(vertexAI, {
