@@ -1993,7 +1993,7 @@ const AddLoadDB = () => {
                             } else {
                               setSelectedBrokerTrucks(prev => [...prev, truck]);
                             }
-                          }}
+                          }}    
                           style={{
                             padding: wp(3),
                             marginVertical: wp(1),

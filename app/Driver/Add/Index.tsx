@@ -26,6 +26,7 @@ import { trackEvent } from '@/services/analytics/appAnalytics';
 import { incrementAccountsCreated } from '@/services/analytics/dashboardAnalytics';
 import { collection, getDocs, query, serverTimestamp, where } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
+import PhoneInput from '@/components/PhoneInput';
 export default function AddDriver() {
     const background = useThemeColor('background');
     const backgroundLight = useThemeColor('backgroundLight');
@@ -53,6 +54,9 @@ export default function AddDriver() {
     const [allUsers, setAllUsers] = useState<any[]>([]);
     const [isEditMode, setIsEditMode] = useState(false);
     const [existingDriver, setExistingDriver] = useState<any>(null);
+
+        const [countryCode, setCountryCode] = useState({ id: 0, name: '' });
+    
 
 
     const { expoPushToken } = usePushNotifications();
@@ -121,7 +125,7 @@ export default function AddDriver() {
                 accType: 'driver',
                 organizationName: fullName,
 
-                organizationPhone: phoneNumber,
+                organizationPhone: `${countryCode.name}${phoneNumber}`,
 
                 fleetMainAdminName: user.displayName,
                 organizationAdminPhone: user.phoneNumber,
@@ -222,6 +226,8 @@ export default function AddDriver() {
             const notifyQyery = query(collection(db, "adminRoles"), where("role", "==", "SUPER_ADMIN"), where("active", "==", true))
             const notifySnapShot = await getDocs(notifyQyery)
 
+            console.log(notifySnapShot)
+
             await Promise.all(
                 notifySnapShot.docs.map((doc) => {
                     notifyUserById(
@@ -292,7 +298,7 @@ export default function AddDriver() {
             // Update driver data
             const updateData = {
                 fullName: fullName.trim(),
-                phoneNumber: phoneNumber.trim(),
+                phoneNumber:  `${countryCode.name}${phoneNumber}`,
                 driverLicenseUrl: licenseUrl,
                 passportUrl: passportUrl,
                 internationalPermitUrl: permitUrl,
@@ -340,12 +346,13 @@ export default function AddDriver() {
                 />
 
                 <ThemedText>Phone Number<ThemedText color="red">*</ThemedText></ThemedText>
-                <Input
-                    placeholder="Enter driver's phone number"
-                    value={phoneNumber}
-                    onChangeText={setPhoneNumber}
-                    keyboardType="phone-pad"
-                />
+                  <PhoneInput
+                                        value={phoneNumber}
+                                        onChangeText={setPhoneNumber}
+                                        countryCode={countryCode}
+                                        setCountryCode={setCountryCode}
+                
+                                    />
 
 
 

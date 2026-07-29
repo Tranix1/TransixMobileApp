@@ -202,6 +202,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       locations: truck?.locations || [],
       trackingDeviceId: truck?.trackingDeviceId || null,
       tankerType: truck?.tankerType || null,
+      operationCountries: truck?.locations || [],
+
     };
 
     const driverDetails = {
@@ -349,7 +351,16 @@ export const submitLoad = async (params: SubmitLoadParams) => {
         role: currentRole.userRole, accountType: currentRole.accType,
         metadata: {
           loadId: cargoId, assigmentType: "PRIVATE_FLEET_CARGO",
-          trucksAssigned: assignmentDetails.map(item => item.truckDetails),
+
+          trucksAssigned: assignmentDetails.map(item => ({
+            cargoArea: item.truckDetails.cargoArea || null,
+            truckType: item.truckDetails.truckType || null,
+            tankerType: item.truckDetails.tankerType || null,
+            capacity: item.truckDetails.truckCapacity || null,
+            operationCountries: item.truckDetails.operationCountries || [],
+          })),
+
+
           loadDetails: assignmentDetails.map(item => item.loadDetails),
         },
       };
@@ -493,7 +504,14 @@ export const submitLoad = async (params: SubmitLoadParams) => {
         role: currentRole.userRole, accountType: currentRole.accType,
         metadata: {
           loadId: cargoId, assigmentType: "PRIVATE_BROKERAGE_CARGO",
-          trucksAssigned: selectedBrokerTrucks, numberOfTrucks: selectedBrokerTrucks.length,
+          trucksAssigned: assignmentDetails.map(item => ({
+            cargoArea: item.truckDetails.cargoArea || null,
+            truckType: item.truckDetails.truckType || null,
+            tankerType: item.truckDetails.tankerType || null,
+            capacity: item.truckDetails.truckCapacity || null,
+            operationCountries: item.truckDetails.operationCountries || [],
+          })),
+          numberOfTrucks: selectedBrokerTrucks.length,
           loadDetails,
         },
       };
@@ -511,6 +529,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
         cargoArea: truck?.cargoArea || null,
         locations: truck?.locations || [],
         trackingDeviceId: truck?.trackingDeviceId || null,
+        operationCountries: truck?.locations || truck?.operationCountries || [],
+
         brokerTruckSummary,
       };
 

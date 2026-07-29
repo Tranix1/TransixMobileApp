@@ -202,13 +202,13 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
             if (result.success) {
                 if (selectedAccount === "fleet") {
-                    router.replace("/Fleet/CreateFleet");
+                    router.replace("/");
                 } else if (selectedAccount === "brokerage") {
-                    router.replace("/brokerage/CreateBrokerage/Index");
+                    router.replace("/");
                 } else if (selectedAccount === "driver") {
-                    router.replace("/Driver/Add/Index");
+                    router.replace("/");
                 } else {
-                    router.push("/Tracking/Index");
+                    router.push("/");
                 }
             }
 
