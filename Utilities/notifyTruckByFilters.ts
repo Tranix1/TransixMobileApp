@@ -70,34 +70,44 @@ export const notifyTrucksByFilters = async ({
   trucksNeeded,
   cargoId,
   loadItem,
+  user,
+  currentRole,
 }: {
   trucksNeeded: TruckNeededType[];
   cargoId?: string;
-  loadItem: LoadItem;
+  loadItem: any;
+  user: any;
+  currentRole: any;
 }) => {
   const loadRatePerKm = loadItem.ratePerKm || 0;
 
   for (const need of trucksNeeded) {
-    const { cargoArea, truckType, tankerType, capacity, operationCountries } = need;
+    const {
+      cargoArea,
+      truckType,
+      tankerType,
+      capacity,
+      operationCountries
+    } = need;
 
-    const { user, currentRole } = useAuth()
+    console.log(trucksNeeded, " trucks needed ")
 
     // 1. Query setup
 
     const filters = [
-      where("truckType", "==", truckType),
-      where("cargoArea", "==", cargoArea),
-      where("truckCapacity", "==", capacity),
+      where("truckType", "==", truckType?.name),
+      where("cargoArea", "==", cargoArea?.name),
+      where("truckCapacity", "==", capacity?.name),
       where("availabilityData.status", "==", "AVAILABLE"),
       where("notificationSettings.notificationsEnabled", "==", true),
       where("approvalStatus", "==", "approved"),
     ];
 
     if (tankerType) {
-      filters.push(where("tankerType", "==", tankerType));
-    }
-    const truckResult = await fetchDocuments("truckMarketplaceProfile", 100, undefined, filters);
+      filters.push(where("tankerType", "==", tankerType.name));
 
+    }
+    const truckResult = await fetchDocuments("truckMarketplaceProfile", 100, undefined,);
     if (!truckResult?.data || truckResult.data.length === 0) {
       continue;
     }
@@ -144,10 +154,10 @@ export const notifyTrucksByFilters = async ({
         metadata: {
           loadId: cargoId,
           trucksData: {
-            cargoArea: `${cargoArea}`,
-            truckType: `${truckType}`,
+            cargoArea: `${cargoArea?.name}`,
+            truckType: `${truckType?.name}`,
             numberOfTrucksRecommended: matchedTrucks.length,
-            truckCapacity: `${capacity}`,
+            truckCapacity: `${capacity?.name}`,
             operatingCountries: operationCountries as string[],
             tankerType: `${tankerType}`,
 
@@ -170,14 +180,14 @@ export const notifyTrucksByFilters = async ({
           truck.notificationSettings?.assignments?.dispatcher?.id;
 
         if (!dispatcherId) {
-          console.log(`Truck ${truck.id} has no dispatcher assigned.`);
           continue;
         }
 
         await notifyUserById(
           dispatcherId,
           "🚚 New Load Match",
-          `${loadItem.truckType} load available from ${loadItem.origin} to ${loadItem.destination}. ${loadItem.currency} ${loadItem.rate.toLocaleString()} (${loadItem.ratePerKm}/km). Tap to review and book if interested.`,
+          `${loadItem.typeofLoad} load available from ${loadItem.origin} to ${loadItem.destination}. ${loadItem.currency} ${Number(loadItem.rate).toLocaleString()} (${Number(loadItem.ratePerKm).toFixed(2)}/km). Tap to review and request if interested.`,
+
           {
             pathname: "/BooksAndBids/ViewBidsAndBooks",
             params: {

@@ -468,16 +468,26 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     }
   };
   const writePublicLoad = async () => {
-    await setDoc(doc(db, 'Cargo', cargoId), {
-      ...commonLoadData,
-      loadVisibility: 'Public',
-      expiresAt: Timestamp.fromDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)),
-      trucksNeededNum: numberOfTrucks,
-      trucksRemainingNum: numberOfTrucks,
-      privateFleetCargoId: currentRole?.accType === 'fleet' && loadVisibility === 'Both' ? cargoId : null,
-      state: 'available',
-      publicTrucks: trucksNeeded ?? null,
-    });
+    // await setDoc(doc(db, 'Cargo', cargoId), {
+    //   ...commonLoadData,
+    //   loadVisibility: 'Public',
+    //   expiresAt: Timestamp.fromDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)),
+    //   trucksNeededNum: numberOfTrucks,
+    //   trucksRemainingNum: numberOfTrucks,
+    //   privateFleetCargoId: currentRole?.accType === 'fleet' && loadVisibility === 'Both' ? cargoId : null,
+    //   state: 'available',  
+    //   publicTrucks: trucksNeeded ?? null,
+    // });
+
+    console.log("notifying")
+
+    await notifyTrucksByFilters({
+    trucksNeeded,
+    loadItem: buildNotificationLoadItem(params),
+    cargoId,
+    user,
+    currentRole
+}); 
   };
 
 
@@ -656,15 +666,8 @@ export const submitLoad = async (params: SubmitLoadParams) => {
   }
 
   await writePublicLoad();
+
   recordLoadCreated();
-  if (
-    loadVisibility === "Public" ||
-    loadVisibility === "Both"
-  ) {
-    await notifyTrucksByFilters({
-      trucksNeeded,
-      loadItem: buildNotificationLoadItem(params) as any,
-      cargoId: cargoId,
-    });
-  }
+
+
 };

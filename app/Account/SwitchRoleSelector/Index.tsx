@@ -76,7 +76,7 @@ function SwitchRoleSelector() {
         if (!fleet) return;
 
         const fleetId = fleet.fleetId || fleet.organizationId;
-        const fleetStatus = fleet.verificationStatus || await getVerifiedStatus(fleetId);
+        const fleetStatus =  await getVerifiedStatus(fleetId);
 
         if (fleetStatus !== 'approved') {
             ToastAndroid.show(
@@ -125,7 +125,7 @@ function SwitchRoleSelector() {
         if (!brokerage) return;
 
         const brokerId = brokerage.organizationId || brokerage.brokerageId || brokerage.id;
-        const brokerStatus = brokerage.verificationStatus || await getVerifiedStatus(brokerId);
+        const brokerStatus =  await getVerifiedStatus(brokerId);
 
         if (brokerStatus !== 'approved') {
             ToastAndroid.show(

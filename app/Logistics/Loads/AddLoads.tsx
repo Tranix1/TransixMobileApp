@@ -691,7 +691,7 @@ const AddLoadDB = () => {
       });
 
       ToastAndroid.show('load added successfully.', ToastAndroid.SHORT);
-      router.back()
+      // router.back()
     } catch (error) {
       console.error("Error submitting load:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
@@ -1993,7 +1993,7 @@ const AddLoadDB = () => {
                             } else {
                               setSelectedBrokerTrucks(prev => [...prev, truck]);
                             }
-                          }}    
+                          }}
                           style={{
                             padding: wp(3),
                             marginVertical: wp(1),

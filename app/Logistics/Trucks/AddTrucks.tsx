@@ -30,6 +30,7 @@ import { doc, collection, getDoc, getDocs, query, where, limit, serverTimestamp,
 import {  trackTruckAdded } from '@/services/analytics/appAnalytics';
 import { incrementTotalTrucks } from '@/services/analytics/dashboardAnalytics';
 import { incrementTruckCount } from '@/services/analytics/organizationAnalytics';
+import { Timestamp } from "@google-cloud/firestore";
 
 type FleetConfig = {
 
@@ -530,7 +531,7 @@ function AddTrucks() {
 
         truckDispatchProfile: {
           notificationSettings: {
-            notificationsEnabled: fleetConfig?.notificationsEnabled || false,
+            notificationsEnabled: fleetConfig?.notificationsEnabled || true,
             notifyRoles: fleetConfig?.truckDefaults?.notification?.roles || [],
             minRatePerKm: fleetConfig?.truckDefaults?.notification?.ratePerKm || null,
           },
@@ -577,7 +578,7 @@ function AddTrucks() {
         tankerType: selectedTankerType?.name ? selectedTankerType?.name : null,
 
         notificationSettings: {
-          notificationsEnabled: fleetConfig?.notificationsEnabled || false,
+          notificationsEnabled: fleetConfig?.notificationsEnabled || true,
           notifyRoles: fleetConfig?.truckDefaults?.notification?.roles || [],
           minRatePerKm: fleetConfig?.truckDefaults?.notification?.ratePerKm || null,
           assignments: {
@@ -597,7 +598,9 @@ function AddTrucks() {
           }
 
         },
-                approvalStatus: 'pending', // pending, approved, rejected
+                approvalStatus: 'pending', // pending, approved, rejected ,
+        timeStamp : serverTimestamp(),
+
 
 
       })
