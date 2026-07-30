@@ -90,6 +90,7 @@ export const notifyTrucksByFilters = async ({
       where("truckCapacity", "==", capacity),
       where("availabilityData.status", "==", "AVAILABLE"),
       where("notificationSettings.notificationsEnabled", "==", true),
+      where("approvalStatus", "==", "approved"),
     ];
 
     if (tankerType) {

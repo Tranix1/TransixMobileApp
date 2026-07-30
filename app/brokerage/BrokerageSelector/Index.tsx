@@ -90,6 +90,8 @@ function BrokerageSelector() {
             phone: `${brokerage.countryCode}${brokerage?.organizationPhone}`,
             email: brokerage.organizationEmail,
             location: brokerage?.location,
+                profilePhoto: brokerage?.profilePhoto ,
+
         };
 
         (brokerageRole as any);

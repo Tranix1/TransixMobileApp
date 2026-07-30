@@ -460,19 +460,31 @@ export default function AssignmentCard({ assignmentData }: any) {
                 createdByAcc
             );
 
-            // Fleet side: stats + proven route
-            const batch = writeBatch(db);
-            incrementOrgStats(batch, fleetCoordinator.organizationId, { "privateLoads.completed": 1 });
-            await upsertProvenRoute(batch, fleetCoordinator.organizationId, assignmentId, provenLocFrom, provenLocTo);
-            await batch.commit();
+            if (truckDetails.trackingDeviceId) {
 
-            // Cargo coordinator side (only for external loads)
-            if (externalLoad && cargoCoordinator) {
-                const batch2 = writeBatch(db);
-                incrementOrgStats(batch2, cargoCoordinator.organizationId, { "privateLoads.completed": 1 });
-                await upsertProvenRoute(batch2, cargoCoordinator.organizationId, assignmentId, provenLocFrom, provenLocTo);
-                await batch2.commit();
+                // Fleet side: stats + proven route
+                const batch = writeBatch(db);
+                incrementOrgStats(batch, fleetCoordinator.organizationId, { "privateLoads.completed": 1 });
+                await upsertProvenRoute(batch, fleetCoordinator.organizationId, assignmentId, provenLocFrom, provenLocTo);
+                await batch.commit();
+
+                // Cargo coordinator side (only for external loads)
+                if (externalLoad && cargoCoordinator) {
+                    const batch2 = writeBatch(db);
+                    incrementOrgStats(batch2, cargoCoordinator.organizationId, { "privateLoads.completed": 1 });
+                    await upsertProvenRoute(batch2, cargoCoordinator.organizationId, assignmentId, provenLocFrom, provenLocTo);
+                    await batch2.commit();
+                }
+
+            } else {
+
+
+                ToastAndroid.show(
+                    "Trip completed. No active GPS tracker detected, so this trip wasn't added to the verified route history.",
+                    ToastAndroid.LONG
+                );
             }
+
 
             const analyticsOrganizationIdForApp = currentRole?.organizationId || currentRole?.fleetId || scopeId;
             if (analyticsOrganizationIdForApp && (currentRole?.accType === "fleet" || currentRole?.accType === "brokerage")) {

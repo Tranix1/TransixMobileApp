@@ -34,11 +34,12 @@ const ApproveTrucks = () => {
         try {
             setLoading(true);
             const filters = [
-                where("isApproved", "==", false),
-                where("approvalStatus", "in", ["pending", "edited"])
+                where("status", "==", "pending"),
+                where("type", "==", "truck"),
+
             ];
 
-            const result = await fetchDocuments("Trucks", 50, undefined, filters);
+            const result = await fetchDocuments("verificationRequests", 50, undefined, filters);
             setTrucks(result.data || []);
         } catch (error) {
             console.error('Error loading unapproved trucks:', error);
@@ -58,10 +59,12 @@ const ApproveTrucks = () => {
         router.push({
             pathname: '/Logistics/Trucks/TruckDetails',
             params: {
-                truckid: truck.id,
-                dspDetails: 'admin'
+                truckid: truck.truckId,
+                dspDetails: "admin",
+                fleetId: truck.organizationId,
             }
         });
+
     };
 
     const renderTruckItem = ({ item: truck }: { item: Truck }) => (
@@ -78,7 +81,7 @@ const ApproveTrucks = () => {
 
             <View style={styles.truckInfo}>
                 <ThemedText type="subtitle" numberOfLines={1}>
-                    {truck.CompanyName || 'Unknown Company'}
+                    {truck.organizationName || 'Unknown Company'}
                 </ThemedText>
 
                 <View style={styles.truckDetails}>
@@ -101,16 +104,16 @@ const ApproveTrucks = () => {
                     <View style={[
                         styles.statusBadge,
                         {
-                            backgroundColor: truck.approvalStatus === 'pending' ? '#F4802424' : '#17a2b824'
+                            backgroundColor: truck.status === 'pending' ? '#F4802424' : '#17a2b824'
                         }
                     ]}>
                         <ThemedText type="tiny" style={[
                             styles.statusText,
                             {
-                                color: truck.approvalStatus === 'pending' ? '#F48024' : '#17a2b8'
+                                color: truck.status === 'pending' ? '#F48024' : '#17a2b8'
                             }
                         ]}>
-                            {truck.approvalStatus === 'pending' ? 'Pending' : 'Edited'}
+                            {truck.status === 'pending' ? 'Pending' : 'Edited'}
                         </ThemedText>
                     </View>
 

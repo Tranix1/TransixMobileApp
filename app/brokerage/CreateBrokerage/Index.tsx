@@ -53,12 +53,12 @@ const CreaterBrokerage = ({ }) => {
 
   const [locationFull, setLocationFull] = useState<SelectLocationProp | null>(null);
 
-  const [profileImageModal, setProfileImageModal] = React.useState(false);
   const [selectedImage, setSelectedImage] = React.useState<any>(null);
+  const [uploadingImageUpdate, setUploadImageUpdate] = React.useState("")
+
   const handleSelectProfileImage = () => {
     selectImage((image) => {
       setSelectedImage(image);
-      setProfileImageModal(true);
     });
   };
 
@@ -121,6 +121,7 @@ const CreaterBrokerage = ({ }) => {
       return
     }
 
+    const imagelogo = selectedImage ? await uploadImage(selectedImage, "Profiles", setUploadImageUpdate, "Profile Image") : null
 
 
     try {
@@ -180,8 +181,10 @@ const CreaterBrokerage = ({ }) => {
           completedLoads: 0,
           revenue: 0,
           rating: 0
-        } ,
-        timeStamp : serverTimestamp()
+        },
+        profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+
+        timeStamp: serverTimestamp()  
 
       };
 
@@ -305,7 +308,9 @@ const CreaterBrokerage = ({ }) => {
         expoPushToken: user?.expoPushToken || null,
 
         subscription: subscriptionData,
-        timeStamp : serverTimestamp()
+        profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+
+        timeStamp: serverTimestamp()
       };
 
 
@@ -342,12 +347,14 @@ const CreaterBrokerage = ({ }) => {
         expoPushToken: user?.expoPushToken || null,
         role: "Owner",
 
-        subscription: {
-          active: subscriptionData.active,
-          plan: subscriptionData.plan,
-          expiresAt: subscriptionData.expiresAt,
-          isTrial: subscriptionData.isTrial,
-        },
+        // subscription: {
+        //   active: subscriptionData.active,
+        //   plan: subscriptionData.plan,
+        //   expiresAt: subscriptionData.expiresAt,
+        //   isTrial: subscriptionData.isTrial,
+        // },
+                profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+        
       };
 
       // Update user profile to reflect broker verification status
@@ -372,7 +379,9 @@ const CreaterBrokerage = ({ }) => {
 
         verificationStatus: "pending",
 
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+
       }
 
       )
@@ -399,13 +408,14 @@ const CreaterBrokerage = ({ }) => {
         userRole: "",
 
         accType: "brokerage",
-        
+                profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+
 
       };
       await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
 
 
-      const notifyQyery = query(collection(db, "adminRoles"), where("role", "==", "SUPER_ADMIN"), where("active", "==", true))
+      const notifyQyery = query(collection(db, "adminRoles"), where("role", "==", "SUPER_ADMIN"), where("isActive", "==", true))
       const notifySnapShot = await getDocs(notifyQyery)
 
       await Promise.all(
@@ -413,7 +423,7 @@ const CreaterBrokerage = ({ }) => {
           notifyUserById(
             doc.id,
             `New verification request`,
-            `${brokerName} , Driver has submitted a verification request`,
+            `${brokerName} , Brokerage has submitted a verification request`,
 
             {
               pathname: "Account/Admin",
@@ -451,8 +461,8 @@ const CreaterBrokerage = ({ }) => {
             <View
               style={{
                 padding: wp(1),
-                width: wp(9),
-                height: wp(9),
+                width: wp(13),
+                height: wp(13),
                 overflow: "hidden",
                 justifyContent: "center",
                 alignItems: "center",
@@ -460,9 +470,9 @@ const CreaterBrokerage = ({ }) => {
               }}
             >
 
-              {currentRole?.profilePhoto? (
+              {(currentRole?.profilePhoto || selectedImage) ? (
                 <Image
-                  source={{ uri: currentRole.profilePhoto }}
+                  source={{ uri: currentRole.profilePhoto || selectedImage.uri }}
                   style={{
                     width: "100%",
                     height: "100%"
@@ -496,13 +506,7 @@ const CreaterBrokerage = ({ }) => {
       }
 
 
-      <ProfileImageModal
-        visible={profileImageModal}
-        image={selectedImage}
-        onClose={() => setProfileImageModal(false)}
-        onChangeImage={handleSelectProfileImage}
 
-      />
 
       <View style={{ gap: wp(2), padding: 15 }}>
 

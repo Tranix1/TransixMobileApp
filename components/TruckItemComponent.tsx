@@ -7,7 +7,8 @@
     import { Image } from 'expo-image'
     import { FontAwesome5, FontAwesome6, Fontisto, Octicons } from '@expo/vector-icons'
     import { router } from 'expo-router'
-    import { auth,  } from '@/db/fireBaseConfig'
+    import auth from "@react-native-firebase/auth"
+    
 
     const TruckItemComponent = ({ truck = {} as Truck, truckContract = {} as Contracts,  }: { truck?: Truck, truckContract?: Contracts,  }) => {
         const backgroundLight = useThemeColor('backgroundLight')
@@ -75,7 +76,7 @@
                             </View>
 
                             {/* Truck Status - Smooth beside capacity */}
-                            {truck.userId === auth.currentUser?.uid && <ThemedText numberOfLines={1} type='tiny' style={[{
+                            {truck.userId === auth().currentUser?.uid && <ThemedText numberOfLines={1} type='tiny' style={[{
                                 fontSize: 13,
                                 fontWeight: 'bold',
                                 color: truck.approvalStatus === 'approved' ? '#0f9d58' :

@@ -500,7 +500,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     if (selectedBrokerTrucks.length > 0) {
       const context = {
         userId: user?.uid, accountAge, organizationId: analyticsOrganizationId,
-        organizationProfileId: analyticsOrganizationId, organizationType: currentRole.accType,
+        organizationProfileId: analyticsOrganizationId, organizationType: currentRole.faccType,
         role: currentRole.userRole, accountType: currentRole.accType,
         metadata: {
           loadId: cargoId, assigmentType: "PRIVATE_BROKERAGE_CARGO",

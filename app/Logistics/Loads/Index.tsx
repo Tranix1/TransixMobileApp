@@ -6,7 +6,6 @@ import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
 import { LoadsComponent } from '@/components/LoadHomePage';
 import { router, useLocalSearchParams } from 'expo-router'
-import { auth } from '@/db/fireBaseConfig';
 import { where, serverTimestamp } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HorizontalTickComponent } from '@/components/SlctHorizonzalTick';
@@ -40,8 +39,8 @@ const Index = () => {
     const [bottomMode, setBottomMode] = useState<'Bid' | 'Book' | ''>('');
 
     const [filteredPNotAavaialble, setFilteredPNotAavaialble] = React.useState(false)
-    const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public' |"Network">('Private');
-    const [loadVisibilityBfr, setLoadVisibilityBfr] = useState<'Private' | 'Public' |"Network">('Private');
+    const [loadVisibility, setLoadVisibility] = useState<'Private' | 'Public' |"Network">('Public');
+    const [loadVisibilityBfr, setLoadVisibilityBfr] = useState<'Private' | 'Public' |"Network">('Public');
     
     // const [currentRole, setCurrentRole] = useState<any>(null);
     const [expireAvailableLoads, setExpiredAvailableLods] = React.useState<"ALL" | "AVAILABLE" | "EXPIRED">("ALL")

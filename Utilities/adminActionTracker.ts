@@ -1,5 +1,6 @@
-import { auth } from '@/db/fireBaseConfig';
 import { addDocument, updateDocument } from '@/db/operations';
+import { useAuth } from '@/context/AuthContext';
+import auth from '@react-native-firebase/auth';
 
 export interface AdminAction {
     id?: string;
@@ -34,23 +35,27 @@ export interface AdminActionLog {
 /**
  * Get current admin user information
  */
-export const getCurrentAdminInfo = () => {
-    const user = auth.currentUser;
+  export const getCurrentAdminInfo = () => {
+    const user = auth().currentUser;
+
     if (!user) {
-        throw new Error('No authenticated user found');
+        throw new Error("No authenticated user found");
     }
 
     return {
         adminId: user.uid,
-        adminEmail: user.email || 'unknown@example.com',
-        adminName: user.displayName || 'Admin User'
+        adminEmail: user.phoneNumber || "unknown",
+        adminName: user.displayName || "Admin User"
     };
 };
-
 /**
  * Log an admin action to the database
  */
-export const logAdminAction = async (actionData: Omit<AdminAction, 'id' | 'timestamp'>) => {
+export const logAdminAction = async (
+    actionData: Omit<AdminAction,
+        'id' | 'timestamp' | 'adminId' | 'adminEmail' | 'adminName'
+    >
+) => {
     try {
         const adminInfo = getCurrentAdminInfo();
 
@@ -63,7 +68,6 @@ export const logAdminAction = async (actionData: Omit<AdminAction, 'id' | 'times
         };
 
         const logId = await addDocument('adminActionLogs', logData);
-        console.log(`Admin action logged: ${actionData.action} by ${adminInfo.adminEmail}`);
 
         return logId;
     } catch (error) {
@@ -132,8 +136,8 @@ export const ADMIN_ACTIONS = {
     APPROVE_LOAD: 'approve_load',
     DECLINE_LOAD: 'decline_load',
     EDIT_LOAD: 'edit_load',
-    DELETE_LOAD: 'delete_load' ,
-    APPROVE_DRIVER : "approve_driver"
+    DELETE_LOAD: 'delete_load',
+    APPROVE_DRIVER: "approve_driver"
 
 } as const;
 

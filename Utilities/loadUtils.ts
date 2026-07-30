@@ -199,18 +199,18 @@ export const prepareLoadData = (
                 : currentRole?.role === "brokerage"
                     ? currentRole.brokerId
                     : null),
-         organizationDetails :{
-            id:currentRole.organizationId || null ,
-            name : currentRole.companyName || user?.organisation ,
-            phone : currentRole.phone||null ,
-            location : currentRole.location||  currentRole.organizationBillingAddress ||null,   
-            accType : currentRole.accType ||null   
-         },       
+        organizationDetails: {
+            id: currentRole.organizationId || null,
+            name: currentRole.companyName || user?.organisation,
+            phone: currentRole.phone || null,
+            location: currentRole.location || currentRole.organizationBillingAddress || null,
+            accType: currentRole.accType || null
+        },
         userRole: currentRole?.userRole || 'general',
         accType: currentRole?.accType || 'general',
         companyName: currentRole.companyName || user?.organisation,
         contact: user?.phoneNumber || '',
-        logo: user.photoURL,
+        logo: currentRole?.profilePhoto || null,
         created_at: Date.now().toString(),
         userType: userType,
         typeofLoad: formData.typeofLoad,
@@ -231,7 +231,7 @@ export const prepareLoadData = (
 
         // Professional user fields
         rate: userType === 'professional' ? (formData.rate || '') : (formData.budget || ''),
-        
+
         rateexplantion: userType === 'professional' ? (formData.rateexplantion || '') : '',
         currency: userType === 'professional' ? (formData.selectedCurrency?.name || 'USD') : (formData.budgetCurrency?.name || 'USD'),
         model: userType === 'professional' ? (formData.selectedModelType?.name || 'Solid') : 'Solid',
@@ -333,8 +333,8 @@ export const getDefaultFormState = () => ({
         maxloadCapacity: "",
         truckName: "",
         otherCargoArea: "",
-        otherTankerType: "" ,
-        numberPlate:"" ,
+        otherTankerType: "",
+        numberPlate: "",
     },
     selectedCargoArea: null,
     selectedTruckType: null,
@@ -357,6 +357,6 @@ export const CURRENCY_OPTIONS = [
 // Model options
 export const MODEL_OPTIONS = [
     { id: 1, name: "Solid" },
-    { id: 2, name: "/ Tonne" }, 
+    { id: 2, name: "/ Tonne" },
     { id: 4, name: "/ Litre" }
 ];

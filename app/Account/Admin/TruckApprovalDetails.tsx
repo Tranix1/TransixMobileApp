@@ -265,8 +265,7 @@ const TruckApprovalDetails = () => {
 
                     <View style={styles.infoRow}>
                         <ThemedText type="default" style={styles.label}>Owner Name:</ThemedText>
-                        <ThemedText type="default">{truck.ownerName || 'N/A'}</ThemedText>
-                    </View>
+                        </View>
 
                     <View style={styles.infoRow}>
                         <ThemedText type="default" style={styles.label}>Owner Email:</ThemedText>

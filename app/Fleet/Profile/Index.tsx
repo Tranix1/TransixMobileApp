@@ -20,13 +20,13 @@ interface TruckTypeEntry {
     count: number;
 }
 
-interface LoadEntry {
-    posted: number;
-    assigned: number;
-    inTransit: number;
-    completed: number;
+    interface LoadEntry {
+        posted: number;
+        assigned: number;
+        inTransit: number;
+        completed: number;
 
-}
+    }
 
 interface ProvenRoutesType {
     id: string;
@@ -338,7 +338,7 @@ const createPublicProfileStats = (fleet: any): StatItem[] => {
             title: "Loads Posted",
             value:
                 (publicLoads.posted ?? 0) +
-                (privateLoads.posted ?? 0),
+                (privateLoads.posted ?? 0) ,
             icon: "cloud-upload-outline",
         },
 
@@ -500,12 +500,12 @@ export default function FleetProfile() {
             setFleet((prev) => ({
                 ...prev,
 
-                logoUrl: data.logoUrl ?? prev.logoUrl,
+                logoUrl: data.profilePhoto ?? prev.logoUrl,
                 name: data.name ?? prev.name,
-                location:
-                    data.location?.description ||
-                    data.location ||
-                    prev.location,
+                    location:
+                        data.location?.description ||
+                        data.location ||
+                        prev.location,
 
                 rating: data.rating ?? prev.rating,
                 reviewsCount: data.reviewsCount ?? prev.reviewsCount,

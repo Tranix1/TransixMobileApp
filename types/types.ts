@@ -117,7 +117,7 @@ export type Truck = {
     truckNumberPlate: string;
     truckThirdPlate: string;
     accType: string;
-
+organizationId : string ;
     id: string;
     imageUrl: string;
     isVerified: boolean;

@@ -23,7 +23,7 @@ import { formatNumber } from "@/services/services";
 import { AntDesign } from '@expo/vector-icons'; // or any close icon
 
 // import { sendPushNotification } from "@/Utilities/pushNotification";
-import { sendPushNotification } from "@/Utilities/pushNotification";
+import { notifyUserById, sendPushNotification } from "@/Utilities/pushNotification";
 import Input from "@/components/Input";
 import TruckNotificationModal from "@/components/TruckNotificationSettingsModal";
 
@@ -45,6 +45,7 @@ const TruckDetails = () => {
     const textColor = useThemeColor("text");
 
     const { truckid, dspDetails, fleetId } = useLocalSearchParams();
+
     const [truckData, setTruckData] = useState<Truck>({} as Truck)
     const [modalVisible, setModalVisible] = useState(false);
     const [availabilityModalVisible, setAvailabilityModalVisible] = useState(false);
@@ -243,7 +244,7 @@ const TruckDetails = () => {
 
             // Update truck status with admin tracking
             await updateDocumentWithAdminTracking(
-                'Trucks',
+                `fleets/${fleetId}/Trucks`,
                 truckData.id,
                 {
                     isApproved: true,
@@ -256,12 +257,42 @@ const TruckDetails = () => {
                 'Truck approved by admin'
             );
 
+
+            await updateDocumentWithAdminTracking(
+                `fleets/${fleetId}/Trucks`,
+                truckData.id,
+                {
+                    approvalStatus: 'approved',
+                    approvedAt: new Date().toISOString()
+                },
+                ADMIN_ACTIONS.APPROVE_TRUCK,
+                'truck',
+                `${truckData.truckType} - ${truckData.truckCapacity}`,
+                'Truck approved by admin'
+            );
+
+            await updateDocumentWithAdminTracking(
+                `truckMarketplaceProfile`,
+                truckData.id,
+                {
+                    approvalStatus: 'approved',
+                    approvedAt: new Date().toISOString()
+                },
+                ADMIN_ACTIONS.APPROVE_TRUCK,
+                'truck',
+                `${truckData.truckType} - ${truckData.truckCapacity}`,
+                'Truck approved by admin'
+            );
+
+
+
             // Send notification to truck owner
-            if (truckData.expoPushToken) {
-                await sendPushNotification(
-                    truckData.expoPushToken,
+            if (truckData.userId) {
+                await notifyUserById(
+                    truckData.userId,
                     'Truck Approved! 🎉',
-                    `Your truck (${truckData.truckType} - ${truckData.truckCapacity}) has been approved and is now visible to other users.`,
+                    `${truckData.CompanyName}'s truck (${truckData.truckType} - ${truckData.truckCapacity}) has been approved and is now visible to other users.`,
+
                     '/Logistics/Trucks',
                     { truckId: truckData.id, type: 'truck_approved' }
                 );
@@ -289,7 +320,7 @@ const TruckDetails = () => {
 
             // Update truck status with admin tracking
             await updateDocumentWithAdminTracking(
-                'Trucks',
+                `fleets/${fleetId}/Trucks`,
                 truckData.id,
                 {
                     isApproved: false,
@@ -303,10 +334,23 @@ const TruckDetails = () => {
                 `Truck declined: ${declineReason.trim()}`
             );
 
+
+            await updateDocumentWithAdminTracking(
+                `truckMarketplaceProfile`,
+                truckData.id,
+                {
+                    approvalStatus: 'rejected',
+                    approvedAt: new Date().toISOString()
+                },
+                ADMIN_ACTIONS.APPROVE_TRUCK,
+                'truck',
+                `${truckData.truckType} - ${truckData.truckCapacity}`,
+                'Truck approved by admin'
+            );
             // Send notification to truck owner
-            if (truckData.expoPushToken) {
-                await sendPushNotification(
-                    truckData.expoPushToken,
+            if (truckData.userId) {
+                await notifyUserById(
+                    truckData.userId,
                     'Truck Declined',
                     `Your truck (${truckData.truckType} - ${truckData.truckCapacity}) has been declined. Reason: ${declineReason}`,
                     '/Logistics/Trucks',
@@ -599,8 +643,8 @@ const TruckDetails = () => {
                                                 operaatingLocations: truckData.locations,
                                                 capacity: truckData?.truckCapacity,
                                                 numberPlate: truckData?.numberPlate,
-                                                imageUrl : truckData?.imageUrl ,
-                                                truckAssigments : truckData?.assignments
+                                                imageUrl: truckData?.imageUrl,
+                                                truckAssigments: truckData?.assignments
 
                                             },
                                         });
@@ -703,14 +747,14 @@ const TruckDetails = () => {
                         }
                     </View>} />
             <ScrollView
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={getData}
-                            colors={[accent]}
-                            tintColor={accent}
-                        />
-                    }
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={getData}
+                        colors={[accent]}
+                        tintColor={accent}
+                    />
+                }
                 contentContainerStyle={{ paddingBottom: hp(6), marginHorizontal: wp(2) }}>
                 <View style={{ marginHorizontal: wp(2) }}>
                     <View style={{ alignItems: 'center', borderRadius: 2, flex: 1, marginBottom: wp(2) }}>
@@ -1004,7 +1048,7 @@ const TruckDetails = () => {
                         </View>
                     }
 
-                 { truckData?.defaultDriver?.driverId&&  <DefaultDriverCard
+                    {truckData?.defaultDriver?.driverId && <DefaultDriverCard
 
                         driver={truckData.defaultDriver}
 
@@ -1237,38 +1281,7 @@ const TruckDetails = () => {
                         </View>
                     )}
 
-                    <TouchableOpacity
-                        style={{
-                            height: 45,
-                            backgroundColor: accent,
-                            width: 240,
-                            borderRadius: 21,
-                            justifyContent: "center",
-                            alignItems: "center",
-                            alignSelf: "center",
-                            marginTop: wp(4),
-                            marginBottom: wp(4),
-                            shadowColor: accent,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.12,
-                            shadowRadius: 4,
-                            elevation: 2,
-                            paddingHorizontal: 5
-                        }}
-                        onPress={() =>
-                            router.push({
-                                pathname: "/Logistics/Trucks/Index",
-                                params: { userId: truckData.userId, organisationName: truckData.CompanyName },
-                            })
-                        }
-                    >
-                        <ThemedText style={{ color: "white" }}>
-                            View Trucks from{'  '}
-                            <ThemedText style={{ textDecorationLine: 'underline', color: 'white' }}>
-                                {truckData.CompanyName}
-                            </ThemedText>
-                        </ThemedText>
-                    </TouchableOpacity>
+
 
                 </View>
             </ScrollView>

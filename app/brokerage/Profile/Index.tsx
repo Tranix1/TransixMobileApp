@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { wp, hp } from '@/constants/common';
 import { useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 
 // ---------- Types ----------
@@ -19,6 +19,13 @@ interface LoadEntry {
     to: string;
     status?: 'Posted' | 'Assigned' | 'Expired' | 'Completed';
     date?: string;
+}
+interface LoadEntryS {
+    posted: number;
+    assigned: number;
+    inTransit: number;
+    completed: number;
+
 }
 
 interface ReviewEntry {
@@ -57,6 +64,8 @@ interface BrokerProfileData {
     completedLoadsList: LoadEntry[];
     recentLoads: LoadEntry[];
     latestReviews: ReviewEntry[];
+    publicLoads: LoadEntryS;
+    privateLoads: LoadEntryS;
 }
 
 const DEFAULT_BROKER: BrokerProfileData = {
@@ -83,6 +92,20 @@ const DEFAULT_BROKER: BrokerProfileData = {
     expiredLoads: 6,
     avgTimeToAssign: '3.4 hrs',
 
+    publicLoads: {
+        posted: 0,
+        assigned: 0,
+        inTransit: 0,
+        completed: 0,
+    },
+    privateLoads: {
+        posted: 0,
+        assigned: 0,
+        inTransit: 0,
+        completed: 0,
+    },
+
+
     activePublicLoads: [
         { id: 'a1', from: 'Harare', to: 'Beitbridge', status: 'Posted', date: 'Today' },
         { id: 'a2', from: 'Mutare', to: 'Harare', status: 'Assigned', date: 'Yesterday' },
@@ -91,11 +114,14 @@ const DEFAULT_BROKER: BrokerProfileData = {
         { id: 'c1', from: 'Bulawayo', to: 'Gweru', status: 'Completed', date: 'Jul 10, 2026' },
         { id: 'c2', from: 'Lusaka', to: 'Harare', status: 'Completed', date: 'Jul 6, 2026' },
     ],
+
     recentLoads: [
         { id: 'r1', from: 'Harare', to: 'Chirundu', status: 'Posted', date: 'Jul 14, 2026' },
         { id: 'r2', from: 'Kadoma', to: 'Harare', status: 'Expired', date: 'Jul 12, 2026' },
         { id: 'r3', from: 'Harare', to: 'Masvingo', status: 'Assigned', date: 'Jul 11, 2026' },
     ],
+
+
     latestReviews: [
         { id: 'rv1', reviewer: 'K. Ndlovu', rating: 5, comment: 'Clear communication and pays on time, every time.', date: 'Jul 5, 2026' },
         { id: 'rv2', reviewer: 'P. Banda', rating: 4, comment: 'Good load volume, occasionally slow to confirm assignment.', date: 'Jun 28, 2026' },
@@ -185,23 +211,76 @@ export default function BrokerProfile() {
                 //   where('type', '==', 'broker')
                 // If organizationId is your doc ID instead, use getDoc(doc(db, 'profiles', orgId)).
                 const snapshot = await getDoc(doc(db, 'organizationProfiles', orgId));
+                const profileRef = doc(db, "organizationProfiles", orgId);
+
+
+
+                const [profileSnap, routesSnap] = await Promise.all([
+                    getDoc(profileRef),
+                    getDocs(
+                        query(
+                            collection(
+                                db,
+                                "organizationProfiles",
+                                orgId,
+                                "provenRoutes"
+                            ),
+                            orderBy("createdAt", "desc")
+                        )
+                    ),
+                ]);
+
+                if (!profileSnap.exists()) {
+                    return;
+                }
+
+                const provenRoutes = routesSnap.docs.map((routeDoc) => {
+                    const route = routeDoc.data();
+
+                    return {
+                        id: routeDoc.id,
+                        from: route.from,
+                        to: route.to,
+                        assignmentId: route.assignmentId,
+                        createdAt: route.createdAt,
+                    };
+                }) as any;
+
+                const data = profileSnap.data() as any;
+
+                const memberSince = data.timeStamp
+                    ? (() => {
+                        const date = data.timeStamp.toDate();
+                        return `${date.getDate()} ${date.toLocaleString(
+                            "default",
+                            { month: "long" }
+                        )} ${date.getFullYear()}`;
+                    })()
+                    : "";
 
                 if (snapshot.exists()) {
                     const data = snapshot.data() as any;
                     setBroker((prev) => ({
                         ...prev,
-                        logoUrl: data.logoUrl ?? prev.logoUrl,
+                        logoUrl: data.profilePhoto ?? prev.logoUrl,
                         name: data.name || prev.name,
                         location: data.location?.description || data.location || prev.location,
                         rating: data.rating ?? prev.rating,
                         reviewsCount: data.reviewsCount ?? prev.reviewsCount,
-                        memberSince: data.memberSince || prev.memberSince,
+                        memberSince: memberSince || prev.memberSince,
+
                         lastActive: data.lastActive || prev.lastActive,
 
                         publicLoadsPosted: data.loadsPosted ?? prev.publicLoadsPosted,
                         privateLoadsPosted: data.loadsPosted ?? prev.privateLoadsPosted,
                         activeLoads: data.activeTrips ?? prev.activeLoads,
                         completedLoads: data.loadsCompleted ?? prev.completedLoads,
+
+                        provenRoutes,
+
+
+                        publicLoads: data.publicLoads ?? prev.publicLoads,
+                        privateLoads: data.privateLoads ?? prev.privateLoads,
 
                         loadAcceptanceRate: data.acceptanceRate ?? prev.loadAcceptanceRate,
                         avgResponseTime: data.responseTime ? `${data.responseTime} min` : prev.avgResponseTime,
@@ -282,11 +361,10 @@ export default function BrokerProfile() {
                     </View>
                 </View>
 
-                {/* ---------- Overview ---------- */}
                 <SectionCard title="Overview" background={backgroundLight} textColor={text}>
                     <View style={styles.statsGrid}>
-                        <StatBlock label="Public Loads Posted" value={broker.publicLoadsPosted} background={background} valueColor={text} iconColor={icon} />
-                        <StatBlock label="Private Loads Posted" value={broker.privateLoadsPosted} background={background} valueColor={text} iconColor={icon} />
+                        <StatBlock label="Public Loads Posted" value={broker?.publicLoads?.posted ?? 0} background={background} valueColor={text} iconColor={icon} />
+                        <StatBlock label="Private Loads Posted" value={broker?.privateLoads?.posted ?? 0} background={background} valueColor={text} iconColor={icon} />
                         <StatBlock label="Active Loads" value={broker.activeLoads} background={background} valueColor={text} iconColor={icon} />
                         <StatBlock label="Completed Loads" value={broker.completedLoads} background={background} valueColor={text} iconColor={icon} />
                     </View>
@@ -471,7 +549,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: wp(3),
         paddingVertical: wp(2),
         borderRadius: wp(3),
-        backgroundColor: '#374151' ,
+        backgroundColor: '#374151',
     },
     ratingText: {
         marginLeft: wp(2),

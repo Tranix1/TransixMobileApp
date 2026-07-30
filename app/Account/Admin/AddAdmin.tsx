@@ -97,32 +97,30 @@ const AddAdmin = () => {
         loadUsers();
     }, []);
 
+    // Show all users by default; narrow down by phone number or name once the user types
     useEffect(() => {
-        if (searchQuery.trim()) {
-            const filtered = users.filter(user =>
-                user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (user.displayName && user.displayName.toLowerCase().includes(searchQuery.toLowerCase()))
-            );
-            setFilteredUsers(filtered);
-        } else {
-            setFilteredUsers([]);
+        const query = searchQuery.trim().toLowerCase();
+
+        if (!query) {
+            setFilteredUsers(users);
+            return;
         }
+
+        const filtered = users.filter(u => {
+            const phoneMatch = !!u.phoneNumber && u.phoneNumber.toLowerCase().includes(query);
+            const nameMatch = !!u.displayName && u.displayName.toLowerCase().includes(query);
+            return phoneMatch || nameMatch;
+        });
+
+        setFilteredUsers(filtered);
     }, [searchQuery, users]);
 
     const loadUsers = async () => {
         setLoading(true);
         try {
             let usersData: any[];
-
-            if (isSuperAdmin()) {
-                // Super admin can see all users
-                usersData = await getUsers();
-            } else if (user?.uid) {
-                // Non-super admin can only see users they referred
-                usersData = await getUsersByReferrerId(user.uid);
-            } else {
-                usersData = [];
-            }
+            
+            usersData = await getUsers();
 
             if (Array.isArray(usersData)) {
                 setUsers(usersData);
@@ -139,7 +137,7 @@ const AddAdmin = () => {
 
     const handleUserSelect = (user: User) => {
         setSelectedUser(user);
-        setSearchQuery(user.email);
+        setSearchQuery('');
         setFilteredUsers([]);
     };
 
@@ -166,7 +164,7 @@ const AddAdmin = () => {
         try {
             const adminData = {
                 userId: selectedUser.id,
-                email: selectedUser.email,
+                phoneNumber: selectedUser.phoneNumber,
                 displayName: selectedUser.displayName,
                 roles: selectedRoles,
                 permissions: ADMIN_ROLES
@@ -211,7 +209,7 @@ const AddAdmin = () => {
                         {user.displayName || 'No Name'}
                     </ThemedText>
                     <ThemedText type="tiny" color={coolGray}>
-                        {user.email}
+                        {user.phoneNumber || user.email}
                     </ThemedText>
                 </View>
             </View>
@@ -266,23 +264,18 @@ const AddAdmin = () => {
                         Select User
                     </ThemedText>
                     <ThemedText type="tiny" color={coolGray} style={styles.sectionDescription}>
-                        {isSuperAdmin()
-                            ? "Search and select any user to assign admin roles"
-                            : "Search and select from users you have referred"
-                        }
+                            "Search and select any user to assign admin roles"
                     </ThemedText>
 
                     <View style={[styles.searchContainer, { backgroundColor: backgroundLight }]}>
                         <Ionicons name="search" size={20} color={icon} style={styles.searchIcon} />
                         <TextInput
                             style={[styles.searchInput, { color: icon }]}
-                            placeholder={isSuperAdmin()
-                                ? "Search by email or name..."
-                                : "Search your referred users..."
-                            }
+                            placeholder={ "Search by Phone Number or name..."}
                             placeholderTextColor={coolGray}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
+                            keyboardType="default"
                         />
                     </View>
 
@@ -295,7 +288,7 @@ const AddAdmin = () => {
                                         {selectedUser.displayName || 'No Name'}
                                     </ThemedText>
                                     <ThemedText color="white" type="tiny" style={styles.selectedUserEmail}>
-                                        {selectedUser.email}
+                                        {selectedUser.phoneNumber || selectedUser.email}
                                     </ThemedText>
                                 </View>
                             </View>
@@ -305,9 +298,21 @@ const AddAdmin = () => {
                         </View>
                     )}
 
-                    {searchQuery && filteredUsers.length > 0 && (
+                    {!selectedUser && !loading && filteredUsers.length > 0 && (
                         <View style={styles.usersList}>
                             {filteredUsers.map(renderUserItem)}
+                        </View>
+                    )}
+
+                    {!selectedUser && !loading && searchQuery.trim().length > 0 && filteredUsers.length === 0 && (
+                        <View style={styles.emptyStateContainer}>
+                            <Ionicons name="search" size={32} color={coolGray} />
+                            <ThemedText type="default" style={styles.emptyStateTitle}>
+                                No users found
+                            </ThemedText>
+                            <ThemedText type="tiny" color={coolGray} style={styles.emptyStateDescription}>
+                                Try a different phone number or name
+                            </ThemedText>
                         </View>
                     )}
 
@@ -320,17 +325,7 @@ const AddAdmin = () => {
                         </View>
                     )}
 
-                    {!loading && users.length === 0 && !isSuperAdmin() && (
-                        <View style={styles.emptyStateContainer}>
-                            <Ionicons name="people-outline" size={wp(12)} color={icon} />
-                            <ThemedText type="default" style={styles.emptyStateTitle}>
-                                No Referred Users
-                            </ThemedText>
-                            <ThemedText type="tiny" color={coolGray} style={styles.emptyStateDescription}>
-                                You haven't referred any users yet. Share your referrer code to get started!
-                            </ThemedText>
-                        </View>
-                    )}
+                
                 </View>
 
                 {/* Role Selection Section */}
@@ -369,6 +364,7 @@ const AddAdmin = () => {
                         />
                     </View>
                 )}
+                <View style={{height:90}} />
             </ScrollView>
         </ScreenWrapper>
     );
@@ -428,7 +424,7 @@ const styles = StyleSheet.create({
         opacity: 0.8,
     },
     usersList: {
-        maxHeight: wp(60),
+        maxHeight: wp(120),
     },
     userItem: {
         flexDirection: 'row',

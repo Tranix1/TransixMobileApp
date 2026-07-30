@@ -42,7 +42,7 @@ export default function ProfileManager({  onProfileUpdate, onClose }: ProfileMan
 
   
 
-    const displayUser = profileData || user;
+    const displayUser = profileData
 
     return (
         <View style={[styles.container, { backgroundColor: background }]}>
@@ -61,14 +61,14 @@ export default function ProfileManager({  onProfileUpdate, onClose }: ProfileMan
 
                     <View style={styles.userDetails}>
                         <ThemedText type='subtitle'>
-                            { displayUser?.displayName || 'No name'}
+                            { currentRole.companyName || 'No name'}
                         </ThemedText>
                         <ThemedText type='tiny' color={coolGray}>
-                            {displayUser?.phoneNumber}
+                            {currentRole.phone}
                         </ThemedText>
                     </View>
 
-                    {!displayUser?.displayName && (
+                    {!currentRole.companyName && (
                         <TouchableNativeFeedback onPress={handleProfilePress}>
                             <View style={styles.alertIcon}>
                                 <Ionicons name='alert-circle-outline' color={icon} size={wp(6)} />

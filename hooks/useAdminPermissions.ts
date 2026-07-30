@@ -8,6 +8,8 @@ import {
     AdminUser,
     SUPER_ADMIN_PERMISSIONS
 } from '@/Utilities/adminPermissions';
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/db/fireBaseConfig';
 
 export const useAdminPermissions = () => {
     const { user } = useAuth();
@@ -25,6 +27,14 @@ export const useAdminPermissions = () => {
         }
     }, [user?.uid]);
 
+
+
+
+
+
+
+
+    
     const loadAdminPermissions = async () => {
         if (!user?.uid) return;
 
@@ -62,9 +72,30 @@ export const useAdminPermissions = () => {
         return permissionsList.some(permission => permissions.includes(permission));
     };
 
-    const isSuperAdmin = (): boolean => {
-        return user?.uid === 'Ij5LdXmBhDZrobGfuixAIeav1J63';
-    };
+  
+
+
+const isSuperAdmin = async (): Promise<boolean> => {
+    if (!user?.uid) return false;
+
+    try {
+        const adminDoc = await getDoc(doc(db, "adminRoles", user.uid));
+
+        if (!adminDoc.exists()) return false;
+
+        const data = adminDoc.data();
+
+        return (
+            data.role === "SUPER_ADMIN" &&
+            data.isActive === true
+        );
+    } catch (error) {
+        console.error("Error checking super admin:", error);
+        return false;
+    }
+};
+
+
 
     return {
         permissions,

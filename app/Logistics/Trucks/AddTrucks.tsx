@@ -21,15 +21,13 @@ import Button from "@/components/Button";
 import { TruckFormData } from "@/types/types";
 import { AddTruckDetails } from "@/components/AddTruckDetails";
 import { HorizontalTickComponent } from "@/components/SlctHorizonzalTick";
-import { usePushNotifications, notifyTruckApprovalAdmins, sendUserNotification } from "@/Utilities/pushNotification";
+import { usePushNotifications, notifyTruckApprovalAdmins, sendUserNotification, notifyUserById } from "@/Utilities/pushNotification";
 import { pickDocument } from "@/Utilities/utils";
 import { DocumentAsset } from "@/types/types";
 import KYCVerificationModal from "@/components/KYCVerificationModal";
 import { db } from "@/db/fireBaseConfig";
 import { doc, collection, getDoc, getDocs, query, where, limit, serverTimestamp, writeBatch } from "firebase/firestore";
-import { SelectLocationProp } from "@/types/types";
-import { PhoneAuthCredential } from "firebase/auth";
-import { trackGrowingUserTruckAdded, trackNewUserTruckAdded, trackTruckAdded } from '@/services/analytics/appAnalytics';
+import {  trackTruckAdded } from '@/services/analytics/appAnalytics';
 import { incrementTotalTrucks } from '@/services/analytics/dashboardAnalytics';
 import { incrementTruckCount } from '@/services/analytics/organizationAnalytics';
 
@@ -483,7 +481,7 @@ function AddTrucks() {
 
 
       const submitData = {
-        CompanyName: currentRole.companyName || user.displayName,
+        CompanyName: currentRole.companyName || currentRole.companyName,
         fleetId: currentRole?.accType === 'fleet' ? currentRole.fleetId : null,
 
         userId: user.uid,
@@ -505,7 +503,7 @@ function AddTrucks() {
         locations: operationCountries,
         truckType: selectedTruckType?.name,
         cargoArea: selectedCargoArea.name,
-        tankerType: selectedTankerType ? selectedTankerType?.name : null,
+        tankerType: selectedTankerType?.name ? selectedTankerType?.name : null,
         truckCapacity: selectedTruckCapacity?.name,
         ...formData,
         expoPushToken: expoPushToken || user?.expoPushToken || null,
@@ -576,7 +574,7 @@ function AddTrucks() {
         truckType: selectedTruckType?.name,
         cargoArea: selectedCargoArea.name,
         truckCapacity: selectedTruckCapacity?.name,
-        tankerType: selectedTankerType ? selectedTankerType?.name : null,
+        tankerType: selectedTankerType?.name ? selectedTankerType?.name : null,
 
         notificationSettings: {
           notificationsEnabled: fleetConfig?.notificationsEnabled || false,
@@ -599,6 +597,8 @@ function AddTrucks() {
           }
 
         },
+                approvalStatus: 'pending', // pending, approved, rejected
+
 
       })
 
@@ -626,7 +626,6 @@ function AddTrucks() {
           {
 
             cargoArea: selectedCargoArea.name,
-            tankerType: selectedTankerType ? selectedTankerType?.name : null,
 
             truckCapacity: selectedTruckCapacity?.name,
             truckOperatingLocations: operationCountries,
@@ -637,11 +636,9 @@ function AddTrucks() {
               truckType: truckType,
               truckCapacity: `${selectedTruckCapacity?.name}`,
               operatingCountries: operationCountries as string[],
-              tankerType: selectedTankerType?.name,
+              tankerType: selectedTankerType?.name  ? selectedTankerType?.name : "",
 
             }
-
-
 
           },
 
@@ -699,7 +696,49 @@ function AddTrucks() {
         operationCountries
       );
 
-      clearFormFields()
+      addDocumentWithId("verificationRequests",truckId ,{
+        type: "truck",
+        organizationId : currentRole.organizationId ,
+        truckId,
+        truckRef: `/fleets/${currentRole.organizationId}/Trucks/${truckId}`,
+        organizationName : currentRole.companyName,
+        truckNumberPlate ,
+        timestamp : serverTimestamp(),
+        status: "pending",
+        priority: "normal",
+        createdBy : user.uid ,
+        imageUrl : truckImage ,
+        truckType : truckType ,
+        locations : operationCountries ,
+      })
+
+
+
+const notifyQuery = query(
+    collection(db, "adminRoles"),
+    where("isActive", "==", true),
+    where("roles", "array-contains", "approve_trucks")
+);
+
+const notifySnapshot = await getDocs(notifyQuery);
+
+await Promise.all(
+    notifySnapshot.docs.map((adminDoc) =>
+        notifyUserById(
+            adminDoc.id,
+            "New truck verification request",
+            `${currentRole.companyName} has submitted a truck verification request`,
+            {
+                pathname: "Account/Admin",
+            },
+            {
+                type: "truck_verification",
+            }
+        )
+    )
+);
+
+      router.back()
       ToastAndroid.show("Truck Added successfully", ToastAndroid.SHORT);
 
     } catch (err) {

@@ -62,13 +62,13 @@ const CreateFleet = () => {
 
 
 
-    const [profileImageModal, setProfileImageModal] = React.useState(false);
     const [selectedImage, setSelectedImage] = React.useState<any>(null);
+    const [uploadingImageUpdate, setUploadImageUpdate] = React.useState("")
+
 
     const handleSelectProfileImage = () => {
         selectImage((image) => {
             setSelectedImage(image);
-            setProfileImageModal(true);
         });
     };
 
@@ -133,6 +133,10 @@ const CreateFleet = () => {
         }
 
         setUploadingFleetD(true);
+
+        const imagelogo = selectedImage ? await uploadImage(selectedImage, "Profiles", setUploadImageUpdate, "Profile Image") : null
+
+
         try {
             const fleetId = `FLT_${Date.now()}_${user.uid}`;
 
@@ -150,6 +154,7 @@ const CreateFleet = () => {
                 userId: user.uid,
                 accType: 'fleet',
                 organizationName: fleetData.fleetName,
+                profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
 
                 organizationEmail: fleetData.fleetEmail,
                 organizationPhone: fleetData.fleetPhone && fleetCountryCode.name ?
@@ -185,6 +190,8 @@ const CreateFleet = () => {
                 submittedAt: new Date().toISOString(),
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
+                        timeStamp: serverTimestamp()
+                
 
             };
             await addDocumentWithId('verifiedUsers', fleetId, fleetVerificationData);
@@ -212,6 +219,8 @@ const CreateFleet = () => {
 
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
+                profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+
             };
 
             await setDoc(doc(db, 'fleets', fleetId), fleetCollectionData);
@@ -235,7 +244,7 @@ const CreateFleet = () => {
                 baseAdress: baseAdress?.description,
                 baseAdressFull: baseAdress,
                 location: billingAddress || baseAdress,
-
+                profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
 
             };
 
@@ -270,6 +279,8 @@ const CreateFleet = () => {
                 verificationStatus: "pending",
 
                 createdAt: Date.now(),
+                profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+
             }
 
             )
@@ -329,20 +340,23 @@ const CreateFleet = () => {
                 userRole: "",
 
                 accType: "fleet",
+                profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+
 
             };
             await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
 
 
-            const notifyQyery = query(collection(db, "adminRoles"), where("role", "==", "SUPER_ADMIN"), where("active", "==", true))
+            const notifyQyery = query(collection(db, "adminRoles"), where("role", "==", "SUPER_ADMIN"), where("isActive", "==", true))
             const notifySnapShot = await getDocs(notifyQyery)
+
 
             await Promise.all(
                 notifySnapShot.docs.map((doc) => {
                     notifyUserById(
                         doc.id,
                         `New verification request`,
-                        `${fleetData.fleetName} , Driver has submitted a verification request`,
+                        `${fleetData.fleetName} , Fleet has submitted a verification request`,
 
                         {
                             pathname: "Account/Admin",
@@ -375,8 +389,8 @@ const CreateFleet = () => {
                         <View
                             style={{
                                 padding: wp(1),
-                                width: wp(9),
-                                height: wp(9),
+                                width: wp(13),
+                                height: wp(13),
                                 overflow: "hidden",
                                 justifyContent: "center",
                                 alignItems: "center",
@@ -384,9 +398,9 @@ const CreateFleet = () => {
                             }}
                         >
 
-                            {currentRole?.profilePhoto ? (
+                            {(currentRole?.profilePhoto || selectedImage) ? (
                                 <Image
-                                    source={{ uri: currentRole.profilePhoto }}
+                                    source={{ uri: currentRole.profilePhoto || selectedImage.uri }}
                                     style={{
                                         width: "100%",
                                         height: "100%"
@@ -419,13 +433,7 @@ const CreateFleet = () => {
 
 
 
-            <ProfileImageModal
-                visible={profileImageModal}
-                image={selectedImage}
-                onClose={() => setProfileImageModal(false)}
-                onChangeImage={handleSelectProfileImage}
 
-            />
 
 
             <View style={{ margin: hp(3) }}>

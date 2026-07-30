@@ -222,11 +222,11 @@ function FleetSelector() {
 
 
 
-    const handleDriverSelect = async (fleet: any) => {
-        if (!fleet) return;
+    const handleDriverSelect = async (driver: any) => {
+        if (!driver) return;
 
-        const fleetId = fleet.fleetId || fleet.organizationId;
-        const fleetStatus =  await getVerifiedStatus(fleetId);
+        const fleetId = driver.fleetId || driver.organizationId;
+        const fleetStatus = await getVerifiedStatus(fleetId);
         if (fleetStatus !== 'approved') {
             ToastAndroid.show(
                 'This fleet connection is not verified yet. Please wait for approval.',
@@ -237,26 +237,18 @@ function FleetSelector() {
 
         const fleetRole = {
             role: 'driver' as const,
-            fleetId: fleet.fleetId,
-            companyName: fleet.companyName || fleet.fleetName,
-            userRole: fleet.userRole || 'owner',
+            companyName: driver.companyName || driver.fleetName,
+            userRole: driver.userRole || 'owner',
             accType: 'driver' as const,
-            driverId: fleet.driverId || null,
+            driverId: driver.driverId || null,
 
-            fleetMainAdminId: fleet.fleetMainAdminId || null,
-            fleetManagerId: fleet.fleetManagerId || null,
-            fleetDispatcherId: fleet.fleetDispatcherId || null,
+            organizationName: driver.companyName || driver.fleetName,
+            organizationId: driver.fleetId,
 
-            referrerCode: fleet.referrerCode || null,
-
-            organizationName: fleet.companyName || fleet.fleetName,
-            organizationId: fleet.fleetId,
-
-            phone: `${fleet.countryCode}${fleet?.organizationPhone}`,
-            email: fleet.organizationEmail,
-            billingAddress: fleet?.billingAddressFull,
-            baseAdress: fleet?.baseAdressFull
-
+            phone: `${driver.countryCode}${driver?.organizationPhone}`,
+            email: driver.organizationEmail,
+            location: driver?.location,
+            profilePhoto: driver?.profilePhoto,
         };
 
         (fleetRole as any);

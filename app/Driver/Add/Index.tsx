@@ -61,6 +61,15 @@ export default function AddDriver() {
 
     const { expoPushToken } = usePushNotifications();
 
+     const [selectedImage, setSelectedImage] = React.useState<any>(null);
+      const [uploadingImageUpdate, setUploadImageUpdate] = React.useState("")
+    
+      const handleSelectProfileImage = () => {
+        selectImage((image) => {
+          setSelectedImage(image);
+        });
+      };
+
     const handleAddDriver = async () => {
 
         if (!user?.uid) {
@@ -74,6 +83,8 @@ export default function AddDriver() {
         }
 
         setIsSubmitting(true);
+            const imagelogo = selectedImage ?  await uploadImage(selectedImage, "Profiles", setUploadImageUpdate, "Profile Image") : null
+        
         try {
 
             const selfieImageUrl = await uploadImage(selfieImage as any, "Selfies", () => { }, "Uploading selfie");
@@ -130,6 +141,7 @@ export default function AddDriver() {
                 fleetMainAdminName: user.displayName,
                 organizationAdminPhone: user.phoneNumber,
                 organizationAdminEmail: user.email,
+        profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
 
                 driverVerificcationTier: driverVerificationTiers,
 
@@ -177,6 +189,7 @@ export default function AddDriver() {
                 driverVerificcationTier: driverVerificationTiers,
                 email: user?.email,
                 location: locationFull,
+                profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
 
             };
 
@@ -204,6 +217,7 @@ export default function AddDriver() {
                 location: locationFull,
 
                 verificationStatus: "pending",
+        profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
 
                 createdAt: Date.now()
             }
@@ -218,15 +232,16 @@ export default function AddDriver() {
                 userRole: "",
 
                 accType: "driver",
+                profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+
 
             };
 
             await AsyncStorage.setItem('currentRole', JSON.stringify(currentRoleAccType));
 
-            const notifyQyery = query(collection(db, "adminRoles"), where("role", "==", "SUPER_ADMIN"), where("active", "==", true))
+            const notifyQyery = query(collection(db, "adminRoles"), where("role", "==", "SUPER_ADMIN"), where("isActive", "==", true))
             const notifySnapShot = await getDocs(notifyQyery)
 
-            console.log(notifySnapShot)
 
             await Promise.all(
                 notifySnapShot.docs.map((doc) => {
@@ -260,6 +275,30 @@ export default function AddDriver() {
     };
 
 
+
+    async function notifyAdmin (){
+            const notifyQyery = query(collection(db, "adminRoles"), where("role", "==", "SUPER_ADMIN"), where("active", "==", true))
+
+           const notifySnapShot = await getDocs(notifyQyery)
+
+
+            await Promise.all(
+                notifySnapShot.docs.map((doc) => {
+                    notifyUserById(
+                        doc.id,
+                        `New verification request`,
+                        `${fullName} , Driver has submitted a verification request`,
+
+                        {
+                            pathname: "Account/Admin",
+                        }, {
+                        type: "account_verification",
+                    }
+                    );
+
+                })
+            )
+    }
 
 
     const handleUpdateDriver = async () => {

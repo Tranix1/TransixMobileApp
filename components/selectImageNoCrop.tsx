@@ -38,7 +38,6 @@ export default function ProfileImageModal({
     const [uploadingImageUpdate, setUploadImageUpdate] = React.useState("")
     const { currentRole } = useAuth();
     const [loading, setLoading] = React.useState(false)
-console.log(typeof image, )
 
 
     async function onSave() {
@@ -69,7 +68,7 @@ console.log(typeof image, )
             await updateDocument(accTypeDB, currentRole.organizationId, {
                 profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
 
-            })
+            })  
             }
 
 

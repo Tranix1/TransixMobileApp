@@ -101,7 +101,6 @@ function FleetSelector() {
             fleetManagerId: fleet.fleetManagerId || null,
             fleetDispatcherId: fleet.fleetDispatcherId || null,
 
-            referrerCode: fleet.referrerCode || null,
 
             organizationName: fleet.companyName || fleet.fleetName,
             organizationId: fleet.fleetId,
@@ -109,7 +108,9 @@ function FleetSelector() {
             phone: `${fleet.countryCode}${fleet?.organizationPhone}`,
             email: fleet.organizationEmail,
             billingAddress: fleet?.billingAddressFull,
-            baseAdress: fleet?.baseAdressFull
+            baseAdress: fleet?.baseAdressFull ,
+                profilePhoto: fleet?.profilePhoto ,
+            
 
         };
 

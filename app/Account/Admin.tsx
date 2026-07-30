@@ -38,6 +38,8 @@ const Admin = () => {
 
     const [verifiedOUnverified, setVerifiedUnverfied] = React.useState<"declined" | "approved" | "pending" | null>(null)
 
+    console.log(verifiedOUnverified)
+
     const fetchUsers = async () => {
         setLoading(true);
         try {
@@ -70,7 +72,7 @@ const Admin = () => {
 
 
 
-            const result = await fetchDocuments("verifiedUsers", 200, undefined)
+            const result = await fetchDocuments("verifiedUsers", 200, undefined , filters)
 
             setUsers(result.data);
 

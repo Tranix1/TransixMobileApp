@@ -1,5 +1,5 @@
 import { ScrollView, StyleSheet, Text, TouchableNativeFeedback, View } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import Heading from '@/components/Heading'
 import { Image } from 'expo-image'
@@ -13,11 +13,13 @@ import { router } from 'expo-router'
 import Divider from '@/components/Divider'
 import Button from '@/components/Button'
 import AdminReferralCode from '@/components/AdminReferralCode'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/db/fireBaseConfig'
 
 const Settings = () => {
 
     const { user, Logout, currentRole } = useAuth()
-    const { isAdmin, hasPermissionSync, isSuperAdmin } = useAdminPermissions()
+    const { isAdmin, hasPermissionSync,  } = useAdminPermissions()
 
     const icon = useThemeColor('icon');
     const coolgray = useThemeColor('coolGray');
@@ -27,6 +29,42 @@ const Settings = () => {
     const logout = async () => {
         const deed = await Logout();
     }
+
+
+
+const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+
+useEffect(() => {
+    const checkSuperAdmin = async () => {
+        if (!user?.uid) return;
+
+        try {
+            const adminDoc = await getDoc(doc(db, "adminRoles", user.uid));
+
+            if (adminDoc.exists()) {
+                const data = adminDoc.data();
+
+                setIsSuperAdmin(
+                    data.role === "SUPER_ADMIN" &&
+                    data.isActive
+                );
+            } else {
+                setIsSuperAdmin(false);
+            }
+        } catch (error) {
+            console.error(error);
+            setIsSuperAdmin(false);
+        }
+    };
+
+    checkSuperAdmin();
+}, [user?.uid]);
+
+
+
+
+    
     return (
         <ScreenWrapper>
             <Heading page='Settings' />
@@ -126,7 +164,7 @@ const Settings = () => {
                                     </View>
                                 </TouchableNativeFeedback>
                             </View>
-                            {isSuperAdmin() && (
+                            {isSuperAdmin && (
                                 <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
                                     <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/AddAdmin')}>
                                         <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
@@ -144,7 +182,7 @@ const Settings = () => {
                                     </TouchableNativeFeedback>
                                 </View>
                             )}
-                            {isSuperAdmin() && (
+                            {isSuperAdmin && (
                                 <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
                                     <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/UpdateVersion')}>
                                         <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
@@ -164,7 +202,7 @@ const Settings = () => {
                             )}
 
 
-                            {isSuperAdmin() && <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
+                            {isSuperAdmin && <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
                                 <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/Rewards')}>
                                     <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
                                         <Ionicons name='gift-outline' size={wp(4)} color={icon} style={{ width: wp(6), textAlign: 'center' }} />
@@ -182,7 +220,7 @@ const Settings = () => {
                             </View>}
 
 
-                            {isSuperAdmin() && (
+                            {isSuperAdmin && (
                                 <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
                                     <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/ActionLogs')}>
                                         <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>
@@ -200,7 +238,7 @@ const Settings = () => {
                                     </TouchableNativeFeedback>
                                 </View>
                             )}
-                            {isSuperAdmin() && (
+                            {isSuperAdmin && (
                                 <View style={{ borderRadius: wp(2), overflow: 'hidden' }}>
                                     <TouchableNativeFeedback onPress={() => router.push('/Account/Admin/Analytics')}>
                                         <View style={{ backgroundColor: backgroundLight, padding: wp(4), flexDirection: 'row', gap: wp(3) }}>

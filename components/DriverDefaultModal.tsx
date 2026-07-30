@@ -38,9 +38,9 @@ type Props = {
     visible: boolean;
     onClose: () => void;
     fleetId: string;
-    cargoId: string,
     truckId: string;
     numberPlate: string;
+    cargoId ?: string,
     onAssigned?: (driver: any) => void;
 
     typeOfAction?: string
@@ -58,7 +58,7 @@ type Props = {
 
     }
 
-    externalLoad: boolean
+    externalLoad ?: boolean
 };
 
 

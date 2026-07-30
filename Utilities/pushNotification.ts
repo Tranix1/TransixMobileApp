@@ -236,19 +236,14 @@ export async function sendPushNotification(
 ) {
   // More lenient token validation
   if (!expoPushToken || expoPushToken.trim() === '') {
-    console.error('❌ No push token provided or token is empty');
-    console.log('🔍 Token value:', expoPushToken);
     return;
   }
 
   // Check if token looks valid (starts with ExponentPushToken)
   if (!expoPushToken.startsWith('ExponentPushToken[')) {
-    console.warn('⚠️ Token format might be invalid:', expoPushToken);
-    console.log('📤 Attempting to send anyway...');
   }
 
-  console.log('📤 Sending push notification to:', expoPushToken);
-
+  
   const message = {
     to: expoPushToken,
     sound: 'default',
@@ -419,9 +414,6 @@ export const notifyUserById = async (
 
     const expoPushToken = userData?.expoPushToken;
 
-    console.log(expoPushToken)
-
-    console.log(userData)
 
 
     if (expoPushToken) {

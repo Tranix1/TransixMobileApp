@@ -5,7 +5,6 @@ import { SelectLocationProp } from "@/types/types";
 /** Additional, event-specific values stored with an analytics event. */
 export type AnalyticsMetadata = {
   cargoArea?: string | null;
-  tankerType?: string | null;
   truckCapacity?: string | null;
   truckOperatingLocations?: string[];
   brokerType?: string | null
@@ -16,6 +15,7 @@ export type AnalyticsMetadata = {
   cargoId?: string,
   driverId?: string,
   truckCargoArea?: string,
+  orgViewedAt ? : string ,
 
   caargoCreated?: {
     origin: SelectLocationProp,

@@ -67,7 +67,7 @@ const remainingCount = Math.max(
 
     function haandlePressProfile (){
         const organizationId = profile.organizationId || profile.id;
-        void trackOrganizationViewed({ organizationId, organizationProfileId: organizationId, organizationType: profile.type, metadata: { source: 'load_network' } }).catch(console.error);
+        void trackOrganizationViewed({ organizationId, organizationProfileId: organizationId, organizationType: profile.type, metadata: { orgViewedAt: 'load_network' } }).catch(console.error);
         if(profile.type ==="brokerage"){
             router.push({ pathname: "/brokerage/Profile/Index", params: { organizationId, organizationType: profile.type } })
         }else if(profile.type ==="fleet"){
