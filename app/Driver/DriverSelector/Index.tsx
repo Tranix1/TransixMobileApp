@@ -434,8 +434,29 @@ function FleetSelector() {
                     ]}
                 >
                     <Ionicons name="file-tray-outline" size={26} color={icon} style={{ opacity: 0.4, marginBottom: 6 }} />
-                    <ThemedText style={{ fontSize: wp(3.2), color: icon }}>
-                        No {fleetFilter} fleet records found.
+                    <ThemedText
+                        style={{
+                            fontSize: wp(4.5),
+                            fontWeight: "700",
+                            textAlign: "center",
+                            marginBottom: hp(0.8),
+                        }}
+                    >
+                        No {fleetFilter} Invitations
+                    </ThemedText>
+
+                    <ThemedText
+                        style={{
+                            fontSize: wp(3.3),
+                            color: icon,
+                            textAlign: "center",
+                            lineHeight: hp(2.6),
+                            paddingHorizontal: wp(8),
+                        }}
+                    >
+                        {fleetFilter === "pending"
+                            ? "You don't have any pending fleet invitations. Once a fleet invites you, it will appear here."
+                            : `You don't have any ${fleetFilter.toLowerCase()} fleet invitations.`}
                     </ThemedText>
                 </View>
             )}

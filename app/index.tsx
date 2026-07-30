@@ -222,7 +222,7 @@ const {
   }
 
 
-  console.log(currentRole)
+  console.log(currentRole ,"current role")
 
 
   return (
@@ -320,13 +320,13 @@ const {
                       {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
                       <Tab.Screen name="Earnings" component={Earnings} />
                     </>
-                  ) : (typeof currentRole === 'object' && currentRole.role === 'driver' && currentRole.userRole === "create_Acc") ?
+                  ) : (typeof currentRole === 'object' && currentRole.accType === 'driver' && currentRole.userRole === "create_Acc") ?
                     (<>
                       <Tab.Screen name="Home" component={CreateDriverAcc} />
                       <Tab.Screen name="About" component={About} />
                     </>) :
 
-                    (typeof currentRole === 'object' && currentRole.role === 'driver') ?
+                    (typeof currentRole === 'object' && currentRole.accType === 'driver') ?
                       (<>
                         <Tab.Screen name="Home" component={DriverSelector} />
                         <Tab.Screen name="About" component={About} />

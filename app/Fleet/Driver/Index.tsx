@@ -17,6 +17,7 @@ import Input from '@/components/Input';
 import { useAuth } from '@/context/AuthContext';
 import { trackEvent } from '@/services/analytics/appAnalytics';
 import { incrementMemberCount } from '@/services/analytics/organizationAnalytics';
+import { notifyUserById } from '@/Utilities/pushNotification';
 
 // Payment method types for a driver
 type PaymentType = 'trip' | 'monthly' | 'later' | 'custom';
@@ -69,7 +70,6 @@ interface Driver {
 interface Driver {
     id: string;
     name: string;
-    email: string;
     userId: string
     selfieImage: string
     // Add other properties present in your 'Drivers' collection
@@ -649,7 +649,7 @@ export default function DriverIndex() {
         const fetchAllDrivers = async () => {
             setLoadingAllDrivers(true);
             try {
-                const querySnapshot = await getDocs(collection(db, "Drivers"));
+                const querySnapshot = await getDocs(collection(db, "Drivers",),   );
                 const driversData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Driver[];
                 setAllDrivers(driversData);
                 setSearchedDrivers(driversData);
@@ -678,7 +678,7 @@ export default function DriverIndex() {
         // Some text entered — show only what matches, never the full list.
         const filtered = allDrivers.filter(driver =>
             driver.fullName?.toLowerCase().includes(searchText) ||
-            driver.email?.toLowerCase().includes(searchText)
+            driver.phoneNumber?.toLowerCase().includes(searchText)
         );
 
         setSearchedDrivers(filtered);
@@ -722,8 +722,27 @@ export default function DriverIndex() {
 
                 if (!currentRole.fleetId) return
                 const driverRef = doc(db, 'fleets', currentRole.fleetId, 'Drivers', `DRV_${driver.userId}`);
-                await setDoc(driverRef, { ...fleetUpdate, driverId: `DRV_${driver?.userId}`, 
-                 driverUserId:driver?.userId,   fullName: driver.fullName, phoneNumber: driver.phoneNumber, driverEmail: driver.email, timeStamp: serverTimestamp(), profilePhoto: driver.selfieImage, payment: buildPaymentPayload(driver.id), });
+                await setDoc(driverRef, {
+                    ...fleetUpdate, driverId: `DRV_${driver?.userId}`,
+                    driverUserId: driver?.userId, fullName: driver.fullName, phoneNumber: driver.phoneNumber, timeStamp: serverTimestamp(), profilePhoto: driver.selfieImage, payment: buildPaymentPayload(driver.id),
+                });
+
+                await notifyUserById(
+                driver?.userId,
+                "🚚 Fleet Invitation",
+                `${currentRole.companyName || "A fleet"} has invited you to join their fleet as a driver.`,
+                {
+                    pathname: "/Fleet/DriverInvitation",
+                    params: {
+                        organizationId : currentRole.organizationId ,
+                        fleetName: currentRole.companyName,
+                    },
+                },
+                {
+                    type: "fleet_invitation",
+                    organizationId : currentRole.organizationId,
+                }
+            );
 
             }));
 
@@ -733,7 +752,11 @@ export default function DriverIndex() {
                     void trackEvent({ eventName: 'driver_added', userId: driver.userId, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: 'fleet', role: 'driver', accountType: 'driver', metadata: { driverId: driver.userId } }).catch(console.error);
                 }
                 void incrementMemberCount(analyticsOrganizationId, selectedDrivers.length).catch(console.error);
+
+                
             }
+
+            
 
 
             fetchDrivers()
@@ -774,7 +797,7 @@ export default function DriverIndex() {
 
                         <ThemedText style={{ marginBottom: wp(1) }}>Driver Name</ThemedText>
                         <Input
-                            placeholder="Search by name or email"
+                            placeholder="Search by name or phone number"
                             onChangeText={handleSearch}
                             value={driverSearchQuery}
                             style={{ marginBottom: wp(3) }}
@@ -824,7 +847,7 @@ export default function DriverIndex() {
                                         >
                                             <ThemedText>{item.fullName}</ThemedText>
                                             <ThemedText style={{ fontSize: 12 }}>
-                                                {item.email}
+                                                {item.phoneNumber}
                                             </ThemedText>
                                         </TouchableOpacity>
 

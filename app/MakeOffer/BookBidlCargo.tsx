@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ToastAndroid, Ale
 import { Image } from 'expo-image'
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { auth, db } from "@/db/fireBaseConfig";
+import { db } from "@/db/fireBaseConfig";
 import { addDocument, runFirestoreTransaction, checkDocumentExists, setDocuments, readById, addDocumentWithId } from "@/db/operations";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Feather, Ionicons } from "@expo/vector-icons";
@@ -18,7 +18,7 @@ import { wp, hp } from "@/constants/common";
 import Heading from "@/components/Heading";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { formatCurrency } from '@/services/services'
-import { usePushNotifications, sendPushNotification, sendBookingWithTrackerNotification } from "@/Utilities/pushNotification";
+import { usePushNotifications, sendPushNotification, sendBookingWithTrackerNotification, notifyUserById } from "@/Utilities/pushNotification";
 import { useAuth } from "@/context/AuthContext";
 
 import { trackCargoRequests, trackCargoRequested } from '@/services/analytics/appAnalytics';
@@ -48,21 +48,19 @@ function BookLCargo({ }) {
 
   useEffect(() => {
     try {
-      if (auth.currentUser) {
-        const userId = auth.currentUser.uid;
-        const dataQuery = query(collection(db, `fleets/${currentRole.fleetId}/Trucks`),);
-        const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
-          const loadedData: Truck[] = [];
-          snapshot.docChanges().forEach((change) => {
-            if (change.type === 'added' || change.type === 'modified') {
-              const dataWithId = { id: change.doc.id, ...change.doc.data() } as Truck;
-              loadedData.push(dataWithId);
-            }
-          });
-          setbbVerifiedLoadD(loadedData);
+      const dataQuery = query(collection(db, `fleets/${currentRole.fleetId}/Trucks`),);
+      const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
+        const loadedData: Truck[] = [];
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added' || change.type === 'modified') {
+            const dataWithId = { id: change.doc.id, ...change.doc.data() } as Truck;
+            loadedData.push(dataWithId);
+          }
         });
-        return () => unsubscribe();
-      }
+        setbbVerifiedLoadD(loadedData);
+      });
+      return () => unsubscribe();
+      ``
     } catch (err) {
       console.error(err);
     }
@@ -72,24 +70,22 @@ function BookLCargo({ }) {
   const [allDrivers, setAllDrivers] = React.useState<any[]>([]);
   useEffect(() => {
     try {
-      if (auth.currentUser) {
-        const dataQuery = query(collection(db, `fleets/${currentRole.fleetId}/Drivers`));
-        const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
-          setAllDrivers((prev) => {
-            const map = new Map(prev.map((d) => [d.id, d]));
-            snapshot.docChanges().forEach((change) => {
-              if (change.type === 'added' || change.type === 'modified') {
-                map.set(change.doc.id, { id: change.doc.id, ...change.doc.data() });
-              }
-              if (change.type === 'removed') {
-                map.delete(change.doc.id);
-              }
-            });
-            return Array.from(map.values());
+      const dataQuery = query(collection(db, `fleets/${currentRole.fleetId}/Drivers`));
+      const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
+        setAllDrivers((prev) => {
+          const map = new Map(prev.map((d) => [d.id, d]));
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'added' || change.type === 'modified') {
+              map.set(change.doc.id, { id: change.doc.id, ...change.doc.data() });
+            }
+            if (change.type === 'removed') {
+              map.delete(change.doc.id);
+            }
           });
+          return Array.from(map.values());
         });
-        return () => unsubscribe();
-      }
+      });
+      return () => unsubscribe();
     } catch (err) {
       console.error(err);
     }
@@ -133,8 +129,6 @@ function BookLCargo({ }) {
 
   const [trucksRequested, setTrucksRequested] = React.useState<BookJob[] | []>([])
   useEffect(() => {
-    if (!auth.currentUser) return;
-    const userId = auth.currentUser.uid;
     const dataQuery = query(collection(db, "CargoRequests"));
     const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
       const loadedData: BookJob[] = [];
@@ -166,21 +160,16 @@ function BookLCargo({ }) {
 
     async function handleSubmitDetails() {
       try {
-        if (!auth.currentUser) return;
-        const userId = auth.currentUser.uid;
 
         const selectedDriver = selectedDrivers[item.id];
-        if (!selectedDriver) {
-          ToastAndroid.show("Select a driver for this truck first", ToastAndroid.SHORT);
-          return;
-        }
+
 
         if (OperationType === "Bid" && (!bidAmount || isNaN(Number(bidAmount)) || Number(bidAmount) <= 0)) {
           ToastAndroid.show("Enter a valid bid rate first", ToastAndroid.SHORT);
           return;
         }
 
-        const existingBBDoc = await checkExistixtBBDoc(`${userId}${loadItem.id}${item.timeStamp}`);
+        const existingBBDoc = await checkExistixtBBDoc(`${currentRole.organizationId}${loadItem.id}${item.timeStamp}`);
         if (existingBBDoc) {
           alert("Truck already booked");
           return;
@@ -192,7 +181,7 @@ function BookLCargo({ }) {
         const theData = {
           requestStatus: "PENDING",
           created_at: Date.now().toString(),
-          requestId: `${userId}${loadItem.id}${item.timeStamp}`,
+          requestId: `${currentRole.organizationId}${loadItem.id}${item.timeStamp}`,
           cargoId: loadItem.id,
           companyName: loadItem.companyName,
           onwerId: loadItem.userId,
@@ -205,7 +194,8 @@ function BookLCargo({ }) {
           expoPushToken: expoPushToken || null,
           trackerShared: false,
           trackerSharingRequested: false,
-          loadOwnerId: loadItem.userId,
+          loadOwnerId: loadItem.postedBy.organizationId ,
+          truckOwnerId : currentRole.organizationId ,
           bookedBy: {
             userId: user?.uid || "unknown",
             name: user?.displayName || "unknown",
@@ -214,13 +204,15 @@ function BookLCargo({ }) {
             email: user?.email || "unknown",
             addedAt: Date.now().toString(),
           },
-          driverDetails: {
+          driverDetails: selectedDriver ? {
             driverId: selectedDriver.id,
-            driverName: selectedDriver.fullName || null,
-            driverPhoneNumber: selectedDriver.phoneNumber || null,
-            driverEmail: selectedDriver.email || null,
-            driverLicenseNumber: selectedDriver.licenseNumber || null,
-          },
+            driverName: selectedDriver.fullName ?? null,
+            driverPhoneNumber: selectedDriver.phoneNumber ?? null,
+            driverEmail: selectedDriver.email ?? null,
+            driverLicenseNumber: selectedDriver.licenseNumber ?? null,
+          } : null,
+
+
           fleetDetails: item.organizationDetails ?? null,
           fleeCoordinator: item?.dispatcher ?? null,
           cargoCoordinator: loadItem.coordinator,
@@ -274,7 +266,7 @@ function BookLCargo({ }) {
         const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId;
 
         void trackCargoRequests({
-          userId,
+          userId: user?.uid,
           accountAge,
           organizationId: analyticsOrganizationId,
           organizationProfileId: analyticsOrganizationId,
@@ -317,19 +309,42 @@ function BookLCargo({ }) {
             loadId: loadItem.id,
             truckId: item.id,
             cargoType: "PUBLIC",
-            cargoOwnerAcc: loadItem.postedBy.accType,
+            cargoOwnerAcc: loadItem.postedBy?.accType,
           });
           await batch.commit();
         }
 
         if (loadItem.expoPushToken) {
-          await sendBookingWithTrackerNotification(
-            loadItem.expoPushToken,
-            truckData?.ownerName || "Truck Owner",
-            `${loadItem.origin} to ${loadItem.destination}`,
-            hasTracker && trackerStatus === "active" && trackingDeviceId,
-            theData.requestId
+          await notifyUserById(
+            loadItem.userId,
+            `New ${OperationType} Request 🚛`,
+            `${currentRole.companyName || user?.displayName} ${OperationType === "Bid" ? "placed a bid on" : "booked"
+            } your load from ${loadItem.origin} to ${loadItem.destination}.`,
+            {
+              pathname: "/BooksAndBids/ViewBidsAndBooks",
+              params: {
+                requestId: theData.requestId,
+                cargoId: loadItem.id,
+                operationType: OperationType,
+              },
+            },
+            {
+              type: OperationType === "Bid" ? "load_bid" : "load_booking",
+              requestId: theData.requestId,
+              cargoId: loadItem.id,
+              truckId: item.id,
+              hasTracker:
+                hasTracker && trackerStatus === "active",
+              trackingDeviceId:
+                hasTracker && trackerStatus === "active"
+                  ? trackingDeviceId
+                  : null,
+            }
           );
+
+
+
+
         } else {
           console.warn("⚠️ No expoPushToken found in loadItem, skipping notification");
         }

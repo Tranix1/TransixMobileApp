@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Image, TouchableOpacity, TouchableNativeFeedback, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, TouchableNativeFeedback, StyleSheet } from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -13,6 +13,8 @@ interface ProfileManagerProps {
     onProfileUpdate?: (updatedUser: any) => void;
     onClose?: () => void;
 }
+import { Image } from 'expo-image'
+
 
 export default function ProfileManager({  onProfileUpdate, onClose }: ProfileManagerProps) {
     const accent = useThemeColor('accent');
@@ -61,10 +63,10 @@ export default function ProfileManager({  onProfileUpdate, onClose }: ProfileMan
 
                     <View style={styles.userDetails}>
                         <ThemedText type='subtitle'>
-                            { currentRole.companyName || 'No name'}
+                            { currentRole.companyName || user?.displayName|| 'No name'}
                         </ThemedText>
                         <ThemedText type='tiny' color={coolGray}>
-                            {currentRole.phone}
+                            {currentRole.phone || user?.phoneNumber }
                         </ThemedText>
                     </View>
 

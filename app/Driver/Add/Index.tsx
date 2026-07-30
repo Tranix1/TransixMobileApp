@@ -55,20 +55,20 @@ export default function AddDriver() {
     const [isEditMode, setIsEditMode] = useState(false);
     const [existingDriver, setExistingDriver] = useState<any>(null);
 
-        const [countryCode, setCountryCode] = useState({ id: 0, name: '' });
-    
+    const [countryCode, setCountryCode] = useState({ id: 0, name: '' });
+
 
 
     const { expoPushToken } = usePushNotifications();
 
-     const [selectedImage, setSelectedImage] = React.useState<any>(null);
-      const [uploadingImageUpdate, setUploadImageUpdate] = React.useState("")
-    
-      const handleSelectProfileImage = () => {
+    const [selectedImage, setSelectedImage] = React.useState<any>(null);
+    const [uploadingImageUpdate, setUploadImageUpdate] = React.useState("")
+
+    const handleSelectProfileImage = () => {
         selectImage((image) => {
-          setSelectedImage(image);
+            setSelectedImage(image);
         });
-      };
+    };
 
     const handleAddDriver = async () => {
 
@@ -83,8 +83,8 @@ export default function AddDriver() {
         }
 
         setIsSubmitting(true);
-            const imagelogo = selectedImage ?  await uploadImage(selectedImage, "Profiles", setUploadImageUpdate, "Profile Image") : null
-        
+        const imagelogo = selectedImage ? await uploadImage(selectedImage, "Profiles", setUploadImageUpdate, "Profile Image") : null
+
         try {
 
             const selfieImageUrl = await uploadImage(selfieImage as any, "Selfies", () => { }, "Uploading selfie");
@@ -140,8 +140,7 @@ export default function AddDriver() {
 
                 fleetMainAdminName: user.displayName,
                 organizationAdminPhone: user.phoneNumber,
-                organizationAdminEmail: user.email,
-        profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+                profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
 
                 driverVerificcationTier: driverVerificationTiers,
 
@@ -170,7 +169,9 @@ export default function AddDriver() {
 
             const driverData = {
                 fullName: fullName.trim(),
-                phoneNumber: phoneNumber.trim(),
+                phoneNumber: `${countryCode.name}${phoneNumber.trim()}`,
+                verificationStatus: 'pending',
+
 
                 selfieImage: selfieImageUrl,
                 nationalIdUrl: nationalIdUrl,
@@ -187,9 +188,9 @@ export default function AddDriver() {
                 expoPushToken: expoPushToken || user?.expoPushToken,
                 updatedAt: new Date().toISOString(),
                 driverVerificcationTier: driverVerificationTiers,
-                email: user?.email,
                 location: locationFull,
                 profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+                timeStamp: serverTimestamp()
 
             };
 
@@ -217,9 +218,11 @@ export default function AddDriver() {
                 location: locationFull,
 
                 verificationStatus: "pending",
-        profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+                profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
 
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                timeStamp: serverTimestamp(),
+
             }
 
             )
@@ -276,28 +279,28 @@ export default function AddDriver() {
 
 
 
-    async function notifyAdmin (){
-            const notifyQyery = query(collection(db, "adminRoles"), where("role", "==", "SUPER_ADMIN"), where("active", "==", true))
+    async function notifyAdmin() {
+        const notifyQyery = query(collection(db, "adminRoles"), where("role", "==", "SUPER_ADMIN"), where("active", "==", true))
 
-           const notifySnapShot = await getDocs(notifyQyery)
+        const notifySnapShot = await getDocs(notifyQyery)
 
 
-            await Promise.all(
-                notifySnapShot.docs.map((doc) => {
-                    notifyUserById(
-                        doc.id,
-                        `New verification request`,
-                        `${fullName} , Driver has submitted a verification request`,
+        await Promise.all(
+            notifySnapShot.docs.map((doc) => {
+                notifyUserById(
+                    doc.id,
+                    `New verification request`,
+                    `${fullName} , Driver has submitted a verification request`,
 
-                        {
-                            pathname: "Account/Admin",
-                        }, {
-                        type: "account_verification",
-                    }
-                    );
+                    {
+                        pathname: "Account/Admin",
+                    }, {
+                    type: "account_verification",
+                }
+                );
 
-                })
-            )
+            })
+        )
     }
 
 
@@ -337,7 +340,7 @@ export default function AddDriver() {
             // Update driver data
             const updateData = {
                 fullName: fullName.trim(),
-                phoneNumber:  `${countryCode.name}${phoneNumber}`,
+                phoneNumber: `${countryCode.name}${phoneNumber}`,
                 driverLicenseUrl: licenseUrl,
                 passportUrl: passportUrl,
                 internationalPermitUrl: permitUrl,
@@ -385,13 +388,13 @@ export default function AddDriver() {
                 />
 
                 <ThemedText>Phone Number<ThemedText color="red">*</ThemedText></ThemedText>
-                  <PhoneInput
-                                        value={phoneNumber}
-                                        onChangeText={setPhoneNumber}
-                                        countryCode={countryCode}
-                                        setCountryCode={setCountryCode}
-                
-                                    />
+                <PhoneInput
+                    value={phoneNumber}
+                    onChangeText={setPhoneNumber}
+                    countryCode={countryCode}
+                    setCountryCode={setCountryCode}
+
+                />
 
 
 

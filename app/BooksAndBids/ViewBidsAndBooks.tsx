@@ -7,10 +7,8 @@ import {
   where,
   getDocs,
 } from "firebase/firestore";
-import { auth, db } from "@/db/fireBaseConfig";
+import {  db } from "@/db/fireBaseConfig";
 import { Ionicons, Octicons } from "@expo/vector-icons";
-import FontAwesome6 from "react-native-vector-icons/FontAwesome6";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams } from "expo-router";
 import Heading from "@/components/Heading";
 import ScreenWrapper from "@/components/ScreenWrapper";
@@ -23,11 +21,10 @@ import { fetchDocuments, } from '@/db/operations';
 import { RequestedCargo } from "@/components/LoadRequestCard";
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { getCurrentLocation } from '@/Utilities/utils';
+import { useAuth } from "@/context/AuthContext";
 
 
 const accent = "#6a0c0c" ;
-const background = "#fff";
-const cardBg = "#f8f8f8";
 const coolGray = "#e5e7eb";
 
 function BookingsandBiddings({ }) {
@@ -45,6 +42,8 @@ function BookingsandBiddings({ }) {
   const [currentLocation, setCurrentLocation] = React.useState<{ latitude: number, longitude: number } | null>(null)
 
   const [requestType, setRequestType] = React.useState("Booked") // Default to Books view
+
+  const {currentRole} = useAuth()
 
   // Debug function to check all loadRequests
   const debugLoadRequests = async () => {
@@ -80,15 +79,15 @@ function BookingsandBiddings({ }) {
      
       // Show loads where current user is the truck owner (truck owner requests)
       
-      filters.push( where("loadOwnerId", "==", auth.currentUser?.uid) );
+      filters.push( where("loadOwnerId", "==", currentRole.organizationId) );
 
     } else if (dspRoute === "Requested Loads") {
        // Show loads where current user is the truck owner (carrier)
       // filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
 
-      filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
+      filters.push(where("truckOwnerId", "==", currentRole.organizationId));
     } else {
-      filters.push( where("loadOwnerId", "==", auth.currentUser?.uid) );
+      filters.push( where("loadOwnerId", "==", currentRole.organizationId) );
       // Default to "My Loads" - show loads where current user is the load owner (booked loads)
     }
 
@@ -150,14 +149,14 @@ function BookingsandBiddings({ }) {
     if (dspRoute === "Requested by Carriers") {
       // Show loads where current user is the truck owner (carrier)
       filters.push( 
-        where("truckOwnerId", "==", auth.currentUser?.uid) , 
+        where("truckOwnerId", "==",  currentRole.organizationId) , 
       );
     } else if (dspRoute === "Requested Loads") {
       // Show loads where current user is the truck owner (truck owner requests)
-      filters.push(where("truckOwnerId", "==", auth.currentUser?.uid));
+      filters.push(where("truckOwnerId", "==",  currentRole.organizationId));
     } else {
       // Default to "My Loads" - show loads where current user is the load owner (booked loads)
-      filters.push(where("loadOwnerId", "==", auth.currentUser?.uid));
+      filters.push(where("loadOwnerId", "==",  currentRole.organizationId));
     }
 
     if (loadingMore || !lastVisible) return;
