@@ -61,6 +61,7 @@ import {
     ActivityIndicator,
     Alert,
     StyleSheet,
+    ToastAndroid,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -331,6 +332,11 @@ export default function FinancePanel({
 
             setFinanceEntries((prev) => [{ id: newDoc.id, ...payload } as FinanceEntry, ...prev]);
 
+            ToastAndroid.show(
+                "Expense recorded successfully.",
+                ToastAndroid.SHORT
+            );
+
             setAmount("");
             setNote("");
             setCustomFields([]);
@@ -394,6 +400,10 @@ export default function FinancePanel({
                 ...prev.filter((p) => p.category !== payoutCategory),
             ]);
 
+            ToastAndroid.show(
+                "Payout created and awaiting payment.",
+                ToastAndroid.SHORT
+            );
             setAmount("");
             setNote("");
         } catch (error) {
@@ -428,7 +438,7 @@ export default function FinancePanel({
                 payoutPaidAt: paidAt,
             });
 
-            await updateDocument("organizationProfiles", fleetId, {
+            await updateDocument("organi`zationProfiles", fleetId, {
                 payouts: {
                     [payoutCategory === "DRIVER" ? "driverConfirmed" : "shipperConfirmed"]: increment(1),
                 },
@@ -436,6 +446,10 @@ export default function FinancePanel({
 
             setPayoutEntries((prev) =>
                 prev.map((p) => (p.category === payoutCategory ? { ...p, state: "PAID", paidAt } : p))
+            );
+            ToastAndroid.show(
+                `${payoutCategory === "DRIVER" ? "Driver" : "Shipper"} payout marked as paid.`,
+                ToastAndroid.SHORT
             );
         } catch (error) {
             console.log("Mark payout paid error", error);
@@ -485,6 +499,10 @@ export default function FinancePanel({
 
             setFinanceEntries((prev) => [{ id: newDoc.id, ...payload } as FinanceEntry, ...prev]);
 
+            ToastAndroid.show(
+                "Payment recorded successfully.",
+                ToastAndroid.SHORT
+            );
             setSelectedMilestoneId("");
             setIncomeAmount("");
             setIncomeNote("");
@@ -625,7 +643,7 @@ export default function FinancePanel({
             {/* MONEY OUT BREAKDOWN */}
             {financeSummary.totalMoneyOut > 0 && (
                 <ThemedText style={{ fontSize: 10.5, color: "#8A8A8E", marginTop: wp(1), textAlign: "center" }}>
-                    Expenses ${financeSummary.totalExpense} • Payouts ${financeSummary.totalPayout }
+                    Expenses ${financeSummary.totalExpense} • Payouts ${financeSummary.totalPayout}
                 </ThemedText>
             )}
 
