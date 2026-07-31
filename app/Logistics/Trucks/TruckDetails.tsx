@@ -877,11 +877,11 @@ const TruckDetails = () => {
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                             <View>
 
-                                <ThemedText type="title" style={{ maxWidth: wp(80), }}>
+                                <ThemedText  style={{ maxWidth: wp(80), fontSize:30,  fontFamily: 'sfbold', }}>
                                     {truckData.CompanyName}
                                 </ThemedText>
                                 <ThemedText>
-                                    {truckData.name}
+                                    {truckData.truckName}
                                 </ThemedText>
                             </View>
                             {truckData.isVerified &&
@@ -992,10 +992,10 @@ const TruckDetails = () => {
                     <View style={{ flexDirection: 'row', gap: wp(2), alignItems: 'center' }}>
                         <View style={{ flex: 1 }}>
                             <ThemedText type="tiny" style={{}}>
-                                Maximum Load Capacity
+                                Number Plate
                             </ThemedText>
                             <ThemedText type="subtitle" style={{}}>
-                                {truckData.maxloadCapacity || '--'}t
+                                {truckData.numberPlate || '--'}t
                             </ThemedText>
                         </View>
                         <ThemedText type="subtitle" color="#1E90FF" >|</ThemedText>

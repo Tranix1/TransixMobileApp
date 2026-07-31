@@ -902,50 +902,7 @@ export default function FinancePanel({
                                 Driver
                             </ThemedText>
                         </TouchableOpacity>}
-
-
-                        {currentRole.accType == "fleet" && driverPayment.type === "trip" && <TouchableOpacity
-                            onPress={() => markPayoutPaid("DRIVER")}
-                            style={[
-                                styles.categoryChip,
-                                {
-                                    borderColor:
-                                        category === "DRIVER"
-                                            ? accent
-                                            : "rgba(128,128,128,0.3)",
-                                    backgroundColor:
-                                        category === "DRIVER"
-                                            ? accent
-                                            : "transparent",
-                                },
-                            ]}
-                        >
-                            <Ionicons
-                                name="person-outline"
-                                size={14}
-                                color={
-                                    category === "DRIVER"
-                                        ? backgroundLight
-                                        : "#8A8A8E"
-                                }
-                                style={{ marginRight: 4 }}
-                            />
-
-                            <ThemedText
-                                style={{
-                                    fontSize: 12,
-                                    fontWeight: "bold",
-                                    color:
-                                        category === "DRIVER"
-                                            ? backgroundLight
-                                            : icon,
-                                }}
-                            >
-                                Driver PAID
-                            </ThemedText>
-                        </TouchableOpacity>}
-
-                        {currentRole.accType == "fleet" && <TouchableOpacity
+                          {currentRole.accType == "fleet" && <TouchableOpacity
                             onPress={() => setCategory("BROKER")}
                             style={[
                                 styles.categoryChip,
@@ -986,30 +943,20 @@ export default function FinancePanel({
                             </ThemedText>
                         </TouchableOpacity>}
 
-                        {currentRole.accType == "fleet" && <TouchableOpacity
-                            onPress={() => markPayoutPaid("BROKER")}
+
+                        {currentRole.accType == "fleet" && driverPayment.type === "trip" && <TouchableOpacity
+                            onPress={() => markPayoutPaid("DRIVER")}
                             style={[
                                 styles.categoryChip,
                                 {
-                                    borderColor:
-                                        category === "BROKER"
-                                            ? accent
-                                            : "rgba(128,128,128,0.3)",
-                                    backgroundColor:
-                                        category === "BROKER"
-                                            ? accent
-                                            : "transparent",
+                                    backgroundColor: "rgba(128,128,128,0.3)"
                                 },
                             ]}
                         >
                             <Ionicons
                                 name="person-outline"
                                 size={14}
-                                color={
-                                    category === "BROKER"
-                                        ? backgroundLight
-                                        : "#8A8A8E"
-                                }
+                                color={icon }
                                 style={{ marginRight: 4 }}
                             />
 
@@ -1017,10 +964,36 @@ export default function FinancePanel({
                                 style={{
                                     fontSize: 12,
                                     fontWeight: "bold",
-                                    color:
-                                        category === "BROKER"
-                                            ? backgroundLight
-                                            : icon,
+                                    
+                                }}
+                            >
+                                Driver PAID
+                            </ThemedText>
+                        </TouchableOpacity>}
+
+                      
+
+                        {currentRole.accType == "fleet" && <TouchableOpacity
+                            onPress={() => markPayoutPaid("BROKER")}
+                            style={[
+                                styles.categoryChip,
+                                {
+                                    backgroundColor: "rgba(128,128,128,0.3)"
+                                },
+                            ]}
+                        >
+                            <Ionicons
+                                name="person-outline"
+                                size={14}
+                                color={ "#8A8A8E" }
+                                style={{ marginRight: 4 }}
+                            />
+
+                            <ThemedText
+                                style={{
+                                    fontSize: 12,
+                                    fontWeight: "bold",
+                                   
                                 }}
                             >
                                 Broker Paid

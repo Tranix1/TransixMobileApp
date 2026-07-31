@@ -74,7 +74,7 @@ const ApproveTrucks = () => {
         >
             <View style={styles.truckImageContainer}>
                 <Image
-                    source={{ uri: fixFirebaseUrl(truck.imageUrl) || 'https://via.placeholder.com/100' }}
+                    source={{ uri: truck.imageUrl || 'https://via.placeholder.com/100' }}
                     style={styles.truckImage}
                 />
             </View>

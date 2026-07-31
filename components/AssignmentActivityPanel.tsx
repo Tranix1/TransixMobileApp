@@ -25,15 +25,19 @@ type Props = {
     initialNotesCount?: number;
     initialIssuesCount?: number;
 
-    fleetCoordinator:{
-            id: string,
-              name: string,
-              phoneNumber :string ,
-              organizationId :string
+    fleetCoordinator: {
+        id: string,
+        name: string,
+        phoneNumber: string,
+        organizationId: string
     }
-    numberPlate : string
-    truckId : string
-    driverPayment : any
+    numberPlate: string
+    truckId: string
+    driverPayment: any
+    driverId: string
+    driverName: string
+    brokerId: string
+    brokerName: string
 
 };
 
@@ -48,10 +52,14 @@ export default function AssignmentActivityPanel({
     cargoPaymentTerms,
     initialNotesCount,
     initialIssuesCount,
-    fleetCoordinator ,
-    numberPlate ,
-    truckId ,
-    driverPayment
+    fleetCoordinator,
+    numberPlate,
+    truckId,
+    driverPayment,
+    driverId,
+    driverName,
+    brokerId,
+    brokerName,
 }: Props) {
 
     // existing logic here
@@ -643,6 +651,8 @@ export default function AssignmentActivityPanel({
                 )}
 
 
+
+
                 <FinancePanel
                     visible={financeView}
                     onClose={() => setFinanceView(false)}
@@ -652,7 +662,11 @@ export default function AssignmentActivityPanel({
                     cargoRateModel={cargoRateModel || ""}
                     ratePerKm={Number(cargoRatePerKm)}
                     paymentTerms={cargoPaymentTerms}
-                    driverPayment ={driverPayment}
+                    driverPayment={driverPayment ?? null}
+                    driverId={driverId ?? ""}
+                    driverName={driverName ?? ""}
+                    brokerId={brokerId ?? ""}
+                    brokerName={brokerName ?? ""}
                 />
 
 

@@ -166,10 +166,7 @@ export default function DriverDefaultModal({
         if (!assignmentId) return
         try {
 
-
             if (externalLoad) {
-
-
 
                 updateDocument(`${cargoOwnerDetails?.createdByAcc}/${cargoOwnerDetails?.organizationId}/assignments`, assignmentId, {
 

@@ -1101,21 +1101,26 @@ export default function AssignmentCard({ assignmentData }: any) {
             </View>
 
             {/* NOTES + ISSUES (persisted to Firestore, per-assignment) */}
-            <AssignmentActivityPanel
-                assignmentId={assignmentData.id}
-                fleetId={assignmentData?.fleetDetails?.id}
-                initialNotesCount={assignmentData?.notesCount}
-                initialIssuesCount={assignmentData?.issuesCount}
-                cargoRate={assignmentData?.loadDetails?.rate}
-                cargoRateCurrency={assignmentData?.loadDetails?.currency}
-                cargoRateModel={assignmentData?.loadDetails?.model}
-                cargoRatePerKm={assignmentData?.loadDetails?.ratePerKm}
-                cargoPaymentTerms={assignmentData?.loadDetails.paymentTerms}
-                fleetCoordinator={assignmentData?.fleetCoordinator}
-                numberPlate={assignmentData?.truckDetails?.numberPlate}
-                truckId={assignmentData?.truckDetails?.truckId}
-                driverPayment={assignmentData?.driverPayment}
-            />
+                <AssignmentActivityPanel
+                    assignmentId={assignmentData.id}
+                    fleetId={assignmentData?.fleetDetails?.id}
+                    initialNotesCount={assignmentData?.notesCount}
+                    initialIssuesCount={assignmentData?.issuesCount}
+                    cargoRate={assignmentData?.loadDetails?.rate}
+                    cargoRateCurrency={assignmentData?.loadDetails?.currency}
+                    cargoRateModel={assignmentData?.loadDetails?.model}
+                    cargoRatePerKm={assignmentData?.loadDetails?.ratePerKm}
+                    cargoPaymentTerms={assignmentData?.loadDetails.paymentTerms}
+                    fleetCoordinator={assignmentData?.fleetCoordinator}
+                    numberPlate={assignmentData?.truckDetails?.numberPlate}
+                    truckId={assignmentData?.truckDetails?.truckId}
+                    driverPayment={assignmentData?.driverPayment}
+                    driverId={assignmentData.driverDetails.driverId}
+                    driverName={assignmentData.driverDetails.driverName}
+                    
+                    brokerId={assignmentData?.cargoCoordinator?.organizationId || ""}   
+                    brokerName={assignmentData.loadDetails.companyName || ""}
+                />
 
         </View >
     );

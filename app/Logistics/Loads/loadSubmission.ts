@@ -181,74 +181,74 @@ export const submitLoad = async (params: SubmitLoadParams) => {
   };
 
 
-    // ── One nested payload per truck/driver assignment ──────────────────
-    // Mirrors your new shape: { truckDetails, driverDetails, loadDetails, fleetDetails, driverId, status }
-    const assignmentDetails = assignments.map((assignment) => {
-      const truck = selectedFleetTrucks.find((item) => item.id === assignment.truckId);
-      const driver = fleetDrivers.find(
-        (item) => item.driverId === assignment.driverId || item.id === assignment.driverId
-      );
+  // ── One nested payload per truck/driver assignment ──────────────────
+  // Mirrors your new shape: { truckDetails, driverDetails, loadDetails, fleetDetails, driverId, status }
+  const assignmentDetails = assignments.map((assignment) => {
+    const truck = selectedFleetTrucks.find((item) => item.id === assignment.truckId);
+    const driver = fleetDrivers.find(
+      (item) => item.driverId === assignment.driverId || item.id === assignment.driverId
+    );
 
-      const isDefaultDriver = truck?.defaultDriver?.driverId === (assignment.driverId || driver?.driverId || driver?.id);
+    const isDefaultDriver = truck?.defaultDriver?.driverId === (assignment.driverId || driver?.driverId || driver?.id);
 
-      const truckDetails = {
-        truckId: assignment.truckId || truck?.id || null,
-        truckName: truck?.truckName || null,
-        registrationNumber: truck?.registrationNumber || truck?.numberPlate || null,
-        numberPlate: truck?.numberPlate || null,
-        truckType: truck?.truckType || null,
-        truckCapacity: truck?.truckCapacity || null,
-        cargoArea: truck?.cargoArea || null,
-        locations: truck?.locations || [],
-        trackingDeviceId: truck?.trackingDeviceId || null,
-        tankerType: truck?.tankerType || null,
-        operationCountries: truck?.locations || [],
+    const truckDetails = {
+      truckId: assignment.truckId || truck?.id || null,
+      truckName: truck?.truckName || null,
+      registrationNumber: truck?.registrationNumber || truck?.numberPlate || null,
+      numberPlate: truck?.numberPlate || null,
+      truckType: truck?.truckType || null,
+      truckCapacity: truck?.truckCapacity || null,
+      cargoArea: truck?.cargoArea || null,
+      locations: truck?.locations || [],
+      trackingDeviceId: truck?.trackingDeviceId || null,
+      tankerType: truck?.tankerType || null,
+      operationCountries: truck?.locations || [],
 
-      };
+    };
 
-      const driverDetails = {
-        driverId: assignment.driverId || driver?.driverId || driver?.id || null,
-        driverDocId: driver?.docId || driver?.id || assignment.driverId || null,
-        driverName: assignment.driverName || driver?.fullName || null,
-        driverPhone: assignment.driverPhone || driver?.phoneNumber || driver?.phone || null,
-        profilePhoto: assignment.profilePhoto || driver?.profilePhoto || null,
-        email: driver?.email || null,
-        role: isDefaultDriver ? 'main' : assignment.role || 'assigned',
-        isDefault: isDefaultDriver,
-      };
+    const driverDetails = {
+      driverId: assignment.driverId || driver?.driverId || driver?.id || null,
+      driverDocId: driver?.docId || driver?.id || assignment.driverId || null,
+      driverName: assignment.driverName || driver?.fullName || null,
+      driverPhone: assignment.driverPhone || driver?.phoneNumber || driver?.phone || null,
+      profilePhoto: assignment.profilePhoto || driver?.profilePhoto || null,
+      role: isDefaultDriver ? 'main' : assignment.role || 'assigned',
+      isDefault: isDefaultDriver,
+    };
 
-      const loadDetails = {
-        ...baseLoadDetails,
-        pickupDate: assignment.pickupDate || loadingDate || null,
-        deliveryDate: assignment.deliveryDate || deliveryDate || null,
-        pickupLocation: assignment.pickupLocation || origin || null,
-        deliveryLocation: assignment.deliveryLocation || destination || null,
-      };
+    const loadDetails = {
+      ...baseLoadDetails,
+      pickupDate: assignment.pickupDate || loadingDate || null,
+      deliveryDate: assignment.deliveryDate || deliveryDate || null,
+      pickupLocation: assignment.pickupLocation || origin || null,
+      deliveryLocation: assignment.deliveryLocation || destination || null,
+    };
 
 
-      return {
-        cargoId,
-        loadId: cargoId,
-        fleetId,
-        truckId: assignment.truckId || null,
-        driverId: driverDetails.driverId,
-        visibility: visibilityTag,
-        // The truck's own owning fleet/org (not necessarily the poster of the load — relevant
-        // when a broker assigns a truck that belongs to a different fleet).
-        fleetDetails: truck?.organizationDetails ?? truck?.fleetDetails ?? null,
-        fleetCoordinator: truck?.assignments?.dispatcher ??  null,
+    return {
+      cargoId,
+      loadId: cargoId,
+      fleetId,
+      truckId: assignment.truckId || null,
+      driverId: driverDetails.driverId,
+      driverPayment: assignment.driverPayment,
+      visibility: visibilityTag,
+      // The truck's own owning fleet/org (not necessarily the poster of the load — relevant
+      // when a broker assigns a truck that belongs to a different fleet).
+      fleetDetails: truck?.organizationDetails ?? truck?.fleetDetails ?? null,
+      fleetCoordinator: truck?.assignments?.dispatcher ?? null,
 
-        loadDetails,
-        truckDetails,
-        driverDetails,
-        status: 'PENDING',
-        acceptedBy: null,
-        coordinator,
-        createdAt: Date.now().toString(),
-        shipper: selectedCustomer,
-        timeStamp: serverTimestamp(),
-      };
-    });
+      loadDetails,
+      truckDetails,
+      driverDetails,
+      status: 'PENDING',
+      acceptedBy: null,
+      coordinator,
+      createdAt: Date.now().toString(),
+      shipper: selectedCustomer,
+      timeStamp: serverTimestamp(),
+    };
+  });
 
 
 
@@ -267,7 +267,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       cargoArea: truck.cargoArea || null,
       operationCountries: truck.operationCountries || [],
       truckStatus: 'pending',
-     
+
     }));
   };
 
@@ -478,18 +478,18 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       trucksNeededNum: numberOfTrucks,
       trucksRemainingNum: numberOfTrucks,
       privateFleetCargoId: currentRole?.accType === 'fleet' && loadVisibility === 'Both' ? cargoId : null,
-      state: 'available',  
+      state: 'available',
       publicTrucks: trucksNeeded ?? null,
     });
 
 
     await notifyTrucksByFilters({
-    trucksNeeded,
-    loadItem: buildNotificationLoadItem(params),
-    cargoId,
-    user,
-    currentRole
-}); 
+      trucksNeeded,
+      loadItem: buildNotificationLoadItem(params),
+      cargoId,
+      user,
+      currentRole
+    });
   };
 
 

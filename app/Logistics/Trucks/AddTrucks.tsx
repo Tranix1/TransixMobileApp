@@ -27,7 +27,7 @@ import { DocumentAsset } from "@/types/types";
 import KYCVerificationModal from "@/components/KYCVerificationModal";
 import { db } from "@/db/fireBaseConfig";
 import { doc, collection, getDoc, getDocs, query, where, limit, serverTimestamp, writeBatch } from "firebase/firestore";
-import {  trackTruckAdded } from '@/services/analytics/appAnalytics';
+import { trackTruckAdded } from '@/services/analytics/appAnalytics';
 import { incrementTotalTrucks } from '@/services/analytics/dashboardAnalytics';
 import { incrementTruckCount } from '@/services/analytics/organizationAnalytics';
 import { Timestamp } from "@google-cloud/firestore";
@@ -241,38 +241,6 @@ function AddTrucks() {
 
 
 
-
-  // Function to clear all form fields
-  const clearFormFields = () => {
-    setFormData({
-      additionalInfo: "",
-      driverPhone: "",
-      maxloadCapacity: "",
-      truckName: "",
-      otherCargoArea: "",
-      otherTankerType: "",
-      numberPlate: "",
-    });
-    setImages([]);
-    setGitImage([])
-    setTruckNumberPlate([])
-    setTruckThirdPlate([])
-    setSelectedCargoArea(null);
-    setSelectedTruckType(null);
-    setSelectedTankerType(null);
-    setSelectedTruckCapacity(null);
-    setShowCountries(false);
-    setOperationCountries([]);
-    // New fields
-    setLease('');
-    setTruckType('Private');
-    // Clear truck lease document
-    setSelectedTruckLease([]);
-    setTruckLeaseFileType([]);
-    // Modal is now controlled by visible prop
-    // Removed broker selection
-    setSpinnerItem(false);
-  };
 
   const handleSubmit = async () => {
 
@@ -557,15 +525,15 @@ function AddTrucks() {
           accType: currentRole?.accType,
           location: currentRole.billingAddress || currentRole.baseAdress || null
         },
-         assignments: {
-            dispatcher: {
-              id  : user.uid,
-              name: user.displayName,
-              phoneNumber: user.phoneNumber,
-              organizationId: currentRole?.organizationId || currentRole?.fleetId || null
-            }
-          },
-        
+        assignments: {
+          dispatcher: {
+            id: user.uid,
+            name: user.displayName,
+            phoneNumber: user.phoneNumber,
+            organizationId: currentRole?.organizationId || currentRole?.fleetId || null
+          }
+        },
+
 
         subscription: subscriptionData,
 
@@ -592,7 +560,7 @@ function AddTrucks() {
           minRatePerKm: fleetConfig?.truckDefaults?.notification?.ratePerKm || null,
           assignments: {
             dispatcher: {
-              id  : user.uid,
+              id: user.uid,
               name: user.displayName,
               phoneNumber: user.phoneNumber,
               organizationId: currentRole?.organizationId || currentRole?.fleetId || null
@@ -607,8 +575,8 @@ function AddTrucks() {
           }
 
         },
-                approvalStatus: 'pending', // pending, approved, rejected ,
-        timeStamp : serverTimestamp(),
+        approvalStatus: 'pending', // pending, approved, rejected ,
+        timeStamp: serverTimestamp(),
 
 
 
@@ -648,7 +616,7 @@ function AddTrucks() {
               truckType: truckType,
               truckCapacity: `${selectedTruckCapacity?.name}`,
               operatingCountries: operationCountries as string[],
-              tankerType: selectedTankerType?.name  ? selectedTankerType?.name : "",
+              tankerType: selectedTankerType?.name ? selectedTankerType?.name : "",
 
             }
 
@@ -708,47 +676,47 @@ function AddTrucks() {
         operationCountries
       );
 
-      addDocumentWithId("verificationRequests",truckId ,{
+      addDocumentWithId("verificationRequests", truckId, {
         type: "truck",
-        organizationId : currentRole.organizationId ,
+        organizationId: currentRole.organizationId,
         truckId,
         truckRef: `/fleets/${currentRole.organizationId}/Trucks/${truckId}`,
-        organizationName : currentRole.companyName,
-        truckNumberPlate ,
-        timestamp : serverTimestamp(),
+        organizationName: currentRole.companyName,
+        truckNumberPlate : formData.numberPlate,
         status: "pending",
         priority: "normal",
-        createdBy : user.uid ,
-        imageUrl : truckImage ,
-        truckType : truckType ,
-        locations : operationCountries ,
+        createdBy: user.uid,
+        imageUrl: truckImage,
+        truckType: truckType,
+        locations: operationCountries,
+        timeStamp: serverTimestamp(),
       })
 
 
 
-const notifyQuery = query(
-    collection(db, "adminRoles"),
-    where("isActive", "==", true),
-    where("roles", "array-contains", "approve_trucks")
-);
+      const notifyQuery = query(
+        collection(db, "adminRoles"),
+        where("isActive", "==", true),
+        where("roles", "array-contains", "approve_trucks")
+      );
 
-const notifySnapshot = await getDocs(notifyQuery);
+      const notifySnapshot = await getDocs(notifyQuery);
 
-await Promise.all(
-    notifySnapshot.docs.map((adminDoc) =>
-        notifyUserById(
+      await Promise.all(
+        notifySnapshot.docs.map((adminDoc) =>
+          notifyUserById(
             adminDoc.id,
             "New truck verification request",
             `${currentRole.companyName} has submitted a truck verification request`,
             {
-                pathname: "Account/Admin",
+              pathname: "Account/Admin",
             },
             {
-                type: "truck_verification",
+              type: "truck_verification",
             }
+          )
         )
-    )
-);
+      );
 
       router.back()
       ToastAndroid.show("Truck Added successfully", ToastAndroid.SHORT);
