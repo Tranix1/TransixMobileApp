@@ -65,12 +65,12 @@
           "image": "./assets/images/TransixxLogoN.jpg",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#0f0e11",
+          "backgroundColor": "#FFFFFF",
           "dark": {
             "image": "./assets/images/blackBgWhiteLogo.png",
             "imageWidth": 200,
             "resizeMode": "contain",
-            "backgroundColor": "#0f0e11"
+            "backgroundColor": "#000000"
           }
         }
       ],

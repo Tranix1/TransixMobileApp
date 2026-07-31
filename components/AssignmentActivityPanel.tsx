@@ -9,7 +9,7 @@ import { collection, orderBy, updateDoc, doc, increment, where, getDocs, query, 
 import { wp, hp } from "@/constants/common";
 import Input from "./Input";
 import FinancePanel from "./FinancePanel";
-import { sendPushNotification } from "@/Utilities/pushNotification";
+import { notifyUserById, sendPushNotification } from "@/Utilities/pushNotification";
 import { readById } from "@/db/operations";
 
 type Props = {
@@ -183,51 +183,25 @@ export default function AssignmentActivityPanel({
                 console.log("Could not update assignment counts", countError);
             }
 
-
-
             if (activityView === "ISSUE") {
 
-
-
-                if (fleetCoordinator?.id) {
-
-                    const coordinatorData = await readById(
-                        "personalData",
-                        fleetCoordinator.id
-                    ) as {
-                        id: string;
-                        expoPushToken?: string;
-                    };
-
-                    const expoPushToken = coordinatorData?.expoPushToken;
-
-                    if (expoPushToken) {
-
-                        await sendPushNotification(
-                            expoPushToken,
-                            "New Load Assignment 📦",
-                            `A new load has been assigned to truck ${numberPlate}. Please review the assignment.`,
-                            {
-                                pathname: "/Fleet/AssignmentDetails",
-                                params: {
-                                    assignmentId,
-                                },
-                            },
-                            {
-                                type: "load_assignment",
-                                assignmentId,
-                                truckId,
-                                fleetId,
-                            }
-                        );
-
-                    } else {
-                        alert("Fleet coordinator has no push token");
+                await notifyUserById(
+                    fleetCoordinator.id,
+                    "New Issue Reported ⚠️",
+                    `An issue has been reported on truck ${numberPlate}. Please review the assignment and take action.`,
+                    {
+                        pathname: "/Fleet/AssignmentDetails",
+                        params: {
+                            assignmentId,
+                        },
+                    },
+                    {
+                        type: "assignment_issue",
+                        assignmentId,
+                        truckId,
+                        fleetId,
                     }
-
-                } else {
-                    alert("No fleet coordinator linked");
-                }
+                );
 
             }
 

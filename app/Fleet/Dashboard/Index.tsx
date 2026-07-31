@@ -160,7 +160,8 @@ const MiniStatRow = ({ label, value, dotColor, border, textlight }: MiniStatRowP
             </ThemedText>
         </View>
         <ThemedText type="tiny" style={styles.miniStatValue}>
-            {value}
+            {/* {value} */}
+            --
         </ThemedText>
     </View>
 );
@@ -207,8 +208,11 @@ const OverviewCard = ({
             </View>
 
             <ThemedText style={styles.overviewPrimaryValue}>
-                {primaryValue}
+                {/* {primaryValue} */}
+                --
             </ThemedText>
+
+            
 
             <ThemedText
                 type="tiny"
@@ -657,7 +661,8 @@ export default function TransixDashboard() {
                                         {step.done && <Ionicons name="checkmark" size={wp(2.6)} color="#fff" />}
                                     </View>
                                     <ThemedText type="tiny" style={styles.pipelineCount}>
-                                        {step.count}
+                                        {/* {step.count} */}
+                                        --
                                     </ThemedText>
                                     <ThemedText type="tiny" style={{ color: textlight, textAlign: 'center' }} numberOfLines={1}>
                                         {step.label}

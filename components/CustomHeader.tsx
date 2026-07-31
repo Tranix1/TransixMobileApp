@@ -61,7 +61,6 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
     };
 
 
-    console.log(currentRole)
 
     return (
         <View style={{ backgroundColor: background, }} >

@@ -145,6 +145,7 @@ export default function AssignmentCard({ assignmentData }: any) {
         assignmentId: string,
         externalLoad: boolean,
         cargoId: string,
+        cargoDetails: any,
         cargoVisibility: string,
         truckId: string,
         fleetCoordinator: coordinatorProps,
@@ -261,7 +262,7 @@ export default function AssignmentCard({ assignmentData }: any) {
             await notifyUserById(
                 fleetCoordinator.id,
                 "Load Started 🚚",
-                `Trip ${assignmentId} is now in transit.`,
+                `Trip ${cargoDetails.productName} is now in transit. with ${truckDetails.numberPlate}`,
                 { pathname: "/Fleet/AssignmentDetails", params: { assignmentId } },
                 { type: "load_in_transit", assignmentId }
             );
@@ -270,11 +271,15 @@ export default function AssignmentCard({ assignmentData }: any) {
                 await notifyUserById(
                     cargoCoordinator.id,
                     "Load In Transit 🚚",
-                    "Your load is now in transit.",
+                    `Your load  ${cargoDetails.productName} is now in transit with ${truckDetails.numberPlate}.`,
                     { pathname: "/Cargo/AssignmentDetails", params: { assignmentId } },
                     { type: "load_in_transit", assignmentId }
                 );
             }
+            ToastAndroid.show(
+                "🚚 Trip started successfully. Drive safely!",
+                ToastAndroid.SHORT
+            );
         } catch (error) {
             console.log("Start trip error:", error);
         }
@@ -379,39 +384,50 @@ export default function AssignmentCard({ assignmentData }: any) {
 
 
 
+
             await notifyUserById(
                 fleetCoordinator.id,
                 "Load Completed ✅",
                 "Trip completed and POD submitted.",
                 {
                     pathname: "/Fleet/AssignmentDetails",
-                    params: { assignmentId }
+                    params: { assignmentId },
                 },
                 {
                     type: "load_completed",
-                    assignmentId
+                    assignmentId,
                 }
             );
 
 
-
             if (externalLoad && cargoCoordinator) {
-
                 await notifyUserById(
                     cargoCoordinator.id,
                     "Load Delivered ✅",
                     "The load has been delivered. Please confirm.",
                     {
                         pathname: "/Cargo/AssignmentDetails",
-                        params: { assignmentId }
+                        params: { assignmentId },
                     },
                     {
                         type: "load_completed",
-                        assignmentId
+                        assignmentId,
                     }
                 );
 
+                console.log("3. Cargo owner notified");
             }
+
+
+            ToastAndroid.show(
+                "✅ Delivery proof submitted. Waiting for confirmation.",
+                ToastAndroid.SHORT
+            );
+
+            console.log("5. Done");
+
+
+
 
 
 
@@ -517,6 +533,10 @@ export default function AssignmentCard({ assignmentData }: any) {
                 void trackAssignmentCompleted(context).catch(console.error);
                 void incrementAssignmentsCompleted(currentRole.accType, analyticsOrganizationIdForApp).catch(console.error);
             }
+            ToastAndroid.show(
+                "🎉 Delivery confirmed. The trip has been completed successfully.",
+                ToastAndroid.SHORT
+            );
         } catch (error) {
             console.log("Confirmation error:", error);
         }
@@ -911,6 +931,7 @@ export default function AssignmentCard({ assignmentData }: any) {
                                     assignmentData.externalLoad,
                                     assignmentData.loadDetails.loadId || assignmentData.loadDetails.cargoId,
                                     assignmentData.loadDetails.visibility,
+                                    assignmentData.loadDetails,
 
                                     assignmentData.truckDetails.truckId,
                                     assignmentData.fleetCoordinator,
@@ -960,8 +981,8 @@ export default function AssignmentCard({ assignmentData }: any) {
                         onPress={() => finishTrip(
                             assignmentData.id,
                             assignmentData.externalLoad,
-                            assignmentData.fleetCoordinatorId.id,
-                            assignmentData.cargoCoordinator.id
+                            assignmentData.fleetCoordinator,
+                            assignmentData.cargoCoordinator
                         )}
                     >
                         <Ionicons name="checkmark-circle-outline" size={18} color="#FFF" />
@@ -974,7 +995,7 @@ export default function AssignmentCard({ assignmentData }: any) {
 
                 {/* OWNER / BROKER CONFIRM */}
                 {(currentRole.accType === "fleet" || currentRole.accType === "brokerage") &&
-                    assignmentData.status === "delivery_submitted" && (
+                    assignmentData.status === "AWAITING_OWNER_CONFIRMATION" && (
                         <TouchableOpacity
                             style={styles.actionButton}
                             onPress={() => {
@@ -1038,7 +1059,7 @@ export default function AssignmentCard({ assignmentData }: any) {
                 </TouchableOpacity>}
 
 
-                {assignmentData.status === "COMPLETED" && assignmentData.externalLoad && currentRole.accType === "brokerage" && <TouchableOpacity
+                {assignmentData.status === "Awaiting Confirmation" && (currentRole.organizationId === assignmentData.cargoCoordinator.organizationId) && (currentRole.accType !== "driver") && <TouchableOpacity
                     style={styles.actionButton}
                     onPress={() =>
 
@@ -1101,27 +1122,26 @@ export default function AssignmentCard({ assignmentData }: any) {
             </View>
 
             {/* NOTES + ISSUES (persisted to Firestore, per-assignment) */}
-                <AssignmentActivityPanel
-                    assignmentId={assignmentData.id}
-                    fleetId={assignmentData?.fleetDetails?.id}
-                    initialNotesCount={assignmentData?.notesCount}
-                    initialIssuesCount={assignmentData?.issuesCount}
-                    cargoRate={assignmentData?.loadDetails?.rate}
-                    cargoRateCurrency={assignmentData?.loadDetails?.currency}
-                    cargoRateModel={assignmentData?.loadDetails?.model}
-                    cargoRatePerKm={assignmentData?.loadDetails?.ratePerKm}
-                    cargoPaymentTerms={assignmentData?.loadDetails.paymentTerms}
-                    fleetCoordinator={assignmentData?.fleetCoordinator}
-                    numberPlate={assignmentData?.truckDetails?.numberPlate}
-                    truckId={assignmentData?.truckDetails?.truckId}
-                    driverPayment={assignmentData?.driverPayment}
-                    driverId={assignmentData.driverDetails.driverId}
-                    driverName={assignmentData.driverDetails.driverName}
-                    
-                    brokerId={assignmentData?.cargoCoordinator?.organizationId || ""}   
-                    brokerName={assignmentData.loadDetails.companyName || ""}
-                />
+            <AssignmentActivityPanel
+                assignmentId={assignmentData.id}
+                fleetId={assignmentData?.fleetDetails?.id}
+                initialNotesCount={assignmentData?.notesCount}
+                initialIssuesCount={assignmentData?.issuesCount}
+                cargoRate={assignmentData?.loadDetails?.rate}
+                cargoRateCurrency={assignmentData?.loadDetails?.currency}
+                cargoRateModel={assignmentData?.loadDetails?.model}
+                cargoRatePerKm={assignmentData?.loadDetails?.ratePerKm}
+                cargoPaymentTerms={assignmentData?.loadDetails.paymentTerms}
+                fleetCoordinator={assignmentData?.fleetCoordinator}
+                numberPlate={assignmentData?.truckDetails?.numberPlate}
+                truckId={assignmentData?.truckDetails?.truckId}
+                driverPayment={assignmentData?.driverPayment}
+                driverId={assignmentData.driverDetails.driverId}
+                driverName={assignmentData.driverDetails.driverName}
 
+                brokerId={assignmentData?.cargoCoordinator?.organizationId || ""}
+                brokerName={assignmentData.loadDetails.companyName || ""}
+            />
         </View >
     );
 
@@ -1136,6 +1156,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+        
     },
 
     cargoHeader: {

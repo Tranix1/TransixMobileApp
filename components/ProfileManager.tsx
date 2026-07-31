@@ -14,6 +14,8 @@ interface ProfileManagerProps {
     onClose?: () => void;
 }
 import { Image } from 'expo-image'
+import { selectImage } from '@/Utilities/imageUtils';
+import ProfileImageModal from './selectImageNoCrop';
 
 
 export default function ProfileManager({  onProfileUpdate, onClose }: ProfileManagerProps) {
@@ -26,7 +28,6 @@ export default function ProfileManager({  onProfileUpdate, onClose }: ProfileMan
         const { user, setupUser, currentRole } = useAuth();
     
 
-    const [profileData, setProfileData] = useState<any>(null);
 
     const handleProfilePress = () => {
         router.push('/Account/Profile');
@@ -36,13 +37,30 @@ export default function ProfileManager({  onProfileUpdate, onClose }: ProfileMan
         onClose?.();
         router.push('/Account/Index');
     };
+        const [profileImageModal, setProfileImageModal] = React.useState(false);
+        const [selectedImage, setSelectedImage] = React.useState<any>(null);
 
+     const handleSelectProfileImage = () => {
+          selectImage((image) => {
+              setSelectedImage(image);
+              setProfileImageModal(true);       
+          });
+      };
   
 
-    const displayUser = profileData
 
     return (
         <View style={[styles.container, { backgroundColor: background }]}>
+
+            
+               <ProfileImageModal
+                                visible={profileImageModal}
+                                image={selectedImage}
+                                onClose={() => setProfileImageModal(false)}
+                                onChangeImage={handleSelectProfileImage}
+            
+                            />
+
             <View style={styles.profileSection}>
                 <View style={styles.profileInfo}>
                     <View style={styles.avatarContainer}>
@@ -65,8 +83,8 @@ export default function ProfileManager({  onProfileUpdate, onClose }: ProfileMan
                         </ThemedText>
                     </View>
 
-                    {!currentRole.companyName && (
-                        <TouchableNativeFeedback onPress={handleProfilePress}>
+                    {!currentRole?.profilePhoto && (
+                        <TouchableNativeFeedback onPress={handleSelectProfileImage}>
                             <View style={styles.alertIcon}>
                                 <Ionicons name='alert-circle-outline' color={icon} size={wp(6)} />
                             </View>

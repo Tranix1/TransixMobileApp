@@ -237,7 +237,7 @@ export const submitLoad = async (params: SubmitLoadParams) => {
       // when a broker assigns a truck that belongs to a different fleet).
       fleetDetails: truck?.organizationDetails ?? truck?.fleetDetails ?? null,
       fleetCoordinator: truck?.assignments?.dispatcher ?? null,
-
+      cargoCoordinator : coordinator ,
       loadDetails,
       truckDetails,
       driverDetails,

@@ -14,6 +14,8 @@ import { hp, wp } from '@/constants/common';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
 import WithdrawModal from '@/components/WithdrawModal';
+import { useAuth } from "@/context/AuthContext";
+
 
 // TODO: implement in referralService.ts — pull from your DB (e.g. Referrals + TrackedVehicles
 // collections) and shape the response as ReferralDashboardData below.
@@ -76,10 +78,13 @@ const ReferralDashboardScreen: React.FC<ReferralDashboardScreenProps> = ({ refer
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [withdrawVisible, setWithdrawVisible] = useState(false);
   const [historyVisible, setHistoryVisible] = useState(false);
+  const { user,  } = useAuth();
+  
 
   const loadData = useCallback(async () => {
     try {
-      const result = await getReferralDashboardData(referrerUserId);
+      if(!user?.uid) return
+      const result = await getReferralDashboardData(user.uid);
       setData(result);
     } catch (error) {
       console.error('Error loading referral dashboard:', error);

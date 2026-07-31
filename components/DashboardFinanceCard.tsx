@@ -98,7 +98,7 @@ const FinanceCard = ({
                             }
                         ]}
                     >
-                        $184,320
+                        $--
                     </ThemedText>
 
 
@@ -128,7 +128,7 @@ const FinanceCard = ({
                             fontWeight:'700'
                         }}
                     >
-                        12.4%
+                        --%
                     </ThemedText>
 
 
@@ -279,7 +279,8 @@ const FinanceItem = ({
 
 
         <ThemedText style={styles.value}>
-            {value}
+            {/* {value} */}
+            --
         </ThemedText>
 
 
@@ -316,7 +317,8 @@ const FinanceRow = ({
 
 
     <ThemedText style={{fontWeight:'700'}}>
-        {value}
+        {/* {value} */}
+        $--
     </ThemedText>
 
 
@@ -339,7 +341,8 @@ const FinanceStat = ({
 
 
     <ThemedText style={styles.statValue}>
-        {value}
+        {/* {value} */}
+        $--
     </ThemedText>
 
 </View>

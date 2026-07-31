@@ -943,6 +943,6 @@ const signUp = async (
     );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const    useAuth = () => useContext(AuthContext);
 
 export type { AlertType, AuthContextValue, LoginCredentials, LoginResponse, SignUpCredentials };

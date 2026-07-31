@@ -123,7 +123,7 @@ const VehicleHealthCard = ({
 
 
                 <ThemedText style={styles.total}>
-                    128 Vehicles
+                    -- Vehicles
                 </ThemedText>
 
 
@@ -165,7 +165,8 @@ const HealthStatus = ({
                 }
             ]}
         >
-            {value}
+            {/* {value} */}
+            --
         </ThemedText>
 
 

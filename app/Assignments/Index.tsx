@@ -666,6 +666,9 @@ function Jobs() {
                     )}
                     onEndReached={loadMoreAssignments}
                     onEndReachedThreshold={0.5}
+                      contentContainerStyle={{paddingBottom: 80, }}
+
+
                     refreshControl={
                         <RefreshControl
                             refreshing={refreshing}
@@ -676,15 +679,18 @@ function Jobs() {
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
                             {isLoading ? (
-                                <>
+                                <View style={{}}>
+                                    <View style={{alignSelf:"center"}}>  
+
                                     <AccentRingLoader color={accent} size={32} dotSize={6} />
+                                    </View>
                                     <ThemedText type='defaultSemiBold' style={styles.emptyText}>
                                         Loading Assignments…
                                     </ThemedText>
                                     <ThemedText type='tiny' style={styles.emptySubtext}>
                                         Please Wait
                                     </ThemedText>
-                                </>
+                                </View>
                             ) : error ? (
                                 <>
                                     <Ionicons name="alert-circle-outline" size={wp(8)} color="#ef4444" />
@@ -727,7 +733,9 @@ function Jobs() {
                     }
                     ListFooterComponent={
                         loadingMore ? (
-                            <AccentRingLoader color={accent} size={20} dotSize={4} />
+                            <View style={{alignSelf:"center"}}>
+                                <AccentRingLoader color={accent} size={20} dotSize={4}  />
+                                </View>
 
                         ) :
                             (!lastVisible && assignedCargo.length > 0) ?

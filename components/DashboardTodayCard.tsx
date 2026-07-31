@@ -107,7 +107,8 @@ const TodayCard = ({
 
                 <View>
                     <ThemedText style={styles.amount}>
-                        $4,250
+                        {/* $4,250 */}
+                        --
                     </ThemedText>
 
                     <ThemedText style={styles.label}>
@@ -118,7 +119,8 @@ const TodayCard = ({
 
                 <View>
                     <ThemedText style={styles.amount}>
-                        18
+                        {/* 18 */}
+                        --
                     </ThemedText>
 
                     <ThemedText style={styles.label}>
@@ -140,7 +142,8 @@ const TodayCard = ({
         </ThemedText>
 
         <ThemedText style={styles.progressPercent}>
-            72%
+            --%
+
         </ThemedText>
 
     </View>
@@ -268,7 +271,8 @@ const TodayMini = ({
             <View>
 
                 <ThemedText style={styles.miniValue}>
-                    {value}
+                    {/* {value} */}
+                    --
                 </ThemedText>
 
 
