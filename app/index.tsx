@@ -15,7 +15,6 @@ import Wallet from "./Wallet/Index";
 // import Jobs from "./Fleet/DriverScreens/Jobs/Index";
 import Jobs from "./Assignments/Index"
 import Trucks from "./Fleet/DriverScreens/Trucks/Index";
-import Earnings from "./Fleet/DriverScreens/Earnings/Index";
 import DriverProfile from "./Fleet/DriverScreens/Profile/Index";
 import ChatIndex from "./Chats/Index";
 
@@ -52,6 +51,8 @@ import CreateFleet from "./Fleet/CreateFleet";
 import CreateDriverAcc from "./Driver/Add/Index"
 import CreateBrokerageAcc from "./brokerage/CreateBrokerage/Index"
 import SubscriptionPaymentModal from "@/components/SubscriptionPaymentModal";
+import DriverFinance from "./Driver/Finance/Index";
+import BrokerageFinance from "./brokerage/Finance/Index";
 
 const Tab = createBottomTabNavigator();
 
@@ -318,7 +319,7 @@ const {
                       <Tab.Screen name="Jobs" component={Jobs} />
                       <Tab.Screen name="Trucks" component={Trucks} />
                       {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
-                      <Tab.Screen name="Earnings" component={Earnings} />
+                      <Tab.Screen name="Earnings" component={DriverFinance} />
                     </>
                   ) : (typeof currentRole === 'object' && currentRole.accType === 'driver' && currentRole.userRole === "create_Acc") ?
                     (<>
@@ -337,7 +338,7 @@ const {
                           <Tab.Screen name="Loads" component={Loads} />
                           <Tab.Screen name="Trucks" component={LogisticsTrucks} />
                           {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
-                          <Tab.Screen name="Wallet" component={Wallet} />
+                          <Tab.Screen name="Wallet" component={BrokerageFinance} />
                         </>
                       )
                         : (typeof currentRole === 'object' && currentRole.accType === 'brokerage' && currentRole.userRole === "create_Acc") ?

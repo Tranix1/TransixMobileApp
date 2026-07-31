@@ -557,6 +557,15 @@ function AddTrucks() {
           accType: currentRole?.accType,
           location: currentRole.billingAddress || currentRole.baseAdress || null
         },
+         assignments: {
+            dispatcher: {
+              id  : user.uid,
+              name: user.displayName,
+              phoneNumber: user.phoneNumber,
+              organizationId: currentRole?.organizationId || currentRole?.fleetId || null
+            }
+          },
+        
 
         subscription: subscriptionData,
 
@@ -583,7 +592,7 @@ function AddTrucks() {
           minRatePerKm: fleetConfig?.truckDefaults?.notification?.ratePerKm || null,
           assignments: {
             dispatcher: {
-              id: user.uid,
+              id  : user.uid,
               name: user.displayName,
               phoneNumber: user.phoneNumber,
               organizationId: currentRole?.organizationId || currentRole?.fleetId || null

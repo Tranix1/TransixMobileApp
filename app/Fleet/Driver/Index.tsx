@@ -392,7 +392,7 @@ export default function DriverIndex() {
     const coolGray = useThemeColor('coolGray');
 
     const { driverId } = useLocalSearchParams();
-    const { currentRole } = useAuth();
+    const { currentRole , user} = useAuth();
     const currentFleet = currentRole
 
 
@@ -709,13 +709,14 @@ export default function DriverIndex() {
                 status: "pending",
                 invitedAt: Date.now(),
                 role: "fleet",
-                userRole: "driver"
+                userRole: "driver" ,
+                createdBy : user?.uid ,
             };
 
             // Update each selected driver
             await Promise.all(selectedDrivers.map(async (driver) => {
                 await updateDocument('personalData', driver.userId, {
-                    accesibleFleets: arrayUnion({ ...fleetUpdate, driverId: `DRV_${driver?.userId}` }), // Use arrayUnion to avoid overwriting existing data
+                    accesibleFleets: arrayUnion({ ...fleetUpdate, driverId: `DRV_${driver?.userId}`,phoneNumber: driver.phoneNumber,  profilePhoto : driver.profilePhoto    }), // Use arrayUnion to avoid overwriting existing data
                     updatedAt: serverTimestamp(),
 
                 });
@@ -740,7 +741,7 @@ export default function DriverIndex() {
                 },
                 {
                     type: "fleet_invitation",
-                    organizationId : currentRole.organizationId,
+                    organizationId : currentRole.organizationId,    
                 }
             );
 

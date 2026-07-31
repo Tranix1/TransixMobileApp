@@ -13,6 +13,7 @@ import { hp, wp } from "@/constants/common";
 import { db } from "@/db/fireBaseConfig";
 import { setDoc, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { handleSubmitReferralCode } from "@/Utilities/handleSubmitRefferalCode";
+import { notifyUserById } from "@/Utilities/pushNotification";
 
 interface FleetAccess {
     fleetId: string;
@@ -133,91 +134,61 @@ function FleetSelector() {
 
     // }
 
+
     const handleDriverDecision = async (fleet: any, decision: 'active' | 'declined') => {
         try {
             if (user?.uid) {
-
-                // setRefreshing(true); // Assuming you have a loading state
-
-                // 1. Update the user's document
-                // We need to find the specific fleet in the array and update its 'accepted' status
-                const userRef = doc(db, 'personalData', user?.uid); // Ensure you have the current userId
-                const updatedAccessibleFleetss = accessibleFleets.map((f: any) =>
+                const userRef = doc(db, 'personalData', user?.uid);
+                const updatedAccessibleFleets = accessibleFleets.map((f: any) =>
                     f.fleetId === fleet.fleetId ? { ...f, status: decision } : f
                 );
 
-                await updateDoc(userRef, { accesibleFleets: updatedAccessibleFleetss });
+                await updateDoc(userRef, { accesibleFleets: updatedAccessibleFleets });
 
-
-                // 2. Update the Fleet's 'Drivers' sub-collection
-                // If accepted, we might want to ensure the driver exists there
                 if (decision === 'active') {
-
                     const driverRef = doc(db, 'fleets', fleet.fleetId, 'Drivers', `DRV_${user?.uid}`);
                     await setDoc(driverRef, {
                         status: 'active',
                         joinedAt: new Date().toISOString(),
-                        // Add any other default fields needed
                     }, { merge: true });
-
-                    const contactDetails = {
-                        userName: user?.displayName,
-                        email: user?.email,
-                        phoneNumber: user?.phoneNumber,
-                        photoUrl: user?.photoURL,
-                        userId: user?.uid,
-                        userRole: "driver",
-                        status: "active",
-                    }
-
-                    const contactRef = doc(db, 'fleets', fleet.fleetId, 'Contacts', `DRV_${user?.uid}`);
-                    await setDoc(contactRef, contactDetails);
-
-
-
-                    const partershipId = [fleet.fleetId, `DRV_${user.uid}`].sort().join("_");
-
-                    const checkPartershipExist = await readById("partners", partershipId)
-                    if (!checkPartershipExist) {
-                        addDocumentWithId("partners", partershipId, {
-                            partnerAId: fleet.fleetId,
-                            partnerAName: fleet.companyName || fleet.fleetName,
-                            partnerAAccType: "fleet",
-
-                            partnerBId: `DRV_${user.uid}`,
-                            partnerBName: user?.displayName,
-                            partnerBAccType: "driver",
-                            active: true,
-
-                        })
-                    }
-
 
 
                 } else {
-                    // If declined, we remove them from the fleet's active list
-
-                    const driverRef = doc(db, 'fleets', fleet?.fleetId, 'Drivers', user.uid);
-
+                    const driverRef = doc(db, 'fleets', fleet?.fleetId, 'Drivers', `DRV_${user?.uid}`);
                     await setDoc(driverRef, {
                         status: 'declined',
                         joinedAt: new Date().toISOString(),
-                        // Add any other default fields needed
                     }, { merge: true });
-
                 }
 
-                // Optionally refresh your local state
+
+                await notifyUserById(
+                    fleet.createdBy,
+                    `🎉 Driver ${decision} Your Fleet`,
+                    `${user.displayName || "A driver"} ${decision} your invitation to join ${fleet.fleetName}.`,
+                    {
+                        pathname: "/Fleet/Drivers",
+                        params: {
+                            organizationId: fleet.fleetId,
+                            driverId: user.uid,
+                        },
+                    },
+                    {
+                        type: "driver_accepted_fleet_invitation",
+                        organizationId: fleet.fleetId,
+                        driverId: user.uid,
+                        fleetName: fleet.fleetName,
+                    }
+                );
+
+
                 ToastAndroid.show(`Fleet invitation ${decision} successfully!`, ToastAndroid.SHORT);
-
             }
-
         } catch (error) {
             console.error("Error updating fleet decision:", error);
-        } finally {
-            // setRefreshing(false);
         }
     };
+
 
 
 

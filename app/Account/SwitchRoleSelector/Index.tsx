@@ -13,6 +13,7 @@ import { hp, wp } from "@/constants/common";
 import { db } from "@/db/fireBaseConfig";
 import { setDoc, doc, updateDoc } from "firebase/firestore";
 import { handleSubmitReferralCode } from "@/Utilities/handleSubmitRefferalCode";
+import { notifyUserById } from "@/Utilities/pushNotification";
 
 interface FleetAccess {
     fleetId: string;
@@ -43,7 +44,7 @@ function SwitchRoleSelector() {
 
     // ---------- shared referral handlers ----------
 
-   
+
 
     const handleRefresh = async () => {
         if (user) {
@@ -76,7 +77,7 @@ function SwitchRoleSelector() {
         if (!fleet) return;
 
         const fleetId = fleet.fleetId || fleet.organizationId;
-        const fleetStatus =  await getVerifiedStatus(fleetId);
+        const fleetStatus = await getVerifiedStatus(fleetId);
 
         if (fleetStatus !== 'approved') {
             ToastAndroid.show(
@@ -107,6 +108,8 @@ function SwitchRoleSelector() {
             email: fleet.organizationEmail,
             billingAddress: fleet?.billingAddressFull,
             baseAdress: fleet?.baseAdressFull,
+            profilePhoto: fleet?.profilePhoto,
+
         };
 
         await AsyncStorage.setItem('currentRole', JSON.stringify(fleetRole));
@@ -125,7 +128,7 @@ function SwitchRoleSelector() {
         if (!brokerage) return;
 
         const brokerId = brokerage.organizationId || brokerage.brokerageId || brokerage.id;
-        const brokerStatus =  await getVerifiedStatus(brokerId);
+        const brokerStatus = await getVerifiedStatus(brokerId);
 
         if (brokerStatus !== 'approved') {
             ToastAndroid.show(
@@ -149,6 +152,9 @@ function SwitchRoleSelector() {
             phone: `${brokerage.countryCode}${brokerage?.organizationPhone}`,
             email: brokerage.organizationEmail,
             location: brokerage?.location,
+            profilePhoto: brokerage?.profilePhoto,
+            
+
         };
 
         await AsyncStorage.setItem('currentRole', JSON.stringify(brokerageRole));
@@ -204,18 +210,7 @@ function SwitchRoleSelector() {
                         joinedAt: new Date().toISOString(),
                     }, { merge: true });
 
-                    const contactDetails = {
-                        userName: user?.displayName,
-                        email: user?.email,
-                        phoneNumber: user?.phoneNumber,
-                        photoUrl: user?.photoURL,
-                        userId: user?.uid,
-                        userRole: "driver",
-                        status: "active",
-                    };
 
-                    const contactRef = doc(db, 'fleets', fleet.fleetId, 'Contacts', `DRV_${user?.uid}`);
-                    await setDoc(contactRef, contactDetails);
                 } else {
                     const driverRef = doc(db, 'fleets', fleet?.fleetId, 'Drivers', `DRV_${user?.uid}`);
                     await setDoc(driverRef, {
@@ -223,6 +218,27 @@ function SwitchRoleSelector() {
                         joinedAt: new Date().toISOString(),
                     }, { merge: true });
                 }
+
+
+                await notifyUserById(
+                    fleet.createdBy,
+                    `🎉 Driver ${decision} Your Fleet`,
+                    `${user.displayName || "A driver"} ${decision} your invitation to join ${fleet.fleetName}.`,
+                    {
+                        pathname: "/Fleet/Drivers",
+                        params: {
+                            organizationId: fleet.fleetId,
+                            driverId: user.uid,
+                        },
+                    },
+                    {
+                        type: "driver_accepted_fleet_invitation",
+                        organizationId: fleet.fleetId,
+                        driverId: user.uid,
+                        fleetName: fleet.fleetName,
+                    }
+                );
+
 
                 ToastAndroid.show(`Fleet invitation ${decision} successfully!`, ToastAndroid.SHORT);
             }
@@ -254,10 +270,11 @@ function SwitchRoleSelector() {
             organizationName: driver.companyName || driver.fleetName,
             organizationId: driver.fleetId,
 
-            phone: `${driver.countryCode}${driver?.organizationPhone}`,
+            phone: driver.phoneNumber,
             email: driver.organizationEmail,
             billingAddress: driver?.billingAddressFull,
-            baseAdress: driver?.baseAdressFull
+            baseAdress: driver?.baseAdressFull,
+            profilePhoto: driver?.profilePhoto,
 
         };
 
@@ -266,9 +283,6 @@ function SwitchRoleSelector() {
         setCurrentRole(fleetRole as any)
         router.replace('/');
     };
-
-
-
 
 
     if (!user) {

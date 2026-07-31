@@ -223,7 +223,7 @@ export default function AssignmentCard({ assignmentData }: any) {
 
             // --- Org-level in-transit stats ---
             const inTransitBatch = writeBatch(db);
-            incrementOrgStats(inTransitBatch, fleetCoordinator.organizationId, { "privateLoads.inTransit": 1 });
+            incrementOrgStats(inTransitBatch, `${currentRole.organizationId}`, { "privateLoads.inTransit": 1 });
             if (externalLoad && cargoCoordinator) {
                 incrementOrgStats(inTransitBatch, cargoCoordinator.organizationId, { "publicLoads.inTransit": 1 });
             }
@@ -279,6 +279,8 @@ export default function AssignmentCard({ assignmentData }: any) {
             console.log("Start trip error:", error);
         }
     };
+
+
 
     const finishTrip = async (
         assignmentId: string,
@@ -421,6 +423,8 @@ export default function AssignmentCard({ assignmentData }: any) {
 
 
     };
+
+
 
 
 

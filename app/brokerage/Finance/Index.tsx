@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { wp } from '@/constants/common';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
+import CustomHeader from '@/components/CustomHeader';
 
 interface BrokerageFinanceEntry {
   id: string;
@@ -107,22 +108,23 @@ const BrokerageFinance = () => {
 
   return (
     <View style={[styles.page, { backgroundColor: background }]}> 
-      <Heading page='Brokerage Finance' />
+    <CustomHeader pageTitle="Finance" />
+
       <ScrollView contentContainerStyle={styles.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         <View style={[styles.summaryGrid, { backgroundColor: backgroundLight }]}> 
-          <View style={[styles.summaryCard, { backgroundColor }]}> 
+          <View style={[styles.summaryCard, { backgroundColor : background }]}> 
             <ThemedText type='defaultSemiBold'>Subscription Payments</ThemedText>
             <ThemedText type='title'>{subscriptionPayments.toLocaleString()}</ThemedText>
           </View>
-          <View style={[styles.summaryCard, { backgroundColor }]}> 
+          <View style={[styles.summaryCard, { backgroundColor :background}]}> 
             <ThemedText type='defaultSemiBold'>Referral Earnings</ThemedText>
             <ThemedText type='title'>{referralEarnings.toLocaleString()}</ThemedText>
           </View>
-          <View style={[styles.summaryCard, { backgroundColor }]}> 
+          <View style={[styles.summaryCard, { backgroundColor :background }]}> 
             <ThemedText type='defaultSemiBold'>Payments</ThemedText>
             <ThemedText type='title'>{payments.toLocaleString()}</ThemedText>
           </View>
-          <View style={[styles.summaryCard, { backgroundColor }]}> 
+          <View style={[styles.summaryCard, { backgroundColor:background }]}> 
             <ThemedText type='defaultSemiBold'>Status</ThemedText>
             <ThemedText type='title'>{status}</ThemedText>
           </View>

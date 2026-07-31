@@ -12,7 +12,6 @@ import {
     ToastAndroid,
     RefreshControl,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useAuth } from '@/context/AuthContext';
 import CustomHeader from '@/components/CustomHeader';
@@ -23,22 +22,11 @@ import { db } from '@/db/fireBaseConfig';
 import { collection, getDocs, doc, updateDoc, where } from 'firebase/firestore';
 import Heading from '@/components/Heading';
 import { wp, hp } from '@/constants/common';
-import Input from '@/components/Input';
-import { getRelativeTime } from '@/Utilities/getDateRelativeTime';
 import { fetchDocuments, updateDocument, uploadImage } from '@/db/operations';
-import * as ImagePicker from "expo-image-picker";
-import { takePhoto, selectMultipleImages } from '@/Utilities/photoPickerUtils';
-import { Image } from 'expo-image';
-import { ImagePickerAsset } from 'expo-image-picker';
-import DriverDefaultModal from '@/components/DriverDefaultModal';
-import FinancePanel from '@/components/FinancePanel';
-import TruckDefaultModal from '@/components/TruckDefaultModal';
+
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import AssignmentCard from '@/components/AssignmentComponent';
 import AccentRingLoader from '@/components/AccentRingLoader';
-import { trackAssignmentCompleted, trackAssignmentStarted } from '@/services/analytics/appAnalytics';
-import { incrementAssignmentsCompleted, incrementAssignmentsStarted } from '@/services/analytics/dashboardAnalytics';
-import { incrementCompletedTrips, incrementActiveTrips } from '@/services/analytics/organizationAnalytics';
 
 // ---------------------------------------------------------------------------
 // Independent Assignments page for Fleet / Broker use.
@@ -718,7 +706,7 @@ function Jobs() {
                                     <TouchableOpacity onPress={() => router.push("/Logistics/Loads/AddLoads")} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}
                                     >
                                         <ThemedText style={{ color: '#666' }}>
-                                            Create a load to get started. Post it privately or request carriers from the network.
+                                            Create a load to get started.
                                         </ThemedText>
 
                                         <Ionicons
@@ -821,8 +809,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
-        backgroundColor: "#455A64",
-        paddingHorizontal: 14,
+        paddingHorizontal: 10,
         paddingVertical: 10,
         borderRadius: 8,
     },

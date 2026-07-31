@@ -28,11 +28,6 @@ export default function ProfileManager({  onProfileUpdate, onClose }: ProfileMan
 
     const [profileData, setProfileData] = useState<any>(null);
 
-   
-
-
-   
-
     const handleProfilePress = () => {
         router.push('/Account/Profile');
     };

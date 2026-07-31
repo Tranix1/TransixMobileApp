@@ -7,7 +7,6 @@ import { useAuth } from '@/context/AuthContext';
 import { wp } from '@/constants/common';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
-import { FinancePanel } from '@/components/FinancePanel';
 
 interface DriverFinanceEntry {
   id: string;
@@ -80,7 +79,7 @@ const DriverFinance = () => {
 
   const renderTransaction = ({ item }: { item: DriverFinanceEntry }) => {
     return (
-      <View style={[styles.transactionCard, { backgroundColor: backgroundLight, borderColor: accent }]}> 
+      <View style={[styles.transactionCard, { backgroundColor: backgroundLight, borderColor: accent }]}>
         <View style={styles.transactionHeader}>
           <ThemedText type='defaultSemiBold'>{item.entryType === 'INCOME' ? 'Earning' : 'Payment'}</ThemedText>
           <ThemedText type='defaultSemiBold' style={{ color: item.entryType === 'INCOME' ? '#2E7D32' : '#D32F2F' }}>
@@ -114,29 +113,41 @@ const DriverFinance = () => {
   };
 
   return (
-    <View style={[styles.page, { backgroundColor: background }]}> 
+    <View style={[styles.page, { backgroundColor: background }]}>
       <Heading page='Driver Finance' />
       <ScrollView contentContainerStyle={styles.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-        <View style={[styles.summaryGrid, { backgroundColor: backgroundLight }]}> 
-          <View style={[styles.summaryCard, { backgroundColor }]}> 
-            <ThemedText type='defaultSemiBold'>Earnings</ThemedText>
-            <ThemedText type='title'>{earnings.toLocaleString()}</ThemedText>
+        <View style={[styles.summaryGrid, { backgroundColor: backgroundLight }]}>
+          <View style={[styles.summaryCard, { backgroundColor: background }]}>
+            <ThemedText type="tiny">Earnings</ThemedText>
+            <ThemedText style={styles.summaryNumber}>
+              {earnings.toLocaleString()}
+            </ThemedText>
           </View>
-          <View style={[styles.summaryCard, { backgroundColor }]}> 
-            <ThemedText type='defaultSemiBold'>Payments</ThemedText>
-            <ThemedText type='title'>{payments.toLocaleString()}</ThemedText>
+
+          <View style={[styles.summaryCard, { backgroundColor: background }]}>
+            <ThemedText type="tiny">Payments</ThemedText>
+            <ThemedText style={styles.summaryNumber}>
+              {payments.toLocaleString()}
+            </ThemedText>
           </View>
-          <View style={[styles.summaryCard, { backgroundColor }]}> 
-            <ThemedText type='defaultSemiBold'>Balance</ThemedText>
-            <ThemedText type='title'>{balance.toLocaleString()}</ThemedText>
+
+          <View style={[styles.summaryCard, { backgroundColor: background }]}>
+            <ThemedText type="tiny">Balance</ThemedText>
+            <ThemedText style={styles.summaryNumber}>
+              {payments.toLocaleString()}
+            </ThemedText>
           </View>
-          <View style={[styles.summaryCard, { backgroundColor }]}> 
-            <ThemedText type='defaultSemiBold'>Status</ThemedText>
-            <ThemedText type='title'>{status}</ThemedText>
+
+          <View style={[styles.summaryCard, { backgroundColor: background }]}>
+            <ThemedText type="tiny">Status</ThemedText>
+            <ThemedText style={styles.summaryNumber}>
+              {status}
+            </ThemedText>
           </View>
         </View>
 
-        <View style={[styles.section, { backgroundColor: backgroundLight }]}> 
+
+        <View style={[styles.section, { backgroundColor: backgroundLight }]}>
           <ThemedText type='subtitle' style={styles.sectionTitle}>Transactions</ThemedText>
           {loading ? (
             <ActivityIndicator size='large' color={accent} />
@@ -163,15 +174,7 @@ const styles = StyleSheet.create({
     padding: wp(4),
     gap: wp(4),
   },
-  summaryGrid: {
-    borderRadius: wp(4),
-    padding: wp(4),
-    gap: wp(3),
-  },
-  summaryCard: {
-    borderRadius: wp(3),
-    padding: wp(3),
-  },
+
   section: {
     borderRadius: wp(4),
     padding: wp(4),
@@ -193,6 +196,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: wp(2),
+  },
+  summaryGrid: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: wp(2),
+    borderRadius: wp(3),
+  },
+
+  summaryCard: {
+    flex: 1,
+    marginHorizontal: wp(1),
+    borderRadius: wp(2),
+    paddingVertical: wp(2),
+    alignItems: "center",
+  },
+
+  summaryNumber: {
+    fontSize: wp(4),
+    fontWeight: "700",
+    marginTop: wp(0.5),
   },
 });
 
