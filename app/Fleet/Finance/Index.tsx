@@ -296,7 +296,7 @@ export default function FleetFinanceScreen() {
 
     const fleetId = currentRole.organizationId|| currentRole.fleetId || ""
 
-    const [activeTab, setActiveTab] = useState<TopTab>("OVERVIEW");
+    const [activeTab, setActiveTab] = useState<TopTab>("Fleet_Operations");
 
     // ---------- entries ----------
     const [entries, setEntries] = useState<FleetFinanceEntry[]>([]);
@@ -334,11 +334,7 @@ const [refreshing, setRefreshing] = useState(false)
     const [vehicleRef, setVehicleRef] = useState("");
     const [customFields, setCustomFields] = useState<CustomField[]>([]);
 
-    // ---------- trip expense form state ----------
-    const [tripSubcategory, setTripSubcategory] = useState<string>("Tolls");
-    const [tripAmount, setTripAmount] = useState("");
-    const [tripNote, setTripNote] = useState("");
-    const [tripRef, setTripRef] = useState("");
+ 
 
     // ---------- tyre form state ----------
     const [tyreVehicleRef, setTyreVehicleRef] = useState("");
