@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, Alert, ScrollView } from 'react-native';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import Heading from '@/components/Heading';
 import { ThemedText } from '@/components/ThemedText';
@@ -11,7 +11,7 @@ import Button from '@/components/Button';
 
 const UpdateVersion = () => {
     const [version, setVersion] = useState('1.0.1');
-    const [forceUpdate, setForceUpdate] = useState(false);
+    const [minVersion, setMinVersion] = useState('1.0.0');
     const [updateMessage, setUpdateMessage] = useState('New features and bug fixes available!');
     const [isLoading, setIsLoading] = useState(false);
     const [currentVersion, setCurrentVersion] = useState<string | null>(null);
@@ -34,7 +34,7 @@ const UpdateVersion = () => {
             if (versionData) {
                 setCurrentVersion(versionData.version);
                 setVersion(versionData.version);
-                setForceUpdate(versionData.forceUpdate);
+                setMinVersion(versionData.minVersion || versionData.version);
                 setUpdateMessage(versionData.updateMessage || '');
                 setDebugInfo(`Loaded version: ${versionData.version}`);
             } else {
@@ -48,7 +48,19 @@ const UpdateVersion = () => {
 
     const handleUpdateVersion = async () => {
         if (!version.trim()) {
-            Alert.alert('Error', 'Please enter a version number');
+            Alert.alert('Error', 'Please enter a latest version number');
+            return;
+        }
+
+        if (!minVersion.trim()) {
+            Alert.alert('Error', 'Please enter a minimum supported version number');
+            return;
+        }
+
+        // minVersion can never be greater than the latest version — that would
+        // force everyone to update past a version that doesn't exist yet.
+        if (compareGuard(minVersion.trim(), version.trim())) {
+            Alert.alert('Error', 'Minimum version cannot be greater than the latest version');
             return;
         }
 
@@ -58,7 +70,7 @@ const UpdateVersion = () => {
         try {
             const success = await setAppVersion({
                 version: version.trim(),
-                forceUpdate,
+                minVersion: minVersion.trim(),
                 updateMessage: updateMessage.trim(),
                 lastUpdated: new Date(),
             });
@@ -129,14 +141,32 @@ const UpdateVersion = () => {
 
                 <View style={styles.inputContainer}>
                     <ThemedText type="default" style={styles.label}>
-                        Version Number
+                        Latest Version
                     </ThemedText>
                     <Input
                         value={version}
                         onChangeText={setVersion}
-                        placeholder="e.g., 1.0.1"
+                        placeholder="e.g., 1.2.0"
                         keyboardType="numeric"
                     />
+                    <ThemedText type="tiny" style={[styles.hint, { color: coolGray }]}>
+                        Users below this (but at or above Minimum Version) see an optional "Update Available" prompt.
+                    </ThemedText>
+                </View>
+
+                <View style={styles.inputContainer}>
+                    <ThemedText type="default" style={styles.label}>
+                        Minimum Supported Version
+                    </ThemedText>
+                    <Input
+                        value={minVersion}
+                        onChangeText={setMinVersion}
+                        placeholder="e.g., 1.0.5"
+                        keyboardType="numeric"
+                    />
+                    <ThemedText type="tiny" style={[styles.hint, { color: coolGray }]}>
+                        Users below this version are force-updated and cannot use the app.
+                    </ThemedText>
                 </View>
 
                 <View style={styles.inputContainer}>
@@ -150,21 +180,6 @@ const UpdateVersion = () => {
                         multiline
                         numberOfLines={3}
                     />
-                </View>
-
-                <View style={styles.switchContainer}>
-                    <ThemedText type="default" style={styles.label}>
-                        Force Update
-                    </ThemedText>
-                    <TouchableOpacity
-                        style={[styles.switch, { backgroundColor: forceUpdate ? accent : coolGray }]}
-                        onPress={() => setForceUpdate(!forceUpdate)}
-                    >
-                        <View style={[styles.switchThumb, {
-                            backgroundColor: 'white',
-                            transform: [{ translateX: forceUpdate ? 20 : 0 }]
-                        }]} />
-                    </TouchableOpacity>
                 </View>
 
                 <View style={styles.buttonContainer}>
@@ -191,6 +206,25 @@ const UpdateVersion = () => {
         </ScreenWrapper>
     );
 };
+
+/**
+ * Returns true if `min` is strictly greater than `latest` (invalid config).
+ * Inline to avoid a second import for a single comparison; swap for
+ * compareVersions from versionCompare.ts if you'd rather share the logic.
+ */
+function compareGuard(min: string, latest: string): boolean {
+    const minParts = min.split('.').map((n) => parseInt(n, 10) || 0);
+    const latestParts = latest.split('.').map((n) => parseInt(n, 10) || 0);
+    const length = Math.max(minParts.length, latestParts.length);
+
+    for (let i = 0; i < length; i++) {
+        const a = minParts[i] ?? 0;
+        const b = latestParts[i] ?? 0;
+        if (a > b) return true;
+        if (a < b) return false;
+    }
+    return false;
+}
 
 const styles = StyleSheet.create({
     container: {
@@ -220,23 +254,8 @@ const styles = StyleSheet.create({
         marginBottom: wp(2),
         fontWeight: '600',
     },
-    switchContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: wp(6),
-    },
-    switch: {
-        width: 50,
-        height: 30,
-        borderRadius: 15,
-        padding: 2,
-        justifyContent: 'center',
-    },
-    switchThumb: {
-        width: 26,
-        height: 26,
-        borderRadius: 13,
+    hint: {
+        marginTop: wp(1),
     },
     buttonContainer: {
         gap: wp(3),
@@ -244,5 +263,3 @@ const styles = StyleSheet.create({
 });
 
 export default UpdateVersion;
-
-

@@ -3,10 +3,9 @@ import { db } from '@/db/fireBaseConfig';
 
 interface AppVersionConfig {
     version: string;
-    forceUpdate: boolean;
-    updateMessage?: string;
-    lastUpdated: any;
-    minSupportedVersion?: string;
+    minVersion: string;
+    updateMessage: string;
+    lastUpdated: Date;
 }
 
 /**
@@ -52,10 +51,10 @@ export const getAppVersion = async (): Promise<AppVersionConfig | null> => {
  */
 export const setupInitialVersion = async () => {
     const initialVersion: AppVersionConfig = {
-        version: '1.0.1', // Set this to your latest version
-        forceUpdate: false, // Set to true if you want to force users to update
+        version: '1.0.1', // Latest version
+        minVersion: '1.0.0', // Minimum version that can still use the app without a force update
         updateMessage: 'New features and bug fixes available!',
-        minSupportedVersion: '1.0.0', // Minimum version that can still use the app
+        lastUpdated: new Date(),
     };
 
     return await setAppVersion(initialVersion);
@@ -65,19 +64,71 @@ export const setupInitialVersion = async () => {
  * Helper function to create version documents for testing
  */
 export const createTestVersions = async () => {
-    // Example: Force update scenario
+    // Example: force-update scenario (currentVersion below minVersion triggers 'force')
     await setAppVersion({
-        version: '1.1.0',
-        forceUpdate: true,
+        version: '1.2.0',
+        minVersion: '1.1.0',
         updateMessage: 'Critical security update required. Please update immediately.',
-        minSupportedVersion: '1.0.0',
+        lastUpdated: new Date(),
     });
 
-    // Example: Optional update scenario
+    // Example: optional-update scenario (currentVersion at/above minVersion but below version)
     await setAppVersion({
         version: '1.0.2',
-        forceUpdate: false,
+        minVersion: '1.0.0',
         updateMessage: 'New features and improvements available!',
-        minSupportedVersion: '1.0.0',
+        lastUpdated: new Date(),
     });
 };
+
+// ---------------------------------------------------------------------------
+// Version comparison + update-state resolution
+// ---------------------------------------------------------------------------
+
+export type UpdateType = 'force' | 'optional' | 'none';
+
+export interface VersionInfo {
+    currentVersion: string;
+    minVersion: string;
+    latestVersion: string;
+}
+
+/**
+ * Compares two version strings.
+ * Returns: -1 if a < b, 0 if a === b, 1 if a > b.
+ * Handles version strings of any segment length ("1.2" === "1.2.0").
+ */
+export function compareVersions(a: string, b: string): number {
+    const aParts = a.split('.').map((n) => parseInt(n, 10) || 0);
+    const bParts = b.split('.').map((n) => parseInt(n, 10) || 0);
+    const length = Math.max(aParts.length, bParts.length);
+
+    for (let i = 0; i < length; i++) {
+        const aSeg = aParts[i] ?? 0;
+        const bSeg = bParts[i] ?? 0;
+        if (aSeg > bSeg) return 1;
+        if (aSeg < bSeg) return -1;
+    }
+    return 0;
+}
+
+export const isVersionLessThan = (a: string, b: string): boolean => compareVersions(a, b) < 0;
+export const isVersionGreaterOrEqual = (a: string, b: string): boolean => compareVersions(a, b) >= 0;
+
+/**
+ * Resolves the update state a user should see given their current version
+ * and the app's configured min/latest versions.
+ *
+ * - currentVersion < minVersion            -> 'force'
+ * - minVersion <= currentVersion < latest  -> 'optional'
+ * - currentVersion >= latestVersion        -> 'none'
+ */
+export function getUpdateType({ currentVersion, minVersion, latestVersion }: VersionInfo): UpdateType {
+    if (isVersionLessThan(currentVersion, minVersion)) {
+        return 'force';
+    }
+    if (isVersionLessThan(currentVersion, latestVersion)) {
+        return 'optional';
+    }
+    return 'none';
+}

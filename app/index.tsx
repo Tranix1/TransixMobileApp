@@ -73,6 +73,8 @@ export default function Index() {
 
   const { currentRole  } = useAuth();
 
+
+
 const {
     isLoading: authLoading,
     isAuthenticated,
@@ -120,12 +122,12 @@ const {
 
   const {
     showUpdateModal,
+    updateType,
     currentVersion,
     latestVersion,
-    isForceUpdate,
     checkForUpdate,
     dismissUpdate,
-  } = useAppUpdate();
+} = useAppUpdate();
 
 
   // Check if profile details are missing
@@ -360,8 +362,16 @@ const {
                             )}
         </Tab.Navigator>
 
-        <UpdateModal visible={showUpdateModal} onClose={dismissUpdate} currentVersion={currentVersion} latestVersion={latestVersion} updateUrl="https://play.google.com/store/apps/details?id=com.yayapana.TransixNewVersion" isForceUpdate={isForceUpdate} />
+       
 
+<UpdateModal
+    visible={showUpdateModal}
+    onClose={dismissUpdate}
+    currentVersion={currentVersion}
+    latestVersion={latestVersion}
+    updateUrl="https://play.google.com/store/apps/details?id=com.yayapana.TransixNewVersion"
+    updateType={updateType}
+/>
 
     <SubscriptionPaymentModal
                 isVisible={showModalPayment}

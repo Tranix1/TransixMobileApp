@@ -25,6 +25,7 @@ import { AccountType } from '@/types/types';
 import PhoneInput from '@/components/PhoneInput';
 import { router } from 'expo-router';
 import { trackScreen } from '@/services/analytics/firebaseAnalystics';
+import { useColorScheme } from 'react-native';
 
 
 const ACCOUNT_TYPES: {
@@ -47,6 +48,9 @@ const Login = ({ setDspLoginOrSignup }: any) => {
     const icon = useThemeColor('icon');
     const accent = useThemeColor('accent');
     const coolGray = useThemeColor('coolGray');
+
+    const colorScheme = useColorScheme();
+
 
     const [keyboardVisible, setKeyboardVisible] = useState(false);
 
@@ -110,7 +114,7 @@ const Login = ({ setDspLoginOrSignup }: any) => {
 
             const confirmationResult = await auth().signInWithPhoneNumber(
                 `${countryCode.name}${phoneNumber}`
-            );  
+            );
 
             setConfirmation(confirmationResult);
             setOtpSent(true);
@@ -200,7 +204,7 @@ const Login = ({ setDspLoginOrSignup }: any) => {
                 <View style={styles.container}>
                     <Image
                         contentFit="contain"
-                        source={require('@/assets/trialogo.svg')}
+                        source={colorScheme === "light" ? require('@/assets/trialogo.svg') : require('@/assets/transix_logo_black_bg`.png')}
                         style={styles.logo}
                     />
 

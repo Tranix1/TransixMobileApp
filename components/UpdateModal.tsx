@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { hp, wp } from '@/constants/common';
+import { UpdateType } from '@/Utilities/versionUtils';
 
 interface UpdateModalProps {
     visible: boolean;
@@ -12,7 +13,12 @@ interface UpdateModalProps {
     currentVersion: string;
     latestVersion: string;
     updateUrl: string;
-    isForceUpdate?: boolean;
+    /**
+     * 'force'    -> user is below minVersion, cannot dismiss or use the app.
+     * 'optional' -> user is below latestVersion but above minVersion, can press "Later".
+     * 'none'     -> should not be rendered (caller should not pass visible=true for this case).
+     */
+    updateType: UpdateType;
 }
 
 export default function UpdateModal({
@@ -21,12 +27,19 @@ export default function UpdateModal({
     currentVersion,
     latestVersion,
     updateUrl,
-    isForceUpdate = false
+    updateType,
 }: UpdateModalProps) {
     const accent = useThemeColor('accent');
     const icon = useThemeColor('icon');
     const background = useThemeColor('background');
     const coolGray = useThemeColor('coolGray');
+
+    const isForceUpdate = updateType === 'force';
+
+    // Defensive: never render for 'none'.
+    if (updateType === 'none') {
+        return null;
+    }
 
     const handleUpdate = async () => {
         try {
@@ -201,4 +214,4 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         fontSize: wp(4),
     },
-});
+}); 

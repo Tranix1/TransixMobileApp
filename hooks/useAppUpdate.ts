@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import Constants from 'expo-constants';
+import { getUpdateType, UpdateType } from '@/Utilities/versionUtils';
 
 interface AppVersion {
     version: string;
-    forceUpdate: boolean;
+    minVersion: string;
     updateMessage?: string;
     lastUpdated: any;
 }
@@ -14,7 +15,7 @@ interface UseAppUpdateReturn {
     showUpdateModal: boolean;
     currentVersion: string;
     latestVersion: string;
-    isForceUpdate: boolean;
+    updateType: UpdateType;
     isLoading: boolean;
     error: string | null;
     checkForUpdate: () => Promise<void>;
@@ -25,7 +26,7 @@ export const useAppUpdate = (): UseAppUpdateReturn => {
     const [showUpdateModal, setShowUpdateModal] = useState(false);
     const [currentVersion, setCurrentVersion] = useState('');
     const [latestVersion, setLatestVersion] = useState('');
-    const [isForceUpdate, setIsForceUpdate] = useState(false);
+    const [updateType, setUpdateType] = useState<UpdateType>('none');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -51,16 +52,19 @@ export const useAppUpdate = (): UseAppUpdateReturn => {
             }
 
             const versionData = versionDoc.data() as AppVersion;
-            const dbVersion = versionData.version;
-            const forceUpdate = versionData.forceUpdate || false;
+            const dbLatestVersion = versionData.version;
+            const dbMinVersion = versionData.minVersion || dbLatestVersion;
 
-            setLatestVersion(dbVersion);
-            setIsForceUpdate(forceUpdate);
+            setLatestVersion(dbLatestVersion);
 
-            // Compare versions
-            if (isVersionLower(currentVersion, dbVersion)) {
-                setShowUpdateModal(true);
-            }
+            const resolvedType = getUpdateType({
+                currentVersion,
+                minVersion: dbMinVersion,
+                latestVersion: dbLatestVersion,
+            });
+
+            setUpdateType(resolvedType);
+            setShowUpdateModal(resolvedType !== 'none');
 
         } catch (error) {
             console.error('Error checking for app update:', error);
@@ -71,39 +75,20 @@ export const useAppUpdate = (): UseAppUpdateReturn => {
     };
 
     const dismissUpdate = () => {
-        setShowUpdateModal(false);
+        // Force updates cannot be dismissed.
+        if (updateType !== 'force') {
+            setShowUpdateModal(false);
+        }
     };
 
     return {
         showUpdateModal,
         currentVersion,
         latestVersion,
-        isForceUpdate,
+        updateType,
         isLoading,
         error,
         checkForUpdate,
         dismissUpdate,
     };
-};
-
-// Helper function to compare version strings
-const isVersionLower = (current: string, latest: string): boolean => {
-    const currentParts = current.split('.').map(Number);
-    const latestParts = latest.split('.').map(Number);
-
-    // Ensure both arrays have the same length
-    const maxLength = Math.max(currentParts.length, latestParts.length);
-
-    for (let i = 0; i < maxLength; i++) {
-        const currentPart = currentParts[i] || 0;
-        const latestPart = latestParts[i] || 0;
-
-        if (currentPart < latestPart) {
-            return true;
-        } else if (currentPart > latestPart) {
-            return false;
-        }
-    }
-
-    return false; // Versions are equal
 };
