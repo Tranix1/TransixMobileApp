@@ -24,6 +24,7 @@ import {
 import { AccountType } from '@/types/types';
 import PhoneInput from '@/components/PhoneInput';
 import { router } from 'expo-router';
+import { trackScreen } from '@/services/analytics/firebaseAnalystics';
 
 
 const ACCOUNT_TYPES: {
@@ -60,6 +61,8 @@ const Login = ({ setDspLoginOrSignup }: any) => {
 
 
     useEffect(() => {
+        trackScreen("Login")
+
         const showSub = Keyboard.addListener('keyboardDidShow', () => {
             setKeyboardVisible(true);
         });

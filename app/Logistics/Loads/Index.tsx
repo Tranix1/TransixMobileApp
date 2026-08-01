@@ -12,6 +12,7 @@ import { HorizontalTickComponent } from '@/components/SlctHorizonzalTick';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Timestamp } from 'firebase/firestore';
+import { trackScreen } from '@/services/analytics/firebaseAnalystics';
 
 
 const Index = () => {
@@ -220,7 +221,7 @@ const LoadTructs = async () => {
     }
 };
         useEffect(() => {
-            
+            trackScreen(`Loads Screen ${loadVisibility} ${expireAvailableLoads} ${selectedAccountType}`);
             LoadTructs();
         }, [loadVisibility, currentRole, expireAvailableLoads ,selectedAccountType])
         

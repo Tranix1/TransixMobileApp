@@ -14,13 +14,14 @@ import { addDocumentWithId, generateUniqueReferralCode, getReferralCodeByUserId,
 import { AccountType, CurrentRole, User } from "@/types/types";
 import { updateUserTokenInAllCollections } from "@/Utilities/pushNotification";
 import { setDoc } from "firebase/firestore";
-import { trackAccountCreated, trackLogin, trackLogout } from "@/services/analytics/appAnalytics";
+import { trackAccountCreated, trackEvent, trackLogin, trackLogout } from "@/services/analytics/appAnalytics";
 import { incrementAccountsCreated } from "@/services/analytics/dashboardAnalytics";
 import { incrementSignups } from "@/services/analytics/referralAnalytics";
 import { getExpoPushTokenAsync } from "expo-notifications";
 import { getExpoPushToken } from "@/Utilities/getExpoPushToken";
 
 import auth from "@react-native-firebase/auth"
+import { trackEventFirebase } from "@/services/analytics/firebaseAnalystics";
 
 type AlertType = "default" | "error" | "success" | "laoding" | "destructive";
 
@@ -283,8 +284,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         credentials: LoginCredentials
     ): Promise<LoginResponse> => {
         try {
-
-
+            trackEventFirebase("login_started", { accountType: credentials.accountType }).catch(console.error);
 
             setUser(undefined);
 
@@ -408,6 +408,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             // App ready after everything is loaded
             setIsAppReady(true);
+            trackEventFirebase("login_success", { accountType: credentials.accountType }).catch(console.error);
 
 
             return {
@@ -415,6 +416,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 message: "Login successful",
                 currentRole: currentRoleAccType,
             };
+            
 
 
         } catch (error) {
@@ -435,6 +437,8 @@ const signUp = async (
 ): Promise<{ success: boolean; accountRole?: any }> => {
 
     try {
+        trackEventFirebase("signup_started", { accountType: credentials.accountType }).catch(console.error);
+        
 
         const firebaseUser = auth().currentUser;
 
@@ -684,9 +688,18 @@ const signUp = async (
             ).catch(console.error);
 
         }
+        trackEventFirebase("signup_completed"  , { accountType: credentials.accountType }).catch(console.error);
 
 
 
+
+        if (referredBy?.userId) {
+
+            void incrementSignups(
+                referredBy.userId
+            ).catch(console.error);
+
+        }
         setIsAppReady(true);
 
 

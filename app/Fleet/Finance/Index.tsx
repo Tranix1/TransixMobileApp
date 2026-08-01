@@ -75,6 +75,7 @@ import { fetchDocuments } from "@/db/operations";
 import AccentRingLoader from "@/components/AccentRingLoader";
 import { FleetTripTaransactionCard } from "@/components/FleetTripTaransactionCard";
 import { hp } from "@/constants/common";
+import { trackEventFirebase, trackScreen } from "@/services/analytics/firebaseAnalystics";
 
 // ------------------------------------------------------
 //
@@ -523,6 +524,7 @@ const onRefresh = async () => {
     };
 
     useEffect(() => {
+        trackScreen('FleetFinanceScreen');
         LoadFleetOperations()
         loadEntries();
         loadTyres();
@@ -562,6 +564,7 @@ const onRefresh = async () => {
             Alert.alert("Pick a subcategory", "Choose what this entry is for before saving.");
             return;
         }
+        trackEventFirebase('fleet_finance_entry_saved', { fleetId, category: category.label, subcategory: subcategoryName, amount: numericAmount, flow: category.flow, recurrence }).catch(console.error);
 
         try {
             setSavingEntry(true);
@@ -596,6 +599,7 @@ const onRefresh = async () => {
         } catch (error) {
             console.log("Fleet finance save error", error);
             Alert.alert("Error", "Failed to save entry. Please try again.");
+            trackEventFirebase('fleet_finance_entry_save_failed', { fleetId, category: category.label, subcategory: subcategoryName, amount: numericAmount, flow: category.flow, recurrence }).catch(console.error);
         } finally {
             setSavingEntry(false);
         }

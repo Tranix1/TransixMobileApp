@@ -29,6 +29,7 @@ import { firebaseConfig } from '@/db/fireBaseConfig';
 
 import PhoneInput from '@/components/PhoneInput';
 import { validateReferralCode } from '@/db/operations';
+import { trackEventFirebase, trackScreen } from '@/services/analytics/firebaseAnalystics';
 
 
 const ACCOUNT_TYPES: {
@@ -72,6 +73,8 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
 
     useEffect(() => {
+        trackScreen("Signup")
+
         const showSub = Keyboard.addListener("keyboardDidShow", () => {
             setKeyboardVisible(true);
         });
@@ -98,6 +101,8 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
     const sendPhoneOTP = async () => {
         try {
+            trackEventFirebase("otp_sent", { accountType: selectedAccount }).catch(console.error);
+
             const length = phoneNumber.replace(/\D/g, "").length;
 
             if (!countryCode.name) {

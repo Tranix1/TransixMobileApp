@@ -87,6 +87,7 @@ import { wp } from "@/constants/common";
 import { useAuth } from "@/context/AuthContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { addDocumentWithId, updateDocument } from "@/db/operations";
+import { trackEventFirebase, trackScreen } from "@/services/analytics/firebaseAnalystics";
 // ------------------------------------------------------
 
 type PaymentMethod = "BANK" | "CASH";
@@ -263,7 +264,10 @@ export default function FinancePanel({
 
     // Fires whenever the panel becomes visible
     useEffect(() => {
+
         if (visible) {
+            trackScreen('finance_panel_opened').catch(console.error);
+
             loadAssignmentFinance();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -301,6 +305,7 @@ export default function FinancePanel({
         const numericAmount = parseFloat(amount);
         if (!numericAmount || numericAmount <= 0 || !fleetId || !assignmentId) return;
 
+        trackEventFirebase('expense_recorded', { assignmentDocId: assignmentId, category, amount: numericAmount }).catch(console.error);
         try {
             setSavingFinance(true);
 
@@ -343,6 +348,7 @@ export default function FinancePanel({
         } catch (error) {
             console.log("Expense save error", error);
             Alert.alert("Error", "Failed to save expense.");
+            trackEventFirebase('expense_recorded_failed', { assignmentDocId: assignmentId, category, amount: numericAmount }).catch(console.error);
         } finally {
             setSavingFinance(false);
         }
@@ -355,7 +361,7 @@ export default function FinancePanel({
         if (!numericAmount || numericAmount <= 0 || !fleetId || !assignmentId) return;
 
         const payoutCategory = category as "DRIVER" | "SHIPPER";
-
+        trackEventFirebase('payout_recorded', { assignmentDocId: assignmentId, payoutCategory, amount: numericAmount }).catch(console.error);
         try {
             setSavingFinance(true);
 
@@ -409,6 +415,7 @@ export default function FinancePanel({
         } catch (error) {
             console.log("Payout save error", error);
             Alert.alert("Error", "Failed to add payout.");
+            trackEventFirebase('payout_recorded_failed', { assignmentDocId: assignmentId, payoutCategory, amount: numericAmount }).catch(console.error);
         } finally {
             setSavingFinance(false);
         }
@@ -418,6 +425,7 @@ export default function FinancePanel({
     const markPayoutPaid = async (payoutCategory: "DRIVER" | "SHIPPER") => {
         if (!fleetId || !assignmentId) return;
 
+        trackEventFirebase('payout_marked_paid', { assignmentDocId: assignmentId, payoutCategory }).catch(console.error);
         try {
             setMarkingPaid(payoutCategory);
 
@@ -454,6 +462,7 @@ export default function FinancePanel({
         } catch (error) {
             console.log("Mark payout paid error", error);
             Alert.alert("Error", "Failed to mark payout as paid.");
+            trackEventFirebase('payout_marked_paid_failed', { assignmentDocId: assignmentId, payoutCategory }).catch(console.error);
         } finally {
             setMarkingPaid(null);
         }
@@ -468,7 +477,7 @@ export default function FinancePanel({
             Alert.alert("Enter amount", "Enter the amount received for this milestone.");
             return;
         }
-
+        trackEventFirebase('income_confirmed', { assignmentDocId: assignmentId, milestoneId: selectedMilestone.id, milestoneLabel: selectedMilestone.label, milestonePercent: selectedMilestone.percent, amount: numericAmount, paymentMethod: incomeMethod }).catch(console.error);
         try {
             setSavingFinance(true);
 
@@ -508,6 +517,7 @@ export default function FinancePanel({
             setIncomeNote("");
             setIncomeMethod("BANK");
         } catch (error) {
+            trackEventFirebase('income_confirmed_failed', { assignmentDocId: assignmentId, milestoneId: selectedMilestone.id, milestoneLabel: selectedMilestone.label, milestonePercent: selectedMilestone.percent, amount: numericAmount, paymentMethod: incomeMethod }).catch(console.error);
             console.log("Income save error", error);
             Alert.alert("Error", "Failed to confirm income.");
         } finally {
@@ -519,6 +529,7 @@ export default function FinancePanel({
     const deleteFinanceEntry = async (entry: FinanceEntry) => {
         if (!fleetId || !assignmentId) return;
 
+        trackEventFirebase('finance_entry_deleted', { assignmentDocId: assignmentId, entryId: entry.id, entryType: entry.entryType, amount: entry.amount }).catch(console.error);
         try {
             await deleteDoc(doc(db, "fleets", fleetId, "Finance", "Account", "Transactions", entry.id));
 
@@ -530,6 +541,7 @@ export default function FinancePanel({
             setFinanceEntries((prev) => prev.filter((e) => e.id !== entry.id));
         } catch (error) {
             console.log("Finance delete error", error);
+            trackEventFirebase('finance_entry_delete_failed', { assignmentDocId: assignmentId, entryId: entry.id, entryType: entry.entryType, amount: entry.amount }).catch(console.error);
             Alert.alert("Error", "Failed to delete entry.");
         }
     };

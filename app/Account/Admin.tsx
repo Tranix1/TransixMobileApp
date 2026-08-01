@@ -13,6 +13,8 @@ import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import { router } from 'expo-router';
 import { where } from 'firebase/firestore';
 import { notifyUserById } from '@/Utilities/pushNotification';
+import { trackEvent } from '@/services/analytics/appAnalytics';
+import { trackEventFirebase } from '@/services/analytics/firebaseAnalystics';
 
 interface User {
     id: string;
@@ -72,7 +74,7 @@ const Admin = () => {
 
 
 
-            const result = await fetchDocuments("verifiedUsers", 200, undefined , filters)
+            const result = await fetchDocuments("verifiedUsers", 200, undefined, filters)
 
             setUsers(result.data);
 
@@ -102,37 +104,45 @@ const Admin = () => {
         adminName: string,
         accType: string,
     ) {
-        const orgDBAcc = accType === "fleet" ? "fleets" : accType === "brokerage" ? "brokerages" : accType === "driver" ? "Drivers" : ""
 
-        updateDocument("verifiedUsers", organizationId, {
-            verificationStatus: 'approved',
+        try {
 
-        })
+            const orgDBAcc = accType === "fleet" ? "fleets" : accType === "brokerage" ? "brokerages" : accType === 'driver' ? "Drivers" : ""
+            trackEventFirebase('account_approval_attempt', { organizationId, organizationName, userId, adminName, accType }).catch(console.error);
 
-        updateDocument("organizationProfiles", organizationId, {
-            verificationStatus: 'approved',
+            updateDocument("verifiedUsers", organizationId, {
+                verificationStatus: 'approved',
 
-        })
+            })
 
-        updateDocument(orgDBAcc, organizationId, {
-            verificationStatus: 'approved',
+            updateDocument("organizationProfiles", organizationId, {
+                verificationStatus: 'approved',
 
-        })
+            })
 
-        const pathForNotification = accType === "fleet" ? `Fleet/FleetSelector/Index` : accType === "brokerage" ? "brokerage/BrokerageSelector/Index" : accType === "driver" ? "brokerage/BrokerageSelector/Index" : ""
+            updateDocument(orgDBAcc, organizationId, {
+                verificationStatus: 'approved',
+
+            })
+
+            const pathForNotification = accType === "fleet" ? `Fleet/FleetSelector/Index` : accType === "brokerage" ? "brokerage/BrokerageSelector/Index" : accType === "driver" ? "brokerage/BrokerageSelector/Index" : ""
 
 
-        await notifyUserById(
-            userId,
-            `Hello ${adminName}`,
-            `Your ${accType} account for ${organizationName}, has been approved and is now active. Thank you for choosing transix`,
+            await notifyUserById(
+                userId,
+                `Hello ${adminName}`,
+                `Your ${accType} account for ${organizationName}, has been approved and is now active. Thank you for choosing transix`,
 
-            {
-                pathname: pathForNotification,
-            }, {
-            type: "account_verification",
+                {
+                    pathname: pathForNotification,
+                }, {
+                type: "account_verification",
+            }
+            );
+        } catch (error) {
+            console.error('Error approving account:', error);
+            trackEventFirebase('account_approval_failed', { organizationId, organizationName, userId, adminName, accType, error }).catch(console.error);
         }
-        );
 
 
     }

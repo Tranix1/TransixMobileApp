@@ -3,6 +3,8 @@ import { Platform, Alert } from 'react-native';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+import { trackEventFirebase } from '@/services/analytics/firebaseAnalystics';
+
 
 // Check if running in Expo Go (where push notifications are not supported in SDK 53+)
 const isExpoGo = Constants.appOwnership === 'expo';
@@ -55,10 +57,19 @@ export function usePushNotifications() {
     try {
       notificationListener = Notifications.addNotificationReceivedListener(notification => {
         setNotification(notification);
+
+        trackEventFirebase('notification_received', {
+          title: notification.request.content.title ?? '',
+          has_data: !!notification.request.content.data,
+        });
       });
 
       responseListener = Notifications.addNotificationResponseReceivedListener(response => {
         console.log('Notification response received:', response);
+
+        trackEventFirebase('notification_opened', {
+          title: response.notification.request.content.title ?? '',
+        });
 
         // Handle routing if route data is provided
         if (response.notification.request.content.data?.route) {
@@ -112,6 +123,8 @@ export function usePushNotifications() {
         repeats: false,
       },
     });
+
+    trackEventFirebase('test_notification_scheduled');
   };
 
   return {
@@ -181,8 +194,11 @@ async function registerForPushNotificationsAsync() {
 
     if (finalStatus !== 'granted') {
       Alert.alert('Permission Error', 'Failed to get push token for notifications!');
+      trackEventFirebase('push_permission_denied');
       return;
     }
+
+    trackEventFirebase('push_permission_granted');
 
     try {
       // Try multiple ways to get project ID for better compatibility
@@ -206,6 +222,8 @@ async function registerForPushNotificationsAsync() {
 
       token = tokenData.data;
       console.log('✅ Expo Push Token generated:', token);
+
+      trackEventFirebase('push_token_registered');
     } catch (e) {
       console.error('❌ Push token error:', e);
       // Try fallback method
@@ -213,9 +231,13 @@ async function registerForPushNotificationsAsync() {
         const fallbackToken = await Notifications.getExpoPushTokenAsync();
         token = fallbackToken.data;
         console.log('✅ Fallback Push Token:', token);
+
+        trackEventFirebase('push_token_registered_fallback');
       } catch (fallbackError) {
         console.error('❌ Fallback token error:', fallbackError);
         token = '';
+
+        trackEventFirebase('push_token_registration_failed');
       }
     }
   } else {
@@ -243,7 +265,7 @@ export async function sendPushNotification(
   if (!expoPushToken.startsWith('ExponentPushToken[')) {
   }
 
-  
+
   const message = {
     to: expoPushToken,
     sound: 'default',
@@ -274,11 +296,26 @@ export async function sendPushNotification(
 
     if (response.ok) {
       console.log('✅ Push notification sent successfully:', result);
+
+      trackEventFirebase('push_notification_sent', {
+        title,
+        type: extraData?.type ?? 'unknown',
+      });
     } else {
       console.error('❌ Push notification failed:', result);
+
+      trackEventFirebase('push_notification_failed', {
+        title,
+        type: extraData?.type ?? 'unknown',
+      });
     }
   } catch (error) {
     console.error('❌ Error sending push notification:', error);
+
+    trackEventFirebase('push_notification_error', {
+      title,
+      type: extraData?.type ?? 'unknown',
+    });
   }
 }
 
@@ -307,6 +344,11 @@ export const sendTrackerSharingRequestNotification = async (
       `/BooksAndBids/ViewBidsAndBooks?dspRoute=Requested by Carriers`,
       { loadRequestId, type: 'tracker_sharing_request' }
     );
+
+    trackEventFirebase('tracker_sharing_request_sent', {
+      loadRequestId,
+      loadOwnerName,
+    });
   } catch (error) {
     console.error('❌ Error in sendTrackerSharingRequestNotification:', error);
   }
@@ -336,6 +378,11 @@ export const sendTrackerSharingAcceptedNotification = async (
       `/BooksAndBids/ViewBidsAndBooks?dspRoute=Requested Loads`,
       { loadRequestId, type: 'tracker_sharing_accepted' }
     );
+
+    trackEventFirebase('tracker_sharing_accepted_sent', {
+      loadRequestId,
+      truckOwnerName,
+    });
   } catch (error) {
     console.error('❌ Error in sendTrackerSharingAcceptedNotification:', error);
   }
@@ -368,65 +415,80 @@ export const sendBookingWithTrackerNotification = async (
       `/BooksAndBids/ViewBidsAndBooks?dspRoute=Requested Loads`,
       { loadRequestId, type: 'booking_with_tracker', hasTracker }
     );
+
+    trackEventFirebase('booking_with_tracker_sent', {
+      loadRequestId,
+      truckOwnerName,
+      hasTracker,
+    });
   } catch (error) {
     console.error('❌ Error in sendBookingWithTrackerNotification:', error);
   }
 };
 
 export const sendUserNotification = async (
-    userToken: string,
-    title: string,
-    body: string,
-    route: any,
-    data: Record<string, any> = {}
+  userToken: string,
+  title: string,
+  body: string,
+  route: any,
+  data: Record<string, any> = {}
 ) => {
 
-    if (!userToken) {
-        console.log("No notification token");
-        return;
-    }
+  if (!userToken) {
+    console.log("No notification token");
+    return;
+  }
 
-    await sendPushNotification(
-        userToken,
-        title,
-        body,
-        route,
-        data
-    );
+  await sendPushNotification(
+    userToken,
+    title,
+    body,
+    route,
+    data
+  );
 };
 
 
 
 export const notifyUserById = async (
-    userId: string,
-    title: string,
-    message: string,
-    route: any,
-    data: any
+  userId: string,
+  title: string,
+  message: string,
+  route: any,
+  data: any
 ) => {
-    const userData = await readById(
-        "personalData",
-        userId
-    ) as {
-        id: string;
-        expoPushToken?: string;
-    };
+  const userData = await readById(
+    "personalData",
+    userId
+  ) as {
+    id: string;
+    expoPushToken?: string;
+  };
 
-    const expoPushToken = userData?.expoPushToken;
+  const expoPushToken = userData?.expoPushToken;
 
 
 
-    if (expoPushToken) {
-        await sendUserNotification(
-            expoPushToken,
-            title,
-            message,
-            route,
-            data
-        );
-    } else {
-        console.log(`User ${userId} has no push token`);
-    }
+  if (expoPushToken) {
+    await sendUserNotification(
+      expoPushToken,
+      title,
+      message,
+      route,
+      data
+    );
+
+    trackEventFirebase('notify_user_by_id_sent', {
+      userId,
+      type: data?.type ?? 'unknown',
+    });
+  } else {
+    console.log(`User ${userId} has no push token`);
+
+    trackEventFirebase('notify_user_by_id_no_token', {
+      userId,
+    });
+  }
 };
 
 
@@ -455,6 +517,10 @@ export function useNotificationRouting() {
         console.log('🔔 Notification tapped:', response);
 
         const data = response.notification.request.content.data;
+
+        trackEventFirebase('notification_tapped', {
+          type: (data as any)?.type ?? 'unknown',
+        });
 
         // Delay execution by 1 second
         setTimeout(() => {
@@ -538,6 +604,12 @@ export const sendNotificationToAllAdmins = async (
     await Promise.all(notificationPromises);
     console.log('✅ Notifications sent to all admins successfully');
 
+    trackEventFirebase('admin_notification_broadcast', {
+      title,
+      recipientCount: adminTokens.length,
+      type: extraData?.type ?? 'unknown',
+    });
+
   } catch (error) {
     console.error('❌ Error sending notifications to admins:', error);
   }
@@ -593,6 +665,13 @@ export const sendNotificationToAdminsWithPermission = async (
 
     await Promise.all(notificationPromises);
     console.log(`✅ Notifications sent to ${adminTokens.length} admins with permission '${permission}'`);
+
+    trackEventFirebase('admin_notification_by_permission', {
+      permission,
+      title,
+      recipientCount: adminTokens.length,
+      type: extraData?.type ?? 'unknown',
+    });
 
   } catch (error) {
     console.error('❌ Error sending notifications to admins with permission:', error);
@@ -656,6 +735,13 @@ export const sendNotificationToAdminsWithAnyPermission = async (
 
     await Promise.all(notificationPromises);
     console.log(`✅ Notifications sent to ${adminTokens.length} admins with specified permissions`);
+
+    trackEventFirebase('admin_notification_by_any_permission', {
+      permissions: permissions.join(','),
+      title,
+      recipientCount: adminTokens.length,
+      type: extraData?.type ?? 'unknown',
+    });
 
   } catch (error) {
     console.error('❌ Error sending notifications to admins with permissions:', error);
@@ -826,6 +912,11 @@ export const notifyTruckApprovalAdmins = async (truckData: any) => {
       priority: 'high'
     }
   );
+
+  trackEventFirebase('truck_approval_notification_sent', {
+    truckId: truckData.id,
+    truckOwner: truckData.CompanyName,
+  });
 };
 
 /**
@@ -850,6 +941,11 @@ export const notifyLoadApprovalAdmins = async (loadData: any) => {
       priority: 'high'
     }
   );
+
+  trackEventFirebase('load_approval_notification_sent', {
+    loadId: loadData.id,
+    loadOwner: loadData.companyName,
+  });
 };
 
 /**
@@ -874,6 +970,11 @@ export const notifyTruckAccountApprovalAdmins = async (accountData: any) => {
       priority: 'medium'
     }
   );
+
+  trackEventFirebase('truck_account_approval_notification_sent', {
+    accountId: accountData.id,
+    accountOwner: accountData.CompanyName,
+  });
 };
 
 /**
@@ -898,6 +999,11 @@ export const notifyLoadAccountApprovalAdmins = async (accountData: any) => {
       priority: 'medium'
     }
   );
+
+  trackEventFirebase('load_account_approval_notification_sent', {
+    accountId: accountData.id,
+    accountOwner: accountData.companyName,
+  });
 };
 
 /**
@@ -916,6 +1022,10 @@ export const notifyReferrerManagementAdmins = async (referrerData: any) => {
       priority: 'low'
     }
   );
+
+  trackEventFirebase('referrer_activity_notification_sent', {
+    referrerCode: referrerData.referrerCode,
+  });
 };
 
 /**
@@ -934,6 +1044,11 @@ export const notifyVersionManagementAdmins = async (versionData: any) => {
       priority: 'high'
     }
   );
+
+  trackEventFirebase('version_update_notification_sent', {
+    version: versionData.version,
+    submittedBy: versionData.submittedBy,
+  });
 };
 
 /**
@@ -952,6 +1067,11 @@ export const notifyTrackingAgentAdmins = async (trackingData: any) => {
       priority: 'medium'
     }
   );
+
+  trackEventFirebase('tracking_agent_request_notification_sent', {
+    userId: trackingData.userId,
+    userName: trackingData.userName,
+  });
 };
 
 /**
@@ -970,6 +1090,11 @@ export const notifyServiceStationAdmins = async (stationData: any) => {
       priority: 'medium'
     }
   );
+
+  trackEventFirebase('service_station_request_notification_sent', {
+    userId: stationData.userId,
+    userName: stationData.userName,
+  });
 };
 
 /**
@@ -988,6 +1113,9 @@ export const notifyTruckStopAdmins = async (stopData: any) => {
       priority: 'medium'
     }
   );
+
+  trackEventFirebase('truck_stop_request_notification_sent', {
+    userId: stopData.userId,
+    userName: stopData.userName,
+  });
 };
-
-

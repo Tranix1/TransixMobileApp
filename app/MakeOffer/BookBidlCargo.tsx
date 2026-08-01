@@ -27,6 +27,7 @@ import { incrementSuccessfullyRequestedPblcCargo, incrementRequestsSuccessfulPbl
 
 import { doc, writeBatch, getDoc } from "firebase/firestore";
 import { createRequestAnalyticsPair, incrementOrgStats } from "@/Utilities/analyticsHelpers";
+import { trackEventFirebase, trackScreen } from "@/services/analytics/firebaseAnalystics";
 
 
 function BookLCargo({ }) {
@@ -47,6 +48,7 @@ function BookLCargo({ }) {
   // where("approvalStatus", "==", "approved"), where("state", "==", "available"),
 
   useEffect(() => {
+    trackScreen("Request Cargo Booking Screen");
     try {
       const dataQuery = query(collection(db, `fleets/${currentRole.fleetId}/Trucks`),);
       const unsubscribe = onSnapshot(dataQuery, (snapshot) => {
@@ -159,6 +161,16 @@ function BookLCargo({ }) {
 
 
     async function handleSubmitDetails() {
+      trackEventFirebase("cargo_request_initiated", {
+        loadId: loadItem.id,
+        truckId: item.id,
+        operationType: OperationType,
+        rate: OperationType === "Bid" ? Number(bidAmount) : loadItem.rate,
+        ratePerKm: loadItem.ratePerKm,
+        distance: loadItem.distance,
+        origin: loadItem.origin,
+        destination: loadItem.destination,
+      });
       try {
 
         const selectedDriver = selectedDrivers[item.id];
@@ -194,8 +206,8 @@ function BookLCargo({ }) {
           expoPushToken: expoPushToken || null,
           trackerShared: false,
           trackerSharingRequested: false,
-          loadOwnerId: loadItem.postedBy.organizationId ,
-          truckOwnerId : currentRole.organizationId ,
+          loadOwnerId: loadItem.postedBy.organizationId,
+          truckOwnerId: currentRole.organizationId,
           bookedBy: {
             userId: user?.uid || "unknown",
             name: user?.displayName || "unknown",
@@ -348,6 +360,17 @@ function BookLCargo({ }) {
         } else {
           console.warn("⚠️ No expoPushToken found in loadItem, skipping notification");
         }
+        trackEventFirebase("cargo_request_completed", {
+          loadId: loadItem.id,
+          truckId: item.id,
+          operationType: OperationType,
+
+          rate: OperationType === "Bid" ? Number(bidAmount) : loadItem.rate,
+          ratePerKm: loadItem.ratePerKm,
+          distance: loadItem.distance,
+          origin: loadItem.origin,
+          destination: loadItem.destination,
+        });
 
         ToastAndroid.show(
           `Load ${OperationType === "Bid" ? "BIDDING" : "BOOKING"} completed successfully.`,
@@ -355,6 +378,17 @@ function BookLCargo({ }) {
         );
       } catch (err) {
         console.error(err);
+        trackEventFirebase("cargo_request_failed", {
+          loadId: loadItem.id,
+          truckId: item.id,
+          operationType: OperationType,
+
+          rate: OperationType === "Bid" ? Number(bidAmount) : loadItem.rate,
+          ratePerKm: loadItem.ratePerKm,
+          distance: loadItem.distance,
+          origin: loadItem.origin,
+          destination: loadItem.destination,
+        });
       }
     }
 

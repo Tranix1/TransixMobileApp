@@ -25,6 +25,7 @@ import { SubscriptionType, SUBSCRIPTION_PRICING, REFERRAL_ELIGIBLE_PAYMENTS } fr
 import { getDocs, where, query, collection } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import { notifyUserById } from '@/Utilities/pushNotification';
+import { trackEventFirebase } from '@/services/analytics/firebaseAnalystics';
 
 interface ReferralCreditResult {
   credited: boolean;
@@ -82,7 +83,7 @@ export async function creditReferralIfEligible(
 ): Promise<ReferralCreditResult> {
 
   try {
-
+trackEventFirebase('referral_credit_attempt', { payerOrganizationId, payerOrganizationName, subscriptionType, commissionAmount, totalTruckSubscriptions }).catch(console.error);
     // Get verified business account
     const verifiedUser = await readById(
       'verifiedUsers',
@@ -286,6 +287,8 @@ export async function creditReferralIfEligible(
       error
     );
 
+
+    trackEventFirebase('referral_credit_failed', { payerOrganizationId, payerOrganizationName, subscriptionType, commissionAmount, totalTruckSubscriptions, error }).catch(console.error);
 
     return {
       credited: false,

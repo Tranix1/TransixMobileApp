@@ -11,6 +11,7 @@ import { FinalReturnComponent } from '@/components/TrucksHomePage'
 import { HorizontalTickComponent } from '@/components/SlctHorizonzalTick';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/context/AuthContext'
+import { trackScreen } from '@/services/analytics/firebaseAnalystics'
 const Index = () => {
 
     const { userId, organisationName, contractName, contractId, capacityG, cargoAreaG, truckTypeG, operationCountriesG } = useLocalSearchParams();
@@ -118,6 +119,7 @@ const Index = () => {
 
 
 useEffect(() => {
+    trackScreen('Trucks_Screen');
 
     if (!currentRole) return;
 

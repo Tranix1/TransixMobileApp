@@ -18,6 +18,7 @@ import { useAuth } from '@/context/AuthContext';
 import { trackEvent } from '@/services/analytics/appAnalytics';
 import { incrementMemberCount } from '@/services/analytics/organizationAnalytics';
 import { notifyUserById } from '@/Utilities/pushNotification';
+import { trackEventFirebase, trackScreen } from '@/services/analytics/firebaseAnalystics';
 
 // Payment method types for a driver
 type PaymentType = 'trip' | 'monthly' | 'later' | 'custom';
@@ -646,6 +647,7 @@ export default function DriverIndex() {
     // against locally, so it's loaded up front and shown in full by
     // default (before any search text is typed).
     useEffect(() => {
+        trackScreen('Fleet Driver Index').catch(console.error);
         const fetchAllDrivers = async () => {
             setLoadingAllDrivers(true);
             try {
@@ -665,6 +667,7 @@ export default function DriverIndex() {
 
 
     const handleSearch = (text: string) => {
+        trackEventFirebase('driver_search', { query: text }).catch(console.error);
         setDriverSearchQuery(text);
 
         const searchText = text.trim().toLowerCase();
@@ -686,7 +689,7 @@ export default function DriverIndex() {
 
     const handleAddDrivers = async () => {
         if (selectedDrivers.length === 0) return;
-
+trackEventFirebase('fleet_invite_drivers_initiated', { count: selectedDrivers.length }).catch(console.error);
         // Validate each selected driver's payment draft before submitting
         for (const driver of selectedDrivers) {
             const draft = getPaymentDraft(driver.id);
@@ -758,7 +761,7 @@ export default function DriverIndex() {
             }
 
             
-
+            trackEventFirebase('fleet_invite_drivers_completed', { count: selectedDrivers.length }).catch(console.error);
 
             fetchDrivers()
             setShowAddDriver(false);
@@ -768,6 +771,8 @@ export default function DriverIndex() {
             setSearchedDrivers(allDrivers);
         } catch (e) {
             console.error("Error updating drivers:", e);
+            trackEventFirebase('fleet_invite_drivers_failed', { error: String(e) }).catch(console.error);
+            Alert.alert('Error', 'Failed to invite drivers. Please try again.');
         } finally {
             setIsSubmitting(false);
         }

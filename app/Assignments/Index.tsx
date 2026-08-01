@@ -27,6 +27,7 @@ import { fetchDocuments, updateDocument, uploadImage } from '@/db/operations';
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import AssignmentCard from '@/components/AssignmentComponent';
 import AccentRingLoader from '@/components/AccentRingLoader';
+import { trackEventFirebase, trackScreen } from '@/services/analytics/firebaseAnalystics';
 
 // ---------------------------------------------------------------------------
 // Independent Assignments page for Fleet / Broker use.
@@ -497,7 +498,7 @@ function Jobs() {
     };
 
     useEffect(() => {
-
+        trackScreen('Assignments_Screen');
         fetchAssignments();
     }, [accType, scopeId, activeTab]);
 
@@ -538,6 +539,7 @@ function Jobs() {
 
 
     const confirmReject = (reason: string) => {
+        trackEventFirebase('assignment_rejected', { cargoId: rejectTarget?.cargoId, assignmentDocId: rejectTarget?.assignmentDocId, reason }).catch(console.error);
         if (rejectTarget) {
             updateCargoStatus(rejectTarget.cargoId, rejectTarget.assignmentDocId, 'rejected', reason);
         }

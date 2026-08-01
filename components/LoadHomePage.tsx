@@ -21,6 +21,7 @@ import CustomHeader from './CustomHeader';
 import Heading from './Heading';
 import ProfileItemComponent from './ProfileItemComponent';
 import { trackLoadDeleted } from '@/services/analytics/appAnalytics';
+import { trackEventFirebase } from '@/services/analytics/firebaseAnalystics';
 
 interface LoadsComponentProps {
     Loads: Load[];
@@ -209,9 +210,6 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                 contentContainerStyle={{}}
                 data={Loads}
 
-
-
-
                 ListHeaderComponent={
                     <>
                         {loadVisibility === "Public" && (
@@ -353,6 +351,14 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                             <ProfileItemComponent profile={item as any} />
                             :
                             <LoadComponent item={item} expandID={expandId} expandId={(s) => setExpandID(s)} ondetailsPress={() => {
+                                trackEventFirebase('request_cargo_booking', {
+                                    loadId: item.id,
+                                    rate : item.rate,
+                                    ratePerKm : item.ratePerKm,
+                                    distance : item.distance,
+                                    origin : item.origin,
+                                    destination : item.destination
+                                });
                                 setSelectedLoad(item);
                                 setShowSheet(true);
                                 setTimeout(() => {

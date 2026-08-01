@@ -27,6 +27,7 @@ import { incrementAccountsCreated } from '@/services/analytics/dashboardAnalytic
 import { collection, getDocs, query, serverTimestamp, where } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
 import PhoneInput from '@/components/PhoneInput';
+import { trackEventFirebase } from '@/services/analytics/firebaseAnalystics';
 export default function AddDriver() {
     const background = useThemeColor('background');
     const backgroundLight = useThemeColor('backgroundLight');
@@ -107,6 +108,7 @@ export default function AddDriver() {
                 return;
             }
 
+            trackEventFirebase("driver_creation_attempt", { userId: user.uid, fullName, phoneNumber }).catch(console.error);
             // Upload the passport image
             const passportUrl = passport ? await uploadImage(passport, "DriverPassports", () => { }, "Uploading passport") : null;
 
@@ -262,7 +264,7 @@ export default function AddDriver() {
 
                 })
             )
-
+            trackEventFirebase("driver_creation_success", { userId: user.uid, fullName, phoneNumber, driverId: fixedDriverId }).catch(console.error);
 
             router.push("/Driver/DriverSelector/Index");
 
@@ -272,6 +274,7 @@ export default function AddDriver() {
         } catch (error) {
             console.error('Error adding driver:', error);
             ToastAndroid.show('Error adding driver', ToastAndroid.SHORT);
+            trackEventFirebase("driver_creation_error", { userId: user.uid, fullName, phoneNumber, error: `${error}` }).catch(console.error);
         } finally {
             setIsSubmitting(false);
         }
@@ -370,7 +373,7 @@ export default function AddDriver() {
             {currentRole.userRole !== "create_Acc" ? <View style={{ paddingTop: 36 }}>
 
                 <Heading page="Create Driver" />
-            </View> : <CustomHeader pageTitle='Create Driver' />}
+            </View> : <CustomHeader pageTitle='Create Driver'selectProfileImage = {handleSelectProfileImage} />}
 
 
 

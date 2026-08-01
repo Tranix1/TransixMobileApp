@@ -14,6 +14,7 @@ import { db } from "@/db/fireBaseConfig";
 import { setDoc, doc, updateDoc } from "firebase/firestore";
 import { handleSubmitReferralCode } from "@/Utilities/handleSubmitRefferalCode";
 import { notifyUserById } from "@/Utilities/pushNotification";
+import { trackEventFirebase, trackScreen } from "@/services/analytics/firebaseAnalystics";
 
 interface FleetAccess {
     fleetId: string;
@@ -38,6 +39,7 @@ function SwitchRoleSelector() {
 
     useEffect(() => {
         if (user) {
+            trackScreen('SwitchRoleSelector_Screen');
             setShowReferralModal(!hasReferral);
         }
     }, [user, hasReferral]);
@@ -87,6 +89,11 @@ function SwitchRoleSelector() {
             return;
         }
 
+        trackEventFirebase('fleet_role_selected', {
+            fleetId: fleet.fleetId || fleet.organizationId,
+            fleetName: fleet.companyName || fleet.fleetName,
+        });
+
         const fleetRole = {
             role: 'fleet' as const,
             fleetId: fleet.fleetId,
@@ -127,6 +134,10 @@ function SwitchRoleSelector() {
     const handleBrokerageSelect = async (brokerage: any) => {
         if (!brokerage) return;
 
+        trackEventFirebase('brokerage_role_selected', {
+            brokerageId: brokerage.brokerageId || brokerage.organizationId,
+            brokerageName: brokerage.name || brokerage.brokerage,
+        });
         const brokerId = brokerage.organizationId || brokerage.brokerageId || brokerage.id;
         const brokerStatus = await getVerifiedStatus(brokerId);
 
@@ -194,6 +205,12 @@ function SwitchRoleSelector() {
                 : accessibleFleets.filter(fleet => fleet.status === 'ended' || fleet.status === 'declined');
 
     const handleDriverDecision = async (fleet: any, decision: 'active' | 'declined') => {
+        trackEventFirebase('driver_fleet_decision', {
+            driverId: user?.uid,
+            fleetId: fleet.fleetId,
+            fleetName: fleet.fleetName,
+            decision: decision,
+        });
         try {
             if (user?.uid) {
                 const userRef = doc(db, 'personalData', user?.uid);
@@ -244,6 +261,14 @@ function SwitchRoleSelector() {
             }
         } catch (error) {
             console.error("Error updating fleet decision:", error);
+            trackEventFirebase('driver_fleet_decision_error', {
+                driverId: user?.uid,
+                fleetId: fleet.fleetId,
+                fleetName: fleet.fleetName,
+                decision: decision,
+                error: error || 'Unknown error',
+            });
+            ToastAndroid.show('Error updating fleet decision. Please try again.', ToastAndroid.LONG);
         }
     };
 
@@ -252,7 +277,11 @@ function SwitchRoleSelector() {
 
     const handleDriverSelect = async (driver: any) => {
         if (!driver) return;
-
+        trackEventFirebase('driver_role_selected', {
+            driverId: driver.driverId || user?.uid,
+            fleetId: driver.fleetId,
+            fleetName: driver.fleetName,
+        });
         const fleetRole = {
             role: 'driver' as const,
             fleetId: driver.fleetId,

@@ -14,6 +14,7 @@
     }
 
     export function useAuthState() {
+        
         const { user: contextUser, isSignedIn, isPersonalDataLoadedFromCache } = useAuth();
         const [authState, setAuthState] = useState<AuthState>({
             isLoading: true,

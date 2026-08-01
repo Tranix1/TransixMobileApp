@@ -27,10 +27,11 @@ import { DocumentAsset } from "@/types/types";
 import KYCVerificationModal from "@/components/KYCVerificationModal";
 import { db } from "@/db/fireBaseConfig";
 import { doc, collection, getDoc, getDocs, query, where, limit, serverTimestamp, writeBatch } from "firebase/firestore";
-import { trackTruckAdded } from '@/services/analytics/appAnalytics';
+import { trackEvent, trackTruckAdded } from '@/services/analytics/appAnalytics';
 import { incrementTotalTrucks } from '@/services/analytics/dashboardAnalytics';
 import { incrementTruckCount } from '@/services/analytics/organizationAnalytics';
 import { Timestamp } from "@google-cloud/firestore";
+import { trackEventFirebase, trackScreen } from "@/services/analytics/firebaseAnalystics";
 
 type FleetConfig = {
 
@@ -157,11 +158,6 @@ async function assignDefaultBrokeragesToTruck(
 
 
 
-
-
-
-
-
 function AddTrucks() {
 
   const { expoPushToken } = usePushNotifications();
@@ -224,6 +220,7 @@ function AddTrucks() {
   const [fleetConfig, setFleetConfig] = useState<FleetConfig | null>(null);
 
   useEffect(() => {
+    trackScreen("Add Truck Screen");
     const loadConfig = async () => {
       const snap = await getDoc(
         doc(db, `fleets/${currentRole.fleetId}/settings/config`)
@@ -243,6 +240,7 @@ function AddTrucks() {
 
 
   const handleSubmit = async () => {
+
 
     setSpinnerItem(true)
     if (!currentRole.fleetId) {
@@ -273,7 +271,13 @@ function AddTrucks() {
 
 
     let truckImage, truckBookImage, trailerBookF, trailerBookSc;
-
+    trackEventFirebase('add_truck_initiated', {
+      truckType: selectedTruckType?.name || "",
+      cargoArea: selectedCargoArea?.name || "",
+      tankerType: selectedTankerType?.name || "",
+      truckCapacity: selectedTruckCapacity?.name || "",
+      operationCountries: operationCountries,
+    });
 
     if (selectedTruckType?.name === "Rigid") {
       if (images.length < 2) {
@@ -682,7 +686,7 @@ function AddTrucks() {
         truckId,
         truckRef: `/fleets/${currentRole.organizationId}/Trucks/${truckId}`,
         organizationName: currentRole.companyName,
-        truckNumberPlate : formData.numberPlate,
+        truckNumberPlate: formData.numberPlate,
         status: "pending",
         priority: "normal",
         createdBy: user.uid,
@@ -718,10 +722,27 @@ function AddTrucks() {
         )
       );
 
-      router.back()
+      trackEventFirebase('add_truck_completed', {
+        truckType: selectedTruckType?.name || "",
+        cargoArea: selectedCargoArea?.name || "",
+        tankerType: selectedTankerType?.name || "",
+        truckCapacity: selectedTruckCapacity?.name || "",
+        operationCountries: operationCountries,
+      });
       ToastAndroid.show("Truck Added successfully", ToastAndroid.SHORT);
+      router.back()
 
     } catch (err) {
+
+      trackEventFirebase('add_truck_completed', {
+        truckType: selectedTruckType?.name || "",
+        cargoArea: selectedCargoArea?.name || "",
+        tankerType: selectedTankerType?.name || "",
+        truckCapacity: selectedTruckCapacity?.name || "",
+        operationCountries: operationCountries,
+        error: (err as Error).message || "Unknown error",
+      });
+      alertBox("Error Adding Truck", (err as Error).message || "An unknown error occurred while adding the truck. Please try again.", [], "error");
       console.error(err);
     } finally {
 

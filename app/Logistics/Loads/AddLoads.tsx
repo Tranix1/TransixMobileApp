@@ -38,6 +38,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomerPicker, { Customer } from '@/components/CustomerPicker';
 
 import { SelectLocationProp } from '@/types/types';
+import { trackEventFirebase, trackScreen } from '@/services/analytics/firebaseAnalystics';
 
 // New utilities
 import {
@@ -104,6 +105,7 @@ const AddLoadDB = () => {
 
 
   useEffect(() => {
+    trackScreen("Add Load Screen");
     const fetchAll = async () => {
 
 
@@ -411,79 +413,7 @@ const AddLoadDB = () => {
   };
 
 
-  // Function to clear all form fields
-  const clearFormFields = () => {
-    const defaultState = getDefaultFormState();
-
-    // Reset all form fields
-    setTypeofLoad(defaultState.typeofLoad);
-    setRate(defaultState.rate);
-    setRateExplanation(defaultState.rateexplantion);
-    // setPaymentTerms(defaultState.paymentTerms);`
-    setRequirements(defaultState.requirements);
-    setLoadingDate(defaultState.loadingDate);
-    setAdditionalInfo(defaultState.additionalInfo);
-    setAlertMsg(defaultState.alertMsg);
-    setFuelAvai(defaultState.fuelAvai);
-    setReturnLoad(defaultState.returnLoad);
-    setReturnRate(defaultState.returnRate);
-    setReturnTerms(defaultState.returnTerms);
-    setSelectedCurrency(defaultState.selectedCurrency);
-    setSelectedReturnCurrency(defaultState.selectedReturnCurrency);
-    setSelectedModelType(defaultState.selectedModelType);
-    setSelectedReturnModelType(defaultState.selectedReturnModelType);
-    setFormDataTruck(defaultState.formDataTruck);
-    setSelectedCargoArea(defaultState.selectedCargoArea);
-    setSelectedTruckType(defaultState.selectedTruckType);
-    setSelectedTankerType(defaultState.selectedTankerType);
-    setSelectedTruckCapacity(defaultState.selectedTruckCapacity);
-    setShowCountries(defaultState.showCountries);
-    setOperationCountries(defaultState.operationCountries);
-    setTrucksNeeded(defaultState.trucksNeeded);
-    setStep(defaultState.step);
-
-    // Reset new fields
-    setNumberOfTrucks('');
-    setDeliveryDate('');
-
-    // Reset location fields
-    setOrigin(null);
-    setDestination(null);
-    setDspFromLocation(false);
-    setDspToLocation(false);
-    setPickLocationOnMap(false);
-    setDistance("");
-    setDuration("");
-    setDurationInTraffic("");
-    setRoutePolyline("");
-    setBounds(null);
-
-    // Reset return load location fields
-    setReturnOrigin(null);
-    setReturnDestination(null);
-    setReturnDspFromLocation(false);
-    setReturnDspToLocation(false);
-    setReturnPickLocationOnMap(false);
-    setReturnDistance("");
-    setReturnDuration("");
-    setReturnDurationInTraffic("");
-    setReturnRoutePolyline("");
-    setReturnBounds(null);
-    setHasReturnLoad(false);
-    setUseDifferentReturnLocation(false);
-
-
-    // Reset proof of order fields
-    setProofImages([]);
-    setProofDocuments([]);
-    setProofDocumentTypes([]);
-
-    // Reset broker selection fields
-    setSelectedBrokers([]);
-    setBrokerSearchText('');
-    setSearchedBrokers([]);
-
-  };
+  
 
 
   // Separate state for proof images and documents
@@ -496,7 +426,8 @@ const AddLoadDB = () => {
   const handleSubmit = async () => {
 
     try {
-
+      trackEventFirebase("load_submission_attempt", { step: step, loadVisibility: loadVisibility, userId: user?.uid || "unknown" , organizationId: currentRole?.organizationId || "unknown" , accountType: currentRole?.accType || "unknown"  ,distance: distance, rate: rate, origin: origin,destination: destination, deliveryDate: deliveryDate });
+        
       setIsSubmitting(true)
 
       // Use utility function for validation
@@ -689,10 +620,12 @@ const AddLoadDB = () => {
         isTrackingEnabled,
 
       });
+      trackEventFirebase("load_submission_success", { step: step, loadVisibility: loadVisibility, userId: user?.uid || "unknown" , organizationId: currentRole?.organizationId || "unknown" , accountType: currentRole?.accType || "unknown"  ,distance: distance, rate: rate, origin: origin,destination: destination, numberOfTrucks: numberOfTrucks, deliveryDate: deliveryDate });
 
       ToastAndroid.show('load added successfully.', ToastAndroid.SHORT);
       router.back()
     } catch (error) {
+      trackEventFirebase("load_submission_failure", { step: step, loadVisibility: loadVisibility, userId: user?.uid || "unknown" , organizationId: currentRole?.organizationId || "unknown" , accountType: currentRole?.accType || "unknown"  ,distance: distance, rate: rate, origin: origin,destination: destination, numberOfTrucks: numberOfTrucks, deliveryDate: deliveryDate , error: error instanceof Error ? error.message : String(error) });
       console.error("Error submitting load:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       const errorDetails = error instanceof Error ? error.stack : String(error);

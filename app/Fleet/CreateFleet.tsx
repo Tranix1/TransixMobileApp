@@ -31,6 +31,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import ProfileImageModal from '@/components/selectImageNoCrop';
 import { Image } from 'expo-image';
 import { notifyUserById } from '@/Utilities/pushNotification';
+import { trackEventFirebase,  } from '@/services/analytics/firebaseAnalystics';
 
 
 const CreateFleet = () => {
@@ -106,6 +107,7 @@ const CreateFleet = () => {
 
             return;
         }
+        trackEventFirebase("fleet_creation_attempt", { userId: user.uid, fleetName: fleetData.fleetName }).catch(console.error);
 
         let errors = [];
 
@@ -367,12 +369,13 @@ const CreateFleet = () => {
 
                 })
             )
-
+trackEventFirebase("fleet_creation_success", { userId: user.uid, fleetName: fleetData.fleetName, fleetId }).catch(console.error);
 
             Alert.alert('Fleet saved', 'Your fleet request has been submitted.');
             router.push("/Fleet/FleetSelector/Index");
         } catch (error) {
             console.error('Error saving fleet verification:', error);
+            trackEventFirebase("fleet_creation_error", { userId: user.uid, fleetName: fleetData.fleetName, error: `${error}` }).catch(console.error);
             Alert.alert('Error submitting fleet verification', 'Please try again.');
         } finally {
             setUploadingFleetD(false);
@@ -429,7 +432,7 @@ const CreateFleet = () => {
                     </TouchableNativeFeedback>
                 </View>
                 } />
-            </View> : <CustomHeader pageTitle='Create Fleet' />}
+            </View> : <CustomHeader pageTitle='Create Fleet'  selectProfileImage = {handleSelectProfileImage} />}
 
 
 

@@ -10,6 +10,8 @@ import { useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { collection, doc, getDoc, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
+import { RefreshControl } from 'react-native-gesture-handler';
+import { trackScreen } from '@/services/analytics/firebaseAnalystics';
 
 // ---------- Types ----------
 
@@ -193,12 +195,14 @@ export default function BrokerProfile() {
     const [activeOpen, setActiveOpen] = useState(true);
     const [completedOpen, setCompletedOpen] = useState(false);
     const [recentOpen, setRecentOpen] = useState(false);
+    const [refreshing, setRefreshing] = useState(false)
 
     const viewerIsOwner = isOwner === 'true';
 
-    useEffect(() => {
         const loadBrokerProfile = async () => {
             try {
+            setRefreshing(true);
+
                 const storedRole = await AsyncStorage.getItem('currentRole');
                 const orgId = organizationId || (storedRole ? JSON.parse(storedRole)?.organizationId : null);
                 if (!orgId) {
@@ -302,9 +306,13 @@ export default function BrokerProfile() {
                 console.error('Error loading broker profile:', error);
             } finally {
                 setLoading(false);
+                            setRefreshing(false);
+                
             }
         };
-
+        
+    useEffect(() => {
+        trackScreen('BrokerProfile_Screen');    
         loadBrokerProfile();
     }, [organizationId]);
 
@@ -312,7 +320,16 @@ export default function BrokerProfile() {
         <ScreenWrapper>
             <Heading page="Broker Profile" />
 
-            <ScrollView contentContainerStyle={{ paddingHorizontal: wp(4), paddingBottom: hp(6) }}>
+            <ScrollView contentContainerStyle={{ paddingHorizontal: wp(4), paddingBottom: hp(6) }}    refreshControl={
+                                <RefreshControl
+                                    refreshing={refreshing}
+                                    onRefresh={loadBrokerProfile}
+                                    colors={[accent]}
+                                    tintColor={accent}
+                                />
+                            }
+            
+                        >
 
                 {/* ---------- Header ---------- */}
                 <View style={[styles.card, { backgroundColor: backgroundLight }]}>

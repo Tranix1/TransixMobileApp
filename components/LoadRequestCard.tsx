@@ -23,6 +23,7 @@ import { incrementRequestsAcceptedPblcCargo, incrementAcceptedRequestedPblcCargo
 import { doc, writeBatch, getDoc, increment } from "firebase/firestore";
 import { db } from "@/db/fireBaseConfig";
 import { incrementOrgStats, respondToRequestAnalytics } from "@/Utilities/analyticsHelpers";
+import { trackEventFirebase } from "@/services/analytics/firebaseAnalystics";
 
 export const RequestedCargo = ({
   item, dspRoute, currentLocation
@@ -69,6 +70,22 @@ export const RequestedCargo = ({
           title: "Yes, Deny",
           onPress: async () => {
             try {
+              trackEventFirebase('deny_load_request', {
+                loadId: item.loadItemDetails.loadId,
+                truckId: item.truckDetails.truckId,
+                driverId: item.driverDetails.driverId,
+                fleetId: item.fleetDetails?.id || null,
+                userId: user?.uid || null,
+                loadOrigin: item.loadItemDetails.origin,
+                loadDestination: item.loadItemDetails.destination,
+                loadRate: item.loadItemDetails.rate,
+                loadRatePerKm: item.loadItemDetails.ratePerKm,
+                loadDistance: item.loadItemDetails.distance,
+                loadCurrency: item.loadItemDetails.currency,
+                loadCommodity: item.loadItemDetails.productName,
+                truckCapacity: item.truckDetails.truckCapacity,
+                truckCargoArea: item.truckDetails.cargoArea,
+              });
               await deleteDocument('loadRequests', item.id);
 
               ToastAndroid.show(
@@ -77,6 +94,22 @@ export const RequestedCargo = ({
               );
             } catch (error) {
               alertBox("Error", "Failed to process request", [], "error");
+              trackEventFirebase('deny_load_request_failed', {
+                loadId: item.loadItemDetails.loadId,
+                truckId: item.truckDetails.truckId,
+                driverId: item.driverDetails.driverId,
+                fleetId: item.fleetDetails?.id || null,
+                userId: user?.uid || null,
+                loadOrigin: item.loadItemDetails.origin,
+                loadDestination: item.loadItemDetails.destination,
+                loadRate: item.loadItemDetails.rate,
+                loadRatePerKm: item.loadItemDetails.ratePerKm,
+                loadDistance: item.loadItemDetails.distance,
+                loadCurrency: item.loadItemDetails.currency,
+                loadCommodity: item.loadItemDetails.productName,
+                truckCapacity: item.truckDetails.truckCapacity,
+                truckCargoArea: item.truckDetails.cargoArea,
+              });
             }
           },
         },
@@ -93,7 +126,32 @@ export const RequestedCargo = ({
     setShowModal(true);
   };
 
+
   const handleConfirm = async (data: any) => {
+    try{
+
+  
+    trackEventFirebase('accept_load_request_initiated', {
+      loadId: item.loadItemDetails.loadId,
+      truckId: item.truckDetails.truckId,
+      driverId: item.driverDetails.driverId,
+      fleetId: item.fleetDetails?.id || null,
+      userId: user?.uid || null,
+      loadOrigin: item.loadItemDetails.origin,
+      loadDestination: item.loadItemDetails.destination,
+      loadRate: item.loadItemDetails.rate,
+      loadRatePerKm: item.loadItemDetails.ratePerKm,
+      loadDistance: item.loadItemDetails.distance,
+      loadCurrency: item.loadItemDetails.currency,
+      loadCommodity: item.loadItemDetails.productName,
+      truckCapacity: item.truckDetails.truckCapacity,
+      truckCargoArea: item.truckDetails.cargoArea,
+    });
+
+    if (!item.loadItemDetails || !item.truckDetails || !item.driverDetails) {
+      alertBox("Error", "Missing required details for assignment.", [], "error");
+      return;
+    }
     const payload = {
       ...data,
       visibility: "PUBLIC",
@@ -185,8 +243,46 @@ export const RequestedCargo = ({
       await batch.commit();
     }
 
+     trackEventFirebase('accept_load_request_accepted', {
+      loadId: item.loadItemDetails.loadId,
+      truckId: item.truckDetails.truckId,
+      driverId: item.driverDetails.driverId,
+      fleetId: item.fleetDetails?.id || null,
+      userId: user?.uid || null,
+      loadOrigin: item.loadItemDetails.origin,
+      loadDestination: item.loadItemDetails.destination,
+      loadRate: item.loadItemDetails.rate,
+      loadRatePerKm: item.loadItemDetails.ratePerKm,
+      loadDistance: item.loadItemDetails.distance,
+      loadCurrency: item.loadItemDetails.currency,
+      loadCommodity: item.loadItemDetails.productName,
+      truckCapacity: item.truckDetails.truckCapacity,
+      truckCargoArea: item.truckDetails.cargoArea,
+    });
+
     ToastAndroid.show("Load accepted. It now appears under Assignments.", ToastAndroid.LONG);
     setShowModal(false);
+      }catch(e){
+        trackEventFirebase('accept_load_request_failed', {
+      loadId: item.loadItemDetails.loadId,
+      truckId: item.truckDetails.truckId,
+      driverId: item.driverDetails.driverId,
+      fleetId: item.fleetDetails?.id || null,
+      userId: user?.uid || null,
+      loadOrigin: item.loadItemDetails.origin,
+      loadDestination: item.loadItemDetails.destination,
+      loadRate: item.loadItemDetails.rate,
+      loadRatePerKm: item.loadItemDetails.ratePerKm,
+      loadDistance: item.loadItemDetails.distance,
+      loadCurrency: item.loadItemDetails.currency,
+      loadCommodity: item.loadItemDetails.productName,
+      truckCapacity: item.truckDetails.truckCapacity,
+      truckCargoArea: item.truckDetails.cargoArea,
+    });
+      console.error("Error in handleConfirm:", e);
+      alertBox("Error", "Failed to accept the load request.", [], "error");
+      return;
+    }
   };
 
 

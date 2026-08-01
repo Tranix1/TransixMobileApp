@@ -380,7 +380,7 @@ export default function Index() {
               <TouchableNativeFeedback style={{backgroundColor:backgroundLight, padding: wp(2), borderRadius: wp(2),borderColor:accent,borderWidth:1 , }} onPress={() => router.push('/Tracking/AddTrackedVehicle')}  >
                 <ThemedText style={{ alignSelf: 'flex-start' }}>Add Vehicle</ThemedText>
               </TouchableNativeFeedback>
-            {user?.uid === 'QOC9krp5BOR7NhFXRuX5f32u17e2' && (
+            {user?.uid === 'jtKEHUDJ66PCpuTlsBr2L5uWwSr1' && (
               <View style={{ marginLeft: wp(4) }}>
                 <TouchableNativeFeedback onPress={() => router.push('/Tracking/AddAgent')} style={{backgroundColor:backgroundLight, padding: wp(2), borderRadius: wp(2),borderColor:accent,borderWidth:1 , }}>
                   <ThemedText style={{ alignSelf: 'flex-start' }}>Add Agent</ThemedText>

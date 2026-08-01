@@ -21,6 +21,7 @@ import { useAuth } from "@/context/AuthContext";
 // collections) and shape the response as ReferralDashboardData below.
 
 import { getReferralDashboardData } from '@/Utilities/referralService.additions';
+import { trackScreen } from '@/services/analytics/firebaseAnalystics';
 
 // ---------- Types ----------
 // Adjust these to match your actual schema — this is my best guess based on
@@ -92,6 +93,7 @@ const ReferralDashboardScreen: React.FC<ReferralDashboardScreenProps> = ({ refer
   }, [referrerUserId]);
 
   useEffect(() => {
+    trackScreen('ReferralDashboardScreen');
     setLoading(true);
     loadData().finally(() => setLoading(false));
   }, [loadData]);

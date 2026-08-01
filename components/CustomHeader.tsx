@@ -15,13 +15,14 @@ interface CustomHeaderProps {
     pageTitle?: string;
     addingNavigate?: string
     filterElement?: (value: boolean) => void;
+    selectProfileImage: () => void;
+    selectedImage?: { uri: string } | null;
 
 }
 import { Image } from 'expo-image';
-import { selectImage, selectImageNoCrop } from '@/Utilities/imageUtils';
-import ProfileImageModal from './selectImageNoCrop';
 
-export default function CustomHeader({ pageTitle, addingNavigate, filterElement }: CustomHeaderProps) {
+
+export default function CustomHeader({ pageTitle, addingNavigate, filterElement, selectProfileImage, selectedImage, }: CustomHeaderProps) {
     const background = useThemeColor("background");
     const icon = useThemeColor('icon');
     const accent = useThemeColor('accent');
@@ -33,32 +34,39 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
     function handleProfileNvigation() {
         if (currentRole.accType === "fleet") {
             router.push(
-                "/Fleet/Details/Index"
+                {
+
+                    pathname: "/Fleet/Profile/Index",
+                    params: {
+                        organizationId: currentRole.organizationId,
+                        isOwner: "true",
+                    },
+                }
             )
 
         } else if (currentRole.accType === "brokerage") {
 
             router.push({
-                pathname: "/brokerage/Details/Index",
+                pathname: "/brokerage/Profile/Index",
                 params: {
-                    brokerid: currentRole.organizationId,
-                    dspDetails: "true",
+                    organizationId: currentRole.organizationId,
+                    isOwner: "true",
                 },
             });
 
         } else if (currentRole.accType === "driver") {
-            router.push("/Driver/Details/Index")
+            router.push(
+                {
+
+                    pathname: "/Driver/Profile/Index",
+                    params: {
+                        organizationId: currentRole.organizationId,
+                        isOwner: "true",
+                    },
+                }
+            )
         }
     }
-    const [profileImageModal, setProfileImageModal] = React.useState(false);
-    const [selectedImage, setSelectedImage] = React.useState<any>(null);
-
-    const handleSelectProfileImage = () => {
-        selectImage((image) => {
-            setSelectedImage(image);
-            setProfileImageModal(true);
-        });
-    };
 
 
 
@@ -74,13 +82,7 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
 
             <View>
 
-                <ProfileImageModal
-                    visible={profileImageModal}
-                    image={selectedImage}
-                    onClose={() => setProfileImageModal(false)}
-                    onChangeImage={handleSelectProfileImage}
 
-                />
 
 
 
@@ -110,7 +112,7 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
 
                                 <View style={{ flexDirection: "row" }}>
                                     <View style={{ paddingRight: 20 }}>
-                                        <TouchableNativeFeedback onPress={handleSelectProfileImage} style={{ paddingRight: 15 }}>
+                                        <TouchableNativeFeedback onPress={selectProfileImage} style={{ paddingRight: 15 }}>
                                             <View
                                                 style={{
                                                     padding: wp(1),
@@ -123,9 +125,9 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
                                                 }}
                                             >
 
-                                                {currentRole?.profilePhoto ? (
+                                                {(currentRole?.profilePhoto || selectedImage) ? (
                                                     <Image
-                                                        source={{ uri: currentRole.profilePhoto }}
+                                                        source={{ uri: selectedImage?.uri && selectedImage.uri || currentRole.profilePhoto }}
                                                         style={{
                                                             width: "100%",
                                                             height: "100%"
@@ -181,7 +183,7 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
                                     <View style={{ padding: wp(2) }}>
                                         <FontAwesome6 name="user" size={wp(7)} color={icon} />;
                                     </View>
-                                </TouchableNativeFeedback>  }
+                                </TouchableNativeFeedback>}
                                 {/* <TouchableNativeFeedback onPress={() => router.push("/Fleet/Profile/Index")}  >
                                     <View style={{ padding: wp(2) }}>
                                         <FontAwesome6 name="user" size={wp(7)} color={icon} />;
@@ -193,17 +195,17 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement 
                                     </View>
                                 </TouchableNativeFeedback> */}
 
-                                
-                                    <View style={{}}>
-                                        <ThemedText type="title" style={{ alignSelf: "center" }} >{pageTitle}</ThemedText>
-                                      { currentRole.userRole && <ThemedText type="tiny" style={{ alignSelf: 'center' }}><ThemedText type='tiny' style={{ fontSize: wp(3), }}>
-                                            {currentRole.companyName?.length > 5
-                                                ? `${currentRole.companyName.slice(0, 5)}`
-                                                : currentRole.companyName}
-                                        </ThemedText> : {currentRole.accType} - {currentRole.userRole}
-                                        </ThemedText>}
-                                    </View>
-                                
+
+                                <View style={{}}>
+                                    <ThemedText type="title" style={{ alignSelf: "center" }} >{pageTitle}</ThemedText>
+                                    {currentRole.userRole && <ThemedText type="tiny" style={{ alignSelf: 'center' }}><ThemedText type='tiny' style={{ fontSize: wp(3), }}>
+                                        {currentRole.companyName?.length > 5
+                                            ? `${currentRole.companyName.slice(0, 5)}`
+                                            : currentRole.companyName}
+                                    </ThemedText> : {currentRole.accType} - {currentRole.userRole}
+                                    </ThemedText>}
+                                </View>
+
 
 
                                 <View style={{ flexDirection: 'row', width: wp(26), justifyContent: "space-around", alignItems: 'center', }}>

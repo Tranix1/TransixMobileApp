@@ -5,6 +5,7 @@ import { storage } from "./fireBaseConfig";
 import { usePushNotifications, sendPushNotification } from "@/Utilities/pushNotification";
 import { logAdminAction, getCurrentAdminInfo, ADMIN_ACTIONS } from "@/Utilities/adminActionTracker";
 import auth from "@react-native-firebase/auth"
+import { trackEventFirebase } from "@/services/analytics/firebaseAnalystics";
 
 
 /**
@@ -556,8 +557,8 @@ export const validateReferrer = async (referrerEmail: string) => {
 };
 
 export const validateReferralCode = async (referralCode: string) => {
-    console.log("REFERRAL CODE RECEIVED:", referralCode);
 
+    trackEventFirebase("referral_entered", { referralCode }).catch(console.error);
     try {   
 
         if (!referralCode) {
@@ -571,6 +572,7 @@ export const validateReferralCode = async (referralCode: string) => {
 
         // Individual referral
         if (referralCode.startsWith("R")) {
+    trackEventFirebase("individual_referral", { referralCode }).catch(console.error);
 
             const q = query(
                 collection(db, "referrers"),
@@ -583,6 +585,7 @@ export const validateReferralCode = async (referralCode: string) => {
 
 
             if (querySnapshot.empty) {
+                trackEventFirebase("individual_referral_not_found", { referralCode }).catch(console.error);
                 return {
                     exists: false,
                     type: "REFERRER",
@@ -592,7 +595,7 @@ export const validateReferralCode = async (referralCode: string) => {
 
 
             const data = querySnapshot.docs[0].data();
-
+            trackEventFirebase("individual_referral_found", { referralCode, referrerId: data.userId }).catch(console.error);
 
             return {
                 exists: true,
@@ -612,8 +615,10 @@ export const validateReferralCode = async (referralCode: string) => {
 
         // Campaign referral
         if (referralCode.startsWith("C")) {
+
             // New records use campaignReferralCode; retain the legacy field lookup
             // so previously issued campaign codes continue to work.
+            trackEventFirebase("campaign_referral", { referralCode }).catch(console.error);
             let querySnapshot = await getDocs(query(
                 collection(db, "campaignReferrals"),
                 where("campaignReferralCode", "==", referralCode)
@@ -627,6 +632,7 @@ export const validateReferralCode = async (referralCode: string) => {
 
 
             if (querySnapshot.empty) {
+                trackEventFirebase("campaign_referral_not_found", { referralCode }).catch(console.error);
                 return {
                     exists: false,
                     type: "CAMPAIGN",
@@ -640,7 +646,7 @@ export const validateReferralCode = async (referralCode: string) => {
                 return { exists: false, type: "CAMPAIGN", data: null };
             }
 
-
+            trackEventFirebase("campaign_referral_found", { referralCode, campaign: data.campaignName ?? data.campaign }).catch(console.error);
             return {
                 exists: true,
                 type: "CAMPAIGN",

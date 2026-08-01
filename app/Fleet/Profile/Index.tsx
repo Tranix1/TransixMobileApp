@@ -12,6 +12,7 @@ import { doc, getDoc, getDocs, collection, query, orderBy } from 'firebase/fires
 import { db } from '@/db/fireBaseConfig';
 import { LoadLyfCyleStatsCompent } from '@/components/loadLyfCyleStatsPlbcPro';
 import { LoadLyfCyleStatsCompentSec } from '@/components/LoadLyfCyleStatsCompentSec';
+import { trackScreen } from '@/services/analytics/firebaseAnalystics';
 
 // ---------- Types ----------
 
@@ -573,7 +574,7 @@ export default function FleetProfile() {
 
 
     useEffect(() => {
-
+        trackScreen('FleetProfile_Screen');
         loadFleetProfile();
     }, [organizationId]);
 
@@ -851,7 +852,7 @@ export default function FleetProfile() {
                 </SectionCard> */}
 
                 {/* ---------- Loads ---------- */}
-                <SectionCard title="Business Reputation" background={backgroundLight} textColor={text}>
+               {isOwner&& <SectionCard title="Business Reputation" background={backgroundLight} textColor={text}>
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
@@ -961,7 +962,7 @@ export default function FleetProfile() {
                     <ThemedText style={{ textAlign: "center", color: icon }}>
                         Swipe to view more →
                     </ThemedText>
-                </SectionCard>
+                </SectionCard>}
 
 
                 {/* ---------- Loads ---------- */}

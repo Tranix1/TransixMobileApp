@@ -20,6 +20,7 @@ import { useAuth } from '@/context/AuthContext'
 import { updateDocument } from '@/db/operations'
 import { serverTimestamp, Timestamp } from 'firebase/firestore'
 import { formatDate } from '@/services/services'
+import { trackEventFirebase } from '@/services/analytics/firebaseAnalystics'
 
 interface DspAllLoadsProps {
   item: Load;
@@ -69,6 +70,7 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
   }
 
   function showDocumentList() {
+    
     if (item.proofOfOrder && Array.isArray(item.proofOfOrder) && item.proofOfOrderType && Array.isArray(item.proofOfOrderType)) {
       const documents = item.proofOfOrder
         .map((url, index) => ({ url, type: item.proofOfOrderType[index] as any }))
@@ -675,6 +677,12 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
                   <TouchableOpacity
                     style={[styles.actionButton, { backgroundColor: '#4eb37a' }]}
                     onPress={() => {
+                      trackEventFirebase('view_load_proof', {
+                        loadId: item.id,
+                        hasProofImages,
+                        hasProofDocuments,
+                        loadImagesCount: item.loadImages ? item.loadImages.length : 0,
+                      });
                       if (hasProofImages || hasProofDocuments) {
                         handleProofPress();
                       } else if (item.loadImages && item.loadImages.length > 0) {
@@ -695,7 +703,13 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
                     // Use stored coordinates if available, otherwise try to parse from strings
                     const originCoords = item.originCoordinates || parseCoordinateString(item.origin || '');
                     const destinationCoords = item.destinationCoordinates || parseCoordinateString(item.destination || '');
-
+                    trackEventFirebase('view_load_route', {
+                      loadId: item.id,
+                      origin: item.origin,
+                      destination: item.destination,
+                      originCoords: JSON.stringify(originCoords),
+                      destinationCoords: JSON.stringify(destinationCoords),
+                    });
                     if (isValidCoordinate(originCoords) && isValidCoordinate(destinationCoords)) {
                       router.push({
                         pathname: "/Map/ViewLoadRoutes",

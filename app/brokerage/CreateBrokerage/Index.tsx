@@ -35,6 +35,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import ProfileImageModal from '@/components/selectImageNoCrop';
 import { notifyUserById } from '@/Utilities/pushNotification';
+import { trackEventFirebase } from '@/services/analytics/firebaseAnalystics';
 
 
 const CreaterBrokerage = ({ }) => {
@@ -120,9 +121,9 @@ const CreaterBrokerage = ({ }) => {
 
       return
     }
+    trackEventFirebase("brokerage_creation_attempt", { userId: user?.uid, brokerName, brokerPhone, typeOfBroker }).catch(console.error);
 
     const imagelogo = selectedImage ? await uploadImage(selectedImage, "Profiles", setUploadImageUpdate, "Profile Image") : null
-
 
     try {
       // Upload documents to Firebase Storage and get URLs
@@ -313,17 +314,10 @@ const CreaterBrokerage = ({ }) => {
         timeStamp: serverTimestamp()
       };
 
-
-
-
-
       await setDoc(doc(db, "brokerages", brokerageId), brokerCollectionData);
 
       // Store in verifiedUsers collection
       const existingAccs = user?.brokerDetails || [];
-
-
-
 
       const newBroker = {
 
@@ -386,8 +380,6 @@ const CreaterBrokerage = ({ }) => {
 
       )
 
-
-
       const contactDetails = {
         userName: user?.displayName,
         phoneNumber: user?.phoneNumber,
@@ -435,7 +427,7 @@ const CreaterBrokerage = ({ }) => {
         })
       )
 
-
+      trackEventFirebase("brokerage_creation_success", { userId: user?.uid, brokerName, brokerPhone, typeOfBroker, brokerageId }).catch(console.error);
       // Close modal and show success
       setUploadingBrokerD(false);
       router.push("/")
@@ -444,6 +436,7 @@ const CreaterBrokerage = ({ }) => {
     } catch (error) {
       console.error('Error saving broker verification:', error);
       setUploadingBrokerD(false);
+      trackEventFirebase("brokerage_creation_error", { userId: user?.uid, brokerName, brokerPhone, typeOfBroker, error: `${error}` }).catch(console.error);
       alert('Error submitting broker verification. Please try again.');
     }
   };
@@ -502,7 +495,7 @@ const CreaterBrokerage = ({ }) => {
         </View>
         } />
       </View> :
-        <CustomHeader pageTitle='Create Brokerage' />
+        <CustomHeader pageTitle='Create Brokerage' selectProfileImage = {handleSelectProfileImage} />
       }
 
 

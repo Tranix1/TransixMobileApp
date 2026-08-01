@@ -13,6 +13,7 @@ import { hp, wp } from "@/constants/common";
 import { db } from "@/db/fireBaseConfig";
 import { setDoc, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { handleSubmitReferralCode } from "@/Utilities/handleSubmitRefferalCode";
+import { trackEventFirebase } from "@/services/analytics/firebaseAnalystics";
 
 interface FleetAccess {
     fleetId: string;
@@ -86,6 +87,7 @@ function FleetSelector() {
             return;
         }
 
+        trackEventFirebase('fleet_selected', { fleetId: fleet.fleetId || fleet.organizationId }).catch(console.error);  
         console.log(fleet.referrerCode, "The refferal code  ")
         if (!fleet) return;
 

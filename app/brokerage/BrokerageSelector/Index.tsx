@@ -13,6 +13,7 @@ import { hp, wp } from "@/constants/common";
 import SubscriptionPaymentModal from "@/components/SubscriptionPaymentModal";
 import { handleSubmitReferralCode } from "@/Utilities/handleSubmitRefferalCode";
 import { readById } from "@/db/operations";
+import { trackEventFirebase } from "@/services/analytics/firebaseAnalystics";
 
 function BrokerageSelector() {
     const { user, Logout, setupUser, setCurrentRole, currentRole } = useAuth();
@@ -62,7 +63,7 @@ function BrokerageSelector() {
     };
 
     const handleBrokerageSelect = async (brokerage: any) => {
-
+        trackEventFirebase('brokerage_selected', { brokerageId: brokerage.organizationId || brokerage.brokerageId || brokerage.id }).catch(console.error);
         if (!brokerage) return;
 
         const brokerId = brokerage.organizationId || brokerage.brokerageId || brokerage.id;

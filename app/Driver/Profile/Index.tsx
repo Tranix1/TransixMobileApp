@@ -1,270 +1,329 @@
-import React from 'react';
-import { View, StyleSheet, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Image, RefreshControl } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import ScreenWrapper from '@/components/ScreenWrapper';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { useAuth } from '@/context/AuthContext';
-import CustomHeader from '@/components/CustomHeader';
-import AuthStatusModal from '@/components/AuthStatusModal';
-import UserMenuModal from '@/components/UserMenuModal';
-import { useAuthState } from '@/hooks/useAuthState';
-import { router, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { doc, getDoc } from 'firebase/firestore';
+import Heading from '@/components/Heading';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { wp, hp } from '@/constants/common';
+import { useLocalSearchParams } from 'expo-router';
+import { doc, getDoc, getDocs, collection, query, orderBy } from 'firebase/firestore';
 import { db } from '@/db/fireBaseConfig';
+import { LoadLyfCyleStatsCompent } from '@/components/loadLyfCyleStatsPlbcPro';
 
 // ---------- Types ----------
 
-interface TripEntry {
+interface AssignedVehicle {
+    regNumber: string;
+    type: string;
+    fleetName?: string;
+}
+
+interface TripRouteEntry {
     id: string;
-    route: string;
-    date: string;
-    load: string;
-    status: string;
+    from: {
+        city: string;
+        country: string;
+    };
+    to: {
+        city: string;
+        country: string;
+    };
+    tripsCompleted: number;
 }
 
 interface ReviewEntry {
     id: string;
-    author: string;
+    reviewer: string;
     rating: number;
     comment: string;
     date: string;
 }
 
+interface DocumentEntry {
+    label: string;
+    verified: boolean;
+    expiry?: string;
+    icon: keyof typeof Ionicons.glyphMap;
+}
+
+interface PayoutStats {
+    totalEarned: number;
+    pendingAmount: number;
+    lastPayout: number;
+    paymentMethod: string;
+    confirmationRate: number;
+}
+
 interface DriverProfileData {
-    photoUrl: string;
-    fullName: string;
+    logoUrl: string | null;
+    name: string;
     location: string;
     rating: number;
     reviewsCount: number;
     memberSince: string;
     lastActive: string;
 
-    completedTrips: number;
+    licenseNumber: string;
+    licenseClass: string;
+    licenseExpiry: string;
+    yearsExperience: number;
+
+    assignedVehicle: AssignedVehicle | null;
+
+    tripsCompleted: number;
     activeTrips: number;
-    yearsExperience: string;
+    totalDistance: number;
 
     onTimeDelivery: number;
     acceptanceRate: number;
     avgResponseTime: string;
     cancellationRate: number;
-    safetyRecord: string;
-    totalDistance: number;
-    trackingStatus: 'Live' | 'Manual' | 'Unavailable';
+    safetyIncidents: number;
+    fleetsWorkedWith: number;
 
-    licenceClasses: string[];
-    endorsements: string[];
-    languages: string[];
-
-    recentTrips: TripEntry[];
+    documents: DocumentEntry[];
+    payouts: PayoutStats;
+    provenRoutes: TripRouteEntry[];
     latestReviews: ReviewEntry[];
 }
 
 const DEFAULT_DRIVER: DriverProfileData = {
-    photoUrl: 'https://via.placeholder.com/160?text=Driver',
-    fullName: 'David K. Ochieng',
-    location: 'Nairobi, Kenya',
-    rating: 4.9,
-    reviewsCount: 84,
-    memberSince: 'Feb 2020',
+    logoUrl: null,
+    name: 'Driver',
+    location: 'Harare, Zimbabwe',
+    rating: 4.8,
+    reviewsCount: 24,
+    memberSince: 'Jan 2023',
     lastActive: 'Today',
 
-    completedTrips: 152,
-    activeTrips: 1,
-    yearsExperience: '7 years',
+    licenseNumber: '—',
+    licenseClass: 'Class 2',
+    licenseExpiry: '—',
+    yearsExperience: 5,
 
-    onTimeDelivery: 98,
-    acceptanceRate: 93,
-    avgResponseTime: '6 min',
-    cancellationRate: 1,
-    safetyRecord: 'No incidents',
-    totalDistance: 96400,
-    trackingStatus: 'Live',
+    assignedVehicle: null,
 
-    licenceClasses: ['Class C', 'Class E'],
-    endorsements: ['Hazardous Materials', 'Tanker'],
-    languages: ['English', 'Swahili'],
+    tripsCompleted: 0,
+    activeTrips: 0,
+    totalDistance: 0,
 
-    recentTrips: [
-        { id: 't1', route: 'Nairobi → Mombasa', date: 'Jun 3, 2026', load: 'Fuel & Spares', status: 'Delivered' },
-        { id: 't2', route: 'Mombasa → Kisumu', date: 'May 26, 2026', load: 'Grain', status: 'Completed' },
-        { id: 't3', route: 'Kisumu → Eldoret', date: 'May 20, 2026', load: 'Construction Materials', status: 'Completed' },
+    onTimeDelivery: 95,
+    acceptanceRate: 90,
+    avgResponseTime: '10 min',
+    cancellationRate: 2,
+    safetyIncidents: 0,
+    fleetsWorkedWith: 0,
+
+    documents: [
+        { label: 'Driver\'s License', verified: false, icon: 'card-outline' },
+        { label: 'National ID', verified: false, icon: 'id-card-outline' },
+        { label: 'Defensive Driving Cert', verified: false, icon: 'shield-checkmark-outline' },
+        { label: 'Medical Certificate', verified: false, icon: 'medkit-outline' },
     ],
-    latestReviews: [
-        { id: 'r1', author: 'Fleet Manager', rating: 5, comment: 'Always meets delivery windows and keeps the truck in excellent condition.', date: 'Jun 5, 2026' },
-        { id: 'r2', author: 'Operations Lead', rating: 5, comment: 'Great communication, very responsive on long-haul jobs.', date: 'May 29, 2026' },
-    ],
+
+    payouts: {
+        totalEarned: 0,
+        pendingAmount: 0,
+        lastPayout: 0,
+        paymentMethod: 'Not set',
+        confirmationRate: 0,
+    },
+
+    provenRoutes: [],
+    latestReviews: [],
 };
 
 // ---------- Small reusable pieces ----------
 
-function StatBlock({ label, value, background, valueColor, labelColor }: { label: string; value: string | number; background: string; valueColor: string; labelColor: string }) {
+function StatBlock({ label, value, background, valueColor, iconColor }: { label: string; value: string | number; background: string; valueColor: string; iconColor: string }) {
     return (
         <View style={[styles.statBlock, { backgroundColor: background }]}>
-            <Text style={[styles.statValue, { color: valueColor }]}>{value}</Text>
-            <Text style={[styles.statLabel, { color: labelColor }]}>{label}</Text>
+            <ThemedText style={[styles.statValue, { color: valueColor }]}>{value}</ThemedText>
+            <ThemedText style={[styles.statLabel, { color: iconColor }]}>{label}</ThemedText>
         </View>
     );
 }
 
-function SectionCard({ title, meta, children, background, textColor, accent }: { title: string; meta?: string; children: React.ReactNode; background: string; textColor: string; accent?: string }) {
+function SectionCard({ title, children, background, textColor }: { title: string; children: React.ReactNode; background: string; textColor: string }) {
     return (
-        <View style={[styles.card, { backgroundColor: background }]}>
-            <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionTitle, { color: textColor }]}>{title}</Text>
-                {meta ? <Text style={[styles.sectionMeta, { color: accent }]}>{meta}</Text> : null}
-            </View>
+        <View style={[styles.section, { backgroundColor: background }]}>
+            <ThemedText style={[styles.sectionTitle, { color: textColor }]}>{title}</ThemedText>
             {children}
-        </View>
-    );
-}
-
-function Chip({ label, background, textColor }: { label: string; background: string; textColor: string }) {
-    return (
-        <View style={[styles.chip, { backgroundColor: background }]}>
-            <Text style={[styles.chipText, { color: textColor }]}>{label}</Text>
         </View>
     );
 }
 
 // ---------- Main component ----------
 
-function Profile() {
+export default function DriverProfile() {
     const background = useThemeColor('background');
     const backgroundLight = useThemeColor('backgroundLight');
     const text = useThemeColor('text');
     const accent = useThemeColor('accent');
     const icon = useThemeColor('icon');
-    const coolGray = useThemeColor('coolGray');
 
-    const {
-        isAuthenticated,
-        user,
-        needsProfileSetup,
-        needsEmailVerification,
-        updateUserProfile
-    } = useAuthState();
+    const { driverId, isOwner } = useLocalSearchParams<{ driverId?: string; isOwner?: string }>();
+    const [driver, setDriver] = useState<DriverProfileData>(DEFAULT_DRIVER);
+    const [refreshing, setRefreshing] = useState(false);
 
-    const { currentRole } = useAuth();
-    const { driverId: driverIdParam, organizationId: organizationIdParam } = useLocalSearchParams<{ driverId?: string; organizationId?: string }>();
+    const [documentsOpen, setDocumentsOpen] = useState(true);
+    const [provenRoutesOpen, setProvenRoutesOpen] = useState(true);
+    const [showAllReviews, setShowAllReviews] = useState(false);
 
-    const [dspCreateAcc, setDspCreateAcc] = React.useState(false);
-    const [dspVerifyAcc, setDspVerifyAcc] = React.useState(false);
-    const [dspMenu, setDspMenu] = React.useState(false);
-    const [tripsOpen, setTripsOpen] = React.useState(true);
+    const viewerIsOwner = isOwner === 'true';
 
-    const [driver, setDriver] = React.useState<DriverProfileData>(DEFAULT_DRIVER);
+    const loadDriverProfile = async () => {
+        try {
+            setRefreshing(true);
 
-    React.useEffect(() => {
-        const loadDriverProfile = async () => {
-            try {
-                const driverId = driverIdParam || user?.uid;
-                if (!driverId) return;
-
-                const profileId = organizationIdParam || driverId;
-                const snapshot = await getDoc(doc(db, 'organizationProfiles', profileId));
-
-                if (snapshot.exists()) {
-                    const data = snapshot.data() as any;
-                    setDriver((prev) => ({
-                        ...prev,
-                        photoUrl: data.photoUrl || prev.photoUrl,
-                        fullName: data.fullName || user?.displayName || prev.fullName,
-                        location: data.location?.description || data.location || prev.location,
-                        rating: data.averageRating ?? prev.rating,
-                        reviewsCount: data.reviewsCount ?? prev.reviewsCount,
-                        memberSince: data.memberSince || prev.memberSince,
-                        lastActive: data.lastActive || prev.lastActive,
-
-                        completedTrips: data.completedTrips ?? prev.completedTrips,
-                        activeTrips: data.activeTrips ?? prev.activeTrips,
-                        yearsExperience: data.yearsExperience || prev.yearsExperience,
-
-                        onTimeDelivery: data.onTimeDelivery ?? prev.onTimeDelivery,
-                        acceptanceRate: data.acceptanceRate ?? prev.acceptanceRate,
-                        avgResponseTime: data.responseTime ? `${data.responseTime} min` : prev.avgResponseTime,
-                        cancellationRate: data.cancellationRate ?? prev.cancellationRate,
-                        safetyRecord: data.safetyRecord || prev.safetyRecord,
-                        totalDistance: data.totalDistance ?? prev.totalDistance,
-                        trackingStatus: data.trackingStatus || prev.trackingStatus,
-
-                        licenceClasses: data.licenceClasses || prev.licenceClasses,
-                        endorsements: data.endorsements || prev.endorsements,
-                        languages: data.languages || prev.languages,
-
-                        recentTrips: data.recentTrips || prev.recentTrips,
-                        latestReviews: data.latestReviews || prev.latestReviews,
-                    }));
-                }
-            } catch (error) {
-                console.error('Error loading driver profile:', error);
+            if (!driverId) {
+                return;
             }
-        };
 
-        loadDriverProfile();
-    }, [driverIdParam, organizationIdParam, user]);
+            const profileRef = doc(db, 'profiles', driverId);
 
-    const checkAuth = (theAction?: () => void) => {
-        if (!isAuthenticated) {
-            setDspCreateAcc(true);
-            return;
-        }
+            const [profileSnap, routesSnap] = await Promise.all([
+                getDoc(profileRef),
+                getDocs(
+                    query(
+                        collection(db, 'profiles', driverId, 'provenRoutes'),
+                        orderBy('createdAt', 'desc')
+                    )
+                ),
+            ]);
 
-        if (needsProfileSetup) {
-            router.push({ pathname: '/Account/Profile', params: { operation: 'create' } });
-            return;
-        }
+            if (!profileSnap.exists()) {
+                return;
+            }
 
-        if (needsEmailVerification) {
-            setDspVerifyAcc(true);
-            return;
-        }
+            const data = profileSnap.data() as any;
 
-        if (typeof theAction === 'function') {
-            theAction();
-        } else {
-            setDspMenu(true);
+            const provenRoutes = routesSnap.docs.map((routeDoc) => {
+                const route = routeDoc.data();
+                return {
+                    id: routeDoc.id,
+                    from: route.from,
+                    to: route.to,
+                    tripsCompleted: route.tripsCompleted ?? 0,
+                };
+            }) as TripRouteEntry[];
+
+            const memberSince = data.timeStamp
+                ? (() => {
+                    const date = data.timeStamp.toDate();
+                    return `${date.getDate()} ${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear()}`;
+                })()
+                : '';
+
+            setDriver((prev) => ({
+                ...prev,
+
+                logoUrl: data.profilePhoto ?? prev.logoUrl,
+                name: data.name ?? prev.name,
+                location: data.location?.description || data.location || prev.location,
+
+                rating: data.rating ?? prev.rating,
+                reviewsCount: data.reviewsCount ?? prev.reviewsCount,
+                memberSince: memberSince || prev.memberSince,
+                lastActive: data.lastActive ?? prev.lastActive,
+
+                licenseNumber: data.licenseNumber ?? prev.licenseNumber,
+                licenseClass: data.licenseClass ?? prev.licenseClass,
+                licenseExpiry: data.licenseExpiry ?? prev.licenseExpiry,
+                yearsExperience: data.yearsExperience ?? prev.yearsExperience,
+
+                assignedVehicle: data.assignedVehicle ?? prev.assignedVehicle,
+
+                tripsCompleted: data.tripsCompleted ?? prev.tripsCompleted,
+                activeTrips: data.activeTrips ?? prev.activeTrips,
+                totalDistance: data.totalDistance ?? prev.totalDistance,
+
+                onTimeDelivery: data.onTimeDelivery ?? prev.onTimeDelivery,
+                acceptanceRate: data.acceptanceRate ?? prev.acceptanceRate,
+                avgResponseTime: data.responseTime ? `${data.responseTime} min` : prev.avgResponseTime,
+                cancellationRate: data.cancellationRate ?? prev.cancellationRate,
+                safetyIncidents: data.safetyIncidents ?? prev.safetyIncidents,
+                fleetsWorkedWith: data.fleetsWorkedWith ?? prev.fleetsWorkedWith,
+
+                documents: data.documents ?? prev.documents,
+                payouts: data.payouts ?? prev.payouts,
+
+                provenRoutes,
+                latestReviews: data.latestReviews ?? prev.latestReviews,
+            }));
+        } catch (error) {
+            console.error('Error loading driver profile:', error);
+        } finally {
+            setRefreshing(false);
         }
     };
 
-    const trackingColor =
-        driver.trackingStatus === 'Live' ? '#16a34a' : driver.trackingStatus === 'Manual' ? '#f2b01e' : '#9ca3af';
+    useEffect(() => {
+        loadDriverProfile();
+    }, [driverId]);
+
+    const visibleReviews = showAllReviews ? driver.latestReviews : driver.latestReviews.slice(0, 3);
+    const verifiedDocsCount = driver.documents.filter((d) => d.verified).length;
 
     return (
-        <View style={[styles.wrapper, { backgroundColor: background }]}>
-            <CustomHeader  pageTitle="Driver Profile" />
+        <ScreenWrapper>
+            <Heading page="Driver Profile" />
 
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-
+            <ScrollView
+                contentContainerStyle={{ paddingHorizontal: wp(4), paddingBottom: hp(6) }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={loadDriverProfile}
+                        colors={[accent]}
+                        tintColor={accent}
+                    />
+                }
+            >
                 {/* ---------- Header ---------- */}
-                <View style={[styles.hero, { backgroundColor: accent + '15' }]}>
-                    <View style={styles.heroTop}>
-                        <View style={[styles.avatarFrame, { borderColor: accent }]}>
-                            <Image source={{ uri: driver.photoUrl }} style={styles.avatar} />
-                        </View>
-                        <View style={styles.heroText}>
-                            <Text style={[styles.name, { color: text }]}>{driver.fullName}</Text>
-                            <View style={styles.locationRow}>
-                                <Ionicons name="location-outline" size={13} color={icon} />
-                                <Text style={[styles.subtitle, { color: icon }]}> {driver.location}</Text>
-                            </View>
-                            <View style={styles.ratingRow}>
-                                <View style={[styles.ratingBadge, { backgroundColor: '#fef3c7' }]}>
-                                    <Ionicons name="star" size={13} color="#f2b01e" />
-                                    <Text style={[styles.ratingText, { color: text }]}>{driver.rating.toFixed(1)}</Text>
+                <View style={[styles.card, { backgroundColor: backgroundLight }]}>
+                    <View style={styles.headerRow}>
+                        <View style={styles.headerLeft}>
+                            {driver.logoUrl ? (
+                                <Image source={{ uri: driver.logoUrl }} style={styles.logo} />
+                            ) : (
+                                <View style={[styles.logoPlaceholder, { backgroundColor: accent + '15' }]}>
+                                    <Ionicons name="person" size={wp(7)} color={accent} />
                                 </View>
-                                <Text style={[styles.reviewText, { color: icon }]}>{driver.reviewsCount} reviews</Text>
+                            )}
+                            <View style={styles.headerText}>
+                                <ThemedText style={[styles.title, { color: text }]}>{driver.name}</ThemedText>
+                                <View style={styles.locationRow}>
+                                    <Ionicons name="location-outline" size={wp(3.5)} color={icon} />
+                                    <ThemedText style={[styles.subtitle, { color: icon }]}> {driver.location}</ThemedText>
+                                </View>
                             </View>
                         </View>
+                        {viewerIsOwner && (
+                            <TouchableOpacity style={[styles.actionPill, { backgroundColor: accent + '20' }]} onPress={() => { }}>
+                                <Ionicons name="pencil" size={wp(4)} color={accent} />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    <View style={styles.ratingRow}>
+                        <View style={styles.ratingBadge}>
+                            <Ionicons name="star" size={wp(4)} color="#f2b01e" />
+                            <ThemedText style={[styles.ratingText, { color: text }]}>{driver.rating.toFixed(1)}</ThemedText>
+                        </View>
+                        <ThemedText style={[styles.reviewText, { color: icon }]}>{driver.reviewsCount} reviews</ThemedText>
                     </View>
 
                     <View style={styles.metaRow}>
                         <View style={styles.metaItem}>
-                            <Text style={[styles.metaLabel, { color: coolGray }]}>Member since</Text>
-                            <Text style={[styles.metaValue, { color: text }]}>{driver.memberSince}</Text>
+                            <ThemedText style={[styles.metaLabel, { color: icon }]}>Member since</ThemedText>
+                            <ThemedText style={[styles.metaValue, { color: text }]}>{driver.memberSince}</ThemedText>
                         </View>
-                        <View style={[styles.metaDivider, { backgroundColor: accent + '30' }]} />
+                        <View style={styles.metaDivider} />
                         <View style={styles.metaItem}>
-                            <Text style={[styles.metaLabel, { color: coolGray }]}>Last active</Text>
-                            <Text style={[styles.metaValue, { color: text }]}>{driver.lastActive}</Text>
+                            <ThemedText style={[styles.metaLabel, { color: icon }]}>Last active</ThemedText>
+                            <ThemedText style={[styles.metaValue, { color: text }]}>{driver.lastActive}</ThemedText>
                         </View>
                     </View>
                 </View>
@@ -272,458 +331,489 @@ function Profile() {
                 {/* ---------- Overview ---------- */}
                 <SectionCard title="Overview" background={backgroundLight} textColor={text}>
                     <View style={styles.statsGrid}>
-                        <StatBlock label="Completed Trips" value={driver.completedTrips} background={background} valueColor={text} labelColor={coolGray} />
-                        <StatBlock label="Active Trips" value={driver.activeTrips} background={background} valueColor={text} labelColor={coolGray} />
-                        <StatBlock label="Experience" value={driver.yearsExperience} background={background} valueColor={text} labelColor={coolGray} />
+                        <StatBlock label="Trips Completed" value={driver.tripsCompleted} background={background} valueColor={text} iconColor={icon} />
+                        <StatBlock label="Active Trips" value={driver.activeTrips} background={background} valueColor={text} iconColor={icon} />
+                        <StatBlock label="Total Distance" value={`${driver.totalDistance.toLocaleString()} km`} background={background} valueColor={text} iconColor={icon} />
+                        <StatBlock label="Years Experience" value={driver.yearsExperience} background={background} valueColor={text} iconColor={icon} />
+                        <StatBlock label="License Class" value={driver.licenseClass} background={background} valueColor={text} iconColor={icon} />
+                        <StatBlock label="Fleets Worked With" value={driver.fleetsWorkedWith} background={background} valueColor={text} iconColor={icon} />
                     </View>
-
-                    <TouchableOpacity style={styles.dropdownHeader} onPress={() => setTripsOpen((v) => !v)}>
-                        <Text style={[styles.dropdownTitle, { color: text }]}>Recent Trips</Text>
-                        <Ionicons name={tripsOpen ? 'chevron-up' : 'chevron-down'} size={18} color={icon} />
-                    </TouchableOpacity>
-                    {tripsOpen && driver.recentTrips.map((trip) => (
-                        <View key={trip.id} style={[styles.routeItem, { backgroundColor: background }]}>
-                            <View style={styles.routeText}>
-                                <Text style={[styles.routeName, { color: text }]}>{trip.route}</Text>
-                                <Text style={[styles.routeDetail, { color: coolGray }]}>{trip.date} · {trip.load}</Text>
-                            </View>
-                            <View style={styles.routeStatus}>
-                                <Text style={[styles.routeStatusText, { color: accent }]}>{trip.status}</Text>
-                            </View>
-                        </View>
-                    ))}
                 </SectionCard>
 
-                {/* ---------- Performance ---------- */}
-                <SectionCard title="Performance" background={backgroundLight} textColor={text}>
+                {/* ---------- License & Vehicle ---------- */}
+                <SectionCard title="License & Vehicle" background={backgroundLight} textColor={text}>
                     <View style={styles.performanceList}>
                         <View style={styles.performanceRow}>
-                            <Text style={[styles.performanceLabel, { color: coolGray }]}>On-Time Delivery</Text>
-                            <Text style={[styles.performanceValue, { color: text }]}>{driver.onTimeDelivery}%</Text>
+                            <ThemedText style={[styles.performanceLabel, { color: icon }]}>License Number</ThemedText>
+                            <ThemedText style={[styles.performanceValue, { color: text }]}>{driver.licenseNumber}</ThemedText>
                         </View>
                         <View style={styles.performanceRow}>
-                            <Text style={[styles.performanceLabel, { color: coolGray }]}>Acceptance Rate</Text>
-                            <Text style={[styles.performanceValue, { color: text }]}>{driver.acceptanceRate}%</Text>
+                            <ThemedText style={[styles.performanceLabel, { color: icon }]}>License Expiry</ThemedText>
+                            <ThemedText style={[styles.performanceValue, { color: text }]}>{driver.licenseExpiry}</ThemedText>
+                        </View>
+                        <View style={[styles.performanceRow, { borderBottomWidth: driver.assignedVehicle ? 1 : 0 }]}>
+                            <ThemedText style={[styles.performanceLabel, { color: icon }]}>Assigned Vehicle</ThemedText>
+                            <ThemedText style={[styles.performanceValue, { color: text }]}>
+                                {driver.assignedVehicle ? driver.assignedVehicle.regNumber : 'Unassigned'}
+                            </ThemedText>
+                        </View>
+                        {driver.assignedVehicle && (
+                            <View style={[styles.performanceRow, { borderBottomWidth: 0 }]}>
+                                <ThemedText style={[styles.performanceLabel, { color: icon }]}>Vehicle Type</ThemedText>
+                                <ThemedText style={[styles.performanceValue, { color: text }]}>
+                                    {driver.assignedVehicle.type}{driver.assignedVehicle.fleetName ? ` • ${driver.assignedVehicle.fleetName}` : ''}
+                                </ThemedText>
+                            </View>
+                        )}
+                    </View>
+                </SectionCard>
+
+                {/* ---------- Driving Performance ---------- */}
+                <SectionCard title="Driving Performance" background={backgroundLight} textColor={text}>
+                    <View style={styles.performanceList}>
+                        <View style={styles.performanceRow}>
+                            <ThemedText style={[styles.performanceLabel, { color: icon }]}>On-Time Delivery</ThemedText>
+                            <ThemedText style={[styles.performanceValue, { color: text }]}>{driver.onTimeDelivery}%</ThemedText>
                         </View>
                         <View style={styles.performanceRow}>
-                            <Text style={[styles.performanceLabel, { color: coolGray }]}>Avg Response Time</Text>
-                            <Text style={[styles.performanceValue, { color: text }]}>{driver.avgResponseTime}</Text>
+                            <ThemedText style={[styles.performanceLabel, { color: icon }]}>Acceptance Rate</ThemedText>
+                            <ThemedText style={[styles.performanceValue, { color: text }]}>{driver.acceptanceRate}%</ThemedText>
                         </View>
                         <View style={styles.performanceRow}>
-                            <Text style={[styles.performanceLabel, { color: coolGray }]}>Cancellation Rate</Text>
-                            <Text style={[styles.performanceValue, { color: text }]}>{driver.cancellationRate}%</Text>
+                            <ThemedText style={[styles.performanceLabel, { color: icon }]}>Avg Response Time</ThemedText>
+                            <ThemedText style={[styles.performanceValue, { color: text }]}>{driver.avgResponseTime}</ThemedText>
                         </View>
                         <View style={styles.performanceRow}>
-                            <Text style={[styles.performanceLabel, { color: coolGray }]}>Safety Record</Text>
-                            <Text style={[styles.performanceValue, { color: text }]}>{driver.safetyRecord}</Text>
-                        </View>
-                        <View style={styles.performanceRow}>
-                            <Text style={[styles.performanceLabel, { color: coolGray }]}>Total Distance</Text>
-                            <Text style={[styles.performanceValue, { color: text }]}>{driver.totalDistance.toLocaleString()} km</Text>
+                            <ThemedText style={[styles.performanceLabel, { color: icon }]}>Cancellation Rate</ThemedText>
+                            <ThemedText style={[styles.performanceValue, { color: text }]}>{driver.cancellationRate}%</ThemedText>
                         </View>
                         <View style={[styles.performanceRow, { borderBottomWidth: 0 }]}>
-                            <Text style={[styles.performanceLabel, { color: coolGray }]}>Tracking Status</Text>
-                            <View style={styles.trackingBadge}>
-                                <View style={[styles.trackingDot, { backgroundColor: trackingColor }]} />
-                                <Text style={[styles.performanceValue, { color: text }]}>{driver.trackingStatus}</Text>
-                            </View>
+                            <ThemedText style={[styles.performanceLabel, { color: icon }]}>Safety Incidents</ThemedText>
+                            <ThemedText style={[styles.performanceValue, { color: driver.safetyIncidents > 0 ? '#dc2626' : text }]}>
+                                {driver.safetyIncidents}
+                            </ThemedText>
                         </View>
                     </View>
                 </SectionCard>
 
-                {/* ---------- Qualifications ---------- */}
-                <SectionCard title="Qualifications" background={backgroundLight} textColor={text}>
-                    <Text style={[styles.subheading, { color: coolGray }]}>Licence Classes</Text>
-                    <View style={styles.chipRow}>
-                        {driver.licenceClasses.map((item) => (
-                            <Chip key={item} label={item} background={accent + '12'} textColor={accent} />
-                        ))}
-                    </View>
+                {/* ---------- Documents (conditional, owner-only) ---------- */}
+                {viewerIsOwner && (
+                    <SectionCard title="Documents" background={backgroundLight} textColor={text}>
+                        <TouchableOpacity style={styles.dropdownHeader} onPress={() => setDocumentsOpen((v) => !v)}>
+                            <ThemedText style={[styles.dropdownTitle, { color: text }]}>
+                                {verifiedDocsCount}/{driver.documents.length} Verified
+                            </ThemedText>
+                            <Ionicons name={documentsOpen ? 'chevron-up' : 'chevron-down'} size={wp(4.5)} color={icon} />
+                        </TouchableOpacity>
 
-                    <Text style={[styles.subheading, { color: coolGray, marginTop: 14 }]}>Special Endorsements</Text>
-                    <View style={styles.chipRow}>
-                        {driver.endorsements.length === 0 ? (
-                            <Text style={[styles.emptyText, { color: coolGray }]}>None listed.</Text>
-                        ) : (
-                            driver.endorsements.map((item) => (
-                                <Chip key={item} label={item} background={accent + '12'} textColor={accent} />
-                            ))
+                        {documentsOpen && (
+                            <View style={styles.dropdownBody}>
+                                {driver.documents.map((docItem) => (
+                                    <View key={docItem.label} style={styles.documentRow}>
+                                        <View style={styles.documentLeft}>
+                                            <Ionicons name={docItem.icon} size={wp(4.5)} color={docItem.verified ? '#16a34a' : icon} />
+                                            <ThemedText style={[styles.documentLabel, { color: text }]}> {docItem.label}</ThemedText>
+                                        </View>
+                                        <View style={styles.documentRight}>
+                                            {docItem.expiry && (
+                                                <ThemedText style={[styles.documentExpiry, { color: icon }]}>{docItem.expiry}</ThemedText>
+                                            )}
+                                            <View
+                                                style={[
+                                                    styles.docStatusPill,
+                                                    { backgroundColor: (docItem.verified ? '#16a34a' : '#9ca3af') + '18' },
+                                                ]}
+                                            >
+                                                <ThemedText
+                                                    style={[
+                                                        styles.docStatusText,
+                                                        { color: docItem.verified ? '#16a34a' : '#9ca3af' },
+                                                    ]}
+                                                >
+                                                    {docItem.verified ? 'Verified' : 'Pending'}
+                                                </ThemedText>
+                                            </View>
+                                        </View>
+                                    </View>
+                                ))}
+                            </View>
                         )}
-                    </View>
+                    </SectionCard>
+                )}
 
-                    <Text style={[styles.subheading, { color: coolGray, marginTop: 14 }]}>Languages Spoken</Text>
-                    <View style={styles.chipRow}>
-                        {driver.languages.map((item) => (
-                            <Chip key={item} label={item} background={'rgba(0,0,0,0.05)'} textColor={text} />
-                        ))}
-                    </View>
+                {/* ---------- Payouts (owner-only) ---------- */}
+                {viewerIsOwner && (
+                    <SectionCard title="Payouts" background={backgroundLight} textColor={text}>
+                        <LoadLyfCyleStatsCompent
+                            title="Total Earned"
+                            value={`$${driver.payouts.totalEarned.toLocaleString()}`}
+                            icon="wallet-outline"
+                            textColor={text}
+                            accent={accent}
+                        />
+                        <LoadLyfCyleStatsCompent
+                            title="Pending Amount"
+                            value={`$${driver.payouts.pendingAmount.toLocaleString()}`}
+                            icon="time-outline"
+                            textColor={text}
+                            accent={accent}
+                        />
+                        <LoadLyfCyleStatsCompent
+                            title="Last Payout"
+                            value={`$${driver.payouts.lastPayout.toLocaleString()}`}
+                            icon="checkmark-circle-outline"
+                            textColor={text}
+                            accent={accent}
+                        />
+                        <LoadLyfCyleStatsCompent
+                            title="Payment Method"
+                            value={driver.payouts.paymentMethod}
+                            icon="card-outline"
+                            textColor={text}
+                            accent={accent}
+                        />
+                        <LoadLyfCyleStatsCompent
+                            title="Confirmation Rate"
+                            value={`${driver.payouts.confirmationRate}%`}
+                            icon="stats-chart-outline"
+                            textColor={text}
+                            accent={accent}
+                        />
+                    </SectionCard>
+                )}
+
+                {/* ---------- Proven Routes ---------- */}
+                <SectionCard title="Proven Routes" background={backgroundLight} textColor={text}>
+                    <TouchableOpacity style={styles.dropdownHeader} onPress={() => setProvenRoutesOpen((v) => !v)}>
+                        <ThemedText style={[styles.dropdownTitle, { color: text }]}>Routes Driven</ThemedText>
+                        <Ionicons name={provenRoutesOpen ? 'chevron-up' : 'chevron-down'} size={wp(4.5)} color={icon} />
+                    </TouchableOpacity>
+                    {provenRoutesOpen && (
+                        <View style={styles.dropdownBody}>
+                            {driver.provenRoutes.length === 0 ? (
+                                <ThemedText style={[styles.emptyText, { color: icon }]}>No proven routes yet.</ThemedText>
+                            ) : (
+                                driver.provenRoutes.map((route) => (
+                                    <View key={route.id} style={styles.loadRow}>
+                                        <Ionicons name="arrow-forward-circle-outline" size={wp(4)} color={accent} />
+                                        <ThemedText style={[styles.loadText, { color: text }]}>
+                                            {' '}
+                                            {route.from.city}, {route.from.country} → {route.to.city}, {route.to.country} • {route.tripsCompleted} trips
+                                        </ThemedText>
+                                    </View>
+                                ))
+                            )}
+                        </View>
+                    )}
                 </SectionCard>
 
                 {/* ---------- Reviews ---------- */}
-                <SectionCard title="Reviews" meta={`${driver.rating.toFixed(1)} / 5`} accent={accent} background={backgroundLight} textColor={text}>
+                <SectionCard title="Reviews" background={backgroundLight} textColor={text}>
                     <View style={styles.reviewsSummary}>
-                        <View style={[styles.ratingBadge, { backgroundColor: '#fef3c7' }]}>
-                            <Ionicons name="star" size={18} color="#f2b01e" />
-                            <Text style={[styles.ratingTextLarge, { color: text }]}>{driver.rating.toFixed(1)}</Text>
+                        <View style={styles.ratingBadge}>
+                            <Ionicons name="star" size={wp(5)} color="#f2b01e" />
+                            <ThemedText style={[styles.ratingTextLarge, { color: text }]}>{driver.rating.toFixed(1)}</ThemedText>
                         </View>
-                        <Text style={[styles.reviewText, { color: coolGray }]}>{driver.reviewsCount} reviews</Text>
+                        <ThemedText style={[styles.reviewText, { color: icon }]}>{driver.reviewsCount} reviews</ThemedText>
                     </View>
 
-                    {driver.latestReviews.map((review) => (
-                        <View key={review.id} style={[styles.commentCard, { backgroundColor: background }]}>
-                            <View style={styles.reviewHeaderRow}>
-                                <Text style={[styles.commentAuthor, { color: text }]}>{review.author}</Text>
-                                <View style={styles.reviewRating}>
-                                    <Ionicons name="star" size={11} color="#f2b01e" />
-                                    <Text style={[styles.reviewRatingText, { color: text }]}>{review.rating}</Text>
+                    {visibleReviews.length === 0 ? (
+                        <ThemedText style={[styles.emptyText, { color: icon }]}>No reviews yet.</ThemedText>
+                    ) : (
+                        visibleReviews.map((review) => (
+                            <View key={review.id} style={[styles.reviewCard, { backgroundColor: background }]}>
+                                <View style={styles.reviewHeader}>
+                                    <ThemedText style={[styles.reviewName, { color: text }]}>{review.reviewer}</ThemedText>
+                                    <View style={styles.reviewRating}>
+                                        <Ionicons name="star" size={wp(3)} color="#f2b01e" />
+                                        <ThemedText style={[styles.reviewRatingText, { color: text }]}>{review.rating}</ThemedText>
+                                    </View>
                                 </View>
+                                <ThemedText style={[styles.reviewComment, { color: icon }]}>{review.comment}</ThemedText>
+                                <ThemedText style={[styles.reviewDate, { color: icon }]}>{review.date}</ThemedText>
                             </View>
-                            <Text style={[styles.commentBody, { color: icon }]}>{review.comment}</Text>
-                            <Text style={[styles.reviewDate, { color: coolGray }]}>{review.date}</Text>
-                        </View>
-                    ))}
+                        ))
+                    )}
+
+                    {driver.latestReviews.length > 3 && (
+                        <TouchableOpacity style={styles.reviewButton} onPress={() => setShowAllReviews((v) => !v)}>
+                            <ThemedText style={[styles.buttonText, { color: accent }]}>
+                                {showAllReviews ? 'Show Less Reviews' : 'View All Reviews'}
+                            </ThemedText>
+                            <Ionicons name={showAllReviews ? 'chevron-up' : 'chevron-down'} size={wp(4)} color={accent} />
+                        </TouchableOpacity>
+                    )}
                 </SectionCard>
-
-                <View style={styles.actionRow}>
-                    <TouchableOpacity style={[styles.actionButton, { backgroundColor: accent }]} onPress={() => {}}>
-                        <Text style={styles.actionText}>Message Driver</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[styles.actionButtonOutline, { borderColor: accent }]} onPress={() => {}}>
-                        <Text style={[styles.actionTextOutline, { color: accent }]}>View Documents</Text>
-                    </TouchableOpacity>
-                </View>
             </ScrollView>
-
-            <AuthStatusModal
-                visible={dspCreateAcc}
-                onClose={() => setDspCreateAcc(false)}
-                user={user}
-                type="create"
-            />
-
-            <AuthStatusModal
-                visible={dspVerifyAcc}
-                onClose={() => setDspVerifyAcc(false)}
-                user={user}
-                type="verify"
-            />
-
-            <UserMenuModal
-                visible={dspMenu}
-                onClose={() => setDspMenu(false)}
-                user={user}
-                onProfileUpdate={updateUserProfile}
-            />
-        </View>
+        </ScreenWrapper>
     );
 }
 
-export default Profile;
-
 const styles = StyleSheet.create({
-    wrapper: {
-        flex: 1,
+    card: {
+        borderRadius: wp(4),
+        padding: wp(4),
+        marginVertical: wp(3),
     },
-    scrollContent: {
-        padding: 20,
-        paddingBottom: 32,
-    },
-    hero: {
-        borderRadius: 24,
-        padding: 18,
-        marginBottom: 20,
-        overflow: 'hidden',
-    },
-    heroTop: {
+    headerRow: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'flex-start',
-        marginBottom: 16,
     },
-    avatarFrame: {
-        width: 92,
-        height: 92,
-        borderRadius: 24,
-        borderWidth: 2,
-        justifyContent: 'center',
+    headerLeft: {
+        flexDirection: 'row',
         alignItems: 'center',
-        marginRight: 16,
-        backgroundColor: '#ffffff',
-    },
-    avatar: {
-        width: 84,
-        height: 84,
-        borderRadius: 20,
-    },
-    heroText: {
         flex: 1,
     },
-    name: {
-        fontSize: 22,
-        fontWeight: '700',
-        marginBottom: 4,
+    logo: {
+        width: wp(14),
+        height: wp(14),
+        borderRadius: wp(3),
+    },
+    logoPlaceholder: {
+        width: wp(14),
+        height: wp(14),
+        borderRadius: wp(3),
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    headerText: {
+        marginLeft: wp(3),
+        flexShrink: 1,
+    },
+    title: {
+        fontSize: wp(5.2),
+        fontWeight: 'bold',
     },
     locationRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 10,
+        marginTop: wp(1),
     },
     subtitle: {
-        fontSize: 13,
+        fontSize: wp(3.2),
+    },
+    actionPill: {
+        paddingHorizontal: wp(3),
+        paddingVertical: wp(2),
+        borderRadius: wp(3),
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     ratingRow: {
+        marginTop: wp(4),
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
+        gap: wp(3),
     },
     ratingBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        borderRadius: 12,
-        paddingHorizontal: 10,
-        paddingVertical: 5,
+        paddingHorizontal: wp(3),
+        paddingVertical: wp(2),
+        borderRadius: wp(3),
+        backgroundColor: '#4B5563',
     },
     ratingText: {
-        marginLeft: 5,
-        fontWeight: '700',
-        fontSize: 14,
+        marginLeft: wp(2),
+        fontWeight: 'bold',
+        fontSize: wp(5),
     },
     ratingTextLarge: {
-        marginLeft: 6,
-        fontWeight: '700',
-        fontSize: 20,
+        marginLeft: wp(2),
+        fontWeight: 'bold',
+        fontSize: wp(6),
     },
     reviewText: {
-        fontSize: 12,
+        fontSize: wp(3.2),
         fontWeight: '600',
     },
     metaRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: 14,
+        marginTop: wp(4),
+        paddingTop: wp(3),
         borderTopWidth: 1,
-        borderTopColor: 'rgba(0,0,0,0.06)',
+        borderTopColor: '#e2e8f0',
     },
     metaItem: {
         flex: 1,
     },
     metaDivider: {
         width: 1,
-        height: 30,
-        marginHorizontal: 14,
+        height: wp(8),
+        backgroundColor: '#e2e8f0',
+        marginHorizontal: wp(3),
     },
     metaLabel: {
-        fontSize: 11,
-        marginBottom: 3,
+        fontSize: wp(3),
+        marginBottom: wp(1),
     },
     metaValue: {
-        fontSize: 14,
+        fontSize: wp(3.6),
         fontWeight: '600',
+    },
+    section: {
+        borderRadius: wp(4),
+        padding: wp(4),
+        marginBottom: wp(3),
+    },
+    sectionTitle: {
+        fontSize: wp(4.2),
+        fontWeight: 'bold',
+        marginBottom: wp(3),
     },
     statsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 8,
-        marginBottom: 14,
+        gap: wp(2),
     },
     statBlock: {
-        flexGrow: 1,
-        flexBasis: '30%',
-        borderRadius: 16,
-        paddingVertical: 14,
-        paddingHorizontal: 8,
+        width: '31%',
+        borderRadius: wp(3),
+        paddingVertical: wp(3),
+        paddingHorizontal: wp(2),
         alignItems: 'center',
     },
     statValue: {
-        fontSize: 17,
-        fontWeight: '700',
+        fontSize: wp(5),
+        fontWeight: 'bold',
     },
     statLabel: {
-        fontSize: 11,
-        marginTop: 4,
+        fontSize: wp(2.8),
+        marginTop: wp(1),
         textAlign: 'center',
     },
-    card: {
-        borderRadius: 24,
-        padding: 18,
-        marginBottom: 20,
+    performanceList: {
+        marginTop: wp(1),
     },
-    sectionHeader: {
+    performanceRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 12,
+        paddingVertical: wp(2.5),
+        borderBottomWidth: 1,
+        borderBottomColor: '#e2e8f0',
     },
-    sectionTitle: {
-        fontSize: 16,
-        fontWeight: '700',
+    performanceLabel: {
+        fontSize: wp(3.4),
     },
-    sectionMeta: {
-        fontSize: 12,
+    performanceValue: {
+        fontSize: wp(3.6),
         fontWeight: '700',
     },
     dropdownHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 8,
+        paddingVertical: wp(2),
+    },
+    dropdownHeaderSpaced: {
+        marginTop: wp(2),
         borderTopWidth: 1,
-        borderTopColor: 'rgba(0,0,0,0.06)',
-        marginTop: 4,
+        borderTopColor: '#e2e8f0',
+        paddingTop: wp(3),
     },
     dropdownTitle: {
-        fontSize: 14,
+        fontSize: wp(3.8),
         fontWeight: '700',
     },
-    routeItem: {
-        borderRadius: 18,
-        padding: 16,
-        marginTop: 10,
+    dropdownBody: {
+        paddingBottom: wp(2),
+    },
+    documentRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        paddingVertical: wp(2),
     },
-    routeText: {
-        flex: 1,
-        paddingRight: 12,
-    },
-    routeName: {
-        fontSize: 14,
-        fontWeight: '700',
-        marginBottom: 5,
-    },
-    routeDetail: {
-        fontSize: 12,
-    },
-    routeStatus: {
-        borderRadius: 14,
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        backgroundColor: 'rgba(0,0,0,0.03)',
-    },
-    routeStatusText: {
-        fontSize: 12,
-        fontWeight: '700',
-    },
-    performanceList: {
-        marginTop: 2,
-    },
-    performanceRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 11,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(0,0,0,0.06)',
-    },
-    performanceLabel: {
-        fontSize: 13,
-    },
-    performanceValue: {
-        fontSize: 14,
-        fontWeight: '700',
-    },
-    trackingBadge: {
+    documentLeft: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        flexShrink: 1,
     },
-    trackingDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
+    documentLabel: {
+        fontSize: wp(3.4),
+        fontWeight: '500',
     },
-    subheading: {
-        fontSize: 12,
+    documentRight: {
+        alignItems: 'flex-end',
+        gap: wp(1),
+    },
+    documentExpiry: {
+        fontSize: wp(2.7),
+    },
+    docStatusPill: {
+        paddingHorizontal: wp(2.2),
+        paddingVertical: wp(0.7),
+        borderRadius: wp(2),
+    },
+    docStatusText: {
+        fontSize: wp(2.7),
         fontWeight: '700',
-        marginBottom: 8,
-        textTransform: 'uppercase',
-        letterSpacing: 0.4,
     },
-    chipRow: {
+    loadRow: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
+        alignItems: 'center',
+        paddingVertical: wp(1.5),
     },
-    chip: {
-        borderRadius: 14,
-        paddingHorizontal: 12,
-        paddingVertical: 7,
-    },
-    chipText: {
-        fontSize: 12,
-        fontWeight: '600',
+    loadText: {
+        fontSize: wp(3.4),
     },
     emptyText: {
-        fontSize: 12,
+        fontSize: wp(3.2),
         fontStyle: 'italic',
+        paddingVertical: wp(1),
     },
     reviewsSummary: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
-        marginBottom: 14,
+        gap: wp(3),
+        marginBottom: wp(3),
     },
-    commentCard: {
-        borderRadius: 18,
-        padding: 16,
-        marginBottom: 12,
+    reviewCard: {
+        borderRadius: wp(3),
+        padding: wp(3),
+        marginTop: wp(2),
+        borderWidth: 1,
+        borderColor: '#d1d5db',
     },
-    reviewHeaderRow: {
+    reviewHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 6,
+        marginBottom: wp(2),
     },
-    commentAuthor: {
-        fontSize: 13,
-        fontWeight: '700',
+    reviewName: {
+        fontSize: wp(4),
+        fontWeight: 'bold',
     },
     reviewRating: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     reviewRatingText: {
-        marginLeft: 3,
+        marginLeft: wp(1),
         fontWeight: '700',
-        fontSize: 12,
     },
-    commentBody: {
-        fontSize: 13,
-        lineHeight: 19,
-        marginBottom: 6,
+    reviewComment: {
+        fontSize: wp(3.2),
+        marginBottom: wp(2),
+        lineHeight: hp(2.6),
     },
     reviewDate: {
-        fontSize: 11,
+        fontSize: wp(3),
+        opacity: 0.8,
     },
-    actionRow: {
+    reviewButton: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    actionButton: {
-        flex: 1,
-        borderRadius: 18,
-        paddingVertical: 14,
-        alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 10,
-    },
-    actionButtonOutline: {
-        flex: 1,
-        borderRadius: 18,
-        paddingVertical: 14,
         alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        marginLeft: 10,
-        backgroundColor: 'transparent',
+        gap: wp(2),
+        paddingVertical: wp(3),
     },
-    actionText: {
-        fontSize: 14,
-        color: '#ffffff',
+    buttonText: {
         fontWeight: '700',
+        fontSize: wp(3.5),
     },
-    actionTextOutline: {
-        fontSize: 14,
-        fontWeight: '700',
-    }
 });

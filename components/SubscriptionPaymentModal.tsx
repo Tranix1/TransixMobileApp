@@ -12,6 +12,7 @@ import { creditReferralIfEligible } from '../app/Referrals/referralService';
 import { SubscriptionType, SUBSCRIPTION_PRICING, PaymentMethod } from '../constants/subscriptionConfig';
 import { addDocument } from '@/db/operations';
 import { useAuth } from '@/context/AuthContext';
+import { trackEventFirebase } from '@/services/analytics/firebaseAnalystics';
 
 type SelectedTruck = {
   id: string;
@@ -58,8 +59,6 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
 
   const { user, currentRole } = useAuth()
 
-  console.log(currentRole)
-
   const pricing = SUBSCRIPTION_PRICING[subscriptionType];
   const isDev = __DEV__;
 
@@ -86,6 +85,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
 
   const finalizeSuccess = async () => {
     setLoading(true);
+    trackEventFirebase('subscription_payment_success', { subscriptionType, paymentMethod, userId: user?.uid }).catch(console.error);
 
     try {
       const { updateDocument } = await import('@/db/operations');
@@ -226,6 +226,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
     } catch (error) {
       console.error('Error completing subscription success flow:', error);
       Alert.alert('Error', 'An error occurred while completing the subscription.');
+      trackEventFirebase('subscription_payment_success_flow_failed', { subscriptionType, paymentMethod, userId: user?.uid, error: error }).catch(console.error);
     } finally {
       setLoading(false);
     }
@@ -239,6 +240,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
       Alert.alert('Error', 'Please enter your Ecocash number');
       return;
     }
+    trackEventFirebase('subscription_payment_attempt', { subscriptionType, paymentMethod: 'ecocash', userId: user?.uid }).catch(console.error);
 
     setLoading(true);
     setPaymentUpdate('');
@@ -256,6 +258,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
       }
     } catch (error) {
       console.error('Error processing subscription payment:', error);
+      trackEventFirebase('subscription_payment_failed', { subscriptionType, paymentMethod: 'ecocash', userId: user?.uid, error: error }).catch(console.error);
       Alert.alert('Error', 'Failed to process payment. Please try again.');
     } finally {
       setLoading(false);
@@ -265,6 +268,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
   const handleCardConfirm = async () => {
     setLoading(true);
     setPaymentUpdate('');
+    trackEventFirebase('subscription_payment_attempt', { subscriptionType, paymentMethod: 'card', userId: user?.uid }).catch(console.error);
 
     try {
       const result = await handleCardPayment(
@@ -298,6 +302,7 @@ const SubscriptionPaymentModal: React.FC<SubscriptionPaymentModalProps> = ({
       }
     } catch (error) {
       console.error('Error confirming card payment:', error);
+      trackEventFirebase('subscription_payment_card_confirm_failed', { subscriptionType, paymentMethod: 'card', userId: user?.uid, error: error }).catch(console.error);
       Alert.alert('Error', 'Could not confirm payment. Please try again.');
     } finally {
       setLoading(false);

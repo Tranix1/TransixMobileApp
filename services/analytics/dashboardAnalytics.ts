@@ -1,7 +1,7 @@
 import { doc, increment, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "@/db/fireBaseConfig";
 
-export type DashboardType = "fleet" | "brokerage";
+export type DashboardType = "fleet" | "brokerage" | "driver" | "tracker";
 export type DashboardMetric =
   | "accountsCreated" | "verifiedAccounts" | "totalLoads" | "activeLoads" | "completedLoads" | "cancelledLoads" | "publicLoads" | "privateFleetLoads" | "privateBrokerageLoads"
   | "recommendedTrucks" | "acceptedRecommendations" | "bookings" | "acceptedRequests" | "cancelledBookings" | "assignmentsCreated" | "assignmentsStarted" | "assignmentsCompleted"

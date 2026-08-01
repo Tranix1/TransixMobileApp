@@ -22,6 +22,7 @@ import { RequestedCargo } from "@/components/LoadRequestCard";
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { getCurrentLocation } from '@/Utilities/utils';
 import { useAuth } from "@/context/AuthContext";
+import { trackScreen } from "@/services/analytics/firebaseAnalystics";
 
 
 const accent = "#6a0c0c" ;
@@ -47,6 +48,7 @@ function BookingsandBiddings({ }) {
 
   // Debug function to check all loadRequests
   const debugLoadRequests = async () => {
+    
     try {
       const allRequestsQuery = query(collection(db, "cargoRequests"));
       const snapshot = await getDocs(allRequestsQuery);
@@ -108,6 +110,7 @@ function BookingsandBiddings({ }) {
   }
   // Get current location for tracking
   useEffect(() => {
+    trackScreen("View Requests Screen");
     const getLocation = async () => {
       try {
         const location = await getCurrentLocation();

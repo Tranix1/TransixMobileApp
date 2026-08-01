@@ -30,6 +30,8 @@ import { trackAssignmentCompleted, trackAssignmentStarted } from "@/services/ana
 import { incrementAssignmentsCompleted, incrementAssignmentsStarted, } from "@/services/analytics/dashboardAnalytics";
 import { incrementActiveTrips, incrementCompletedTrips } from "@/services/analytics/organizationAnalytics";
 import { incrementOrgStats, recordTripStarted, respondToRequestAnalytics, upsertProvenRoute } from "@/Utilities/analyticsHelpers";
+import { trackEventFirebase } from "@/services/analytics/firebaseAnalystics";
+import { truckType } from "@/data/appConstants";
 
 const getStatusColor = (status: string) => {
     switch (status) {
@@ -73,31 +75,22 @@ export default function AssignmentCard({ assignmentData }: any) {
 
     const handleTrackTruck = (truckTrackerId?: string | null) => {
 
+        trackEventFirebase('track_truck_clicked', { cargoId: assignmentData.loadDetails.cargoId, assignmentDocId: assignmentData.id }).catch(console.error);
         if (truckTrackerId) {
-            // router.push(`/Tracking/${truckTrackerId}`);
-            //   {
-            //                     router.push({
-            //                         pathname: "/Map/VehicleTrackingMap",
-            //                         params: {
-            //                             vehicleId: assignmentData.truckDetails.trackingDeviceId || "UNASSIGNED",
-
-            //                             pickupLati: assignmentData.loadDetails.pickupLocation.latitud,
-            //                             pickupLongi: assignmentData.loadDetails.pickupLocation.longitude,
-            //                             pickupName: assignmentData.loadDetails.pickupLocation.description,
-
-            //                             dropoffLati: assignmentData.loadDetails.deliveryLocation.latitude,
-            //                             dropoffLongi: assignmentData.loadDetails.deliveryLocation.longitude,
-            //                             dropoffName: assignmentData.loadDetails.deliveryLocation.description,
-
-            //                             plannedRoutePolyline: assignmentData.loadDetails.deliveryLocation,
-            //                         },
-            //                     });
-            //                 }
+           router.push({
+                    pathname: "/Tracking/Map",
+                    params: {
+                      deviceId: truckTrackerId,
+                      firebaseDocId: assignmentData.truckDetails.id,
+                      isOnceOff: 'false'
+                    },
+                  });
         } else {
 
             setGetTrackerModal(true);
         }
     };
+           
 
     type coordinatorProps = {
         id: string;
@@ -155,6 +148,7 @@ export default function AssignmentCard({ assignmentData }: any) {
     ) => {
         if (!assignmentId) return;
 
+        trackEventFirebase('start_trip_clicked_assignment_initiated', { cargoId, assignmentDocId: assignmentId , origin: cargoDetails.origin , destination: cargoDetails.destination , rate: cargoDetails.rate , ratePerKm: cargoDetails.ratePerKm , truckCapacity: truckDetails?.truckCapacity , truckCargoArea: truckDetails?.cargoArea , externalLoad , cargoVisibility: cargoVisibility}).catch(console.error);
         try {
             await updateAssignmentCopies(
                 assignmentId,
@@ -276,11 +270,15 @@ export default function AssignmentCard({ assignmentData }: any) {
                     { type: "load_in_transit", assignmentId }
                 );
             }
+        trackEventFirebase('start_trip_clicked_assignment_success', { cargoId, assignmentDocId: assignmentId , origin: cargoDetails.origin , destination: cargoDetails.destination , rate: cargoDetails.rate , ratePerKm: cargoDetails.ratePerKm , truckCapacity: truckDetails?.truckCapacity , truckCargoArea: truckDetails?.cargoArea , externalLoad , cargoVisibility: cargoVisibility}).catch(console.error);
+
             ToastAndroid.show(
                 "🚚 Trip started successfully. Drive safely!",
                 ToastAndroid.SHORT
             );
         } catch (error) {
+        trackEventFirebase('start_trip_clicked_assignment_failed', { cargoId, assignmentDocId: assignmentId , origin: cargoDetails.origin , destination: cargoDetails.destination , rate: cargoDetails.rate , ratePerKm: cargoDetails.ratePerKm , truckCapacity: truckDetails?.truckCapacity , truckCargoArea: truckDetails?.cargoArea , externalLoad , cargoVisibility: cargoVisibility}).catch(console.error);
+
             console.log("Start trip error:", error);
         }
     };
@@ -297,7 +295,7 @@ export default function AssignmentCard({ assignmentData }: any) {
 
 
         try {
-
+            trackEventFirebase('finish_trip_clicked_assignment_initiated', { cargoId: assignmentData.loadDetails.cargoId, assignmentDocId: assignmentId }).catch(console.error);
 
             const images = proofImages[assignmentId] || [];
 
@@ -432,6 +430,7 @@ export default function AssignmentCard({ assignmentData }: any) {
 
 
         } catch (error) {
+            trackEventFirebase('finish_trip_clicked_assignment_failed', { cargoId: assignmentData.loadDetails.cargoId, assignmentDocId: assignmentId }).catch(console.error);
 
             console.log("Finish trip error:", error);
 
@@ -453,9 +452,14 @@ export default function AssignmentCard({ assignmentData }: any) {
         cargoCoordinator?: coordinatorProps,
         createdByAcc?: string,
         cargoId?: string,
-        truckDetails?: any
+        truckDetails?: any ,
+        cargoDetails?: any,
     ) => {
         try {
+            trackEventFirebase('cargo_owner_confirmed_assignment_initiated', { cargoId, assignmentDocId: assignmentId , origin: cargoDetails.origin , destination: cargoDetails.destination , rate: cargoDetails.rate , ratePerKm: cargoDetails.ratePerKm , truckCapacity: truckDetails?.truckCapacity , truckCargoArea: truckDetails?.cargoArea , externalLoad ,}).catch(console.error);
+
+            
+            
             await updateAssignmentCopies(
                 assignmentId,
                 {
@@ -538,6 +542,7 @@ export default function AssignmentCard({ assignmentData }: any) {
                 ToastAndroid.SHORT
             );
         } catch (error) {
+            trackEventFirebase('cargo_owner_confirmed_assignment_failed', { cargoId, assignmentDocId: assignmentId , origin: cargoDetails.origin , destination: cargoDetails.destination , rate: cargoDetails.rate , ratePerKm: cargoDetails.ratePerKm , truckCapacity: truckDetails?.truckCapacity , truckCargoArea: truckDetails?.cargoArea , externalLoad ,}).catch(console.error);
             console.log("Confirmation error:", error);
         }
     };
@@ -1081,7 +1086,8 @@ export default function AssignmentCard({ assignmentData }: any) {
                             assignmentData.cargoCoordinator,
                             assignmentData.createdByAcc,
                             assignmentData.loadDetails.loadId || assignmentData.loadDetails.cargoId,
-                            assignmentData.truckDetails
+                            assignmentData.truckDetails ,
+                            assignmentData.loadDetails ,
                         )
                     }
                 >

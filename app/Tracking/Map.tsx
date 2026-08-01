@@ -20,6 +20,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { darkMapStyle } from "@/Utilities/MapDarkMode";
 import { decodePolyline } from "@/Utilities/decodePolyline";
 import SubscriptionPaymentModal from "@/components/SubscriptionPaymentModal";
+import { trackScreen } from "@/services/analytics/firebaseAnalystics";
 
 // Traccar API types (kept from your original)
 interface Device {
@@ -226,7 +227,8 @@ export default function Tracking() {
   // Fetch Traccar data (kept your logic but ensured deviceId in deps)
   useEffect(() => {
     let interval: NodeJS.Timeout;
-
+    trackScreen("Tracking Map Screen");
+    
     async function fetchData() {
       if (!deviceId || isNaN(deviceId)) {
         setLoading(false);

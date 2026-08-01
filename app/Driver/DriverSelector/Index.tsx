@@ -14,6 +14,7 @@ import { db } from "@/db/fireBaseConfig";
 import { setDoc, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { handleSubmitReferralCode } from "@/Utilities/handleSubmitRefferalCode";
 import { notifyUserById } from "@/Utilities/pushNotification";
+import { trackEventFirebase } from "@/services/analytics/firebaseAnalystics";
 
 interface FleetAccess {
     fleetId: string;
@@ -137,6 +138,7 @@ function FleetSelector() {
 
     const handleDriverDecision = async (fleet: any, decision: 'active' | 'declined') => {
         try {
+            trackEventFirebase('driver_fleet_decision_initiated', { fleetId: fleet.fleetId, decision }).catch(console.error);
             if (user?.uid) {
                 const userRef = doc(db, 'personalData', user?.uid);
                 const updatedAccessibleFleets = accessibleFleets.map((f: any) =>
@@ -181,10 +183,11 @@ function FleetSelector() {
                     }
                 );
 
-
+                trackEventFirebase('driver_fleet_decision_completed', { fleetId: fleet.fleetId, decision }).catch(console.error);
                 ToastAndroid.show(`Fleet invitation ${decision} successfully!`, ToastAndroid.SHORT);
             }
         } catch (error) {
+            trackEventFirebase('driver_fleet_decision_failed', { fleetId: fleet.fleetId, decision, error: String(error) }).catch(console.error);
             console.error("Error updating fleet decision:", error);
         }
     };
@@ -195,6 +198,7 @@ function FleetSelector() {
 
     const handleDriverSelect = async (driver: any) => {
         if (!driver) return;
+        trackEventFirebase('driver_fleet_selected', { fleetId: driver.fleetId }).catch(console.error);
 
         const fleetId = driver.fleetId || driver.organizationId;
         const fleetStatus = await getVerifiedStatus(fleetId);

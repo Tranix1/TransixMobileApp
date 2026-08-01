@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect,  } from 'react';
 import {
     View,
     ScrollView,
@@ -25,6 +25,7 @@ import VehicleHealthCard from '@/components/DashboardVehicleHealthCard';
 import AttentionCard from '@/components/AttentionCard';
 import MyActivityCard from '@/components/DashboardMyActivtyCard';
 import CustomHeader from '@/components/CustomHeader';
+import { trackEventFirebase,  trackScreen } from '@/services/analytics/firebaseAnalystics';
 // ---------------------------------------------------------------------------
 // Brand palette (kept local to this screen so it doesn't depend on theme
 // keys that may not exist yet in the design system).
@@ -321,6 +322,13 @@ export default function TransixDashboard() {
     ];
 
     const [showFilter , setShowfilter]= React.useState(false)
+
+
+    useEffect(() => {
+        trackScreen('Fleet Dashboard');
+
+     }, []);
+
     return (
         <View style={[styles.safeArea, { backgroundColor: background }]}>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -353,7 +361,10 @@ export default function TransixDashboard() {
                         backgroundLight={backgroundColor}
                         border={border}
                         textlight={textlight}
-                        onPress={()=>router.push("/Assignments/Index")}
+                        onPress={() => {
+                            trackEventFirebase("quick_action_pressed", { action: "View Assignments" });
+                            router.push("/Assignments/Index");
+                        }}
                     />
                     <OverviewCard
                         title="Finance"
@@ -369,7 +380,10 @@ export default function TransixDashboard() {
                         backgroundLight={backgroundColor}
                         border={border}
                         textlight={textlight}
-                            onPress={() => router.push("/Fleet/Finance/Index")}
+                            onPress={() => {
+                                trackEventFirebase("quick_action_pressed", { action: "View Finance" });
+                                router.push("/Fleet/Finance/Index");
+                            }}
 
                     />
                     
@@ -389,7 +403,10 @@ export default function TransixDashboard() {
                         backgroundLight={backgroundColor}
                         border={border}
                         textlight={textlight}
-                        onPress={()=>router.push("/Fleet/Driver/Index")}
+                        onPress={() => {
+                            trackEventFirebase("quick_action_pressed", { action: "View Drivers" });
+                            router.push("/Fleet/Driver/Index");
+                        }}
                     />
                     <OverviewCard
                         title="My Referrals"
@@ -405,7 +422,10 @@ export default function TransixDashboard() {
                         backgroundLight={backgroundColor}
                         border={border}
                         textlight={textlight}
-                        onPress={()=>router.push("/Referrals/ReferralDashboardScreen")}
+                        onPress={() => {
+                            trackEventFirebase("quick_action_pressed", { action: "View Referrals" });
+                            router.push("/Referrals/ReferralDashboardScreen");
+                        }}
                     />
                     
 
@@ -562,7 +582,10 @@ export default function TransixDashboard() {
                         label="Add Truck"
                         iconElement={<FontAwesome6 name="box" size={wp(4.4)} color={BRAND.teal} />}
                         iconBg={`${BRAND.teal}1A`}
-                        onPress={() => router.push('/Logistics/Trucks/AddTrucks')}
+                        onPress={() => {
+                            trackEventFirebase("quick_action_pressed", { action: "Add Truck" });
+                            router.push('/Logistics/Trucks/AddTrucks');
+                        }}
                         background={background}
                         border={border}
                         textlight={textlight}
@@ -571,7 +594,10 @@ export default function TransixDashboard() {
                         label="Add Load"
                         iconElement={<FontAwesome6 name="box" size={wp(4.4)} color={BRAND.navy} />}
                         iconBg={`${BRAND.navy}1A`}
-                        onPress={() => router.push('/Logistics/Loads/AddLoads')}
+                        onPress={() => {
+                            trackEventFirebase("quick_action_pressed", { action: "Add Load" });
+                            router.push('/Logistics/Loads/AddLoads');
+                        }}
                         background={background}
                         border={border}
                         textlight={textlight}
@@ -581,7 +607,10 @@ export default function TransixDashboard() {
                         label="Create Request"
                         iconElement={<Ionicons name="calendar-outline" size={wp(4.4)} color={BRAND.teal} />}
                         iconBg={`${BRAND.teal}1A`}
-                        onPress={() => router.push('/BooksAndBids/ViewBidsAndBooks')}
+                        onPress={() => {
+                            trackEventFirebase("quick_action_pressed", { action: "Create Request" });
+                            router.push('/BooksAndBids/ViewBidsAndBooks');
+                        }}
                         background={background}
                         border={border}
                         textlight={textlight}
@@ -590,7 +619,10 @@ export default function TransixDashboard() {
                         label="View Requested"
                         iconElement={<MaterialCommunityIcons name="clipboard-list-outline" size={wp(4.4)} color={BRAND.amber} />}
                         iconBg={`${BRAND.amber}1A`}
-                        onPress={() => router.push('/Assignments/Index')}
+                        onPress={() => {
+                            trackEventFirebase("quick_action_pressed", { action: "View Requested" });
+                            router.push('/Assignments/Index');
+                        }}
                         background={background}
                         border={border}
                         textlight={textlight}
@@ -599,7 +631,10 @@ export default function TransixDashboard() {
                         label="Finance Centre"
                         iconElement={<Ionicons name="cash-outline" size={wp(4.4)} color={BRAND.good} />}
                         iconBg={`${BRAND.good}1A`}
-                        onPress={() => router.push('/Wallet/DepositAndWithdraw')}
+                        onPress={() => {
+                            trackEventFirebase("quick_action_pressed", { action: "Finance Centre" });
+                            router.push('/Wallet/DepositAndWithdraw');
+                        }}
                         background={background}
                         border={border}
                         textlight={textlight}
@@ -608,7 +643,10 @@ export default function TransixDashboard() {
                         label="Track Vehicles"
                         iconElement={<MaterialCommunityIcons name="map-marker-radius" size={wp(4.4)} color={BRAND.info} />}
                         iconBg={`${BRAND.info}1A`}
-                        onPress={() => router.push('/Tracking/Index')}
+                        onPress={() => {
+                            trackEventFirebase("quick_action_pressed", { action: "Track Vehicles" });
+                            router.push('/Tracking/Index');
+                        }}
                         background={background}
                         border={border}
                         textlight={textlight}
@@ -680,9 +718,6 @@ export default function TransixDashboard() {
                         ))}
                     </View>
                 </View>
-
-
-
 
                 <VehicleHealthCard
                     background={background}
