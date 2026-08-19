@@ -659,7 +659,7 @@ export default function FleetProfile() {
                     <View style={styles.ratingRow}>
                         <View style={styles.ratingBadge}>
                             <Ionicons name="star" size={wp(4)} color="#f2b01e" />
-                            <ThemedText style={[styles.ratingText, { color: text }]}>{fleet.rating.toFixed(1)}</ThemedText>
+                            <ThemedText style={[styles.ratingText, { color: "white" }]}>{fleet.rating.toFixed(1)}</ThemedText>
                         </View>
                         <ThemedText style={[styles.reviewText, { color: icon }]}>{fleet.reviewsCount} reviews</ThemedText>
                     </View>
@@ -1036,7 +1036,7 @@ export default function FleetProfile() {
                             <ThemedText
                                 style={[
                                     styles.ratingTextLarge,
-                                    { color: text }
+                                    { color: "white" }
                                 ]}
                             >
                                 {fleet.rating.toFixed(1)}

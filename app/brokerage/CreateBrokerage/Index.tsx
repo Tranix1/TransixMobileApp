@@ -375,6 +375,7 @@ const CreaterBrokerage = ({ }) => {
 
         createdAt: Date.now(),
         profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+        timeStamp: serverTimestamp()   ,
 
       }
 
@@ -430,7 +431,7 @@ const CreaterBrokerage = ({ }) => {
       trackEventFirebase("brokerage_creation_success", { userId: user?.uid, brokerName, brokerPhone, typeOfBroker, brokerageId }).catch(console.error);
       // Close modal and show success
       setUploadingBrokerD(false);
-      router.push("/")
+      router.push("/brokerage/BrokerageSelector/Index")
       alert('Broker verification submitted successfully! Your account will be reviewed.');
 
     } catch (error) {

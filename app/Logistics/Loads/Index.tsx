@@ -70,11 +70,8 @@ const LoadTructs = async () => {
             filters = selectedAccountType !== "ALL"
                 ? [
                     where("type", "==", selectedAccountType.toLowerCase()),
-                    where("verificationStatus", "==", "approved"),
                 ]
-                : [
-                    where("verificationStatus", "==", "approved"),
-                ];
+                : []
 
             collectionName = "organizationProfiles";
 

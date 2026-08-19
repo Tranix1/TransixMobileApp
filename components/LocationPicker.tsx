@@ -9,6 +9,7 @@ import ScreenWrapper from "./ScreenWrapper";
 import Heading from "./Heading";
 import { wp } from '@/constants/common'
 import { useThemeColor } from '@/hooks/useThemeColor'
+import { useColorScheme } from "react-native";
 export type SelectLocationProp = {
   description: string;
   placeId: string;
@@ -60,6 +61,9 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const [userLocation, setUserLocation] = useState<{ latitude: number, longitude: number } | null>(null);
   const mapRef = useRef<MapView>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  const colorScheme = useColorScheme();
+const isDark = colorScheme === 'dark';
 
   // Helper: Get user's current location
   const getUserCurrentLocation = useCallback(async () => {
@@ -132,14 +136,10 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       const response = await fetch(url);
       const data = await response.json();
 
-      console.log('Geocoding response:', data);
-
       if (data.status === "OK" && data.results && data.results.length > 0) {
         const result = data.results[0];
-        console.log('First result:', result);
 
         const formattedAddress = result.formatted_address || "";
-        console.log('Formatted address:', formattedAddress);
 
         // Extract address components
         let city: string | null = null;
@@ -307,6 +307,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     });
   };
 
+
   return (
     <Modal transparent statusBarTranslucent visible={dspShowMap} animationType="fade">
       <ScreenWrapper>
@@ -356,8 +357,10 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
           <View style={styles.mapContainer}>
             <MapView
               ref={mapRef}
+                key={isDark ? 'dark-map' : 'light-map'}
+
               style={styles.map}
-              customMapStyle={darkMapStyle}
+              customMapStyle={isDark ? darkMapStyle : []}
               onPress={handleMapPress}
               onRegionChange={handleRegionChange}
               initialRegion={mapRegion}
@@ -460,6 +463,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginBottom: wp(6),
   },
   instructionsContainer: {
     paddingHorizontal: wp(4),

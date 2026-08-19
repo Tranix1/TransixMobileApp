@@ -310,7 +310,7 @@ export default function DriverProfile() {
                     <View style={styles.ratingRow}>
                         <View style={styles.ratingBadge}>
                             <Ionicons name="star" size={wp(4)} color="#f2b01e" />
-                            <ThemedText style={[styles.ratingText, { color: text }]}>{driver.rating.toFixed(1)}</ThemedText>
+                            <ThemedText style={[styles.ratingText, { color: "white" }]}>{driver.rating.toFixed(1)}</ThemedText>
                         </View>
                         <ThemedText style={[styles.reviewText, { color: icon }]}>{driver.reviewsCount} reviews</ThemedText>
                     </View>
@@ -512,7 +512,7 @@ export default function DriverProfile() {
                     <View style={styles.reviewsSummary}>
                         <View style={styles.ratingBadge}>
                             <Ionicons name="star" size={wp(5)} color="#f2b01e" />
-                            <ThemedText style={[styles.ratingTextLarge, { color: text }]}>{driver.rating.toFixed(1)}</ThemedText>
+                            <ThemedText style={[styles.ratingTextLarge, { color: "white" }]}>{driver.rating.toFixed(1)}</ThemedText>
                         </View>
                         <ThemedText style={[styles.reviewText, { color: icon }]}>{driver.reviewsCount} reviews</ThemedText>
                     </View>

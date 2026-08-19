@@ -71,54 +71,58 @@ export default function Index() {
   const [dspLoginOrSignup, setDspLoginOrSignup] = useState(true);
   const [isSigningUp, setIsSigningUp] = useState(false);
 
-  const { currentRole  } = useAuth();
+  const { currentRole } = useAuth();
 
 
 
-const {
+
+
+  const {
     isLoading: authLoading,
     isAuthenticated,
+    needsSignup,
     user,
     needsEmailVerification,
     error: authError,
+
   } = useAuthState();
 
 
 
-    const [showModalPayment, setShowModalPaymentModal] = useState(false)
+  const [showModalPayment, setShowModalPaymentModal] = useState(false)
 
 
- const brokerage = user?.brokerageDetails?.find(
-        (item: any) =>
-            item.organizationId === currentRole.organizationId
+  const brokerage = user?.brokerageDetails?.find(
+    (item: any) =>
+      item.organizationId === currentRole.organizationId
+  );
+
+
+  const shouldShowBrokerageSubscription =
+    brokerage &&
+    (
+      !brokerage.subscription ||
+      !brokerage.subscription.active ||
+      Date.now() > brokerage.subscription.expiresAt
     );
 
 
-    const shouldShowBrokerageSubscription =
-        brokerage &&
-        (
-            !brokerage.subscription ||
-            !brokerage.subscription.active ||
-            Date.now() > brokerage.subscription.expiresAt
-        );
- 
 
 
 
+  useEffect(() => {
 
-       useEffect(() => {
-    
-            if (shouldShowBrokerageSubscription) {
-                setShowModalPaymentModal(true);
-            }
-    
-        }, [shouldShowBrokerageSubscription]);
+    if (shouldShowBrokerageSubscription) {
+      setShowModalPaymentModal(true);
+    }
+
+  }, [shouldShowBrokerageSubscription]);
 
 
 
 
 
-  
+
 
   const {
     showUpdateModal,
@@ -127,7 +131,7 @@ const {
     latestVersion,
     checkForUpdate,
     dismissUpdate,
-} = useAppUpdate();
+  } = useAppUpdate();
 
 
   // Check if profile details are missing
@@ -164,7 +168,7 @@ const {
         return;
       }
 
-      if (!isAuthenticated) {
+      if (!isAuthenticated || needsSignup) {
         setDspCreateAcc(true);
         return;
       }
@@ -225,7 +229,7 @@ const {
   }
 
 
-  console.log(currentRole ,"current role")
+  console.log(currentRole, "current role")
 
 
   return (
@@ -293,41 +297,35 @@ const {
 
             (typeof currentRole === 'object' && currentRole.accType === 'tracking') ? (
               <>
-                <Tab.Screen name="Home" component={TrackingIndex}/>
+                <Tab.Screen name="Home" component={TrackingIndex} />
                 <Tab.Screen name="About" component={About} />
               </>
-            ) : (typeof currentRole === 'object' && currentRole.accType === 'fleet' && currentRole.userRole === 'owner') ? (
-              <>
-                <Tab.Screen name="Home" component={Dashboard} />
-                <Tab.Screen name="Loads" component={Loads} />
-                {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
-                <Tab.Screen name="Trucks" component={LogisticsTrucks} />
-              </>
-            ) :
+            )
+              :
 
-              (typeof currentRole === 'object' && currentRole.accType === 'fleet' && currentRole.userRole === "create_Acc") ?
+              (typeof currentRole === 'object' && currentRole.accType === 'fleet' && currentRole.userRole === 'owner') ?
                 (<>
-                  <Tab.Screen name="Home" component={CreateFleet} />
+                  <Tab.Screen name="Home" component={FleetSelector} />
                   <Tab.Screen name="About" component={About} />
-                </>) :
-                (typeof currentRole === 'object' && currentRole.accType === 'fleet') ?
-                  (<>
-                    <Tab.Screen name="Home" component={FleetSelector} />
-                    <Tab.Screen name="About" component={About} />
-                  </>)
+                </>)
+    
+                : (typeof currentRole === 'object' && currentRole.accType === 'fleet') ? (
+                  <>
+                    <Tab.Screen name="Home" component={Dashboard} />
+                    <Tab.Screen name="Loads" component={Loads} />
+                    {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
+                    <Tab.Screen name="Trucks" component={LogisticsTrucks} />
+                  </>
+                ) :
 
-                  : (typeof currentRole === 'object' && currentRole.accType === 'driver' && currentRole.userRole === 'driver') ? (
+                  (typeof currentRole === 'object' && currentRole.accType === 'driver' && currentRole.userRole === 'driver') ? (
                     <>
                       <Tab.Screen name="Jobs" component={Jobs} />
                       <Tab.Screen name="Trucks" component={Trucks} />
                       {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
                       <Tab.Screen name="Earnings" component={DriverFinance} />
                     </>
-                  ) : (typeof currentRole === 'object' && currentRole.accType === 'driver' && currentRole.userRole === "create_Acc") ?
-                    (<>
-                      <Tab.Screen name="Home" component={CreateDriverAcc} />
-                      <Tab.Screen name="About" component={About} />
-                    </>) :
+                  ) :
 
                     (typeof currentRole === 'object' && currentRole.accType === 'driver') ?
                       (<>
@@ -335,51 +333,46 @@ const {
                         <Tab.Screen name="About" component={About} />
                       </>)
 
-                      : (typeof currentRole === 'object' && currentRole.accType === 'brokerage' && currentRole.userRole === 'owner') ? (
-                        <>
-                          <Tab.Screen name="Loads" component={Loads} />
-                          <Tab.Screen name="Trucks" component={LogisticsTrucks} />
-                          {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
-                          <Tab.Screen name="Wallet" component={BrokerageFinance} />
-                        </>
-                      )
-                        : (typeof currentRole === 'object' && currentRole.accType === 'brokerage' && currentRole.userRole === "create_Acc") ?
-                          (<>
-                            <Tab.Screen name="Home" component={CreateBrokerageAcc} />
-                            <Tab.Screen name="About" component={About} />
-                          </>) :
-                          (typeof currentRole === 'object' && currentRole.accType === 'brokerage') ?
-                            (<>
-                              <Tab.Screen name="Home" component={BrokerageSelector} />
+                      :
+                      (typeof currentRole === 'object' && currentRole.accType === 'brokerage' && currentRole.userRole === 'owner') ?
+                        (<>
+                          <Tab.Screen name="Home" component={BrokerageSelector} />
+                          <Tab.Screen name="About" component={About} />
+                        </>)
+                        : (typeof currentRole === 'object' && currentRole.accType === 'brokerage') ? (
+                          <>
+                            <Tab.Screen name="Loads" component={Loads} />
+                            <Tab.Screen name="Trucks" component={LogisticsTrucks} />
+                            {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
+                            <Tab.Screen name="Wallet" component={BrokerageFinance} />
+                          </>
+                        )
+                          : (
+                            <>
+                              {/* <Tab.Screen name="Home " component={Login} /> */}
                               <Tab.Screen name="About" component={About} />
-                            </>)
-
-                            : (
-                              <>
-                                {/* <Tab.Screen name="Home " component={Login} /> */}
-                                {/* <Tab.Screen name="About " component={About} /> */}
-                              </>
-                            )}
+                            </>
+                          )}
         </Tab.Navigator>
 
-       
 
-<UpdateModal
-    visible={showUpdateModal}
-    onClose={dismissUpdate}
-    currentVersion={currentVersion}
-    latestVersion={latestVersion}
-    updateUrl="https://play.google.com/store/apps/details?id=com.yayapana.TransixNewVersion"
-    updateType={updateType}
-/>
 
-    <SubscriptionPaymentModal
-                isVisible={showModalPayment}
-                onClose={() => setShowModalPaymentModal(false)}
-                subscriptionType="brokerage"      // or "broker" / "tracking"
-                payerOrganizationId={currentRole.organizationId || ""}
-                payerOrganizationName={currentRole.companyName || " "}
-            />
+        <UpdateModal
+          visible={showUpdateModal}
+          onClose={dismissUpdate}
+          currentVersion={currentVersion}
+          latestVersion={latestVersion}
+          updateUrl="https://play.google.com/store/apps/details?id=com.yayapana.TransixNewVersion"
+          updateType={updateType}
+        />
+
+        <SubscriptionPaymentModal
+          isVisible={showModalPayment}
+          onClose={() => setShowModalPaymentModal(false)}
+          subscriptionType="brokerage"      // or "broker" / "tracking"
+          payerOrganizationId={currentRole.organizationId || ""}
+          payerOrganizationName={currentRole.companyName || " "}
+        />
 
 
       </View>

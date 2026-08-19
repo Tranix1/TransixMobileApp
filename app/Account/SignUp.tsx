@@ -23,7 +23,6 @@ import { Image } from 'expo-image';
 import { useAuth } from '@/context/AuthContext';
 import { AccountType } from '@/types/types';
 import { router } from 'expo-router';
-import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
 import { useRef } from "react";
 import { firebaseConfig } from '@/db/fireBaseConfig';
 
@@ -31,6 +30,7 @@ import PhoneInput from '@/components/PhoneInput';
 import { validateReferralCode } from '@/db/operations';
 import { trackEventFirebase, trackScreen } from '@/services/analytics/firebaseAnalystics';
 import { useColorScheme } from 'react-native';
+import auth from "@react-native-firebase/auth"; 
 
 
 const ACCOUNT_TYPES: {
@@ -49,20 +49,21 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
     const [referrerCode, setReferrerCode] = useState('');
     const [acceptTerms, setAcceptTerms] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [selectedAccount, setSelectedAccount] = useState<AccountType>('tracking');
+    const [selectedAccount, setSelectedAccount] = useState<AccountType | null>(null);
     const [loading, setLoading] = useState(false);
 
     const backgroundLight = useThemeColor('backgroundLight');
     const icon = useThemeColor('icon');
     const accent = useThemeColor('accent');
     const coolGray = useThemeColor('coolGray');
+
     const colorScheme = useColorScheme();
 
 
     const [keyboardVisible, setKeyboardVisible] = useState(false);
 
     const [phoneNumber, setPhoneNumber] = useState('');
-    const [countryCode, setCountryCode] = useState({ id: 0, name: '' });
+    const [countryCode, setCountryCode] = useState({ id: 0, name: '', countryName: '' });
 
     const [confirmation, setConfirmation] = useState<any>(null);
 
@@ -72,7 +73,7 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
     const [referralValidation, setReferralValidation] = useState<any>(null);
 
-
+    console.log("Selected Country:", countryCode.name, countryCode.countryName);
 
 
     useEffect(() => {
@@ -163,6 +164,8 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
         } catch (error: any) {
             console.error(error);
+            setError(error?.message || 'Failed to send OTP. Please try again.');
+            
 
             ToastAndroid.show(
                 error?.message || `${error}`,
@@ -181,6 +184,11 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
             return;
         }
 
+          if (! selectedAccount) {
+            setError("Please select Account Type");
+            return;
+        }
+        
         if (!confirmation) {
             setError("OTP session expired. Please request a new code.");
             return;
@@ -192,21 +200,27 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
             setLoading(true);
             setIsSigningUp(true);
 
-            await confirmation.confirm(code);
 
-
+            if (!auth().currentUser) {
+                await confirmation.confirm(code);
+            }
 
 
             const result = await signUp({
                 phoneNumber: `${countryCode.name}${phoneNumber}`,
                 verificationId,
-                otp,
                 referrerCode,
                 accountType: selectedAccount,
                 displayName: fullname,
                 referralValidation,
                 countryCode: countryCode.name,
+                countryName: countryCode.countryName || "Unknown",
             });
+            
+        ToastAndroid.show(
+            "Account created successfully!",
+            ToastAndroid.SHORT
+        );
 
             if (result.success) {
                 if (selectedAccount === "fleet") {
@@ -240,6 +254,60 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
         await verifyOTP(otp);
     };
 
+
+    const hasAutoSignedUp = useRef(false);
+
+  useEffect(() => {
+    const unsubscribe = auth().onAuthStateChanged(async (user) => {
+        if (!user) return;
+        if (!selectedAccount) return;
+
+        // Prevent running twice
+        if (hasAutoSignedUp.current) return;
+
+        // Only after OTP has been requested
+        if (!otpSent) return;
+
+        hasAutoSignedUp.current = true;
+
+        setLoading(true);
+        setIsSigningUp(true);
+
+        try {
+            const result = await signUp({
+                phoneNumber: `${countryCode.name}${phoneNumber}`,
+                verificationId,
+                referrerCode,
+                accountType: selectedAccount,
+                displayName: fullname,
+                referralValidation,
+                countryCode: countryCode.name,
+                countryName: countryCode.countryName || "Unknown",
+            });
+
+            if (result.success) {
+
+                ToastAndroid.show(
+                    "Account verified automatically and created successfully!",
+                    ToastAndroid.SHORT
+                );
+
+                 setTimeout(() => {
+        router.replace("/");
+    }, 800);
+            }
+
+        } catch (e) {
+            console.error(e);
+            hasAutoSignedUp.current = false;
+        } finally {
+            setLoading(false);
+            setIsSigningUp(false);
+        }
+    });
+
+    return unsubscribe;
+}, [otpSent]);
 
 
 
@@ -428,9 +496,9 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                         activeOpacity={0.85}
                     >
                         {loading ? (
-                            <ActivityIndicator color="#fff" />
+                            <ActivityIndicator color={icon} />
                         ) : (
-                            <ThemedText color="#fff" type="subtitle">
+                            <ThemedText  type="subtitle">
                                 Create Account
                             </ThemedText>
                         )}

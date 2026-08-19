@@ -18,11 +18,13 @@ type Props = {
     countryCode: {
         id: number;
         name: string;
+        countryName: string;    
     };
 
     setCountryCode: (item: {
         id: number;
         name: string;
+        countryName: string;
     }) => void;
 
     placeholder?: string;

@@ -155,7 +155,7 @@ export function GooglePlaceAutoCompleteComp({
                                         console.log('GooglePlacesAutocomplete focused');
                                         setIsDropdownVisible(true);
                                     },
-                                    
+
                                     onChangeText: (text) => {
                                         console.log('Search text changed:', text);
                                     },
@@ -189,7 +189,8 @@ export function GooglePlaceAutoCompleteComp({
                             <View style={styles.buttonRow}>
                                 {/* Pick on Map Button */}
                                 <TouchableOpacity
-                                    style={styles.button}
+                                    style={[styles.button, { backgroundColor: backgroundLight }]}
+
                                     onPress={() => {
                                         setPickLocationOnMap(true);
                                         setIsDropdownVisible(false);
@@ -202,7 +203,7 @@ export function GooglePlaceAutoCompleteComp({
                                 {/* Current Location Button */}
                                 {!currentLocation && (
                                     <TouchableOpacity
-                                        style={styles.button}
+                                        style={[styles.button, { backgroundColor: backgroundLight }]}
                                         onPress={async () => {
                                             try {
                                                 setLoadingCurrentLocation(true);
@@ -259,12 +260,11 @@ const styles = StyleSheet.create({
     },
     button: {
         flex: 1,
-        borderWidth: 1,
         borderRadius: 8,
         paddingVertical: hp(1.2),
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#424242',
+        // backgroundColor: '#424242',
         marginTop: hp(2.7),
     },
     buttonText: { fontSize: 15, fontWeight: '600' },

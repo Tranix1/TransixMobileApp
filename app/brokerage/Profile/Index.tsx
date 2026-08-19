@@ -360,7 +360,7 @@ export default function BrokerProfile() {
                     <View style={styles.ratingRow}>
                         <View style={styles.ratingBadge}>
                             <Ionicons name="star" size={wp(4)} color="#f2b01e" />
-                            <ThemedText style={[styles.ratingText, { color: text }]}>{broker.rating.toFixed(1)}</ThemedText>
+                            <ThemedText style={[styles.ratingText, { color: "white" }]}>{broker.rating.toFixed(1)}</ThemedText>
                         </View>
                         <ThemedText style={[styles.reviewText, { color: icon }]}>{broker.reviewsCount} reviews</ThemedText>
                     </View>
@@ -479,7 +479,7 @@ export default function BrokerProfile() {
                     <View style={styles.reviewsSummary}>
                         <View style={styles.ratingBadge}>
                             <Ionicons name="star" size={wp(5)} color="#f2b01e" />
-                            <ThemedText style={[styles.ratingTextLarge, { color: text }]}>{broker.rating.toFixed(1)}</ThemedText>
+                            <ThemedText style={[styles.ratingTextLarge, { color: "white" }]}>{broker.rating.toFixed(1)}</ThemedText>
                         </View>
                         <ThemedText style={[styles.reviewText, { color: icon }]}>{broker.reviewsCount} reviews</ThemedText>
                     </View>

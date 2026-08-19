@@ -26,6 +26,7 @@ import PhoneInput from '@/components/PhoneInput';
 import { router } from 'expo-router';
 import { trackScreen } from '@/services/analytics/firebaseAnalystics';
 import { useColorScheme } from 'react-native';
+import auth from "@react-native-firebase/auth";
 
 
 const ACCOUNT_TYPES: {
@@ -55,7 +56,7 @@ const Login = ({ setDspLoginOrSignup }: any) => {
     const [keyboardVisible, setKeyboardVisible] = useState(false);
 
     const [phoneNumber, setPhoneNumber] = useState('');
-    const [countryCode, setCountryCode] = useState({ id: 0, name: '' });
+    const [countryCode, setCountryCode] = useState({ id: 0, name: '' , countryName: '' });
 
     const [verificationId, setVerificationId] = useState('');
     const [otp, setOtp] = useState('');
@@ -121,6 +122,7 @@ const Login = ({ setDspLoginOrSignup }: any) => {
 
         } catch (error: any) {
             console.error(error);
+            setError(error?.message || 'Failed to send OTP. Please try again.');
 
             ToastAndroid.show(
                 error?.message || `${error}`,
@@ -154,7 +156,6 @@ const Login = ({ setDspLoginOrSignup }: any) => {
             const res = await loginUser({
                 phoneNumber: `${countryCode.name}${phoneNumber}`,
                 verificationId,
-                otp,
                 accountType: selectedAccount,
             });
 
@@ -163,6 +164,10 @@ const Login = ({ setDspLoginOrSignup }: any) => {
                 return;
             }
 
+              ToastAndroid.show(
+                    "Verified. Welcome back!" ,
+                    ToastAndroid.SHORT
+                );
             if (res.currentRole?.userRole === "create_Acc") {
                 if (res.currentRole.accType === "fleet") {
                     router.push("/Fleet/CreateFleet");
@@ -190,7 +195,53 @@ const Login = ({ setDspLoginOrSignup }: any) => {
 
     const onsubmit = async () => {
         await verifyOTP(otp);
-    };
+    };  
+
+       const hasAutoSignedUp = useRef(false);
+
+  useEffect(() => {
+    const unsubscribe = auth().onAuthStateChanged(async (user) => {
+        if (!user) return;
+
+        // Prevent running twice
+        if (hasAutoSignedUp.current) return;
+
+        // Only after OTP has been requested
+        if (!otpSent) return;
+
+        hasAutoSignedUp.current = true;
+
+        setLoading(true);
+
+        try {
+               const res = await loginUser({
+                phoneNumber: `${countryCode.name}${phoneNumber}`,
+                verificationId,
+                accountType: selectedAccount,
+            });
+
+            if (res.success) {
+
+                ToastAndroid.show(
+                    "Verified automatically. Welcome back!" ,
+                    ToastAndroid.SHORT
+                );
+
+                 setTimeout(() => {
+        router.replace("/");
+    }, 800);
+            }
+
+        } catch (e) {
+            console.error(e);
+            hasAutoSignedUp.current = false;
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    return unsubscribe;
+}, [otpSent]);
 
 
 
@@ -204,7 +255,7 @@ const Login = ({ setDspLoginOrSignup }: any) => {
                 <View style={styles.container}>
                     <Image
                         contentFit="contain"
-                        source={colorScheme === "light" ? require('@/assets/trialogo.svg') : require('@/assets/transix_logo_black_bg`.png')}
+                        source={colorScheme === "light" ? require('@/assets/trialogo.svg') : require('@/assets/transix_logo_black_bg.png')}
                         style={styles.logo}
                     />
 
@@ -302,9 +353,9 @@ const Login = ({ setDspLoginOrSignup }: any) => {
                             ]}
                         >
                             {loading ? (
-                                <ActivityIndicator color="#fff" />
+                                <ActivityIndicator color={icon} />
                             ) : (
-                                <ThemedText color="#fff" type="subtitle">
+                                <ThemedText  type="subtitle">
                                     Send OTP
                                 </ThemedText>
                             )}
@@ -320,9 +371,9 @@ const Login = ({ setDspLoginOrSignup }: any) => {
                             activeOpacity={0.85}
                         >
                             {loading ? (
-                                <ActivityIndicator color="#fff" />
+                                <ActivityIndicator color={icon} />
                             ) : (
-                                <ThemedText color="#fff" type="subtitle">
+                                <ThemedText  type="subtitle">
                                     Login
                                 </ThemedText>
                             )}

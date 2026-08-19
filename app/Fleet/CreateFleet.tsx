@@ -265,27 +265,28 @@ const CreateFleet = () => {
             await setupUser(updatedUser);
 
 
-            await addDocumentWithId(`organizationProfiles`, fleetId, {
-                organizationId: fleetId,
-                type: "fleet", // or "fleet"
+                    await addDocumentWithId(`organizationProfiles`, fleetId, {
+                        organizationId: fleetId,
+                        type: "fleet", // or "fleet"
 
-                name: fleetData.fleetName,
-                coverPhoto: null,
-                description: "",
-                ownerId: user.uid,
-                ownerName: user.displayName || user.organisation,
+                        name: fleetData.fleetName,
+                        coverPhoto: null,
+                        description: "",
+                        ownerId: user.uid,
+                        ownerName: user.displayName || user.organisation,
 
-                location: billingAddress || baseAdress,
-                operationCountries: operationCountries,
+                        location: billingAddress || baseAdress,
+                        operationCountries: operationCountries,
 
-                verificationStatus: "pending",
+                        verificationStatus: "pending",
 
-                createdAt: Date.now(),
-                profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+                        createdAt: Date.now(),
+                        profilePhoto: imagelogo ? imagelogo || undefined : currentRole.profilePhoto || null,
+                        timeStamp: serverTimestamp()  
 
-            }
+                    }
 
-            )
+                    )
 
 
             const contactDetails = {

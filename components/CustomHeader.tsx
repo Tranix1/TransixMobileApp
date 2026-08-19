@@ -22,6 +22,85 @@ interface CustomHeaderProps {
 import { Image } from 'expo-image';
 
 
+
+// currentRole.userRole === "create_Acc" ?
+//                             <View
+//                                 style={{
+//                                     backgroundColor: background,
+//                                     paddingHorizontal: wp(3.5),
+//                                     paddingVertical: wp(1),
+//                                     flexDirection: 'row',
+//                                     justifyContent: 'space-between',
+//                                     alignItems: 'center',
+//                                     marginBottom: wp(1),
+//                                     paddingRight: 15,
+
+//                                 }}
+//                             >
+
+//                                 <View style={{}}>
+//                                     <ThemedText style={{ fontSize: 30, fontFamily: 'sfbold', }} >{pageTitle}</ThemedText>
+//                                     {pageTitle === "Tracking" && <ThemedText type='default' >Role: {currentRole.accType}
+//                                     </ThemedText>}
+//                                 </View>
+
+//                                 <View style={{ flexDirection: "row" }}>
+//                                     <View style={{ paddingRight: 20 }}>
+//                                         <TouchableNativeFeedback onPress={selectProfileImage} style={{ paddingRight: 15 }}>
+//                                             <View
+//                                                 style={{
+//                                                     padding: wp(1),
+//                                                     width: wp(9),
+//                                                     height: wp(9),
+//                                                     overflow: "hidden",
+//                                                     justifyContent: "center",
+//                                                     alignItems: "center",
+//                                                     borderWidth: 1,
+//                                                 }}
+//                                             >
+
+//                                                 {(currentRole?.profilePhoto || selectedImage) ? (
+//                                                     <Image
+//                                                         source={{ uri: selectedImage?.uri && selectedImage.uri || currentRole.profilePhoto }}
+//                                                         style={{
+//                                                             width: "100%",
+//                                                             height: "100%"
+//                                                         }}
+//                                                     />
+//                                                 ) : (
+//                                                     <View style={{ alignItems: "center" }}>
+//                                                         <Ionicons
+//                                                             name="person-add-outline"
+//                                                             size={wp(5)}
+//                                                             color={icon}
+//                                                         />
+
+//                                                         <ThemedText
+//                                                             type="tiny"
+//                                                             style={{
+//                                                                 fontSize: wp(2.5),
+//                                                             }}
+//                                                         >
+//                                                             Photo
+//                                                         </ThemedText>
+//                                                     </View>
+//                                                 )}
+
+//                                             </View>
+//                                         </TouchableNativeFeedback>
+//                                     </View>
+//                                     <TouchableNativeFeedback onPress={() => setDspMenu(true)} style={{ marginLeft: 10 }} >
+//                                         <View >
+//                                             <Ionicons name="ellipsis-vertical" size={wp(6)} color={icon} />
+//                                         </View>
+//                                     </TouchableNativeFeedback>
+//                                 </View>
+
+
+//                             </View>
+//                             :
+
+
 export default function CustomHeader({ pageTitle, addingNavigate, filterElement, selectProfileImage, selectedImage, }: CustomHeaderProps) {
     const background = useThemeColor("background");
     const icon = useThemeColor('icon');
@@ -89,82 +168,14 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement,
 
                 {(currentRole.accType === 'fleet' || currentRole.accType === 'brokerage' || currentRole.accType === "driver") ? (
                     <>
-                        {currentRole.userRole === "create_Acc" ?
-                            <View
-                                style={{
-                                    backgroundColor: background,
-                                    paddingHorizontal: wp(3.5),
-                                    paddingVertical: wp(1),
-                                    flexDirection: 'row',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    marginBottom: wp(1),
-                                    paddingRight: 15,
-
-                                }}
-                            >
-
-                                <View style={{}}>
-                                    <ThemedText style={{ fontSize: 30, fontFamily: 'sfbold', }} >{pageTitle}</ThemedText>
-                                    {pageTitle === "Tracking" && <ThemedText type='default' >Role: {currentRole.accType}
-                                    </ThemedText>}
-                                </View>
-
-                                <View style={{ flexDirection: "row" }}>
-                                    <View style={{ paddingRight: 20 }}>
-                                        <TouchableNativeFeedback onPress={selectProfileImage} style={{ paddingRight: 15 }}>
-                                            <View
-                                                style={{
-                                                    padding: wp(1),
-                                                    width: wp(9),
-                                                    height: wp(9),
-                                                    overflow: "hidden",
-                                                    justifyContent: "center",
-                                                    alignItems: "center",
-                                                    borderWidth: 1,
-                                                }}
-                                            >
-
-                                                {(currentRole?.profilePhoto || selectedImage) ? (
-                                                    <Image
-                                                        source={{ uri: selectedImage?.uri && selectedImage.uri || currentRole.profilePhoto }}
-                                                        style={{
-                                                            width: "100%",
-                                                            height: "100%"
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <View style={{ alignItems: "center" }}>
-                                                        <Ionicons
-                                                            name="person-add-outline"
-                                                            size={wp(5)}
-                                                            color={icon}
-                                                        />
-
-                                                        <ThemedText
-                                                            type="tiny"
-                                                            style={{
-                                                                fontSize: wp(2.5),
-                                                            }}
-                                                        >
-                                                            Photo
-                                                        </ThemedText>
-                                                    </View>
-                                                )}
-
-                                            </View>
-                                        </TouchableNativeFeedback>
-                                    </View>
-                                    <TouchableNativeFeedback onPress={() => setDspMenu(true)} style={{ marginLeft: 10 }} >
-                                        <View >
-                                            <Ionicons name="ellipsis-vertical" size={wp(6)} color={icon} />
-                                        </View>
-                                    </TouchableNativeFeedback>
-                                </View>
+                        {
 
 
-                            </View>
-                            :
+
+
+
+
+
                             <View
                                 style={{
                                     backgroundColor: background,

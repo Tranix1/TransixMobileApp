@@ -1,4 +1,4 @@
-import React, { useEffect,  } from 'react';
+import React, { useEffect, } from 'react';
 import {
     View,
     ScrollView,
@@ -6,6 +6,7 @@ import {
     StyleSheet,
     SafeAreaView,
     Image,
+    ToastAndroid,
 } from 'react-native';
 import {
     Ionicons,
@@ -25,7 +26,8 @@ import VehicleHealthCard from '@/components/DashboardVehicleHealthCard';
 import AttentionCard from '@/components/AttentionCard';
 import MyActivityCard from '@/components/DashboardMyActivtyCard';
 import CustomHeader from '@/components/CustomHeader';
-import { trackEventFirebase,  trackScreen } from '@/services/analytics/firebaseAnalystics';
+import { trackEventFirebase, trackScreen } from '@/services/analytics/firebaseAnalystics';
+import LoadAlertsModal from "@/components/LoadAlertsModal";
 // ---------------------------------------------------------------------------
 // Brand palette (kept local to this screen so it doesn't depend on theme
 // keys that may not exist yet in the design system).
@@ -63,7 +65,7 @@ interface OverviewCardProps {
     backgroundLight: string;
     border: string;
     textlight: string;
-        onPress?: () => void;
+    onPress?: () => void;
 
 }
 
@@ -179,64 +181,81 @@ const OverviewCard = ({
     border,
     textlight,
     onPress,
-}: OverviewCardProps) => (
-    <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={onPress}
-        disabled={!onPress}
-        style={[
-            styles.overviewCard,
-            {
-                backgroundColor: background,
-                borderColor: border,
-            },
-        ]}
-    >
-        <View>
-            <View style={styles.overviewCardHead}>
-                <View
-                    style={[
-                        styles.overviewIconWrap,
-                        { backgroundColor: iconBg },
-                    ]}
-                >
-                    {iconElement}
+}: OverviewCardProps) => {
+    const { currentRole } = useAuth();
+    return (
+        <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => {
+                if (currentRole.organizationId) {
+
+                    onPress
+                } else {
+                    ToastAndroid.show(
+                        "Account created. Please complete verification to continue.",
+                        ToastAndroid.LONG
+                    );
+                    router.push("/Fleet/CreateFleet")
+
+                }
+            }
+
+            }
+            disabled={!onPress}
+            style={[
+                styles.overviewCard,
+                {
+                    backgroundColor: background,
+                    borderColor: border,
+                },
+            ]}
+        >
+            <View>
+                <View style={styles.overviewCardHead}>
+                    <View
+                        style={[
+                            styles.overviewIconWrap,
+                            { backgroundColor: iconBg },
+                        ]}
+                    >
+                        {iconElement}
+                    </View>
+
+                    <ThemedText type="tiny" style={styles.overviewCardTitle}>
+                        {title}
+                    </ThemedText>
                 </View>
 
-                <ThemedText type="tiny" style={styles.overviewCardTitle}>
-                    {title}
+                <ThemedText style={styles.overviewPrimaryValue}>
+                    {/* {primaryValue} */}
+                    --
                 </ThemedText>
+
+
+
+                <ThemedText
+                    type="tiny"
+                    style={{ color: textlight, marginBottom: hp(1) }}
+                >
+                    {primaryLabel}
+                </ThemedText>
+
+                <View>
+                    {rows.map((row, index) => (
+                        <MiniStatRow
+                            key={`${title}-${row.label}-${index}`}
+                            label={row.label}
+                            value={row.value}
+                            dotColor={row.dotColor}
+                            border={border}
+                            textlight={textlight}
+                        />
+                    ))}
+                </View>
             </View>
-
-            <ThemedText style={styles.overviewPrimaryValue}>
-                {/* {primaryValue} */}
-                --
-            </ThemedText>
-
-            
-
-            <ThemedText
-                type="tiny"
-                style={{ color: textlight, marginBottom: hp(1) }}
-            >
-                {primaryLabel}
-            </ThemedText>
-
-            <View>
-                {rows.map((row, index) => (
-                    <MiniStatRow
-                        key={`${title}-${row.label}-${index}`}
-                        label={row.label}
-                        value={row.value}
-                        dotColor={row.dotColor}
-                        border={border}
-                        textlight={textlight}
-                    />
-                ))}
-            </View>
-        </View>
-    </TouchableOpacity>
-);
+        </TouchableOpacity>
+    );
+}
 
 
 
@@ -268,18 +287,34 @@ const PerformanceStat = ({ label, value, iconElement, backgroundLight, border, t
     </View>
 );
 
-const QuickAction = ({ label, iconElement, iconBg, onPress, background, border, textlight }: QuickActionProps) => (
-    <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={0.75}
-        style={[styles.quickActionBtn, { backgroundColor: background, borderColor: border }]}
-    >
-        <View style={[styles.quickActionIconWrap, { backgroundColor: iconBg }]}>{iconElement}</View>
-        <ThemedText type="tiny" style={[styles.quickActionLabel, { color: textlight }]} numberOfLines={2}>
-            {label}
-        </ThemedText>
-    </TouchableOpacity>
-);
+const QuickAction = ({ label, iconElement, iconBg, onPress, background, border, textlight }: QuickActionProps) => 
+    {    
+        const currentRole = useAuth().currentRole;
+        return(
+        <TouchableOpacity
+        
+            onPress={() => {
+                    if (currentRole.organizationId) {
+
+                        onPress
+                    } else {
+                        ToastAndroid.show(
+                            "Account created. Please complete verification to continue.",
+                            ToastAndroid.LONG
+                        );
+                        router.push("/Fleet/CreateFleet")
+
+                    }
+                } } 
+            activeOpacity={0.75}
+            style={[styles.quickActionBtn, { backgroundColor: background, borderColor: border }]}
+        >
+            <View style={[styles.quickActionIconWrap, { backgroundColor: iconBg }]}>{iconElement}</View>
+            <ThemedText type="tiny" style={[styles.quickActionLabel, { color: textlight }]} numberOfLines={2}>
+                {label}
+            </ThemedText>
+        </TouchableOpacity>
+    );}
 
 
 
@@ -321,29 +356,89 @@ export default function TransixDashboard() {
         { label: 'Delivered', count: 9, done: false },
     ];
 
-    const [showFilter , setShowfilter]= React.useState(false)
+    const [showFilter, setShowfilter] = React.useState(false)
 
 
     useEffect(() => {
         trackScreen('Fleet Dashboard');
 
-     }, []);
+    }, []);
+    const [showLoadPreferences, setShowLoadPreferences] = React.useState(false);
 
     return (
         <View style={[styles.safeArea, { backgroundColor: background }]}>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 {/* ============================= HEADER ============================= */}
-             
 
-<CustomHeader pageTitle="Dashboard" addingNavigate="/Logistics/Loads/AddLoads" filterElement={setShowfilter} />
 
+
+<CustomHeader
+    pageTitle="Dashboard"
+    addingNavigate="/Logistics/Loads/AddLoads"
+    // filterElement={setShowfilter}
+/>
+
+{/* LOAD ALERT PREFERENCES */}
+<TouchableOpacity
+    activeOpacity={0.8}
+    onPress={() => setShowLoadPreferences(true)}
+    style={[
+        styles.alertPreferencesCard,
+        {
+            backgroundColor: background,
+            borderColor: border,
+        },
+    ]}
+>
+    <View
+        style={[
+            styles.alertPreferencesIcon,
+            { backgroundColor: `${BRAND.teal}1A` },
+        ]}
+    >
+        <Ionicons
+            name="notifications-outline"
+            size={wp(5)}
+            color={BRAND.teal}
+        />
+    </View>
+
+    <View style={{ flex: 1 }}>
+        <ThemedText style={styles.alertPreferencesTitle}>
+            Set Load Alerts
+        </ThemedText>
+
+        <ThemedText
+            type="tiny"
+            style={{ color: textlight, marginTop: hp(0.3) }}
+        >
+            Get notified about loads matching your location and truck type.
+        </ThemedText>
+    </View>
+
+    <Ionicons
+        name="chevron-forward"
+        size={wp(5)}
+        color={textlight}
+    />
+</TouchableOpacity>
+
+<LoadAlertsModal
+    visible={showLoadPreferences}
+    onClose={() => setShowLoadPreferences(false)}
+    background={background}
+    backgroundLight={backgroundColor}
+    border={border}
+    textlight={textlight}
+   
+/>
 
 
 
                 {/* ======================= BUSINESS OVERVIEW ======================= */}
                 <SectionHeader title="Business Overview" textlight={textlight} accent={accent} />
                 <View style={styles.overviewGrid}>
-                    
+
                     <OverviewCard
                         title="Assignments"
                         iconElement={
@@ -380,13 +475,13 @@ export default function TransixDashboard() {
                         backgroundLight={backgroundColor}
                         border={border}
                         textlight={textlight}
-                            onPress={() => {
-                                trackEventFirebase("quick_action_pressed", { action: "View Finance" });
-                                router.push("/Fleet/Finance/Index");
-                            }}
+                        onPress={() => {
+                            trackEventFirebase("quick_action_pressed", { action: "View Finance" });
+                            router.push("/Fleet/Finance/Index");
+                        }}
 
                     />
-                    
+
 
 
                     <OverviewCard
@@ -427,7 +522,7 @@ export default function TransixDashboard() {
                             router.push("/Referrals/ReferralDashboardScreen");
                         }}
                     />
-                    
+
 
 
 
@@ -438,7 +533,7 @@ export default function TransixDashboard() {
                 {/* ======================= AttentionCard ======================= */}
 
 
-{/* 
+                {/* 
 <>
 <SectionHeader
     title="Needs Attention"
@@ -575,10 +670,10 @@ export default function TransixDashboard() {
 </> */}
 
 
-   {/* ============================== QUICK ACTIONS ============================== */}
+                {/* ============================== QUICK ACTIONS ============================== */}
                 <SectionHeader title="Quick Actions" textlight={textlight} accent={accent} />
                 <View style={styles.quickActionsGrid}>
-                     <QuickAction
+                    <QuickAction
                         label="Add Truck"
                         iconElement={<FontAwesome6 name="box" size={wp(4.4)} color={BRAND.teal} />}
                         iconBg={`${BRAND.teal}1A`}
@@ -602,7 +697,7 @@ export default function TransixDashboard() {
                         border={border}
                         textlight={textlight}
                     />
-                    
+
                     <QuickAction
                         label="Create Request"
                         iconElement={<Ionicons name="calendar-outline" size={wp(4.4)} color={BRAND.teal} />}
@@ -657,7 +752,7 @@ export default function TransixDashboard() {
 
 
 
-    <TodayCard
+                <TodayCard
                     background={background}
                     backgroundLight={backgroundColor}
                     border={border}
@@ -667,14 +762,14 @@ export default function TransixDashboard() {
 
 
 
-             
 
 
 
 
 
 
-            
+
+
 
 
 
@@ -832,7 +927,7 @@ export default function TransixDashboard() {
                     />
                 </View> */}
 
-             
+
             </ScrollView>
         </View>
     );
@@ -850,6 +945,28 @@ const styles = StyleSheet.create({
         paddingTop: hp(1.5),
         paddingBottom: hp(4),
     },
+    alertPreferencesCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: wp(4),
+    padding: wp(3.2),
+    marginBottom: hp(1.2),
+    gap: wp(2.5),
+},
+
+alertPreferencesIcon: {
+    width: wp(10),
+    height: wp(10),
+    borderRadius: wp(3),
+    alignItems: 'center',
+    justifyContent: 'center',
+},
+
+alertPreferencesTitle: {
+    fontWeight: '800',
+    fontSize: wp(3.5),
+},
 
     // Header
     headerRow: {
