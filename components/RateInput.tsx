@@ -195,10 +195,10 @@ export const RateInput: React.FC<RateInputProps> = ({
                         >
                             {
                                 safeModel.name === "Solid"
-                                    ? "Calc: price ÷ (distance × 2)"
+                                    ? "Calc: price ÷ distance"
                                     : safeModel.name === "/ Tonne"
-                                        ? "Calc: price × 30T ÷ (distance × 2)"
-                                        : "Calc: price × 35000L ÷ (distance × 2)"
+                                        ? "Calc: price × 30T ÷ distance`"
+                                        : "Calc: price × 35000L ÷ distance "
                             }
                         </ThemedText>
 

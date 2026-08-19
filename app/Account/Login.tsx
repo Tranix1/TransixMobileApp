@@ -43,7 +43,7 @@ const ACCOUNT_TYPES: {
 const Login = ({ setDspLoginOrSignup }: any) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [selectedAccount, setSelectedAccount] = useState<AccountType>('tracking');
+    const [selectedAccount, setSelectedAccount] = useState<AccountType | null>(null);
 
     const backgroundLight = useThemeColor('backgroundLight');
     const icon = useThemeColor('icon');
@@ -94,6 +94,10 @@ const Login = ({ setDspLoginOrSignup }: any) => {
                 setError('Select a country code');
                 return;
             }
+                 if (! selectedAccount) {
+            setError("Please select Account Type");
+            return;
+        }
 
             if (countryCode.name === '+267') {
                 if (length !== 8) {
@@ -143,6 +147,10 @@ const Login = ({ setDspLoginOrSignup }: any) => {
 
         if (!confirmation) {
             setError('OTP session expired. Please request a new code.');
+            return;
+        }
+             if (! selectedAccount) {
+            setError("Please select Account Type");
             return;
         }
 
@@ -212,6 +220,7 @@ const Login = ({ setDspLoginOrSignup }: any) => {
         hasAutoSignedUp.current = true;
 
         setLoading(true);
+        if(!selectedAccount ) return 
 
         try {
                const res = await loginUser({
@@ -296,6 +305,7 @@ const Login = ({ setDspLoginOrSignup }: any) => {
                                         <ThemedText
                                             style={[
                                                 styles.accountButtonLabel,
+                                                {color:selected ? '#fff' : undefined}
                                             ]}
                                         >
                                             {label}

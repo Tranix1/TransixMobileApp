@@ -311,6 +311,7 @@ export type Load = {
     trucksRequired: TruckNeededType[]
     proofOfOrder: string[];
     proofOfOrderType: string[]
+    accType : string ;
 
     // Load verification system
     loadUserType: 'general' | 'confinee' | 'broker';
@@ -373,6 +374,7 @@ export type Load = {
     publicTrucks?: TruckNeededType[]
     isTrackingEnabled?: boolean[]
     ratePerKm: number
+    rtRatePerKm : number ,
 
 } & LoadFormData;
 

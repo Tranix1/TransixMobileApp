@@ -21,6 +21,7 @@ import { updateDocument } from '@/db/operations'
 import { serverTimestamp, Timestamp } from 'firebase/firestore'
 import { formatDate } from '@/services/services'
 import { trackEventFirebase } from '@/services/analytics/firebaseAnalystics'
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 interface DspAllLoadsProps {
   item: Load;
@@ -195,6 +196,15 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
               {item.companyName}
             </ThemedText>
           )}
+
+
+       {item.accType !== "unverified"  &&  <View style={styles.verifiedBadge}>
+        <MaterialIcons
+  name="verified"
+  size={22}
+  color="#16A34A"
+/>
+</View>}
         </View>
 
         {/* Distance and Time horizontal row */}
@@ -214,11 +224,10 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
 
           {/* Booking Button */}
           {item.loadVisibility === "Public" && currentRole.accType === "fleet" && expireAvailableLoads === "ALL" && <TouchableOpacity
-            style={[styles.bookingButton, { backgroundColor: accent }]}
+            style={[styles.bookingButton, { backgroundColor: "#7C3AED" }]}
             onPress={ondetailsPress}
             activeOpacity={0.8}
           >
-            <Ionicons name="checkmark-circle" size={wp(3.5)} color="white" />
             <ThemedText style={{ color: 'white', fontWeight: 'bold', marginLeft: wp(0.5), fontSize: wp(3.5) }}>Respond</ThemedText>
           </TouchableOpacity>}
 
@@ -328,75 +337,139 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
           </View>
         </View>
 
-        <View style={{ backgroundColor: backgroundLight, padding: wp(2) }}>
+      <View
+  style={{
+    backgroundColor: backgroundLight,
+    padding: wp(2.5),
+    borderRadius: wp(2.5),
+    marginTop: wp(1),
+  }}
+>
+  {/* Price Header */}
+  <View
+    style={{
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: wp(1.5),
+    }}
+  >
+    <ThemedText
+      type="default"
+      style={{ fontWeight: '600' }}
+    >
+      Price {item.model}
+    </ThemedText>
 
-          <View style={styles.detailRow}>
-            <ThemedText type='default' style={{ flex: 2 }}>
-              Price {item.model}
-            </ThemedText>
+    <ThemedText
+      type="subtitle"
+      style={{
+        color: textColor,
+        fontSize: wp(4.5),
+        fontWeight: '700',
+      }}
+    >
+      {item.currency} {item.rate}
+    </ThemedText>
+  </View>
 
-            <View style={{ flex: 2 }}>
-              <ThemedText
-                type='subtitle'
-                style={{
-                  color: textColor,
-                  fontSize: wp(4.5),
-                  lineHeight: wp(5),
-                }}
-              >
-                {item.currency} {item.rate}
-              </ThemedText>
+  {/* Rate Details */}
+  <View
+    style={{
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: wp(1),
+    }}
+  >
+    {/* Distance */}
+    <View style={{ flex: 1 }}>
+      <ThemedText
+        type="tiny"
+        style={{ color: coolGray }}
+      >
+        Distance
+      </ThemedText>
 
-              {item.ratePerKm && (
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginTop: wp(0.5),
-                  gap: wp(1)
-                }}>
-                  <ThemedText
-                    type='tiny'
-                    style={{ color: textColor }}
-                  >
-                    $ {Number(item.ratePerKm).toFixed(2)}/km
-                  </ThemedText>
+      <ThemedText
+        type="defaultSemiBold"
+        style={{ fontSize: wp(3.5) }}
+      >
+        {item.distance || 'N/A'}
+      </ThemedText>
+    </View>
 
-                  {rateStatus && (
-                    <ThemedText
-                      type='tiny'
-                      style={{ color: accent, fontWeight: "bold" }}
-                    >
-                      ✓ {rateStatus}
-                    </ThemedText>
-                  )}
-                </View>
-              )}
+    {/* Rate / KM */}
+    <View style={{ flex: 1, alignItems: 'center' }}>
+      <ThemedText
+        type="tiny"
+        style={{ color: coolGray }}
+      >
+        Rate / km
+      </ThemedText>
 
-            </View>
+      <ThemedText
+        type="defaultSemiBold"
+        style={{ fontSize: wp(3.5) }}
+      >
+        {item.ratePerKm
+          ? `$${Number(item.ratePerKm).toFixed(2)}`
+          : 'N/A'}
+      </ThemedText>
 
-          </View>
+      {rateStatus && (
+        <ThemedText
+          type="tiny"
+          style={{
+            color: accent,
+            fontWeight: '700',
+            marginTop: wp(0.3),
+          }}
+        >
+          ✓ {rateStatus}
+        </ThemedText>
+      )}
+    </View>
 
-          {item.rateexplantion &&
-            <View style={styles.detailRow}>
-              <ThemedText type='default' style={{ flex: 2 }}>
-                Rate Explanation
-              </ThemedText>
+    {/* Round Trip */}
+    {item.roundTrip && (
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'flex-end',
+        }}
+      >
+        <ThemedText
+          type="tiny"
+          style={{ color: coolGray }}
+        >
+          Round Trip
+        </ThemedText>
 
-              <ThemedText
-                type='subtitle'
-                style={{
-                  color: textColor,
-                  fontSize: wp(4.5),
-                  lineHeight: wp(5),
-                  flex: 2
-                }}
-              >
-                {item.rateexplantion}
-              </ThemedText>
-            </View>
-          }
+        <ThemedText
+          type="defaultSemiBold"
+          style={{ fontSize: wp(3.5) }}
+        >
+          {item.distance
+            ? `${(parseFloat(String(item.distance).replace(/[^0-9.]/g, '')) * 2).toFixed(0)} km`
+            : 'N/A'}
+        </ThemedText>
 
-        </View>
+        <ThemedText
+          type="tiny"
+          style={{
+            color: textColor,
+            marginTop: wp(0.3),
+          }}
+        >
+          {item.rtRatePerKm
+            ? `$${Number(item.rtRatePerKm).toFixed(2)}/km`
+            : 'N/A'}
+        </ThemedText>
+      </View>
+    )}
+  </View>
+</View>
 
 
 
@@ -880,17 +953,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 13
   },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: wp(1),
-    padding: wp(1),
-    backgroundColor: 'white',
-    position: 'absolute',
-    right: wp(4),
-    top: wp(4),
-    borderRadius: wp(4),
-  },
+ 
   title: {
     marginBottom: wp(2),
     fontSize: wp(5)
@@ -1069,6 +1132,35 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
+  },
+//   verifiedBadge: {
+//   flexDirection: 'row',
+//   alignItems: 'center',
+//   alignSelf: 'flex-start',
+//   backgroundColor: '#DCFCE7',
+//   paddingHorizontal: 8,
+//   paddingVertical: 4,
+//   borderRadius: 12,
+//   gap: 4,
+//   // marginRight : 50 ,
+// },
+
+verifiedText: {
+  color: '#16A34A',
+  fontSize: 12,
+  fontWeight: '700',
+},
+
+ verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: wp(1),
+    padding: wp(1),
+    backgroundColor: 'white',
+    position: 'absolute',
+    right: wp(-4),
+    top: wp(-2),
+    borderRadius: wp(4),
   },
 
 });

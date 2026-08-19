@@ -15,7 +15,7 @@ interface CustomHeaderProps {
     pageTitle?: string;
     addingNavigate?: string
     filterElement?: (value: boolean) => void;
-    selectProfileImage: () => void;
+    selectProfileImage ?: () => void;
     selectedImage?: { uri: string } | null;
 
 }
@@ -228,7 +228,21 @@ export default function CustomHeader({ pageTitle, addingNavigate, filterElement,
                                     </TouchableNativeFeedback>
 
 
-                                    {addingNavigate && <TouchableNativeFeedback onPress={() => router.push(addingNavigate as any)}>
+                                    {addingNavigate && <TouchableNativeFeedback onPress={
+                                        () => {
+                                            if(addingNavigate ==="/Logistics/Trucks/AddTrucks"){
+                                                if(currentRole.userRole === "create_Acc"){
+                                                    router.push("/Fleet/CreateFleet")
+                                                }else{
+                                                router.push(addingNavigate as any)} 
+                                                    
+                                                
+                                            }else{
+
+                                                router.push(addingNavigate as any)} 
+                                            }
+                                        } 
+                                        >
                                         <Ionicons name="add" size={wp(7)} color={icon} />
                                     </TouchableNativeFeedback>}
 

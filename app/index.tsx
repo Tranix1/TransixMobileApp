@@ -311,8 +311,8 @@ export default function Index() {
     
                 : (typeof currentRole === 'object' && currentRole.accType === 'fleet') ? (
                   <>
-                    <Tab.Screen name="Home" component={Dashboard} />
                     <Tab.Screen name="Loads" component={Loads} />
+                    <Tab.Screen name="Home" component={Dashboard} />
                     {/* <Tab.Screen name="Chat" component={ChatIndex} /> */}
                     <Tab.Screen name="Trucks" component={LogisticsTrucks} />
                   </>

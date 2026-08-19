@@ -108,23 +108,25 @@ export const LoadsComponent: React.FC<LoadsComponentProps> = ({
 
     const handleContact = (method: 'whatsapp' | 'call' | 'message') => {
 
-        ToastAndroid.show('Please book or bid this load. Direct contact is not available yet.', ToastAndroid.SHORT);
-        return;
+        // ToastAndroid.show('Please book or bid this load. Direct contact is not available yet.', ToastAndroid.SHORT);
+        // return;
         // if (!selectedLoad?.contact) return
 
-        // const message = `${selectedLoad.companyName}\nIs this load still available\n${selectedLoad.typeofLoad}\nrOUTE: ${selectedLoad.origin} TO ${selectedLoad.destination}\nRate : ${selectedLoad.currency} ${selectedLoad.rate} ${selectedLoad.model}`
+        if (!selectedLoad) return
 
-        // switch (method) {
-        //     case 'whatsapp':
-        //         Linking.openURL(`whatsapp://send?phone=${selectedLoad.contact}&text=${encodeURIComponent(message)}`)
-        //         break
-        //     case 'call':
-        //         Linking.openURL(`tel:${selectedLoad.contact}`)
-        //         break
-        //     case 'message':
-        //         // Implement your messaging logic
-        //         break
-        // }
+        const message = `${selectedLoad.companyName}\nIs this load still available\n${selectedLoad.typeofLoad}\nRoute: ${selectedLoad.origin} TO ${selectedLoad.destination}\nRate : ${selectedLoad.currency} ${selectedLoad.rate} ${selectedLoad.model} \n from Transix`
+
+        switch (method) {
+            case 'whatsapp':
+                Linking.openURL(`whatsapp://send?phone=${selectedLoad.contact}&text=${encodeURIComponent(message)}`)
+                break
+            case 'call':
+                Linking.openURL(`tel:${selectedLoad.contact}`)
+                break
+            case 'message':
+                // Implement your messaging logic
+                break
+        }
     }
 
     const handleDeleteLoad = async () => {
@@ -327,7 +329,7 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
 
                                                     color: selected
                                                         ? accent
-                                                        : coolGray,
+                                                        : undefined,
 
                                                     fontSize: 13,
                                                 }}
@@ -353,11 +355,11 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                             <LoadComponent item={item} expandID={expandId} expandId={(s) => setExpandID(s)} ondetailsPress={() => {
                                 trackEventFirebase('request_cargo_booking', {
                                     loadId: item.id,
-                                    rate : item.rate,
-                                    ratePerKm : item.ratePerKm,
-                                    distance : item.distance,
-                                    origin : item.origin,
-                                    destination : item.destination
+                                    rate: item.rate,
+                                    ratePerKm: item.ratePerKm,
+                                    distance: item.distance,
+                                    origin: item.origin,
+                                    destination: item.destination
                                 });
                                 setSelectedLoad(item);
                                 setShowSheet(true);
@@ -450,15 +452,15 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                                     <ThemedText type='tiny' style={{ color: icon }}>Loading More</ThemedText>
                                     <AccentRingLoader color={accent} size={20} dotSize={4} />
                                 </View>
-                                    :
-                                    (!lastVisible && Loads.length > 0) ?
-                                        <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                                            <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>No more Loads to Load
-                                            </ThemedText>
-                                            <Ionicons color={icon} style={{}} name='alert-circle-outline' size={wp(6)} />
+                                :
+                                (!lastVisible && Loads.length > 0) ?
+                                    <View style={{ gap: wp(2), alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                                        <ThemedText type='tiny' style={{ color: icon, paddingTop: 0, width: wp(90), textAlign: 'center' }}>No more Loads to Load
+                                        </ThemedText>
+                                        <Ionicons color={icon} style={{}} name='alert-circle-outline' size={wp(6)} />
 
-                                        </View>
-                                        : null
+                                    </View>
+                                    : null
                         }
 
                     </View>
@@ -562,15 +564,27 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
                                 {
                                     <>
 
-
                                         {<>
                                             <View>
                                                 {/* <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: accent, padding: wp(3), borderRadius: wp(4) }} onPress={() => submitBidsOBookings("bookings" as 'bookings', selectedLoad as Load)} > */}
                                                 <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: accent, padding: wp(3), borderRadius: wp(4) }}
-                                                    onPress={() => router.push({
-                                                        pathname: '/MakeOffer/BookBidlCargo',
-                                                        params: { contract: JSON.stringify(selectedLoad), OperationType: "Book" }
-                                                    })}>
+                                                    onPress={() => {
+                                                        if (selectedLoad.accType === "unverified") {
+                                                            ToastAndroid.show(
+                                                                "Unverified account. Contact via WhatsApp",
+                                                                ToastAndroid.LONG
+                                                            );
+                                                        } else {
+                                                            router.push({
+                                                                pathname: '/MakeOffer/BookBidlCargo',
+                                                                params: { contract: JSON.stringify(selectedLoad), OperationType: "Book" }
+                                                            })
+                                                        }
+
+
+                                                    }
+
+                                                    }>
 
                                                     <ThemedText color='white'>
                                                         Book Load
@@ -579,10 +593,23 @@ From Transix - Download the app for more loads: https://play.google.com/store/ap
 
                                             </View>
                                             <View>
-                                                <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => router.push({
-                                                    pathname: '/MakeOffer/BookBidlCargo',
-                                                    params: { cargo: JSON.stringify(selectedLoad), OperationType: "Bid" }
-                                                })}>
+                                                <TouchableOpacity style={{ flexDirection: 'row', marginTop: wp(2), alignItems: 'center', gap: wp(2), justifyContent: 'center', backgroundColor: coolGray, padding: wp(3), borderRadius: wp(4) }} onPress={() => {
+                                                    if (selectedLoad.accType === "unverified") {
+                                                        ToastAndroid.show(
+                                                            "Unverified account. Contact via WhatsApp.",
+                                                            ToastAndroid.LONG
+                                                        );
+                                                    } else {
+
+                                                        router.push({
+                                                            pathname: '/MakeOffer/BookBidlCargo',
+                                                            params: { cargo: JSON.stringify(selectedLoad), OperationType: "Bid" }
+                                                        })
+                                                    }
+                                                }
+
+
+                                                }>
                                                     <ThemedText color='white'>
                                                         Bid Load
                                                     </ThemedText>

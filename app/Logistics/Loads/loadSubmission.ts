@@ -1,4 +1,12 @@
-import { collection, doc, increment, serverTimestamp, setDoc, Timestamp, writeBatch } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  increment,
+  serverTimestamp,
+  setDoc,
+  Timestamp,
+  writeBatch
+} from 'firebase/firestore';
 import { ToastAndroid, Alert, Platform } from "react-native";
 
 import { db } from '@/db/fireBaseConfig';
@@ -6,13 +14,28 @@ import { addDocumentWithId, updateDocument } from '@/db/operations';
 import { notifyTrucksByFilters } from '@/Utilities/notifyTruckByFilters';
 import { Customer } from '@/components/CustomerPicker';
 import { notifyUserById, sendPushNotification } from '@/Utilities/pushNotification';
-import { trackAssignmentCreated, trackGrowinUserCreatedLoad, trackLoadCreated, trackNewUserCreatedLoad } from '@/services/analytics/appAnalytics';
-import { incrementActiveLoads, incrementPrivateBrokerageLoads, incrementPrivateFleetLoads, incrementPublicLoads, incrementTotalLoads } from '@/services/analytics/dashboardAnalytics';
+import {
+  trackAssignmentCreated,
+  trackGrowinUserCreatedLoad,
+  trackLoadCreated,
+  trackNewUserCreatedLoad
+} from '@/services/analytics/appAnalytics';
+import {
+  incrementActiveLoads,
+  incrementPrivateBrokerageLoads,
+  incrementPrivateFleetLoads,
+  incrementPublicLoads,
+  incrementTotalLoads
+} from '@/services/analytics/dashboardAnalytics';
 import { incrementLoadsPosted } from '@/services/analytics/organizationAnalytics';
-import { createRequestAnalyticsPair, incrementOrgStats } from '@/Utilities/analyticsHelpers';
+import {
+  createRequestAnalyticsPair,
+  incrementOrgStats
+} from '@/Utilities/analyticsHelpers';
 
 
 export type LoadVisibility = 'Private' | 'Public' | 'Both';
+
 
 type SubmitLoadParams = {
   currentRole: any;
@@ -32,12 +55,14 @@ type SubmitLoadParams = {
   trucksNeeded: any[];
   typeofLoad: string;
   rate: string;
-  ratePerKm: number
+  ratePerKm: number;
+  rtRatePerKm: number
   selectedModelType: any;
   selectedCurrency: any;
   selectedCustomer: Customer | null;
-  isTrackingEnabled: boolean
+  isTrackingEnabled: boolean;
 };
+
 
 const buildNotificationLoadItem = (params: any) => ({
   typeofLoad: params.typeofLoad,
@@ -45,10 +70,11 @@ const buildNotificationLoadItem = (params: any) => ({
   destination: params.destination?.description || '',
   rate: params.rate,
   ratePerKm: params.ratePerKm,
+  rtRatePerKm: params.rtRatePerKm,
   model: params.selectedModelType?.name || 'Solid',
   currency: params.selectedCurrency?.name || 'USD',
-
 });
+
 
 export const submitLoad = async (params: SubmitLoadParams) => {
   const {
@@ -68,30 +94,88 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     destination,
     trucksNeeded,
     ratePerKm,
+    rtRatePerKm,
     selectedCustomer,
     isTrackingEnabled,
   } = params;
 
   const roleAny = currentRole as any;
+
   const cargoId = doc(collection(db, 'Cargo')).id;
+
   const fleetId = roleAny?.fleetId || null;
-  const brokerId = roleAny?.organizationId || roleAny?.userId || user.uid;
+
+  const brokerId =
+    roleAny?.organizationId ||
+    roleAny?.userId ||
+    user.uid;
+
+  /*
+   * UNVERIFIED ACCOUNT
+   *
+   * An unverified account is identified ONLY by:
+   * currentRole.userRole === "create_Acc"
+   *
+   * It does NOT have an organizationId.
+   *
+   * Unverified users can ONLY create Public loads.
+   */
+  const isUnverified = currentRole?.userRole === "create_Acc";
+
   const coordinator = {
     id: roleAny?.userId || user.uid,
-    organizationId: roleAny?.organizationId,
+
+    // IMPORTANT:
+    // Unverified accounts do not have organizationId.
+    // Store null instead of undefined because Firestore does not accept
+    // undefined field values.
+    organizationId: roleAny?.organizationId ?? null,
+
     name: user.organisation || user.displayName || '',
     phoneNumber: user.phoneNumber || '',
   };
-  const analyticsType = currentRole?.accType === 'brokerage' ? 'brokerage' : 'fleet';
+
+  const analyticsType =
+    currentRole?.accType === 'brokerage'
+      ? 'brokerage'
+      : 'fleet';
 
 
-  const daySinceSignup = (Date.now() - user?.createdAt!) / (1000 * 60 * 60 * 24)
-  const accountAge = daySinceSignup < 30 ? "new" : daySinceSignup < 90 ? "active" : "established"
+  const daySinceSignup =
+    (Date.now() - user?.createdAt!) /
+    (1000 * 60 * 60 * 24);
 
-  const analyticsOrganizationId = currentRole?.organizationId || currentRole?.fleetId || null;
+  const accountAge =
+    daySinceSignup < 30
+      ? "new"
+      : daySinceSignup < 90
+        ? "active"
+        : "established";
+
+
+  const analyticsOrganizationId =
+    currentRole?.organizationId ||
+    currentRole?.fleetId ||
+    null;
+
+
   const analyticsContext = {
-    userId: user?.uid, accountAge: accountAge, organizationId: analyticsOrganizationId, organizationProfileId: analyticsOrganizationId, organizationType: currentRole?.accType ?? null, role: currentRole?.userRole ?? null, accountType: currentRole?.accType ?? null, referrerId: user?.referredBy?.userId ?? null, referralCodeUsed: user?.referredBy?.referralCode ?? null, campaign: user?.referredBy?.campaign ?? null, platform: user?.referredBy?.platform ?? null, metadata: {
-      loadId: cargoId, caargoCreated: {
+    userId: user?.uid,
+    accountAge: accountAge,
+    organizationId: analyticsOrganizationId,
+    organizationProfileId: analyticsOrganizationId,
+    organizationType: currentRole?.accType ?? null,
+    role: currentRole?.userRole ?? null,
+    accountType: currentRole?.accType ?? null,
+    referrerId: user?.referredBy?.userId ?? null,
+    referralCodeUsed: user?.referredBy?.referralCode ?? null,
+    campaign: user?.referredBy?.campaign ?? null,
+    platform: user?.referredBy?.platform ?? null,
+
+    metadata: {
+      loadId: cargoId,
+
+      caargoCreated: {
         origin: origin,
         destination: destination,
         ratePerKm: ratePerKm,
@@ -107,570 +191,1673 @@ export const submitLoad = async (params: SubmitLoadParams) => {
     void trackLoadCreated(analyticsContext).catch(console.error);
 
 
-
+    /*
+     * Unverified users have no organization.
+     *
+     * Therefore there is no organization analytics to update.
+     */
     if (!analyticsOrganizationId) return;
 
-    void incrementTotalLoads(analyticsType, analyticsOrganizationId).catch(console.error);
-    void incrementActiveLoads(analyticsType, analyticsOrganizationId).catch(console.error);
+
+    void incrementTotalLoads(
+      analyticsType,
+      analyticsOrganizationId
+    ).catch(console.error);
+
+
+    void incrementActiveLoads(
+      analyticsType,
+      analyticsOrganizationId
+    ).catch(console.error);
 
 
     if (loadVisibility === 'Public') {
 
-      updateDocument("organizationProfiles", analyticsOrganizationId, {
-        publicLoads: {
-          posted: increment(1)
+      updateDocument(
+        "organizationProfiles",
+        analyticsOrganizationId,
+        {
+          publicLoads: {
+            posted: increment(1)
+          }
         }
-      })
+      );
 
     } else if (loadVisibility === 'Private') {
-      updateDocument("organizationProfiles", analyticsOrganizationId, {
-        privateLoads: {
-          posted: increment(1)
-        }
-      })
-    } else if (loadVisibility === "Both") {
-      updateDocument("organizationProfiles", analyticsOrganizationId, {
-        publicLoads: {
-          posted: increment(1)
-        },
-        privateLoads: {
-          posted: increment(1)
-        }
-      })
 
+      updateDocument(
+        "organizationProfiles",
+        analyticsOrganizationId,
+        {
+          privateLoads: {
+            posted: increment(1)
+          }
+        }
+      );
+
+    } else if (loadVisibility === "Both") {
+
+      updateDocument(
+        "organizationProfiles",
+        analyticsOrganizationId,
+        {
+          publicLoads: {
+            posted: increment(1)
+          },
+
+          privateLoads: {
+            posted: increment(1)
+          }
+        }
+      );
     }
 
 
+    if (
+      loadVisibility === 'Public' ||
+      loadVisibility === 'Both'
+    ) {
+      void incrementPublicLoads(
+        analyticsType,
+        analyticsOrganizationId
+      ).catch(console.error);
+    }
 
 
-    if (loadVisibility === 'Public' || loadVisibility === 'Both') void incrementPublicLoads(analyticsType, analyticsOrganizationId).catch(console.error);
-    if ((loadVisibility === 'Private' || loadVisibility === 'Both') && analyticsType === 'fleet') void incrementPrivateFleetLoads(analyticsType, analyticsOrganizationId).catch(console.error);
-    if ((loadVisibility === 'Private' || loadVisibility === 'Both') && analyticsType === 'brokerage') void incrementPrivateBrokerageLoads(analyticsType, analyticsOrganizationId).catch(console.error);
+    if (
+      (loadVisibility === 'Private' ||
+        loadVisibility === 'Both') &&
+      analyticsType === 'fleet'
+    ) {
+      void incrementPrivateFleetLoads(
+        analyticsType,
+        analyticsOrganizationId
+      ).catch(console.error);
+    }
+
+
+    if (
+      (loadVisibility === 'Private' ||
+        loadVisibility === 'Both') &&
+      analyticsType === 'brokerage'
+    ) {
+      void incrementPrivateBrokerageLoads(
+        analyticsType,
+        analyticsOrganizationId
+      ).catch(console.error);
+    }
   };
 
-  // Visibility tag used inside each nested assignment doc.
-  // (Your pasted snippet hardcoded "PUBLIC" — here it tracks the real loadVisibility instead,
-  // since submitLoad can also write Private/Both loads.)
-  const visibilityTag = loadVisibility === 'Public' ? 'PUBLIC' : 'PRIVATE';
 
-  // ── Shared load-level details, nested the same way as `loadItemDetails` in your booking flow ──
+  /*
+   * Visibility tag used inside each nested assignment doc.
+   */
+  const visibilityTag =
+    loadVisibility === 'Public'
+      ? 'PUBLIC'
+      : 'PRIVATE';
+
+
+  /*
+   * Shared load-level details.
+   */
   const baseLoadDetails = {
     loadId: cargoId,
+
     contact: loadData?.contact || null,
-    companyName: loadData?.companyName || user.organisation || null,
-    productName: loadData?.typeofLoad || null,
-    origin: origin || null,
-    originFull: loadData?.originFull || null,
-    destination: destination || null,
-    destinationFull: loadData?.destinationFull || null,
-    originCoordinates: loadData?.originCoordinates || null,
-    destinationCoordinates: loadData?.destinationCoordinates || null,
-    rate: loadData?.rate || null,
-    ratePerKm: ratePerKm || null,
-    currency: loadData?.currency || null,
-    model: loadData?.model || null,
-    paymentTerms: loadData?.paymentTerms || null,
-    loadingDate: loadingDate || null,
-    deliveryDate: deliveryDate || null,
-    shipper: selectedCustomer,
-    isTrackingEnabled: isTrackingEnabled,
-    createdByAcc: currentRole?.accType,
-    visibility: visibilityTag,
 
+    companyName:
+      loadData?.companyName ||
+      user.organisation ||
+      null,
 
+    productName:
+      loadData?.typeofLoad ||
+      null,
+
+    origin:
+      origin ||
+      null,
+
+    originFull:
+      loadData?.originFull ||
+      null,
+
+    destination:
+      destination ||
+      null,
+
+    destinationFull:
+      loadData?.destinationFull ||
+      null,
+
+    originCoordinates:
+      loadData?.originCoordinates ||
+      null,
+
+    destinationCoordinates:
+      loadData?.destinationCoordinates ||
+      null,
+
+    rate:
+      loadData?.rate ||
+      null,
+
+    ratePerKm:
+      ratePerKm ||
+      null,
+
+    rtRatePerKm: rtRatePerKm || null,
+    currency:
+      loadData?.currency ||
+      null,
+
+    model:
+      loadData?.model ||
+      null,
+
+    paymentTerms:
+      loadData?.paymentTerms ||
+      null,
+
+    loadingDate:
+      loadingDate ||
+      null,
+
+    deliveryDate:
+      deliveryDate ||
+      null,
+
+    shipper:
+      selectedCustomer,
+
+    isTrackingEnabled:
+      isTrackingEnabled,
+
+    createdByAcc:
+      currentRole?.accType,
+
+    visibility:
+      visibilityTag,
   };
 
 
-  // ── One nested payload per truck/driver assignment ──────────────────
-  // Mirrors your new shape: { truckDetails, driverDetails, loadDetails, fleetDetails, driverId, status }
+  /*
+   * Assignment details.
+   */
   const assignmentDetails = assignments.map((assignment) => {
-    const truck = selectedFleetTrucks.find((item) => item.id === assignment.truckId);
-    const driver = fleetDrivers.find(
-      (item) => item.driverId === assignment.driverId || item.id === assignment.driverId
+
+    const truck = selectedFleetTrucks.find(
+      (item) => item.id === assignment.truckId
     );
 
-    const isDefaultDriver = truck?.defaultDriver?.driverId === (assignment.driverId || driver?.driverId || driver?.id);
+    const driver = fleetDrivers.find(
+      (item) =>
+        item.driverId === assignment.driverId ||
+        item.id === assignment.driverId
+    );
+
+
+    const isDefaultDriver =
+      truck?.defaultDriver?.driverId ===
+      (
+        assignment.driverId ||
+        driver?.driverId ||
+        driver?.id
+      );
+
 
     const truckDetails = {
-      truckId: assignment.truckId || truck?.id || null,
-      truckName: truck?.truckName || null,
-      registrationNumber: truck?.registrationNumber || truck?.numberPlate || null,
-      numberPlate: truck?.numberPlate || null,
-      truckType: truck?.truckType || null,
-      truckCapacity: truck?.truckCapacity || null,
-      cargoArea: truck?.cargoArea || null,
-      locations: truck?.locations || [],
-      trackingDeviceId: truck?.trackingDeviceId || null,
-      tankerType: truck?.tankerType || null,
-      operationCountries: truck?.locations || [],
 
+      truckId:
+        assignment.truckId ||
+        truck?.id ||
+        null,
+
+      truckName:
+        truck?.truckName ||
+        null,
+
+      registrationNumber:
+        truck?.registrationNumber ||
+        truck?.numberPlate ||
+        null,
+
+      numberPlate:
+        truck?.numberPlate ||
+        null,
+
+      truckType:
+        truck?.truckType ||
+        null,
+
+      truckCapacity:
+        truck?.truckCapacity ||
+        null,
+
+      cargoArea:
+        truck?.cargoArea ||
+        null,
+
+      locations:
+        truck?.locations ||
+        [],
+
+      trackingDeviceId:
+        truck?.trackingDeviceId ||
+        null,
+
+      tankerType:
+        truck?.tankerType ||
+        null,
+
+      operationCountries:
+        truck?.locations ||
+        [],
     };
+
 
     const driverDetails = {
-      driverId: assignment.driverId || driver?.driverId || driver?.id || null,
-      driverDocId: driver?.docId || driver?.id || assignment.driverId || null,
-      driverName: assignment.driverName || driver?.fullName || null,
-      driverPhone: assignment.driverPhone || driver?.phoneNumber || driver?.phone || null,
-      profilePhoto: assignment.profilePhoto || driver?.profilePhoto || null,
-      role: isDefaultDriver ? 'main' : assignment.role || 'assigned',
-      isDefault: isDefaultDriver,
+
+      driverId:
+        assignment.driverId ||
+        driver?.driverId ||
+        driver?.id ||
+        null,
+
+      driverDocId:
+        driver?.docId ||
+        driver?.id ||
+        assignment.driverId ||
+        null,
+
+      driverName:
+        assignment.driverName ||
+        driver?.fullName ||
+        null,
+
+      driverPhone:
+        assignment.driverPhone ||
+        driver?.phoneNumber ||
+        driver?.phone ||
+        null,
+
+      profilePhoto:
+        assignment.profilePhoto ||
+        driver?.profilePhoto ||
+        null,
+
+      role:
+        isDefaultDriver
+          ? 'main'
+          : assignment.role || 'assigned',
+
+      isDefault:
+        isDefaultDriver,
     };
 
+
     const loadDetails = {
+
       ...baseLoadDetails,
-      pickupDate: assignment.pickupDate || loadingDate || null,
-      deliveryDate: assignment.deliveryDate || deliveryDate || null,
-      pickupLocation: assignment.pickupLocation || origin || null,
-      deliveryLocation: assignment.deliveryLocation || destination || null,
+
+      pickupDate:
+        assignment.pickupDate ||
+        loadingDate ||
+        null,
+
+      deliveryDate:
+        assignment.deliveryDate ||
+        deliveryDate ||
+        null,
+
+      pickupLocation:
+        assignment.pickupLocation ||
+        origin ||
+        null,
+
+      deliveryLocation:
+        assignment.deliveryLocation ||
+        destination ||
+        null,
     };
 
 
     return {
+
       cargoId,
-      loadId: cargoId,
+
+      loadId:
+        cargoId,
+
       fleetId,
-      truckId: assignment.truckId || null,
-      driverId: driverDetails.driverId,
-      driverPayment: assignment.driverPayment,
-      visibility: visibilityTag,
-      // The truck's own owning fleet/org (not necessarily the poster of the load — relevant
-      // when a broker assigns a truck that belongs to a different fleet).
-      fleetDetails: truck?.organizationDetails ?? truck?.fleetDetails ?? null,
-      fleetCoordinator: truck?.assignments?.dispatcher ?? null,
-      cargoCoordinator : coordinator ,
+
+      truckId:
+        assignment.truckId ||
+        null,
+
+      driverId:
+        driverDetails.driverId,
+
+      driverPayment:
+        assignment.driverPayment,
+
+      visibility:
+        visibilityTag,
+
+      fleetDetails:
+        truck?.organizationDetails ??
+        truck?.fleetDetails ??
+        null,
+
+      fleetCoordinator:
+        truck?.assignments?.dispatcher ??
+        null,
+
+      cargoCoordinator:
+        coordinator,
+
       loadDetails,
+
       truckDetails,
+
       driverDetails,
-      status: 'PENDING',
-      acceptedBy: null,
+
+      status:
+        'PENDING',
+
+      acceptedBy:
+        null,
+
       coordinator,
-      createdAt: Date.now().toString(),
-      shipper: selectedCustomer,
-      timeStamp: serverTimestamp(),
+
+      createdAt:
+        Date.now().toString(),
+
+      shipper:
+        selectedCustomer,
+
+      timeStamp:
+        serverTimestamp(),
     };
   });
-
-
-
 
 
   const createTruckSummary = (
     trucks: any[],
     assignmentDetails: any[]
   ) => {
+
     return trucks.map((truck) => ({
-      truckId: truck.id,
-      truckName: truck.truckName || '',
-      registrationNumber: truck.registrationNumber || '',
-      truckType: truck.truckType || '',
-      truckCapacity: truck.truckCapacity || '',
-      cargoArea: truck.cargoArea || null,
-      operationCountries: truck.operationCountries || [],
-      truckStatus: 'pending',
+
+      truckId:
+        truck.id,
+
+      truckName:
+        truck.truckName ||
+        '',
+
+      registrationNumber:
+        truck.registrationNumber ||
+        '',
+
+      truckType:
+        truck.truckType ||
+        '',
+
+      truckCapacity:
+        truck.truckCapacity ||
+        '',
+
+      cargoArea:
+        truck.cargoArea ||
+        null,
+
+      operationCountries:
+        truck.operationCountries ||
+        [],
+
+      truckStatus:
+        'pending',
 
     }));
   };
 
 
-  const fleetTruckSummary = createTruckSummary(
-    selectedFleetTrucks,
-    assignmentDetails
-  );
-
-  const brokerTruckSummary = createTruckSummary(
-    selectedBrokerTrucks,
-    assignmentDetails,
-  );
+  const fleetTruckSummary =
+    createTruckSummary(
+      selectedFleetTrucks,
+      assignmentDetails
+    );
 
 
+  const brokerTruckSummary =
+    createTruckSummary(
+      selectedBrokerTrucks,
+      assignmentDetails
+    );
 
-  // Flat summary kept for the load doc itself (cheap to query/list without reading nested objects)
-  const assignmentSummary = assignmentDetails.map((assignment) => ({
-    truckId: assignment.truckId,
-    truckName: assignment.truckDetails.truckName,
-    registrationNumber: assignment.truckDetails.registrationNumber,
-    truckType: assignment.truckDetails.truckType,
-    truckCapacity: assignment.truckDetails.truckCapacity,
-    driverId: assignment.driverId,
-    driverName: assignment.driverDetails.driverName,
-    driverPhone: assignment.driverDetails.driverPhone,
-    role: assignment.driverDetails.role,
-    pickupDate: assignment.loadDetails.pickupDate,
-    deliveryDate: assignment.loadDetails.deliveryDate,
-    pickupLocation: assignment.loadDetails.pickupLocation,
-    deliveryLocation: assignment.loadDetails.deliveryLocation,
-    status: assignment.status,
-  }));
 
+  /*
+   * Flat assignment summary.
+   */
+  const assignmentSummary =
+    assignmentDetails.map((assignment) => ({
+
+      truckId:
+        assignment.truckId,
+
+      truckName:
+        assignment.truckDetails.truckName,
+
+      registrationNumber:
+        assignment.truckDetails.registrationNumber,
+
+      truckType:
+        assignment.truckDetails.truckType,
+
+      truckCapacity:
+        assignment.truckDetails.truckCapacity,
+
+      driverId:
+        assignment.driverId,
+
+      driverName:
+        assignment.driverDetails.driverName,
+
+      driverPhone:
+        assignment.driverDetails.driverPhone,
+
+      role:
+        assignment.driverDetails.role,
+
+      pickupDate:
+        assignment.loadDetails.pickupDate,
+
+      deliveryDate:
+        assignment.loadDetails.deliveryDate,
+
+      pickupLocation:
+        assignment.loadDetails.pickupLocation,
+
+      deliveryLocation:
+        assignment.loadDetails.deliveryLocation,
+
+      status:
+        assignment.status,
+    }));
+
+
+  /*
+   * Common load data.
+   *
+   * IMPORTANT FOR UNVERIFIED:
+   * organizationId is explicitly null when it doesn't exist.
+   */
   const commonLoadData = {
+
     ...loadData,
+
     cargoId,
-    loadId: cargoId,
-    cargoStatus: 'pending',
+
+    loadId:
+      cargoId,
+
+    cargoStatus:
+      'pending',
+
     deliveryDate,
+
     selectedBrokers,
+
     coordinator,
-    assignmentCount: assignmentSummary.length,
+
+    assignmentCount:
+      assignmentSummary.length,
+
     assignmentSummary,
-    timeStamp: serverTimestamp(),
-    createdAt: serverTimestamp(),
-    availability: 'available',
-    shipper: selectedCustomer,
-    isTrackingEnabled: isTrackingEnabled,
-    ratePerKm: ratePerKm || null,
+
+    timeStamp:
+      serverTimestamp(),
+
+    createdAt:
+      serverTimestamp(),
+
+    availability:
+      'available',
+
+    shipper:
+      selectedCustomer,
+
+    isTrackingEnabled:
+      isTrackingEnabled,
+
+    ratePerKm:
+      ratePerKm ||
+      null,
+    rtRatePerKm: rtRatePerKm || null,
+
     postedBy: {
-      accType: currentRole.accType,
-      userRole: currentRole.userRole,
-      usserId: user.uid,
-      userName: user.displayName,
 
-      organizationId: currentRole.organizationId,
+      accType:
+        currentRole?.accType ??
+        null,
 
+      userRole:
+        currentRole?.userRole ??
+        null,
+
+      usserId:
+        user.uid,
+
+      userName:
+        user.displayName ||
+        null,
+
+      /*
+       * Unverified account has NO organizationId.
+       * Store null rather than undefined.
+       */
+      organizationId:
+        currentRole?.organizationId ??
+        null,
     }
+
   };
 
 
+  /*
+   * PRIVATE FLEET LOAD
+   */
   const writeFleetPrivateLoad = async () => {
+
     if (!fleetId) return;
 
 
-    const fleetCargoPath = `fleets/${fleetId}/Cargo`;
-    await setDoc(doc(db, fleetCargoPath, cargoId), {
-      ...commonLoadData,
-      loadVisibility: 'Private',
-      publicCargoId: loadVisibility === 'Both' ? cargoId : null,
-      privateTrucks: fleetTruckSummary,
-      publicTrucks: trucksNeeded ?? null,
-    });
+    const fleetCargoPath =
+      `fleets/${fleetId}/Cargo`;
+
+
+    await setDoc(
+      doc(
+        db,
+        fleetCargoPath,
+        cargoId
+      ),
+      {
+
+        ...commonLoadData,
+
+        loadVisibility:
+          'Private',
+
+        publicCargoId:
+          loadVisibility === 'Both'
+            ? cargoId
+            : null,
+
+        privateTrucks:
+          fleetTruckSummary,
+
+        publicTrucks:
+          trucksNeeded ??
+          null,
+      }
+    );
+
 
     if (assignmentDetails.length > 0) {
+
       const context = {
-        userId: user?.uid, accountAge, organizationId: analyticsOrganizationId,
-        organizationProfileId: analyticsOrganizationId, organizationType: currentRole.accType,
-        role: currentRole.userRole, accountType: currentRole.accType,
+
+        userId:
+          user?.uid,
+
+        accountAge,
+
+        organizationId:
+          analyticsOrganizationId,
+
+        organizationProfileId:
+          analyticsOrganizationId,
+
+        organizationType:
+          currentRole.accType,
+
+        role:
+          currentRole.userRole,
+
+        accountType:
+          currentRole.accType,
+
         metadata: {
-          loadId: cargoId, assigmentType: "PRIVATE_FLEET_CARGO",
 
-          trucksAssigned: assignmentDetails.map(item => ({
-            cargoArea: item.truckDetails.cargoArea || null,
-            truckType: item.truckDetails.truckType || null,
-            tankerType: item.truckDetails.tankerType || null,
-            capacity: item.truckDetails.truckCapacity || null,
-            operationCountries: item.truckDetails.operationCountries || [],
-          })),
+          loadId:
+            cargoId,
 
+          assigmentType:
+            "PRIVATE_FLEET_CARGO",
 
-          loadDetails: assignmentDetails.map(item => item.loadDetails),
+          trucksAssigned:
+            assignmentDetails.map(item => ({
+
+              cargoArea:
+                item.truckDetails.cargoArea ||
+                null,
+
+              truckType:
+                item.truckDetails.truckType ||
+                null,
+
+              tankerType:
+                item.truckDetails.tankerType ||
+                null,
+
+              capacity:
+                item.truckDetails.truckCapacity ||
+                null,
+
+              operationCountries:
+                item.truckDetails.operationCountries ||
+                [],
+            })),
+
+          loadDetails:
+            assignmentDetails.map(
+              item => item.loadDetails
+            ),
         },
       };
-      void trackAssignmentCreated(context).catch(console.error);
 
-      // Create assignment docs + bump "assigned" stat
-      const createBatch = writeBatch(db);
-      for (const assignment of assignmentDetails) {
-        const assignmentDocId = `${cargoId}_${assignment.truckId}_${assignment.driverId}`;
-        await addDocumentWithId(`fleets/${fleetId}/assignments`, assignmentDocId, assignment);
+
+      void trackAssignmentCreated(
+        context
+      ).catch(console.error);
+
+
+      const createBatch =
+        writeBatch(db);
+
+
+      for (
+        const assignment
+        of assignmentDetails
+      ) {
+
+        const assignmentDocId =
+          `${cargoId}_${assignment.truckId}_${assignment.driverId}`;
+
+
+        await addDocumentWithId(
+          `fleets/${fleetId}/assignments`,
+          assignmentDocId,
+          assignment
+        );
       }
-      incrementOrgStats(createBatch, analyticsOrganizationId, {
-        "privateCargo.assigned": assignmentDetails.length,
-      });
+
+
+      incrementOrgStats(
+        createBatch,
+        analyticsOrganizationId,
+        {
+          "privateCargo.assigned":
+            assignmentDetails.length,
+        }
+      );
+
+
       await createBatch.commit();
 
-      // Per-driver notify + analytics
-      for (const assignment of assignmentDetails) {
-        if (!assignment.driverDetails?.driverId) continue;
+
+      /*
+       * Per-driver notification + analytics.
+       */
+      for (
+        const assignment
+        of assignmentDetails
+      ) {
+
+        if (
+          !assignment.driverDetails?.driverId
+        ) {
+          continue;
+        }
+
 
         try {
-          const driverOrgId = assignment.driverDetails.driverId; // e.g. "DRV_xxx"
-          const driverUserId = driverOrgId.replace("DRV_", ""); // FIX: original was missing the 2nd arg, so it never stripped the prefix
-          const assignmentDocId = `${cargoId}_${assignment.truckId}_${assignment.driverId}`;
-          const assignmentTimeId = `${cargoId}_${driverOrgId}`.toLowerCase().replace(/\s+/g, "_");
 
-          const batchSec = writeBatch(db);
-          incrementOrgStats(batchSec, analyticsOrganizationId, {
-            "driverAssignment.totalRequestsInitiated": 1,
-          });
-          incrementOrgStats(batchSec, driverOrgId, {
-            "driverAssignment.totalRequestsSent": 1,
-          });
-          createRequestAnalyticsPair(batchSec, {
-            orgIdA: analyticsOrganizationId,
-            orgIdB: driverOrgId,
-            docId: assignmentTimeId,
-            loadId: cargoId,
-            truckId: assignment?.truckDetails?.truckId ?? null,
-            cargoType: "PRIVATE",
-            cargoOwnerAcc: currentRole?.accType,
-            extraA: { assignmentId: assignmentDocId, driverId: driverOrgId },
-            extraB: { assignmentId: assignmentDocId, fleetId: analyticsOrganizationId },
-          });
+          const driverOrgId =
+            assignment.driverDetails.driverId;
+
+
+          const driverUserId =
+            driverOrgId.replace(
+              "DRV_",
+              ""
+            );
+
+
+          const assignmentDocId =
+            `${cargoId}_${assignment.truckId}_${assignment.driverId}`;
+
+
+          const assignmentTimeId =
+            `${cargoId}_${driverOrgId}`
+              .toLowerCase()
+              .replace(/\s+/g, "_");
+
+
+          const batchSec =
+            writeBatch(db);
+
+
+          incrementOrgStats(
+            batchSec,
+            analyticsOrganizationId,
+            {
+              "driverAssignment.totalRequestsInitiated":
+                1,
+            }
+          );
+
+
+          incrementOrgStats(
+            batchSec,
+            driverOrgId,
+            {
+              "driverAssignment.totalRequestsSent":
+                1,
+            }
+          );
+
+
+          createRequestAnalyticsPair(
+            batchSec,
+            {
+              orgIdA:
+                analyticsOrganizationId,
+
+              orgIdB:
+                driverOrgId,
+
+              docId:
+                assignmentTimeId,
+
+              loadId:
+                cargoId,
+
+              truckId:
+                assignment?.truckDetails?.truckId ??
+                null,
+
+              cargoType:
+                "PRIVATE",
+
+              cargoOwnerAcc:
+                currentRole?.accType,
+
+              extraA: {
+                assignmentId:
+                  assignmentDocId,
+
+                driverId:
+                  driverOrgId
+              },
+
+              extraB: {
+                assignmentId:
+                  assignmentDocId,
+
+                fleetId:
+                  analyticsOrganizationId
+              },
+            }
+          );
+
+
           await batchSec.commit();
 
+
           await notifyUserById(
+
             driverUserId,
+
             "New Load Assignment 🚛",
+
             `You have been assigned a load from ${assignment.loadDetails.origin.description} to ${assignment.loadDetails.destination.description}`,
+
             {
-              pathname: "Assignments/Index",
-              params: { cargoId, assignmentId: assignmentDocId, fleetId: assignment.fleetDetails.id },
+              pathname:
+                "Assignments/Index",
+
+              params: {
+                cargoId,
+
+                assignmentId:
+                  assignmentDocId,
+
+                fleetId:
+                  assignment.fleetDetails.id
+              },
             },
-            { type: "load_assignment", assignmentId: assignmentDocId }
+
+            {
+              type:
+                "load_assignment",
+
+              assignmentId:
+                assignmentDocId
+            }
           );
+
         } catch (error) {
+
           Alert.alert(
             "Notification Failed",
+
             `Load was assigned to ${assignment.driverDetails.driverName}, but notification failed.`
           );
-          console.log("Driver notification error:", error);
+
+          console.log(
+            "Driver notification error:",
+            error
+          );
         }
       }
 
+
       if (Platform.OS === "android") {
-        ToastAndroid.show("Private load assigned successfully 🚛", ToastAndroid.SHORT);
+
+        ToastAndroid.show(
+          "Private load assigned successfully 🚛",
+          ToastAndroid.SHORT
+        );
       }
+
     } else {
-      const assignmentDocId = `${cargoId}_UNASSIGNED`;
+
+      const assignmentDocId =
+        `${cargoId}_UNASSIGNED`;
+
+
       const loadDetails = {
+
         ...baseLoadDetails,
-        pickupDate: loadingDate || null,
-        deliveryDate: deliveryDate || null,
-        pickupLocation: origin || null,
-        deliveryLocation: destination || null,
+
+        pickupDate:
+          loadingDate ||
+          null,
+
+        deliveryDate:
+          deliveryDate ||
+          null,
+
+        pickupLocation:
+          origin ||
+          null,
+
+        deliveryLocation:
+          destination ||
+          null,
       };
 
-      await addDocumentWithId(`fleets/${fleetId}/assignments`, assignmentDocId, {
-        cargoId, loadId: cargoId, fleetId,
-        truckId: null, driverId: null,
-        status: "UNASSIGNED",
-        loadDetails, externalLoad: false,
-        truckDetails: null, driverDetails: null,
-        shipper: selectedCustomer, coordinator,
-        createdAt: Date.now().toString(),
-        timeStamp: serverTimestamp(),
-      });
+
+      await addDocumentWithId(
+        `fleets/${fleetId}/assignments`,
+        assignmentDocId,
+        {
+
+          cargoId,
+
+          loadId:
+            cargoId,
+
+          fleetId,
+
+          truckId:
+            null,
+
+          driverId:
+            null,
+
+          status:
+            "UNASSIGNED",
+
+          loadDetails,
+
+          externalLoad:
+            false,
+
+          truckDetails:
+            null,
+
+          driverDetails:
+            null,
+
+          shipper:
+            selectedCustomer,
+
+          coordinator,
+
+          createdAt:
+            Date.now().toString(),
+
+          timeStamp:
+            serverTimestamp(),
+        }
+      );
     }
 
-    for (const selectedBrokerId of selectedBrokers) {
-      await addDocumentWithId(`brokerages/${selectedBrokerId}/cargo`, `${cargoId}_${selectedBrokerId}`, {
-        loadId: cargoId, cargoId,
-        loadStatus: 'pending',
-        loadVisibility: 'Private',
-        truckId: fleetTruckSummary[0]?.truckId || null,
-        truckName: fleetTruckSummary[0]?.truckName || null,
-        driverId: assignmentSummary[0]?.driverId || null,
-        driverName: assignmentSummary[0]?.driverName || null,
-        origin, destination, loadingDate, deliveryDate,
-        assignmentSummary,
-        createdAt: new Date(),
-        coordinator,
-      });
+
+    for (
+      const selectedBrokerId
+      of selectedBrokers
+    ) {
+
+      await addDocumentWithId(
+
+        `brokerages/${selectedBrokerId}/cargo`,
+
+        `${cargoId}_${selectedBrokerId}`,
+
+        {
+
+          loadId:
+            cargoId,
+
+          cargoId,
+
+          loadStatus:
+            'pending',
+
+          loadVisibility:
+            'Private',
+
+          truckId:
+            fleetTruckSummary[0]?.truckId ||
+            null,
+
+          truckName:
+            fleetTruckSummary[0]?.truckName ||
+            null,
+
+          driverId:
+            assignmentSummary[0]?.driverId ||
+            null,
+
+          driverName:
+            assignmentSummary[0]?.driverName ||
+            null,
+
+          origin,
+
+          destination,
+
+          loadingDate,
+
+          deliveryDate,
+
+          assignmentSummary,
+
+          createdAt:
+            new Date(),
+
+          coordinator,
+        }
+      );
     }
   };
 
 
-
-
+  /*
+   * PUBLIC LOAD
+   *
+   * This is the path used by unverified users.
+   */
   const writePublicLoad = async () => {
-    await setDoc(doc(db, 'Cargo', cargoId), {
-      ...commonLoadData,
-      loadVisibility: 'Public',
-      expiresAt: Timestamp.fromDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)),
-      trucksNeededNum: numberOfTrucks,
-      trucksRemainingNum: numberOfTrucks,
-      privateFleetCargoId: currentRole?.accType === 'fleet' && loadVisibility === 'Both' ? cargoId : null,
-      state: 'available',
-      publicTrucks: trucksNeeded ?? null,
-    });
+
+    await setDoc(
+      doc(
+        db,
+        'Cargo',
+        cargoId
+      ),
+      {
+
+        ...commonLoadData,
+
+        loadVisibility:
+          'Public',
+
+        expiresAt:
+          Timestamp.fromDate(
+            new Date(
+              Date.now() +
+              5 * 24 * 60 * 60 * 1000
+            )
+          ),
+
+        trucksNeededNum:
+          numberOfTrucks,
+
+        trucksRemainingNum:
+          numberOfTrucks,
+
+        privateFleetCargoId:
+          currentRole?.accType === 'fleet' &&
+            loadVisibility === 'Both'
+            ? cargoId
+            : null,
+
+        state:
+          'available',
+
+        publicTrucks:
+          trucksNeeded ??
+          null,
+      }
+    );
 
 
     await notifyTrucksByFilters({
+
       trucksNeeded,
-      loadItem: buildNotificationLoadItem(params),
+
+      loadItem:
+        buildNotificationLoadItem(params),
+
       cargoId,
+
       user,
+
       currentRole
     });
   };
 
 
+  /*
+   * PRIVATE BROKERAGE LOAD
+   */
   const writeBrokerPrivateLoad = async () => {
-    await setDoc(doc(db, `brokerages/${brokerId}/Cargo`, cargoId), {
-      ...commonLoadData,
-      loadVisibility: 'Private',
-      privateTrucks: brokerTruckSummary,
-      publicTrucks: trucksNeeded ?? null,
-    });
+
+    await setDoc(
+      doc(
+        db,
+        `brokerages/${brokerId}/Cargo`,
+        cargoId
+      ),
+      {
+
+        ...commonLoadData,
+
+        loadVisibility:
+          'Private',
+
+        privateTrucks:
+          brokerTruckSummary,
+
+        publicTrucks:
+          trucksNeeded ??
+          null,
+      }
+    );
+
 
     const loadDetails = {
+
       ...baseLoadDetails,
-      pickupDate: loadingDate || null,
-      deliveryDate: deliveryDate || null,
-      pickupLocation: origin || null,
-      deliveryLocation: destination || null,
+
+      pickupDate:
+        loadingDate ||
+        null,
+
+      deliveryDate:
+        deliveryDate ||
+        null,
+
+      pickupLocation:
+        origin ||
+        null,
+
+      deliveryLocation:
+        destination ||
+        null,
     };
 
-    if (selectedBrokerTrucks.length > 0) {
+
+    if (
+      selectedBrokerTrucks.length > 0
+    ) {
+
       const context = {
-        userId: user?.uid, accountAge, organizationId: analyticsOrganizationId,
-        organizationProfileId: analyticsOrganizationId, organizationType: currentRole.faccType,
-        role: currentRole.userRole, accountType: currentRole.accType,
+
+        userId:
+          user?.uid,
+
+        accountAge,
+
+        organizationId:
+          analyticsOrganizationId,
+
+        organizationProfileId:
+          analyticsOrganizationId,
+
+        organizationType:
+          currentRole.faccType,
+
+        role:
+          currentRole.userRole,
+
+        accountType:
+          currentRole.accType,
+
         metadata: {
-          loadId: cargoId, assigmentType: "PRIVATE_BROKERAGE_CARGO",
-          trucksAssigned: assignmentDetails.map(item => ({
-            cargoArea: item.truckDetails.cargoArea || null,
-            truckType: item.truckDetails.truckType || null,
-            tankerType: item.truckDetails.tankerType || null,
-            capacity: item.truckDetails.truckCapacity || null,
-            operationCountries: item.truckDetails.operationCountries || [],
-          })),
-          numberOfTrucks: selectedBrokerTrucks.length,
+
+          loadId:
+            cargoId,
+
+          assigmentType:
+            "PRIVATE_BROKERAGE_CARGO",
+
+          trucksAssigned:
+            assignmentDetails.map(
+              item => ({
+
+                cargoArea:
+                  item.truckDetails.cargoArea ||
+                  null,
+
+                truckType:
+                  item.truckDetails.truckType ||
+                  null,
+
+                tankerType:
+                  item.truckDetails.tankerType ||
+                  null,
+
+                capacity:
+                  item.truckDetails.truckCapacity ||
+                  null,
+
+                operationCountries:
+                  item.truckDetails.operationCountries ||
+                  [],
+              })
+            ),
+
+          numberOfTrucks:
+            selectedBrokerTrucks.length,
+
           loadDetails,
         },
       };
-      void trackAssignmentCreated(context).catch(console.error);
+
+
+      void trackAssignmentCreated(
+        context
+      ).catch(console.error);
     }
 
-    for (const truck of selectedBrokerTrucks) {
+
+    for (
+      const truck
+      of selectedBrokerTrucks
+    ) {
+
       const truckDetails = {
-        truckId: truck?.id || null,
-        truckName: truck?.truckName || null,
-        registrationNumber: truck?.registrationNumber || truck?.numberPlate || null,
-        numberPlate: truck?.numberPlate || null,
-        truckType: truck?.truckType || null,
-        truckCapacity: truck?.truckCapacity || null,
-        cargoArea: truck?.cargoArea || null,
-        locations: truck?.locations || [],
-        trackingDeviceId: truck?.trackingDeviceId || null,
-        operationCountries: truck?.locations || truck?.operationCountries || [],
+
+        truckId:
+          truck?.id ||
+          null,
+
+        truckName:
+          truck?.truckName ||
+          null,
+
+        registrationNumber:
+          truck?.registrationNumber ||
+          truck?.numberPlate ||
+          null,
+
+        numberPlate:
+          truck?.numberPlate ||
+          null,
+
+        truckType:
+          truck?.truckType ||
+          null,
+
+        truckCapacity:
+          truck?.truckCapacity ||
+          null,
+
+        cargoArea:
+          truck?.cargoArea ||
+          null,
+
+        locations:
+          truck?.locations ||
+          [],
+
+        trackingDeviceId:
+          truck?.trackingDeviceId ||
+          null,
+
+        operationCountries:
+          truck?.locations ||
+          truck?.operationCountries ||
+          [],
 
         brokerTruckSummary,
       };
 
+
       const assignment = {
-        cargoId, loadId: cargoId, fleetId: truck.fleetId,
-        truckId: truck.id || null, driverId: null,
-        visibility: visibilityTag,
-        loadDetails, externalLoad: true,
-        fleetDetails: truck?.organizationDetails ?? truck?.fleetDetails ?? null,
+
+        cargoId,
+
+        loadId:
+          cargoId,
+
+        fleetId:
+          truck.fleetId,
+
+        truckId:
+          truck.id ||
+          null,
+
+        driverId:
+          null,
+
+        visibility:
+          visibilityTag,
+
+        loadDetails,
+
+        externalLoad:
+          true,
+
+        fleetDetails:
+          truck?.organizationDetails ??
+          truck?.fleetDetails ??
+          null,
+
         shipper: {
-          id: currentRole.organizationId || currentRole.fleetId || null,
-          name: currentRole.companyName || user?.organisation,
-          phone: currentRole.phone || null,
-          location: currentRole.billingAddress || currentRole.location || null,
-          accType: currentRole.accType || null,
+
+          id:
+            currentRole.organizationId ||
+            currentRole.fleetId ||
+            null,
+
+          name:
+            currentRole.companyName ||
+            user?.organisation,
+
+          phone:
+            currentRole.phone ||
+            null,
+
+          location:
+            currentRole.billingAddress ||
+            currentRole.location ||
+            null,
+
+          accType:
+            currentRole.accType ||
+            null,
         },
-        truckDetails, driverDetails: null,
-        status: 'ASSIGNED', acceptedBy: null,
-        fleetCoordinator: truck.assignments?.dispatcher
-          ? {
-            id: truck.assignments.dispatcher.id || null,
-            organizationId: truck.fleetId || null,
-            name: truck.assignments.dispatcher.name || '',
-            phoneNumber: truck.assignments.dispatcher.phoneNumber || '',
-          }
-          : null,
-        cargoCoordinator: coordinator,
-        createdByAcc: "brokerages",
-        createdAt: Date.now().toString(),
+
+        truckDetails,
+
+        driverDetails:
+          null,
+
+        status:
+          'ASSIGNED',
+
+        acceptedBy:
+          null,
+
+        fleetCoordinator:
+          truck.assignments?.dispatcher
+            ? {
+
+              id:
+                truck.assignments.dispatcher.id ||
+                null,
+
+              organizationId:
+                truck.fleetId ||
+                null,
+
+              name:
+                truck.assignments.dispatcher.name ||
+                '',
+
+              phoneNumber:
+                truck.assignments.dispatcher.phoneNumber ||
+                '',
+            }
+            : null,
+
+        cargoCoordinator:
+          coordinator,
+
+        createdByAcc:
+          "brokerages",
+
+        createdAt:
+          Date.now().toString(),
       };
 
 
-      const docId = `${cargoId}_${truck.truckId}`;
+      const docId =
+        `${cargoId}_${truck.truckId}`;
 
-      // --- Assignment docs (broker + fleet copies) ---
-      const batch = writeBatch(db);
-      batch.set(doc(db, `brokerages/${brokerId}/assignments/${docId}`), {
-        ...assignment,
-        shipper: selectedCustomer,
-        timeStamp: serverTimestamp(),
-      });
-      batch.set(doc(db, `fleets/${truck.fleetId}/assignments/${docId}`), {
-        ...assignment,
-        shipper: {
-          id: brokerId,
-          organizationId: brokerId,
-          name: currentRole.companyName || user?.organisation,
-          phone: currentRole.phone,
-          billingAddress: currentRole.location.description,
-          createdBy: user?.uid,
-          createdByAcc: "brokerages",
-        },
-        timeStamp: serverTimestamp(),
-      });
+
+      /*
+       * Assignment docs.
+       */
+      const batch =
+        writeBatch(db);
+
+
+      batch.set(
+        doc(
+          db,
+          `brokerages/${brokerId}/assignments/${docId}`
+        ),
+        {
+
+          ...assignment,
+
+          shipper:
+            selectedCustomer,
+
+          timeStamp:
+            serverTimestamp(),
+        }
+      );
+
+
+      batch.set(
+        doc(
+          db,
+          `fleets/${truck.fleetId}/assignments/${docId}`
+        ),
+        {
+
+          ...assignment,
+
+          shipper: {
+
+            id:
+              brokerId,
+
+            organizationId:
+              brokerId,
+
+            name:
+              currentRole.companyName ||
+              user?.organisation,
+
+            phone:
+              currentRole.phone,
+
+            billingAddress:
+              currentRole.location.description,
+
+            createdBy:
+              user?.uid,
+
+            createdByAcc:
+              "brokerages",
+          },
+
+          timeStamp:
+            serverTimestamp(),
+        }
+      );
+
+
       await batch.commit();
 
-      // --- Stats + requestAnalytics pair ---
-      const assignmentTimeId = `${cargoId}_${truck?.id}`.toLowerCase().replace(/\s+/g, "_");
 
-      const batchSec = writeBatch(db);
-      incrementOrgStats(batchSec, truck.fleetId, {
-        "privateBrokerCargo.totalRequestsSent": 1,
-      });
-      incrementOrgStats(batchSec, analyticsOrganizationId, {
-        "privateBrokerCargo.totalRequestsInitiated": 1,
-      });
-      createRequestAnalyticsPair(batchSec, {
-        orgIdA: truck.fleetId,
-        orgIdB: analyticsOrganizationId,
-        docId: assignmentTimeId,
-        loadId: cargoId,
-        truckId: truck?.id,
-        cargoType: "PRIVATE",
-        cargoOwnerAcc: currentRole?.accType,
-        extraA: { cargoOwner: false, externalLoadOrg: analyticsOrganizationId },
-        extraB: { cargoOwner: true },
-      });
+      /*
+       * Stats + request analytics.
+       */
+      const assignmentTimeId =
+        `${cargoId}_${truck?.id}`
+          .toLowerCase()
+          .replace(/\s+/g, "_");
+
+
+      const batchSec =
+        writeBatch(db);
+
+
+      incrementOrgStats(
+        batchSec,
+        truck.fleetId,
+        {
+          "privateBrokerCargo.totalRequestsSent":
+            1,
+        }
+      );
+
+
+      incrementOrgStats(
+        batchSec,
+        analyticsOrganizationId,
+        {
+          "privateBrokerCargo.totalRequestsInitiated":
+            1,
+        }
+      );
+
+
+      createRequestAnalyticsPair(
+        batchSec,
+        {
+
+          orgIdA:
+            truck.fleetId,
+
+          orgIdB:
+            analyticsOrganizationId,
+
+          docId:
+            assignmentTimeId,
+
+          loadId:
+            cargoId,
+
+          truckId:
+            truck?.id,
+
+          cargoType:
+            "PRIVATE",
+
+          cargoOwnerAcc:
+            currentRole?.accType,
+
+          extraA: {
+            cargoOwner:
+              false,
+
+            externalLoadOrg:
+              analyticsOrganizationId
+          },
+
+          extraB: {
+            cargoOwner:
+              true
+          },
+        }
+      );
+
+
       await batchSec.commit();
 
-      // --- Notify dispatcher ---
-      const dispatcherId = truck.assignments?.dispatcher?.id;
+
+      /*
+       * Notify dispatcher.
+       */
+      const dispatcherId =
+        truck.assignments?.dispatcher?.id;
+
+
       if (dispatcherId) {
+
         try {
+
           await notifyUserById(
+
             dispatcherId,
+
             "New Load Assigned 🚛",
+
             `${truck.truckName} has been assigned a new load from ${origin.description} to ${destination.description}`,
-            { pathname: "/Dispatcher/AssignmentDetails", params: { cargoId, truckId: truck.id } },
-            { type: "private_load_assigned", cargoId, truckId: truck.id }
+
+            {
+              pathname:
+                "/Dispatcher/AssignmentDetails",
+
+              params: {
+                cargoId,
+
+                truckId:
+                  truck.id
+              }
+            },
+
+            {
+              type:
+                "private_load_assigned",
+
+              cargoId,
+
+              truckId:
+                truck.id
+            }
           );
+
         } catch (error) {
-          Alert.alert("Notification Failed", "Load assigned but dispatcher notification failed.");
-          console.log("Dispatcher notification error:", error);
+
+          Alert.alert(
+            "Notification Failed",
+            "Load assigned but dispatcher notification failed."
+          );
+
+          console.log(
+            "Dispatcher notification error:",
+            error
+          );
         }
       }
     }
   };
 
 
+  /*
+   * ============================================================
+   * UNVERIFIED ACCOUNT
+   * ============================================================
+   *
+   * userRole === "create_Acc"
+   *
+   * Unverified accounts:
+   * - have an accType
+   * - DO NOT have organizationId
+   * - DO NOT have fleetId
+   * - DO NOT have brokerId
+   * - CAN ONLY create Public loads
+   *
+   * We handle this BEFORE fleet/brokerage logic so the account
+   * can never accidentally enter a private-load path.
+   */
+  if (currentRole?.userRole === "create_Acc") {
 
+    await writePublicLoad();
+
+    recordLoadCreated();
+
+    return;
+  }
+
+
+  /*
+   * ============================================================
+   * NORMAL FLEET ACCOUNT
+   * ============================================================
+   */
   if (currentRole?.accType === 'fleet') {
-    // NOTE: fixed a bug from the previous version — "Both" used to call
-    // writeFleetPrivateLoad() twice (once explicitly, once via the || check below it).
-    if (loadVisibility === 'Private' || loadVisibility === 'Both') {
+
+    if (
+      loadVisibility === 'Private' ||
+      loadVisibility === 'Both'
+    ) {
+
       await writeFleetPrivateLoad();
     }
-    if (loadVisibility === 'Public' || loadVisibility === 'Both') {
+
+
+    if (
+      loadVisibility === 'Public' ||
+      loadVisibility === 'Both'
+    ) {
+
       await writePublicLoad();
-      // await notifyTrucksByFilters({ trucksNeeded, loadItem: buildNotificationLoadItem(params) });
+
+      // await notifyTrucksByFilters({
+      //   trucksNeeded,
+      //   loadItem: buildNotificationLoadItem(params)
+      // });
     }
+
+
     recordLoadCreated();
+
     return;
   }
 
+
+  /*
+   * ============================================================
+   * NORMAL BROKERAGE ACCOUNT
+   * ============================================================
+   */
   if (currentRole?.accType === 'brokerage') {
-    if (loadVisibility === 'Private') {
+
+    if (
+      loadVisibility === 'Private'
+    ) {
+
       await writeBrokerPrivateLoad();
     }
-    if (loadVisibility === 'Public' || loadVisibility === 'Both') {
+
+
+    if (
+      loadVisibility === 'Public' ||
+      loadVisibility === 'Both'
+    ) {
+
       await writePublicLoad();
     }
+
+
     recordLoadCreated();
+
     return;
   }
 
+
+  /*
+   * ============================================================
+   * FALLBACK
+   * ============================================================
+   */
   await writePublicLoad();
 
   recordLoadCreated();
-
-
 };

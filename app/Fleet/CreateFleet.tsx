@@ -386,7 +386,7 @@ trackEventFirebase("fleet_creation_success", { userId: user.uid, fleetName: flee
     return (
         <View style={{ flex: 1, backgroundColor: background, }} >
 
-            {currentRole.userRole !== "create_Acc" ? <View style={{ paddingTop: 36 }}>
+            <View style={{ paddingTop: 36 }}>
 
                 <Heading page="Create Fleet" rightComponent={<View style={{ paddingRight: 20 }}>
                     <TouchableNativeFeedback onPress={handleSelectProfileImage} style={{ paddingRight: 15 }}>
@@ -398,7 +398,6 @@ trackEventFirebase("fleet_creation_success", { userId: user.uid, fleetName: flee
                                 overflow: "hidden",
                                 justifyContent: "center",
                                 alignItems: "center",
-                                borderWidth: 1,
                             }}
                         >
 
@@ -433,7 +432,7 @@ trackEventFirebase("fleet_creation_success", { userId: user.uid, fleetName: flee
                     </TouchableNativeFeedback>
                 </View>
                 } />
-            </View> : <CustomHeader pageTitle='Create Fleet'  selectProfileImage = {handleSelectProfileImage} />}
+            </View> 
 
 
 

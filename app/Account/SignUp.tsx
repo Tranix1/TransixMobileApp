@@ -114,6 +114,10 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                 return;
             }
 
+                 if (! selectedAccount) {
+            setError("Please select Account Type");
+            return;
+        }
             if (countryCode.name === "+267") {
                 if (length !== 8) {
                     setError("Botswana phone number must be 8 digits");
@@ -365,6 +369,7 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                                         <ThemedText
                                             style={[
                                                 styles.accountButtonLabel,
+                                                {color :selected ? '#fff' : undefined}
                                             ]}
                                         >
                                             {label}
@@ -474,9 +479,9 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
                             ]}
                         >
                             {loading ? (
-                                <ActivityIndicator color="#fff" />
+                                <ActivityIndicator color={icon} />
                             ) : (
-                                <ThemedText color="#fff" type="subtitle">
+                                <ThemedText      type="subtitle">
                                     Send OTP
                                 </ThemedText>
                             )}

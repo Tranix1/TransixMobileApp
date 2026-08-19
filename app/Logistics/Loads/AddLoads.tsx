@@ -187,7 +187,10 @@ const AddLoadDB = () => {
   const [locationPicKERdSP, setPickLocationOnMap] = useState(false);
   const [dspToLocation, setDspToLocation] = useState(false);
   const [rate, setRate] = useState(defaultState.rate);
-  const [ratePerKm, setRatePerKm] = React.useState(0);
+    const [ratePerKm, setRatePerKm] = React.useState(0);
+
+    const rtRatePerKm = ratePerKm/2
+
   const [rateexplantion, setRateExplanation] = useState(defaultState.rateexplantion);
   // const [paymentTerms, setPaymentTerms] = useState(defaultState.paymentTerms);
 
@@ -413,7 +416,7 @@ const AddLoadDB = () => {
   };
 
 
-  
+
 
 
   // Separate state for proof images and documents
@@ -423,100 +426,100 @@ const AddLoadDB = () => {
   const [uploadImageUpdate, setUploadImageUpdate] = useState("");
 
 
-  const handleSubmit = async () => {
+    const handleSubmit = async () => {
 
-    try {
-      trackEventFirebase("load_submission_attempt", { step: step, loadVisibility: loadVisibility, userId: user?.uid || "unknown" , organizationId: currentRole?.organizationId || "unknown" , accountType: currentRole?.accType || "unknown"  ,distance: distance, rate: rate, origin: origin,destination: destination, deliveryDate: deliveryDate });
-        
-      setIsSubmitting(true)
-
-      // Use utility function for validation
-      let validationErrors = [];
       try {
-        const validationTrucksNeeded = currentRole?.accType === 'fleet' && loadVisibility === 'Private'
-          ? selectedFleetTrucks
-          : currentRole?.accType === 'brokerage' && loadVisibility === 'Private'
-            ? selectedBrokerTrucks
-            : trucksNeeded;
+        trackEventFirebase("load_submission_attempt", { step: step, loadVisibility: loadVisibility, userId: user?.uid || "unknown", organizationId: currentRole?.organizationId || "unknown", accountType: currentRole?.accType || "unknown", distance: distance, rate: rate, origin: origin, destination: destination, deliveryDate: deliveryDate });
 
-        validationErrors = validateLoadForm("professional", {
-          typeofLoad,
-          origin,
-          destination,
-          rate,
-          paymentTerms,
-          requirements,
-          proofOfOrder: [...proofDocuments],
-          proofOfOrderFileType: [...proofDocumentTypes],
-        }, step);
+        setIsSubmitting(true)
+
+        // Use utility function for validation
+        let validationErrors = [];
+        try {
+          const validationTrucksNeeded = currentRole?.accType === 'fleet' && loadVisibility === 'Private'
+            ? selectedFleetTrucks
+            : currentRole?.accType === 'brokerage' && loadVisibility === 'Private'
+              ? selectedBrokerTrucks
+              : trucksNeeded;
+
+          validationErrors = validateLoadForm("professional", {
+            typeofLoad,
+            origin,
+            destination,
+            rate,
+            paymentTerms,
+            requirements,
+            proofOfOrder: [...proofDocuments],
+            proofOfOrderFileType: [...proofDocumentTypes],
+          }, step);
+        } catch (e) {
+          const errorDetails = e instanceof Error ? e.stack : String(e);
+          showError(
+            "Validation Error",
+            "Failed to vallidate Form Data",
+            errorDetails,
+            true
+          );
+
+
+          return;
+        }
+
+
+        // Additional validation for new fields
+        if ((loadVisibility === "Public" || loadVisibility === "Both") && (!numberOfTrucks || numberOfTrucks.trim() === '')) {
+          validationErrors.push('Number of trucks needed is required');
+        }
+        if (!deliveryDate || deliveryDate.trim() === '') {
+          validationErrors.push('Delivery date is required');
+        }
+
+
+        // Additional validation for fleet users - private and both loads need a private truck assignment.
+
+
+        if ((loadVisibility === 'Public' || loadVisibility === 'Both') && trucksNeeded.length === 0) {
+          validationErrors.push('Select at least 1 truck requirement for the public load');
+        }
+
+        // Additional validation for broker selection - skip for broker users
+        // if (currentRole?.accType !== 'broker' && selectedBrokers.length === 0) {
+        //   validationErrors.push('Select at least one broker');
+        // }
+
+        // Additional validation for broker private loads
+        if (currentRole?.accType === 'brokerage' && loadVisibility === 'Private') {
+          if (selectedBrokerTrucks.length === 0) {
+            validationErrors.push('Select at least one assigned truck');
+          }
+        }
+
+        if (validationErrors.length > 0) {
+          alert(validationErrors.join("\n"),)
+          // alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
+
+          setIsSubmitting(false)
+          return;
+        }
+
+        // Show payment confirmation modal
+        confirmLoadPaymentAndSubmit()
+        return;
+
       } catch (e) {
         const errorDetails = e instanceof Error ? e.stack : String(e);
         showError(
-          "Validation Error",
-          "Failed to vallidate Form Data",
+          "Failed to Submit Load",
+          "There was an error submitting your load. Please try again.",
           errorDetails,
           true
         );
+        // setIsSubmitting(false);
 
-
-        return;
+        console.error(e)
       }
 
-
-      // Additional validation for new fields
-      if ((loadVisibility === "Public" || loadVisibility === "Both") && (!numberOfTrucks || numberOfTrucks.trim() === '')) {
-        validationErrors.push('Number of trucks needed is required');
-      }
-      if (!deliveryDate || deliveryDate.trim() === '') {
-        validationErrors.push('Delivery date is required');
-      }
-
-
-      // Additional validation for fleet users - private and both loads need a private truck assignment.
-
-
-      if ((loadVisibility === 'Public' || loadVisibility === 'Both') && trucksNeeded.length === 0) {
-        validationErrors.push('Select at least 1 truck requirement for the public load');
-      }
-
-      // Additional validation for broker selection - skip for broker users
-      // if (currentRole?.accType !== 'broker' && selectedBrokers.length === 0) {
-      //   validationErrors.push('Select at least one broker');
-      // }
-
-      // Additional validation for broker private loads
-      if (currentRole?.accType === 'brokerage' && loadVisibility === 'Private') {
-        if (selectedBrokerTrucks.length === 0) {
-          validationErrors.push('Select at least one assigned truck');
-        }
-      }
-
-      if (validationErrors.length > 0) {
-        alert(validationErrors.join("\n"),)
-        // alertBox("Missing Load Details", validationErrors.join("\n"), [], "error");
-
-        setIsSubmitting(false)
-        return;
-      }
-
-      // Show payment confirmation modal
-      confirmLoadPaymentAndSubmit()
-      return;
-
-    } catch (e) {
-      const errorDetails = e instanceof Error ? e.stack : String(e);
-      showError(
-        "Failed to Submit Load",
-        "There was an error submitting your load. Please try again.",
-        errorDetails,
-        true
-      );
-      // setIsSubmitting(false);
-
-      console.error(e)
-    }
-
-  };
+    };
 
 
 
@@ -614,18 +617,19 @@ const AddLoadDB = () => {
         typeofLoad,
         rate,
         ratePerKm,
+        rtRatePerKm ,
         selectedModelType,
         selectedCurrency,
         selectedCustomer,
         isTrackingEnabled,
 
       });
-      trackEventFirebase("load_submission_success", { step: step, loadVisibility: loadVisibility, userId: user?.uid || "unknown" , organizationId: currentRole?.organizationId || "unknown" , accountType: currentRole?.accType || "unknown"  ,distance: distance, rate: rate, origin: origin,destination: destination, numberOfTrucks: numberOfTrucks, deliveryDate: deliveryDate });
+      trackEventFirebase("load_submission_success", { step: step, loadVisibility: loadVisibility, userId: user?.uid || "unknown", organizationId: currentRole?.organizationId || "unknown", accountType: currentRole?.accType || "unknown", distance: distance, rate: rate, origin: origin, destination: destination, numberOfTrucks: numberOfTrucks, deliveryDate: deliveryDate });
 
       ToastAndroid.show('load added successfully.', ToastAndroid.SHORT);
       router.back()
     } catch (error) {
-      trackEventFirebase("load_submission_failure", { step: step, loadVisibility: loadVisibility, userId: user?.uid || "unknown" , organizationId: currentRole?.organizationId || "unknown" , accountType: currentRole?.accType || "unknown"  ,distance: distance, rate: rate, origin: origin,destination: destination, numberOfTrucks: numberOfTrucks, deliveryDate: deliveryDate , error: error instanceof Error ? error.message : String(error) });
+      trackEventFirebase("load_submission_failure", { step: step, loadVisibility: loadVisibility, userId: user?.uid || "unknown", organizationId: currentRole?.organizationId || "unknown", accountType: currentRole?.accType || "unknown", distance: distance, rate: rate, origin: origin, destination: destination, numberOfTrucks: numberOfTrucks, deliveryDate: deliveryDate, error: error instanceof Error ? error.message : String(error) });
       console.error("Error submitting load:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       const errorDetails = error instanceof Error ? error.stack : String(error);

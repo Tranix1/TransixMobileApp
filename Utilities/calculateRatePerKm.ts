@@ -15,5 +15,5 @@ export function calculateRatePerKm(
     return 0;
   }
 
-  return price / (distance * 2);
+  return price / distance ; 
 }

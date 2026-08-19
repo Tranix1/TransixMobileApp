@@ -86,7 +86,7 @@ export default function ProfileManager({  onProfileUpdate, onClose }: ProfileMan
                     {!currentRole?.profilePhoto && (
                         <TouchableNativeFeedback onPress={handleSelectProfileImage}>
                             <View style={styles.alertIcon}>
-                                <Ionicons name='alert-circle-outline' color={icon} size={wp(6)} />
+                                <Ionicons name='alert-circle-outline' color="red" size={wp(6)} />
                             </View>
                         </TouchableNativeFeedback>
                     )}
