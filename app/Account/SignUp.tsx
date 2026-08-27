@@ -105,38 +105,52 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
     const sendPhoneOTP = async () => {
         try {
+            setLoading(true);
+
             trackEventFirebase("otp_sent", { accountType: selectedAccount }).catch(console.error);
 
             const length = phoneNumber.replace(/\D/g, "").length;
 
             if (!countryCode.name) {
                 setError("Select a country code");
+            setLoading(false);
+                
                 return;
             }
 
                  if (! selectedAccount) {
             setError("Please select Account Type");
+            setLoading(false);
+            
             return;
         }
             if (countryCode.name === "+267") {
                 if (length !== 8) {
                     setError("Botswana phone number must be 8 digits");
+            setLoading(false);
+
                     return;
                 }
             } else {
                 if (length !== 9) {
                     setError("Phone number must be 9 digits");
+            setLoading(false);
+
                     return;
                 }
             }
 
             if (selectedAccount !== "tracking" && !referrerCode) {
                 setError("Referral code is required");
+            setLoading(false);
+
                 return;
             }
 
             if (!acceptTerms) {
                 setError("You must accept the terms and privacy policy");
+            setLoading(false);
+
                 return;
             }
 
@@ -147,6 +161,8 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
 
                 if (!validation.exists) {
                     setError("Invalid referral code");
+            setLoading(false);
+
                     return;
                 }
 
@@ -169,6 +185,7 @@ const Index = ({ setDspLoginOrSignup, setIsSigningUp }: any) => {
         } catch (error: any) {
             console.error(error);
             setError(error?.message || 'Failed to send OTP. Please try again.');
+            setLoading(false);
             
 
             ToastAndroid.show(

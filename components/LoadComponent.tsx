@@ -386,13 +386,11 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
     <View style={{ flex: 1 }}>
       <ThemedText
         type="tiny"
-        style={{ color: coolGray }}
       >
         Distance
       </ThemedText>
 
       <ThemedText
-        type="defaultSemiBold"
         style={{ fontSize: wp(3.5) }}
       >
         {item.distance || 'N/A'}
@@ -403,13 +401,11 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
     <View style={{ flex: 1, alignItems: 'center' }}>
       <ThemedText
         type="tiny"
-        style={{ color: coolGray }}
       >
         Rate / km
       </ThemedText>
 
       <ThemedText
-        type="defaultSemiBold"
         style={{ fontSize: wp(3.5) }}
       >
         {item.ratePerKm
@@ -441,7 +437,6 @@ const DspAllLoads = ({ item, expandID = '', expandId = (id: string) => { }, onde
       >
         <ThemedText
           type="tiny"
-          style={{ color: coolGray }}
         >
           Round Trip
         </ThemedText>

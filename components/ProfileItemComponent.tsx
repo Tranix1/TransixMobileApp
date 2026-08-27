@@ -144,6 +144,15 @@ const ProfileItemComponent = ({
                     organizationType: profile.type,
                 },
             });
+        }else {
+                router.push({
+                pathname: '/brokerage/Profile/Index',
+                params: {
+                    organizationId,
+                    organizationType: profile.type,
+                },
+            });
+            
         }
     }
 
@@ -201,19 +210,7 @@ const ProfileItemComponent = ({
                         {profile.name || 'Unnamed Organization'}
                     </ThemedText>
 
-                    {profile.ownerName ? (
-                        <ThemedText
-                            numberOfLines={1}
-                            type="tiny"
-                            style={{
-                                color: coolGray,
-                                fontSize: 12.5,
-                                marginTop: -wp(0.5),
-                            }}
-                        >
-                            {profile.ownerName}
-                        </ThemedText>
-                    ) : null}
+                    
                 </View>
 
                 {/* Account type */}
@@ -445,7 +442,7 @@ const styles = StyleSheet.create({
     image: {
         flex: 1,
         width: wp(60),
-        height: wp(40),
+        height: wp(37),
         borderRadius: wp(4),
         marginLeft: wp(1),
     },
