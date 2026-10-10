@@ -13,21 +13,18 @@ export const configureNativeNavigationBar = async (colorScheme: 'light' | 'dark'
     try {
         console.log('Configuring native navigation bar for theme:', colorScheme);
 
-        // Try using the native Android approach
-        const { NativeModules } = require('react-native');
+        // Use Expo's public module API. Expo modules are not guaranteed to be
+        // exposed through React Native's NativeModules object in release builds.
+        const NavigationBar = require('expo-navigation-bar');
 
-        if (NativeModules.ExpoNavigationBar) {
-            if (colorScheme === 'dark') {
-                await NativeModules.ExpoNavigationBar.setBackgroundColorAsync('#0f0e11');
-                await NativeModules.ExpoNavigationBar.setButtonStyleAsync('light');
-            } else {
-                await NativeModules.ExpoNavigationBar.setBackgroundColorAsync('#F9F9F9');
-                await NativeModules.ExpoNavigationBar.setButtonStyleAsync('dark');
-            }
-            console.log('Native navigation bar configuration completed');
+        if (colorScheme === 'dark') {
+            await NavigationBar.setBackgroundColorAsync('#0f0e11');
+            await NavigationBar.setButtonStyleAsync('light');
         } else {
-            console.log('Native ExpoNavigationBar module not available');
+            await NavigationBar.setBackgroundColorAsync('#F9F9F9');
+            await NavigationBar.setButtonStyleAsync('dark');
         }
+        console.log('Native navigation bar configuration completed');
     } catch (error) {
         console.error('Native navigation bar configuration failed:', error);
     }

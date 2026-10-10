@@ -1,5 +1,5 @@
 import { ImagePickerAsset } from 'expo-image-picker';
-import { model } from '@/db/fireBaseConfig';
+import { getVertexModel } from '@/db/fireBaseConfig';
 import { createAIPrompt, mapAIResponse } from './loadUtils';
 
 export interface AIAnalysisResult {
@@ -46,7 +46,8 @@ export const analyzeLoadImages = async (
         // Create AI prompt for truck type detection
         const prompt = createAIPrompt();
 
-        const result: any = await (model as any).generateContent([
+        const model = await getVertexModel();
+        const result: any = await model.generateContent([
             { text: prompt },
             ...base64Images.map(img => ({ inlineData: { mimeType: "image/jpeg", data: img.split(',')[1] } }))
         ]);
@@ -124,7 +125,8 @@ export const askVertexAI = async (
         setAiLoading(true);
         setAiAnswer("");
         console.log('[VertexAI] Sending prompt:', question);
-        const result: any = await (model as any).generateContent(question);
+        const model = await getVertexModel();
+        const result: any = await model.generateContent(question);
         console.log('[VertexAI] Raw response:', result);
         const text = typeof result?.response?.text === 'function'
             ? result.response.text()

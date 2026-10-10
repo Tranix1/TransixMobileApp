@@ -16,7 +16,9 @@
         import { configureNativeNavigationBar, forceNavigationBarConfig } from "@/Utilities/nativeNavigationBarUtils";
         import 'react-native-get-random-values';
 
-        SplashScreen.preventAutoHideAsync();
+        // This runs before React renders. Never allow a rejected native call to
+        // become an unhandled startup exception in a release bundle.
+        void SplashScreen.preventAutoHideAsync().catch(() => {});
 
 
         export default function RootLayout() {
@@ -112,29 +114,34 @@
 
             useEffect(() => {
 
-                const unsubscribe = auth().onAuthStateChanged((user) => {
+                try {
+                    const unsubscribe = auth().onAuthStateChanged((user) => {
 
-                    if (user) {
-                        console.log(
-                            "User Found >",
-                            user.phoneNumber
-                        );
+                        if (user) {
+                            console.log(
+                                "User Found >",
+                                user.phoneNumber
+                            );
 
-                        setupUser(user as any);
+                            void setupUser(user as any).catch(console.error);
 
-                    } else {
+                        } else {
 
-                        console.log(
-                            "Currently no user"
-                        );
+                            console.log(
+                                "Currently no user"
+                            );
 
-                        setupUser(null);
-                    }
+                            void setupUser(null).catch(console.error);
+                        }
 
-                });
+                    });
 
 
-                return unsubscribe;
+                    return unsubscribe;
+                } catch (error) {
+                    console.error('Unable to subscribe to Firebase Auth:', error);
+                    void setupUser(null).catch(console.error);
+                }
 
             }, []);
 

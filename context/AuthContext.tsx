@@ -1,12 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import {
-    createUserWithEmailAndPassword,
-    PhoneAuthProvider,
-    signInWithCredential,
-    signInWithEmailAndPassword,
-    updateProfile,
-} from "firebase/auth";
 import { createContext, ReactElement, useContext, useEffect, useState } from "react";
 import { Alert, ToastAndroid } from "react-native";
 import AlertComponent, { Alertbutton } from "@/components/AlertComponent";
@@ -401,6 +394,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 "currentRole",
                 JSON.stringify(currentRoleAccType)
             );
+            await saveCurrentRole(credentials.accountType);
 
 
             void trackLogin({

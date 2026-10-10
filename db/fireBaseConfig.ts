@@ -4,12 +4,6 @@ import { initializeApp } from "firebase/app";
 
 import { getFirestore, } from 'firebase/firestore'
 import { getStorage } from "firebase/storage"
-import { initializeAuth,  } from 'firebase/auth';
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
-import { getVertexAI, getGenerativeModel } from "firebase/vertexai";
-
-// import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-// import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 // const firebaseConfig = {
 //   apiKey: "AIzaSyD9lbKyl6QTiOZLEm7005VHI8lDgoYHTQA",
@@ -37,11 +31,23 @@ export const storage = getStorage(app)
 
 
 
-const vertexAI = getVertexAI(app);
-export const model = getGenerativeModel(vertexAI, {
-    model: "gemini-2.5-flash", // or "gemini-2.5-flash"
+// AI is optional and must not initialize while the application bundle is loading.
+// Loading it only when an AI feature is used keeps a Firebase AI failure from
+// preventing the root layout and authentication UI from rendering.
+let modelPromise: Promise<any> | undefined;
 
-});
+export const getVertexModel = () => {
+  if (!modelPromise) {
+    modelPromise = import('firebase/vertexai')
+      .then(({ getVertexAI, getGenerativeModel }) =>
+        getGenerativeModel(getVertexAI(app), { model: 'gemini-2.5-flash' })
+      )
+      .catch((error) => {
+        modelPromise = undefined;
+        throw error;
+      });
+  }
 
-
+  return modelPromise;
+};
 

@@ -65,7 +65,6 @@ export default function Index() {
   const [isConnectedInternet, setIsConnectedInternet] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
 
-  const [dspCreateAcc, setDspCreateAcc] = useState(false);
   const versionCheckRun = useRef(false);
 
   const [dspLoginOrSignup, setDspLoginOrSignup] = useState(true);
@@ -82,7 +81,6 @@ export default function Index() {
     isAuthenticated,
     needsSignup,
     user,
-    needsEmailVerification,
     error: authError,
 
   } = useAuthState();
@@ -137,6 +135,14 @@ export default function Index() {
   // Check if profile details are missing
 
   const isAuthReady = !authLoading && user !== undefined;
+  // Do not first mount the tracking tabs and then replace their screens once
+  // auth resolves. React Navigation can otherwise reuse the active SceneView
+  // while its screen definition changes from TrackingIndex to Login/SignUp.
+  const shouldShowAccountEntry =
+    isAuthReady && isConnectedInternet && (!isAuthenticated || needsSignup);
+  const navigatorKey = shouldShowAccountEntry
+    ? 'account-entry'
+    : `${currentRole.accType}:${currentRole.userRole ?? 'none'}`;
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
@@ -155,28 +161,6 @@ export default function Index() {
       setLoadingProgress(100);
     }
   }, [authLoading]);
-
-  useEffect(() => {
-    if (!isAuthReady) {
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setDspCreateAcc(false);
-
-      if (!isConnectedInternet) {
-        return;
-      }
-
-      if (!isAuthenticated || needsSignup) {
-        setDspCreateAcc(true);
-        return;
-      }
-
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [isAuthReady, isConnectedInternet, isAuthenticated, needsEmailVerification,]);
 
   useEffect(() => {
     if (!isAuthReady || !isConnectedInternet || versionCheckRun.current) {
@@ -229,13 +213,13 @@ export default function Index() {
   }
 
 
-  console.log(currentRole, "current role")
 
 
   return (
     <ScreenWrapper>
       <View style={{ flex: 1, backgroundColor: background }}>
         <Tab.Navigator
+          key={navigatorKey}
           screenOptions={({ route }) => ({
             tabBarIcon: ({ focused }) => {
               const color = focused ? accent : icon;
@@ -270,7 +254,7 @@ export default function Index() {
             },
           })}
         >
-          {dspCreateAcc ? (
+          {shouldShowAccountEntry ? (
             <>
               {/* <Tab.Screen name="Home " component={dspLoginOSignup ? Login : SignUp} /> */}
 
@@ -356,7 +340,6 @@ export default function Index() {
         </Tab.Navigator>
 
 
-
         <UpdateModal
           visible={showUpdateModal}
           onClose={dismissUpdate}
@@ -380,11 +363,4 @@ export default function Index() {
   );
 }
 
-const styles = StyleSheet.create({
-  btn: {
-    paddingHorizontal: wp(10),
-    paddingVertical: hp(1.5),
-    borderRadius: wp(2),
-    marginTop: 10
-  }
-});
+
